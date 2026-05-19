@@ -58,12 +58,57 @@
         "emittedEvents": [],
         "listenedEvents": [],
         "overridableConfigKeys": [
-          "appName",
-          "contentTrait",
-          "navItems",
-          "notificationClickEvent",
-          "notifications",
-          "searchEvent"
+          {
+            "key": "appName",
+            "type": "unknown",
+            "default": "Fleet Manager"
+          },
+          {
+            "key": "contentTrait",
+            "type": "unknown",
+            "default": "@trait.FleetCatalog"
+          },
+          {
+            "key": "navItems",
+            "type": "unknown",
+            "default": [
+              {
+                "label": "Fleets",
+                "href": "/fleets",
+                "icon": "truck"
+              },
+              {
+                "icon": "truck",
+                "label": "Vehicles",
+                "href": "/vehicles"
+              },
+              {
+                "label": "Drivers",
+                "icon": "user",
+                "href": "/drivers"
+              },
+              {
+                "label": "Telematics",
+                "icon": "activity",
+                "href": "/telematics"
+              }
+            ]
+          },
+          {
+            "key": "notificationClickEvent",
+            "type": "unknown",
+            "default": "FLEET_NOTIFICATIONS_OPEN"
+          },
+          {
+            "key": "notifications",
+            "type": "unknown",
+            "default": []
+          },
+          {
+            "key": "searchEvent",
+            "type": "unknown",
+            "default": "FLEET_SEARCH"
+          }
         ],
         "capabilities": []
       },
@@ -84,8 +129,16 @@
         "emittedEvents": [],
         "listenedEvents": [],
         "overridableConfigKeys": [
-          "event",
-          "placeholder"
+          {
+            "key": "event",
+            "type": "unknown",
+            "default": "FLEET_SEARCH"
+          },
+          {
+            "key": "placeholder",
+            "type": "unknown",
+            "default": "Search fleets…"
+          }
         ],
         "capabilities": []
       },
@@ -94,8 +147,28 @@
         "emittedEvents": [],
         "listenedEvents": [],
         "overridableConfigKeys": [
-          "event",
-          "filters"
+          {
+            "key": "event",
+            "type": "unknown",
+            "default": "FLEET_FILTER"
+          },
+          {
+            "key": "filters",
+            "type": "unknown",
+            "default": [
+              {
+                "label": "Status",
+                "field": "status",
+                "filterType": "select",
+                "options": [
+                  "active",
+                  "inactive",
+                  "merging",
+                  "archived"
+                ]
+              }
+            ]
+          }
         ],
         "capabilities": []
       },
@@ -106,8 +179,56 @@
           "BrowseItemLoaded"
         ],
         "overridableConfigKeys": [
-          "metrics",
-          "title"
+          {
+            "key": "metrics",
+            "type": "unknown",
+            "default": [
+              {
+                "format": "number",
+                "label": "Total",
+                "variant": "primary",
+                "aggregation": "count",
+                "icon": "truck"
+              },
+              {
+                "aggregation": "count",
+                "variant": "success",
+                "label": "Active",
+                "format": "number",
+                "icon": "check-circle",
+                "filter": [
+                  "fn",
+                  "row",
+                  [
+                    "=",
+                    "@row.status",
+                    "active"
+                  ]
+                ]
+              },
+              {
+                "format": "number",
+                "field": "vehicleCount",
+                "variant": "info",
+                "aggregation": "sum",
+                "label": "Vehicles",
+                "icon": "truck"
+              },
+              {
+                "label": "Drivers",
+                "field": "driverCount",
+                "format": "number",
+                "aggregation": "sum",
+                "icon": "users",
+                "variant": "info"
+              }
+            ]
+          },
+          {
+            "key": "title",
+            "type": "unknown",
+            "default": "Fleets"
+          }
         ],
         "capabilities": []
       },
@@ -118,13 +239,41 @@
           "BrowseItemLoaded"
         ],
         "overridableConfigKeys": [
-          "aggregation",
-          "categoryField",
-          "chartType",
-          "height",
-          "showLegend",
-          "subtitle",
-          "title"
+          {
+            "key": "aggregation",
+            "type": "unknown",
+            "default": "count"
+          },
+          {
+            "key": "categoryField",
+            "type": "unknown",
+            "default": "status"
+          },
+          {
+            "key": "chartType",
+            "type": "unknown",
+            "default": "bar"
+          },
+          {
+            "key": "height",
+            "type": "unknown",
+            "default": 240
+          },
+          {
+            "key": "showLegend",
+            "type": "unknown",
+            "default": false
+          },
+          {
+            "key": "subtitle",
+            "type": "unknown",
+            "default": "Operational composition across fleet statuses"
+          },
+          {
+            "key": "title",
+            "type": "unknown",
+            "default": "Fleets by Status"
+          }
         ],
         "capabilities": []
       },
@@ -139,10 +288,64 @@
           "FLEET_DELETED"
         ],
         "overridableConfigKeys": [
-          "cols",
-          "fields",
-          "gap",
-          "itemActions"
+          {
+            "key": "cols",
+            "type": "unknown",
+            "default": 1
+          },
+          {
+            "key": "fields",
+            "type": "unknown",
+            "default": [
+              {
+                "variant": "h3",
+                "name": "name",
+                "icon": "truck"
+              },
+              {
+                "name": "region",
+                "variant": "caption"
+              },
+              {
+                "name": "status",
+                "variant": "badge"
+              },
+              {
+                "name": "vehicleCount",
+                "variant": "caption"
+              },
+              {
+                "variant": "caption",
+                "name": "driverCount"
+              }
+            ]
+          },
+          {
+            "key": "gap",
+            "type": "unknown",
+            "default": "sm"
+          },
+          {
+            "key": "itemActions",
+            "type": "unknown",
+            "default": [
+              {
+                "label": "View",
+                "event": "VIEW",
+                "variant": "ghost"
+              },
+              {
+                "event": "EDIT",
+                "label": "Edit",
+                "variant": "ghost"
+              },
+              {
+                "label": "Delete",
+                "event": "DELETE",
+                "variant": "danger"
+              }
+            ]
+          }
         ],
         "capabilities": []
       },
@@ -153,10 +356,32 @@
           "CREATE"
         ],
         "overridableConfigKeys": [
-          "fields",
-          "icon",
-          "mode",
-          "title"
+          {
+            "key": "fields",
+            "type": "unknown",
+            "default": [
+              "name",
+              "description",
+              "region",
+              "status",
+              "managedBy"
+            ]
+          },
+          {
+            "key": "icon",
+            "type": "unknown",
+            "default": "plus-circle"
+          },
+          {
+            "key": "mode",
+            "type": "unknown",
+            "default": "create"
+          },
+          {
+            "key": "title",
+            "type": "unknown",
+            "default": "New Fleet"
+          }
         ],
         "capabilities": []
       },
@@ -167,10 +392,32 @@
           "EDIT"
         ],
         "overridableConfigKeys": [
-          "fields",
-          "icon",
-          "mode",
-          "title"
+          {
+            "key": "fields",
+            "type": "unknown",
+            "default": [
+              "name",
+              "description",
+              "region",
+              "status",
+              "managedBy"
+            ]
+          },
+          {
+            "key": "icon",
+            "type": "unknown",
+            "default": "edit"
+          },
+          {
+            "key": "mode",
+            "type": "unknown",
+            "default": "edit"
+          },
+          {
+            "key": "title",
+            "type": "unknown",
+            "default": "Edit Fleet"
+          }
         ],
         "capabilities": []
       },
@@ -181,10 +428,34 @@
           "VIEW"
         ],
         "overridableConfigKeys": [
-          "fields",
-          "icon",
-          "mode",
-          "title"
+          {
+            "key": "fields",
+            "type": "unknown",
+            "default": [
+              "name",
+              "description",
+              "region",
+              "status",
+              "managedBy",
+              "vehicleCount",
+              "driverCount"
+            ]
+          },
+          {
+            "key": "icon",
+            "type": "unknown",
+            "default": "eye"
+          },
+          {
+            "key": "mode",
+            "type": "unknown",
+            "default": "edit"
+          },
+          {
+            "key": "title",
+            "type": "unknown",
+            "default": "View Fleet"
+          }
         ],
         "capabilities": []
       },
@@ -195,10 +466,26 @@
           "DELETE"
         ],
         "overridableConfigKeys": [
-          "alertMessage",
-          "confirmLabel",
-          "icon",
-          "title"
+          {
+            "key": "alertMessage",
+            "type": "unknown",
+            "default": "This action cannot be undone."
+          },
+          {
+            "key": "confirmLabel",
+            "type": "unknown",
+            "default": "Delete"
+          },
+          {
+            "key": "icon",
+            "type": "unknown",
+            "default": "alert-triangle"
+          },
+          {
+            "key": "title",
+            "type": "unknown",
+            "default": "Delete Fleet"
+          }
         ],
         "capabilities": []
       },
@@ -322,12 +609,57 @@
         "emittedEvents": [],
         "listenedEvents": [],
         "overridableConfigKeys": [
-          "appName",
-          "contentTrait",
-          "navItems",
-          "notificationClickEvent",
-          "notifications",
-          "searchEvent"
+          {
+            "key": "appName",
+            "type": "unknown",
+            "default": "Fleet Management"
+          },
+          {
+            "key": "contentTrait",
+            "type": "unknown",
+            "default": "@trait.VehiclePanel"
+          },
+          {
+            "key": "navItems",
+            "type": "unknown",
+            "default": [
+              {
+                "icon": "truck",
+                "label": "Fleets",
+                "href": "/fleets"
+              },
+              {
+                "label": "Vehicles",
+                "href": "/vehicles",
+                "icon": "truck"
+              },
+              {
+                "label": "Drivers",
+                "icon": "user",
+                "href": "/drivers"
+              },
+              {
+                "label": "Telematics",
+                "href": "/telematics",
+                "icon": "activity"
+              }
+            ]
+          },
+          {
+            "key": "notificationClickEvent",
+            "type": "unknown",
+            "default": "VEHICLE_NOTIFICATIONS_OPEN"
+          },
+          {
+            "key": "notifications",
+            "type": "unknown",
+            "default": []
+          },
+          {
+            "key": "searchEvent",
+            "type": "unknown",
+            "default": "VEHICLE_SEARCH"
+          }
         ],
         "capabilities": []
       },
@@ -343,7 +675,11 @@
         "emittedEvents": [],
         "listenedEvents": [],
         "overridableConfigKeys": [
-          "title"
+          {
+            "key": "title",
+            "type": "unknown",
+            "default": "Fleet Vehicles"
+          }
         ],
         "capabilities": []
       }
@@ -427,12 +763,57 @@
         "emittedEvents": [],
         "listenedEvents": [],
         "overridableConfigKeys": [
-          "appName",
-          "contentTrait",
-          "navItems",
-          "notificationClickEvent",
-          "notifications",
-          "searchEvent"
+          {
+            "key": "appName",
+            "type": "unknown",
+            "default": "Fleet Management"
+          },
+          {
+            "key": "contentTrait",
+            "type": "unknown",
+            "default": "@trait.DriverPanel"
+          },
+          {
+            "key": "navItems",
+            "type": "unknown",
+            "default": [
+              {
+                "href": "/fleets",
+                "label": "Fleets",
+                "icon": "truck"
+              },
+              {
+                "label": "Vehicles",
+                "href": "/vehicles",
+                "icon": "truck"
+              },
+              {
+                "icon": "user",
+                "href": "/drivers",
+                "label": "Drivers"
+              },
+              {
+                "href": "/telematics",
+                "icon": "activity",
+                "label": "Telematics"
+              }
+            ]
+          },
+          {
+            "key": "notificationClickEvent",
+            "type": "unknown",
+            "default": "DRIVER_NOTIFICATIONS_OPEN"
+          },
+          {
+            "key": "notifications",
+            "type": "unknown",
+            "default": []
+          },
+          {
+            "key": "searchEvent",
+            "type": "unknown",
+            "default": "DRIVER_SEARCH"
+          }
         ],
         "capabilities": []
       },
@@ -448,7 +829,11 @@
         "emittedEvents": [],
         "listenedEvents": [],
         "overridableConfigKeys": [
-          "title"
+          {
+            "key": "title",
+            "type": "unknown",
+            "default": "Driver Roster"
+          }
         ],
         "capabilities": []
       }
@@ -532,12 +917,57 @@
         "emittedEvents": [],
         "listenedEvents": [],
         "overridableConfigKeys": [
-          "appName",
-          "contentTrait",
-          "navItems",
-          "notificationClickEvent",
-          "notifications",
-          "searchEvent"
+          {
+            "key": "appName",
+            "type": "unknown",
+            "default": "Fleet Management"
+          },
+          {
+            "key": "contentTrait",
+            "type": "unknown",
+            "default": "@trait.TelematicsEventPanel"
+          },
+          {
+            "key": "navItems",
+            "type": "unknown",
+            "default": [
+              {
+                "label": "Fleets",
+                "icon": "truck",
+                "href": "/fleets"
+              },
+              {
+                "href": "/vehicles",
+                "label": "Vehicles",
+                "icon": "truck"
+              },
+              {
+                "icon": "user",
+                "label": "Drivers",
+                "href": "/drivers"
+              },
+              {
+                "label": "Telematics",
+                "icon": "activity",
+                "href": "/telematics"
+              }
+            ]
+          },
+          {
+            "key": "notificationClickEvent",
+            "type": "unknown",
+            "default": "TELEMATICS_EVENT_NOTIFICATIONS_OPEN"
+          },
+          {
+            "key": "notifications",
+            "type": "unknown",
+            "default": []
+          },
+          {
+            "key": "searchEvent",
+            "type": "unknown",
+            "default": "TELEMATICS_EVENT_SEARCH"
+          }
         ],
         "capabilities": []
       },
@@ -553,7 +983,11 @@
         "emittedEvents": [],
         "listenedEvents": [],
         "overridableConfigKeys": [
-          "title"
+          {
+            "key": "title",
+            "type": "unknown",
+            "default": "Event Stream"
+          }
         ],
         "capabilities": []
       }

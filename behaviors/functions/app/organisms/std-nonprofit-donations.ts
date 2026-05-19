@@ -197,17 +197,16 @@ export function stdNonprofitDonationsCampaignOrbital(params: StdNonprofitDonatio
         'ref': 'AppShell.traits.AppLayout',
         'name': 'CampaignAppLayout',
         'config': {
-          'appName': 'Donations',
           'navItems': [
             {
+              'icon': 'target',
               'label': 'Campaigns',
               'href': '/campaigns',
-              'icon': 'target',
             },
             {
+              'label': 'Donors',
               'href': '/donors',
               'icon': 'heart-handshake',
-              'label': 'Donors',
             },
             {
               'href': '/goals',
@@ -220,10 +219,11 @@ export function stdNonprofitDonationsCampaignOrbital(params: StdNonprofitDonatio
               'href': '/receipts',
             },
           ],
+          'notificationClickEvent': 'CAMPAIGN_NOTIFICATIONS_OPEN',
           'contentTrait': '@trait.CampaignCatalog',
+          'appName': 'Donations',
           'notifications': [],
           'searchEvent': 'CAMPAIGN_SEARCH',
-          'notificationClickEvent': 'CAMPAIGN_NOTIFICATIONS_OPEN',
         },
         'events': {
           'NOTIFY_CLICK': 'CAMPAIGN_NOTIFICATIONS_OPEN',
@@ -310,61 +310,62 @@ export function stdNonprofitDonationsCampaignOrbital(params: StdNonprofitDonatio
                   'render-ui',
                   'main',
                   {
-                    'type': 'stack',
                     'direction': 'vertical',
+                    'type': 'stack',
+                    'gap': 'lg',
                     'children': [
                       {
-                        'justify': 'between',
                         'gap': 'md',
+                        'direction': 'horizontal',
+                        'type': 'stack',
+                        'justify': 'between',
                         'align': 'center',
                         'children': [
                           {
-                            'direction': 'horizontal',
+                            'gap': 'sm',
+                            'type': 'stack',
                             'align': 'center',
+                            'direction': 'horizontal',
                             'children': [
                               {
                                 'name': 'target',
                                 'type': 'icon',
                               },
                               {
-                                'type': 'typography',
                                 'content': 'Fundraising Campaigns',
                                 'variant': 'h2',
+                                'type': 'typography',
                               },
                             ],
-                            'type': 'stack',
-                            'gap': 'sm',
                           },
                           {
-                            'type': 'stack',
                             'direction': 'horizontal',
+                            'type': 'stack',
                             'gap': 'sm',
                             'children': [
                               {
-                                'icon': 'plus',
-                                'action': 'CREATE',
-                                'variant': 'primary',
                                 'type': 'button',
                                 'label': 'New Campaign',
+                                'action': 'CREATE',
+                                'icon': 'plus',
+                                'variant': 'primary',
                               },
                             ],
                           },
                         ],
-                        'type': 'stack',
-                        'direction': 'horizontal',
                       },
                       {
                         'type': 'divider',
                       },
                       {
-                        'direction': 'horizontal',
-                        'gap': 'md',
-                        'align': 'center',
-                        'type': 'stack',
                         'children': [
                           '@trait.CampaignSearch',
                           '@trait.CampaignFilter',
                         ],
+                        'type': 'stack',
+                        'direction': 'horizontal',
+                        'align': 'center',
+                        'gap': 'md',
                       },
                       '@trait.CampaignStats',
                       '@trait.CampaignGraphs',
@@ -373,7 +374,6 @@ export function stdNonprofitDonationsCampaignOrbital(params: StdNonprofitDonatio
                       },
                       '@trait.CampaignBrowseList',
                     ],
-                    'gap': 'lg',
                   },
                 ],
               ],
@@ -392,34 +392,34 @@ export function stdNonprofitDonationsCampaignOrbital(params: StdNonprofitDonatio
                   'render-ui',
                   'main',
                   {
-                    'type': 'stack',
-                    'gap': 'md',
-                    'align': 'center',
                     'direction': 'vertical',
+                    'align': 'center',
+                    'className': 'py-8',
                     'children': [
                       {
-                        'type': 'icon',
                         'name': 'bell',
+                        'type': 'icon',
                       },
                       {
-                        'content': 'No notifications',
+                        'type': 'typography',
                         'variant': 'h3',
-                        'type': 'typography',
+                        'content': 'No notifications',
                       },
                       {
-                        'variant': 'caption',
                         'type': 'typography',
+                        'variant': 'caption',
                         'content': 'You\'re all caught up.',
                         'color': 'muted',
                       },
                       {
-                        'type': 'button',
                         'action': 'INIT',
                         'label': 'Back to campaigns',
+                        'type': 'button',
                         'variant': 'ghost',
                       },
                     ],
-                    'className': 'py-8',
+                    'type': 'stack',
+                    'gap': 'md',
                   },
                 ],
               ],
@@ -444,14 +444,14 @@ export function stdNonprofitDonationsCampaignOrbital(params: StdNonprofitDonatio
           'filters': [
             {
               'filterType': 'select',
+              'field': 'status',
+              'label': 'Status',
               'options': [
                 'active',
                 'completed',
                 'paused',
                 'draft',
               ],
-              'label': 'Status',
-              'field': 'status',
             },
           ],
         },
@@ -464,17 +464,15 @@ export function stdNonprofitDonationsCampaignOrbital(params: StdNonprofitDonatio
           'metrics': [
             {
               'icon': 'target',
-              'variant': 'primary',
-              'aggregation': 'count',
               'label': 'Total',
+              'aggregation': 'count',
+              'variant': 'primary',
               'format': 'number',
             },
             {
-              'aggregation': 'count',
-              'label': 'Active',
-              'icon': 'zap',
               'variant': 'success',
-              'format': 'number',
+              'label': 'Active',
+              'aggregation': 'count',
               'filter': [
                 'fn',
                 'row',
@@ -484,21 +482,23 @@ export function stdNonprofitDonationsCampaignOrbital(params: StdNonprofitDonatio
                   'active',
                 ],
               ],
+              'icon': 'zap',
+              'format': 'number',
             },
             {
               'aggregation': 'sum',
-              'format': 'number',
               'variant': 'info',
-              'icon': 'flag',
               'field': 'goalAmount',
+              'icon': 'flag',
               'label': 'Goal',
+              'format': 'number',
             },
             {
-              'label': 'Raised',
-              'field': 'raisedAmount',
-              'aggregation': 'sum',
               'format': 'number',
+              'label': 'Raised',
               'variant': 'success',
+              'aggregation': 'sum',
+              'field': 'raisedAmount',
               'icon': 'trending-up',
             },
           ],
@@ -518,13 +518,13 @@ export function stdNonprofitDonationsCampaignOrbital(params: StdNonprofitDonatio
         'ref': 'Graphs.traits.GraphItemGraph',
         'name': 'CampaignGraphs',
         'config': {
-          'showLegend': false,
-          'aggregation': 'count',
-          'title': 'Campaigns by Status',
           'chartType': 'bar',
-          'categoryField': 'status',
-          'height': 240,
           'subtitle': 'Volume across campaign lifecycle',
+          'aggregation': 'count',
+          'height': 240,
+          'showLegend': false,
+          'categoryField': 'status',
+          'title': 'Campaigns by Status',
         },
         'listens': [
           {
@@ -544,28 +544,28 @@ export function stdNonprofitDonationsCampaignOrbital(params: StdNonprofitDonatio
         'config': {
           'fields': [
             {
-              'icon': 'target',
               'name': 'name',
+              'icon': 'target',
               'variant': 'h3',
             },
             {
-              'variant': 'badge',
               'name': 'status',
+              'variant': 'badge',
             },
             {
+              'variant': 'body',
+              'format': 'number',
               'name': 'goalAmount',
-              'variant': 'body',
-              'format': 'number',
             },
             {
-              'variant': 'body',
               'name': 'raisedAmount',
+              'variant': 'body',
               'format': 'number',
             },
             {
-              'variant': 'caption',
-              'format': 'date',
               'name': 'startDate',
+              'format': 'date',
+              'variant': 'caption',
             },
             {
               'variant': 'caption',
@@ -573,17 +573,16 @@ export function stdNonprofitDonationsCampaignOrbital(params: StdNonprofitDonatio
               'format': 'date',
             },
           ],
-          'gap': 'sm',
           'itemActions': [
             {
-              'variant': 'ghost',
-              'event': 'VIEW',
               'label': 'View',
+              'event': 'VIEW',
+              'variant': 'ghost',
             },
             {
-              'label': 'Edit',
               'variant': 'ghost',
               'event': 'EDIT',
+              'label': 'Edit',
             },
             {
               'event': 'DELETE',
@@ -591,6 +590,7 @@ export function stdNonprofitDonationsCampaignOrbital(params: StdNonprofitDonatio
               'label': 'Delete',
             },
           ],
+          'gap': 'sm',
           'cols': 1,
         },
         'listens': [
@@ -641,6 +641,8 @@ export function stdNonprofitDonationsCampaignOrbital(params: StdNonprofitDonatio
         'name': 'CampaignCreate',
         'linkedEntity': canonicalName,
         'config': {
+          'title': 'New Campaign',
+          'mode': 'create',
           'fields': [
             'name',
             'goalAmount',
@@ -649,9 +651,7 @@ export function stdNonprofitDonationsCampaignOrbital(params: StdNonprofitDonatio
             'startDate',
             'endDate',
           ],
-          'mode': 'create',
           'icon': 'plus-circle',
-          'title': 'New Campaign',
         },
         'events': {
           'OPEN': 'CREATE',
@@ -673,7 +673,7 @@ export function stdNonprofitDonationsCampaignOrbital(params: StdNonprofitDonatio
         'linkedEntity': canonicalName,
         'config': {
           'icon': 'edit',
-          'mode': 'edit',
+          'title': 'Edit Campaign',
           'fields': [
             'name',
             'goalAmount',
@@ -682,7 +682,7 @@ export function stdNonprofitDonationsCampaignOrbital(params: StdNonprofitDonatio
             'startDate',
             'endDate',
           ],
-          'title': 'Edit Campaign',
+          'mode': 'edit',
         },
         'events': {
           'OPEN': 'EDIT',
@@ -703,7 +703,6 @@ export function stdNonprofitDonationsCampaignOrbital(params: StdNonprofitDonatio
         'name': 'CampaignView',
         'linkedEntity': canonicalName,
         'config': {
-          'title': 'View Campaign',
           'mode': 'edit',
           'fields': [
             'name',
@@ -714,6 +713,7 @@ export function stdNonprofitDonationsCampaignOrbital(params: StdNonprofitDonatio
             'endDate',
           ],
           'icon': 'eye',
+          'title': 'View Campaign',
         },
         'events': {
           'OPEN': 'VIEW',
@@ -735,8 +735,8 @@ export function stdNonprofitDonationsCampaignOrbital(params: StdNonprofitDonatio
         'linkedEntity': canonicalName,
         'config': {
           'confirmLabel': 'Delete',
-          'icon': 'alert-triangle',
           'title': 'Delete Campaign',
+          'icon': 'alert-triangle',
           'alertMessage': 'This action cannot be undone.',
         },
         'events': {

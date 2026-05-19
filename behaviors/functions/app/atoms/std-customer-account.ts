@@ -94,12 +94,12 @@ export interface StdCustomerAccountCustomerAccountLoadFailedPayload {
  * without modifying its state-machine topology.
  */
 export interface StdCustomerAccountConfig {
-  /** Default: `[{"variant":"primary","label":"Open","icon":"arrow-right","event":"OPEN_CUSTOMER"},{"variant":"danger","label":"Ban","event":"BAN_CUSTOMER"}]` */
+  /** Default: `[{"variant":"caption","name":"name","label":"Name"},{"name":"email","variant":"caption","label":"Email"},{"variant":"caption","label":"Phone","name":"phone"},{"name":"loyaltyPoints","label":"Points","variant":"caption"},{"name":"totalSpent","label":"Total Spent","variant":"caption"},{"name":"status","label":"Status","variant":"badge"}]` */
+  fields?: TraitConfig[];
+  /** Default: `[{"variant":"primary","icon":"arrow-right","label":"Open","event":"OPEN_CUSTOMER"},{"variant":"danger","label":"Ban","event":"BAN_CUSTOMER"}]` */
   itemActions?: TraitConfig[];
   /** Default: `"Customers"` */
   title?: string;
-  /** Default: `[{"variant":"caption","label":"Name","name":"name"},{"variant":"caption","label":"Email","name":"email"},{"name":"phone","label":"Phone","variant":"caption"},{"variant":"caption","name":"loyaltyPoints","label":"Points"},{"name":"totalSpent","label":"Total Spent","variant":"caption"},{"variant":"badge","name":"status","label":"Status"}]` */
-  fields?: TraitConfig[];
 }
 
 /**

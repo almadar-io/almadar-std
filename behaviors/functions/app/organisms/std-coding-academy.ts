@@ -325,22 +325,22 @@ export function stdCodingAcademySeqChallengeOrbital(params: StdCodingAcademySeqC
                   'render-ui',
                   'main',
                   {
+                    'type': 'game-shell',
+                    'appName': 'Coding Academy',
+                    'showTopBar': true,
                     'children': [
                       {
                         'type': 'game-menu',
                         'title': 'Sequencer Challenge',
                         'menuItems': [
                           {
-                            'label': 'Start',
                             'variant': 'primary',
+                            'label': 'Start',
                             'event': 'START',
                           },
                         ],
                       },
                     ],
-                    'type': 'game-shell',
-                    'appName': 'Coding Academy',
-                    'showTopBar': true,
                   },
                 ],
               ],
@@ -354,14 +354,10 @@ export function stdCodingAcademySeqChallengeOrbital(params: StdCodingAcademySeqC
                   'render-ui',
                   'main',
                   {
-                    'appName': 'Coding Academy',
-                    'type': 'game-shell',
-                    'showTopBar': true,
                     'children': [
                       {
                         'type': 'stack',
                         'direction': 'vertical',
-                        'gap': 'md',
                         'children': [
                           {
                             'type': 'game-hud',
@@ -371,8 +367,8 @@ export function stdCodingAcademySeqChallengeOrbital(params: StdCodingAcademySeqC
                                 'label': 'Score',
                               },
                               {
-                                'label': 'Level',
                                 'value': '@entity.level',
+                                'label': 'Level',
                               },
                             ],
                           },
@@ -381,36 +377,40 @@ export function stdCodingAcademySeqChallengeOrbital(params: StdCodingAcademySeqC
                             'type': 'card',
                             'children': [
                               {
+                                'type': 'stack',
+                                'align': 'center',
                                 'children': [
                                   {
+                                    'variant': 'h3',
                                     'content': 'Sequencer Challenge',
                                     'type': 'typography',
-                                    'variant': 'h3',
                                   },
                                   {
-                                    'variant': 'body',
-                                    'content': 'Arrange the action blocks in the correct order.',
                                     'type': 'typography',
+                                    'content': 'Arrange the action blocks in the correct order.',
                                     'color': 'muted',
+                                    'variant': 'body',
                                   },
                                   {
-                                    'type': 'button',
-                                    'variant': 'primary',
-                                    'action': 'COMPLETE',
                                     'label': 'Complete',
+                                    'action': 'COMPLETE',
                                     'icon': 'check',
+                                    'variant': 'primary',
+                                    'type': 'button',
                                   },
                                 ],
-                                'direction': 'vertical',
-                                'align': 'center',
-                                'type': 'stack',
                                 'gap': 'md',
+                                'direction': 'vertical',
                               },
                             ],
                           },
                         ],
+                        'gap': 'md',
                       },
                     ],
+                    'appName': 'Coding Academy',
+                    'showTopBar': true,
+                    'type': 'game-shell',
                   },
                 ],
               ],
@@ -429,22 +429,22 @@ export function stdCodingAcademySeqChallengeOrbital(params: StdCodingAcademySeqC
                   'render-ui',
                   'main',
                   {
-                    'showTopBar': true,
-                    'appName': 'Coding Academy',
-                    'type': 'game-shell',
                     'children': [
                       {
                         'menuItems': [
                           {
-                            'event': 'RESTART',
-                            'variant': 'primary',
                             'label': 'Play Again',
+                            'variant': 'primary',
+                            'event': 'RESTART',
                           },
                         ],
                         'type': 'game-over-screen',
                         'title': 'Well Done!',
                       },
                     ],
+                    'appName': 'Coding Academy',
+                    'showTopBar': true,
+                    'type': 'game-shell',
                   },
                 ],
               ],
@@ -459,11 +459,9 @@ export function stdCodingAcademySeqChallengeOrbital(params: StdCodingAcademySeqC
                   'main',
                   {
                     'type': 'game-shell',
-                    'appName': 'Coding Academy',
                     'showTopBar': true,
                     'children': [
                       {
-                        'type': 'game-menu',
                         'title': 'Sequencer Challenge',
                         'menuItems': [
                           {
@@ -472,8 +470,10 @@ export function stdCodingAcademySeqChallengeOrbital(params: StdCodingAcademySeqC
                             'variant': 'primary',
                           },
                         ],
+                        'type': 'game-menu',
                       },
                     ],
+                    'appName': 'Coding Academy',
                   },
                 ],
               ],
@@ -487,9 +487,9 @@ export function stdCodingAcademySeqChallengeOrbital(params: StdCodingAcademySeqC
         'name': 'SeqLessonVideo',
         'config': {
           'videoId': '@entity.videoId',
+          'autoplay': false,
           'controls': true,
           'uiTrait': '@trait.SeqLessonPlayer',
-          'autoplay': false,
         },
       }),
       rebindInlineTraitEntity({
@@ -521,25 +521,25 @@ export function stdCodingAcademySeqChallengeOrbital(params: StdCodingAcademySeqC
                     'type': 'card',
                     'children': [
                       {
-                        'type': 'stack',
                         'gap': 'sm',
+                        'type': 'stack',
                         'direction': 'vertical',
                         'align': 'center',
                         'children': [
                           {
-                            'name': 'video',
                             'type': 'icon',
+                            'name': 'video',
                           },
                           {
-                            'color': 'muted',
                             'variant': 'caption',
-                            'type': 'typography',
                             'content': 'Lesson video',
+                            'type': 'typography',
+                            'color': 'muted',
                           },
                           {
-                            'type': 'typography',
                             'variant': 'body',
                             'content': '@config.videoId',
+                            'type': 'typography',
                           },
                         ],
                       },
@@ -562,13 +562,13 @@ export function stdCodingAcademySeqChallengeOrbital(params: StdCodingAcademySeqC
         'ref': 'Storage.traits.ServiceStorageStorage',
         'name': 'SeqProgressStorage',
         'config': {
-          'acl': 'private',
-          'uiTrait': '@trait.SeqProgressForm',
+          'bucket': 'coding-academy-progress',
           'allowedMimeTypes': [
             'application/json',
           ],
+          'acl': 'private',
           'maxSize': 102400,
-          'bucket': 'coding-academy-progress',
+          'uiTrait': '@trait.SeqProgressForm',
         },
         'listens': [
           {
@@ -627,21 +627,21 @@ export function stdCodingAcademySeqChallengeOrbital(params: StdCodingAcademySeqC
                   'render-ui',
                   'main',
                   {
-                    'align': 'center',
-                    'type': 'stack',
-                    'gap': 'sm',
                     'direction': 'horizontal',
+                    'gap': 'sm',
+                    'type': 'stack',
+                    'align': 'center',
                     'children': [
                       {
-                        'name': 'save',
                         'type': 'icon',
+                        'name': 'save',
                       },
                       {
-                        'action': 'UPLOAD',
-                        'type': 'button',
-                        'variant': 'ghost',
                         'icon': 'save',
+                        'type': 'button',
                         'label': 'Save Progress',
+                        'action': 'UPLOAD',
+                        'variant': 'ghost',
                       },
                     ],
                   },
@@ -995,8 +995,8 @@ export function stdCodingAcademyBuildChallengeOrbital(params: StdCodingAcademyBu
                   'BuildChallenge',
                   {
                     'emit': {
-                      'failure': 'BuildChallengeLoadFailed',
                       'success': 'BuildChallengeLoaded',
+                      'failure': 'BuildChallengeLoadFailed',
                     },
                   },
                 ],
@@ -1004,20 +1004,20 @@ export function stdCodingAcademyBuildChallengeOrbital(params: StdCodingAcademyBu
                   'render-ui',
                   'main',
                   {
-                    'showTopBar': true,
                     'type': 'game-shell',
                     'appName': 'Coding Academy',
+                    'showTopBar': true,
                     'children': [
                       {
+                        'type': 'game-menu',
+                        'title': 'Builder Challenge',
                         'menuItems': [
                           {
-                            'variant': 'primary',
-                            'label': 'Start',
                             'event': 'START',
+                            'label': 'Start',
+                            'variant': 'primary',
                           },
                         ],
-                        'title': 'Builder Challenge',
-                        'type': 'game-menu',
                       },
                     ],
                   },
@@ -1033,24 +1033,24 @@ export function stdCodingAcademyBuildChallengeOrbital(params: StdCodingAcademyBu
                   'render-ui',
                   'main',
                   {
-                    'type': 'game-shell',
                     'showTopBar': true,
                     'appName': 'Coding Academy',
+                    'type': 'game-shell',
                     'children': [
                       {
+                        'type': 'stack',
                         'gap': 'md',
-                        'direction': 'vertical',
                         'children': [
                           {
                             'type': 'game-hud',
                             'stats': [
                               {
-                                'label': 'Score',
                                 'value': '@entity.score',
+                                'label': 'Score',
                               },
                               {
-                                'value': '@entity.level',
                                 'label': 'Level',
+                                'value': '@entity.level',
                               },
                             ],
                           },
@@ -1058,35 +1058,35 @@ export function stdCodingAcademyBuildChallengeOrbital(params: StdCodingAcademyBu
                             'type': 'card',
                             'children': [
                               {
-                                'type': 'stack',
+                                'direction': 'vertical',
                                 'gap': 'md',
+                                'align': 'center',
                                 'children': [
                                   {
+                                    'type': 'typography',
                                     'variant': 'h3',
                                     'content': 'Builder Challenge',
-                                    'type': 'typography',
                                   },
                                   {
-                                    'type': 'typography',
-                                    'variant': 'body',
                                     'content': 'Drag components into the slots to build the solution.',
                                     'color': 'muted',
+                                    'type': 'typography',
+                                    'variant': 'body',
                                   },
                                   {
                                     'type': 'button',
-                                    'variant': 'primary',
                                     'label': 'Complete',
-                                    'icon': 'check',
                                     'action': 'COMPLETE',
+                                    'variant': 'primary',
+                                    'icon': 'check',
                                   },
                                 ],
-                                'align': 'center',
-                                'direction': 'vertical',
+                                'type': 'stack',
                               },
                             ],
                           },
                         ],
-                        'type': 'stack',
+                        'direction': 'vertical',
                       },
                     ],
                   },
@@ -1107,9 +1107,6 @@ export function stdCodingAcademyBuildChallengeOrbital(params: StdCodingAcademyBu
                   'render-ui',
                   'main',
                   {
-                    'showTopBar': true,
-                    'appName': 'Coding Academy',
-                    'type': 'game-shell',
                     'children': [
                       {
                         'menuItems': [
@@ -1119,10 +1116,13 @@ export function stdCodingAcademyBuildChallengeOrbital(params: StdCodingAcademyBu
                             'label': 'Play Again',
                           },
                         ],
-                        'type': 'game-over-screen',
                         'title': 'Well Done!',
+                        'type': 'game-over-screen',
                       },
                     ],
+                    'showTopBar': true,
+                    'type': 'game-shell',
+                    'appName': 'Coding Academy',
                   },
                 ],
               ],
@@ -1137,21 +1137,21 @@ export function stdCodingAcademyBuildChallengeOrbital(params: StdCodingAcademyBu
                   'main',
                   {
                     'type': 'game-shell',
+                    'appName': 'Coding Academy',
+                    'showTopBar': true,
                     'children': [
                       {
                         'type': 'game-menu',
-                        'title': 'Builder Challenge',
                         'menuItems': [
                           {
                             'label': 'Start',
-                            'variant': 'primary',
                             'event': 'START',
+                            'variant': 'primary',
                           },
                         ],
+                        'title': 'Builder Challenge',
                       },
                     ],
-                    'appName': 'Coding Academy',
-                    'showTopBar': true,
                   },
                 ],
               ],
@@ -1496,22 +1496,22 @@ export function stdCodingAcademyEventChallengeOrbital(params: StdCodingAcademyEv
                   'render-ui',
                   'main',
                   {
-                    'showTopBar': true,
-                    'type': 'game-shell',
                     'children': [
                       {
+                        'title': 'Event Handler Challenge',
                         'type': 'game-menu',
                         'menuItems': [
                           {
+                            'label': 'Start',
                             'event': 'START',
                             'variant': 'primary',
-                            'label': 'Start',
                           },
                         ],
-                        'title': 'Event Handler Challenge',
                       },
                     ],
+                    'type': 'game-shell',
                     'appName': 'Coding Academy',
+                    'showTopBar': true,
                   },
                 ],
               ],
@@ -1525,16 +1525,16 @@ export function stdCodingAcademyEventChallengeOrbital(params: StdCodingAcademyEv
                   'render-ui',
                   'main',
                   {
-                    'appName': 'Coding Academy',
+                    'showTopBar': true,
                     'children': [
                       {
-                        'direction': 'vertical',
+                        'type': 'stack',
                         'children': [
                           {
                             'stats': [
                               {
-                                'label': 'Score',
                                 'value': '@entity.score',
+                                'label': 'Score',
                               },
                               {
                                 'label': 'Level',
@@ -1546,41 +1546,41 @@ export function stdCodingAcademyEventChallengeOrbital(params: StdCodingAcademyEv
                           {
                             'children': [
                               {
-                                'align': 'center',
                                 'gap': 'md',
-                                'direction': 'vertical',
-                                'type': 'stack',
+                                'align': 'center',
                                 'children': [
                                   {
                                     'type': 'typography',
-                                    'content': 'Event Handler Challenge',
                                     'variant': 'h3',
+                                    'content': 'Event Handler Challenge',
                                   },
                                   {
-                                    'type': 'typography',
+                                    'content': 'Wire the event handlers to fire on the right triggers.',
                                     'color': 'muted',
                                     'variant': 'body',
-                                    'content': 'Wire the event handlers to fire on the right triggers.',
+                                    'type': 'typography',
                                   },
                                   {
                                     'type': 'button',
-                                    'icon': 'check',
                                     'action': 'COMPLETE',
-                                    'label': 'Complete',
                                     'variant': 'primary',
+                                    'icon': 'check',
+                                    'label': 'Complete',
                                   },
                                 ],
+                                'type': 'stack',
+                                'direction': 'vertical',
                               },
                             ],
                             'type': 'card',
                           },
                         ],
-                        'type': 'stack',
+                        'direction': 'vertical',
                         'gap': 'md',
                       },
                     ],
+                    'appName': 'Coding Academy',
                     'type': 'game-shell',
-                    'showTopBar': true,
                   },
                 ],
               ],
@@ -1599,22 +1599,22 @@ export function stdCodingAcademyEventChallengeOrbital(params: StdCodingAcademyEv
                   'render-ui',
                   'main',
                   {
-                    'showTopBar': true,
+                    'appName': 'Coding Academy',
                     'children': [
                       {
-                        'title': 'Well Done!',
-                        'type': 'game-over-screen',
                         'menuItems': [
                           {
-                            'event': 'RESTART',
                             'label': 'Play Again',
+                            'event': 'RESTART',
                             'variant': 'primary',
                           },
                         ],
+                        'type': 'game-over-screen',
+                        'title': 'Well Done!',
                       },
                     ],
-                    'appName': 'Coding Academy',
                     'type': 'game-shell',
+                    'showTopBar': true,
                   },
                 ],
               ],
@@ -1628,22 +1628,22 @@ export function stdCodingAcademyEventChallengeOrbital(params: StdCodingAcademyEv
                   'render-ui',
                   'main',
                   {
+                    'appName': 'Coding Academy',
+                    'type': 'game-shell',
+                    'showTopBar': true,
                     'children': [
                       {
                         'type': 'game-menu',
                         'title': 'Event Handler Challenge',
                         'menuItems': [
                           {
+                            'event': 'START',
                             'label': 'Start',
                             'variant': 'primary',
-                            'event': 'START',
                           },
                         ],
                       },
                     ],
-                    'showTopBar': true,
-                    'type': 'game-shell',
-                    'appName': 'Coding Academy',
                   },
                 ],
               ],
@@ -1878,16 +1878,11 @@ export function stdCodingAcademyStudentProgressOrbital(params: StdCodingAcademyS
         'ref': 'AppShell.traits.AppLayout',
         'name': 'StudentProgressAppLayout',
         'config': {
-          'notificationClickEvent': 'STUDENT_PROGRESS_NOTIFICATIONS_OPEN',
-          'notifications': [],
-          'contentTrait': '@trait.StudentProgressCatalog',
-          'searchEvent': 'STUDENT_PROGRESS_SEARCH',
-          'appName': 'Coding Academy',
           'navItems': [
             {
               'label': 'Sequencer',
-              'href': '/sequencer',
               'icon': 'list-ordered',
+              'href': '/sequencer',
             },
             {
               'icon': 'wrench',
@@ -1900,11 +1895,16 @@ export function stdCodingAcademyStudentProgressOrbital(params: StdCodingAcademyS
               'icon': 'zap',
             },
             {
-              'icon': 'trending-up',
               'label': 'Progress',
               'href': '/progress',
+              'icon': 'trending-up',
             },
           ],
+          'notifications': [],
+          'contentTrait': '@trait.StudentProgressCatalog',
+          'appName': 'Coding Academy',
+          'notificationClickEvent': 'STUDENT_PROGRESS_NOTIFICATIONS_OPEN',
+          'searchEvent': 'STUDENT_PROGRESS_SEARCH',
         },
         'events': {
           'SEARCH': 'STUDENT_PROGRESS_SEARCH',
@@ -1975,23 +1975,20 @@ export function stdCodingAcademyStudentProgressOrbital(params: StdCodingAcademyS
                   'render-ui',
                   'main',
                   {
-                    'gap': 'lg',
-                    'direction': 'vertical',
                     'type': 'stack',
                     'children': [
                       {
-                        'direction': 'horizontal',
                         'gap': 'md',
                         'align': 'center',
-                        'type': 'stack',
                         'justify': 'between',
+                        'type': 'stack',
+                        'direction': 'horizontal',
                         'children': [
                           {
-                            'direction': 'horizontal',
                             'children': [
                               {
-                                'name': 'trending-up',
                                 'type': 'icon',
+                                'name': 'trending-up',
                               },
                               {
                                 'variant': 'h2',
@@ -1999,9 +1996,10 @@ export function stdCodingAcademyStudentProgressOrbital(params: StdCodingAcademyS
                                 'content': 'Progress',
                               },
                             ],
+                            'direction': 'horizontal',
                             'gap': 'sm',
-                            'align': 'center',
                             'type': 'stack',
+                            'align': 'center',
                           },
                         ],
                       },
@@ -2015,6 +2013,8 @@ export function stdCodingAcademyStudentProgressOrbital(params: StdCodingAcademyS
                       },
                       '@trait.StudentProgressBrowseList',
                     ],
+                    'gap': 'lg',
+                    'direction': 'vertical',
                   },
                 ],
               ],
@@ -2033,34 +2033,34 @@ export function stdCodingAcademyStudentProgressOrbital(params: StdCodingAcademyS
                   'render-ui',
                   'main',
                   {
-                    'align': 'center',
-                    'gap': 'md',
                     'className': 'py-8',
                     'children': [
                       {
-                        'type': 'icon',
                         'name': 'bell',
+                        'type': 'icon',
                       },
                       {
+                        'content': 'No notifications',
                         'variant': 'h3',
                         'type': 'typography',
-                        'content': 'No notifications',
                       },
                       {
                         'color': 'muted',
-                        'content': 'You\'re all caught up.',
-                        'type': 'typography',
                         'variant': 'caption',
+                        'type': 'typography',
+                        'content': 'You\'re all caught up.',
                       },
                       {
-                        'label': 'Back to progress',
                         'type': 'button',
-                        'variant': 'ghost',
+                        'label': 'Back to progress',
                         'action': 'INIT',
+                        'variant': 'ghost',
                       },
                     ],
-                    'type': 'stack',
+                    'gap': 'md',
+                    'align': 'center',
                     'direction': 'vertical',
+                    'type': 'stack',
                   },
                 ],
               ],
@@ -2076,36 +2076,36 @@ export function stdCodingAcademyStudentProgressOrbital(params: StdCodingAcademyS
           'title': 'Student Progress',
           'metrics': [
             {
-              'variant': 'success',
-              'format': 'number',
-              'field': 'lessonsCompleted',
-              'aggregation': 'sum',
               'label': 'Lessons Completed',
+              'aggregation': 'sum',
+              'format': 'number',
+              'variant': 'success',
               'icon': 'check-circle',
+              'field': 'lessonsCompleted',
             },
             {
               'label': 'Average Score',
-              'aggregation': 'avg',
-              'variant': 'primary',
               'field': 'avgScore',
-              'format': 'number',
               'icon': 'star',
+              'variant': 'primary',
+              'format': 'number',
+              'aggregation': 'avg',
             },
             {
-              'suffix': 'd',
-              'field': 'streak',
-              'aggregation': 'max',
+              'icon': 'flame',
               'label': 'Streak',
+              'aggregation': 'max',
+              'field': 'streak',
               'format': 'number',
               'variant': 'warning',
-              'icon': 'flame',
+              'suffix': 'd',
             },
             {
-              'aggregation': 'sum',
-              'format': 'number',
               'icon': 'clock',
-              'label': 'Total Time',
+              'format': 'number',
               'field': 'totalTimeMinutes',
+              'aggregation': 'sum',
+              'label': 'Total Time',
               'variant': 'info',
               'suffix': 'm',
             },
@@ -2126,13 +2126,13 @@ export function stdCodingAcademyStudentProgressOrbital(params: StdCodingAcademyS
         'ref': 'Graphs.traits.GraphItemGraph',
         'name': 'StudentProgressGraphs',
         'config': {
-          'title': 'Progress over time',
           'dateField': 'day',
-          'height': 280,
-          'valueField': 'progressPct',
           'showLegend': true,
-          'subtitle': 'Daily progress %',
+          'title': 'Progress over time',
           'chartType': 'line',
+          'valueField': 'progressPct',
+          'height': 280,
+          'subtitle': 'Daily progress %',
         },
         'listens': [
           {
@@ -2150,54 +2150,54 @@ export function stdCodingAcademyStudentProgressOrbital(params: StdCodingAcademyS
         'name': 'StudentProgressBrowseList',
         'linkedEntity': canonicalName,
         'config': {
+          'cols': 1,
           'itemActions': [
             {
-              'label': 'View',
               'event': 'VIEW',
               'variant': 'ghost',
+              'label': 'View',
             },
             {
-              'variant': 'ghost',
-              'label': 'Edit',
               'event': 'EDIT',
+              'label': 'Edit',
+              'variant': 'ghost',
             },
             {
+              'label': 'Delete',
               'variant': 'danger',
               'event': 'DELETE',
-              'label': 'Delete',
             },
           ],
+          'gap': 'sm',
           'fields': [
             {
-              'label': 'Student',
-              'icon': 'user',
               'name': 'student',
               'variant': 'h4',
+              'icon': 'user',
+              'label': 'Student',
             },
             {
-              'label': 'Lessons Completed',
-              'variant': 'body',
               'name': 'lessonsCompleted',
+              'variant': 'body',
+              'label': 'Lessons Completed',
             },
             {
-              'label': 'Avg Score',
               'name': 'avgScore',
               'variant': 'badge',
+              'label': 'Avg Score',
             },
             {
-              'label': 'Streak',
               'variant': 'body',
               'name': 'streak',
+              'label': 'Streak',
             },
             {
-              'name': 'lastActiveAt',
-              'label': 'Last Active',
               'variant': 'caption',
               'format': 'date',
+              'label': 'Last Active',
+              'name': 'lastActiveAt',
             },
           ],
-          'cols': 1,
-          'gap': 'sm',
         },
         'listens': [
           {
@@ -2223,9 +2223,8 @@ export function stdCodingAcademyStudentProgressOrbital(params: StdCodingAcademyS
         'name': 'StudentProgressView',
         'linkedEntity': canonicalName,
         'config': {
-          'icon': 'eye',
-          'title': 'View Progress',
           'mode': 'edit',
+          'icon': 'eye',
           'fields': [
             'student',
             'lessonsCompleted',
@@ -2235,6 +2234,7 @@ export function stdCodingAcademyStudentProgressOrbital(params: StdCodingAcademyS
             'progressPct',
             'lastActiveAt',
           ],
+          'title': 'View Progress',
         },
         'events': {
           'OPEN': 'VIEW',
@@ -2255,9 +2255,6 @@ export function stdCodingAcademyStudentProgressOrbital(params: StdCodingAcademyS
         'name': 'StudentProgressEdit',
         'linkedEntity': canonicalName,
         'config': {
-          'title': 'Edit Progress',
-          'mode': 'edit',
-          'icon': 'edit',
           'fields': [
             'student',
             'lessonsCompleted',
@@ -2267,6 +2264,9 @@ export function stdCodingAcademyStudentProgressOrbital(params: StdCodingAcademyS
             'progressPct',
             'lastActiveAt',
           ],
+          'title': 'Edit Progress',
+          'icon': 'edit',
+          'mode': 'edit',
         },
         'events': {
           'OPEN': 'EDIT',
@@ -2287,10 +2287,10 @@ export function stdCodingAcademyStudentProgressOrbital(params: StdCodingAcademyS
         'name': 'StudentProgressDelete',
         'linkedEntity': canonicalName,
         'config': {
-          'icon': 'alert-triangle',
-          'title': 'Delete Progress',
           'alertMessage': 'This action cannot be undone.',
+          'icon': 'alert-triangle',
           'confirmLabel': 'Delete',
+          'title': 'Delete Progress',
         },
         'events': {
           'CONFIRM': 'CONFIRM_DELETE',

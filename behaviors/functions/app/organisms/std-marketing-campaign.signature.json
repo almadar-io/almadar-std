@@ -68,12 +68,62 @@
         "emittedEvents": [],
         "listenedEvents": [],
         "overridableConfigKeys": [
-          "appName",
-          "contentTrait",
-          "navItems",
-          "notificationClickEvent",
-          "notifications",
-          "searchEvent"
+          {
+            "key": "appName",
+            "type": "unknown",
+            "default": "Marketing"
+          },
+          {
+            "key": "contentTrait",
+            "type": "unknown",
+            "default": "@trait.CampaignCatalog"
+          },
+          {
+            "key": "navItems",
+            "type": "unknown",
+            "default": [
+              {
+                "href": "/campaigns",
+                "label": "Campaigns",
+                "icon": "megaphone"
+              },
+              {
+                "label": "Broadcasts",
+                "href": "/broadcasts",
+                "icon": "send"
+              },
+              {
+                "icon": "users",
+                "href": "/segments",
+                "label": "Segments"
+              },
+              {
+                "icon": "mail",
+                "label": "Sequences",
+                "href": "/sequences"
+              },
+              {
+                "icon": "file-text",
+                "href": "/templates",
+                "label": "Templates"
+              }
+            ]
+          },
+          {
+            "key": "notificationClickEvent",
+            "type": "unknown",
+            "default": "CAMPAIGN_NOTIFICATIONS_OPEN"
+          },
+          {
+            "key": "notifications",
+            "type": "unknown",
+            "default": []
+          },
+          {
+            "key": "searchEvent",
+            "type": "unknown",
+            "default": "CAMPAIGN_SEARCH"
+          }
         ],
         "capabilities": []
       },
@@ -94,8 +144,16 @@
         "emittedEvents": [],
         "listenedEvents": [],
         "overridableConfigKeys": [
-          "event",
-          "placeholder"
+          {
+            "key": "event",
+            "type": "unknown",
+            "default": "CAMPAIGN_SEARCH"
+          },
+          {
+            "key": "placeholder",
+            "type": "unknown",
+            "default": "Search campaigns…"
+          }
         ],
         "capabilities": []
       },
@@ -104,8 +162,40 @@
         "emittedEvents": [],
         "listenedEvents": [],
         "overridableConfigKeys": [
-          "event",
-          "filters"
+          {
+            "key": "event",
+            "type": "unknown",
+            "default": "CAMPAIGN_FILTER"
+          },
+          {
+            "key": "filters",
+            "type": "unknown",
+            "default": [
+              {
+                "label": "Channel",
+                "field": "channel",
+                "options": [
+                  "email",
+                  "sms",
+                  "push",
+                  "mixed"
+                ],
+                "filterType": "select"
+              },
+              {
+                "label": "Status",
+                "options": [
+                  "draft",
+                  "scheduled",
+                  "sending",
+                  "sent",
+                  "paused"
+                ],
+                "field": "status",
+                "filterType": "select"
+              }
+            ]
+          }
         ],
         "capabilities": []
       },
@@ -116,8 +206,65 @@
           "CampaignLoaded"
         ],
         "overridableConfigKeys": [
-          "metrics",
-          "title"
+          {
+            "key": "metrics",
+            "type": "unknown",
+            "default": [
+              {
+                "format": "number",
+                "icon": "megaphone",
+                "variant": "primary",
+                "aggregation": "count",
+                "label": "Total"
+              },
+              {
+                "filter": [
+                  "fn",
+                  "row",
+                  [
+                    "=",
+                    "@row.status",
+                    "scheduled"
+                  ]
+                ],
+                "icon": "clock",
+                "variant": "info",
+                "aggregation": "count",
+                "label": "Scheduled",
+                "format": "number"
+              },
+              {
+                "format": "number",
+                "label": "Sent",
+                "variant": "success",
+                "aggregation": "count",
+                "icon": "check-circle",
+                "filter": [
+                  "fn",
+                  "row",
+                  [
+                    "=",
+                    "@row.status",
+                    "sent"
+                  ]
+                ]
+              },
+              {
+                "aggregation": "avg",
+                "label": "Open Rate",
+                "field": "openRate",
+                "icon": "eye",
+                "variant": "warning",
+                "format": "number",
+                "suffix": "%"
+              }
+            ]
+          },
+          {
+            "key": "title",
+            "type": "unknown",
+            "default": "Campaigns"
+          }
         ],
         "capabilities": []
       },
@@ -128,13 +275,41 @@
           "CampaignLoaded"
         ],
         "overridableConfigKeys": [
-          "aggregation",
-          "categoryField",
-          "chartType",
-          "height",
-          "showLegend",
-          "subtitle",
-          "title"
+          {
+            "key": "aggregation",
+            "type": "unknown",
+            "default": "count"
+          },
+          {
+            "key": "categoryField",
+            "type": "unknown",
+            "default": "channel"
+          },
+          {
+            "key": "chartType",
+            "type": "unknown",
+            "default": "bar"
+          },
+          {
+            "key": "height",
+            "type": "unknown",
+            "default": 240
+          },
+          {
+            "key": "showLegend",
+            "type": "unknown",
+            "default": false
+          },
+          {
+            "key": "subtitle",
+            "type": "unknown",
+            "default": "Volume across channels"
+          },
+          {
+            "key": "title",
+            "type": "unknown",
+            "default": "Campaigns by Channel"
+          }
         ],
         "capabilities": []
       },
@@ -164,10 +339,32 @@
           "CREATE"
         ],
         "overridableConfigKeys": [
-          "fields",
-          "icon",
-          "mode",
-          "title"
+          {
+            "key": "fields",
+            "type": "unknown",
+            "default": [
+              "name",
+              "description",
+              "channel",
+              "audience",
+              "scheduledAt"
+            ]
+          },
+          {
+            "key": "icon",
+            "type": "unknown",
+            "default": "plus-circle"
+          },
+          {
+            "key": "mode",
+            "type": "unknown",
+            "default": "create"
+          },
+          {
+            "key": "title",
+            "type": "unknown",
+            "default": "New Campaign"
+          }
         ],
         "capabilities": []
       },
@@ -178,10 +375,33 @@
           "EDIT"
         ],
         "overridableConfigKeys": [
-          "fields",
-          "icon",
-          "mode",
-          "title"
+          {
+            "key": "fields",
+            "type": "unknown",
+            "default": [
+              "name",
+              "description",
+              "channel",
+              "status",
+              "audience",
+              "scheduledAt"
+            ]
+          },
+          {
+            "key": "icon",
+            "type": "unknown",
+            "default": "edit"
+          },
+          {
+            "key": "mode",
+            "type": "unknown",
+            "default": "edit"
+          },
+          {
+            "key": "title",
+            "type": "unknown",
+            "default": "Edit Campaign"
+          }
         ],
         "capabilities": []
       },
@@ -192,10 +412,36 @@
           "VIEW"
         ],
         "overridableConfigKeys": [
-          "fields",
-          "icon",
-          "mode",
-          "title"
+          {
+            "key": "fields",
+            "type": "unknown",
+            "default": [
+              "name",
+              "description",
+              "channel",
+              "status",
+              "audience",
+              "sendCount",
+              "openRate",
+              "clickRate",
+              "scheduledAt"
+            ]
+          },
+          {
+            "key": "icon",
+            "type": "unknown",
+            "default": "eye"
+          },
+          {
+            "key": "mode",
+            "type": "unknown",
+            "default": "edit"
+          },
+          {
+            "key": "title",
+            "type": "unknown",
+            "default": "View Campaign"
+          }
         ],
         "capabilities": []
       },
@@ -206,10 +452,26 @@
           "DELETE"
         ],
         "overridableConfigKeys": [
-          "alertMessage",
-          "confirmLabel",
-          "icon",
-          "title"
+          {
+            "key": "alertMessage",
+            "type": "unknown",
+            "default": "This action cannot be undone."
+          },
+          {
+            "key": "confirmLabel",
+            "type": "unknown",
+            "default": "Delete"
+          },
+          {
+            "key": "icon",
+            "type": "unknown",
+            "default": "alert-triangle"
+          },
+          {
+            "key": "title",
+            "type": "unknown",
+            "default": "Delete Campaign"
+          }
         ],
         "capabilities": []
       },
@@ -268,7 +530,11 @@
         "emittedEvents": [],
         "listenedEvents": [],
         "overridableConfigKeys": [
-          "title"
+          {
+            "key": "title",
+            "type": "unknown",
+            "default": "Audience Segments"
+          }
         ],
         "capabilities": []
       },
@@ -277,7 +543,11 @@
         "emittedEvents": [],
         "listenedEvents": [],
         "overridableConfigKeys": [
-          "title"
+          {
+            "key": "title",
+            "type": "unknown",
+            "default": "Drip Sequences"
+          }
         ],
         "capabilities": []
       },
@@ -286,7 +556,11 @@
         "emittedEvents": [],
         "listenedEvents": [],
         "overridableConfigKeys": [
-          "title"
+          {
+            "key": "title",
+            "type": "unknown",
+            "default": "Message Templates"
+          }
         ],
         "capabilities": []
       }

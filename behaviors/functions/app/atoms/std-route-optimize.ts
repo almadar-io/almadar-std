@@ -85,12 +85,12 @@ export interface StdRouteOptimizeRouteLoadFailedPayload {
  * without modifying its state-machine topology.
  */
 export interface StdRouteOptimizeConfig {
-  /** Default: `[{"icon":"arrow-right","label":"Open","event":"OPEN_ROUTE","variant":"primary"},{"event":"OPTIMIZE","label":"Optimize","variant":"danger"}]` */
-  itemActions?: TraitConfig[];
   /** Default: `"Routes"` */
   title?: string;
-  /** Default: `[{"name":"technicianId","label":"Technician","variant":"caption"},{"variant":"caption","label":"Distance (km)","name":"totalDistanceKm"},{"variant":"caption","name":"totalDurationMinutes","label":"Duration (min)"},{"name":"optimizedAt","variant":"caption","label":"Optimized"}]` */
+  /** Default: `[{"variant":"caption","label":"Technician","name":"technicianId"},{"name":"totalDistanceKm","variant":"caption","label":"Distance (km)"},{"label":"Duration (min)","name":"totalDurationMinutes","variant":"caption"},{"name":"optimizedAt","variant":"caption","label":"Optimized"}]` */
   fields?: TraitConfig[];
+  /** Default: `[{"event":"OPEN_ROUTE","variant":"primary","label":"Open","icon":"arrow-right"},{"label":"Optimize","event":"OPTIMIZE","variant":"danger"}]` */
+  itemActions?: TraitConfig[];
 }
 
 /**

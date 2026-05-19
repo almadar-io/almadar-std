@@ -110,14 +110,14 @@ export interface StdBoardBoardItemsSaveFailedPayload {
  * without modifying its state-machine topology.
  */
 export interface StdBoardConfig {
-  /** Default: `"Board"` */
-  title?: string;
   /** Default: `3` */
   gridCols?: number;
   /** Default: `["title","description","stage","notes"]` */
   formFields?: string[];
-  /** Default: `[{"key":"todo","label":"To Do","variant":"default","icon":"circle"},{"variant":"primary","key":"doing","icon":"circle-dot","label":"In Progress"},{"key":"done","icon":"check-circle","variant":"success","label":"Done"}]` */
+  /** Default: `[{"icon":"circle","variant":"default","key":"todo","label":"To Do"},{"key":"doing","variant":"primary","icon":"circle-dot","label":"In Progress"},{"label":"Done","variant":"success","key":"done","icon":"check-circle"}]` */
   columns?: TraitConfig[];
+  /** Default: `"Board"` */
+  title?: string;
 }
 
 /**

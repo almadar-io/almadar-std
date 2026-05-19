@@ -53,12 +53,52 @@
         "emittedEvents": [],
         "listenedEvents": [],
         "overridableConfigKeys": [
-          "appName",
-          "contentTrait",
-          "navItems",
-          "notificationClickEvent",
-          "notifications",
-          "searchEvent"
+          {
+            "key": "appName",
+            "type": "unknown",
+            "default": "API Gateway"
+          },
+          {
+            "key": "contentTrait",
+            "type": "unknown",
+            "default": "@trait.RouteCatalog"
+          },
+          {
+            "key": "navItems",
+            "type": "unknown",
+            "default": [
+              {
+                "icon": "git-branch",
+                "href": "/routes",
+                "label": "Routes"
+              },
+              {
+                "label": "Backends",
+                "icon": "server",
+                "href": "/backends"
+              },
+              {
+                "label": "Analytics",
+                "href": "/analytics",
+                "icon": "bar-chart-2"
+              }
+            ]
+          },
+          {
+            "key": "notificationClickEvent",
+            "type": "unknown",
+            "default": "ROUTE_NOTIFICATIONS_OPEN"
+          },
+          {
+            "key": "notifications",
+            "type": "unknown",
+            "default": []
+          },
+          {
+            "key": "searchEvent",
+            "type": "unknown",
+            "default": "ROUTE_SEARCH"
+          }
         ],
         "capabilities": []
       },
@@ -79,8 +119,16 @@
         "emittedEvents": [],
         "listenedEvents": [],
         "overridableConfigKeys": [
-          "event",
-          "placeholder"
+          {
+            "key": "event",
+            "type": "unknown",
+            "default": "ROUTE_SEARCH"
+          },
+          {
+            "key": "placeholder",
+            "type": "unknown",
+            "default": "Search routes…"
+          }
         ],
         "capabilities": []
       },
@@ -89,8 +137,37 @@
         "emittedEvents": [],
         "listenedEvents": [],
         "overridableConfigKeys": [
-          "event",
-          "filters"
+          {
+            "key": "event",
+            "type": "unknown",
+            "default": "ROUTE_FILTER"
+          },
+          {
+            "key": "filters",
+            "type": "unknown",
+            "default": [
+              {
+                "filterType": "select",
+                "label": "Method",
+                "field": "method",
+                "options": [
+                  "GET",
+                  "POST",
+                  "PUT",
+                  "DELETE"
+                ]
+              },
+              {
+                "label": "Status",
+                "options": [
+                  "active",
+                  "disabled"
+                ],
+                "field": "status",
+                "filterType": "select"
+              }
+            ]
+          }
         ],
         "capabilities": []
       },
@@ -101,8 +178,56 @@
           "BrowseItemLoaded"
         ],
         "overridableConfigKeys": [
-          "metrics",
-          "title"
+          {
+            "key": "metrics",
+            "type": "unknown",
+            "default": [
+              {
+                "aggregation": "count",
+                "format": "number",
+                "icon": "git-branch",
+                "label": "Total",
+                "variant": "primary"
+              },
+              {
+                "icon": "check-circle",
+                "label": "Active",
+                "aggregation": "count",
+                "filter": [
+                  "fn",
+                  "row",
+                  [
+                    "=",
+                    "@row.status",
+                    "active"
+                  ]
+                ],
+                "variant": "success",
+                "format": "number"
+              },
+              {
+                "filter": [
+                  "fn",
+                  "row",
+                  [
+                    "=",
+                    "@row.status",
+                    "disabled"
+                  ]
+                ],
+                "aggregation": "count",
+                "label": "Disabled",
+                "icon": "x-circle",
+                "format": "number",
+                "variant": "warning"
+              }
+            ]
+          },
+          {
+            "key": "title",
+            "type": "unknown",
+            "default": "Routes"
+          }
         ],
         "capabilities": []
       },
@@ -113,13 +238,41 @@
           "BrowseItemLoaded"
         ],
         "overridableConfigKeys": [
-          "aggregation",
-          "categoryField",
-          "chartType",
-          "height",
-          "showLegend",
-          "subtitle",
-          "title"
+          {
+            "key": "aggregation",
+            "type": "unknown",
+            "default": "count"
+          },
+          {
+            "key": "categoryField",
+            "type": "unknown",
+            "default": "method"
+          },
+          {
+            "key": "chartType",
+            "type": "unknown",
+            "default": "pie"
+          },
+          {
+            "key": "height",
+            "type": "unknown",
+            "default": 240
+          },
+          {
+            "key": "showLegend",
+            "type": "unknown",
+            "default": true
+          },
+          {
+            "key": "subtitle",
+            "type": "unknown",
+            "default": "Distribution across HTTP methods"
+          },
+          {
+            "key": "title",
+            "type": "unknown",
+            "default": "Routes by Method"
+          }
         ],
         "capabilities": []
       },
@@ -134,10 +287,66 @@
           "ROUTE_DELETED"
         ],
         "overridableConfigKeys": [
-          "cols",
-          "fields",
-          "gap",
-          "itemActions"
+          {
+            "key": "cols",
+            "type": "unknown",
+            "default": 1
+          },
+          {
+            "key": "fields",
+            "type": "unknown",
+            "default": [
+              {
+                "name": "path",
+                "icon": "git-branch",
+                "variant": "h3"
+              },
+              {
+                "variant": "badge",
+                "name": "method"
+              },
+              {
+                "name": "status",
+                "variant": "badge"
+              },
+              {
+                "variant": "body",
+                "name": "target"
+              },
+              {
+                "label": "Hits",
+                "variant": "caption",
+                "format": "number",
+                "name": "hits"
+              }
+            ]
+          },
+          {
+            "key": "gap",
+            "type": "unknown",
+            "default": "sm"
+          },
+          {
+            "key": "itemActions",
+            "type": "unknown",
+            "default": [
+              {
+                "label": "View",
+                "event": "VIEW",
+                "variant": "ghost"
+              },
+              {
+                "label": "Edit",
+                "event": "EDIT",
+                "variant": "ghost"
+              },
+              {
+                "event": "DELETE",
+                "label": "Delete",
+                "variant": "danger"
+              }
+            ]
+          }
         ],
         "capabilities": []
       },
@@ -148,10 +357,32 @@
           "CREATE"
         ],
         "overridableConfigKeys": [
-          "fields",
-          "icon",
-          "mode",
-          "title"
+          {
+            "key": "fields",
+            "type": "unknown",
+            "default": [
+              "path",
+              "method",
+              "status",
+              "target",
+              "rateLimit"
+            ]
+          },
+          {
+            "key": "icon",
+            "type": "unknown",
+            "default": "plus-circle"
+          },
+          {
+            "key": "mode",
+            "type": "unknown",
+            "default": "create"
+          },
+          {
+            "key": "title",
+            "type": "unknown",
+            "default": "New Route"
+          }
         ],
         "capabilities": []
       },
@@ -162,10 +393,32 @@
           "EDIT"
         ],
         "overridableConfigKeys": [
-          "fields",
-          "icon",
-          "mode",
-          "title"
+          {
+            "key": "fields",
+            "type": "unknown",
+            "default": [
+              "path",
+              "method",
+              "status",
+              "target",
+              "rateLimit"
+            ]
+          },
+          {
+            "key": "icon",
+            "type": "unknown",
+            "default": "edit"
+          },
+          {
+            "key": "mode",
+            "type": "unknown",
+            "default": "edit"
+          },
+          {
+            "key": "title",
+            "type": "unknown",
+            "default": "Edit Route"
+          }
         ],
         "capabilities": []
       },
@@ -176,10 +429,32 @@
           "VIEW"
         ],
         "overridableConfigKeys": [
-          "fields",
-          "icon",
-          "mode",
-          "title"
+          {
+            "key": "fields",
+            "type": "unknown",
+            "default": [
+              "path",
+              "method",
+              "status",
+              "target",
+              "rateLimit"
+            ]
+          },
+          {
+            "key": "icon",
+            "type": "unknown",
+            "default": "eye"
+          },
+          {
+            "key": "mode",
+            "type": "unknown",
+            "default": "edit"
+          },
+          {
+            "key": "title",
+            "type": "unknown",
+            "default": "View Route"
+          }
         ],
         "capabilities": []
       },
@@ -190,10 +465,26 @@
           "DELETE"
         ],
         "overridableConfigKeys": [
-          "alertMessage",
-          "confirmLabel",
-          "icon",
-          "title"
+          {
+            "key": "alertMessage",
+            "type": "unknown",
+            "default": "This action cannot be undone."
+          },
+          {
+            "key": "confirmLabel",
+            "type": "unknown",
+            "default": "Delete"
+          },
+          {
+            "key": "icon",
+            "type": "unknown",
+            "default": "alert-triangle"
+          },
+          {
+            "key": "title",
+            "type": "unknown",
+            "default": "Delete Route"
+          }
         ],
         "capabilities": []
       },
@@ -287,12 +578,52 @@
         "emittedEvents": [],
         "listenedEvents": [],
         "overridableConfigKeys": [
-          "appName",
-          "contentTrait",
-          "navItems",
-          "notificationClickEvent",
-          "notifications",
-          "searchEvent"
+          {
+            "key": "appName",
+            "type": "unknown",
+            "default": "API Gateway"
+          },
+          {
+            "key": "contentTrait",
+            "type": "unknown",
+            "default": "@trait.BackendCatalog"
+          },
+          {
+            "key": "navItems",
+            "type": "unknown",
+            "default": [
+              {
+                "label": "Routes",
+                "href": "/routes",
+                "icon": "git-branch"
+              },
+              {
+                "label": "Backends",
+                "icon": "server",
+                "href": "/backends"
+              },
+              {
+                "href": "/analytics",
+                "icon": "bar-chart-2",
+                "label": "Analytics"
+              }
+            ]
+          },
+          {
+            "key": "notificationClickEvent",
+            "type": "unknown",
+            "default": "BACKEND_NOTIFICATIONS_OPEN"
+          },
+          {
+            "key": "notifications",
+            "type": "unknown",
+            "default": []
+          },
+          {
+            "key": "searchEvent",
+            "type": "unknown",
+            "default": "BACKEND_SEARCH"
+          }
         ],
         "capabilities": []
       },
@@ -317,10 +648,62 @@
           "BACKEND_DELETED"
         ],
         "overridableConfigKeys": [
-          "cols",
-          "fields",
-          "gap",
-          "itemActions"
+          {
+            "key": "cols",
+            "type": "unknown",
+            "default": 1
+          },
+          {
+            "key": "fields",
+            "type": "unknown",
+            "default": [
+              {
+                "name": "name",
+                "variant": "h3",
+                "icon": "server"
+              },
+              {
+                "name": "url",
+                "variant": "body"
+              },
+              {
+                "variant": "badge",
+                "name": "status"
+              },
+              {
+                "variant": "caption",
+                "label": "Latency",
+                "format": "number",
+                "name": "latency"
+              }
+            ]
+          },
+          {
+            "key": "gap",
+            "type": "unknown",
+            "default": "sm"
+          },
+          {
+            "key": "itemActions",
+            "type": "unknown",
+            "default": [
+              {
+                "label": "View",
+                "event": "VIEW",
+                "variant": "ghost"
+              },
+              {
+                "label": "Edit",
+                "event": "EDIT",
+                "variant": "ghost"
+              },
+              {
+                "label": "Delete",
+                "event": "DELETE",
+                "variant": "danger"
+              }
+            ]
+          }
         ],
         "capabilities": []
       },
@@ -352,10 +735,31 @@
           "CREATE"
         ],
         "overridableConfigKeys": [
-          "fields",
-          "icon",
-          "mode",
-          "title"
+          {
+            "key": "fields",
+            "type": "unknown",
+            "default": [
+              "name",
+              "url",
+              "status",
+              "latency"
+            ]
+          },
+          {
+            "key": "icon",
+            "type": "unknown",
+            "default": "plus-circle"
+          },
+          {
+            "key": "mode",
+            "type": "unknown",
+            "default": "create"
+          },
+          {
+            "key": "title",
+            "type": "unknown",
+            "default": "New Backend"
+          }
         ],
         "capabilities": []
       },
@@ -366,10 +770,31 @@
           "EDIT"
         ],
         "overridableConfigKeys": [
-          "fields",
-          "icon",
-          "mode",
-          "title"
+          {
+            "key": "fields",
+            "type": "unknown",
+            "default": [
+              "name",
+              "url",
+              "status",
+              "latency"
+            ]
+          },
+          {
+            "key": "icon",
+            "type": "unknown",
+            "default": "edit"
+          },
+          {
+            "key": "mode",
+            "type": "unknown",
+            "default": "edit"
+          },
+          {
+            "key": "title",
+            "type": "unknown",
+            "default": "Edit Backend"
+          }
         ],
         "capabilities": []
       },
@@ -380,10 +805,31 @@
           "VIEW"
         ],
         "overridableConfigKeys": [
-          "fields",
-          "icon",
-          "mode",
-          "title"
+          {
+            "key": "fields",
+            "type": "unknown",
+            "default": [
+              "name",
+              "url",
+              "status",
+              "latency"
+            ]
+          },
+          {
+            "key": "icon",
+            "type": "unknown",
+            "default": "eye"
+          },
+          {
+            "key": "mode",
+            "type": "unknown",
+            "default": "edit"
+          },
+          {
+            "key": "title",
+            "type": "unknown",
+            "default": "View Backend"
+          }
         ],
         "capabilities": []
       },
@@ -394,10 +840,26 @@
           "DELETE"
         ],
         "overridableConfigKeys": [
-          "alertMessage",
-          "confirmLabel",
-          "icon",
-          "title"
+          {
+            "key": "alertMessage",
+            "type": "unknown",
+            "default": "This action cannot be undone."
+          },
+          {
+            "key": "confirmLabel",
+            "type": "unknown",
+            "default": "Delete"
+          },
+          {
+            "key": "icon",
+            "type": "unknown",
+            "default": "alert-triangle"
+          },
+          {
+            "key": "title",
+            "type": "unknown",
+            "default": "Delete Backend"
+          }
         ],
         "capabilities": []
       },
@@ -488,12 +950,52 @@
         "emittedEvents": [],
         "listenedEvents": [],
         "overridableConfigKeys": [
-          "appName",
-          "contentTrait",
-          "navItems",
-          "notificationClickEvent",
-          "notifications",
-          "searchEvent"
+          {
+            "key": "appName",
+            "type": "unknown",
+            "default": "API Gateway"
+          },
+          {
+            "key": "contentTrait",
+            "type": "unknown",
+            "default": "@trait.AnalyticsDisplay"
+          },
+          {
+            "key": "navItems",
+            "type": "unknown",
+            "default": [
+              {
+                "href": "/routes",
+                "label": "Routes",
+                "icon": "git-branch"
+              },
+              {
+                "href": "/backends",
+                "icon": "server",
+                "label": "Backends"
+              },
+              {
+                "label": "Analytics",
+                "href": "/analytics",
+                "icon": "bar-chart-2"
+              }
+            ]
+          },
+          {
+            "key": "notificationClickEvent",
+            "type": "unknown",
+            "default": "ANALYTICS_NOTIFICATIONS_OPEN"
+          },
+          {
+            "key": "notifications",
+            "type": "unknown",
+            "default": []
+          },
+          {
+            "key": "searchEvent",
+            "type": "unknown",
+            "default": "ANALYTICS_SEARCH"
+          }
         ],
         "capabilities": []
       },
@@ -502,11 +1004,60 @@
         "emittedEvents": [],
         "listenedEvents": [],
         "overridableConfigKeys": [
-          "cols",
-          "displayPageSize",
-          "fields",
-          "gap",
-          "pageSize"
+          {
+            "key": "cols",
+            "type": "unknown",
+            "default": 1
+          },
+          {
+            "key": "displayPageSize",
+            "type": "unknown",
+            "default": 10
+          },
+          {
+            "key": "fields",
+            "type": "unknown",
+            "default": [
+              {
+                "variant": "h4",
+                "label": "Route",
+                "name": "routePath",
+                "icon": "bar-chart-2"
+              },
+              {
+                "variant": "badge",
+                "label": "Method",
+                "name": "method"
+              },
+              {
+                "variant": "badge",
+                "name": "statusCode",
+                "label": "Status"
+              },
+              {
+                "name": "latencyMs",
+                "label": "Latency",
+                "variant": "caption",
+                "format": "number"
+              },
+              {
+                "variant": "caption",
+                "label": "Time",
+                "format": "date",
+                "name": "timestamp"
+              }
+            ]
+          },
+          {
+            "key": "gap",
+            "type": "unknown",
+            "default": "sm"
+          },
+          {
+            "key": "pageSize",
+            "type": "unknown",
+            "default": 100
+          }
         ],
         "capabilities": []
       },

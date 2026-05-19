@@ -85,12 +85,12 @@ export interface StdStockLevelStockLevelLoadFailedPayload {
  * without modifying its state-machine topology.
  */
 export interface StdStockLevelConfig {
-  /** Default: `[{"variant":"primary","icon":"arrow-right","label":"Open","event":"OPEN_STOCK"},{"variant":"danger","label":"Adjust","event":"ADJUST_STOCK"}]` */
+  /** Default: `[{"label":"Open","icon":"arrow-right","event":"OPEN_STOCK","variant":"primary"},{"variant":"danger","label":"Adjust","event":"ADJUST_STOCK"}]` */
   itemActions?: TraitConfig[];
-  /** Default: `[{"name":"sku","variant":"caption","label":"SKU"},{"label":"Product","variant":"caption","name":"productName"},{"variant":"caption","label":"Location","name":"locationId"},{"name":"onHand","variant":"caption","label":"On Hand"},{"name":"reorderPoint","variant":"caption","label":"Reorder At"}]` */
-  fields?: TraitConfig[];
   /** Default: `"Stock Levels"` */
   title?: string;
+  /** Default: `[{"label":"SKU","name":"sku","variant":"caption"},{"label":"Product","variant":"caption","name":"productName"},{"label":"Location","name":"locationId","variant":"caption"},{"variant":"caption","name":"onHand","label":"On Hand"},{"variant":"caption","label":"Reorder At","name":"reorderPoint"}]` */
+  fields?: TraitConfig[];
 }
 
 /**

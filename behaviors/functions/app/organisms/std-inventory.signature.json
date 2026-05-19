@@ -48,12 +48,62 @@
         "emittedEvents": [],
         "listenedEvents": [],
         "overridableConfigKeys": [
-          "appName",
-          "contentTrait",
-          "navItems",
-          "notificationClickEvent",
-          "notifications",
-          "searchEvent"
+          {
+            "key": "appName",
+            "type": "unknown",
+            "default": "Inventory Management"
+          },
+          {
+            "key": "contentTrait",
+            "type": "unknown",
+            "default": "@trait.InventoryCatalog"
+          },
+          {
+            "key": "navItems",
+            "type": "unknown",
+            "default": [
+              {
+                "icon": "package",
+                "label": "Items",
+                "href": "/inventory"
+              },
+              {
+                "label": "Stock Levels",
+                "href": "/stock-levels",
+                "icon": "package"
+              },
+              {
+                "icon": "warehouse",
+                "href": "/warehouses",
+                "label": "Warehouses"
+              },
+              {
+                "icon": "refresh-ccw",
+                "label": "Reorder Rules",
+                "href": "/reorder-rules"
+              },
+              {
+                "label": "Adjustments",
+                "href": "/adjustments",
+                "icon": "edit"
+              }
+            ]
+          },
+          {
+            "key": "notificationClickEvent",
+            "type": "unknown",
+            "default": "INVENTORY_NOTIFICATIONS_OPEN"
+          },
+          {
+            "key": "notifications",
+            "type": "unknown",
+            "default": []
+          },
+          {
+            "key": "searchEvent",
+            "type": "unknown",
+            "default": "INVENTORY_SEARCH"
+          }
         ],
         "capabilities": []
       },
@@ -74,8 +124,16 @@
         "emittedEvents": [],
         "listenedEvents": [],
         "overridableConfigKeys": [
-          "event",
-          "placeholder"
+          {
+            "key": "event",
+            "type": "unknown",
+            "default": "INVENTORY_SEARCH"
+          },
+          {
+            "key": "placeholder",
+            "type": "unknown",
+            "default": "Search SKUs, names, categories…"
+          }
         ],
         "capabilities": []
       },
@@ -84,8 +142,27 @@
         "emittedEvents": [],
         "listenedEvents": [],
         "overridableConfigKeys": [
-          "event",
-          "filters"
+          {
+            "key": "event",
+            "type": "unknown",
+            "default": "INVENTORY_FILTER"
+          },
+          {
+            "key": "filters",
+            "type": "unknown",
+            "default": [
+              {
+                "label": "Status",
+                "options": [
+                  "active",
+                  "discontinued",
+                  "draft"
+                ],
+                "filterType": "select",
+                "field": "status"
+              }
+            ]
+          }
         ],
         "capabilities": []
       },
@@ -96,8 +173,56 @@
           "BrowseItemLoaded"
         ],
         "overridableConfigKeys": [
-          "metrics",
-          "title"
+          {
+            "key": "metrics",
+            "type": "unknown",
+            "default": [
+              {
+                "aggregation": "count",
+                "variant": "primary",
+                "icon": "package",
+                "format": "number",
+                "label": "Total SKUs"
+              },
+              {
+                "label": "Active",
+                "aggregation": "count",
+                "format": "number",
+                "filter": [
+                  "fn",
+                  "row",
+                  [
+                    "=",
+                    "@row.status",
+                    "active"
+                  ]
+                ],
+                "variant": "success",
+                "icon": "check-circle"
+              },
+              {
+                "label": "Discontinued",
+                "aggregation": "count",
+                "format": "number",
+                "filter": [
+                  "fn",
+                  "row",
+                  [
+                    "=",
+                    "@row.status",
+                    "discontinued"
+                  ]
+                ],
+                "variant": "warning",
+                "icon": "circle-off"
+              }
+            ]
+          },
+          {
+            "key": "title",
+            "type": "unknown",
+            "default": "Inventory"
+          }
         ],
         "capabilities": []
       },
@@ -108,13 +233,41 @@
           "BrowseItemLoaded"
         ],
         "overridableConfigKeys": [
-          "aggregation",
-          "categoryField",
-          "chartType",
-          "height",
-          "showLegend",
-          "subtitle",
-          "title"
+          {
+            "key": "aggregation",
+            "type": "unknown",
+            "default": "count"
+          },
+          {
+            "key": "categoryField",
+            "type": "unknown",
+            "default": "category"
+          },
+          {
+            "key": "chartType",
+            "type": "unknown",
+            "default": "bar"
+          },
+          {
+            "key": "height",
+            "type": "unknown",
+            "default": 240
+          },
+          {
+            "key": "showLegend",
+            "type": "unknown",
+            "default": false
+          },
+          {
+            "key": "subtitle",
+            "type": "unknown",
+            "default": "SKU distribution across categories"
+          },
+          {
+            "key": "title",
+            "type": "unknown",
+            "default": "Items by Category"
+          }
         ],
         "capabilities": []
       },
@@ -129,10 +282,64 @@
           "INVENTORY_DELETED"
         ],
         "overridableConfigKeys": [
-          "cols",
-          "fields",
-          "gap",
-          "itemActions"
+          {
+            "key": "cols",
+            "type": "unknown",
+            "default": 1
+          },
+          {
+            "key": "fields",
+            "type": "unknown",
+            "default": [
+              {
+                "icon": "tag",
+                "name": "sku",
+                "variant": "h4"
+              },
+              {
+                "variant": "body",
+                "name": "name"
+              },
+              {
+                "variant": "caption",
+                "name": "category"
+              },
+              {
+                "name": "status",
+                "variant": "badge"
+              },
+              {
+                "name": "defaultUnitCost",
+                "variant": "caption"
+              }
+            ]
+          },
+          {
+            "key": "gap",
+            "type": "unknown",
+            "default": "sm"
+          },
+          {
+            "key": "itemActions",
+            "type": "unknown",
+            "default": [
+              {
+                "event": "VIEW",
+                "variant": "ghost",
+                "label": "View"
+              },
+              {
+                "label": "Edit",
+                "event": "EDIT",
+                "variant": "ghost"
+              },
+              {
+                "variant": "danger",
+                "label": "Delete",
+                "event": "DELETE"
+              }
+            ]
+          }
         ],
         "capabilities": []
       },
@@ -143,10 +350,32 @@
           "CREATE"
         ],
         "overridableConfigKeys": [
-          "fields",
-          "icon",
-          "mode",
-          "title"
+          {
+            "key": "fields",
+            "type": "unknown",
+            "default": [
+              "sku",
+              "name",
+              "category",
+              "defaultUnitCost",
+              "status"
+            ]
+          },
+          {
+            "key": "icon",
+            "type": "unknown",
+            "default": "plus-circle"
+          },
+          {
+            "key": "mode",
+            "type": "unknown",
+            "default": "create"
+          },
+          {
+            "key": "title",
+            "type": "unknown",
+            "default": "New Item"
+          }
         ],
         "capabilities": []
       },
@@ -157,10 +386,32 @@
           "EDIT"
         ],
         "overridableConfigKeys": [
-          "fields",
-          "icon",
-          "mode",
-          "title"
+          {
+            "key": "fields",
+            "type": "unknown",
+            "default": [
+              "sku",
+              "name",
+              "category",
+              "defaultUnitCost",
+              "status"
+            ]
+          },
+          {
+            "key": "icon",
+            "type": "unknown",
+            "default": "edit"
+          },
+          {
+            "key": "mode",
+            "type": "unknown",
+            "default": "edit"
+          },
+          {
+            "key": "title",
+            "type": "unknown",
+            "default": "Edit Item"
+          }
         ],
         "capabilities": []
       },
@@ -171,10 +422,32 @@
           "VIEW"
         ],
         "overridableConfigKeys": [
-          "fields",
-          "icon",
-          "mode",
-          "title"
+          {
+            "key": "fields",
+            "type": "unknown",
+            "default": [
+              "sku",
+              "name",
+              "category",
+              "defaultUnitCost",
+              "status"
+            ]
+          },
+          {
+            "key": "icon",
+            "type": "unknown",
+            "default": "eye"
+          },
+          {
+            "key": "mode",
+            "type": "unknown",
+            "default": "edit"
+          },
+          {
+            "key": "title",
+            "type": "unknown",
+            "default": "View Item"
+          }
         ],
         "capabilities": []
       },
@@ -185,10 +458,26 @@
           "DELETE"
         ],
         "overridableConfigKeys": [
-          "alertMessage",
-          "confirmLabel",
-          "icon",
-          "title"
+          {
+            "key": "alertMessage",
+            "type": "unknown",
+            "default": "This action cannot be undone."
+          },
+          {
+            "key": "confirmLabel",
+            "type": "unknown",
+            "default": "Delete"
+          },
+          {
+            "key": "icon",
+            "type": "unknown",
+            "default": "alert-triangle"
+          },
+          {
+            "key": "title",
+            "type": "unknown",
+            "default": "Delete Item"
+          }
         ],
         "capabilities": []
       },
@@ -292,12 +581,62 @@
         "emittedEvents": [],
         "listenedEvents": [],
         "overridableConfigKeys": [
-          "appName",
-          "contentTrait",
-          "navItems",
-          "notificationClickEvent",
-          "notifications",
-          "searchEvent"
+          {
+            "key": "appName",
+            "type": "unknown",
+            "default": "Inventory Management"
+          },
+          {
+            "key": "contentTrait",
+            "type": "unknown",
+            "default": "@trait.StockLevelPanel"
+          },
+          {
+            "key": "navItems",
+            "type": "unknown",
+            "default": [
+              {
+                "label": "Items",
+                "href": "/inventory",
+                "icon": "package"
+              },
+              {
+                "label": "Stock Levels",
+                "href": "/stock-levels",
+                "icon": "package"
+              },
+              {
+                "label": "Warehouses",
+                "href": "/warehouses",
+                "icon": "warehouse"
+              },
+              {
+                "href": "/reorder-rules",
+                "icon": "refresh-ccw",
+                "label": "Reorder Rules"
+              },
+              {
+                "label": "Adjustments",
+                "href": "/adjustments",
+                "icon": "edit"
+              }
+            ]
+          },
+          {
+            "key": "notificationClickEvent",
+            "type": "unknown",
+            "default": "STOCK_LEVEL_NOTIFICATIONS_OPEN"
+          },
+          {
+            "key": "notifications",
+            "type": "unknown",
+            "default": []
+          },
+          {
+            "key": "searchEvent",
+            "type": "unknown",
+            "default": "STOCK_LEVEL_SEARCH"
+          }
         ],
         "capabilities": []
       },
@@ -313,7 +652,11 @@
         "emittedEvents": [],
         "listenedEvents": [],
         "overridableConfigKeys": [
-          "title"
+          {
+            "key": "title",
+            "type": "unknown",
+            "default": "Stock Levels"
+          }
         ],
         "capabilities": []
       }
@@ -377,12 +720,62 @@
         "emittedEvents": [],
         "listenedEvents": [],
         "overridableConfigKeys": [
-          "appName",
-          "contentTrait",
-          "navItems",
-          "notificationClickEvent",
-          "notifications",
-          "searchEvent"
+          {
+            "key": "appName",
+            "type": "unknown",
+            "default": "Inventory Management"
+          },
+          {
+            "key": "contentTrait",
+            "type": "unknown",
+            "default": "@trait.WarehousePanel"
+          },
+          {
+            "key": "navItems",
+            "type": "unknown",
+            "default": [
+              {
+                "label": "Items",
+                "icon": "package",
+                "href": "/inventory"
+              },
+              {
+                "icon": "package",
+                "label": "Stock Levels",
+                "href": "/stock-levels"
+              },
+              {
+                "href": "/warehouses",
+                "icon": "warehouse",
+                "label": "Warehouses"
+              },
+              {
+                "label": "Reorder Rules",
+                "href": "/reorder-rules",
+                "icon": "refresh-ccw"
+              },
+              {
+                "href": "/adjustments",
+                "label": "Adjustments",
+                "icon": "edit"
+              }
+            ]
+          },
+          {
+            "key": "notificationClickEvent",
+            "type": "unknown",
+            "default": "WAREHOUSE_NOTIFICATIONS_OPEN"
+          },
+          {
+            "key": "notifications",
+            "type": "unknown",
+            "default": []
+          },
+          {
+            "key": "searchEvent",
+            "type": "unknown",
+            "default": "WAREHOUSE_SEARCH"
+          }
         ],
         "capabilities": []
       },
@@ -398,7 +791,11 @@
         "emittedEvents": [],
         "listenedEvents": [],
         "overridableConfigKeys": [
-          "title"
+          {
+            "key": "title",
+            "type": "unknown",
+            "default": "Locations"
+          }
         ],
         "capabilities": []
       }
@@ -467,12 +864,62 @@
         "emittedEvents": [],
         "listenedEvents": [],
         "overridableConfigKeys": [
-          "appName",
-          "contentTrait",
-          "navItems",
-          "notificationClickEvent",
-          "notifications",
-          "searchEvent"
+          {
+            "key": "appName",
+            "type": "unknown",
+            "default": "Inventory Management"
+          },
+          {
+            "key": "contentTrait",
+            "type": "unknown",
+            "default": "@trait.ReorderRulePanel"
+          },
+          {
+            "key": "navItems",
+            "type": "unknown",
+            "default": [
+              {
+                "href": "/inventory",
+                "icon": "package",
+                "label": "Items"
+              },
+              {
+                "icon": "package",
+                "label": "Stock Levels",
+                "href": "/stock-levels"
+              },
+              {
+                "icon": "warehouse",
+                "href": "/warehouses",
+                "label": "Warehouses"
+              },
+              {
+                "href": "/reorder-rules",
+                "icon": "refresh-ccw",
+                "label": "Reorder Rules"
+              },
+              {
+                "icon": "edit",
+                "label": "Adjustments",
+                "href": "/adjustments"
+              }
+            ]
+          },
+          {
+            "key": "notificationClickEvent",
+            "type": "unknown",
+            "default": "REORDER_RULE_NOTIFICATIONS_OPEN"
+          },
+          {
+            "key": "notifications",
+            "type": "unknown",
+            "default": []
+          },
+          {
+            "key": "searchEvent",
+            "type": "unknown",
+            "default": "REORDER_RULE_SEARCH"
+          }
         ],
         "capabilities": []
       },
@@ -488,7 +935,11 @@
         "emittedEvents": [],
         "listenedEvents": [],
         "overridableConfigKeys": [
-          "title"
+          {
+            "key": "title",
+            "type": "unknown",
+            "default": "Reorder Rules"
+          }
         ],
         "capabilities": []
       }
@@ -577,12 +1028,62 @@
         "emittedEvents": [],
         "listenedEvents": [],
         "overridableConfigKeys": [
-          "appName",
-          "contentTrait",
-          "navItems",
-          "notificationClickEvent",
-          "notifications",
-          "searchEvent"
+          {
+            "key": "appName",
+            "type": "unknown",
+            "default": "Inventory Management"
+          },
+          {
+            "key": "contentTrait",
+            "type": "unknown",
+            "default": "@trait.StockAdjustmentPanel"
+          },
+          {
+            "key": "navItems",
+            "type": "unknown",
+            "default": [
+              {
+                "label": "Items",
+                "icon": "package",
+                "href": "/inventory"
+              },
+              {
+                "icon": "package",
+                "href": "/stock-levels",
+                "label": "Stock Levels"
+              },
+              {
+                "href": "/warehouses",
+                "label": "Warehouses",
+                "icon": "warehouse"
+              },
+              {
+                "icon": "refresh-ccw",
+                "label": "Reorder Rules",
+                "href": "/reorder-rules"
+              },
+              {
+                "label": "Adjustments",
+                "href": "/adjustments",
+                "icon": "edit"
+              }
+            ]
+          },
+          {
+            "key": "notificationClickEvent",
+            "type": "unknown",
+            "default": "STOCK_ADJUSTMENT_NOTIFICATIONS_OPEN"
+          },
+          {
+            "key": "notifications",
+            "type": "unknown",
+            "default": []
+          },
+          {
+            "key": "searchEvent",
+            "type": "unknown",
+            "default": "STOCK_ADJUSTMENT_SEARCH"
+          }
         ],
         "capabilities": []
       },

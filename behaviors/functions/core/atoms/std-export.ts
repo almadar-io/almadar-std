@@ -49,10 +49,10 @@ export interface StdExportExportRequestedPayload {
 export interface StdExportConfig {
   /** Default: `""` */
   tileId?: string;
+  /** Default: `[{"label":"CSV","format":"csv","id":"csv"},{"format":"xlsx","id":"xlsx","label":"XLSX"},{"format":"pdf","id":"pdf","label":"PDF"}]` */
+  formats?: TraitConfig[];
   /** Default: `"EXPORT_REQUESTED"` */
   event?: string;
-  /** Default: `[{"id":"csv","format":"csv","label":"CSV"},{"label":"XLSX","format":"xlsx","id":"xlsx"},{"label":"PDF","id":"pdf","format":"pdf"}]` */
-  formats?: TraitConfig[];
 }
 
 /**

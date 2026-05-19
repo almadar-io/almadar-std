@@ -31,8 +31,8 @@ const ALIAS = 'FitnessStudio';
  * without modifying its state-machine topology.
  */
 export interface StdFitnessStudioConfig {
-  navItems?: TraitConfig;
   notifications?: TraitConfig;
+  navItems?: TraitConfig;
 }
 
 /**
@@ -184,17 +184,21 @@ export function stdFitnessStudioMemberOrbital(params: StdFitnessStudioMemberOrbi
         'ref': 'AppShell.traits.AppLayout',
         'name': 'MemberAppLayout',
         'config': {
+          'notifications': [],
+          'appName': 'Fitness Studio',
+          'contentTrait': '@trait.MemberCatalog',
+          'searchEvent': 'MEMBER_SEARCH',
           'notificationClickEvent': 'MEMBER_NOTIFICATIONS_OPEN',
           'navItems': [
             {
-              'icon': 'users',
-              'label': 'Members',
               'href': '/members',
+              'label': 'Members',
+              'icon': 'users',
             },
             {
               'icon': 'calendar',
-              'href': '/classes',
               'label': 'Classes',
+              'href': '/classes',
             },
             {
               'icon': 'credit-card',
@@ -207,10 +211,6 @@ export function stdFitnessStudioMemberOrbital(params: StdFitnessStudioMemberOrbi
               'href': '/rosters',
             },
           ],
-          'notifications': [],
-          'searchEvent': 'MEMBER_SEARCH',
-          'contentTrait': '@trait.MemberCatalog',
-          'appName': 'Fitness Studio',
         },
         'events': {
           'NOTIFY_CLICK': 'MEMBER_NOTIFICATIONS_OPEN',
@@ -297,48 +297,49 @@ export function stdFitnessStudioMemberOrbital(params: StdFitnessStudioMemberOrbi
                   'render-ui',
                   'main',
                   {
-                    'direction': 'vertical',
+                    'gap': 'lg',
                     'type': 'stack',
+                    'direction': 'vertical',
                     'children': [
                       {
-                        'align': 'center',
-                        'direction': 'horizontal',
                         'justify': 'between',
+                        'direction': 'horizontal',
                         'gap': 'md',
+                        'type': 'stack',
+                        'align': 'center',
                         'children': [
                           {
-                            'gap': 'sm',
+                            'align': 'center',
                             'direction': 'horizontal',
                             'type': 'stack',
                             'children': [
                               {
-                                'name': 'users',
                                 'type': 'icon',
+                                'name': 'users',
                               },
                               {
                                 'type': 'typography',
-                                'variant': 'h2',
                                 'content': 'Members',
+                                'variant': 'h2',
                               },
                             ],
-                            'align': 'center',
+                            'gap': 'sm',
                           },
                           {
-                            'type': 'stack',
                             'direction': 'horizontal',
-                            'gap': 'sm',
+                            'type': 'stack',
                             'children': [
                               {
-                                'action': 'CREATE',
-                                'type': 'button',
                                 'variant': 'primary',
-                                'label': 'New Member',
+                                'action': 'CREATE',
                                 'icon': 'user-plus',
+                                'label': 'New Member',
+                                'type': 'button',
                               },
                             ],
+                            'gap': 'sm',
                           },
                         ],
-                        'type': 'stack',
                       },
                       {
                         'type': 'divider',
@@ -348,9 +349,9 @@ export function stdFitnessStudioMemberOrbital(params: StdFitnessStudioMemberOrbi
                           '@trait.MemberSearch',
                           '@trait.MemberFilter',
                         ],
-                        'align': 'center',
                         'type': 'stack',
                         'direction': 'horizontal',
+                        'align': 'center',
                         'gap': 'md',
                       },
                       '@trait.MemberStats',
@@ -360,7 +361,6 @@ export function stdFitnessStudioMemberOrbital(params: StdFitnessStudioMemberOrbi
                       },
                       '@trait.MemberBrowseList',
                     ],
-                    'gap': 'lg',
                   },
                 ],
               ],
@@ -379,34 +379,34 @@ export function stdFitnessStudioMemberOrbital(params: StdFitnessStudioMemberOrbi
                   'render-ui',
                   'main',
                   {
-                    'align': 'center',
+                    'direction': 'vertical',
+                    'gap': 'md',
+                    'type': 'stack',
                     'children': [
                       {
-                        'name': 'bell',
                         'type': 'icon',
+                        'name': 'bell',
                       },
                       {
-                        'type': 'typography',
                         'variant': 'h3',
                         'content': 'No notifications',
+                        'type': 'typography',
                       },
                       {
-                        'variant': 'caption',
                         'type': 'typography',
                         'content': 'You\'re all caught up.',
                         'color': 'muted',
+                        'variant': 'caption',
                       },
                       {
-                        'label': 'Back to members',
+                        'action': 'INIT',
                         'variant': 'ghost',
                         'type': 'button',
-                        'action': 'INIT',
+                        'label': 'Back to members',
                       },
                     ],
                     'className': 'py-8',
-                    'gap': 'md',
-                    'type': 'stack',
-                    'direction': 'vertical',
+                    'align': 'center',
                   },
                 ],
               ],
@@ -419,8 +419,8 @@ export function stdFitnessStudioMemberOrbital(params: StdFitnessStudioMemberOrbi
         'ref': 'Search.traits.SearchResultSearch',
         'name': 'MemberSearch',
         'config': {
-          'placeholder': 'Search members…',
           'event': 'MEMBER_SEARCH',
+          'placeholder': 'Search members…',
         },
       }),
       makeTraitRef({
@@ -429,6 +429,7 @@ export function stdFitnessStudioMemberOrbital(params: StdFitnessStudioMemberOrbi
         'config': {
           'filters': [
             {
+              'label': 'Tier',
               'field': 'membershipTier',
               'options': [
                 'basic',
@@ -436,17 +437,16 @@ export function stdFitnessStudioMemberOrbital(params: StdFitnessStudioMemberOrbi
                 'unlimited',
               ],
               'filterType': 'select',
-              'label': 'Tier',
             },
             {
-              'label': 'Status',
+              'filterType': 'select',
               'options': [
                 'active',
                 'paused',
                 'cancelled',
               ],
-              'filterType': 'select',
               'field': 'status',
+              'label': 'Status',
             },
           ],
           'event': 'MEMBER_FILTER',
@@ -456,16 +456,19 @@ export function stdFitnessStudioMemberOrbital(params: StdFitnessStudioMemberOrbi
         'ref': 'Stats.traits.StatsItemStats',
         'name': 'MemberStats',
         'config': {
+          'title': 'Members',
           'metrics': [
             {
-              'variant': 'primary',
-              'format': 'number',
               'aggregation': 'count',
+              'format': 'number',
               'label': 'Total',
+              'variant': 'primary',
               'icon': 'users',
             },
             {
               'icon': 'user-check',
+              'format': 'number',
+              'variant': 'success',
               'aggregation': 'count',
               'filter': [
                 'fn',
@@ -476,13 +479,12 @@ export function stdFitnessStudioMemberOrbital(params: StdFitnessStudioMemberOrbi
                   'active',
                 ],
               ],
-              'format': 'number',
-              'variant': 'success',
               'label': 'Active',
             },
             {
               'aggregation': 'count',
-              'variant': 'warning',
+              'icon': 'pause-circle',
+              'format': 'number',
               'filter': [
                 'fn',
                 'row',
@@ -492,11 +494,15 @@ export function stdFitnessStudioMemberOrbital(params: StdFitnessStudioMemberOrbi
                   'paused',
                 ],
               ],
-              'format': 'number',
               'label': 'Paused',
-              'icon': 'pause-circle',
+              'variant': 'warning',
             },
             {
+              'aggregation': 'count',
+              'label': 'Cancelled',
+              'icon': 'user-x',
+              'variant': 'danger',
+              'format': 'number',
               'filter': [
                 'fn',
                 'row',
@@ -506,14 +512,8 @@ export function stdFitnessStudioMemberOrbital(params: StdFitnessStudioMemberOrbi
                   'cancelled',
                 ],
               ],
-              'icon': 'user-x',
-              'aggregation': 'count',
-              'label': 'Cancelled',
-              'variant': 'danger',
-              'format': 'number',
             },
           ],
-          'title': 'Members',
         },
         'listens': [
           {
@@ -530,13 +530,13 @@ export function stdFitnessStudioMemberOrbital(params: StdFitnessStudioMemberOrbi
         'ref': 'Graphs.traits.GraphItemGraph',
         'name': 'MemberGraphs',
         'config': {
-          'title': 'Members by Tier',
           'chartType': 'bar',
+          'categoryField': 'membershipTier',
+          'aggregation': 'count',
+          'title': 'Members by Tier',
           'height': 240,
           'showLegend': false,
           'subtitle': 'Distribution across membership tiers',
-          'aggregation': 'count',
-          'categoryField': 'membershipTier',
         },
         'listens': [
           {
@@ -556,29 +556,27 @@ export function stdFitnessStudioMemberOrbital(params: StdFitnessStudioMemberOrbi
         'config': {
           'fields': [
             {
-              'name': 'name',
-              'icon': 'user',
               'variant': 'h4',
+              'icon': 'user',
+              'name': 'name',
             },
             {
-              'name': 'email',
               'variant': 'body',
+              'name': 'email',
             },
             {
-              'name': 'membershipTier',
               'variant': 'badge',
+              'name': 'membershipTier',
             },
             {
               'name': 'status',
               'variant': 'badge',
             },
             {
-              'variant': 'caption',
               'name': 'joinedAt',
+              'variant': 'caption',
             },
           ],
-          'cols': 1,
-          'gap': 'sm',
           'itemActions': [
             {
               'event': 'VIEW',
@@ -586,16 +584,18 @@ export function stdFitnessStudioMemberOrbital(params: StdFitnessStudioMemberOrbi
               'label': 'View',
             },
             {
-              'label': 'Edit',
               'event': 'EDIT',
+              'label': 'Edit',
               'variant': 'ghost',
             },
             {
-              'label': 'Delete',
               'event': 'DELETE',
+              'label': 'Delete',
               'variant': 'danger',
             },
           ],
+          'cols': 1,
+          'gap': 'sm',
         },
         'listens': [
           {
@@ -645,6 +645,7 @@ export function stdFitnessStudioMemberOrbital(params: StdFitnessStudioMemberOrbi
         'name': 'MemberCreate',
         'linkedEntity': canonicalName,
         'config': {
+          'icon': 'user-plus',
           'fields': [
             'name',
             'email',
@@ -652,9 +653,8 @@ export function stdFitnessStudioMemberOrbital(params: StdFitnessStudioMemberOrbi
             'status',
             'joinedAt',
           ],
-          'icon': 'user-plus',
-          'title': 'New Member',
           'mode': 'create',
+          'title': 'New Member',
         },
         'events': {
           'OPEN': 'CREATE',
@@ -676,6 +676,8 @@ export function stdFitnessStudioMemberOrbital(params: StdFitnessStudioMemberOrbi
         'linkedEntity': canonicalName,
         'config': {
           'mode': 'edit',
+          'icon': 'edit',
+          'title': 'Edit Member',
           'fields': [
             'name',
             'email',
@@ -683,8 +685,6 @@ export function stdFitnessStudioMemberOrbital(params: StdFitnessStudioMemberOrbi
             'status',
             'joinedAt',
           ],
-          'icon': 'edit',
-          'title': 'Edit Member',
         },
         'events': {
           'OPEN': 'EDIT',
@@ -706,8 +706,8 @@ export function stdFitnessStudioMemberOrbital(params: StdFitnessStudioMemberOrbi
         'linkedEntity': canonicalName,
         'config': {
           'title': 'View Member',
-          'icon': 'eye',
           'mode': 'edit',
+          'icon': 'eye',
           'fields': [
             'name',
             'email',
@@ -735,14 +735,14 @@ export function stdFitnessStudioMemberOrbital(params: StdFitnessStudioMemberOrbi
         'name': 'MemberDelete',
         'linkedEntity': canonicalName,
         'config': {
+          'confirmLabel': 'Delete',
+          'alertMessage': 'This action cannot be undone.',
           'icon': 'alert-triangle',
           'title': 'Cancel Membership',
-          'alertMessage': 'This action cannot be undone.',
-          'confirmLabel': 'Delete',
         },
         'events': {
-          'REQUEST': 'DELETE',
           'CONFIRM': 'CONFIRM_DELETE',
+          'REQUEST': 'DELETE',
         },
         'listens': [
           {
@@ -1150,31 +1150,31 @@ export function stdFitnessStudioClassSessionOrbital(params: StdFitnessStudioClas
         'name': 'ClassSessionAppLayout',
         'config': {
           'contentTrait': '@trait.ClassSessionDisplay',
+          'notifications': [],
+          'notificationClickEvent': 'CLASS_SESSION_NOTIFICATIONS_OPEN',
           'navItems': [
             {
-              'label': 'Members',
               'href': '/members',
+              'label': 'Members',
               'icon': 'users',
             },
             {
-              'href': '/classes',
               'icon': 'calendar',
+              'href': '/classes',
               'label': 'Classes',
             },
             {
-              'icon': 'credit-card',
               'href': '/memberships',
+              'icon': 'credit-card',
               'label': 'Memberships',
             },
             {
               'label': 'Rosters',
-              'href': '/rosters',
               'icon': 'clipboard-list',
+              'href': '/rosters',
             },
           ],
-          'notificationClickEvent': 'CLASS_SESSION_NOTIFICATIONS_OPEN',
           'appName': 'Fitness Studio',
-          'notifications': [],
           'searchEvent': 'CLASS_SESSION_SEARCH',
         },
         'events': {
@@ -1208,12 +1208,12 @@ export function stdFitnessStudioClassSessionOrbital(params: StdFitnessStudioClas
                   'render-ui',
                   'main',
                   {
-                    'className': 'max-w-6xl mx-auto w-full p-4',
                     'children': [
                       {
-                        'align': 'center',
                         'type': 'stack',
                         'gap': 'sm',
+                        'align': 'center',
+                        'direction': 'horizontal',
                         'children': [
                           {
                             'name': 'calendar',
@@ -1225,22 +1225,22 @@ export function stdFitnessStudioClassSessionOrbital(params: StdFitnessStudioClas
                             'variant': 'h2',
                           },
                         ],
-                        'direction': 'horizontal',
                       },
                       {
-                        'color': 'muted',
                         'variant': 'caption',
-                        'content': 'Group classes for the week. Start a class to open its roster; cancel to notify enrolled members.',
                         'type': 'typography',
+                        'content': 'Group classes for the week. Start a class to open its roster; cancel to notify enrolled members.',
+                        'color': 'muted',
                       },
                       {
                         'type': 'divider',
                       },
                       '@trait.ClassSessionSchedule',
                     ],
+                    'type': 'stack',
                     'direction': 'vertical',
                     'gap': 'lg',
-                    'type': 'stack',
+                    'className': 'max-w-6xl mx-auto w-full p-4',
                   },
                 ],
               ],
@@ -1431,37 +1431,37 @@ export function stdFitnessStudioMembershipOrbital(params: StdFitnessStudioMember
         'ref': 'AppShell.traits.AppLayout',
         'name': 'MembershipAppLayout',
         'config': {
-          'notifications': [],
           'searchEvent': 'MEMBERSHIP_SEARCH',
+          'contentTrait': '@trait.MembershipDisplay',
           'appName': 'Fitness Studio',
           'notificationClickEvent': 'MEMBERSHIP_NOTIFICATIONS_OPEN',
-          'contentTrait': '@trait.MembershipDisplay',
+          'notifications': [],
           'navItems': [
             {
               'icon': 'users',
-              'href': '/members',
               'label': 'Members',
+              'href': '/members',
             },
             {
               'label': 'Classes',
-              'href': '/classes',
               'icon': 'calendar',
+              'href': '/classes',
             },
             {
-              'href': '/memberships',
               'label': 'Memberships',
               'icon': 'credit-card',
+              'href': '/memberships',
             },
             {
-              'href': '/rosters',
               'label': 'Rosters',
+              'href': '/rosters',
               'icon': 'clipboard-list',
             },
           ],
         },
         'events': {
-          'NOTIFY_CLICK': 'MEMBERSHIP_NOTIFICATIONS_OPEN',
           'SEARCH': 'MEMBERSHIP_SEARCH',
+          'NOTIFY_CLICK': 'MEMBERSHIP_NOTIFICATIONS_OPEN',
         },
       }),
       rebindInlineTraitEntity({
@@ -1491,38 +1491,38 @@ export function stdFitnessStudioMembershipOrbital(params: StdFitnessStudioMember
                   'main',
                   {
                     'type': 'stack',
+                    'direction': 'vertical',
                     'gap': 'lg',
                     'className': 'max-w-6xl mx-auto w-full p-4',
                     'children': [
                       {
                         'direction': 'horizontal',
-                        'align': 'center',
                         'children': [
                           {
                             'type': 'icon',
                             'name': 'id-card',
                           },
                           {
+                            'variant': 'h2',
                             'content': 'Memberships',
                             'type': 'typography',
-                            'variant': 'h2',
                           },
                         ],
                         'type': 'stack',
+                        'align': 'center',
                         'gap': 'sm',
                       },
                       {
                         'type': 'typography',
                         'variant': 'caption',
-                        'color': 'muted',
                         'content': 'Recurring subscriptions per member. Upgrade tiers, freeze, or cancel from the row actions.',
+                        'color': 'muted',
                       },
                       {
                         'type': 'divider',
                       },
                       '@trait.MembershipDirectory',
                     ],
-                    'direction': 'vertical',
                   },
                 ],
               ],
@@ -1713,17 +1713,18 @@ export function stdFitnessStudioClassRosterOrbital(params: StdFitnessStudioClass
         'ref': 'AppShell.traits.AppLayout',
         'name': 'ClassRosterAppLayout',
         'config': {
-          'contentTrait': '@trait.ClassRosterDisplay',
           'appName': 'Fitness Studio',
+          'notificationClickEvent': 'CLASS_ROSTER_NOTIFICATIONS_OPEN',
+          'searchEvent': 'CLASS_ROSTER_SEARCH',
           'navItems': [
             {
-              'label': 'Members',
               'icon': 'users',
+              'label': 'Members',
               'href': '/members',
             },
             {
-              'label': 'Classes',
               'href': '/classes',
+              'label': 'Classes',
               'icon': 'calendar',
             },
             {
@@ -1732,18 +1733,17 @@ export function stdFitnessStudioClassRosterOrbital(params: StdFitnessStudioClass
               'icon': 'credit-card',
             },
             {
-              'label': 'Rosters',
               'href': '/rosters',
               'icon': 'clipboard-list',
+              'label': 'Rosters',
             },
           ],
-          'searchEvent': 'CLASS_ROSTER_SEARCH',
-          'notificationClickEvent': 'CLASS_ROSTER_NOTIFICATIONS_OPEN',
           'notifications': [],
+          'contentTrait': '@trait.ClassRosterDisplay',
         },
         'events': {
-          'SEARCH': 'CLASS_ROSTER_SEARCH',
           'NOTIFY_CLICK': 'CLASS_ROSTER_NOTIFICATIONS_OPEN',
+          'SEARCH': 'CLASS_ROSTER_SEARCH',
         },
       }),
       rebindInlineTraitEntity({
@@ -1772,39 +1772,39 @@ export function stdFitnessStudioClassRosterOrbital(params: StdFitnessStudioClass
                   'render-ui',
                   'main',
                   {
+                    'direction': 'vertical',
+                    'type': 'stack',
+                    'gap': 'lg',
                     'children': [
                       {
-                        'type': 'stack',
-                        'align': 'center',
-                        'gap': 'sm',
+                        'direction': 'horizontal',
                         'children': [
                           {
-                            'name': 'clipboard-list',
                             'type': 'icon',
+                            'name': 'clipboard-list',
                           },
                           {
-                            'content': 'Class Rosters',
                             'type': 'typography',
                             'variant': 'h2',
+                            'content': 'Class Rosters',
                           },
                         ],
-                        'direction': 'horizontal',
+                        'align': 'center',
+                        'type': 'stack',
+                        'gap': 'sm',
                       },
                       {
-                        'content': 'Enrolled members per session. Check in arrivals or mark no-shows from the row actions.',
-                        'variant': 'caption',
                         'color': 'muted',
+                        'content': 'Enrolled members per session. Check in arrivals or mark no-shows from the row actions.',
                         'type': 'typography',
+                        'variant': 'caption',
                       },
                       {
                         'type': 'divider',
                       },
                       '@trait.ClassRosterEntries',
                     ],
-                    'type': 'stack',
                     'className': 'max-w-6xl mx-auto w-full p-4',
-                    'direction': 'vertical',
-                    'gap': 'lg',
                   },
                 ],
               ],

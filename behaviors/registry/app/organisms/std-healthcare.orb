@@ -102,20 +102,18 @@
           "ref": "AppShell.traits.AppLayout",
           "name": "PatientAppLayout",
           "config": {
-            "notifications": [],
-            "appName": "HealthcareApp",
-            "notificationClickEvent": "PATIENT_NOTIFICATIONS_OPEN",
+            "searchEvent": "PATIENT_SEARCH",
             "contentTrait": "@trait.PatientCatalog",
             "navItems": [
               {
-                "icon": "user-plus",
+                "label": "Patients",
                 "href": "/patients",
-                "label": "Patients"
+                "icon": "user-plus"
               },
               {
                 "label": "Appointments",
-                "icon": "calendar",
-                "href": "/appointments"
+                "href": "/appointments",
+                "icon": "calendar"
               },
               {
                 "label": "Intake",
@@ -123,17 +121,19 @@
                 "icon": "layout-list"
               },
               {
-                "icon": "pill",
                 "href": "/prescriptions",
+                "icon": "pill",
                 "label": "Prescriptions"
               },
               {
-                "label": "Dashboard",
                 "href": "/dashboard",
-                "icon": "layout-dashboard"
+                "icon": "layout-dashboard",
+                "label": "Dashboard"
               }
             ],
-            "searchEvent": "PATIENT_SEARCH"
+            "appName": "HealthcareApp",
+            "notifications": [],
+            "notificationClickEvent": "PATIENT_NOTIFICATIONS_OPEN"
           },
           "events": {
             "NOTIFY_CLICK": "PATIENT_NOTIFICATIONS_OPEN",
@@ -220,61 +220,58 @@
                     "render-ui",
                     "main",
                     {
-                      "direction": "vertical",
-                      "gap": "lg",
-                      "type": "stack",
                       "children": [
                         {
                           "type": "stack",
-                          "gap": "md",
-                          "align": "center",
                           "direction": "horizontal",
+                          "justify": "between",
+                          "align": "center",
                           "children": [
                             {
+                              "gap": "sm",
+                              "type": "stack",
                               "direction": "horizontal",
+                              "align": "center",
                               "children": [
                                 {
-                                  "type": "icon",
-                                  "name": "user-plus"
+                                  "name": "user-plus",
+                                  "type": "icon"
                                 },
                                 {
                                   "type": "typography",
-                                  "content": "Patients",
-                                  "variant": "h2"
+                                  "variant": "h2",
+                                  "content": "Patients"
                                 }
-                              ],
-                              "gap": "sm",
-                              "align": "center",
-                              "type": "stack"
+                              ]
                             },
                             {
-                              "direction": "horizontal",
                               "type": "stack",
                               "gap": "sm",
+                              "direction": "horizontal",
                               "children": [
                                 {
-                                  "type": "button",
-                                  "label": "New Patient",
-                                  "action": "CREATE",
                                   "icon": "plus",
+                                  "label": "New Patient",
+                                  "type": "button",
+                                  "action": "CREATE",
                                   "variant": "primary"
                                 }
                               ]
                             }
                           ],
-                          "justify": "between"
+                          "gap": "md"
                         },
                         {
                           "type": "divider"
                         },
                         {
                           "type": "stack",
+                          "gap": "sm",
                           "direction": "horizontal",
                           "children": [
                             "@trait.PatientSearch",
                             "@trait.PatientFilter"
-                          ],
-                          "gap": "sm"
+                          ]
                         },
                         "@trait.PatientStats",
                         "@trait.PatientGraphs",
@@ -282,7 +279,10 @@
                           "type": "divider"
                         },
                         "@trait.PatientBrowseList"
-                      ]
+                      ],
+                      "type": "stack",
+                      "direction": "vertical",
+                      "gap": "lg"
                     }
                   ]
                 ]
@@ -301,13 +301,15 @@
                     "render-ui",
                     "main",
                     {
-                      "direction": "vertical",
                       "gap": "md",
+                      "direction": "vertical",
+                      "type": "stack",
+                      "className": "py-8",
                       "align": "center",
                       "children": [
                         {
-                          "type": "icon",
-                          "name": "bell"
+                          "name": "bell",
+                          "type": "icon"
                         },
                         {
                           "variant": "h3",
@@ -315,20 +317,18 @@
                           "type": "typography"
                         },
                         {
-                          "type": "typography",
                           "color": "muted",
+                          "content": "You're all caught up.",
                           "variant": "caption",
-                          "content": "You're all caught up."
+                          "type": "typography"
                         },
                         {
                           "type": "button",
-                          "label": "Back to patients",
                           "variant": "ghost",
-                          "action": "INIT"
+                          "action": "INIT",
+                          "label": "Back to patients"
                         }
-                      ],
-                      "type": "stack",
-                      "className": "py-8"
+                      ]
                     }
                   ]
                 ]
@@ -341,59 +341,55 @@
           "ref": "Search.traits.SearchResultSearch",
           "name": "PatientSearch",
           "config": {
-            "placeholder": "Search patients by name…",
-            "event": "SEARCH"
+            "event": "SEARCH",
+            "placeholder": "Search patients by name…"
           }
         },
         {
           "ref": "Filter.traits.FilterTargetFilter",
           "name": "PatientFilter",
           "config": {
+            "event": "FILTER",
             "filters": [
               {
+                "label": "Status",
+                "filterType": "select",
+                "field": "status",
                 "options": [
                   "active",
                   "inactive",
                   "discharged"
-                ],
-                "field": "status",
-                "label": "Status",
-                "filterType": "select"
+                ]
               },
               {
                 "filterType": "select",
-                "label": "Insurance",
                 "field": "insuranceId",
                 "options": [
                   "aetna",
                   "bcbs",
                   "cigna",
                   "uhc"
-                ]
+                ],
+                "label": "Insurance"
               }
-            ],
-            "event": "FILTER"
+            ]
           }
         },
         {
           "ref": "Stats.traits.StatsItemStats",
           "name": "PatientStats",
           "config": {
-            "title": "Patient Overview",
             "metrics": [
               {
-                "variant": "primary",
                 "aggregation": "count",
-                "label": "Total Patients",
                 "format": "number",
-                "icon": "users"
+                "label": "Total Patients",
+                "icon": "users",
+                "variant": "primary"
               },
               {
                 "icon": "check-circle",
-                "aggregation": "count",
                 "variant": "success",
-                "label": "Active",
-                "format": "number",
                 "filter": [
                   "fn",
                   "row",
@@ -402,23 +398,27 @@
                     "@row.status",
                     "active"
                   ]
-                ]
-              },
-              {
+                ],
+                "aggregation": "count",
                 "format": "number",
-                "variant": "info",
-                "aggregation": "count",
-                "label": "New This Month",
-                "icon": "user-plus"
+                "label": "Active"
               },
               {
-                "aggregation": "count",
+                "variant": "info",
+                "icon": "user-plus",
+                "format": "number",
+                "label": "New This Month",
+                "aggregation": "count"
+              },
+              {
                 "label": "By Insurance",
                 "format": "number",
+                "aggregation": "count",
                 "icon": "shield",
                 "variant": "default"
               }
-            ]
+            ],
+            "title": "Patient Overview"
           },
           "listens": [
             {
@@ -435,13 +435,13 @@
           "ref": "Graphs.traits.GraphItemGraph",
           "name": "PatientGraphs",
           "config": {
-            "subtitle": "Distribution across providers",
+            "height": 280.0,
+            "showLegend": true,
+            "aggregation": "count",
             "title": "Patients by Insurance",
             "chartType": "pie",
-            "height": 280.0,
             "categoryField": "insuranceId",
-            "aggregation": "count",
-            "showLegend": true
+            "subtitle": "Distribution across providers"
           },
           "listens": [
             {
@@ -459,28 +459,11 @@
           "name": "PatientBrowseList",
           "linkedEntity": "Patient",
           "config": {
-            "itemActions": [
-              {
-                "event": "VIEW",
-                "label": "View",
-                "variant": "ghost"
-              },
-              {
-                "variant": "ghost",
-                "label": "Edit",
-                "event": "EDIT"
-              },
-              {
-                "event": "DELETE",
-                "variant": "danger",
-                "label": "Delete"
-              }
-            ],
             "fields": [
               {
+                "label": "Name",
                 "variant": "h3",
                 "name": "firstName",
-                "label": "Name",
                 "icon": "user"
               },
               {
@@ -489,14 +472,14 @@
               },
               {
                 "name": "dateOfBirth",
-                "format": "date",
                 "variant": "caption",
-                "label": "DOB"
+                "label": "DOB",
+                "format": "date"
               },
               {
                 "name": "insuranceId",
-                "variant": "badge",
-                "label": "Insurance"
+                "label": "Insurance",
+                "variant": "badge"
               },
               {
                 "name": "status",
@@ -505,6 +488,23 @@
               {
                 "variant": "caption",
                 "name": "email"
+              }
+            ],
+            "itemActions": [
+              {
+                "label": "View",
+                "variant": "ghost",
+                "event": "VIEW"
+              },
+              {
+                "variant": "ghost",
+                "label": "Edit",
+                "event": "EDIT"
+              },
+              {
+                "event": "DELETE",
+                "label": "Delete",
+                "variant": "danger"
               }
             ],
             "gap": "sm"
@@ -566,7 +566,7 @@
           "name": "PatientCreate",
           "linkedEntity": "Patient",
           "config": {
-            "title": "Create Patient",
+            "icon": "plus-circle",
             "fields": [
               "firstName",
               "lastName",
@@ -576,12 +576,12 @@
               "insuranceId",
               "status"
             ],
-            "icon": "plus-circle",
+            "title": "Create Patient",
             "mode": "create"
           },
           "events": {
-            "OPEN": "CREATE",
-            "SAVE": "PATIENT_CREATED"
+            "SAVE": "PATIENT_CREATED",
+            "OPEN": "CREATE"
           },
           "listens": [
             {
@@ -599,8 +599,6 @@
           "name": "PatientEdit",
           "linkedEntity": "Patient",
           "config": {
-            "title": "Edit Patient",
-            "mode": "edit",
             "fields": [
               "firstName",
               "lastName",
@@ -610,11 +608,13 @@
               "insuranceId",
               "status"
             ],
-            "icon": "edit"
+            "mode": "edit",
+            "icon": "edit",
+            "title": "Edit Patient"
           },
           "events": {
-            "OPEN": "EDIT",
-            "SAVE": "PATIENT_UPDATED"
+            "SAVE": "PATIENT_UPDATED",
+            "OPEN": "EDIT"
           },
           "listens": [
             {
@@ -642,8 +642,8 @@
               "insuranceId",
               "status"
             ],
-            "title": "Patient Details",
-            "icon": "eye"
+            "icon": "eye",
+            "title": "Patient Details"
           },
           "events": {
             "OPEN": "VIEW"
@@ -664,14 +664,14 @@
           "name": "PatientDelete",
           "linkedEntity": "Patient",
           "config": {
-            "icon": "alert-triangle",
+            "alertMessage": "This action cannot be undone.",
             "title": "Delete Patient",
             "confirmLabel": "Delete",
-            "alertMessage": "This action cannot be undone."
+            "icon": "alert-triangle"
           },
           "events": {
-            "CONFIRM": "PATIENT_DELETED",
-            "REQUEST": "DELETE"
+            "REQUEST": "DELETE",
+            "CONFIRM": "PATIENT_DELETED"
           },
           "listens": [
             {
@@ -953,40 +953,40 @@
                     "render-ui",
                     "main",
                     {
-                      "gap": "md",
                       "type": "stack",
-                      "direction": "vertical",
+                      "gap": "md",
                       "children": [
                         {
-                          "direction": "horizontal",
+                          "gap": "sm",
                           "type": "stack",
                           "align": "center",
                           "children": [
                             {
-                              "type": "icon",
-                              "name": "paperclip"
+                              "name": "paperclip",
+                              "type": "icon"
                             },
                             {
                               "content": "Upload Medical Record",
-                              "type": "typography",
-                              "variant": "h3"
+                              "variant": "h3",
+                              "type": "typography"
                             }
                           ],
-                          "gap": "sm"
+                          "direction": "horizontal"
                         },
                         {
-                          "type": "input",
+                          "placeholder": "Choose file path…",
                           "inputType": "text",
-                          "placeholder": "Choose file path…"
+                          "type": "input"
                         },
                         {
                           "type": "button",
-                          "icon": "upload",
+                          "action": "UPLOAD",
                           "variant": "primary",
-                          "label": "Upload",
-                          "action": "UPLOAD"
+                          "icon": "upload",
+                          "label": "Upload"
                         }
-                      ]
+                      ],
+                      "direction": "vertical"
                     }
                   ]
                 ]
@@ -1001,15 +1001,15 @@
                     "storage",
                     "upload",
                     {
-                      "file": "@payload.file",
                       "acl": "private",
-                      "bucket": "patient-records",
-                      "maxSize": 10485760.0
+                      "maxSize": 10485760.0,
+                      "file": "@payload.file",
+                      "bucket": "patient-records"
                     },
                     {
                       "emit": {
-                        "failure": "DocumentUploadFailed",
-                        "success": "DocumentUploaded"
+                        "success": "DocumentUploaded",
+                        "failure": "DocumentUploadFailed"
                       }
                     }
                   ],
@@ -1017,21 +1017,21 @@
                     "render-ui",
                     "main",
                     {
+                      "type": "stack",
+                      "gap": "md",
+                      "align": "center",
+                      "direction": "vertical",
                       "children": [
                         {
                           "type": "spinner"
                         },
                         {
-                          "color": "muted",
+                          "type": "typography",
                           "variant": "caption",
                           "content": "Uploading…",
-                          "type": "typography"
+                          "color": "muted"
                         }
-                      ],
-                      "direction": "vertical",
-                      "gap": "md",
-                      "type": "stack",
-                      "align": "center"
+                      ]
                     }
                   ]
                 ]
@@ -1220,22 +1220,26 @@
           "name": "AppointmentAppLayout",
           "linkedEntity": "Appointment",
           "config": {
+            "notificationClickEvent": "APPOINTMENT_NOTIFICATIONS_OPEN",
+            "appName": "HealthcareApp",
             "searchEvent": "APPOINTMENT_SEARCH",
+            "notifications": [],
             "topBarActions": [],
+            "contentTrait": "@trait.AppointmentCatalog",
             "navItems": [
               {
-                "href": "/patients",
+                "label": "Patients",
                 "icon": "user-plus",
-                "label": "Patients"
+                "href": "/patients"
               },
               {
+                "href": "/appointments",
                 "label": "Appointments",
-                "icon": "calendar",
-                "href": "/appointments"
+                "icon": "calendar"
               },
               {
-                "label": "Intake",
                 "href": "/intake",
+                "label": "Intake",
                 "icon": "layout-list"
               },
               {
@@ -1245,14 +1249,10 @@
               },
               {
                 "href": "/dashboard",
-                "label": "Dashboard",
-                "icon": "layout-dashboard"
+                "icon": "layout-dashboard",
+                "label": "Dashboard"
               }
-            ],
-            "notificationClickEvent": "APPOINTMENT_NOTIFICATIONS_OPEN",
-            "notifications": [],
-            "contentTrait": "@trait.AppointmentCatalog",
-            "appName": "HealthcareApp"
+            ]
           },
           "events": {
             "NOTIFY_CLICK": "APPOINTMENT_NOTIFICATIONS_OPEN",
@@ -1301,46 +1301,48 @@
                     "render-ui",
                     "main",
                     {
+                      "direction": "vertical",
+                      "gap": "lg",
                       "children": [
                         {
-                          "direction": "horizontal",
-                          "align": "center",
-                          "justify": "between",
                           "children": [
                             {
+                              "direction": "horizontal",
                               "align": "center",
                               "children": [
                                 {
-                                  "type": "icon",
-                                  "name": "calendar"
+                                  "name": "calendar",
+                                  "type": "icon"
                                 },
                                 {
                                   "type": "typography",
-                                  "content": "Appointments",
-                                  "variant": "h2"
+                                  "variant": "h2",
+                                  "content": "Appointments"
                                 }
                               ],
-                              "gap": "sm",
-                              "direction": "horizontal",
-                              "type": "stack"
+                              "type": "stack",
+                              "gap": "sm"
                             },
                             {
                               "type": "stack",
-                              "direction": "horizontal",
                               "children": [
                                 {
-                                  "icon": "plus",
-                                  "label": "New Appointment",
-                                  "variant": "primary",
+                                  "action": "CREATE",
                                   "type": "button",
-                                  "action": "CREATE"
+                                  "variant": "primary",
+                                  "icon": "plus",
+                                  "label": "New Appointment"
                                 }
                               ],
+                              "direction": "horizontal",
                               "gap": "sm"
                             }
                           ],
-                          "type": "stack",
-                          "gap": "md"
+                          "direction": "horizontal",
+                          "gap": "md",
+                          "justify": "between",
+                          "align": "center",
+                          "type": "stack"
                         },
                         {
                           "type": "divider"
@@ -1351,9 +1353,7 @@
                         },
                         "@trait.AppointmentBrowseList"
                       ],
-                      "gap": "lg",
-                      "type": "stack",
-                      "direction": "vertical"
+                      "type": "stack"
                     }
                   ]
                 ]
@@ -1403,30 +1403,12 @@
           "name": "AppointmentBrowseList",
           "linkedEntity": "Appointment",
           "config": {
-            "itemActions": [
-              {
-                "variant": "ghost",
-                "event": "VIEW",
-                "label": "View"
-              },
-              {
-                "label": "Edit",
-                "event": "EDIT",
-                "variant": "ghost"
-              },
-              {
-                "variant": "danger",
-                "event": "DELETE",
-                "label": "Delete"
-              }
-            ],
-            "gap": "sm",
             "fields": [
               {
-                "label": "Patient",
-                "icon": "user",
                 "name": "patientName",
-                "variant": "h4"
+                "icon": "user",
+                "variant": "h4",
+                "label": "Patient"
               },
               {
                 "label": "Doctor",
@@ -1434,20 +1416,38 @@
                 "name": "doctorName"
               },
               {
-                "format": "date",
+                "variant": "caption",
                 "name": "scheduledAt",
                 "label": "When",
-                "variant": "caption"
+                "format": "date"
               },
               {
                 "name": "status",
                 "variant": "badge"
               },
               {
-                "variant": "caption",
-                "name": "reason"
+                "name": "reason",
+                "variant": "caption"
               }
-            ]
+            ],
+            "itemActions": [
+              {
+                "label": "View",
+                "event": "VIEW",
+                "variant": "ghost"
+              },
+              {
+                "variant": "ghost",
+                "label": "Edit",
+                "event": "EDIT"
+              },
+              {
+                "label": "Delete",
+                "event": "DELETE",
+                "variant": "danger"
+              }
+            ],
+            "gap": "sm"
           },
           "listens": [
             {
@@ -1481,8 +1481,8 @@
           "name": "AppointmentCreate",
           "linkedEntity": "Appointment",
           "config": {
-            "title": "Create Appointment",
             "icon": "plus-circle",
+            "title": "Create Appointment",
             "fields": [
               "patientName",
               "patientEmail",
@@ -1496,8 +1496,8 @@
             "mode": "create"
           },
           "events": {
-            "SAVE": "APPOINTMENT_CREATED",
-            "OPEN": "CREATE"
+            "OPEN": "CREATE",
+            "SAVE": "APPOINTMENT_CREATED"
           },
           "listens": [
             {
@@ -1515,7 +1515,8 @@
           "name": "AppointmentEdit",
           "linkedEntity": "Appointment",
           "config": {
-            "title": "Edit Appointment",
+            "mode": "edit",
+            "icon": "edit",
             "fields": [
               "patientName",
               "patientEmail",
@@ -1526,12 +1527,11 @@
               "reason",
               "status"
             ],
-            "mode": "edit",
-            "icon": "edit"
+            "title": "Edit Appointment"
           },
           "events": {
-            "OPEN": "EDIT",
-            "SAVE": "APPOINTMENT_UPDATED"
+            "SAVE": "APPOINTMENT_UPDATED",
+            "OPEN": "EDIT"
           },
           "listens": [
             {
@@ -1549,8 +1549,8 @@
           "name": "AppointmentView",
           "linkedEntity": "Appointment",
           "config": {
-            "icon": "eye",
             "title": "Appointment Details",
+            "icon": "eye",
             "fields": [
               "patientName",
               "doctorName",
@@ -1580,10 +1580,10 @@
           "name": "AppointmentDelete",
           "linkedEntity": "Appointment",
           "config": {
-            "title": "Delete Appointment",
-            "alertMessage": "This action cannot be undone.",
+            "icon": "alert-triangle",
             "confirmLabel": "Delete",
-            "icon": "alert-triangle"
+            "alertMessage": "This action cannot be undone.",
+            "title": "Delete Appointment"
           },
           "events": {
             "CONFIRM": "APPOINTMENT_DELETED",
@@ -1796,15 +1796,15 @@
                     "email",
                     "send",
                     {
-                      "body": "Your appointment is scheduled.",
                       "sender": "noreply@clinic.example",
-                      "recipient": "@payload.data.patientEmail",
-                      "subject": "Appointment Confirmed"
+                      "body": "Your appointment is scheduled.",
+                      "subject": "Appointment Confirmed",
+                      "recipient": "@payload.data.patientEmail"
                     },
                     {
                       "emit": {
-                        "failure": "AppointmentEmailFailed",
-                        "success": "AppointmentEmailSent"
+                        "success": "AppointmentEmailSent",
+                        "failure": "AppointmentEmailFailed"
                       }
                     }
                   ]
@@ -1956,35 +1956,35 @@
                     "render-ui",
                     "main",
                     {
-                      "gap": "md",
+                      "type": "stack",
                       "direction": "vertical",
+                      "gap": "md",
                       "children": [
                         {
-                          "direction": "horizontal",
                           "type": "stack",
+                          "align": "center",
+                          "gap": "sm",
+                          "direction": "horizontal",
                           "children": [
                             {
                               "type": "icon",
                               "name": "bell"
                             },
                             {
-                              "type": "typography",
                               "content": "Send Appointment Reminder",
-                              "variant": "h3"
+                              "variant": "h3",
+                              "type": "typography"
                             }
-                          ],
-                          "gap": "sm",
-                          "align": "center"
+                          ]
                         },
                         {
+                          "label": "Send SMS Reminder",
+                          "type": "button",
                           "variant": "primary",
                           "action": "SEND_REMINDER",
-                          "type": "button",
-                          "label": "Send SMS Reminder",
                           "icon": "send"
                         }
-                      ],
-                      "type": "stack"
+                      ]
                     }
                   ]
                 ]
@@ -2005,8 +2005,8 @@
                     },
                     {
                       "emit": {
-                        "success": "ReminderSent",
-                        "failure": "ReminderFailed"
+                        "failure": "ReminderFailed",
+                        "success": "ReminderSent"
                       }
                     }
                   ],
@@ -2014,21 +2014,21 @@
                     "render-ui",
                     "main",
                     {
-                      "align": "center",
-                      "gap": "md",
-                      "type": "stack",
                       "direction": "vertical",
                       "children": [
                         {
                           "type": "spinner"
                         },
                         {
-                          "content": "Sending reminder…",
-                          "color": "muted",
                           "variant": "caption",
-                          "type": "typography"
+                          "content": "Sending reminder…",
+                          "type": "typography",
+                          "color": "muted"
                         }
-                      ]
+                      ],
+                      "align": "center",
+                      "gap": "md",
+                      "type": "stack"
                     }
                   ]
                 ]
@@ -2173,19 +2173,16 @@
           "name": "IntakeFormAppLayout",
           "linkedEntity": "IntakeForm",
           "config": {
-            "notificationClickEvent": "INTAKE_NOTIFICATIONS_OPEN",
-            "appName": "HealthcareApp",
-            "searchEvent": "INTAKE_SEARCH",
             "contentTrait": "@trait.IntakeFormWizard",
             "navItems": [
               {
-                "href": "/patients",
+                "icon": "user-plus",
                 "label": "Patients",
-                "icon": "user-plus"
+                "href": "/patients"
               },
               {
-                "label": "Appointments",
                 "icon": "calendar",
+                "label": "Appointments",
                 "href": "/appointments"
               },
               {
@@ -2194,18 +2191,21 @@
                 "href": "/intake"
               },
               {
+                "icon": "pill",
                 "label": "Prescriptions",
-                "href": "/prescriptions",
-                "icon": "pill"
+                "href": "/prescriptions"
               },
               {
-                "label": "Dashboard",
                 "href": "/dashboard",
-                "icon": "layout-dashboard"
+                "icon": "layout-dashboard",
+                "label": "Dashboard"
               }
             ],
             "topBarActions": [],
-            "notifications": []
+            "notifications": [],
+            "searchEvent": "INTAKE_SEARCH",
+            "appName": "HealthcareApp",
+            "notificationClickEvent": "INTAKE_NOTIFICATIONS_OPEN"
           },
           "events": {
             "NOTIFY_CLICK": "INTAKE_NOTIFICATIONS_OPEN",
@@ -2427,8 +2427,8 @@
                     "IntakeForm",
                     {
                       "emit": {
-                        "success": "IntakeFormLoaded",
-                        "failure": "IntakeFormLoadFailed"
+                        "failure": "IntakeFormLoadFailed",
+                        "success": "IntakeFormLoaded"
                       }
                     }
                   ],
@@ -2437,12 +2437,11 @@
                     "main",
                     {
                       "className": "max-w-xl mx-auto w-full",
+                      "gap": "lg",
+                      "type": "stack",
+                      "direction": "vertical",
                       "children": [
                         {
-                          "gap": "sm",
-                          "align": "center",
-                          "direction": "horizontal",
-                          "type": "stack",
                           "children": [
                             {
                               "type": "icon",
@@ -2453,11 +2452,15 @@
                               "type": "typography",
                               "content": "Patient Intake"
                             }
-                          ]
+                          ],
+                          "type": "stack",
+                          "direction": "horizontal",
+                          "gap": "sm",
+                          "align": "center"
                         },
                         {
-                          "currentStep": 0.0,
                           "type": "wizard-progress",
+                          "currentStep": 0.0,
                           "steps": [
                             "Personal Info",
                             "Medical History",
@@ -2469,14 +2472,12 @@
                           "type": "divider"
                         },
                         {
+                          "type": "typography",
                           "content": "Personal Info",
-                          "variant": "h3",
-                          "type": "typography"
+                          "variant": "h3"
                         },
                         {
-                          "submitEvent": "NEXT",
-                          "type": "form-section",
-                          "showCancel": false,
+                          "submitLabel": "Continue",
                           "fields": [
                             {
                               "required": true,
@@ -2492,12 +2493,11 @@
                             }
                           ],
                           "mode": "create",
-                          "submitLabel": "Continue"
+                          "submitEvent": "NEXT",
+                          "type": "form-section",
+                          "showCancel": false
                         }
-                      ],
-                      "type": "stack",
-                      "gap": "lg",
-                      "direction": "vertical"
+                      ]
                     }
                   ]
                 ]
@@ -2533,47 +2533,47 @@
                     "main",
                     {
                       "gap": "lg",
+                      "direction": "vertical",
+                      "type": "stack",
                       "className": "max-w-xl mx-auto w-full",
                       "children": [
                         {
-                          "content": "Patient Intake",
                           "type": "typography",
-                          "variant": "h2"
+                          "variant": "h2",
+                          "content": "Patient Intake"
                         },
                         {
                           "type": "wizard-progress",
+                          "currentStep": 1.0,
                           "steps": [
                             "Personal Info",
                             "Medical History",
                             "Insurance",
                             "Review"
-                          ],
-                          "currentStep": 1.0
+                          ]
                         },
                         {
                           "type": "divider"
                         },
                         {
                           "variant": "h3",
-                          "type": "typography",
-                          "content": "Medical History"
+                          "content": "Medical History",
+                          "type": "typography"
                         },
                         {
-                          "entity": "@entity",
                           "cancelEvent": "PREV",
+                          "mode": "edit",
+                          "cancelLabel": "Back",
                           "type": "form-section",
+                          "entity": "@entity",
+                          "submitLabel": "Continue",
+                          "submitEvent": "NEXT",
                           "fields": [
                             "allergies",
                             "medications"
-                          ],
-                          "mode": "edit",
-                          "cancelLabel": "Back",
-                          "submitLabel": "Continue",
-                          "submitEvent": "NEXT"
+                          ]
                         }
-                      ],
-                      "type": "stack",
-                      "direction": "vertical"
+                      ]
                     }
                   ]
                 ]
@@ -2603,58 +2603,58 @@
                     "render-ui",
                     "main",
                     {
+                      "gap": "lg",
                       "className": "max-w-xl mx-auto w-full",
+                      "type": "stack",
                       "children": [
                         {
                           "type": "typography",
-                          "content": "Patient Intake",
-                          "variant": "h2"
+                          "variant": "h2",
+                          "content": "Patient Intake"
                         },
                         {
-                          "type": "wizard-progress",
                           "steps": [
                             "Personal Info",
                             "Medical History",
                             "Insurance",
                             "Review"
                           ],
+                          "type": "wizard-progress",
                           "currentStep": 2.0
                         },
                         {
                           "type": "divider"
                         },
                         {
-                          "content": "Insurance",
                           "variant": "h3",
+                          "content": "Insurance",
                           "type": "typography"
                         },
                         {
+                          "cancelEvent": "PREV",
                           "entity": "@entity",
+                          "type": "form-section",
+                          "mode": "edit",
+                          "submitEvent": "NEXT",
                           "cancelLabel": "Back",
+                          "submitLabel": "Continue",
                           "fields": [
                             {
-                              "required": true,
-                              "name": "emergencyContact"
+                              "name": "emergencyContact",
+                              "required": true
                             },
                             {
                               "required": true,
                               "name": "insuranceProvider"
                             },
                             {
-                              "name": "insuranceId",
-                              "required": true
+                              "required": true,
+                              "name": "insuranceId"
                             }
-                          ],
-                          "submitEvent": "NEXT",
-                          "type": "form-section",
-                          "mode": "edit",
-                          "cancelEvent": "PREV",
-                          "submitLabel": "Continue"
+                          ]
                         }
                       ],
-                      "direction": "vertical",
-                      "gap": "lg",
-                      "type": "stack"
+                      "direction": "vertical"
                     }
                   ]
                 ]
@@ -2668,6 +2668,7 @@
                     "render-ui",
                     "main",
                     {
+                      "className": "max-w-xl mx-auto w-full",
                       "children": [
                         {
                           "type": "typography",
@@ -2689,36 +2690,35 @@
                         },
                         {
                           "type": "typography",
-                          "content": "Personal Info",
-                          "variant": "h3"
+                          "variant": "h3",
+                          "content": "Personal Info"
                         },
                         {
-                          "entity": "@entity",
-                          "mode": "edit",
-                          "submitEvent": "NEXT",
-                          "submitLabel": "Continue",
                           "type": "form-section",
+                          "submitEvent": "NEXT",
+                          "entity": "@entity",
+                          "submitLabel": "Continue",
+                          "mode": "edit",
+                          "showCancel": false,
                           "fields": [
                             {
                               "name": "firstName",
                               "required": true
                             },
                             {
-                              "name": "lastName",
-                              "required": true
+                              "required": true,
+                              "name": "lastName"
                             },
                             {
                               "required": true,
                               "name": "dateOfBirth"
                             }
-                          ],
-                          "showCancel": false
+                          ]
                         }
                       ],
                       "direction": "vertical",
-                      "type": "stack",
                       "gap": "lg",
-                      "className": "max-w-xl mx-auto w-full"
+                      "type": "stack"
                     }
                   ]
                 ]
@@ -2756,84 +2756,80 @@
                     "render-ui",
                     "main",
                     {
-                      "className": "max-w-xl mx-auto w-full",
                       "children": [
                         {
+                          "variant": "h2",
                           "content": "Review intake",
-                          "type": "typography",
-                          "variant": "h2"
+                          "type": "typography"
                         },
                         {
-                          "type": "wizard-progress",
                           "steps": [
                             "Personal Info",
                             "Medical History",
                             "Insurance",
                             "Review"
                           ],
+                          "type": "wizard-progress",
                           "currentStep": 3.0
                         },
                         {
                           "type": "divider"
                         },
                         {
-                          "direction": "vertical",
-                          "type": "stack",
-                          "gap": "sm",
                           "children": [
                             {
+                              "gap": "md",
                               "type": "stack",
-                              "gap": "md",
+                              "direction": "horizontal",
                               "justify": "between",
-                              "children": [
-                                {
-                                  "type": "typography",
-                                  "content": "First Name",
-                                  "variant": "caption"
-                                },
-                                {
-                                  "content": "@entity.firstName",
-                                  "type": "typography",
-                                  "variant": "body"
-                                }
-                              ],
-                              "direction": "horizontal"
-                            },
-                            {
-                              "gap": "md",
                               "children": [
                                 {
                                   "variant": "caption",
                                   "type": "typography",
-                                  "content": "Last Name"
+                                  "content": "First Name"
                                 },
                                 {
-                                  "content": "@entity.lastName",
+                                  "variant": "body",
                                   "type": "typography",
-                                  "variant": "body"
+                                  "content": "@entity.firstName"
+                                }
+                              ]
+                            },
+                            {
+                              "gap": "md",
+                              "direction": "horizontal",
+                              "children": [
+                                {
+                                  "content": "Last Name",
+                                  "type": "typography",
+                                  "variant": "caption"
+                                },
+                                {
+                                  "variant": "body",
+                                  "type": "typography",
+                                  "content": "@entity.lastName"
                                 }
                               ],
                               "type": "stack",
-                              "direction": "horizontal",
                               "justify": "between"
                             },
                             {
-                              "gap": "md",
-                              "justify": "between",
                               "direction": "horizontal",
+                              "justify": "between",
+                              "type": "stack",
+                              "gap": "md",
                               "children": [
                                 {
-                                  "content": "Date of Birth",
+                                  "type": "typography",
                                   "variant": "caption",
-                                  "type": "typography"
+                                  "content": "Date of Birth"
                                 },
                                 {
-                                  "content": "@entity.dateOfBirth",
                                   "variant": "body",
+                                  "content": "@entity.dateOfBirth",
                                   "type": "typography"
                                 }
-                              ],
-                              "type": "stack"
+                              ]
                             },
                             {
                               "direction": "horizontal",
@@ -2841,121 +2837,125 @@
                               "justify": "between",
                               "children": [
                                 {
-                                  "content": "Allergies",
+                                  "variant": "caption",
                                   "type": "typography",
-                                  "variant": "caption"
+                                  "content": "Allergies"
                                 },
                                 {
                                   "content": "@entity.allergies",
-                                  "variant": "body",
-                                  "type": "typography"
+                                  "type": "typography",
+                                  "variant": "body"
                                 }
                               ],
                               "type": "stack"
                             },
                             {
                               "direction": "horizontal",
+                              "type": "stack",
                               "justify": "between",
                               "gap": "md",
                               "children": [
                                 {
+                                  "variant": "caption",
                                   "content": "Medications",
-                                  "type": "typography",
-                                  "variant": "caption"
+                                  "type": "typography"
                                 },
                                 {
                                   "variant": "body",
                                   "type": "typography",
                                   "content": "@entity.medications"
                                 }
-                              ],
-                              "type": "stack"
-                            },
-                            {
-                              "direction": "horizontal",
-                              "type": "stack",
-                              "gap": "md",
-                              "justify": "between",
-                              "children": [
-                                {
-                                  "content": "Emergency Contact",
-                                  "type": "typography",
-                                  "variant": "caption"
-                                },
-                                {
-                                  "type": "typography",
-                                  "variant": "body",
-                                  "content": "@entity.emergencyContact"
-                                }
                               ]
                             },
                             {
-                              "type": "stack",
-                              "gap": "md",
                               "children": [
                                 {
-                                  "content": "Insurance Provider",
-                                  "variant": "caption",
-                                  "type": "typography"
-                                },
-                                {
                                   "type": "typography",
-                                  "content": "@entity.insuranceProvider",
-                                  "variant": "body"
-                                }
-                              ],
-                              "justify": "between",
-                              "direction": "horizontal"
-                            },
-                            {
-                              "type": "stack",
-                              "gap": "md",
-                              "children": [
-                                {
-                                  "content": "Insurance ID",
-                                  "type": "typography",
+                                  "content": "Emergency Contact",
                                   "variant": "caption"
                                 },
                                 {
-                                  "content": "@entity.insuranceId",
+                                  "variant": "body",
+                                  "content": "@entity.emergencyContact",
+                                  "type": "typography"
+                                }
+                              ],
+                              "justify": "between",
+                              "type": "stack",
+                              "direction": "horizontal",
+                              "gap": "md"
+                            },
+                            {
+                              "direction": "horizontal",
+                              "children": [
+                                {
                                   "type": "typography",
+                                  "variant": "caption",
+                                  "content": "Insurance Provider"
+                                },
+                                {
+                                  "variant": "body",
+                                  "type": "typography",
+                                  "content": "@entity.insuranceProvider"
+                                }
+                              ],
+                              "justify": "between",
+                              "type": "stack",
+                              "gap": "md"
+                            },
+                            {
+                              "children": [
+                                {
+                                  "type": "typography",
+                                  "content": "Insurance ID",
+                                  "variant": "caption"
+                                },
+                                {
+                                  "type": "typography",
+                                  "content": "@entity.insuranceId",
                                   "variant": "body"
                                 }
                               ],
+                              "gap": "md",
+                              "type": "stack",
                               "direction": "horizontal",
                               "justify": "between"
                             }
-                          ]
+                          ],
+                          "gap": "sm",
+                          "type": "stack",
+                          "direction": "vertical"
                         },
                         {
                           "type": "divider"
                         },
                         {
-                          "justify": "between",
-                          "direction": "horizontal",
-                          "gap": "sm",
                           "type": "stack",
+                          "justify": "between",
                           "children": [
                             {
-                              "icon": "arrow-left",
                               "label": "Back",
+                              "action": "PREV",
                               "type": "button",
-                              "variant": "ghost",
-                              "action": "PREV"
+                              "icon": "arrow-left",
+                              "variant": "ghost"
                             },
                             {
-                              "action": "COMPLETE",
                               "label": "Submit Intake",
-                              "icon": "check",
                               "type": "button",
-                              "variant": "primary"
+                              "action": "COMPLETE",
+                              "variant": "primary",
+                              "icon": "check"
                             }
-                          ]
+                          ],
+                          "gap": "sm",
+                          "direction": "horizontal"
                         }
                       ],
+                      "type": "stack",
                       "gap": "lg",
-                      "direction": "vertical",
-                      "type": "stack"
+                      "className": "max-w-xl mx-auto w-full",
+                      "direction": "vertical"
                     }
                   ]
                 ]
@@ -2969,48 +2969,48 @@
                     "render-ui",
                     "main",
                     {
-                      "type": "stack",
-                      "className": "max-w-xl mx-auto w-full",
                       "direction": "vertical",
                       "gap": "lg",
+                      "type": "stack",
                       "children": [
                         {
                           "variant": "h2",
-                          "content": "Patient Intake",
-                          "type": "typography"
+                          "type": "typography",
+                          "content": "Patient Intake"
                         },
                         {
-                          "type": "wizard-progress",
                           "steps": [
                             "Personal Info",
                             "Medical History",
                             "Insurance",
                             "Review"
                           ],
-                          "currentStep": 1.0
+                          "currentStep": 1.0,
+                          "type": "wizard-progress"
                         },
                         {
                           "type": "divider"
                         },
                         {
-                          "variant": "h3",
+                          "type": "typography",
                           "content": "Medical History",
-                          "type": "typography"
+                          "variant": "h3"
                         },
                         {
+                          "entity": "@entity",
+                          "type": "form-section",
+                          "submitLabel": "Continue",
+                          "submitEvent": "NEXT",
+                          "cancelEvent": "PREV",
+                          "mode": "edit",
+                          "cancelLabel": "Back",
                           "fields": [
                             "allergies",
                             "medications"
-                          ],
-                          "type": "form-section",
-                          "cancelLabel": "Back",
-                          "entity": "@entity",
-                          "mode": "edit",
-                          "submitEvent": "NEXT",
-                          "submitLabel": "Continue",
-                          "cancelEvent": "PREV"
+                          ]
                         }
-                      ]
+                      ],
+                      "className": "max-w-xl mx-auto w-full"
                     }
                   ]
                 ]
@@ -3036,8 +3036,8 @@
                     "@entity",
                     {
                       "emit": {
-                        "success": "IntakeFormSaved",
-                        "failure": "IntakeFormSaveFailed"
+                        "failure": "IntakeFormSaveFailed",
+                        "success": "IntakeFormSaved"
                       }
                     }
                   ],
@@ -3057,20 +3057,15 @@
                     "render-ui",
                     "main",
                     {
-                      "align": "center",
-                      "direction": "vertical",
-                      "gap": "lg",
-                      "type": "stack",
-                      "className": "max-w-xl mx-auto w-full py-12",
                       "children": [
                         {
                           "type": "icon",
                           "name": "check-circle"
                         },
                         {
-                          "type": "typography",
+                          "variant": "h2",
                           "content": "Intake Complete",
-                          "variant": "h2"
+                          "type": "typography"
                         },
                         {
                           "content": "Patient intake has been submitted.",
@@ -3080,12 +3075,17 @@
                         },
                         {
                           "action": "RESTART",
-                          "icon": "rotate-ccw",
-                          "label": "Start new intake",
+                          "variant": "ghost",
                           "type": "button",
-                          "variant": "ghost"
+                          "label": "Start new intake",
+                          "icon": "rotate-ccw"
                         }
-                      ]
+                      ],
+                      "align": "center",
+                      "gap": "lg",
+                      "type": "stack",
+                      "className": "max-w-xl mx-auto w-full py-12",
+                      "direction": "vertical"
                     }
                   ]
                 ]
@@ -3099,38 +3099,37 @@
                     "render-ui",
                     "main",
                     {
-                      "type": "stack",
+                      "gap": "lg",
                       "className": "max-w-xl mx-auto w-full",
+                      "type": "stack",
+                      "direction": "vertical",
                       "children": [
                         {
-                          "variant": "h2",
                           "type": "typography",
+                          "variant": "h2",
                           "content": "Patient Intake"
                         },
                         {
+                          "type": "wizard-progress",
                           "currentStep": 2.0,
                           "steps": [
                             "Personal Info",
                             "Medical History",
                             "Insurance",
                             "Review"
-                          ],
-                          "type": "wizard-progress"
+                          ]
                         },
                         {
                           "type": "divider"
                         },
                         {
-                          "type": "typography",
+                          "variant": "h3",
                           "content": "Insurance",
-                          "variant": "h3"
+                          "type": "typography"
                         },
                         {
-                          "type": "form-section",
-                          "entity": "@entity",
+                          "submitLabel": "Continue",
                           "submitEvent": "NEXT",
-                          "cancelEvent": "PREV",
-                          "cancelLabel": "Back",
                           "mode": "edit",
                           "fields": [
                             {
@@ -3138,19 +3137,20 @@
                               "required": true
                             },
                             {
-                              "name": "insuranceProvider",
-                              "required": true
+                              "required": true,
+                              "name": "insuranceProvider"
                             },
                             {
-                              "name": "insuranceId",
-                              "required": true
+                              "required": true,
+                              "name": "insuranceId"
                             }
                           ],
-                          "submitLabel": "Continue"
+                          "entity": "@entity",
+                          "cancelEvent": "PREV",
+                          "cancelLabel": "Back",
+                          "type": "form-section"
                         }
-                      ],
-                      "gap": "lg",
-                      "direction": "vertical"
+                      ]
                     }
                   ]
                 ]
@@ -3207,53 +3207,53 @@
                       "children": [
                         {
                           "type": "typography",
-                          "content": "Patient Intake",
-                          "variant": "h2"
+                          "variant": "h2",
+                          "content": "Patient Intake"
                         },
                         {
-                          "currentStep": 0.0,
                           "type": "wizard-progress",
                           "steps": [
                             "Personal Info",
                             "Medical History",
                             "Insurance",
                             "Review"
-                          ]
+                          ],
+                          "currentStep": 0.0
                         },
                         {
                           "type": "divider"
                         },
                         {
-                          "variant": "h3",
+                          "type": "typography",
                           "content": "Personal Info",
-                          "type": "typography"
+                          "variant": "h3"
                         },
                         {
-                          "submitLabel": "Continue",
                           "type": "form-section",
-                          "submitEvent": "NEXT",
+                          "mode": "create",
+                          "submitLabel": "Continue",
                           "showCancel": false,
                           "fields": [
                             {
-                              "name": "firstName",
-                              "required": true
+                              "required": true,
+                              "name": "firstName"
                             },
                             {
                               "name": "lastName",
                               "required": true
                             },
                             {
-                              "name": "dateOfBirth",
-                              "required": true
+                              "required": true,
+                              "name": "dateOfBirth"
                             }
                           ],
-                          "mode": "create"
+                          "submitEvent": "NEXT"
                         }
                       ],
-                      "gap": "lg",
-                      "type": "stack",
                       "direction": "vertical",
-                      "className": "max-w-xl mx-auto w-full"
+                      "className": "max-w-xl mx-auto w-full",
+                      "type": "stack",
+                      "gap": "lg"
                     }
                   ]
                 ]
@@ -3363,43 +3363,43 @@
           "name": "PrescriptionAppLayout",
           "linkedEntity": "Prescription",
           "config": {
-            "topBarActions": [],
-            "searchEvent": "PRESCRIPTION_SEARCH",
             "contentTrait": "@trait.PrescriptionCatalog",
-            "notifications": [],
-            "notificationClickEvent": "PRESCRIPTION_NOTIFICATIONS_OPEN",
             "appName": "HealthcareApp",
             "navItems": [
               {
-                "href": "/patients",
+                "label": "Patients",
                 "icon": "user-plus",
-                "label": "Patients"
+                "href": "/patients"
               },
               {
-                "label": "Appointments",
+                "href": "/appointments",
                 "icon": "calendar",
-                "href": "/appointments"
+                "label": "Appointments"
               },
               {
                 "href": "/intake",
-                "label": "Intake",
-                "icon": "layout-list"
+                "icon": "layout-list",
+                "label": "Intake"
               },
               {
-                "label": "Prescriptions",
                 "href": "/prescriptions",
-                "icon": "pill"
+                "icon": "pill",
+                "label": "Prescriptions"
               },
               {
                 "label": "Dashboard",
-                "href": "/dashboard",
-                "icon": "layout-dashboard"
+                "icon": "layout-dashboard",
+                "href": "/dashboard"
               }
-            ]
+            ],
+            "searchEvent": "PRESCRIPTION_SEARCH",
+            "topBarActions": [],
+            "notificationClickEvent": "PRESCRIPTION_NOTIFICATIONS_OPEN",
+            "notifications": []
           },
           "events": {
-            "SEARCH": "PRESCRIPTION_SEARCH",
-            "NOTIFY_CLICK": "PRESCRIPTION_NOTIFICATIONS_OPEN"
+            "NOTIFY_CLICK": "PRESCRIPTION_NOTIFICATIONS_OPEN",
+            "SEARCH": "PRESCRIPTION_SEARCH"
           }
         },
         {
@@ -3444,47 +3444,45 @@
                     "render-ui",
                     "main",
                     {
-                      "type": "stack",
-                      "direction": "vertical",
                       "children": [
                         {
-                          "type": "stack",
-                          "align": "center",
-                          "gap": "md",
                           "justify": "between",
+                          "align": "center",
                           "children": [
                             {
                               "align": "center",
+                              "gap": "sm",
+                              "type": "stack",
                               "children": [
                                 {
                                   "name": "pill",
                                   "type": "icon"
                                 },
                                 {
-                                  "content": "Prescriptions",
+                                  "variant": "h2",
                                   "type": "typography",
-                                  "variant": "h2"
+                                  "content": "Prescriptions"
                                 }
                               ],
-                              "direction": "horizontal",
-                              "gap": "sm",
-                              "type": "stack"
+                              "direction": "horizontal"
                             },
                             {
                               "type": "stack",
-                              "direction": "horizontal",
                               "children": [
                                 {
-                                  "action": "CREATE",
-                                  "type": "button",
-                                  "variant": "primary",
                                   "icon": "plus",
-                                  "label": "New Prescription"
+                                  "variant": "primary",
+                                  "label": "New Prescription",
+                                  "type": "button",
+                                  "action": "CREATE"
                                 }
                               ],
-                              "gap": "sm"
+                              "gap": "sm",
+                              "direction": "horizontal"
                             }
                           ],
+                          "gap": "md",
+                          "type": "stack",
                           "direction": "horizontal"
                         },
                         {
@@ -3492,6 +3490,8 @@
                         },
                         "@trait.PrescriptionBrowseList"
                       ],
+                      "type": "stack",
+                      "direction": "vertical",
                       "gap": "lg"
                     }
                   ]
@@ -3509,32 +3509,32 @@
             "fields": [
               {
                 "icon": "pill",
-                "variant": "h3",
-                "name": "medication"
+                "name": "medication",
+                "variant": "h3"
               },
               {
-                "name": "dosage",
-                "variant": "badge"
+                "variant": "badge",
+                "name": "dosage"
               },
               {
                 "variant": "body",
                 "name": "frequency"
               },
               {
-                "label": "Patient",
+                "variant": "body",
                 "name": "patientName",
-                "variant": "body"
+                "label": "Patient"
               },
               {
-                "label": "Prescribed By",
                 "variant": "caption",
-                "name": "prescribedBy"
+                "name": "prescribedBy",
+                "label": "Prescribed By"
               },
               {
+                "variant": "caption",
+                "name": "startDate",
                 "label": "Start",
-                "format": "date",
-                "variant": "caption",
-                "name": "startDate"
+                "format": "date"
               },
               {
                 "name": "status",
@@ -3543,19 +3543,19 @@
             ],
             "itemActions": [
               {
-                "label": "View",
                 "event": "VIEW",
+                "label": "View",
                 "variant": "ghost"
               },
               {
+                "event": "EDIT",
                 "label": "Edit",
-                "variant": "ghost",
-                "event": "EDIT"
+                "variant": "ghost"
               },
               {
-                "variant": "danger",
+                "event": "DELETE",
                 "label": "Delete",
-                "event": "DELETE"
+                "variant": "danger"
               }
             ],
             "gap": "sm"
@@ -3592,8 +3592,6 @@
           "name": "PrescriptionCreate",
           "linkedEntity": "Prescription",
           "config": {
-            "title": "New Prescription",
-            "mode": "create",
             "fields": [
               "medication",
               "dosage",
@@ -3604,11 +3602,13 @@
               "endDate",
               "status"
             ],
+            "mode": "create",
+            "title": "New Prescription",
             "icon": "plus-circle"
           },
           "events": {
-            "SAVE": "PRESCRIPTION_CREATED",
-            "OPEN": "CREATE"
+            "OPEN": "CREATE",
+            "SAVE": "PRESCRIPTION_CREATED"
           },
           "listens": [
             {
@@ -3626,8 +3626,6 @@
           "name": "PrescriptionEdit",
           "linkedEntity": "Prescription",
           "config": {
-            "mode": "edit",
-            "title": "Edit Prescription",
             "fields": [
               "medication",
               "dosage",
@@ -3638,7 +3636,9 @@
               "endDate",
               "status"
             ],
-            "icon": "edit"
+            "mode": "edit",
+            "icon": "edit",
+            "title": "Edit Prescription"
           },
           "events": {
             "OPEN": "EDIT",
@@ -3854,57 +3854,54 @@
                     "render-ui",
                     "modal",
                     {
-                      "direction": "vertical",
-                      "gap": "md",
+                      "type": "stack",
                       "children": [
                         {
-                          "type": "stack",
-                          "direction": "horizontal",
-                          "gap": "sm",
+                          "align": "center",
                           "children": [
                             {
-                              "name": "pill",
-                              "type": "icon"
+                              "type": "icon",
+                              "name": "pill"
                             },
                             {
-                              "type": "typography",
+                              "content": "@entity.medication",
                               "variant": "h3",
-                              "content": "@entity.medication"
+                              "type": "typography"
                             }
                           ],
-                          "align": "center"
+                          "direction": "horizontal",
+                          "gap": "sm",
+                          "type": "stack"
                         },
                         {
                           "type": "divider"
                         },
                         {
-                          "type": "simple-grid",
-                          "cols": 3.0,
-                          "gap": "md",
                           "children": [
                             {
-                              "direction": "vertical",
                               "type": "stack",
                               "children": [
                                 {
                                   "variant": "caption",
-                                  "content": "Drug",
-                                  "type": "typography"
+                                  "type": "typography",
+                                  "content": "Drug"
                                 },
                                 {
                                   "content": "@entity.medication",
-                                  "variant": "h4",
-                                  "type": "typography"
+                                  "type": "typography",
+                                  "variant": "h4"
                                 }
                               ],
+                              "direction": "vertical",
                               "gap": "xs"
                             },
                             {
+                              "type": "stack",
                               "children": [
                                 {
-                                  "content": "Dose",
                                   "variant": "caption",
-                                  "type": "typography"
+                                  "type": "typography",
+                                  "content": "Dose"
                                 },
                                 {
                                   "variant": "h4",
@@ -3912,34 +3909,37 @@
                                   "content": "@entity.dosage"
                                 }
                               ],
-                              "gap": "xs",
                               "direction": "vertical",
-                              "type": "stack"
+                              "gap": "xs"
                             },
                             {
+                              "gap": "xs",
                               "children": [
                                 {
-                                  "content": "Frequency",
                                   "type": "typography",
-                                  "variant": "caption"
+                                  "variant": "caption",
+                                  "content": "Frequency"
                                 },
                                 {
-                                  "type": "typography",
+                                  "variant": "h4",
                                   "content": "@entity.frequency",
-                                  "variant": "h4"
+                                  "type": "typography"
                                 }
                               ],
                               "type": "stack",
-                              "direction": "vertical",
-                              "gap": "xs"
+                              "direction": "vertical"
                             }
-                          ]
+                          ],
+                          "cols": 3.0,
+                          "gap": "md",
+                          "type": "simple-grid"
                         },
                         {
                           "type": "divider"
                         },
                         {
                           "type": "stack",
+                          "gap": "md",
                           "children": [
                             {
                               "variant": "caption",
@@ -3947,18 +3947,15 @@
                               "type": "typography"
                             },
                             {
-                              "content": "@entity.patientName",
+                              "variant": "body",
                               "type": "typography",
-                              "variant": "body"
+                              "content": "@entity.patientName"
                             }
                           ],
-                          "direction": "horizontal",
-                          "gap": "md"
+                          "direction": "horizontal"
                         },
                         {
-                          "type": "stack",
                           "direction": "horizontal",
-                          "gap": "md",
                           "children": [
                             {
                               "type": "typography",
@@ -3967,31 +3964,33 @@
                             },
                             {
                               "variant": "body",
-                              "type": "typography",
-                              "content": "@entity.prescribedBy"
-                            }
-                          ]
-                        },
-                        {
-                          "direction": "horizontal",
-                          "children": [
-                            {
-                              "content": "Start",
-                              "variant": "caption",
+                              "content": "@entity.prescribedBy",
                               "type": "typography"
-                            },
-                            {
-                              "type": "typography",
-                              "content": "@entity.startDate",
-                              "variant": "body"
                             }
                           ],
                           "gap": "md",
                           "type": "stack"
                         },
                         {
-                          "type": "stack",
                           "direction": "horizontal",
+                          "gap": "md",
+                          "type": "stack",
+                          "children": [
+                            {
+                              "content": "Start",
+                              "type": "typography",
+                              "variant": "caption"
+                            },
+                            {
+                              "variant": "body",
+                              "type": "typography",
+                              "content": "@entity.startDate"
+                            }
+                          ]
+                        },
+                        {
+                          "direction": "horizontal",
+                          "type": "stack",
                           "gap": "md",
                           "children": [
                             {
@@ -4010,21 +4009,22 @@
                           "type": "divider"
                         },
                         {
+                          "justify": "end",
                           "children": [
                             {
                               "action": "CLOSE",
-                              "type": "button",
                               "variant": "ghost",
-                              "label": "Close"
+                              "label": "Close",
+                              "type": "button"
                             }
                           ],
                           "direction": "horizontal",
-                          "gap": "sm",
-                          "justify": "end",
-                          "type": "stack"
+                          "type": "stack",
+                          "gap": "sm"
                         }
                       ],
-                      "type": "stack"
+                      "direction": "vertical",
+                      "gap": "md"
                     }
                   ]
                 ]
@@ -4050,14 +4050,14 @@
           "name": "PrescriptionDelete",
           "linkedEntity": "Prescription",
           "config": {
-            "icon": "alert-triangle",
             "alertMessage": "This action cannot be undone.",
+            "title": "Delete Prescription",
             "confirmLabel": "Delete",
-            "title": "Delete Prescription"
+            "icon": "alert-triangle"
           },
           "events": {
-            "CONFIRM": "PRESCRIPTION_DELETED",
-            "REQUEST": "DELETE"
+            "REQUEST": "DELETE",
+            "CONFIRM": "PRESCRIPTION_DELETED"
           },
           "listens": [
             {
@@ -4316,39 +4316,39 @@
           "name": "DashboardAppLayout",
           "linkedEntity": "DashboardSummary",
           "config": {
-            "notifications": [],
-            "notificationClickEvent": "DASHBOARD_NOTIFICATIONS_OPEN",
-            "appName": "HealthcareApp",
             "topBarActions": [],
-            "contentTrait": "@trait.DashboardDisplay",
             "navItems": [
               {
-                "icon": "user-plus",
                 "label": "Patients",
+                "icon": "user-plus",
                 "href": "/patients"
               },
               {
-                "label": "Appointments",
+                "icon": "calendar",
                 "href": "/appointments",
-                "icon": "calendar"
+                "label": "Appointments"
               },
               {
-                "label": "Intake",
+                "icon": "layout-list",
                 "href": "/intake",
-                "icon": "layout-list"
+                "label": "Intake"
               },
               {
-                "label": "Prescriptions",
                 "icon": "pill",
+                "label": "Prescriptions",
                 "href": "/prescriptions"
               },
               {
-                "icon": "layout-dashboard",
                 "label": "Dashboard",
+                "icon": "layout-dashboard",
                 "href": "/dashboard"
               }
             ],
-            "searchEvent": "DASHBOARD_SEARCH"
+            "notifications": [],
+            "searchEvent": "DASHBOARD_SEARCH",
+            "contentTrait": "@trait.DashboardDisplay",
+            "notificationClickEvent": "DASHBOARD_NOTIFICATIONS_OPEN",
+            "appName": "HealthcareApp"
           },
           "events": {
             "NOTIFY_CLICK": "DASHBOARD_NOTIFICATIONS_OPEN",
@@ -4382,38 +4382,36 @@
                     "render-ui",
                     "main",
                     {
-                      "type": "stack",
                       "gap": "lg",
+                      "direction": "vertical",
                       "className": "max-w-6xl mx-auto w-full p-4",
+                      "type": "stack",
                       "children": [
                         {
-                          "gap": "sm",
-                          "type": "stack",
-                          "direction": "horizontal",
-                          "align": "center",
                           "children": [
                             {
                               "type": "icon",
                               "name": "activity"
                             },
                             {
+                              "content": "Clinic Dashboard",
                               "variant": "h2",
-                              "type": "typography",
-                              "content": "Clinic Dashboard"
+                              "type": "typography"
                             }
-                          ]
+                          ],
+                          "direction": "horizontal",
+                          "align": "center",
+                          "type": "stack",
+                          "gap": "sm"
                         },
                         {
                           "type": "divider"
                         },
                         {
-                          "type": "stack",
-                          "direction": "vertical",
-                          "gap": "md",
                           "children": [
                             {
-                              "type": "typography",
                               "content": "Quick Links",
+                              "type": "typography",
                               "variant": "h3"
                             },
                             {
@@ -4433,19 +4431,21 @@
                                 }
                               ]
                             }
-                          ]
+                          ],
+                          "direction": "vertical",
+                          "type": "stack",
+                          "gap": "md"
                         },
                         {
                           "type": "divider"
                         },
                         {
-                          "content": "Patient stats, graphs, and the appointment calendar live on their respective pages.",
-                          "variant": "caption",
                           "type": "typography",
+                          "variant": "caption",
+                          "content": "Patient stats, graphs, and the appointment calendar live on their respective pages.",
                           "color": "muted"
                         }
-                      ],
-                      "direction": "vertical"
+                      ]
                     }
                   ]
                 ]

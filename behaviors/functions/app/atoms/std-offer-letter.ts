@@ -86,12 +86,12 @@ export interface StdOfferLetterOfferLetterLoadFailedPayload {
  * without modifying its state-machine topology.
  */
 export interface StdOfferLetterConfig {
+  /** Default: `[{"variant":"primary","icon":"arrow-right","event":"OPEN_OFFER","label":"Open"},{"event":"REVOKE_OFFER","variant":"danger","label":"Revoke"}]` */
+  itemActions?: TraitConfig[];
+  /** Default: `[{"name":"applicantName","label":"Applicant","variant":"caption"},{"variant":"caption","name":"position","label":"Position"},{"variant":"caption","name":"salary","label":"Salary"},{"label":"Start Date","name":"startDate","variant":"caption"},{"name":"status","label":"Status","variant":"badge"}]` */
+  fields?: TraitConfig[];
   /** Default: `"Offer Letters"` */
   title?: string;
-  /** Default: `[{"name":"applicantName","variant":"caption","label":"Applicant"},{"name":"position","label":"Position","variant":"caption"},{"name":"salary","variant":"caption","label":"Salary"},{"label":"Start Date","variant":"caption","name":"startDate"},{"name":"status","label":"Status","variant":"badge"}]` */
-  fields?: TraitConfig[];
-  /** Default: `[{"label":"Open","variant":"primary","icon":"arrow-right","event":"OPEN_OFFER"},{"event":"REVOKE_OFFER","label":"Revoke","variant":"danger"}]` */
-  itemActions?: TraitConfig[];
 }
 
 /**

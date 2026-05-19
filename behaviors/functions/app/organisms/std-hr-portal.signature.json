@@ -58,12 +58,57 @@
         "emittedEvents": [],
         "listenedEvents": [],
         "overridableConfigKeys": [
-          "appName",
-          "contentTrait",
-          "navItems",
-          "notificationClickEvent",
-          "notifications",
-          "searchEvent"
+          {
+            "key": "appName",
+            "type": "unknown",
+            "default": "HRPortal"
+          },
+          {
+            "key": "contentTrait",
+            "type": "unknown",
+            "default": "@trait.EmployeeCatalog"
+          },
+          {
+            "key": "navItems",
+            "type": "unknown",
+            "default": [
+              {
+                "label": "Employees",
+                "href": "/employees",
+                "icon": "users"
+              },
+              {
+                "icon": "clipboard-check",
+                "label": "Onboarding",
+                "href": "/onboarding"
+              },
+              {
+                "label": "Time Off",
+                "href": "/timeoff",
+                "icon": "calendar"
+              },
+              {
+                "href": "/org-chart",
+                "label": "Org Chart",
+                "icon": "git-branch"
+              }
+            ]
+          },
+          {
+            "key": "notificationClickEvent",
+            "type": "unknown",
+            "default": "EMPLOYEE_NOTIFICATIONS_OPEN"
+          },
+          {
+            "key": "notifications",
+            "type": "unknown",
+            "default": []
+          },
+          {
+            "key": "searchEvent",
+            "type": "unknown",
+            "default": "EMPLOYEE_SEARCH"
+          }
         ],
         "capabilities": []
       },
@@ -84,8 +129,16 @@
         "emittedEvents": [],
         "listenedEvents": [],
         "overridableConfigKeys": [
-          "event",
-          "placeholder"
+          {
+            "key": "event",
+            "type": "unknown",
+            "default": "SEARCH"
+          },
+          {
+            "key": "placeholder",
+            "type": "unknown",
+            "default": "Search employees by name…"
+          }
         ],
         "capabilities": []
       },
@@ -94,8 +147,51 @@
         "emittedEvents": [],
         "listenedEvents": [],
         "overridableConfigKeys": [
-          "event",
-          "filters"
+          {
+            "key": "event",
+            "type": "unknown",
+            "default": "FILTER"
+          },
+          {
+            "key": "filters",
+            "type": "unknown",
+            "default": [
+              {
+                "options": [
+                  "engineering",
+                  "design",
+                  "marketing",
+                  "sales",
+                  "hr",
+                  "finance"
+                ],
+                "field": "department",
+                "filterType": "select",
+                "label": "Department"
+              },
+              {
+                "options": [
+                  "manager",
+                  "lead",
+                  "ic",
+                  "intern"
+                ],
+                "field": "role",
+                "label": "Role",
+                "filterType": "select"
+              },
+              {
+                "label": "Status",
+                "field": "status",
+                "options": [
+                  "active",
+                  "leave",
+                  "terminated"
+                ],
+                "filterType": "select"
+              }
+            ]
+          }
         ],
         "capabilities": []
       },
@@ -106,8 +202,54 @@
           "BrowseItemLoaded"
         ],
         "overridableConfigKeys": [
-          "metrics",
-          "title"
+          {
+            "key": "metrics",
+            "type": "unknown",
+            "default": [
+              {
+                "icon": "users",
+                "aggregation": "count",
+                "format": "number",
+                "label": "Total Employees",
+                "variant": "primary"
+              },
+              {
+                "variant": "default",
+                "icon": "layers",
+                "label": "By Department",
+                "format": "number",
+                "aggregation": "count"
+              },
+              {
+                "icon": "user-plus",
+                "variant": "info",
+                "aggregation": "count",
+                "format": "number",
+                "label": "New This Month"
+              },
+              {
+                "label": "On Leave",
+                "format": "number",
+                "filter": [
+                  "fn",
+                  "row",
+                  [
+                    "=",
+                    "@row.status",
+                    "leave"
+                  ]
+                ],
+                "variant": "warning",
+                "aggregation": "count",
+                "icon": "calendar-off"
+              }
+            ]
+          },
+          {
+            "key": "title",
+            "type": "unknown",
+            "default": "Workforce Overview"
+          }
         ],
         "capabilities": []
       },
@@ -118,13 +260,41 @@
           "BrowseItemLoaded"
         ],
         "overridableConfigKeys": [
-          "aggregation",
-          "categoryField",
-          "chartType",
-          "height",
-          "showLegend",
-          "subtitle",
-          "title"
+          {
+            "key": "aggregation",
+            "type": "unknown",
+            "default": "count"
+          },
+          {
+            "key": "categoryField",
+            "type": "unknown",
+            "default": "department"
+          },
+          {
+            "key": "chartType",
+            "type": "unknown",
+            "default": "pie"
+          },
+          {
+            "key": "height",
+            "type": "unknown",
+            "default": 280
+          },
+          {
+            "key": "showLegend",
+            "type": "unknown",
+            "default": true
+          },
+          {
+            "key": "subtitle",
+            "type": "unknown",
+            "default": "Headcount distribution"
+          },
+          {
+            "key": "title",
+            "type": "unknown",
+            "default": "Employees by Department"
+          }
         ],
         "capabilities": []
       },
@@ -140,10 +310,66 @@
           "FILTER"
         ],
         "overridableConfigKeys": [
-          "fields",
-          "gap",
-          "imageField",
-          "itemActions"
+          {
+            "key": "fields",
+            "type": "unknown",
+            "default": [
+              {
+                "name": "name",
+                "variant": "h3",
+                "icon": "user"
+              },
+              {
+                "variant": "body",
+                "name": "role"
+              },
+              {
+                "name": "department",
+                "variant": "badge"
+              },
+              {
+                "name": "email",
+                "variant": "caption"
+              },
+              {
+                "format": "date",
+                "name": "hireDate",
+                "label": "Joined",
+                "variant": "caption"
+              }
+            ]
+          },
+          {
+            "key": "gap",
+            "type": "unknown",
+            "default": "sm"
+          },
+          {
+            "key": "imageField",
+            "type": "unknown",
+            "default": "avatar"
+          },
+          {
+            "key": "itemActions",
+            "type": "unknown",
+            "default": [
+              {
+                "event": "VIEW",
+                "variant": "ghost",
+                "label": "View"
+              },
+              {
+                "variant": "ghost",
+                "event": "EDIT",
+                "label": "Edit"
+              },
+              {
+                "event": "DELETE",
+                "label": "Delete",
+                "variant": "danger"
+              }
+            ]
+          }
         ],
         "capabilities": []
       },
@@ -154,10 +380,33 @@
           "CREATE"
         ],
         "overridableConfigKeys": [
-          "fields",
-          "icon",
-          "mode",
-          "title"
+          {
+            "key": "fields",
+            "type": "unknown",
+            "default": [
+              "name",
+              "email",
+              "department",
+              "role",
+              "hireDate",
+              "status"
+            ]
+          },
+          {
+            "key": "icon",
+            "type": "unknown",
+            "default": "plus-circle"
+          },
+          {
+            "key": "mode",
+            "type": "unknown",
+            "default": "create"
+          },
+          {
+            "key": "title",
+            "type": "unknown",
+            "default": "Add Employee"
+          }
         ],
         "capabilities": []
       },
@@ -168,10 +417,33 @@
           "EDIT"
         ],
         "overridableConfigKeys": [
-          "fields",
-          "icon",
-          "mode",
-          "title"
+          {
+            "key": "fields",
+            "type": "unknown",
+            "default": [
+              "name",
+              "email",
+              "department",
+              "role",
+              "hireDate",
+              "status"
+            ]
+          },
+          {
+            "key": "icon",
+            "type": "unknown",
+            "default": "edit"
+          },
+          {
+            "key": "mode",
+            "type": "unknown",
+            "default": "edit"
+          },
+          {
+            "key": "title",
+            "type": "unknown",
+            "default": "Edit Employee"
+          }
         ],
         "capabilities": []
       },
@@ -182,10 +454,33 @@
           "VIEW"
         ],
         "overridableConfigKeys": [
-          "fields",
-          "icon",
-          "mode",
-          "title"
+          {
+            "key": "fields",
+            "type": "unknown",
+            "default": [
+              "name",
+              "email",
+              "department",
+              "role",
+              "hireDate",
+              "status"
+            ]
+          },
+          {
+            "key": "icon",
+            "type": "unknown",
+            "default": "eye"
+          },
+          {
+            "key": "mode",
+            "type": "unknown",
+            "default": "edit"
+          },
+          {
+            "key": "title",
+            "type": "unknown",
+            "default": "Employee Details"
+          }
         ],
         "capabilities": []
       },
@@ -196,10 +491,26 @@
           "DELETE"
         ],
         "overridableConfigKeys": [
-          "alertMessage",
-          "confirmLabel",
-          "icon",
-          "title"
+          {
+            "key": "alertMessage",
+            "type": "unknown",
+            "default": "This action cannot be undone."
+          },
+          {
+            "key": "confirmLabel",
+            "type": "unknown",
+            "default": "Delete"
+          },
+          {
+            "key": "icon",
+            "type": "unknown",
+            "default": "alert-triangle"
+          },
+          {
+            "key": "title",
+            "type": "unknown",
+            "default": "Delete Employee"
+          }
         ],
         "capabilities": []
       },
@@ -223,11 +534,35 @@
         "emittedEvents": [],
         "listenedEvents": [],
         "overridableConfigKeys": [
-          "acl",
-          "allowedMimeTypes",
-          "bucket",
-          "maxSize",
-          "uiTrait"
+          {
+            "key": "acl",
+            "type": "unknown",
+            "default": "public-read"
+          },
+          {
+            "key": "allowedMimeTypes",
+            "type": "unknown",
+            "default": [
+              "image/jpeg",
+              "image/png",
+              "image/webp"
+            ]
+          },
+          {
+            "key": "bucket",
+            "type": "unknown",
+            "default": "employee-avatars"
+          },
+          {
+            "key": "maxSize",
+            "type": "unknown",
+            "default": 5242880
+          },
+          {
+            "key": "uiTrait",
+            "type": "unknown",
+            "default": "@trait.EmployeeAvatarUploadForm"
+          }
         ],
         "capabilities": []
       },
@@ -325,12 +660,57 @@
         "emittedEvents": [],
         "listenedEvents": [],
         "overridableConfigKeys": [
-          "appName",
-          "contentTrait",
-          "navItems",
-          "notificationClickEvent",
-          "notifications",
-          "searchEvent"
+          {
+            "key": "appName",
+            "type": "unknown",
+            "default": "HRPortal"
+          },
+          {
+            "key": "contentTrait",
+            "type": "unknown",
+            "default": "@trait.OnboardingWizard"
+          },
+          {
+            "key": "navItems",
+            "type": "unknown",
+            "default": [
+              {
+                "icon": "users",
+                "label": "Employees",
+                "href": "/employees"
+              },
+              {
+                "label": "Onboarding",
+                "icon": "clipboard-check",
+                "href": "/onboarding"
+              },
+              {
+                "icon": "calendar",
+                "label": "Time Off",
+                "href": "/timeoff"
+              },
+              {
+                "label": "Org Chart",
+                "icon": "git-branch",
+                "href": "/org-chart"
+              }
+            ]
+          },
+          {
+            "key": "notificationClickEvent",
+            "type": "unknown",
+            "default": "ONBOARDING_NOTIFICATIONS_OPEN"
+          },
+          {
+            "key": "notifications",
+            "type": "unknown",
+            "default": []
+          },
+          {
+            "key": "searchEvent",
+            "type": "unknown",
+            "default": "ONBOARDING_SEARCH"
+          }
         ],
         "capabilities": []
       },
@@ -427,12 +807,57 @@
         "emittedEvents": [],
         "listenedEvents": [],
         "overridableConfigKeys": [
-          "appName",
-          "contentTrait",
-          "navItems",
-          "notificationClickEvent",
-          "notifications",
-          "searchEvent"
+          {
+            "key": "appName",
+            "type": "unknown",
+            "default": "HRPortal"
+          },
+          {
+            "key": "contentTrait",
+            "type": "unknown",
+            "default": "@trait.TimeOffCatalog"
+          },
+          {
+            "key": "navItems",
+            "type": "unknown",
+            "default": [
+              {
+                "href": "/employees",
+                "icon": "users",
+                "label": "Employees"
+              },
+              {
+                "href": "/onboarding",
+                "icon": "clipboard-check",
+                "label": "Onboarding"
+              },
+              {
+                "label": "Time Off",
+                "href": "/timeoff",
+                "icon": "calendar"
+              },
+              {
+                "href": "/org-chart",
+                "label": "Org Chart",
+                "icon": "git-branch"
+              }
+            ]
+          },
+          {
+            "key": "notificationClickEvent",
+            "type": "unknown",
+            "default": "TIME_OFF_NOTIFICATIONS_OPEN"
+          },
+          {
+            "key": "notifications",
+            "type": "unknown",
+            "default": []
+          },
+          {
+            "key": "searchEvent",
+            "type": "unknown",
+            "default": "TIME_OFF_SEARCH"
+          }
         ],
         "capabilities": []
       },
@@ -454,9 +879,21 @@
           "TIME_OFF_DELETED"
         ],
         "overridableConfigKeys": [
-          "colorField",
-          "dateField",
-          "titleField"
+          {
+            "key": "colorField",
+            "type": "unknown",
+            "default": "status"
+          },
+          {
+            "key": "dateField",
+            "type": "unknown",
+            "default": "startDate"
+          },
+          {
+            "key": "titleField",
+            "type": "unknown",
+            "default": "reason"
+          }
         ],
         "capabilities": []
       },
@@ -469,9 +906,69 @@
           "TIME_OFF_DELETED"
         ],
         "overridableConfigKeys": [
-          "fields",
-          "gap",
-          "itemActions"
+          {
+            "key": "fields",
+            "type": "unknown",
+            "default": [
+              {
+                "icon": "user",
+                "variant": "h4",
+                "label": "Employee",
+                "name": "employeeName"
+              },
+              {
+                "name": "leaveType",
+                "label": "Type",
+                "variant": "badge"
+              },
+              {
+                "name": "status",
+                "variant": "badge"
+              },
+              {
+                "name": "startDate",
+                "label": "From",
+                "format": "date",
+                "variant": "caption"
+              },
+              {
+                "variant": "caption",
+                "label": "To",
+                "name": "endDate",
+                "format": "date"
+              },
+              {
+                "variant": "caption",
+                "name": "reason"
+              }
+            ]
+          },
+          {
+            "key": "gap",
+            "type": "unknown",
+            "default": "sm"
+          },
+          {
+            "key": "itemActions",
+            "type": "unknown",
+            "default": [
+              {
+                "label": "View",
+                "event": "VIEW",
+                "variant": "ghost"
+              },
+              {
+                "variant": "ghost",
+                "event": "EDIT",
+                "label": "Edit"
+              },
+              {
+                "event": "DELETE",
+                "variant": "danger",
+                "label": "Delete"
+              }
+            ]
+          }
         ],
         "capabilities": []
       },
@@ -482,10 +979,34 @@
           "CREATE"
         ],
         "overridableConfigKeys": [
-          "fields",
-          "icon",
-          "mode",
-          "title"
+          {
+            "key": "fields",
+            "type": "unknown",
+            "default": [
+              "employeeName",
+              "employeeEmail",
+              "leaveType",
+              "startDate",
+              "endDate",
+              "reason",
+              "status"
+            ]
+          },
+          {
+            "key": "icon",
+            "type": "unknown",
+            "default": "plus-circle"
+          },
+          {
+            "key": "mode",
+            "type": "unknown",
+            "default": "create"
+          },
+          {
+            "key": "title",
+            "type": "unknown",
+            "default": "Request Time Off"
+          }
         ],
         "capabilities": []
       },
@@ -496,10 +1017,34 @@
           "EDIT"
         ],
         "overridableConfigKeys": [
-          "fields",
-          "icon",
-          "mode",
-          "title"
+          {
+            "key": "fields",
+            "type": "unknown",
+            "default": [
+              "employeeName",
+              "employeeEmail",
+              "leaveType",
+              "startDate",
+              "endDate",
+              "reason",
+              "status"
+            ]
+          },
+          {
+            "key": "icon",
+            "type": "unknown",
+            "default": "edit"
+          },
+          {
+            "key": "mode",
+            "type": "unknown",
+            "default": "edit"
+          },
+          {
+            "key": "title",
+            "type": "unknown",
+            "default": "Edit Time Off"
+          }
         ],
         "capabilities": []
       },
@@ -510,10 +1055,34 @@
           "VIEW"
         ],
         "overridableConfigKeys": [
-          "fields",
-          "icon",
-          "mode",
-          "title"
+          {
+            "key": "fields",
+            "type": "unknown",
+            "default": [
+              "employeeName",
+              "employeeEmail",
+              "leaveType",
+              "startDate",
+              "endDate",
+              "reason",
+              "status"
+            ]
+          },
+          {
+            "key": "icon",
+            "type": "unknown",
+            "default": "eye"
+          },
+          {
+            "key": "mode",
+            "type": "unknown",
+            "default": "edit"
+          },
+          {
+            "key": "title",
+            "type": "unknown",
+            "default": "Time Off Details"
+          }
         ],
         "capabilities": []
       },
@@ -524,10 +1093,26 @@
           "DELETE"
         ],
         "overridableConfigKeys": [
-          "alertMessage",
-          "confirmLabel",
-          "icon",
-          "title"
+          {
+            "key": "alertMessage",
+            "type": "unknown",
+            "default": "This action cannot be undone."
+          },
+          {
+            "key": "confirmLabel",
+            "type": "unknown",
+            "default": "Delete"
+          },
+          {
+            "key": "icon",
+            "type": "unknown",
+            "default": "alert-triangle"
+          },
+          {
+            "key": "title",
+            "type": "unknown",
+            "default": "Delete Time Off Request"
+          }
         ],
         "capabilities": []
       },
@@ -613,12 +1198,57 @@
         "emittedEvents": [],
         "listenedEvents": [],
         "overridableConfigKeys": [
-          "appName",
-          "contentTrait",
-          "navItems",
-          "notificationClickEvent",
-          "notifications",
-          "searchEvent"
+          {
+            "key": "appName",
+            "type": "unknown",
+            "default": "HRPortal"
+          },
+          {
+            "key": "contentTrait",
+            "type": "unknown",
+            "default": "@trait.OrgChartDisplay"
+          },
+          {
+            "key": "navItems",
+            "type": "unknown",
+            "default": [
+              {
+                "href": "/employees",
+                "icon": "users",
+                "label": "Employees"
+              },
+              {
+                "icon": "clipboard-check",
+                "label": "Onboarding",
+                "href": "/onboarding"
+              },
+              {
+                "href": "/timeoff",
+                "label": "Time Off",
+                "icon": "calendar"
+              },
+              {
+                "href": "/org-chart",
+                "icon": "git-branch",
+                "label": "Org Chart"
+              }
+            ]
+          },
+          {
+            "key": "notificationClickEvent",
+            "type": "unknown",
+            "default": "ORG_CHART_NOTIFICATIONS_OPEN"
+          },
+          {
+            "key": "notifications",
+            "type": "unknown",
+            "default": []
+          },
+          {
+            "key": "searchEvent",
+            "type": "unknown",
+            "default": "ORG_CHART_SEARCH"
+          }
         ],
         "capabilities": []
       },
@@ -627,7 +1257,11 @@
         "emittedEvents": [],
         "listenedEvents": [],
         "overridableConfigKeys": [
-          "relationField"
+          {
+            "key": "relationField",
+            "type": "unknown",
+            "default": "managerId"
+          }
         ],
         "capabilities": []
       },

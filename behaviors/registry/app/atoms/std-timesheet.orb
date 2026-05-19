@@ -611,8 +611,8 @@
                     "Timesheet",
                     {
                       "emit": {
-                        "success": "TimesheetLoaded",
-                        "failure": "TimesheetLoadFailed"
+                        "failure": "TimesheetLoadFailed",
+                        "success": "TimesheetLoaded"
                       }
                     }
                   ],
@@ -620,22 +620,22 @@
                     "render-ui",
                     "main",
                     {
-                      "direction": "vertical",
-                      "gap": "md",
-                      "type": "stack",
-                      "align": "center",
-                      "className": "py-12",
                       "children": [
                         {
                           "type": "spinner"
                         },
                         {
-                          "content": "Loading timesheets…",
+                          "color": "muted",
                           "variant": "caption",
                           "type": "typography",
-                          "color": "muted"
+                          "content": "Loading timesheets…"
                         }
-                      ]
+                      ],
+                      "type": "stack",
+                      "direction": "vertical",
+                      "gap": "md",
+                      "align": "center",
+                      "className": "py-12"
                     }
                   ]
                 ]
@@ -649,11 +649,13 @@
                     "render-ui",
                     "main",
                     {
-                      "direction": "vertical",
                       "type": "stack",
+                      "gap": "md",
                       "children": [
                         {
-                          "align": "center",
+                          "direction": "horizontal",
+                          "type": "stack",
+                          "gap": "sm",
                           "children": [
                             {
                               "type": "icon",
@@ -661,57 +663,55 @@
                             },
                             {
                               "content": "@config.title",
-                              "type": "typography",
-                              "variant": "h3"
+                              "variant": "h3",
+                              "type": "typography"
                             }
                           ],
-                          "gap": "sm",
-                          "direction": "horizontal",
-                          "type": "stack"
+                          "align": "center"
                         },
                         {
-                          "cols": 4.0,
-                          "type": "simple-grid",
                           "children": [
                             {
-                              "label": "Total timesheets",
-                              "icon": "clock",
                               "type": "stat-display",
-                              "value": "@payload.data.length"
+                              "icon": "clock",
+                              "value": "@payload.data.length",
+                              "label": "Total timesheets"
                             },
                             {
-                              "label": "Pending approval",
-                              "icon": "hourglass",
+                              "type": "stat-display",
                               "value": "14",
-                              "type": "stat-display"
+                              "icon": "hourglass",
+                              "label": "Pending approval"
                             },
                             {
+                              "type": "stat-display",
                               "value": "1,240",
                               "label": "Billable hours wk",
-                              "type": "stat-display",
                               "icon": "dollar-sign"
                             },
                             {
-                              "type": "stat-display",
-                              "value": "38",
                               "label": "Approved this wk",
-                              "icon": "check-circle"
+                              "type": "stat-display",
+                              "icon": "check-circle",
+                              "value": "38"
                             }
-                          ]
+                          ],
+                          "type": "simple-grid",
+                          "cols": 4.0
                         },
                         {
                           "type": "divider"
                         },
                         {
                           "cols": 1.0,
-                          "fields": "@config.fields",
                           "gap": "sm",
-                          "itemActions": "@config.itemActions",
+                          "fields": "@config.fields",
+                          "entity": "@payload.data",
                           "type": "data-grid",
-                          "entity": "@payload.data"
+                          "itemActions": "@config.itemActions"
                         }
                       ],
-                      "gap": "md"
+                      "direction": "vertical"
                     }
                   ]
                 ]
@@ -725,8 +725,8 @@
                     "render-ui",
                     "main",
                     {
-                      "variant": "error",
                       "type": "alert",
+                      "variant": "error",
                       "message": "@payload.error"
                     }
                   ]
@@ -801,32 +801,33 @@
                     "render-ui",
                     "main",
                     {
+                      "direction": "vertical",
                       "children": [
                         {
+                          "direction": "horizontal",
+                          "gap": "sm",
                           "children": [
                             {
+                              "label": "Back",
                               "variant": "ghost",
                               "type": "button",
-                              "action": "CLOSE_VIEW",
-                              "label": "Back"
+                              "action": "CLOSE_VIEW"
                             },
                             {
-                              "type": "icon",
-                              "name": "clock"
+                              "name": "clock",
+                              "type": "icon"
                             },
                             {
                               "type": "typography",
-                              "content": "@entity.employeeName",
-                              "variant": "h3"
+                              "variant": "h3",
+                              "content": "@entity.employeeName"
                             },
                             {
-                              "type": "badge",
                               "variant": "primary",
-                              "label": "@entity.status"
+                              "label": "@entity.status",
+                              "type": "badge"
                             }
                           ],
-                          "direction": "horizontal",
-                          "gap": "sm",
                           "align": "center",
                           "type": "stack"
                         },
@@ -834,15 +835,19 @@
                           "type": "divider"
                         },
                         {
+                          "gap": "sm",
+                          "direction": "vertical",
                           "type": "stack",
                           "children": [
                             {
+                              "direction": "horizontal",
+                              "type": "stack",
                               "gap": "md",
                               "children": [
                                 {
                                   "type": "typography",
-                                  "variant": "caption",
                                   "content": "Employee ID",
+                                  "variant": "caption",
                                   "color": "muted"
                                 },
                                 {
@@ -850,16 +855,17 @@
                                   "content": "@entity.employeeId",
                                   "variant": "body"
                                 }
-                              ],
-                              "direction": "horizontal",
-                              "type": "stack"
+                              ]
                             },
                             {
+                              "type": "stack",
+                              "direction": "horizontal",
+                              "gap": "md",
                               "children": [
                                 {
-                                  "type": "typography",
-                                  "content": "Approved by",
                                   "color": "muted",
+                                  "content": "Approved by",
+                                  "type": "typography",
                                   "variant": "caption"
                                 },
                                 {
@@ -867,86 +873,67 @@
                                   "variant": "body",
                                   "content": "@entity.approvedBy"
                                 }
-                              ],
-                              "gap": "md",
-                              "direction": "horizontal",
-                              "type": "stack"
+                              ]
                             },
                             {
-                              "type": "stack",
-                              "direction": "horizontal",
                               "children": [
                                 {
-                                  "type": "typography",
                                   "variant": "caption",
-                                  "color": "muted",
-                                  "content": "Notes"
+                                  "type": "typography",
+                                  "content": "Notes",
+                                  "color": "muted"
                                 },
                                 {
+                                  "content": "@entity.notes",
                                   "type": "typography",
-                                  "variant": "body",
-                                  "content": "@entity.notes"
+                                  "variant": "body"
                                 }
                               ],
+                              "direction": "horizontal",
+                              "type": "stack",
                               "gap": "md"
                             }
-                          ],
-                          "direction": "vertical",
-                          "gap": "sm"
+                          ]
                         },
                         {
                           "type": "divider"
                         },
                         {
-                          "type": "simple-grid",
                           "children": [
                             {
-                              "type": "stat-display",
-                              "value": "@entity.totalHours",
                               "icon": "clock",
-                              "label": "Total hours"
+                              "value": "@entity.totalHours",
+                              "label": "Total hours",
+                              "type": "stat-display"
                             },
                             {
-                              "label": "Billable",
-                              "icon": "dollar-sign",
                               "type": "stat-display",
-                              "value": "@entity.billableHours"
+                              "value": "@entity.billableHours",
+                              "label": "Billable",
+                              "icon": "dollar-sign"
                             },
                             {
-                              "label": "Period start",
                               "value": "@entity.periodStart",
-                              "icon": "calendar",
-                              "type": "stat-display"
+                              "label": "Period start",
+                              "type": "stat-display",
+                              "icon": "calendar"
                             },
                             {
-                              "label": "Period end",
-                              "value": "@entity.periodEnd",
                               "icon": "calendar-check",
-                              "type": "stat-display"
+                              "label": "Period end",
+                              "type": "stat-display",
+                              "value": "@entity.periodEnd"
                             }
                           ],
+                          "type": "simple-grid",
                           "cols": 4.0
                         },
                         {
-                          "type": "stack",
-                          "gap": "sm",
-                          "align": "center",
-                          "direction": "horizontal",
                           "children": [
                             {
                               "action": "SUBMIT",
-                              "actionPayload": {
-                                "row": "@entity",
-                                "id": "@entity.id"
-                              },
                               "variant": "primary",
-                              "type": "button",
-                              "label": "Submit"
-                            },
-                            {
-                              "label": "Approve",
-                              "variant": "primary",
-                              "action": "APPROVE",
+                              "label": "Submit",
                               "type": "button",
                               "actionPayload": {
                                 "id": "@entity.id",
@@ -955,39 +942,52 @@
                             },
                             {
                               "type": "button",
-                              "variant": "danger",
-                              "action": "REJECT",
+                              "action": "APPROVE",
                               "actionPayload": {
                                 "row": "@entity",
                                 "id": "@entity.id"
                               },
-                              "label": "Reject"
+                              "label": "Approve",
+                              "variant": "primary"
                             },
                             {
-                              "variant": "secondary",
+                              "variant": "danger",
                               "actionPayload": {
                                 "id": "@entity.id",
                                 "row": "@entity"
                               },
-                              "label": "Revise",
-                              "action": "REQUEST_REVISION",
+                              "label": "Reject",
+                              "action": "REJECT",
                               "type": "button"
                             },
                             {
-                              "type": "button",
-                              "action": "REQUEST_DELETE",
-                              "variant": "danger",
                               "actionPayload": {
+                                "row": "@entity",
                                 "id": "@entity.id"
                               },
-                              "label": "Delete"
+                              "action": "REQUEST_REVISION",
+                              "type": "button",
+                              "variant": "secondary",
+                              "label": "Revise"
+                            },
+                            {
+                              "action": "REQUEST_DELETE",
+                              "type": "button",
+                              "variant": "danger",
+                              "label": "Delete",
+                              "actionPayload": {
+                                "id": "@entity.id"
+                              }
                             }
-                          ]
+                          ],
+                          "type": "stack",
+                          "direction": "horizontal",
+                          "gap": "sm",
+                          "align": "center"
                         }
                       ],
-                      "gap": "md",
-                      "direction": "vertical",
-                      "type": "stack"
+                      "type": "stack",
+                      "gap": "md"
                     }
                   ]
                 ]
@@ -1016,21 +1016,21 @@
                     "render-ui",
                     "main",
                     {
-                      "type": "stack",
                       "direction": "vertical",
                       "align": "center",
-                      "className": "py-12",
                       "children": [
                         {
                           "type": "spinner"
                         },
                         {
+                          "variant": "caption",
                           "color": "muted",
-                          "content": "Deleting timesheet…",
                           "type": "typography",
-                          "variant": "caption"
+                          "content": "Deleting timesheet…"
                         }
                       ],
+                      "type": "stack",
+                      "className": "py-12",
                       "gap": "md"
                     }
                   ]
@@ -1055,22 +1055,22 @@
                     "render-ui",
                     "main",
                     {
-                      "type": "stack",
                       "align": "center",
                       "gap": "md",
-                      "direction": "vertical",
-                      "className": "py-12",
                       "children": [
                         {
                           "type": "spinner"
                         },
                         {
-                          "variant": "caption",
                           "color": "muted",
+                          "variant": "caption",
                           "content": "Loading timesheets…",
                           "type": "typography"
                         }
-                      ]
+                      ],
+                      "type": "stack",
+                      "direction": "vertical",
+                      "className": "py-12"
                     }
                   ]
                 ]
@@ -1090,8 +1090,8 @@
                     "Timesheet",
                     {
                       "emit": {
-                        "failure": "TimesheetLoadFailed",
-                        "success": "TimesheetLoaded"
+                        "success": "TimesheetLoaded",
+                        "failure": "TimesheetLoadFailed"
                       }
                     }
                   ],
@@ -1099,22 +1099,22 @@
                     "render-ui",
                     "main",
                     {
-                      "direction": "vertical",
                       "gap": "md",
-                      "type": "stack",
-                      "align": "center",
                       "className": "py-12",
                       "children": [
                         {
                           "type": "spinner"
                         },
                         {
-                          "content": "Submitting timesheet…",
+                          "variant": "caption",
                           "type": "typography",
-                          "color": "muted",
-                          "variant": "caption"
+                          "content": "Submitting timesheet…",
+                          "color": "muted"
                         }
-                      ]
+                      ],
+                      "type": "stack",
+                      "direction": "vertical",
+                      "align": "center"
                     }
                   ]
                 ]
@@ -1134,8 +1134,8 @@
                     "Timesheet",
                     {
                       "emit": {
-                        "failure": "TimesheetLoadFailed",
-                        "success": "TimesheetLoaded"
+                        "success": "TimesheetLoaded",
+                        "failure": "TimesheetLoadFailed"
                       }
                     }
                   ],
@@ -1143,22 +1143,22 @@
                     "render-ui",
                     "main",
                     {
+                      "direction": "vertical",
+                      "className": "py-12",
+                      "align": "center",
+                      "gap": "md",
                       "children": [
                         {
                           "type": "spinner"
                         },
                         {
-                          "color": "muted",
                           "type": "typography",
+                          "color": "muted",
                           "variant": "caption",
                           "content": "Approving timesheet…"
                         }
                       ],
-                      "align": "center",
-                      "gap": "md",
-                      "type": "stack",
-                      "className": "py-12",
-                      "direction": "vertical"
+                      "type": "stack"
                     }
                   ]
                 ]
@@ -1178,8 +1178,8 @@
                     "Timesheet",
                     {
                       "emit": {
-                        "failure": "TimesheetLoadFailed",
-                        "success": "TimesheetLoaded"
+                        "success": "TimesheetLoaded",
+                        "failure": "TimesheetLoadFailed"
                       }
                     }
                   ],
@@ -1187,22 +1187,22 @@
                     "render-ui",
                     "main",
                     {
+                      "type": "stack",
                       "direction": "vertical",
-                      "align": "center",
+                      "className": "py-12",
+                      "gap": "md",
                       "children": [
                         {
                           "type": "spinner"
                         },
                         {
-                          "variant": "caption",
                           "type": "typography",
+                          "variant": "caption",
                           "color": "muted",
                           "content": "Rejecting timesheet…"
                         }
                       ],
-                      "className": "py-12",
-                      "gap": "md",
-                      "type": "stack"
+                      "align": "center"
                     }
                   ]
                 ]
@@ -1232,21 +1232,21 @@
                     "main",
                     {
                       "gap": "md",
+                      "direction": "vertical",
+                      "type": "stack",
+                      "align": "center",
+                      "className": "py-12",
                       "children": [
                         {
                           "type": "spinner"
                         },
                         {
                           "type": "typography",
-                          "content": "Requesting revision…",
+                          "color": "muted",
                           "variant": "caption",
-                          "color": "muted"
+                          "content": "Requesting revision…"
                         }
-                      ],
-                      "direction": "vertical",
-                      "align": "center",
-                      "type": "stack",
-                      "className": "py-12"
+                      ]
                     }
                   ]
                 ]
@@ -1266,8 +1266,8 @@
                     "Timesheet",
                     {
                       "emit": {
-                        "failure": "TimesheetLoadFailed",
-                        "success": "TimesheetLoaded"
+                        "success": "TimesheetLoaded",
+                        "failure": "TimesheetLoadFailed"
                       }
                     }
                   ],
@@ -1275,22 +1275,22 @@
                     "render-ui",
                     "main",
                     {
-                      "gap": "md",
-                      "align": "center",
-                      "className": "py-12",
                       "direction": "vertical",
+                      "className": "py-12",
+                      "type": "stack",
                       "children": [
                         {
                           "type": "spinner"
                         },
                         {
-                          "variant": "caption",
-                          "color": "muted",
+                          "type": "typography",
                           "content": "Deleting timesheet…",
-                          "type": "typography"
+                          "variant": "caption",
+                          "color": "muted"
                         }
                       ],
-                      "type": "stack"
+                      "gap": "md",
+                      "align": "center"
                     }
                   ]
                 ]
@@ -1327,24 +1327,24 @@
               "type": "[object]",
               "default": [
                 {
-                  "label": "Employee",
+                  "name": "employeeName",
                   "variant": "caption",
-                  "name": "employeeName"
+                  "label": "Employee"
                 },
                 {
                   "variant": "caption",
-                  "label": "Period Start",
-                  "name": "periodStart"
+                  "name": "periodStart",
+                  "label": "Period Start"
                 },
                 {
+                  "name": "periodEnd",
                   "label": "Period End",
-                  "variant": "caption",
-                  "name": "periodEnd"
+                  "variant": "caption"
                 },
                 {
-                  "name": "totalHours",
+                  "variant": "caption",
                   "label": "Total Hours",
-                  "variant": "caption"
+                  "name": "totalHours"
                 },
                 {
                   "label": "Billable",
@@ -1352,16 +1352,18 @@
                   "name": "billableHours"
                 },
                 {
+                  "label": "Status",
                   "variant": "badge",
-                  "name": "status",
-                  "label": "Status"
+                  "name": "status"
                 },
                 {
                   "name": "approvedBy",
                   "label": "Approved By",
                   "variant": "caption"
                 }
-              ]
+              ],
+              "label": "Columns to show",
+              "description": "Each column maps to one field on the Timesheet entity"
             },
             "itemActions": {
               "type": "[object]",
@@ -1369,19 +1371,23 @@
                 {
                   "label": "Open",
                   "event": "OPEN_TIMESHEET",
-                  "icon": "arrow-right",
-                  "variant": "primary"
+                  "variant": "primary",
+                  "icon": "arrow-right"
                 },
                 {
-                  "variant": "danger",
                   "label": "Delete",
-                  "event": "REQUEST_DELETE"
+                  "event": "REQUEST_DELETE",
+                  "variant": "danger"
                 }
-              ]
+              ],
+              "label": "Row actions",
+              "description": "Buttons users can click on each timesheet row"
             },
             "title": {
               "type": "string",
-              "default": "Timesheets"
+              "default": "Timesheets",
+              "label": "Section title",
+              "description": "Heading shown above the weekly timesheet list"
             }
           },
           "scope": "collection"

@@ -53,12 +53,52 @@
         "emittedEvents": [],
         "listenedEvents": [],
         "overridableConfigKeys": [
-          "appName",
-          "contentTrait",
-          "navItems",
-          "notificationClickEvent",
-          "notifications",
-          "searchEvent"
+          {
+            "key": "appName",
+            "type": "unknown",
+            "default": "Helpdesk"
+          },
+          {
+            "key": "contentTrait",
+            "type": "unknown",
+            "default": "@trait.TicketCatalog"
+          },
+          {
+            "key": "navItems",
+            "type": "unknown",
+            "default": [
+              {
+                "label": "Tickets",
+                "href": "/tickets",
+                "icon": "inbox"
+              },
+              {
+                "label": "Replies",
+                "icon": "message-circle",
+                "href": "/replies"
+              },
+              {
+                "icon": "layout-list",
+                "label": "Metrics",
+                "href": "/metrics"
+              }
+            ]
+          },
+          {
+            "key": "notificationClickEvent",
+            "type": "unknown",
+            "default": "TICKET_NOTIFICATIONS_OPEN"
+          },
+          {
+            "key": "notifications",
+            "type": "unknown",
+            "default": []
+          },
+          {
+            "key": "searchEvent",
+            "type": "unknown",
+            "default": "TICKET_SEARCH"
+          }
         ],
         "capabilities": []
       },
@@ -79,8 +119,16 @@
         "emittedEvents": [],
         "listenedEvents": [],
         "overridableConfigKeys": [
-          "event",
-          "placeholder"
+          {
+            "key": "event",
+            "type": "unknown",
+            "default": "TICKET_SEARCH"
+          },
+          {
+            "key": "placeholder",
+            "type": "unknown",
+            "default": "Search tickets…"
+          }
         ],
         "capabilities": []
       },
@@ -89,8 +137,39 @@
         "emittedEvents": [],
         "listenedEvents": [],
         "overridableConfigKeys": [
-          "event",
-          "filters"
+          {
+            "key": "event",
+            "type": "unknown",
+            "default": "TICKET_FILTER"
+          },
+          {
+            "key": "filters",
+            "type": "unknown",
+            "default": [
+              {
+                "options": [
+                  "low",
+                  "medium",
+                  "high",
+                  "critical"
+                ],
+                "label": "Priority",
+                "field": "priority",
+                "filterType": "select"
+              },
+              {
+                "options": [
+                  "open",
+                  "in-progress",
+                  "resolved",
+                  "closed"
+                ],
+                "filterType": "select",
+                "label": "Status",
+                "field": "status"
+              }
+            ]
+          }
         ],
         "capabilities": []
       },
@@ -101,8 +180,56 @@
           "BrowseItemLoaded"
         ],
         "overridableConfigKeys": [
-          "metrics",
-          "title"
+          {
+            "key": "metrics",
+            "type": "unknown",
+            "default": [
+              {
+                "aggregation": "count",
+                "icon": "inbox",
+                "variant": "primary",
+                "format": "number",
+                "label": "Total"
+              },
+              {
+                "aggregation": "count",
+                "icon": "circle",
+                "label": "Open",
+                "format": "number",
+                "variant": "warning",
+                "filter": [
+                  "fn",
+                  "row",
+                  [
+                    "=",
+                    "@row.status",
+                    "open"
+                  ]
+                ]
+              },
+              {
+                "format": "number",
+                "label": "Resolved",
+                "icon": "check-circle",
+                "variant": "success",
+                "aggregation": "count",
+                "filter": [
+                  "fn",
+                  "row",
+                  [
+                    "=",
+                    "@row.status",
+                    "resolved"
+                  ]
+                ]
+              }
+            ]
+          },
+          {
+            "key": "title",
+            "type": "unknown",
+            "default": "Tickets"
+          }
         ],
         "capabilities": []
       },
@@ -113,13 +240,41 @@
           "BrowseItemLoaded"
         ],
         "overridableConfigKeys": [
-          "aggregation",
-          "categoryField",
-          "chartType",
-          "height",
-          "showLegend",
-          "subtitle",
-          "title"
+          {
+            "key": "aggregation",
+            "type": "unknown",
+            "default": "count"
+          },
+          {
+            "key": "categoryField",
+            "type": "unknown",
+            "default": "priority"
+          },
+          {
+            "key": "chartType",
+            "type": "unknown",
+            "default": "bar"
+          },
+          {
+            "key": "height",
+            "type": "unknown",
+            "default": 240
+          },
+          {
+            "key": "showLegend",
+            "type": "unknown",
+            "default": false
+          },
+          {
+            "key": "subtitle",
+            "type": "unknown",
+            "default": "Volume across priority buckets"
+          },
+          {
+            "key": "title",
+            "type": "unknown",
+            "default": "Tickets by Priority"
+          }
         ],
         "capabilities": []
       },
@@ -134,10 +289,64 @@
           "TICKET_DELETED"
         ],
         "overridableConfigKeys": [
-          "cols",
-          "fields",
-          "gap",
-          "itemActions"
+          {
+            "key": "cols",
+            "type": "unknown",
+            "default": 1
+          },
+          {
+            "key": "fields",
+            "type": "unknown",
+            "default": [
+              {
+                "name": "subject",
+                "variant": "h3",
+                "icon": "inbox"
+              },
+              {
+                "name": "priority",
+                "variant": "badge"
+              },
+              {
+                "name": "status",
+                "variant": "badge"
+              },
+              {
+                "name": "assignee",
+                "variant": "body"
+              },
+              {
+                "name": "description",
+                "variant": "caption"
+              }
+            ]
+          },
+          {
+            "key": "gap",
+            "type": "unknown",
+            "default": "sm"
+          },
+          {
+            "key": "itemActions",
+            "type": "unknown",
+            "default": [
+              {
+                "variant": "ghost",
+                "event": "VIEW",
+                "label": "View"
+              },
+              {
+                "event": "EDIT",
+                "variant": "ghost",
+                "label": "Edit"
+              },
+              {
+                "event": "DELETE",
+                "label": "Delete",
+                "variant": "danger"
+              }
+            ]
+          }
         ],
         "capabilities": []
       },
@@ -148,10 +357,33 @@
           "CREATE"
         ],
         "overridableConfigKeys": [
-          "fields",
-          "icon",
-          "mode",
-          "title"
+          {
+            "key": "fields",
+            "type": "unknown",
+            "default": [
+              "subject",
+              "description",
+              "priority",
+              "status",
+              "assignee",
+              "customerEmail"
+            ]
+          },
+          {
+            "key": "icon",
+            "type": "unknown",
+            "default": "plus-circle"
+          },
+          {
+            "key": "mode",
+            "type": "unknown",
+            "default": "create"
+          },
+          {
+            "key": "title",
+            "type": "unknown",
+            "default": "New Ticket"
+          }
         ],
         "capabilities": []
       },
@@ -162,10 +394,33 @@
           "EDIT"
         ],
         "overridableConfigKeys": [
-          "fields",
-          "icon",
-          "mode",
-          "title"
+          {
+            "key": "fields",
+            "type": "unknown",
+            "default": [
+              "subject",
+              "description",
+              "priority",
+              "status",
+              "assignee",
+              "customerEmail"
+            ]
+          },
+          {
+            "key": "icon",
+            "type": "unknown",
+            "default": "edit"
+          },
+          {
+            "key": "mode",
+            "type": "unknown",
+            "default": "edit"
+          },
+          {
+            "key": "title",
+            "type": "unknown",
+            "default": "Edit Ticket"
+          }
         ],
         "capabilities": []
       },
@@ -176,10 +431,33 @@
           "VIEW"
         ],
         "overridableConfigKeys": [
-          "fields",
-          "icon",
-          "mode",
-          "title"
+          {
+            "key": "fields",
+            "type": "unknown",
+            "default": [
+              "subject",
+              "description",
+              "priority",
+              "status",
+              "assignee",
+              "customerEmail"
+            ]
+          },
+          {
+            "key": "icon",
+            "type": "unknown",
+            "default": "eye"
+          },
+          {
+            "key": "mode",
+            "type": "unknown",
+            "default": "edit"
+          },
+          {
+            "key": "title",
+            "type": "unknown",
+            "default": "View Ticket"
+          }
         ],
         "capabilities": []
       },
@@ -190,10 +468,26 @@
           "DELETE"
         ],
         "overridableConfigKeys": [
-          "alertMessage",
-          "confirmLabel",
-          "icon",
-          "title"
+          {
+            "key": "alertMessage",
+            "type": "unknown",
+            "default": "This action cannot be undone."
+          },
+          {
+            "key": "confirmLabel",
+            "type": "unknown",
+            "default": "Delete"
+          },
+          {
+            "key": "icon",
+            "type": "unknown",
+            "default": "alert-triangle"
+          },
+          {
+            "key": "title",
+            "type": "unknown",
+            "default": "Delete Ticket"
+          }
         ],
         "capabilities": []
       },
@@ -292,12 +586,52 @@
         "emittedEvents": [],
         "listenedEvents": [],
         "overridableConfigKeys": [
-          "appName",
-          "contentTrait",
-          "navItems",
-          "notificationClickEvent",
-          "notifications",
-          "searchEvent"
+          {
+            "key": "appName",
+            "type": "unknown",
+            "default": "Helpdesk"
+          },
+          {
+            "key": "contentTrait",
+            "type": "unknown",
+            "default": "@trait.TicketReplyBrowse"
+          },
+          {
+            "key": "navItems",
+            "type": "unknown",
+            "default": [
+              {
+                "label": "Tickets",
+                "href": "/tickets",
+                "icon": "inbox"
+              },
+              {
+                "label": "Replies",
+                "href": "/replies",
+                "icon": "message-circle"
+              },
+              {
+                "label": "Metrics",
+                "href": "/metrics",
+                "icon": "layout-list"
+              }
+            ]
+          },
+          {
+            "key": "notificationClickEvent",
+            "type": "unknown",
+            "default": "TICKET_REPLY_NOTIFICATIONS_OPEN"
+          },
+          {
+            "key": "notifications",
+            "type": "unknown",
+            "default": []
+          },
+          {
+            "key": "searchEvent",
+            "type": "unknown",
+            "default": "TICKET_REPLY_SEARCH"
+          }
         ],
         "capabilities": []
       },
@@ -332,10 +666,32 @@
           "CREATE"
         ],
         "overridableConfigKeys": [
-          "fields",
-          "icon",
-          "mode",
-          "title"
+          {
+            "key": "fields",
+            "type": "unknown",
+            "default": [
+              "ticketId",
+              "body",
+              "author",
+              "customerEmail",
+              "subject"
+            ]
+          },
+          {
+            "key": "icon",
+            "type": "unknown",
+            "default": "message-circle"
+          },
+          {
+            "key": "mode",
+            "type": "unknown",
+            "default": "create"
+          },
+          {
+            "key": "title",
+            "type": "unknown",
+            "default": "New Reply"
+          }
         ],
         "capabilities": []
       },
@@ -346,11 +702,31 @@
           "SEND"
         ],
         "overridableConfigKeys": [
-          "body",
-          "recipient",
-          "sender",
-          "subject",
-          "uiTrait"
+          {
+            "key": "body",
+            "type": "unknown",
+            "default": ""
+          },
+          {
+            "key": "recipient",
+            "type": "unknown",
+            "default": ""
+          },
+          {
+            "key": "sender",
+            "type": "unknown",
+            "default": "support@example.com"
+          },
+          {
+            "key": "subject",
+            "type": "unknown",
+            "default": "Re: your ticket"
+          },
+          {
+            "key": "uiTrait",
+            "type": "unknown",
+            "default": "@trait.TicketReplyComposerForm"
+          }
         ],
         "capabilities": []
       },
@@ -431,12 +807,52 @@
         "emittedEvents": [],
         "listenedEvents": [],
         "overridableConfigKeys": [
-          "appName",
-          "contentTrait",
-          "navItems",
-          "notificationClickEvent",
-          "notifications",
-          "searchEvent"
+          {
+            "key": "appName",
+            "type": "unknown",
+            "default": "Helpdesk"
+          },
+          {
+            "key": "contentTrait",
+            "type": "unknown",
+            "default": "@trait.SupportMetricsDisplay"
+          },
+          {
+            "key": "navItems",
+            "type": "unknown",
+            "default": [
+              {
+                "label": "Tickets",
+                "icon": "inbox",
+                "href": "/tickets"
+              },
+              {
+                "icon": "message-circle",
+                "label": "Replies",
+                "href": "/replies"
+              },
+              {
+                "icon": "layout-list",
+                "label": "Metrics",
+                "href": "/metrics"
+              }
+            ]
+          },
+          {
+            "key": "notificationClickEvent",
+            "type": "unknown",
+            "default": "SUPPORT_METRICS_NOTIFICATIONS_OPEN"
+          },
+          {
+            "key": "notifications",
+            "type": "unknown",
+            "default": []
+          },
+          {
+            "key": "searchEvent",
+            "type": "unknown",
+            "default": "SUPPORT_METRICS_SEARCH"
+          }
         ],
         "capabilities": []
       },
@@ -445,9 +861,42 @@
         "emittedEvents": [],
         "listenedEvents": [],
         "overridableConfigKeys": [
-          "displayPageSize",
-          "fields",
-          "pageSize"
+          {
+            "key": "displayPageSize",
+            "type": "unknown",
+            "default": 5
+          },
+          {
+            "key": "fields",
+            "type": "unknown",
+            "default": [
+              {
+                "label": "Name",
+                "variant": "h4",
+                "name": "name"
+              },
+              {
+                "variant": "caption",
+                "label": "Category",
+                "name": "category"
+              },
+              {
+                "label": "Status",
+                "variant": "badge",
+                "name": "status"
+              },
+              {
+                "label": "Priority",
+                "name": "priority",
+                "variant": "badge"
+              }
+            ]
+          },
+          {
+            "key": "pageSize",
+            "type": "unknown",
+            "default": 100
+          }
         ],
         "capabilities": []
       },

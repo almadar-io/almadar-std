@@ -63,12 +63,57 @@
         "emittedEvents": [],
         "listenedEvents": [],
         "overridableConfigKeys": [
-          "appName",
-          "contentTrait",
-          "navItems",
-          "notificationClickEvent",
-          "notifications",
-          "searchEvent"
+          {
+            "key": "appName",
+            "type": "unknown",
+            "default": "Construction PM"
+          },
+          {
+            "key": "contentTrait",
+            "type": "unknown",
+            "default": "@trait.ProjectCatalog"
+          },
+          {
+            "key": "navItems",
+            "type": "unknown",
+            "default": [
+              {
+                "label": "Projects",
+                "icon": "briefcase",
+                "href": "/projects"
+              },
+              {
+                "label": "RFIs",
+                "href": "/rfis",
+                "icon": "message-circle"
+              },
+              {
+                "label": "Submittals",
+                "href": "/submittals",
+                "icon": "file-text"
+              },
+              {
+                "icon": "edit",
+                "label": "Change Orders",
+                "href": "/change-orders"
+              }
+            ]
+          },
+          {
+            "key": "notificationClickEvent",
+            "type": "unknown",
+            "default": "PROJECT_NOTIFICATIONS_OPEN"
+          },
+          {
+            "key": "notifications",
+            "type": "unknown",
+            "default": []
+          },
+          {
+            "key": "searchEvent",
+            "type": "unknown",
+            "default": "PROJECT_SEARCH"
+          }
         ],
         "capabilities": []
       },
@@ -89,8 +134,16 @@
         "emittedEvents": [],
         "listenedEvents": [],
         "overridableConfigKeys": [
-          "event",
-          "placeholder"
+          {
+            "key": "event",
+            "type": "unknown",
+            "default": "PROJECT_SEARCH"
+          },
+          {
+            "key": "placeholder",
+            "type": "unknown",
+            "default": "Search projects…"
+          }
         ],
         "capabilities": []
       },
@@ -99,8 +152,28 @@
         "emittedEvents": [],
         "listenedEvents": [],
         "overridableConfigKeys": [
-          "event",
-          "filters"
+          {
+            "key": "event",
+            "type": "unknown",
+            "default": "PROJECT_FILTER"
+          },
+          {
+            "key": "filters",
+            "type": "unknown",
+            "default": [
+              {
+                "label": "Status",
+                "field": "status",
+                "options": [
+                  "active",
+                  "on-hold",
+                  "completed",
+                  "cancelled"
+                ],
+                "filterType": "select"
+              }
+            ]
+          }
         ],
         "capabilities": []
       },
@@ -111,8 +184,64 @@
           "BrowseItemLoaded"
         ],
         "overridableConfigKeys": [
-          "metrics",
-          "title"
+          {
+            "key": "metrics",
+            "type": "unknown",
+            "default": [
+              {
+                "icon": "briefcase",
+                "format": "number",
+                "aggregation": "count",
+                "variant": "primary",
+                "label": "Total"
+              },
+              {
+                "variant": "success",
+                "filter": [
+                  "fn",
+                  "row",
+                  [
+                    "=",
+                    "@row.status",
+                    "active"
+                  ]
+                ],
+                "label": "Active",
+                "format": "number",
+                "icon": "check-circle",
+                "aggregation": "count"
+              },
+              {
+                "filter": [
+                  "fn",
+                  "row",
+                  [
+                    "=",
+                    "@row.status",
+                    "on-hold"
+                  ]
+                ],
+                "variant": "warning",
+                "aggregation": "count",
+                "format": "number",
+                "icon": "pause-circle",
+                "label": "On Hold"
+              },
+              {
+                "label": "Total Budget",
+                "format": "number",
+                "aggregation": "sum",
+                "variant": "info",
+                "icon": "dollar-sign",
+                "field": "budgetUsd"
+              }
+            ]
+          },
+          {
+            "key": "title",
+            "type": "unknown",
+            "default": "Projects"
+          }
         ],
         "capabilities": []
       },
@@ -123,13 +252,41 @@
           "BrowseItemLoaded"
         ],
         "overridableConfigKeys": [
-          "aggregation",
-          "categoryField",
-          "chartType",
-          "height",
-          "showLegend",
-          "subtitle",
-          "title"
+          {
+            "key": "aggregation",
+            "type": "unknown",
+            "default": "count"
+          },
+          {
+            "key": "categoryField",
+            "type": "unknown",
+            "default": "status"
+          },
+          {
+            "key": "chartType",
+            "type": "unknown",
+            "default": "bar"
+          },
+          {
+            "key": "height",
+            "type": "unknown",
+            "default": 240
+          },
+          {
+            "key": "showLegend",
+            "type": "unknown",
+            "default": false
+          },
+          {
+            "key": "subtitle",
+            "type": "unknown",
+            "default": "Portfolio composition across project statuses"
+          },
+          {
+            "key": "title",
+            "type": "unknown",
+            "default": "Projects by Status"
+          }
         ],
         "capabilities": []
       },
@@ -144,10 +301,64 @@
           "PROJECT_DELETED"
         ],
         "overridableConfigKeys": [
-          "cols",
-          "fields",
-          "gap",
-          "itemActions"
+          {
+            "key": "cols",
+            "type": "unknown",
+            "default": 1
+          },
+          {
+            "key": "fields",
+            "type": "unknown",
+            "default": [
+              {
+                "variant": "h3",
+                "name": "name",
+                "icon": "briefcase"
+              },
+              {
+                "variant": "caption",
+                "name": "jobNumber"
+              },
+              {
+                "variant": "caption",
+                "name": "client"
+              },
+              {
+                "name": "status",
+                "variant": "badge"
+              },
+              {
+                "variant": "caption",
+                "name": "projectManager"
+              }
+            ]
+          },
+          {
+            "key": "gap",
+            "type": "unknown",
+            "default": "sm"
+          },
+          {
+            "key": "itemActions",
+            "type": "unknown",
+            "default": [
+              {
+                "event": "VIEW",
+                "variant": "ghost",
+                "label": "View"
+              },
+              {
+                "variant": "ghost",
+                "label": "Edit",
+                "event": "EDIT"
+              },
+              {
+                "label": "Delete",
+                "event": "DELETE",
+                "variant": "danger"
+              }
+            ]
+          }
         ],
         "capabilities": []
       },
@@ -158,10 +369,35 @@
           "CREATE"
         ],
         "overridableConfigKeys": [
-          "fields",
-          "icon",
-          "mode",
-          "title"
+          {
+            "key": "fields",
+            "type": "unknown",
+            "default": [
+              "name",
+              "jobNumber",
+              "client",
+              "status",
+              "startDate",
+              "targetEndDate",
+              "budgetUsd",
+              "projectManager"
+            ]
+          },
+          {
+            "key": "icon",
+            "type": "unknown",
+            "default": "plus-circle"
+          },
+          {
+            "key": "mode",
+            "type": "unknown",
+            "default": "create"
+          },
+          {
+            "key": "title",
+            "type": "unknown",
+            "default": "New Project"
+          }
         ],
         "capabilities": []
       },
@@ -172,10 +408,35 @@
           "EDIT"
         ],
         "overridableConfigKeys": [
-          "fields",
-          "icon",
-          "mode",
-          "title"
+          {
+            "key": "fields",
+            "type": "unknown",
+            "default": [
+              "name",
+              "jobNumber",
+              "client",
+              "status",
+              "startDate",
+              "targetEndDate",
+              "budgetUsd",
+              "projectManager"
+            ]
+          },
+          {
+            "key": "icon",
+            "type": "unknown",
+            "default": "edit"
+          },
+          {
+            "key": "mode",
+            "type": "unknown",
+            "default": "edit"
+          },
+          {
+            "key": "title",
+            "type": "unknown",
+            "default": "Edit Project"
+          }
         ],
         "capabilities": []
       },
@@ -186,10 +447,35 @@
           "VIEW"
         ],
         "overridableConfigKeys": [
-          "fields",
-          "icon",
-          "mode",
-          "title"
+          {
+            "key": "fields",
+            "type": "unknown",
+            "default": [
+              "name",
+              "jobNumber",
+              "client",
+              "status",
+              "startDate",
+              "targetEndDate",
+              "budgetUsd",
+              "projectManager"
+            ]
+          },
+          {
+            "key": "icon",
+            "type": "unknown",
+            "default": "eye"
+          },
+          {
+            "key": "mode",
+            "type": "unknown",
+            "default": "edit"
+          },
+          {
+            "key": "title",
+            "type": "unknown",
+            "default": "View Project"
+          }
         ],
         "capabilities": []
       },
@@ -200,10 +486,26 @@
           "DELETE"
         ],
         "overridableConfigKeys": [
-          "alertMessage",
-          "confirmLabel",
-          "icon",
-          "title"
+          {
+            "key": "alertMessage",
+            "type": "unknown",
+            "default": "This action cannot be undone."
+          },
+          {
+            "key": "confirmLabel",
+            "type": "unknown",
+            "default": "Delete"
+          },
+          {
+            "key": "icon",
+            "type": "unknown",
+            "default": "alert-triangle"
+          },
+          {
+            "key": "title",
+            "type": "unknown",
+            "default": "Delete Project"
+          }
         ],
         "capabilities": []
       },
@@ -327,12 +629,57 @@
         "emittedEvents": [],
         "listenedEvents": [],
         "overridableConfigKeys": [
-          "appName",
-          "contentTrait",
-          "navItems",
-          "notificationClickEvent",
-          "notifications",
-          "searchEvent"
+          {
+            "key": "appName",
+            "type": "unknown",
+            "default": "Construction PM"
+          },
+          {
+            "key": "contentTrait",
+            "type": "unknown",
+            "default": "@trait.RfiPanel"
+          },
+          {
+            "key": "navItems",
+            "type": "unknown",
+            "default": [
+              {
+                "href": "/projects",
+                "icon": "briefcase",
+                "label": "Projects"
+              },
+              {
+                "href": "/rfis",
+                "icon": "message-circle",
+                "label": "RFIs"
+              },
+              {
+                "href": "/submittals",
+                "label": "Submittals",
+                "icon": "file-text"
+              },
+              {
+                "icon": "edit",
+                "label": "Change Orders",
+                "href": "/change-orders"
+              }
+            ]
+          },
+          {
+            "key": "notificationClickEvent",
+            "type": "unknown",
+            "default": "RFI_NOTIFICATIONS_OPEN"
+          },
+          {
+            "key": "notifications",
+            "type": "unknown",
+            "default": []
+          },
+          {
+            "key": "searchEvent",
+            "type": "unknown",
+            "default": "RFI_SEARCH"
+          }
         ],
         "capabilities": []
       },
@@ -348,7 +695,11 @@
         "emittedEvents": [],
         "listenedEvents": [],
         "overridableConfigKeys": [
-          "title"
+          {
+            "key": "title",
+            "type": "unknown",
+            "default": "Requests for Information"
+          }
         ],
         "capabilities": []
       }
@@ -437,12 +788,57 @@
         "emittedEvents": [],
         "listenedEvents": [],
         "overridableConfigKeys": [
-          "appName",
-          "contentTrait",
-          "navItems",
-          "notificationClickEvent",
-          "notifications",
-          "searchEvent"
+          {
+            "key": "appName",
+            "type": "unknown",
+            "default": "Construction PM"
+          },
+          {
+            "key": "contentTrait",
+            "type": "unknown",
+            "default": "@trait.SubmittalPanel"
+          },
+          {
+            "key": "navItems",
+            "type": "unknown",
+            "default": [
+              {
+                "label": "Projects",
+                "icon": "briefcase",
+                "href": "/projects"
+              },
+              {
+                "label": "RFIs",
+                "href": "/rfis",
+                "icon": "message-circle"
+              },
+              {
+                "icon": "file-text",
+                "label": "Submittals",
+                "href": "/submittals"
+              },
+              {
+                "href": "/change-orders",
+                "label": "Change Orders",
+                "icon": "edit"
+              }
+            ]
+          },
+          {
+            "key": "notificationClickEvent",
+            "type": "unknown",
+            "default": "SUBMITTAL_NOTIFICATIONS_OPEN"
+          },
+          {
+            "key": "notifications",
+            "type": "unknown",
+            "default": []
+          },
+          {
+            "key": "searchEvent",
+            "type": "unknown",
+            "default": "SUBMITTAL_SEARCH"
+          }
         ],
         "capabilities": []
       },
@@ -458,7 +854,11 @@
         "emittedEvents": [],
         "listenedEvents": [],
         "overridableConfigKeys": [
-          "title"
+          {
+            "key": "title",
+            "type": "unknown",
+            "default": "Submittal Log"
+          }
         ],
         "capabilities": []
       }
@@ -547,12 +947,57 @@
         "emittedEvents": [],
         "listenedEvents": [],
         "overridableConfigKeys": [
-          "appName",
-          "contentTrait",
-          "navItems",
-          "notificationClickEvent",
-          "notifications",
-          "searchEvent"
+          {
+            "key": "appName",
+            "type": "unknown",
+            "default": "Construction PM"
+          },
+          {
+            "key": "contentTrait",
+            "type": "unknown",
+            "default": "@trait.ChangeOrderPanel"
+          },
+          {
+            "key": "navItems",
+            "type": "unknown",
+            "default": [
+              {
+                "icon": "briefcase",
+                "label": "Projects",
+                "href": "/projects"
+              },
+              {
+                "label": "RFIs",
+                "href": "/rfis",
+                "icon": "message-circle"
+              },
+              {
+                "label": "Submittals",
+                "href": "/submittals",
+                "icon": "file-text"
+              },
+              {
+                "icon": "edit",
+                "href": "/change-orders",
+                "label": "Change Orders"
+              }
+            ]
+          },
+          {
+            "key": "notificationClickEvent",
+            "type": "unknown",
+            "default": "CHANGE_ORDER_NOTIFICATIONS_OPEN"
+          },
+          {
+            "key": "notifications",
+            "type": "unknown",
+            "default": []
+          },
+          {
+            "key": "searchEvent",
+            "type": "unknown",
+            "default": "CHANGE_ORDER_SEARCH"
+          }
         ],
         "capabilities": []
       },
@@ -568,7 +1013,11 @@
         "emittedEvents": [],
         "listenedEvents": [],
         "overridableConfigKeys": [
-          "title"
+          {
+            "key": "title",
+            "type": "unknown",
+            "default": "Change Order Ledger"
+          }
         ],
         "capabilities": []
       }

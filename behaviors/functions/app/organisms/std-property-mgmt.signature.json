@@ -43,12 +43,62 @@
         "emittedEvents": [],
         "listenedEvents": [],
         "overridableConfigKeys": [
-          "appName",
-          "contentTrait",
-          "navItems",
-          "notificationClickEvent",
-          "notifications",
-          "searchEvent"
+          {
+            "key": "appName",
+            "type": "unknown",
+            "default": "Property Management"
+          },
+          {
+            "key": "contentTrait",
+            "type": "unknown",
+            "default": "@trait.PropertyCatalog"
+          },
+          {
+            "key": "navItems",
+            "type": "unknown",
+            "default": [
+              {
+                "icon": "home",
+                "label": "Properties",
+                "href": "/properties"
+              },
+              {
+                "icon": "file-text",
+                "href": "/leases",
+                "label": "Leases"
+              },
+              {
+                "href": "/tenants",
+                "icon": "users",
+                "label": "Tenants"
+              },
+              {
+                "href": "/rent-charges",
+                "icon": "credit-card",
+                "label": "Rent Charges"
+              },
+              {
+                "icon": "wrench",
+                "label": "Maintenance",
+                "href": "/maintenance"
+              }
+            ]
+          },
+          {
+            "key": "notificationClickEvent",
+            "type": "unknown",
+            "default": "PROPERTY_NOTIFICATIONS_OPEN"
+          },
+          {
+            "key": "notifications",
+            "type": "unknown",
+            "default": []
+          },
+          {
+            "key": "searchEvent",
+            "type": "unknown",
+            "default": "PROPERTY_SEARCH"
+          }
         ],
         "capabilities": []
       },
@@ -69,8 +119,16 @@
         "emittedEvents": [],
         "listenedEvents": [],
         "overridableConfigKeys": [
-          "event",
-          "placeholder"
+          {
+            "key": "event",
+            "type": "unknown",
+            "default": "PROPERTY_SEARCH"
+          },
+          {
+            "key": "placeholder",
+            "type": "unknown",
+            "default": "Search properties…"
+          }
         ],
         "capabilities": []
       },
@@ -79,8 +137,38 @@
         "emittedEvents": [],
         "listenedEvents": [],
         "overridableConfigKeys": [
-          "event",
-          "filters"
+          {
+            "key": "event",
+            "type": "unknown",
+            "default": "PROPERTY_FILTER"
+          },
+          {
+            "key": "filters",
+            "type": "unknown",
+            "default": [
+              {
+                "label": "Type",
+                "filterType": "select",
+                "options": [
+                  "single-family",
+                  "multi-family",
+                  "commercial",
+                  "mixed-use"
+                ],
+                "field": "propertyType"
+              },
+              {
+                "label": "Status",
+                "filterType": "select",
+                "options": [
+                  "active",
+                  "vacant",
+                  "under-renovation"
+                ],
+                "field": "status"
+              }
+            ]
+          }
         ],
         "capabilities": []
       },
@@ -91,8 +179,64 @@
           "BrowseItemLoaded"
         ],
         "overridableConfigKeys": [
-          "metrics",
-          "title"
+          {
+            "key": "metrics",
+            "type": "unknown",
+            "default": [
+              {
+                "format": "number",
+                "aggregation": "count",
+                "label": "Total",
+                "icon": "home",
+                "variant": "primary"
+              },
+              {
+                "aggregation": "count",
+                "variant": "success",
+                "format": "number",
+                "filter": [
+                  "fn",
+                  "row",
+                  [
+                    "=",
+                    "@row.status",
+                    "active"
+                  ]
+                ],
+                "label": "Active",
+                "icon": "check-circle"
+              },
+              {
+                "format": "number",
+                "filter": [
+                  "fn",
+                  "row",
+                  [
+                    "=",
+                    "@row.status",
+                    "vacant"
+                  ]
+                ],
+                "icon": "circle",
+                "variant": "warning",
+                "label": "Vacant",
+                "aggregation": "count"
+              },
+              {
+                "format": "number",
+                "field": "unitCount",
+                "label": "Total Units",
+                "icon": "layers",
+                "variant": "info",
+                "aggregation": "sum"
+              }
+            ]
+          },
+          {
+            "key": "title",
+            "type": "unknown",
+            "default": "Properties"
+          }
         ],
         "capabilities": []
       },
@@ -103,13 +247,41 @@
           "BrowseItemLoaded"
         ],
         "overridableConfigKeys": [
-          "aggregation",
-          "categoryField",
-          "chartType",
-          "height",
-          "showLegend",
-          "subtitle",
-          "title"
+          {
+            "key": "aggregation",
+            "type": "unknown",
+            "default": "count"
+          },
+          {
+            "key": "categoryField",
+            "type": "unknown",
+            "default": "propertyType"
+          },
+          {
+            "key": "chartType",
+            "type": "unknown",
+            "default": "bar"
+          },
+          {
+            "key": "height",
+            "type": "unknown",
+            "default": 240
+          },
+          {
+            "key": "showLegend",
+            "type": "unknown",
+            "default": false
+          },
+          {
+            "key": "subtitle",
+            "type": "unknown",
+            "default": "Portfolio composition across property types"
+          },
+          {
+            "key": "title",
+            "type": "unknown",
+            "default": "Properties by Type"
+          }
         ],
         "capabilities": []
       },
@@ -124,10 +296,60 @@
           "PROPERTY_DELETED"
         ],
         "overridableConfigKeys": [
-          "cols",
-          "fields",
-          "gap",
-          "itemActions"
+          {
+            "key": "cols",
+            "type": "unknown",
+            "default": 1
+          },
+          {
+            "key": "fields",
+            "type": "unknown",
+            "default": [
+              {
+                "variant": "h3",
+                "icon": "home",
+                "name": "address"
+              },
+              {
+                "name": "propertyType",
+                "variant": "badge"
+              },
+              {
+                "variant": "badge",
+                "name": "status"
+              },
+              {
+                "name": "unitCount",
+                "variant": "caption"
+              }
+            ]
+          },
+          {
+            "key": "gap",
+            "type": "unknown",
+            "default": "sm"
+          },
+          {
+            "key": "itemActions",
+            "type": "unknown",
+            "default": [
+              {
+                "event": "VIEW",
+                "variant": "ghost",
+                "label": "View"
+              },
+              {
+                "event": "EDIT",
+                "label": "Edit",
+                "variant": "ghost"
+              },
+              {
+                "event": "DELETE",
+                "variant": "danger",
+                "label": "Delete"
+              }
+            ]
+          }
         ],
         "capabilities": []
       },
@@ -138,10 +360,31 @@
           "CREATE"
         ],
         "overridableConfigKeys": [
-          "fields",
-          "icon",
-          "mode",
-          "title"
+          {
+            "key": "fields",
+            "type": "unknown",
+            "default": [
+              "address",
+              "unitCount",
+              "propertyType",
+              "status"
+            ]
+          },
+          {
+            "key": "icon",
+            "type": "unknown",
+            "default": "plus-circle"
+          },
+          {
+            "key": "mode",
+            "type": "unknown",
+            "default": "create"
+          },
+          {
+            "key": "title",
+            "type": "unknown",
+            "default": "New Property"
+          }
         ],
         "capabilities": []
       },
@@ -152,10 +395,31 @@
           "EDIT"
         ],
         "overridableConfigKeys": [
-          "fields",
-          "icon",
-          "mode",
-          "title"
+          {
+            "key": "fields",
+            "type": "unknown",
+            "default": [
+              "address",
+              "unitCount",
+              "propertyType",
+              "status"
+            ]
+          },
+          {
+            "key": "icon",
+            "type": "unknown",
+            "default": "edit"
+          },
+          {
+            "key": "mode",
+            "type": "unknown",
+            "default": "edit"
+          },
+          {
+            "key": "title",
+            "type": "unknown",
+            "default": "Edit Property"
+          }
         ],
         "capabilities": []
       },
@@ -166,10 +430,31 @@
           "VIEW"
         ],
         "overridableConfigKeys": [
-          "fields",
-          "icon",
-          "mode",
-          "title"
+          {
+            "key": "fields",
+            "type": "unknown",
+            "default": [
+              "address",
+              "unitCount",
+              "propertyType",
+              "status"
+            ]
+          },
+          {
+            "key": "icon",
+            "type": "unknown",
+            "default": "eye"
+          },
+          {
+            "key": "mode",
+            "type": "unknown",
+            "default": "edit"
+          },
+          {
+            "key": "title",
+            "type": "unknown",
+            "default": "View Property"
+          }
         ],
         "capabilities": []
       },
@@ -180,10 +465,26 @@
           "DELETE"
         ],
         "overridableConfigKeys": [
-          "alertMessage",
-          "confirmLabel",
-          "icon",
-          "title"
+          {
+            "key": "alertMessage",
+            "type": "unknown",
+            "default": "This action cannot be undone."
+          },
+          {
+            "key": "confirmLabel",
+            "type": "unknown",
+            "default": "Delete"
+          },
+          {
+            "key": "icon",
+            "type": "unknown",
+            "default": "alert-triangle"
+          },
+          {
+            "key": "title",
+            "type": "unknown",
+            "default": "Delete Property"
+          }
         ],
         "capabilities": []
       },
@@ -297,12 +598,62 @@
         "emittedEvents": [],
         "listenedEvents": [],
         "overridableConfigKeys": [
-          "appName",
-          "contentTrait",
-          "navItems",
-          "notificationClickEvent",
-          "notifications",
-          "searchEvent"
+          {
+            "key": "appName",
+            "type": "unknown",
+            "default": "Property Management"
+          },
+          {
+            "key": "contentTrait",
+            "type": "unknown",
+            "default": "@trait.LeasePanel"
+          },
+          {
+            "key": "navItems",
+            "type": "unknown",
+            "default": [
+              {
+                "label": "Properties",
+                "href": "/properties",
+                "icon": "home"
+              },
+              {
+                "label": "Leases",
+                "href": "/leases",
+                "icon": "file-text"
+              },
+              {
+                "href": "/tenants",
+                "icon": "users",
+                "label": "Tenants"
+              },
+              {
+                "label": "Rent Charges",
+                "icon": "credit-card",
+                "href": "/rent-charges"
+              },
+              {
+                "icon": "wrench",
+                "href": "/maintenance",
+                "label": "Maintenance"
+              }
+            ]
+          },
+          {
+            "key": "notificationClickEvent",
+            "type": "unknown",
+            "default": "LEASE_NOTIFICATIONS_OPEN"
+          },
+          {
+            "key": "notifications",
+            "type": "unknown",
+            "default": []
+          },
+          {
+            "key": "searchEvent",
+            "type": "unknown",
+            "default": "LEASE_SEARCH"
+          }
         ],
         "capabilities": []
       },
@@ -318,7 +669,11 @@
         "emittedEvents": [],
         "listenedEvents": [],
         "overridableConfigKeys": [
-          "title"
+          {
+            "key": "title",
+            "type": "unknown",
+            "default": "Leases"
+          }
         ],
         "capabilities": []
       }
@@ -392,12 +747,62 @@
         "emittedEvents": [],
         "listenedEvents": [],
         "overridableConfigKeys": [
-          "appName",
-          "contentTrait",
-          "navItems",
-          "notificationClickEvent",
-          "notifications",
-          "searchEvent"
+          {
+            "key": "appName",
+            "type": "unknown",
+            "default": "Property Management"
+          },
+          {
+            "key": "contentTrait",
+            "type": "unknown",
+            "default": "@trait.TenantPanel"
+          },
+          {
+            "key": "navItems",
+            "type": "unknown",
+            "default": [
+              {
+                "label": "Properties",
+                "href": "/properties",
+                "icon": "home"
+              },
+              {
+                "label": "Leases",
+                "href": "/leases",
+                "icon": "file-text"
+              },
+              {
+                "label": "Tenants",
+                "href": "/tenants",
+                "icon": "users"
+              },
+              {
+                "href": "/rent-charges",
+                "label": "Rent Charges",
+                "icon": "credit-card"
+              },
+              {
+                "href": "/maintenance",
+                "icon": "wrench",
+                "label": "Maintenance"
+              }
+            ]
+          },
+          {
+            "key": "notificationClickEvent",
+            "type": "unknown",
+            "default": "TENANT_NOTIFICATIONS_OPEN"
+          },
+          {
+            "key": "notifications",
+            "type": "unknown",
+            "default": []
+          },
+          {
+            "key": "searchEvent",
+            "type": "unknown",
+            "default": "TENANT_SEARCH"
+          }
         ],
         "capabilities": []
       },
@@ -413,7 +818,11 @@
         "emittedEvents": [],
         "listenedEvents": [],
         "overridableConfigKeys": [
-          "title"
+          {
+            "key": "title",
+            "type": "unknown",
+            "default": "Tenants"
+          }
         ],
         "capabilities": []
       }
@@ -487,12 +896,62 @@
         "emittedEvents": [],
         "listenedEvents": [],
         "overridableConfigKeys": [
-          "appName",
-          "contentTrait",
-          "navItems",
-          "notificationClickEvent",
-          "notifications",
-          "searchEvent"
+          {
+            "key": "appName",
+            "type": "unknown",
+            "default": "Property Management"
+          },
+          {
+            "key": "contentTrait",
+            "type": "unknown",
+            "default": "@trait.RentChargePanel"
+          },
+          {
+            "key": "navItems",
+            "type": "unknown",
+            "default": [
+              {
+                "icon": "home",
+                "label": "Properties",
+                "href": "/properties"
+              },
+              {
+                "href": "/leases",
+                "icon": "file-text",
+                "label": "Leases"
+              },
+              {
+                "label": "Tenants",
+                "href": "/tenants",
+                "icon": "users"
+              },
+              {
+                "label": "Rent Charges",
+                "href": "/rent-charges",
+                "icon": "credit-card"
+              },
+              {
+                "href": "/maintenance",
+                "icon": "wrench",
+                "label": "Maintenance"
+              }
+            ]
+          },
+          {
+            "key": "notificationClickEvent",
+            "type": "unknown",
+            "default": "RENT_CHARGE_NOTIFICATIONS_OPEN"
+          },
+          {
+            "key": "notifications",
+            "type": "unknown",
+            "default": []
+          },
+          {
+            "key": "searchEvent",
+            "type": "unknown",
+            "default": "RENT_CHARGE_SEARCH"
+          }
         ],
         "capabilities": []
       },
@@ -508,7 +967,11 @@
         "emittedEvents": [],
         "listenedEvents": [],
         "overridableConfigKeys": [
-          "title"
+          {
+            "key": "title",
+            "type": "unknown",
+            "default": "Rent Charges"
+          }
         ],
         "capabilities": []
       }
@@ -597,12 +1060,62 @@
         "emittedEvents": [],
         "listenedEvents": [],
         "overridableConfigKeys": [
-          "appName",
-          "contentTrait",
-          "navItems",
-          "notificationClickEvent",
-          "notifications",
-          "searchEvent"
+          {
+            "key": "appName",
+            "type": "unknown",
+            "default": "Property Management"
+          },
+          {
+            "key": "contentTrait",
+            "type": "unknown",
+            "default": "@trait.MaintenanceRequestPanel"
+          },
+          {
+            "key": "navItems",
+            "type": "unknown",
+            "default": [
+              {
+                "href": "/properties",
+                "label": "Properties",
+                "icon": "home"
+              },
+              {
+                "href": "/leases",
+                "icon": "file-text",
+                "label": "Leases"
+              },
+              {
+                "href": "/tenants",
+                "label": "Tenants",
+                "icon": "users"
+              },
+              {
+                "href": "/rent-charges",
+                "label": "Rent Charges",
+                "icon": "credit-card"
+              },
+              {
+                "icon": "wrench",
+                "label": "Maintenance",
+                "href": "/maintenance"
+              }
+            ]
+          },
+          {
+            "key": "notificationClickEvent",
+            "type": "unknown",
+            "default": "MAINTENANCE_REQUEST_NOTIFICATIONS_OPEN"
+          },
+          {
+            "key": "notifications",
+            "type": "unknown",
+            "default": []
+          },
+          {
+            "key": "searchEvent",
+            "type": "unknown",
+            "default": "MAINTENANCE_REQUEST_SEARCH"
+          }
         ],
         "capabilities": []
       },
@@ -618,7 +1131,11 @@
         "emittedEvents": [],
         "listenedEvents": [],
         "overridableConfigKeys": [
-          "title"
+          {
+            "key": "title",
+            "type": "unknown",
+            "default": "Maintenance Requests"
+          }
         ],
         "capabilities": []
       }

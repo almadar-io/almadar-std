@@ -68,12 +68,57 @@
         "emittedEvents": [],
         "listenedEvents": [],
         "overridableConfigKeys": [
-          "appName",
-          "contentTrait",
-          "navItems",
-          "notificationClickEvent",
-          "notifications",
-          "searchEvent"
+          {
+            "key": "appName",
+            "type": "unknown",
+            "default": "Legal Case"
+          },
+          {
+            "key": "contentTrait",
+            "type": "unknown",
+            "default": "@trait.MatterCatalog"
+          },
+          {
+            "key": "navItems",
+            "type": "unknown",
+            "default": [
+              {
+                "href": "/matters",
+                "label": "Matters",
+                "icon": "scale"
+              },
+              {
+                "icon": "folder",
+                "href": "/cases",
+                "label": "Cases"
+              },
+              {
+                "label": "Time",
+                "icon": "clock",
+                "href": "/timesheet"
+              },
+              {
+                "href": "/deadlines",
+                "icon": "calendar",
+                "label": "Deadlines"
+              }
+            ]
+          },
+          {
+            "key": "notificationClickEvent",
+            "type": "unknown",
+            "default": "MATTER_NOTIFICATIONS_OPEN"
+          },
+          {
+            "key": "notifications",
+            "type": "unknown",
+            "default": []
+          },
+          {
+            "key": "searchEvent",
+            "type": "unknown",
+            "default": "MATTER_SEARCH"
+          }
         ],
         "capabilities": []
       },
@@ -94,8 +139,16 @@
         "emittedEvents": [],
         "listenedEvents": [],
         "overridableConfigKeys": [
-          "event",
-          "placeholder"
+          {
+            "key": "event",
+            "type": "unknown",
+            "default": "MATTER_SEARCH"
+          },
+          {
+            "key": "placeholder",
+            "type": "unknown",
+            "default": "Search matters…"
+          }
         ],
         "capabilities": []
       },
@@ -104,8 +157,43 @@
         "emittedEvents": [],
         "listenedEvents": [],
         "overridableConfigKeys": [
-          "event",
-          "filters"
+          {
+            "key": "event",
+            "type": "unknown",
+            "default": "MATTER_FILTER"
+          },
+          {
+            "key": "filters",
+            "type": "unknown",
+            "default": [
+              {
+                "field": "practiceArea",
+                "options": [
+                  "litigation",
+                  "transactional",
+                  "regulatory",
+                  "ip",
+                  "immigration",
+                  "family",
+                  "other"
+                ],
+                "label": "Practice",
+                "filterType": "select"
+              },
+              {
+                "label": "Status",
+                "field": "status",
+                "options": [
+                  "open",
+                  "active",
+                  "on_hold",
+                  "closed",
+                  "archived"
+                ],
+                "filterType": "select"
+              }
+            ]
+          }
         ],
         "capabilities": []
       },
@@ -116,8 +204,72 @@
           "BrowseItemLoaded"
         ],
         "overridableConfigKeys": [
-          "metrics",
-          "title"
+          {
+            "key": "metrics",
+            "type": "unknown",
+            "default": [
+              {
+                "aggregation": "count",
+                "format": "number",
+                "icon": "scale",
+                "label": "Total",
+                "variant": "primary"
+              },
+              {
+                "variant": "warning",
+                "aggregation": "count",
+                "filter": [
+                  "fn",
+                  "row",
+                  [
+                    "=",
+                    "@row.status",
+                    "open"
+                  ]
+                ],
+                "label": "Open",
+                "format": "number",
+                "icon": "circle"
+              },
+              {
+                "variant": "success",
+                "filter": [
+                  "fn",
+                  "row",
+                  [
+                    "=",
+                    "@row.status",
+                    "active"
+                  ]
+                ],
+                "aggregation": "count",
+                "icon": "check-circle",
+                "format": "number",
+                "label": "Active"
+              },
+              {
+                "icon": "archive",
+                "variant": "info",
+                "label": "Closed",
+                "aggregation": "count",
+                "format": "number",
+                "filter": [
+                  "fn",
+                  "row",
+                  [
+                    "=",
+                    "@row.status",
+                    "closed"
+                  ]
+                ]
+              }
+            ]
+          },
+          {
+            "key": "title",
+            "type": "unknown",
+            "default": "Matters"
+          }
         ],
         "capabilities": []
       },
@@ -128,13 +280,41 @@
           "BrowseItemLoaded"
         ],
         "overridableConfigKeys": [
-          "aggregation",
-          "categoryField",
-          "chartType",
-          "height",
-          "showLegend",
-          "subtitle",
-          "title"
+          {
+            "key": "aggregation",
+            "type": "unknown",
+            "default": "count"
+          },
+          {
+            "key": "categoryField",
+            "type": "unknown",
+            "default": "practiceArea"
+          },
+          {
+            "key": "chartType",
+            "type": "unknown",
+            "default": "bar"
+          },
+          {
+            "key": "height",
+            "type": "unknown",
+            "default": 240
+          },
+          {
+            "key": "showLegend",
+            "type": "unknown",
+            "default": false
+          },
+          {
+            "key": "subtitle",
+            "type": "unknown",
+            "default": "Caseload composition across practice areas"
+          },
+          {
+            "key": "title",
+            "type": "unknown",
+            "default": "Matters by Practice Area"
+          }
         ],
         "capabilities": []
       },
@@ -149,10 +329,68 @@
           "MATTER_DELETED"
         ],
         "overridableConfigKeys": [
-          "cols",
-          "fields",
-          "gap",
-          "itemActions"
+          {
+            "key": "cols",
+            "type": "unknown",
+            "default": 1
+          },
+          {
+            "key": "fields",
+            "type": "unknown",
+            "default": [
+              {
+                "variant": "caption",
+                "name": "matterNumber",
+                "icon": "hash"
+              },
+              {
+                "variant": "h3",
+                "name": "title"
+              },
+              {
+                "name": "clientName",
+                "variant": "body"
+              },
+              {
+                "variant": "badge",
+                "name": "practiceArea"
+              },
+              {
+                "name": "leadAttorney",
+                "variant": "caption"
+              },
+              {
+                "name": "status",
+                "variant": "badge"
+              }
+            ]
+          },
+          {
+            "key": "gap",
+            "type": "unknown",
+            "default": "sm"
+          },
+          {
+            "key": "itemActions",
+            "type": "unknown",
+            "default": [
+              {
+                "label": "View",
+                "event": "VIEW",
+                "variant": "ghost"
+              },
+              {
+                "variant": "ghost",
+                "label": "Edit",
+                "event": "EDIT"
+              },
+              {
+                "variant": "danger",
+                "label": "Delete",
+                "event": "DELETE"
+              }
+            ]
+          }
         ],
         "capabilities": []
       },
@@ -163,10 +401,35 @@
           "CREATE"
         ],
         "overridableConfigKeys": [
-          "fields",
-          "icon",
-          "mode",
-          "title"
+          {
+            "key": "fields",
+            "type": "unknown",
+            "default": [
+              "matterNumber",
+              "title",
+              "clientName",
+              "practiceArea",
+              "leadAttorney",
+              "status",
+              "openedAt",
+              "notes"
+            ]
+          },
+          {
+            "key": "icon",
+            "type": "unknown",
+            "default": "plus-circle"
+          },
+          {
+            "key": "mode",
+            "type": "unknown",
+            "default": "create"
+          },
+          {
+            "key": "title",
+            "type": "unknown",
+            "default": "New Matter"
+          }
         ],
         "capabilities": []
       },
@@ -177,10 +440,36 @@
           "EDIT"
         ],
         "overridableConfigKeys": [
-          "fields",
-          "icon",
-          "mode",
-          "title"
+          {
+            "key": "fields",
+            "type": "unknown",
+            "default": [
+              "matterNumber",
+              "title",
+              "clientName",
+              "practiceArea",
+              "leadAttorney",
+              "status",
+              "openedAt",
+              "closedAt",
+              "notes"
+            ]
+          },
+          {
+            "key": "icon",
+            "type": "unknown",
+            "default": "edit"
+          },
+          {
+            "key": "mode",
+            "type": "unknown",
+            "default": "edit"
+          },
+          {
+            "key": "title",
+            "type": "unknown",
+            "default": "Edit Matter"
+          }
         ],
         "capabilities": []
       },
@@ -191,10 +480,36 @@
           "VIEW"
         ],
         "overridableConfigKeys": [
-          "fields",
-          "icon",
-          "mode",
-          "title"
+          {
+            "key": "fields",
+            "type": "unknown",
+            "default": [
+              "matterNumber",
+              "title",
+              "clientName",
+              "practiceArea",
+              "leadAttorney",
+              "status",
+              "openedAt",
+              "closedAt",
+              "notes"
+            ]
+          },
+          {
+            "key": "icon",
+            "type": "unknown",
+            "default": "eye"
+          },
+          {
+            "key": "mode",
+            "type": "unknown",
+            "default": "edit"
+          },
+          {
+            "key": "title",
+            "type": "unknown",
+            "default": "View Matter"
+          }
         ],
         "capabilities": []
       },
@@ -205,10 +520,26 @@
           "DELETE"
         ],
         "overridableConfigKeys": [
-          "alertMessage",
-          "confirmLabel",
-          "icon",
-          "title"
+          {
+            "key": "alertMessage",
+            "type": "unknown",
+            "default": "This action cannot be undone."
+          },
+          {
+            "key": "confirmLabel",
+            "type": "unknown",
+            "default": "Delete"
+          },
+          {
+            "key": "icon",
+            "type": "unknown",
+            "default": "alert-triangle"
+          },
+          {
+            "key": "title",
+            "type": "unknown",
+            "default": "Delete Matter"
+          }
         ],
         "capabilities": []
       },
@@ -327,12 +658,57 @@
         "emittedEvents": [],
         "listenedEvents": [],
         "overridableConfigKeys": [
-          "appName",
-          "contentTrait",
-          "navItems",
-          "notificationClickEvent",
-          "notifications",
-          "searchEvent"
+          {
+            "key": "appName",
+            "type": "unknown",
+            "default": "Legal Case"
+          },
+          {
+            "key": "contentTrait",
+            "type": "unknown",
+            "default": "@trait.BillableHourPanel"
+          },
+          {
+            "key": "navItems",
+            "type": "unknown",
+            "default": [
+              {
+                "href": "/matters",
+                "icon": "scale",
+                "label": "Matters"
+              },
+              {
+                "href": "/cases",
+                "label": "Cases",
+                "icon": "folder"
+              },
+              {
+                "href": "/timesheet",
+                "label": "Time",
+                "icon": "clock"
+              },
+              {
+                "label": "Deadlines",
+                "href": "/deadlines",
+                "icon": "calendar"
+              }
+            ]
+          },
+          {
+            "key": "notificationClickEvent",
+            "type": "unknown",
+            "default": "BILLABLE_HOUR_NOTIFICATIONS_OPEN"
+          },
+          {
+            "key": "notifications",
+            "type": "unknown",
+            "default": []
+          },
+          {
+            "key": "searchEvent",
+            "type": "unknown",
+            "default": "BILLABLE_HOUR_SEARCH"
+          }
         ],
         "capabilities": []
       },
@@ -348,7 +724,11 @@
         "emittedEvents": [],
         "listenedEvents": [],
         "overridableConfigKeys": [
-          "title"
+          {
+            "key": "title",
+            "type": "unknown",
+            "default": "Billable Hours"
+          }
         ],
         "capabilities": []
       }
@@ -427,12 +807,57 @@
         "emittedEvents": [],
         "listenedEvents": [],
         "overridableConfigKeys": [
-          "appName",
-          "contentTrait",
-          "navItems",
-          "notificationClickEvent",
-          "notifications",
-          "searchEvent"
+          {
+            "key": "appName",
+            "type": "unknown",
+            "default": "Legal Case"
+          },
+          {
+            "key": "contentTrait",
+            "type": "unknown",
+            "default": "@trait.CourtDeadlinePanel"
+          },
+          {
+            "key": "navItems",
+            "type": "unknown",
+            "default": [
+              {
+                "label": "Matters",
+                "href": "/matters",
+                "icon": "scale"
+              },
+              {
+                "href": "/cases",
+                "label": "Cases",
+                "icon": "folder"
+              },
+              {
+                "label": "Time",
+                "href": "/timesheet",
+                "icon": "clock"
+              },
+              {
+                "label": "Deadlines",
+                "href": "/deadlines",
+                "icon": "calendar"
+              }
+            ]
+          },
+          {
+            "key": "notificationClickEvent",
+            "type": "unknown",
+            "default": "COURT_DEADLINE_NOTIFICATIONS_OPEN"
+          },
+          {
+            "key": "notifications",
+            "type": "unknown",
+            "default": []
+          },
+          {
+            "key": "searchEvent",
+            "type": "unknown",
+            "default": "COURT_DEADLINE_SEARCH"
+          }
         ],
         "capabilities": []
       },
@@ -448,7 +873,11 @@
         "emittedEvents": [],
         "listenedEvents": [],
         "overridableConfigKeys": [
-          "title"
+          {
+            "key": "title",
+            "type": "unknown",
+            "default": "Filing Deadlines"
+          }
         ],
         "capabilities": []
       }
@@ -527,12 +956,57 @@
         "emittedEvents": [],
         "listenedEvents": [],
         "overridableConfigKeys": [
-          "appName",
-          "contentTrait",
-          "navItems",
-          "notificationClickEvent",
-          "notifications",
-          "searchEvent"
+          {
+            "key": "appName",
+            "type": "unknown",
+            "default": "Legal Case"
+          },
+          {
+            "key": "contentTrait",
+            "type": "unknown",
+            "default": "@trait.MatterCasePanel"
+          },
+          {
+            "key": "navItems",
+            "type": "unknown",
+            "default": [
+              {
+                "icon": "scale",
+                "href": "/matters",
+                "label": "Matters"
+              },
+              {
+                "label": "Cases",
+                "href": "/cases",
+                "icon": "folder"
+              },
+              {
+                "label": "Time",
+                "href": "/timesheet",
+                "icon": "clock"
+              },
+              {
+                "href": "/deadlines",
+                "icon": "calendar",
+                "label": "Deadlines"
+              }
+            ]
+          },
+          {
+            "key": "notificationClickEvent",
+            "type": "unknown",
+            "default": "MATTER_CASE_NOTIFICATIONS_OPEN"
+          },
+          {
+            "key": "notifications",
+            "type": "unknown",
+            "default": []
+          },
+          {
+            "key": "searchEvent",
+            "type": "unknown",
+            "default": "MATTER_CASE_SEARCH"
+          }
         ],
         "capabilities": []
       },
@@ -548,7 +1022,11 @@
         "emittedEvents": [],
         "listenedEvents": [],
         "overridableConfigKeys": [
-          "title"
+          {
+            "key": "title",
+            "type": "unknown",
+            "default": "Case Files"
+          }
         ],
         "capabilities": []
       }

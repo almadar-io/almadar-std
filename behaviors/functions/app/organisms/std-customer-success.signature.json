@@ -58,12 +58,57 @@
         "emittedEvents": [],
         "listenedEvents": [],
         "overridableConfigKeys": [
-          "appName",
-          "contentTrait",
-          "navItems",
-          "notificationClickEvent",
-          "notifications",
-          "searchEvent"
+          {
+            "key": "appName",
+            "type": "unknown",
+            "default": "Customer Success"
+          },
+          {
+            "key": "contentTrait",
+            "type": "unknown",
+            "default": "@trait.CsAccountCatalog"
+          },
+          {
+            "key": "navItems",
+            "type": "unknown",
+            "default": [
+              {
+                "label": "Accounts",
+                "href": "/cs-accounts",
+                "icon": "users"
+              },
+              {
+                "label": "Health Scores",
+                "href": "/health-scores",
+                "icon": "activity"
+              },
+              {
+                "label": "NPS",
+                "href": "/nps-surveys",
+                "icon": "message-square"
+              },
+              {
+                "icon": "alert-triangle",
+                "label": "Renewal Risks",
+                "href": "/renewal-risks"
+              }
+            ]
+          },
+          {
+            "key": "notificationClickEvent",
+            "type": "unknown",
+            "default": "CS_ACCOUNT_NOTIFICATIONS_OPEN"
+          },
+          {
+            "key": "notifications",
+            "type": "unknown",
+            "default": []
+          },
+          {
+            "key": "searchEvent",
+            "type": "unknown",
+            "default": "CS_ACCOUNT_SEARCH"
+          }
         ],
         "capabilities": []
       },
@@ -84,8 +129,16 @@
         "emittedEvents": [],
         "listenedEvents": [],
         "overridableConfigKeys": [
-          "event",
-          "placeholder"
+          {
+            "key": "event",
+            "type": "unknown",
+            "default": "CS_ACCOUNT_SEARCH"
+          },
+          {
+            "key": "placeholder",
+            "type": "unknown",
+            "default": "Search accounts…"
+          }
         ],
         "capabilities": []
       },
@@ -94,8 +147,40 @@
         "emittedEvents": [],
         "listenedEvents": [],
         "overridableConfigKeys": [
-          "event",
-          "filters"
+          {
+            "key": "event",
+            "type": "unknown",
+            "default": "CS_ACCOUNT_FILTER"
+          },
+          {
+            "key": "filters",
+            "type": "unknown",
+            "default": [
+              {
+                "label": "Plan",
+                "options": [
+                  "trial",
+                  "starter",
+                  "growth",
+                  "enterprise"
+                ],
+                "field": "plan",
+                "filterType": "select"
+              },
+              {
+                "options": [
+                  "onboarding",
+                  "healthy",
+                  "at-risk",
+                  "churned",
+                  "renewed"
+                ],
+                "field": "status",
+                "filterType": "select",
+                "label": "Status"
+              }
+            ]
+          }
         ],
         "capabilities": []
       },
@@ -106,8 +191,64 @@
           "BrowseItemLoaded"
         ],
         "overridableConfigKeys": [
-          "metrics",
-          "title"
+          {
+            "key": "metrics",
+            "type": "unknown",
+            "default": [
+              {
+                "format": "number",
+                "aggregation": "count",
+                "label": "Total",
+                "icon": "users",
+                "variant": "primary"
+              },
+              {
+                "format": "number",
+                "variant": "success",
+                "filter": [
+                  "fn",
+                  "row",
+                  [
+                    "=",
+                    "@row.status",
+                    "healthy"
+                  ]
+                ],
+                "aggregation": "count",
+                "label": "Healthy",
+                "icon": "check-circle"
+              },
+              {
+                "aggregation": "count",
+                "icon": "alert-triangle",
+                "label": "At Risk",
+                "variant": "warning",
+                "format": "number",
+                "filter": [
+                  "fn",
+                  "row",
+                  [
+                    "=",
+                    "@row.status",
+                    "at-risk"
+                  ]
+                ]
+              },
+              {
+                "label": "Total ARR",
+                "icon": "dollar-sign",
+                "variant": "info",
+                "aggregation": "sum",
+                "format": "number",
+                "field": "arrAmount"
+              }
+            ]
+          },
+          {
+            "key": "title",
+            "type": "unknown",
+            "default": "Customer Success"
+          }
         ],
         "capabilities": []
       },
@@ -118,13 +259,41 @@
           "BrowseItemLoaded"
         ],
         "overridableConfigKeys": [
-          "aggregation",
-          "categoryField",
-          "chartType",
-          "height",
-          "showLegend",
-          "subtitle",
-          "title"
+          {
+            "key": "aggregation",
+            "type": "unknown",
+            "default": "count"
+          },
+          {
+            "key": "categoryField",
+            "type": "unknown",
+            "default": "plan"
+          },
+          {
+            "key": "chartType",
+            "type": "unknown",
+            "default": "bar"
+          },
+          {
+            "key": "height",
+            "type": "unknown",
+            "default": 240
+          },
+          {
+            "key": "showLegend",
+            "type": "unknown",
+            "default": false
+          },
+          {
+            "key": "subtitle",
+            "type": "unknown",
+            "default": "Portfolio composition across subscription plans"
+          },
+          {
+            "key": "title",
+            "type": "unknown",
+            "default": "Accounts by Plan"
+          }
         ],
         "capabilities": []
       },
@@ -139,10 +308,68 @@
           "CS_ACCOUNT_DELETED"
         ],
         "overridableConfigKeys": [
-          "cols",
-          "fields",
-          "gap",
-          "itemActions"
+          {
+            "key": "cols",
+            "type": "unknown",
+            "default": 1
+          },
+          {
+            "key": "fields",
+            "type": "unknown",
+            "default": [
+              {
+                "variant": "h3",
+                "icon": "users",
+                "name": "name"
+              },
+              {
+                "variant": "badge",
+                "name": "plan"
+              },
+              {
+                "name": "status",
+                "variant": "badge"
+              },
+              {
+                "variant": "caption",
+                "name": "csm"
+              },
+              {
+                "variant": "caption",
+                "name": "arrAmount"
+              },
+              {
+                "variant": "caption",
+                "name": "renewalDate"
+              }
+            ]
+          },
+          {
+            "key": "gap",
+            "type": "unknown",
+            "default": "sm"
+          },
+          {
+            "key": "itemActions",
+            "type": "unknown",
+            "default": [
+              {
+                "variant": "ghost",
+                "event": "VIEW",
+                "label": "View"
+              },
+              {
+                "event": "EDIT",
+                "variant": "ghost",
+                "label": "Edit"
+              },
+              {
+                "event": "DELETE",
+                "variant": "danger",
+                "label": "Delete"
+              }
+            ]
+          }
         ],
         "capabilities": []
       },
@@ -153,10 +380,34 @@
           "CREATE"
         ],
         "overridableConfigKeys": [
-          "fields",
-          "icon",
-          "mode",
-          "title"
+          {
+            "key": "fields",
+            "type": "unknown",
+            "default": [
+              "name",
+              "plan",
+              "status",
+              "csm",
+              "arrAmount",
+              "renewalDate",
+              "signedAt"
+            ]
+          },
+          {
+            "key": "icon",
+            "type": "unknown",
+            "default": "plus-circle"
+          },
+          {
+            "key": "mode",
+            "type": "unknown",
+            "default": "create"
+          },
+          {
+            "key": "title",
+            "type": "unknown",
+            "default": "New Account"
+          }
         ],
         "capabilities": []
       },
@@ -167,10 +418,34 @@
           "EDIT"
         ],
         "overridableConfigKeys": [
-          "fields",
-          "icon",
-          "mode",
-          "title"
+          {
+            "key": "fields",
+            "type": "unknown",
+            "default": [
+              "name",
+              "plan",
+              "status",
+              "csm",
+              "arrAmount",
+              "renewalDate",
+              "signedAt"
+            ]
+          },
+          {
+            "key": "icon",
+            "type": "unknown",
+            "default": "edit"
+          },
+          {
+            "key": "mode",
+            "type": "unknown",
+            "default": "edit"
+          },
+          {
+            "key": "title",
+            "type": "unknown",
+            "default": "Edit Account"
+          }
         ],
         "capabilities": []
       },
@@ -181,10 +456,34 @@
           "VIEW"
         ],
         "overridableConfigKeys": [
-          "fields",
-          "icon",
-          "mode",
-          "title"
+          {
+            "key": "fields",
+            "type": "unknown",
+            "default": [
+              "name",
+              "plan",
+              "status",
+              "csm",
+              "arrAmount",
+              "renewalDate",
+              "signedAt"
+            ]
+          },
+          {
+            "key": "icon",
+            "type": "unknown",
+            "default": "eye"
+          },
+          {
+            "key": "mode",
+            "type": "unknown",
+            "default": "edit"
+          },
+          {
+            "key": "title",
+            "type": "unknown",
+            "default": "View Account"
+          }
         ],
         "capabilities": []
       },
@@ -195,10 +494,26 @@
           "DELETE"
         ],
         "overridableConfigKeys": [
-          "alertMessage",
-          "confirmLabel",
-          "icon",
-          "title"
+          {
+            "key": "alertMessage",
+            "type": "unknown",
+            "default": "This action cannot be undone."
+          },
+          {
+            "key": "confirmLabel",
+            "type": "unknown",
+            "default": "Delete"
+          },
+          {
+            "key": "icon",
+            "type": "unknown",
+            "default": "alert-triangle"
+          },
+          {
+            "key": "title",
+            "type": "unknown",
+            "default": "Delete Account"
+          }
         ],
         "capabilities": []
       },
@@ -222,7 +537,11 @@
         "emittedEvents": [],
         "listenedEvents": [],
         "overridableConfigKeys": [
-          "title"
+          {
+            "key": "title",
+            "type": "unknown",
+            "default": "Customer Health Scores"
+          }
         ],
         "capabilities": []
       },
@@ -231,7 +550,11 @@
         "emittedEvents": [],
         "listenedEvents": [],
         "overridableConfigKeys": [
-          "title"
+          {
+            "key": "title",
+            "type": "unknown",
+            "default": "NPS Surveys"
+          }
         ],
         "capabilities": []
       },
@@ -240,7 +563,11 @@
         "emittedEvents": [],
         "listenedEvents": [],
         "overridableConfigKeys": [
-          "title"
+          {
+            "key": "title",
+            "type": "unknown",
+            "default": "Renewal Risk"
+          }
         ],
         "capabilities": []
       }

@@ -86,15 +86,18 @@
           "name": "VendorAppLayout",
           "config": {
             "contentTrait": "@trait.VendorCatalog",
+            "notificationClickEvent": "VENDOR_NOTIFICATIONS_OPEN",
+            "searchEvent": "VENDOR_SEARCH",
+            "notifications": [],
             "navItems": [
               {
-                "icon": "store",
                 "label": "Vendors",
-                "href": "/vendors"
+                "href": "/vendors",
+                "icon": "store"
               },
               {
-                "label": "Listings",
                 "href": "/listings",
+                "label": "Listings",
                 "icon": "package"
               },
               {
@@ -103,14 +106,11 @@
                 "href": "/orders"
               }
             ],
-            "appName": "Marketplace",
-            "notifications": [],
-            "searchEvent": "VENDOR_SEARCH",
-            "notificationClickEvent": "VENDOR_NOTIFICATIONS_OPEN"
+            "appName": "Marketplace"
           },
           "events": {
-            "NOTIFY_CLICK": "VENDOR_NOTIFICATIONS_OPEN",
-            "SEARCH": "VENDOR_SEARCH"
+            "SEARCH": "VENDOR_SEARCH",
+            "NOTIFY_CLICK": "VENDOR_NOTIFICATIONS_OPEN"
           }
         },
         {
@@ -193,46 +193,48 @@
                     "render-ui",
                     "main",
                     {
+                      "type": "stack",
+                      "direction": "vertical",
                       "children": [
                         {
+                          "type": "stack",
                           "gap": "md",
+                          "justify": "between",
+                          "align": "center",
                           "direction": "horizontal",
                           "children": [
                             {
                               "type": "stack",
+                              "direction": "horizontal",
                               "gap": "sm",
                               "align": "center",
-                              "direction": "horizontal",
                               "children": [
                                 {
                                   "name": "store",
                                   "type": "icon"
                                 },
                                 {
-                                  "type": "typography",
+                                  "content": "Vendors",
                                   "variant": "h2",
-                                  "content": "Vendors"
+                                  "type": "typography"
                                 }
                               ]
                             },
                             {
-                              "direction": "horizontal",
                               "children": [
                                 {
-                                  "label": "New Vendor",
-                                  "variant": "primary",
-                                  "type": "button",
                                   "action": "CREATE",
-                                  "icon": "plus"
+                                  "type": "button",
+                                  "icon": "plus",
+                                  "variant": "primary",
+                                  "label": "New Vendor"
                                 }
                               ],
                               "gap": "sm",
-                              "type": "stack"
+                              "type": "stack",
+                              "direction": "horizontal"
                             }
-                          ],
-                          "justify": "between",
-                          "type": "stack",
-                          "align": "center"
+                          ]
                         },
                         {
                           "type": "divider"
@@ -243,8 +245,6 @@
                         },
                         "@trait.VendorPayoutLedger"
                       ],
-                      "direction": "vertical",
-                      "type": "stack",
                       "gap": "lg"
                     }
                   ]
@@ -264,34 +264,34 @@
                     "render-ui",
                     "main",
                     {
-                      "className": "py-8",
+                      "align": "center",
+                      "gap": "md",
                       "children": [
                         {
-                          "name": "bell",
-                          "type": "icon"
+                          "type": "icon",
+                          "name": "bell"
                         },
                         {
-                          "variant": "h3",
                           "content": "No notifications",
-                          "type": "typography"
+                          "type": "typography",
+                          "variant": "h3"
                         },
                         {
-                          "variant": "caption",
-                          "type": "typography",
                           "content": "You're all caught up.",
+                          "type": "typography",
+                          "variant": "caption",
                           "color": "muted"
                         },
                         {
                           "label": "Back to vendors",
+                          "type": "button",
                           "action": "INIT",
-                          "variant": "ghost",
-                          "type": "button"
+                          "variant": "ghost"
                         }
                       ],
-                      "type": "stack",
-                      "gap": "md",
                       "direction": "vertical",
-                      "align": "center"
+                      "type": "stack",
+                      "className": "py-8"
                     }
                   ]
                 ]
@@ -305,7 +305,6 @@
           "name": "VendorBrowseList",
           "linkedEntity": "Vendor",
           "config": {
-            "gap": "sm",
             "itemActions": [
               {
                 "label": "View",
@@ -313,39 +312,40 @@
                 "variant": "ghost"
               },
               {
-                "label": "Edit",
                 "event": "EDIT",
+                "label": "Edit",
                 "variant": "ghost"
               },
               {
-                "variant": "danger",
                 "event": "DELETE",
-                "label": "Delete"
+                "label": "Delete",
+                "variant": "danger"
               }
             ],
+            "gap": "sm",
             "cols": 1.0,
             "fields": [
               {
-                "variant": "h3",
+                "icon": "store",
                 "name": "name",
-                "icon": "store"
+                "variant": "h3"
               },
               {
-                "name": "businessName",
-                "variant": "body"
+                "variant": "body",
+                "name": "businessName"
               },
               {
-                "variant": "badge",
-                "name": "status"
+                "name": "status",
+                "variant": "badge"
               },
               {
-                "name": "totalSales",
                 "format": "currency",
+                "name": "totalSales",
                 "variant": "caption"
               },
               {
-                "variant": "caption",
-                "name": "rating"
+                "name": "rating",
+                "variant": "caption"
               }
             ]
           },
@@ -380,8 +380,8 @@
           "ref": "Payout.traits.PayoutLedger",
           "name": "VendorPayoutLedger",
           "config": {
-            "minimumWithdrawal": 50.0,
-            "title": "Vendor Payouts"
+            "title": "Vendor Payouts",
+            "minimumWithdrawal": 50.0
           }
         },
         {
@@ -389,16 +389,16 @@
           "name": "VendorCreate",
           "linkedEntity": "Vendor",
           "config": {
-            "icon": "plus-circle",
             "mode": "create",
+            "icon": "plus-circle",
+            "title": "New Vendor",
             "fields": [
               "name",
               "businessName",
               "status",
               "totalSales",
               "rating"
-            ],
-            "title": "New Vendor"
+            ]
           },
           "events": {
             "OPEN": "CREATE"
@@ -419,16 +419,16 @@
           "name": "VendorEdit",
           "linkedEntity": "Vendor",
           "config": {
-            "icon": "edit",
-            "mode": "edit",
-            "title": "Edit Vendor",
             "fields": [
               "name",
               "businessName",
               "status",
               "totalSales",
               "rating"
-            ]
+            ],
+            "title": "Edit Vendor",
+            "mode": "edit",
+            "icon": "edit"
           },
           "events": {
             "OPEN": "EDIT"
@@ -449,8 +449,7 @@
           "name": "VendorView",
           "linkedEntity": "Vendor",
           "config": {
-            "mode": "edit",
-            "title": "View Vendor",
+            "icon": "eye",
             "fields": [
               "name",
               "businessName",
@@ -458,7 +457,8 @@
               "totalSales",
               "rating"
             ],
-            "icon": "eye"
+            "mode": "edit",
+            "title": "View Vendor"
           },
           "events": {
             "OPEN": "VIEW"
@@ -479,10 +479,10 @@
           "name": "VendorDelete",
           "linkedEntity": "Vendor",
           "config": {
-            "confirmLabel": "Delete",
-            "title": "Delete Vendor",
             "alertMessage": "This action cannot be undone.",
-            "icon": "alert-triangle"
+            "title": "Delete Vendor",
+            "icon": "alert-triangle",
+            "confirmLabel": "Delete"
           },
           "events": {
             "CONFIRM": "CONFIRM_DELETE",
@@ -860,28 +860,28 @@
           "ref": "AppShell.traits.AppLayout",
           "name": "ListingAppLayout",
           "config": {
-            "appName": "Marketplace",
-            "contentTrait": "@trait.ListingCatalog",
             "navItems": [
               {
-                "href": "/vendors",
                 "label": "Vendors",
+                "href": "/vendors",
                 "icon": "store"
               },
               {
-                "icon": "package",
                 "label": "Listings",
-                "href": "/listings"
+                "href": "/listings",
+                "icon": "package"
               },
               {
-                "href": "/orders",
                 "icon": "shopping-cart",
+                "href": "/orders",
                 "label": "Orders"
               }
             ],
+            "notificationClickEvent": "LISTING_NOTIFICATIONS_OPEN",
+            "contentTrait": "@trait.ListingCatalog",
             "searchEvent": "LISTING_SEARCH",
             "notifications": [],
-            "notificationClickEvent": "LISTING_NOTIFICATIONS_OPEN"
+            "appName": "Marketplace"
           },
           "events": {
             "NOTIFY_CLICK": "LISTING_NOTIFICATIONS_OPEN",
@@ -968,11 +968,13 @@
                     "render-ui",
                     "main",
                     {
-                      "direction": "vertical",
-                      "gap": "lg",
-                      "type": "stack",
                       "children": [
                         {
+                          "justify": "between",
+                          "type": "stack",
+                          "gap": "md",
+                          "align": "center",
+                          "direction": "horizontal",
                           "children": [
                             {
                               "gap": "sm",
@@ -980,50 +982,45 @@
                               "align": "center",
                               "children": [
                                 {
-                                  "name": "package",
-                                  "type": "icon"
+                                  "type": "icon",
+                                  "name": "package"
                                 },
                                 {
-                                  "type": "typography",
                                   "content": "Listings",
-                                  "variant": "h2"
+                                  "variant": "h2",
+                                  "type": "typography"
                                 }
                               ],
                               "direction": "horizontal"
                             },
                             {
+                              "type": "stack",
                               "direction": "horizontal",
                               "gap": "sm",
                               "children": [
                                 {
-                                  "label": "New Listing",
-                                  "action": "CREATE",
-                                  "icon": "plus",
                                   "variant": "primary",
-                                  "type": "button"
+                                  "type": "button",
+                                  "label": "New Listing",
+                                  "icon": "plus",
+                                  "action": "CREATE"
                                 }
-                              ],
-                              "type": "stack"
+                              ]
                             }
-                          ],
-                          "gap": "md",
-                          "align": "center",
-                          "justify": "between",
-                          "type": "stack",
-                          "direction": "horizontal"
+                          ]
                         },
                         {
                           "type": "divider"
                         },
                         {
+                          "type": "stack",
                           "gap": "md",
+                          "direction": "horizontal",
+                          "align": "center",
                           "children": [
                             "@trait.ListingSearch",
                             "@trait.ListingFilter"
-                          ],
-                          "type": "stack",
-                          "direction": "horizontal",
-                          "align": "center"
+                          ]
                         },
                         "@trait.ListingStats",
                         "@trait.ListingTags",
@@ -1047,7 +1044,10 @@
                           "type": "divider"
                         },
                         "@trait.ListingModQueue"
-                      ]
+                      ],
+                      "direction": "vertical",
+                      "gap": "lg",
+                      "type": "stack"
                     }
                   ]
                 ]
@@ -1067,6 +1067,10 @@
                     "main",
                     {
                       "align": "center",
+                      "gap": "md",
+                      "type": "stack",
+                      "className": "py-8",
+                      "direction": "vertical",
                       "children": [
                         {
                           "type": "icon",
@@ -1079,21 +1083,17 @@
                         },
                         {
                           "variant": "caption",
+                          "type": "typography",
                           "content": "You're all caught up.",
-                          "color": "muted",
-                          "type": "typography"
+                          "color": "muted"
                         },
                         {
+                          "type": "button",
                           "variant": "ghost",
                           "action": "INIT",
-                          "type": "button",
                           "label": "Back to listings"
                         }
-                      ],
-                      "type": "stack",
-                      "gap": "md",
-                      "className": "py-8",
-                      "direction": "vertical"
+                      ]
                     }
                   ]
                 ]
@@ -1106,8 +1106,8 @@
           "ref": "Search.traits.SearchResultSearch",
           "name": "ListingSearch",
           "config": {
-            "placeholder": "Search listings…",
-            "event": "LISTING_SEARCH"
+            "event": "LISTING_SEARCH",
+            "placeholder": "Search listings…"
           }
         },
         {
@@ -1117,20 +1117,20 @@
             "event": "LISTING_FILTER",
             "filters": [
               {
+                "field": "status",
+                "label": "Status",
                 "options": [
                   "draft",
                   "active",
                   "sold",
                   "removed"
                 ],
-                "field": "status",
-                "filterType": "select",
-                "label": "Status"
+                "filterType": "select"
               },
               {
-                "filterType": "select",
-                "field": "currency",
                 "label": "Currency",
+                "field": "currency",
+                "filterType": "select",
                 "options": [
                   "USD",
                   "EUR",
@@ -1144,16 +1144,20 @@
           "ref": "Stats.traits.StatsItemStats",
           "name": "ListingStats",
           "config": {
-            "title": "Listings",
             "metrics": [
               {
-                "aggregation": "count",
+                "icon": "package",
                 "format": "number",
-                "variant": "primary",
                 "label": "Total",
-                "icon": "package"
+                "aggregation": "count",
+                "variant": "primary"
               },
               {
+                "aggregation": "count",
+                "label": "Active",
+                "variant": "success",
+                "icon": "check-circle",
+                "format": "number",
                 "filter": [
                   "fn",
                   "row",
@@ -1162,17 +1166,10 @@
                     "@row.status",
                     "active"
                   ]
-                ],
-                "label": "Active",
-                "aggregation": "count",
-                "icon": "check-circle",
-                "variant": "success",
-                "format": "number"
+                ]
               },
               {
-                "aggregation": "count",
                 "format": "number",
-                "variant": "warning",
                 "filter": [
                   "fn",
                   "row",
@@ -1182,10 +1179,13 @@
                     "draft"
                   ]
                 ],
+                "label": "Draft",
                 "icon": "edit",
-                "label": "Draft"
+                "aggregation": "count",
+                "variant": "warning"
               }
-            ]
+            ],
+            "title": "Listings"
           },
           "listens": [
             {
@@ -1202,8 +1202,8 @@
           "ref": "TagTaxonomy.traits.TagBrowse",
           "name": "ListingTags",
           "config": {
-            "allowEdit": false,
-            "title": "Categories"
+            "title": "Categories",
+            "allowEdit": false
           }
         },
         {
@@ -1211,13 +1211,29 @@
           "name": "ListingBrowseList",
           "linkedEntity": "Listing",
           "config": {
-            "gap": "sm",
+            "itemActions": [
+              {
+                "event": "VIEW",
+                "label": "View",
+                "variant": "ghost"
+              },
+              {
+                "variant": "ghost",
+                "label": "Edit",
+                "event": "EDIT"
+              },
+              {
+                "event": "DELETE",
+                "label": "Delete",
+                "variant": "danger"
+              }
+            ],
             "cols": 1.0,
             "fields": [
               {
-                "variant": "h3",
                 "icon": "package",
-                "name": "title"
+                "name": "title",
+                "variant": "h3"
               },
               {
                 "name": "price",
@@ -1229,39 +1245,23 @@
                 "name": "currency"
               },
               {
-                "name": "status",
-                "variant": "badge"
+                "variant": "badge",
+                "name": "status"
               },
               {
                 "name": "ratingAverage",
                 "variant": "caption"
               },
               {
-                "name": "reviewCount",
-                "variant": "caption"
+                "variant": "caption",
+                "name": "reviewCount"
               },
               {
                 "name": "description",
                 "variant": "caption"
               }
             ],
-            "itemActions": [
-              {
-                "event": "VIEW",
-                "label": "View",
-                "variant": "ghost"
-              },
-              {
-                "label": "Edit",
-                "event": "EDIT",
-                "variant": "ghost"
-              },
-              {
-                "event": "DELETE",
-                "variant": "danger",
-                "label": "Delete"
-              }
-            ]
+            "gap": "sm"
           },
           "listens": [
             {
@@ -1310,9 +1310,9 @@
           "ref": "ImageUpload.traits.UploadedImageUpload",
           "name": "ListingImages",
           "config": {
-            "accept": "image/*",
-            "maxBytesPerImage": 10485760.0,
             "maxImages": 10.0,
+            "maxBytesPerImage": 10485760.0,
+            "accept": "image/*",
             "title": "Listing Images"
           }
         },
@@ -1320,18 +1320,17 @@
           "ref": "RatingReview.traits.RatingReviewSubmit",
           "name": "ListingRating",
           "config": {
+            "allowComment": true,
             "allowPhotos": false,
-            "title": "Rate this listing",
-            "submitEvent": "SUBMIT_REVIEW",
             "maxStars": 5.0,
-            "allowComment": true
+            "title": "Rate this listing",
+            "submitEvent": "SUBMIT_REVIEW"
           }
         },
         {
           "ref": "Flag.traits.FlagReport",
           "name": "ListingFlag",
           "config": {
-            "title": "Report listing",
             "reasons": [
               "spam",
               "abuse",
@@ -1339,15 +1338,16 @@
               "misinformation",
               "nsfw",
               "other"
-            ]
+            ],
+            "title": "Report listing"
           }
         },
         {
           "ref": "ModQueue.traits.ModQueueItemReview",
           "name": "ListingModQueue",
           "config": {
-            "title": "Listing Moderation Queue",
-            "autoEscalateThreshold": 5.0
+            "autoEscalateThreshold": 5.0,
+            "title": "Listing Moderation Queue"
           }
         },
         {
@@ -1355,8 +1355,6 @@
           "name": "ListingCreate",
           "linkedEntity": "Listing",
           "config": {
-            "icon": "plus-circle",
-            "title": "New Listing",
             "mode": "create",
             "fields": [
               "vendorId",
@@ -1365,7 +1363,9 @@
               "price",
               "currency",
               "status"
-            ]
+            ],
+            "icon": "plus-circle",
+            "title": "New Listing"
           },
           "events": {
             "OPEN": "CREATE"
@@ -1386,6 +1386,7 @@
           "name": "ListingEdit",
           "linkedEntity": "Listing",
           "config": {
+            "mode": "edit",
             "fields": [
               "vendorId",
               "title",
@@ -1394,9 +1395,8 @@
               "currency",
               "status"
             ],
-            "icon": "edit",
-            "mode": "edit",
-            "title": "Edit Listing"
+            "title": "Edit Listing",
+            "icon": "edit"
           },
           "events": {
             "OPEN": "EDIT"
@@ -1417,6 +1417,7 @@
           "name": "ListingView",
           "linkedEntity": "Listing",
           "config": {
+            "title": "View Listing",
             "fields": [
               "vendorId",
               "title",
@@ -1425,9 +1426,8 @@
               "currency",
               "status"
             ],
-            "icon": "eye",
             "mode": "edit",
-            "title": "View Listing"
+            "icon": "eye"
           },
           "events": {
             "OPEN": "VIEW"
@@ -1448,10 +1448,10 @@
           "name": "ListingDelete",
           "linkedEntity": "Listing",
           "config": {
-            "alertMessage": "This action cannot be undone.",
-            "confirmLabel": "Delete",
             "title": "Delete Listing",
-            "icon": "alert-triangle"
+            "icon": "alert-triangle",
+            "confirmLabel": "Delete",
+            "alertMessage": "This action cannot be undone."
           },
           "events": {
             "REQUEST": "DELETE",
@@ -1792,32 +1792,32 @@
           "ref": "AppShell.traits.AppLayout",
           "name": "OrderAppLayout",
           "config": {
+            "notifications": [],
             "notificationClickEvent": "ORDER_NOTIFICATIONS_OPEN",
+            "contentTrait": "@trait.OrderCatalog",
+            "searchEvent": "ORDER_SEARCH",
+            "appName": "Marketplace",
             "navItems": [
               {
-                "icon": "store",
                 "label": "Vendors",
-                "href": "/vendors"
+                "href": "/vendors",
+                "icon": "store"
               },
               {
-                "icon": "package",
                 "label": "Listings",
+                "icon": "package",
                 "href": "/listings"
               },
               {
-                "icon": "shopping-cart",
                 "label": "Orders",
-                "href": "/orders"
+                "href": "/orders",
+                "icon": "shopping-cart"
               }
-            ],
-            "searchEvent": "ORDER_SEARCH",
-            "appName": "Marketplace",
-            "notifications": [],
-            "contentTrait": "@trait.OrderCatalog"
+            ]
           },
           "events": {
-            "SEARCH": "ORDER_SEARCH",
-            "NOTIFY_CLICK": "ORDER_NOTIFICATIONS_OPEN"
+            "NOTIFY_CLICK": "ORDER_NOTIFICATIONS_OPEN",
+            "SEARCH": "ORDER_SEARCH"
           }
         },
         {
@@ -1905,16 +1905,17 @@
                       "gap": "lg",
                       "children": [
                         {
-                          "type": "stack",
-                          "justify": "between",
-                          "align": "center",
                           "direction": "horizontal",
+                          "align": "center",
+                          "justify": "between",
+                          "type": "stack",
+                          "gap": "md",
                           "children": [
                             {
+                              "align": "center",
+                              "type": "stack",
                               "direction": "horizontal",
                               "gap": "sm",
-                              "type": "stack",
-                              "align": "center",
                               "children": [
                                 {
                                   "name": "shopping-cart",
@@ -1922,27 +1923,26 @@
                                 },
                                 {
                                   "type": "typography",
-                                  "content": "Orders",
-                                  "variant": "h2"
+                                  "variant": "h2",
+                                  "content": "Orders"
                                 }
                               ]
                             },
                             {
-                              "type": "stack",
                               "direction": "horizontal",
                               "children": [
                                 {
-                                  "variant": "primary",
                                   "icon": "plus",
+                                  "action": "CREATE",
                                   "type": "button",
                                   "label": "New Order",
-                                  "action": "CREATE"
+                                  "variant": "primary"
                                 }
                               ],
+                              "type": "stack",
                               "gap": "sm"
                             }
-                          ],
-                          "gap": "md"
+                          ]
                         },
                         {
                           "type": "divider"
@@ -1972,33 +1972,33 @@
                     "main",
                     {
                       "direction": "vertical",
-                      "align": "center",
-                      "type": "stack",
                       "gap": "md",
+                      "type": "stack",
                       "className": "py-8",
                       "children": [
                         {
-                          "name": "bell",
-                          "type": "icon"
+                          "type": "icon",
+                          "name": "bell"
                         },
                         {
-                          "type": "typography",
                           "variant": "h3",
+                          "type": "typography",
                           "content": "No notifications"
                         },
                         {
-                          "variant": "caption",
                           "type": "typography",
+                          "color": "muted",
                           "content": "You're all caught up.",
-                          "color": "muted"
+                          "variant": "caption"
                         },
                         {
                           "type": "button",
-                          "variant": "ghost",
                           "label": "Back to orders",
-                          "action": "INIT"
+                          "action": "INIT",
+                          "variant": "ghost"
                         }
-                      ]
+                      ],
+                      "align": "center"
                     }
                   ]
                 ]
@@ -2012,48 +2012,48 @@
           "name": "OrderBrowseList",
           "linkedEntity": "Order",
           "config": {
+            "gap": "sm",
             "fields": [
               {
-                "name": "buyerId",
-                "variant": "caption"
-              },
-              {
-                "name": "listingId",
-                "variant": "caption"
+                "variant": "caption",
+                "name": "buyerId"
               },
               {
                 "variant": "caption",
-                "name": "quantity"
+                "name": "listingId"
+              },
+              {
+                "name": "quantity",
+                "variant": "caption"
               },
               {
                 "name": "totalAmount",
-                "format": "currency",
-                "variant": "h4"
+                "variant": "h4",
+                "format": "currency"
               },
               {
-                "variant": "badge",
-                "name": "status"
+                "name": "status",
+                "variant": "badge"
               }
             ],
-            "gap": "sm",
+            "cols": 1.0,
             "itemActions": [
               {
+                "variant": "ghost",
                 "label": "View",
-                "event": "VIEW",
-                "variant": "ghost"
+                "event": "VIEW"
               },
               {
-                "label": "Edit",
                 "event": "EDIT",
-                "variant": "ghost"
+                "variant": "ghost",
+                "label": "Edit"
               },
               {
                 "event": "DELETE",
                 "variant": "danger",
                 "label": "Delete"
               }
-            ],
-            "cols": 1.0
+            ]
           },
           "listens": [
             {
@@ -2103,8 +2103,7 @@
           "name": "OrderCreate",
           "linkedEntity": "Order",
           "config": {
-            "title": "New Order",
-            "mode": "create",
+            "icon": "plus-circle",
             "fields": [
               "buyerId",
               "listingId",
@@ -2112,7 +2111,8 @@
               "totalAmount",
               "status"
             ],
-            "icon": "plus-circle"
+            "title": "New Order",
+            "mode": "create"
           },
           "events": {
             "OPEN": "CREATE"
@@ -2133,6 +2133,7 @@
           "name": "OrderEdit",
           "linkedEntity": "Order",
           "config": {
+            "title": "Edit Order",
             "icon": "edit",
             "mode": "edit",
             "fields": [
@@ -2141,8 +2142,7 @@
               "quantity",
               "totalAmount",
               "status"
-            ],
-            "title": "Edit Order"
+            ]
           },
           "events": {
             "OPEN": "EDIT"
@@ -2163,16 +2163,16 @@
           "name": "OrderView",
           "linkedEntity": "Order",
           "config": {
-            "mode": "edit",
-            "title": "View Order",
-            "icon": "eye",
             "fields": [
               "buyerId",
               "listingId",
               "quantity",
               "totalAmount",
               "status"
-            ]
+            ],
+            "title": "View Order",
+            "icon": "eye",
+            "mode": "edit"
           },
           "events": {
             "OPEN": "VIEW"

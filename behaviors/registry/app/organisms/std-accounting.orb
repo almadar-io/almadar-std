@@ -102,19 +102,18 @@
           "ref": "AppShell.traits.AppLayout",
           "name": "JournalAppLayout",
           "config": {
-            "searchEvent": "JOURNAL_SEARCH",
-            "notificationClickEvent": "JOURNAL_NOTIFICATIONS_OPEN",
-            "notifications": [],
+            "appName": "Accounting",
+            "contentTrait": "@trait.JournalCatalog",
             "navItems": [
               {
-                "icon": "book-open",
+                "label": "Journal",
                 "href": "/journal-summaries",
-                "label": "Journal"
+                "icon": "book-open"
               },
               {
-                "href": "/entries",
+                "icon": "list",
                 "label": "Entries",
-                "icon": "list"
+                "href": "/entries"
               },
               {
                 "label": "Chart of Accounts",
@@ -122,18 +121,19 @@
                 "icon": "layout-list"
               },
               {
-                "href": "/bills",
                 "label": "AP Bills",
+                "href": "/bills",
                 "icon": "file-text"
               },
               {
+                "href": "/invoices",
                 "icon": "receipt",
-                "label": "AR Invoices",
-                "href": "/invoices"
+                "label": "AR Invoices"
               }
             ],
-            "appName": "Accounting",
-            "contentTrait": "@trait.JournalCatalog"
+            "notifications": [],
+            "searchEvent": "JOURNAL_SEARCH",
+            "notificationClickEvent": "JOURNAL_NOTIFICATIONS_OPEN"
           },
           "events": {
             "NOTIFY_CLICK": "JOURNAL_NOTIFICATIONS_OPEN",
@@ -220,60 +220,59 @@
                     "render-ui",
                     "main",
                     {
-                      "direction": "vertical",
                       "children": [
                         {
+                          "type": "stack",
+                          "direction": "horizontal",
+                          "gap": "md",
+                          "justify": "between",
+                          "align": "center",
                           "children": [
                             {
+                              "direction": "horizontal",
+                              "type": "stack",
                               "gap": "sm",
                               "align": "center",
-                              "direction": "horizontal",
                               "children": [
                                 {
                                   "type": "icon",
                                   "name": "book-open"
                                 },
                                 {
-                                  "variant": "h2",
                                   "content": "Journal Summaries",
-                                  "type": "typography"
+                                  "type": "typography",
+                                  "variant": "h2"
                                 }
-                              ],
-                              "type": "stack"
+                              ]
                             },
                             {
-                              "gap": "sm",
+                              "type": "stack",
+                              "direction": "horizontal",
                               "children": [
                                 {
                                   "type": "button",
+                                  "action": "CREATE",
                                   "variant": "primary",
                                   "icon": "plus",
-                                  "label": "New Period",
-                                  "action": "CREATE"
+                                  "label": "New Period"
                                 }
                               ],
-                              "type": "stack",
-                              "direction": "horizontal"
+                              "gap": "sm"
                             }
-                          ],
-                          "gap": "md",
-                          "type": "stack",
-                          "align": "center",
-                          "direction": "horizontal",
-                          "justify": "between"
+                          ]
                         },
                         {
                           "type": "divider"
                         },
                         {
-                          "gap": "md",
-                          "align": "center",
-                          "direction": "horizontal",
-                          "type": "stack",
                           "children": [
                             "@trait.JournalSearch",
                             "@trait.JournalFilter"
-                          ]
+                          ],
+                          "direction": "horizontal",
+                          "gap": "md",
+                          "type": "stack",
+                          "align": "center"
                         },
                         "@trait.JournalStats",
                         "@trait.JournalGraphs",
@@ -282,8 +281,9 @@
                         },
                         "@trait.JournalBrowseList"
                       ],
-                      "gap": "lg",
-                      "type": "stack"
+                      "direction": "vertical",
+                      "type": "stack",
+                      "gap": "lg"
                     }
                   ]
                 ]
@@ -302,34 +302,34 @@
                     "render-ui",
                     "main",
                     {
-                      "children": [
-                        {
-                          "type": "icon",
-                          "name": "bell"
-                        },
-                        {
-                          "type": "typography",
-                          "content": "No notifications",
-                          "variant": "h3"
-                        },
-                        {
-                          "type": "typography",
-                          "color": "muted",
-                          "content": "You're all caught up.",
-                          "variant": "caption"
-                        },
-                        {
-                          "type": "button",
-                          "action": "INIT",
-                          "label": "Back to journal",
-                          "variant": "ghost"
-                        }
-                      ],
                       "className": "py-8",
                       "type": "stack",
                       "align": "center",
+                      "direction": "vertical",
                       "gap": "md",
-                      "direction": "vertical"
+                      "children": [
+                        {
+                          "name": "bell",
+                          "type": "icon"
+                        },
+                        {
+                          "variant": "h3",
+                          "content": "No notifications",
+                          "type": "typography"
+                        },
+                        {
+                          "variant": "caption",
+                          "color": "muted",
+                          "content": "You're all caught up.",
+                          "type": "typography"
+                        },
+                        {
+                          "action": "INIT",
+                          "variant": "ghost",
+                          "type": "button",
+                          "label": "Back to journal"
+                        }
+                      ]
                     }
                   ]
                 ]
@@ -353,14 +353,14 @@
             "event": "JOURNAL_FILTER",
             "filters": [
               {
-                "filterType": "select",
-                "field": "status",
-                "label": "Status",
                 "options": [
                   "draft",
                   "posted",
                   "closed"
-                ]
+                ],
+                "field": "status",
+                "label": "Status",
+                "filterType": "select"
               }
             ]
           }
@@ -369,32 +369,32 @@
           "ref": "Stats.traits.StatsItemStats",
           "name": "JournalStats",
           "config": {
+            "title": "Journal Periods",
             "metrics": [
               {
-                "label": "Periods",
-                "format": "number",
-                "icon": "book-open",
+                "variant": "primary",
                 "aggregation": "count",
-                "variant": "primary"
+                "icon": "book-open",
+                "format": "number",
+                "label": "Periods"
               },
               {
-                "aggregation": "sum",
-                "variant": "success",
                 "label": "Debits",
                 "format": "number",
-                "field": "totalDebits",
-                "icon": "trending-up"
+                "aggregation": "sum",
+                "variant": "success",
+                "icon": "trending-up",
+                "field": "totalDebits"
               },
               {
                 "format": "number",
+                "icon": "trending-down",
+                "field": "totalCredits",
                 "aggregation": "sum",
                 "label": "Credits",
-                "icon": "trending-down",
-                "variant": "warning",
-                "field": "totalCredits"
+                "variant": "warning"
               }
-            ],
-            "title": "Journal Periods"
+            ]
           },
           "listens": [
             {
@@ -411,13 +411,13 @@
           "ref": "Graphs.traits.GraphItemGraph",
           "name": "JournalGraphs",
           "config": {
-            "title": "Journal Status",
-            "chartType": "bar",
             "height": 240.0,
-            "subtitle": "Periods by status",
-            "categoryField": "status",
             "aggregation": "count",
-            "showLegend": false
+            "chartType": "bar",
+            "showLegend": false,
+            "title": "Journal Status",
+            "subtitle": "Periods by status",
+            "categoryField": "status"
           },
           "listens": [
             {
@@ -706,8 +706,8 @@
                     "JournalSummary",
                     {
                       "emit": {
-                        "failure": "JournalSummaryLoadFailed",
-                        "success": "JournalSummaryLoaded"
+                        "success": "JournalSummaryLoaded",
+                        "failure": "JournalSummaryLoadFailed"
                       }
                     }
                   ],
@@ -715,22 +715,22 @@
                     "render-ui",
                     "main",
                     {
-                      "gap": "md",
                       "type": "stack",
+                      "align": "center",
                       "children": [
                         {
                           "type": "spinner"
                         },
                         {
-                          "variant": "caption",
                           "type": "typography",
+                          "variant": "caption",
                           "color": "muted",
                           "content": "Loading journal periods…"
                         }
                       ],
                       "className": "py-12",
                       "direction": "vertical",
-                      "align": "center"
+                      "gap": "md"
                     }
                   ]
                 ]
@@ -744,27 +744,27 @@
                     "render-ui",
                     "main",
                     {
-                      "type": "data-grid",
-                      "gap": "sm",
-                      "entity": "@payload.data",
                       "cols": 1.0,
+                      "gap": "sm",
                       "itemActions": [
                         {
-                          "label": "View",
                           "variant": "ghost",
-                          "event": "VIEW"
+                          "event": "VIEW",
+                          "label": "View"
                         },
                         {
-                          "event": "EDIT",
                           "label": "Edit",
-                          "variant": "ghost"
+                          "variant": "ghost",
+                          "event": "EDIT"
                         },
                         {
-                          "label": "Delete",
                           "variant": "danger",
+                          "label": "Delete",
                           "event": "DELETE"
                         }
                       ],
+                      "type": "data-grid",
+                      "entity": "@payload.data",
                       "fields": [
                         {
                           "label": "Period",
@@ -773,19 +773,19 @@
                           "icon": "calendar"
                         },
                         {
+                          "name": "status",
                           "label": "Status",
-                          "variant": "badge",
-                          "name": "status"
+                          "variant": "badge"
                         },
                         {
-                          "variant": "caption",
                           "name": "totalDebits",
-                          "label": "Total Debits"
+                          "label": "Total Debits",
+                          "variant": "caption"
                         },
                         {
+                          "label": "Total Credits",
                           "name": "totalCredits",
-                          "variant": "caption",
-                          "label": "Total Credits"
+                          "variant": "caption"
                         }
                       ]
                     }
@@ -901,6 +901,7 @@
           "name": "JournalCreate",
           "linkedEntity": "JournalSummary",
           "config": {
+            "icon": "plus-circle",
             "title": "New Journal Period",
             "mode": "create",
             "fields": [
@@ -908,8 +909,7 @@
               "totalDebits",
               "totalCredits",
               "status"
-            ],
-            "icon": "plus-circle"
+            ]
           },
           "events": {
             "OPEN": "CREATE"
@@ -930,15 +930,15 @@
           "name": "JournalEdit",
           "linkedEntity": "JournalSummary",
           "config": {
-            "title": "Edit Journal Period",
             "mode": "edit",
+            "icon": "edit",
+            "title": "Edit Journal Period",
             "fields": [
               "period",
               "totalDebits",
               "totalCredits",
               "status"
-            ],
-            "icon": "edit"
+            ]
           },
           "events": {
             "OPEN": "EDIT"
@@ -959,15 +959,15 @@
           "name": "JournalView",
           "linkedEntity": "JournalSummary",
           "config": {
+            "icon": "eye",
             "title": "View Journal Period",
+            "mode": "edit",
             "fields": [
               "period",
               "totalDebits",
               "totalCredits",
               "status"
-            ],
-            "mode": "edit",
-            "icon": "eye"
+            ]
           },
           "events": {
             "OPEN": "VIEW"
@@ -988,10 +988,10 @@
           "name": "JournalDelete",
           "linkedEntity": "JournalSummary",
           "config": {
-            "confirmLabel": "Delete",
-            "title": "Delete Journal Period",
+            "alertMessage": "This action cannot be undone.",
             "icon": "alert-triangle",
-            "alertMessage": "This action cannot be undone."
+            "confirmLabel": "Delete",
+            "title": "Delete Journal Period"
           },
           "events": {
             "CONFIRM": "CONFIRM_DELETE",

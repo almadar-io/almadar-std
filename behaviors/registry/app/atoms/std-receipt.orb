@@ -288,8 +288,8 @@
                     "Receipt",
                     {
                       "emit": {
-                        "success": "ReceiptLoaded",
-                        "failure": "ReceiptLoadFailed"
+                        "failure": "ReceiptLoadFailed",
+                        "success": "ReceiptLoaded"
                       }
                     }
                   ],
@@ -297,22 +297,22 @@
                     "render-ui",
                     "main",
                     {
-                      "direction": "vertical",
-                      "type": "stack",
-                      "gap": "md",
-                      "align": "center",
-                      "className": "py-12",
                       "children": [
                         {
                           "type": "spinner"
                         },
                         {
+                          "content": "Loading receipts…",
                           "type": "typography",
                           "color": "muted",
-                          "content": "Loading receipts…",
                           "variant": "caption"
                         }
-                      ]
+                      ],
+                      "className": "py-12",
+                      "type": "stack",
+                      "gap": "md",
+                      "align": "center",
+                      "direction": "vertical"
                     }
                   ]
                 ]
@@ -326,69 +326,69 @@
                     "render-ui",
                     "main",
                     {
+                      "direction": "vertical",
+                      "type": "stack",
                       "gap": "md",
                       "children": [
                         {
-                          "gap": "sm",
-                          "type": "stack",
-                          "direction": "horizontal",
                           "align": "center",
                           "children": [
                             {
-                              "name": "receipt",
-                              "type": "icon"
+                              "type": "icon",
+                              "name": "receipt"
                             },
                             {
-                              "content": "@config.title",
                               "type": "typography",
+                              "content": "@config.title",
                               "variant": "h3"
                             }
-                          ]
+                          ],
+                          "type": "stack",
+                          "direction": "horizontal",
+                          "gap": "sm"
                         },
                         {
-                          "type": "simple-grid",
-                          "cols": 4.0,
                           "children": [
                             {
-                              "icon": "receipt",
+                              "value": "@payload.data.length",
                               "label": "Total receipts",
-                              "type": "stat-display",
-                              "value": "@payload.data.length"
+                              "icon": "receipt",
+                              "type": "stat-display"
                             },
                             {
-                              "label": "Issued today",
+                              "value": "23",
                               "icon": "calendar",
-                              "type": "stat-display",
-                              "value": "23"
+                              "label": "Issued today",
+                              "type": "stat-display"
                             },
                             {
-                              "value": "$12,840",
-                              "type": "stat-display",
                               "icon": "dollar-sign",
+                              "type": "stat-display",
+                              "value": "$12,840",
                               "label": "Revenue"
                             },
                             {
                               "value": "92%",
-                              "label": "Emailed",
                               "type": "stat-display",
+                              "label": "Emailed",
                               "icon": "mail"
                             }
-                          ]
+                          ],
+                          "type": "simple-grid",
+                          "cols": 4.0
                         },
                         {
                           "type": "divider"
                         },
                         {
-                          "entity": "@payload.data",
-                          "fields": "@config.fields",
                           "gap": "sm",
-                          "type": "data-grid",
+                          "cols": 1.0,
                           "itemActions": "@config.itemActions",
-                          "cols": 1.0
+                          "fields": "@config.fields",
+                          "entity": "@payload.data",
+                          "type": "data-grid"
                         }
-                      ],
-                      "type": "stack",
-                      "direction": "vertical"
+                      ]
                     }
                   ]
                 ]
@@ -402,9 +402,9 @@
                     "render-ui",
                     "main",
                     {
-                      "variant": "error",
+                      "type": "alert",
                       "message": "@payload.error",
-                      "type": "alert"
+                      "variant": "error"
                     }
                   ]
                 ]
@@ -473,19 +473,15 @@
                     "render-ui",
                     "main",
                     {
-                      "direction": "vertical",
-                      "type": "stack",
-                      "gap": "md",
                       "children": [
                         {
-                          "align": "center",
-                          "type": "stack",
                           "direction": "horizontal",
+                          "align": "center",
                           "gap": "sm",
                           "children": [
                             {
-                              "type": "button",
                               "label": "Back",
+                              "type": "button",
                               "variant": "ghost",
                               "action": "CLOSE_VIEW"
                             },
@@ -494,141 +490,145 @@
                               "name": "receipt"
                             },
                             {
-                              "type": "typography",
                               "content": "@entity.receiptNumber",
-                              "variant": "h3"
+                              "variant": "h3",
+                              "type": "typography"
                             },
                             {
-                              "type": "badge",
                               "label": "@entity.transactionType",
-                              "variant": "default"
-                            }
-                          ]
-                        },
-                        {
-                          "type": "divider"
-                        },
-                        {
-                          "gap": "sm",
-                          "children": [
-                            {
-                              "direction": "horizontal",
-                              "children": [
-                                {
-                                  "type": "typography",
-                                  "content": "Recipient",
-                                  "variant": "caption",
-                                  "color": "muted"
-                                },
-                                {
-                                  "content": "@entity.recipientName",
-                                  "type": "typography",
-                                  "variant": "body"
-                                }
-                              ],
-                              "gap": "md",
-                              "type": "stack"
-                            },
-                            {
-                              "direction": "horizontal",
-                              "children": [
-                                {
-                                  "type": "typography",
-                                  "color": "muted",
-                                  "variant": "caption",
-                                  "content": "Email"
-                                },
-                                {
-                                  "variant": "body",
-                                  "type": "typography",
-                                  "content": "@entity.recipientEmail"
-                                }
-                              ],
-                              "gap": "md",
-                              "type": "stack"
-                            },
-                            {
-                              "type": "stack",
-                              "direction": "horizontal",
-                              "children": [
-                                {
-                                  "type": "typography",
-                                  "variant": "caption",
-                                  "color": "muted",
-                                  "content": "Transaction"
-                                },
-                                {
-                                  "type": "typography",
-                                  "content": "@entity.transactionId",
-                                  "variant": "body"
-                                }
-                              ],
-                              "gap": "md"
+                              "variant": "default",
+                              "type": "badge"
                             }
                           ],
-                          "direction": "vertical",
                           "type": "stack"
                         },
                         {
                           "type": "divider"
                         },
                         {
+                          "direction": "vertical",
                           "children": [
                             {
-                              "label": "Subtotal",
-                              "value": "@entity.subtotal",
-                              "icon": "dollar-sign",
-                              "type": "stat-display"
+                              "type": "stack",
+                              "direction": "horizontal",
+                              "gap": "md",
+                              "children": [
+                                {
+                                  "variant": "caption",
+                                  "color": "muted",
+                                  "type": "typography",
+                                  "content": "Recipient"
+                                },
+                                {
+                                  "content": "@entity.recipientName",
+                                  "variant": "body",
+                                  "type": "typography"
+                                }
+                              ]
                             },
                             {
+                              "type": "stack",
+                              "children": [
+                                {
+                                  "color": "muted",
+                                  "type": "typography",
+                                  "variant": "caption",
+                                  "content": "Email"
+                                },
+                                {
+                                  "type": "typography",
+                                  "variant": "body",
+                                  "content": "@entity.recipientEmail"
+                                }
+                              ],
+                              "direction": "horizontal",
+                              "gap": "md"
+                            },
+                            {
+                              "type": "stack",
+                              "direction": "horizontal",
+                              "children": [
+                                {
+                                  "variant": "caption",
+                                  "content": "Transaction",
+                                  "type": "typography",
+                                  "color": "muted"
+                                },
+                                {
+                                  "type": "typography",
+                                  "variant": "body",
+                                  "content": "@entity.transactionId"
+                                }
+                              ],
+                              "gap": "md"
+                            }
+                          ],
+                          "type": "stack",
+                          "gap": "sm"
+                        },
+                        {
+                          "type": "divider"
+                        },
+                        {
+                          "cols": 4.0,
+                          "children": [
+                            {
+                              "icon": "dollar-sign",
+                              "type": "stat-display",
+                              "label": "Subtotal",
+                              "value": "@entity.subtotal"
+                            },
+                            {
+                              "label": "Tax",
                               "icon": "percent",
                               "value": "@entity.tax",
-                              "type": "stat-display",
-                              "label": "Tax"
+                              "type": "stat-display"
                             },
                             {
                               "value": "@entity.total",
+                              "type": "stat-display",
                               "label": "Total",
-                              "icon": "dollar-sign",
-                              "type": "stat-display"
+                              "icon": "dollar-sign"
                             },
                             {
-                              "label": "Issued",
                               "icon": "calendar",
+                              "label": "Issued",
                               "value": "@entity.issuedAt",
                               "type": "stat-display"
                             }
                           ],
-                          "cols": 4.0,
                           "type": "simple-grid"
                         },
                         {
-                          "gap": "sm",
-                          "align": "center",
                           "type": "stack",
-                          "direction": "horizontal",
                           "children": [
                             {
-                              "label": "Email",
                               "action": "EMAIL_RECEIPT",
                               "actionPayload": {
                                 "id": "@entity.id"
                               },
                               "type": "button",
+                              "label": "Email",
                               "variant": "primary"
                             },
                             {
-                              "type": "button",
+                              "variant": "secondary",
                               "action": "REPRINT_RECEIPT",
+                              "type": "button",
                               "actionPayload": {
                                 "id": "@entity.id"
                               },
-                              "label": "Reprint",
-                              "variant": "secondary"
+                              "label": "Reprint"
                             }
-                          ]
+                          ],
+                          "align": "center",
+                          "direction": "horizontal",
+                          "gap": "sm"
                         }
-                      ]
+                      ],
+                      "direction": "vertical",
+                      "gap": "md",
+                      "type": "stack"
                     }
                   ]
                 ]
@@ -657,22 +657,22 @@
                     "render-ui",
                     "main",
                     {
-                      "type": "stack",
-                      "gap": "md",
+                      "className": "py-12",
                       "children": [
                         {
                           "type": "spinner"
                         },
                         {
+                          "variant": "caption",
                           "content": "Emailing receipt…",
                           "type": "typography",
-                          "variant": "caption",
                           "color": "muted"
                         }
                       ],
-                      "className": "py-12",
-                      "align": "center",
-                      "direction": "vertical"
+                      "type": "stack",
+                      "direction": "vertical",
+                      "gap": "md",
+                      "align": "center"
                     }
                   ]
                 ]
@@ -701,21 +701,21 @@
                     "render-ui",
                     "main",
                     {
-                      "className": "py-12",
+                      "direction": "vertical",
+                      "align": "center",
                       "children": [
                         {
                           "type": "spinner"
                         },
                         {
-                          "type": "typography",
-                          "color": "muted",
                           "content": "Reprinting receipt…",
-                          "variant": "caption"
+                          "color": "muted",
+                          "variant": "caption",
+                          "type": "typography"
                         }
                       ],
-                      "align": "center",
                       "type": "stack",
-                      "direction": "vertical",
+                      "className": "py-12",
                       "gap": "md"
                     }
                   ]
@@ -740,22 +740,22 @@
                     "render-ui",
                     "main",
                     {
-                      "type": "stack",
-                      "gap": "md",
-                      "align": "center",
                       "children": [
                         {
                           "type": "spinner"
                         },
                         {
+                          "type": "typography",
                           "variant": "caption",
                           "content": "Loading receipts…",
-                          "type": "typography",
                           "color": "muted"
                         }
                       ],
+                      "direction": "vertical",
+                      "type": "stack",
+                      "align": "center",
                       "className": "py-12",
-                      "direction": "vertical"
+                      "gap": "md"
                     }
                   ]
                 ]
@@ -784,22 +784,22 @@
                     "render-ui",
                     "main",
                     {
-                      "gap": "md",
-                      "align": "center",
-                      "direction": "vertical",
                       "type": "stack",
-                      "className": "py-12",
+                      "align": "center",
                       "children": [
                         {
                           "type": "spinner"
                         },
                         {
-                          "type": "typography",
-                          "variant": "caption",
                           "content": "Emailing receipt…",
-                          "color": "muted"
+                          "variant": "caption",
+                          "color": "muted",
+                          "type": "typography"
                         }
-                      ]
+                      ],
+                      "direction": "vertical",
+                      "className": "py-12",
+                      "gap": "md"
                     }
                   ]
                 ]
@@ -828,19 +828,19 @@
                     "render-ui",
                     "main",
                     {
-                      "direction": "vertical",
-                      "className": "py-12",
                       "children": [
                         {
                           "type": "spinner"
                         },
                         {
-                          "type": "typography",
+                          "variant": "caption",
                           "color": "muted",
                           "content": "Reprinting receipt…",
-                          "variant": "caption"
+                          "type": "typography"
                         }
                       ],
+                      "direction": "vertical",
+                      "className": "py-12",
                       "type": "stack",
                       "gap": "md",
                       "align": "center"
@@ -858,8 +858,8 @@
                     "Receipt",
                     {
                       "emit": {
-                        "success": "ReceiptLoaded",
-                        "failure": "ReceiptLoadFailed"
+                        "failure": "ReceiptLoadFailed",
+                        "success": "ReceiptLoaded"
                       }
                     }
                   ],
@@ -867,8 +867,8 @@
                     "render-ui",
                     "main",
                     {
-                      "type": "spinner",
-                      "size": "sm"
+                      "size": "sm",
+                      "type": "spinner"
                     }
                   ]
                 ]
@@ -876,55 +876,61 @@
             ]
           },
           "config": {
-            "title": {
-              "type": "string",
-              "default": "Receipts"
-            },
             "fields": {
               "type": "[object]",
               "default": [
                 {
-                  "label": "Receipt #",
+                  "name": "receiptNumber",
                   "variant": "caption",
-                  "name": "receiptNumber"
+                  "label": "Receipt #"
                 },
                 {
+                  "variant": "caption",
                   "name": "recipientName",
-                  "label": "Recipient",
+                  "label": "Recipient"
+                },
+                {
+                  "variant": "badge",
+                  "name": "transactionType",
+                  "label": "Type"
+                },
+                {
+                  "label": "Total",
+                  "name": "total",
                   "variant": "caption"
                 },
                 {
-                  "name": "transactionType",
-                  "label": "Type",
-                  "variant": "badge"
-                },
-                {
-                  "variant": "caption",
-                  "label": "Total",
-                  "name": "total"
-                },
-                {
-                  "name": "issuedAt",
                   "label": "Issued",
+                  "name": "issuedAt",
                   "variant": "caption"
                 }
-              ]
+              ],
+              "label": "Columns to show",
+              "description": "Each column maps to one field on the Receipt entity"
             },
             "itemActions": {
               "type": "[object]",
               "default": [
                 {
-                  "label": "Open",
-                  "variant": "primary",
                   "event": "OPEN_RECEIPT",
-                  "icon": "arrow-right"
+                  "variant": "primary",
+                  "icon": "arrow-right",
+                  "label": "Open"
                 },
                 {
-                  "variant": "danger",
                   "event": "REPRINT_RECEIPT",
-                  "label": "Reprint"
+                  "label": "Reprint",
+                  "variant": "danger"
                 }
-              ]
+              ],
+              "label": "Row actions",
+              "description": "Buttons users can click on each receipt row"
+            },
+            "title": {
+              "type": "string",
+              "default": "Receipts",
+              "label": "Section title",
+              "description": "Heading shown above the receipts list"
             }
           },
           "scope": "collection"

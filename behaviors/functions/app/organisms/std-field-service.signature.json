@@ -68,12 +68,52 @@
         "emittedEvents": [],
         "listenedEvents": [],
         "overridableConfigKeys": [
-          "appName",
-          "contentTrait",
-          "navItems",
-          "notificationClickEvent",
-          "notifications",
-          "searchEvent"
+          {
+            "key": "appName",
+            "type": "unknown",
+            "default": "Field Service"
+          },
+          {
+            "key": "contentTrait",
+            "type": "unknown",
+            "default": "@trait.WorkOrderCatalog"
+          },
+          {
+            "key": "navItems",
+            "type": "unknown",
+            "default": [
+              {
+                "label": "Work Orders",
+                "href": "/workorders",
+                "icon": "clipboard-list"
+              },
+              {
+                "icon": "hard-hat",
+                "href": "/technicians",
+                "label": "Technicians"
+              },
+              {
+                "label": "Check In",
+                "href": "/jobs/checkin",
+                "icon": "map-pin"
+              }
+            ]
+          },
+          {
+            "key": "notificationClickEvent",
+            "type": "unknown",
+            "default": "WORK_ORDER_NOTIFICATIONS_OPEN"
+          },
+          {
+            "key": "notifications",
+            "type": "unknown",
+            "default": []
+          },
+          {
+            "key": "searchEvent",
+            "type": "unknown",
+            "default": "WORK_ORDER_SEARCH"
+          }
         ],
         "capabilities": []
       },
@@ -94,8 +134,16 @@
         "emittedEvents": [],
         "listenedEvents": [],
         "overridableConfigKeys": [
-          "event",
-          "placeholder"
+          {
+            "key": "event",
+            "type": "unknown",
+            "default": "WORK_ORDER_SEARCH"
+          },
+          {
+            "key": "placeholder",
+            "type": "unknown",
+            "default": "Search work orders…"
+          }
         ],
         "capabilities": []
       },
@@ -104,8 +152,41 @@
         "emittedEvents": [],
         "listenedEvents": [],
         "overridableConfigKeys": [
-          "event",
-          "filters"
+          {
+            "key": "event",
+            "type": "unknown",
+            "default": "WORK_ORDER_FILTER"
+          },
+          {
+            "key": "filters",
+            "type": "unknown",
+            "default": [
+              {
+                "field": "priority",
+                "options": [
+                  "low",
+                  "normal",
+                  "high",
+                  "urgent"
+                ],
+                "label": "Priority",
+                "filterType": "select"
+              },
+              {
+                "label": "Status",
+                "field": "status",
+                "options": [
+                  "created",
+                  "assigned",
+                  "en-route",
+                  "on-site",
+                  "completed",
+                  "cancelled"
+                ],
+                "filterType": "select"
+              }
+            ]
+          }
         ],
         "capabilities": []
       },
@@ -116,8 +197,72 @@
           "BrowseItemLoaded"
         ],
         "overridableConfigKeys": [
-          "metrics",
-          "title"
+          {
+            "key": "metrics",
+            "type": "unknown",
+            "default": [
+              {
+                "aggregation": "count",
+                "variant": "primary",
+                "label": "Total",
+                "format": "number",
+                "icon": "clipboard-list"
+              },
+              {
+                "icon": "circle",
+                "aggregation": "count",
+                "variant": "warning",
+                "format": "number",
+                "label": "Open",
+                "filter": [
+                  "fn",
+                  "row",
+                  [
+                    "=",
+                    "@row.status",
+                    "created"
+                  ]
+                ]
+              },
+              {
+                "icon": "map-pin",
+                "aggregation": "count",
+                "format": "number",
+                "filter": [
+                  "fn",
+                  "row",
+                  [
+                    "=",
+                    "@row.status",
+                    "on-site"
+                  ]
+                ],
+                "label": "On Site",
+                "variant": "info"
+              },
+              {
+                "filter": [
+                  "fn",
+                  "row",
+                  [
+                    "=",
+                    "@row.status",
+                    "completed"
+                  ]
+                ],
+                "label": "Completed",
+                "variant": "success",
+                "aggregation": "count",
+                "icon": "check-circle",
+                "format": "number"
+              }
+            ]
+          },
+          {
+            "key": "title",
+            "type": "unknown",
+            "default": "Work Orders"
+          }
         ],
         "capabilities": []
       },
@@ -132,10 +277,72 @@
           "WORK_ORDER_DELETED"
         ],
         "overridableConfigKeys": [
-          "cols",
-          "fields",
-          "gap",
-          "itemActions"
+          {
+            "key": "cols",
+            "type": "unknown",
+            "default": 1
+          },
+          {
+            "key": "fields",
+            "type": "unknown",
+            "default": [
+              {
+                "icon": "user",
+                "name": "customerName",
+                "variant": "h4"
+              },
+              {
+                "name": "serviceType",
+                "variant": "body"
+              },
+              {
+                "name": "address",
+                "variant": "caption"
+              },
+              {
+                "name": "priority",
+                "variant": "badge"
+              },
+              {
+                "name": "status",
+                "variant": "badge"
+              },
+              {
+                "name": "assignedTo",
+                "variant": "caption"
+              },
+              {
+                "name": "etaMinutes",
+                "variant": "caption"
+              }
+            ]
+          },
+          {
+            "key": "gap",
+            "type": "unknown",
+            "default": "sm"
+          },
+          {
+            "key": "itemActions",
+            "type": "unknown",
+            "default": [
+              {
+                "label": "View",
+                "event": "VIEW",
+                "variant": "ghost"
+              },
+              {
+                "label": "Edit",
+                "event": "EDIT",
+                "variant": "ghost"
+              },
+              {
+                "event": "DELETE",
+                "variant": "danger",
+                "label": "Delete"
+              }
+            ]
+          }
         ],
         "capabilities": []
       },
@@ -144,7 +351,11 @@
         "emittedEvents": [],
         "listenedEvents": [],
         "overridableConfigKeys": [
-          "title"
+          {
+            "key": "title",
+            "type": "unknown",
+            "default": "Available Technicians"
+          }
         ],
         "capabilities": []
       },
@@ -153,7 +364,11 @@
         "emittedEvents": [],
         "listenedEvents": [],
         "overridableConfigKeys": [
-          "title"
+          {
+            "key": "title",
+            "type": "unknown",
+            "default": "Technician Routes"
+          }
         ],
         "capabilities": []
       },
@@ -164,10 +379,36 @@
           "CREATE"
         ],
         "overridableConfigKeys": [
-          "fields",
-          "icon",
-          "mode",
-          "title"
+          {
+            "key": "fields",
+            "type": "unknown",
+            "default": [
+              "customerName",
+              "serviceType",
+              "address",
+              "priority",
+              "status",
+              "assignedTo",
+              "scheduledAt",
+              "etaMinutes",
+              "notes"
+            ]
+          },
+          {
+            "key": "icon",
+            "type": "unknown",
+            "default": "plus-circle"
+          },
+          {
+            "key": "mode",
+            "type": "unknown",
+            "default": "create"
+          },
+          {
+            "key": "title",
+            "type": "unknown",
+            "default": "New Work Order"
+          }
         ],
         "capabilities": []
       },
@@ -178,10 +419,36 @@
           "EDIT"
         ],
         "overridableConfigKeys": [
-          "fields",
-          "icon",
-          "mode",
-          "title"
+          {
+            "key": "fields",
+            "type": "unknown",
+            "default": [
+              "customerName",
+              "serviceType",
+              "address",
+              "priority",
+              "status",
+              "assignedTo",
+              "scheduledAt",
+              "etaMinutes",
+              "notes"
+            ]
+          },
+          {
+            "key": "icon",
+            "type": "unknown",
+            "default": "edit"
+          },
+          {
+            "key": "mode",
+            "type": "unknown",
+            "default": "edit"
+          },
+          {
+            "key": "title",
+            "type": "unknown",
+            "default": "Edit Work Order"
+          }
         ],
         "capabilities": []
       },
@@ -192,10 +459,36 @@
           "VIEW"
         ],
         "overridableConfigKeys": [
-          "fields",
-          "icon",
-          "mode",
-          "title"
+          {
+            "key": "fields",
+            "type": "unknown",
+            "default": [
+              "customerName",
+              "serviceType",
+              "address",
+              "priority",
+              "status",
+              "assignedTo",
+              "scheduledAt",
+              "etaMinutes",
+              "notes"
+            ]
+          },
+          {
+            "key": "icon",
+            "type": "unknown",
+            "default": "eye"
+          },
+          {
+            "key": "mode",
+            "type": "unknown",
+            "default": "edit"
+          },
+          {
+            "key": "title",
+            "type": "unknown",
+            "default": "View Work Order"
+          }
         ],
         "capabilities": []
       },
@@ -206,10 +499,26 @@
           "DELETE"
         ],
         "overridableConfigKeys": [
-          "alertMessage",
-          "confirmLabel",
-          "icon",
-          "title"
+          {
+            "key": "alertMessage",
+            "type": "unknown",
+            "default": "This action cannot be undone."
+          },
+          {
+            "key": "confirmLabel",
+            "type": "unknown",
+            "default": "Delete"
+          },
+          {
+            "key": "icon",
+            "type": "unknown",
+            "default": "alert-triangle"
+          },
+          {
+            "key": "title",
+            "type": "unknown",
+            "default": "Delete Work Order"
+          }
         ],
         "capabilities": []
       },
@@ -323,12 +632,52 @@
         "emittedEvents": [],
         "listenedEvents": [],
         "overridableConfigKeys": [
-          "appName",
-          "contentTrait",
-          "navItems",
-          "notificationClickEvent",
-          "notifications",
-          "searchEvent"
+          {
+            "key": "appName",
+            "type": "unknown",
+            "default": "Field Service"
+          },
+          {
+            "key": "contentTrait",
+            "type": "unknown",
+            "default": "@trait.TechnicianCatalog"
+          },
+          {
+            "key": "navItems",
+            "type": "unknown",
+            "default": [
+              {
+                "href": "/workorders",
+                "icon": "clipboard-list",
+                "label": "Work Orders"
+              },
+              {
+                "label": "Technicians",
+                "href": "/technicians",
+                "icon": "hard-hat"
+              },
+              {
+                "label": "Check In",
+                "href": "/jobs/checkin",
+                "icon": "map-pin"
+              }
+            ]
+          },
+          {
+            "key": "notificationClickEvent",
+            "type": "unknown",
+            "default": "TECHNICIAN_NOTIFICATIONS_OPEN"
+          },
+          {
+            "key": "notifications",
+            "type": "unknown",
+            "default": []
+          },
+          {
+            "key": "searchEvent",
+            "type": "unknown",
+            "default": "TECHNICIAN_SEARCH"
+          }
         ],
         "capabilities": []
       },
@@ -353,10 +702,68 @@
           "TECHNICIAN_DELETED"
         ],
         "overridableConfigKeys": [
-          "cols",
-          "fields",
-          "gap",
-          "itemActions"
+          {
+            "key": "cols",
+            "type": "unknown",
+            "default": 1
+          },
+          {
+            "key": "fields",
+            "type": "unknown",
+            "default": [
+              {
+                "variant": "h4",
+                "icon": "hard-hat",
+                "name": "name"
+              },
+              {
+                "variant": "caption",
+                "name": "phone"
+              },
+              {
+                "name": "skills",
+                "variant": "caption"
+              },
+              {
+                "name": "available",
+                "variant": "badge"
+              },
+              {
+                "name": "currentOrderId",
+                "variant": "caption"
+              },
+              {
+                "name": "lastSeenAt",
+                "variant": "caption"
+              }
+            ]
+          },
+          {
+            "key": "gap",
+            "type": "unknown",
+            "default": "sm"
+          },
+          {
+            "key": "itemActions",
+            "type": "unknown",
+            "default": [
+              {
+                "event": "VIEW",
+                "variant": "ghost",
+                "label": "View"
+              },
+              {
+                "event": "EDIT",
+                "label": "Edit",
+                "variant": "ghost"
+              },
+              {
+                "label": "Delete",
+                "variant": "danger",
+                "event": "DELETE"
+              }
+            ]
+          }
         ],
         "capabilities": []
       },
@@ -365,7 +772,11 @@
         "emittedEvents": [],
         "listenedEvents": [],
         "overridableConfigKeys": [
-          "title"
+          {
+            "key": "title",
+            "type": "unknown",
+            "default": "Dispatch Board"
+          }
         ],
         "capabilities": []
       },
@@ -374,8 +785,16 @@
         "emittedEvents": [],
         "listenedEvents": [],
         "overridableConfigKeys": [
-          "mode",
-          "title"
+          {
+            "key": "mode",
+            "type": "unknown",
+            "default": "geo"
+          },
+          {
+            "key": "title",
+            "type": "unknown",
+            "default": "Technician Check-In"
+          }
         ],
         "capabilities": []
       },
@@ -386,10 +805,34 @@
           "CREATE"
         ],
         "overridableConfigKeys": [
-          "fields",
-          "icon",
-          "mode",
-          "title"
+          {
+            "key": "fields",
+            "type": "unknown",
+            "default": [
+              "name",
+              "phone",
+              "skills",
+              "available",
+              "currentOrderId",
+              "lat",
+              "lng"
+            ]
+          },
+          {
+            "key": "icon",
+            "type": "unknown",
+            "default": "user-plus"
+          },
+          {
+            "key": "mode",
+            "type": "unknown",
+            "default": "create"
+          },
+          {
+            "key": "title",
+            "type": "unknown",
+            "default": "Add Technician"
+          }
         ],
         "capabilities": []
       },
@@ -400,10 +843,34 @@
           "EDIT"
         ],
         "overridableConfigKeys": [
-          "fields",
-          "icon",
-          "mode",
-          "title"
+          {
+            "key": "fields",
+            "type": "unknown",
+            "default": [
+              "name",
+              "phone",
+              "skills",
+              "available",
+              "currentOrderId",
+              "lat",
+              "lng"
+            ]
+          },
+          {
+            "key": "icon",
+            "type": "unknown",
+            "default": "edit"
+          },
+          {
+            "key": "mode",
+            "type": "unknown",
+            "default": "edit"
+          },
+          {
+            "key": "title",
+            "type": "unknown",
+            "default": "Edit Technician"
+          }
         ],
         "capabilities": []
       },
@@ -414,10 +881,35 @@
           "VIEW"
         ],
         "overridableConfigKeys": [
-          "fields",
-          "icon",
-          "mode",
-          "title"
+          {
+            "key": "fields",
+            "type": "unknown",
+            "default": [
+              "name",
+              "phone",
+              "skills",
+              "available",
+              "currentOrderId",
+              "lat",
+              "lng",
+              "lastSeenAt"
+            ]
+          },
+          {
+            "key": "icon",
+            "type": "unknown",
+            "default": "eye"
+          },
+          {
+            "key": "mode",
+            "type": "unknown",
+            "default": "edit"
+          },
+          {
+            "key": "title",
+            "type": "unknown",
+            "default": "View Technician"
+          }
         ],
         "capabilities": []
       },
@@ -479,12 +971,52 @@
         "emittedEvents": [],
         "listenedEvents": [],
         "overridableConfigKeys": [
-          "appName",
-          "contentTrait",
-          "navItems",
-          "notificationClickEvent",
-          "notifications",
-          "searchEvent"
+          {
+            "key": "appName",
+            "type": "unknown",
+            "default": "Field Service"
+          },
+          {
+            "key": "contentTrait",
+            "type": "unknown",
+            "default": "@trait.JobCheckinComposer"
+          },
+          {
+            "key": "navItems",
+            "type": "unknown",
+            "default": [
+              {
+                "icon": "clipboard-list",
+                "href": "/workorders",
+                "label": "Work Orders"
+              },
+              {
+                "icon": "hard-hat",
+                "href": "/technicians",
+                "label": "Technicians"
+              },
+              {
+                "href": "/jobs/checkin",
+                "icon": "map-pin",
+                "label": "Check In"
+              }
+            ]
+          },
+          {
+            "key": "notificationClickEvent",
+            "type": "unknown",
+            "default": "JOB_CHECKIN_NOTIFICATIONS_OPEN"
+          },
+          {
+            "key": "notifications",
+            "type": "unknown",
+            "default": []
+          },
+          {
+            "key": "searchEvent",
+            "type": "unknown",
+            "default": "JOB_CHECKIN_SEARCH"
+          }
         ],
         "capabilities": []
       },
@@ -500,8 +1032,16 @@
         "emittedEvents": [],
         "listenedEvents": [],
         "overridableConfigKeys": [
-          "mode",
-          "title"
+          {
+            "key": "mode",
+            "type": "unknown",
+            "default": "geo"
+          },
+          {
+            "key": "title",
+            "type": "unknown",
+            "default": "Confirm arrival on site"
+          }
         ],
         "capabilities": []
       },
@@ -510,8 +1050,16 @@
         "emittedEvents": [],
         "listenedEvents": [],
         "overridableConfigKeys": [
-          "instructions",
-          "title"
+          {
+            "key": "instructions",
+            "type": "unknown",
+            "default": "Customer signs to confirm the job is complete."
+          },
+          {
+            "key": "title",
+            "type": "unknown",
+            "default": "Customer signature"
+          }
         ],
         "capabilities": []
       }

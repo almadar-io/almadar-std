@@ -121,10 +121,10 @@ export interface StdTableMapTableWriteFailedPayload {
 export interface StdTableMapConfig {
   /** Default: `600` */
   canvasHeight?: number;
-  /** Default: `800` */
-  canvasWidth?: number;
   /** Default: `"Floor Plan"` */
   title?: string;
+  /** Default: `800` */
+  canvasWidth?: number;
 }
 
 /**

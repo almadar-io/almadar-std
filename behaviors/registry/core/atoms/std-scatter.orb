@@ -21,25 +21,25 @@
             "items": {
               "type": "object",
               "properties": {
-                "label": {
-                  "name": "label",
-                  "type": "string"
+                "size": {
+                  "name": "size",
+                  "type": "number"
                 },
                 "y": {
                   "name": "y",
                   "type": "number"
                 },
-                "size": {
-                  "name": "size",
+                "x": {
+                  "name": "x",
                   "type": "number"
                 },
                 "color": {
                   "name": "color",
                   "type": "string"
                 },
-                "x": {
-                  "name": "x",
-                  "type": "number"
+                "label": {
+                  "name": "label",
+                  "type": "string"
                 }
               }
             }
@@ -89,39 +89,39 @@
                     "@entity.points",
                     [
                       {
-                        "size": 8.0,
-                        "y": 24.0,
                         "label": "A",
                         "x": 12.0,
-                        "color": ""
+                        "size": 8.0,
+                        "color": "",
+                        "y": 24.0
                       },
                       {
                         "y": 42.0,
+                        "x": 28.0,
                         "size": 6.0,
                         "color": "",
-                        "label": "B",
-                        "x": 28.0
+                        "label": "B"
                       },
                       {
+                        "x": 45.0,
                         "size": 10.0,
                         "label": "C",
-                        "y": 18.0,
-                        "x": 45.0,
-                        "color": ""
-                      },
-                      {
-                        "y": 55.0,
-                        "x": 60.0,
-                        "size": 7.0,
-                        "label": "D",
-                        "color": ""
-                      },
-                      {
                         "color": "",
-                        "label": "E",
+                        "y": 18.0
+                      },
+                      {
+                        "size": 7.0,
+                        "x": 60.0,
+                        "label": "D",
+                        "color": "",
+                        "y": 55.0
+                      },
+                      {
                         "y": 38.0,
+                        "x": 78.0,
+                        "label": "E",
                         "size": 9.0,
-                        "x": 78.0
+                        "color": ""
                       }
                     ]
                   ],
@@ -129,12 +129,12 @@
                     "render-ui",
                     "main",
                     {
+                      "scatterData": "@entity.points",
+                      "title": "@config.title",
+                      "height": "@config.height",
                       "subtitle": "@config.subtitle",
                       "drillEvent": "@config.drillEvent",
                       "type": "chart",
-                      "title": "@config.title",
-                      "scatterData": "@entity.points",
-                      "height": "@config.height",
                       "chartType": "scatter"
                     }
                   ]
@@ -155,16 +155,10 @@
                         "fn",
                         "row",
                         {
-                          "y": [
+                          "color": [
                             "object/get",
                             "@row",
-                            "@config.yField",
-                            0.0
-                          ],
-                          "label": [
-                            "object/get",
-                            "@row",
-                            "@config.labelField",
+                            "@config.colorField",
                             ""
                           ],
                           "x": [
@@ -173,16 +167,22 @@
                             "@config.xField",
                             0.0
                           ],
+                          "y": [
+                            "object/get",
+                            "@row",
+                            "@config.yField",
+                            0.0
+                          ],
                           "size": [
                             "object/get",
                             "@row",
                             "@config.sizeField",
                             5.0
                           ],
-                          "color": [
+                          "label": [
                             "object/get",
                             "@row",
-                            "@config.colorField",
+                            "@config.labelField",
                             ""
                           ]
                         }
@@ -193,13 +193,13 @@
                     "render-ui",
                     "main",
                     {
-                      "type": "chart",
-                      "chartType": "scatter",
-                      "title": "@config.title",
+                      "subtitle": "@config.subtitle",
                       "scatterData": "@entity.points",
                       "height": "@config.height",
-                      "subtitle": "@config.subtitle",
-                      "drillEvent": "@config.drillEvent"
+                      "drillEvent": "@config.drillEvent",
+                      "chartType": "scatter",
+                      "type": "chart",
+                      "title": "@config.title"
                     }
                   ]
                 ]
@@ -207,41 +207,59 @@
             ]
           },
           "config": {
-            "yField": {
-              "type": "string",
-              "default": "y"
-            },
-            "height": {
-              "type": "number",
-              "default": 280.0
-            },
-            "drillEvent": {
-              "type": "string",
-              "default": ""
-            },
-            "colorField": {
-              "type": "string",
-              "default": ""
-            },
-            "labelField": {
-              "type": "string",
-              "default": ""
-            },
-            "xField": {
-              "type": "string",
-              "default": "x"
-            },
             "title": {
               "type": "string",
-              "default": "Correlation"
+              "default": "Correlation",
+              "label": "Title",
+              "description": "Heading shown above the chart"
             },
             "subtitle": {
               "type": "string",
-              "default": "x vs y"
+              "default": "x vs y",
+              "label": "Subtitle",
+              "description": "Secondary line below the title"
+            },
+            "height": {
+              "type": "number",
+              "default": 280.0,
+              "label": "Chart height",
+              "description": "Pixel height of the rendered scatter plot"
+            },
+            "labelField": {
+              "type": "string",
+              "default": "",
+              "label": "Label field",
+              "description": "Field used as the point label tooltip (blank = none)"
+            },
+            "drillEvent": {
+              "type": "string",
+              "default": "",
+              "label": "Drill event",
+              "description": "Event emitted when the user clicks a data point"
+            },
+            "xField": {
+              "type": "string",
+              "default": "x",
+              "label": "X-axis field",
+              "description": "Entity field mapped to the horizontal axis"
+            },
+            "yField": {
+              "type": "string",
+              "default": "y",
+              "label": "Y-axis field",
+              "description": "Entity field mapped to the vertical axis"
+            },
+            "colorField": {
+              "type": "string",
+              "default": "",
+              "label": "Color field",
+              "description": "Field used to color-code points (blank = single color)"
             },
             "sizeField": {
               "type": "string",
-              "default": ""
+              "default": "",
+              "label": "Size field",
+              "description": "Numeric field that scales bubble size (blank = uniform)"
             }
           },
           "scope": "instance"

@@ -431,22 +431,22 @@
                     "render-ui",
                     "main",
                     {
-                      "type": "stack",
-                      "gap": "md",
-                      "align": "center",
                       "direction": "vertical",
+                      "type": "stack",
                       "className": "py-12",
                       "children": [
                         {
                           "type": "spinner"
                         },
                         {
-                          "variant": "caption",
-                          "color": "muted",
                           "type": "typography",
+                          "color": "muted",
+                          "variant": "caption",
                           "content": "Loading moderation queue…"
                         }
-                      ]
+                      ],
+                      "gap": "md",
+                      "align": "center"
                     }
                   ]
                 ]
@@ -460,67 +460,45 @@
                     "render-ui",
                     "main",
                     {
-                      "direction": "vertical",
+                      "gap": "md",
                       "type": "stack",
                       "children": [
                         {
-                          "direction": "horizontal",
                           "gap": "sm",
-                          "type": "stack",
+                          "direction": "horizontal",
                           "children": [
                             {
-                              "type": "icon",
-                              "name": "shield-alert"
+                              "name": "shield-alert",
+                              "type": "icon"
                             },
                             {
                               "content": "@config.title",
-                              "type": "typography",
-                              "variant": "h3"
+                              "variant": "h3",
+                              "type": "typography"
                             }
-                          ]
+                          ],
+                          "type": "stack"
                         },
                         {
                           "type": "divider"
                         },
                         {
-                          "cols": 1.0,
-                          "gap": "sm",
-                          "itemActions": [
-                            {
-                              "label": "Approve",
-                              "icon": "check",
-                              "event": "APPROVE",
-                              "variant": "primary"
-                            },
-                            {
-                              "event": "REJECT",
-                              "variant": "danger",
-                              "icon": "x",
-                              "label": "Reject"
-                            },
-                            {
-                              "label": "Escalate",
-                              "event": "ESCALATE",
-                              "variant": "secondary",
-                              "icon": "alert-triangle"
-                            }
-                          ],
                           "entity": "@payload.data",
                           "fields": [
                             {
-                              "label": "Type",
                               "variant": "badge",
+                              "label": "Type",
                               "name": "targetType"
                             },
                             {
                               "label": "Reason",
-                              "variant": "caption",
-                              "name": "reason"
+                              "name": "reason",
+                              "variant": "caption"
                             },
                             {
+                              "variant": "caption",
                               "name": "flagCount",
-                              "label": "Flags",
-                              "variant": "caption"
+                              "label": "Flags"
                             },
                             {
                               "label": "Status",
@@ -528,10 +506,32 @@
                               "variant": "badge"
                             }
                           ],
-                          "type": "data-grid"
+                          "type": "data-grid",
+                          "cols": 1.0,
+                          "gap": "sm",
+                          "itemActions": [
+                            {
+                              "icon": "check",
+                              "variant": "primary",
+                              "label": "Approve",
+                              "event": "APPROVE"
+                            },
+                            {
+                              "icon": "x",
+                              "event": "REJECT",
+                              "label": "Reject",
+                              "variant": "danger"
+                            },
+                            {
+                              "variant": "secondary",
+                              "event": "ESCALATE",
+                              "label": "Escalate",
+                              "icon": "alert-triangle"
+                            }
+                          ]
                         }
                       ],
-                      "gap": "md"
+                      "direction": "vertical"
                     }
                   ]
                 ]
@@ -574,8 +574,8 @@
                     "@entity",
                     {
                       "emit": {
-                        "failure": "ModQueueItemReviewFailed",
-                        "success": "ModQueueItemReviewed"
+                        "success": "ModQueueItemReviewed",
+                        "failure": "ModQueueItemReviewFailed"
                       }
                     }
                   ]
@@ -603,8 +603,8 @@
                     "@entity",
                     {
                       "emit": {
-                        "failure": "ModQueueItemReviewFailed",
-                        "success": "ModQueueItemReviewed"
+                        "success": "ModQueueItemReviewed",
+                        "failure": "ModQueueItemReviewFailed"
                       }
                     }
                   ]
@@ -632,8 +632,8 @@
                     "@entity",
                     {
                       "emit": {
-                        "success": "ModQueueItemReviewed",
-                        "failure": "ModQueueItemReviewFailed"
+                        "failure": "ModQueueItemReviewFailed",
+                        "success": "ModQueueItemReviewed"
                       }
                     }
                   ]
@@ -665,9 +665,9 @@
                     "render-ui",
                     "main",
                     {
-                      "type": "alert",
                       "variant": "error",
-                      "message": "@payload.error"
+                      "message": "@payload.error",
+                      "type": "alert"
                     }
                   ]
                 ]
@@ -682,8 +682,8 @@
                     "ModQueueItem",
                     {
                       "emit": {
-                        "success": "ModQueueItemLoaded",
-                        "failure": "ModQueueItemLoadFailed"
+                        "failure": "ModQueueItemLoadFailed",
+                        "success": "ModQueueItemLoaded"
                       }
                     }
                   ],
@@ -702,11 +702,15 @@
           "config": {
             "title": {
               "type": "string",
-              "default": "Moderation Queue"
+              "default": "Moderation Queue",
+              "label": "Section title",
+              "description": "Heading shown above the moderation queue"
             },
             "autoEscalateThreshold": {
               "type": "number",
-              "default": 5.0
+              "default": 5.0,
+              "label": "Auto-escalate at",
+              "description": "Flag count after which an item is auto-escalated to senior review"
             }
           },
           "scope": "collection"

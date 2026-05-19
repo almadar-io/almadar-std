@@ -71,9 +71,9 @@ export interface StdWarehouseWarehouseLoadFailedPayload {
 export interface StdWarehouseConfig {
   /** Default: `"Locations"` */
   title?: string;
-  /** Default: `[{"variant":"caption","label":"Code","name":"code"},{"label":"Name","variant":"caption","name":"name"},{"variant":"badge","name":"type","label":"Type"},{"label":"SKUs","variant":"caption","name":"totalSkus"},{"variant":"badge","label":"Active","name":"isActive"}]` */
+  /** Default: `[{"name":"code","variant":"caption","label":"Code"},{"variant":"caption","name":"name","label":"Name"},{"variant":"badge","name":"type","label":"Type"},{"label":"SKUs","variant":"caption","name":"totalSkus"},{"variant":"badge","name":"isActive","label":"Active"}]` */
   fields?: TraitConfig[];
-  /** Default: `[{"event":"OPEN_WAREHOUSE","variant":"primary","icon":"arrow-right","label":"Open"}]` */
+  /** Default: `[{"icon":"arrow-right","variant":"primary","event":"OPEN_WAREHOUSE","label":"Open"}]` */
   itemActions?: TraitConfig[];
 }
 

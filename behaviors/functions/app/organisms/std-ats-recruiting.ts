@@ -184,32 +184,32 @@ export function stdAtsRecruitingJobOpeningOrbital(params: StdAtsRecruitingJobOpe
         'ref': 'AppShell.traits.AppLayout',
         'name': 'JobOpeningAppLayout',
         'config': {
-          'contentTrait': '@trait.JobOpeningCatalog',
-          'notificationClickEvent': 'JOB_OPENING_NOTIFICATIONS_OPEN',
           'appName': 'ATSRecruiting',
+          'contentTrait': '@trait.JobOpeningCatalog',
           'navItems': [
             {
+              'label': 'Openings',
               'icon': 'briefcase',
               'href': '/openings',
-              'label': 'Openings',
             },
             {
               'label': 'Pipeline',
-              'icon': 'user-plus',
               'href': '/pipeline',
+              'icon': 'user-plus',
             },
             {
+              'label': 'Interviews',
               'href': '/interviews',
               'icon': 'calendar',
-              'label': 'Interviews',
             },
             {
-              'href': '/offers',
-              'icon': 'file-text',
               'label': 'Offers',
+              'icon': 'file-text',
+              'href': '/offers',
             },
           ],
           'searchEvent': 'JOB_OPENING_SEARCH',
+          'notificationClickEvent': 'JOB_OPENING_NOTIFICATIONS_OPEN',
           'notifications': [],
         },
         'events': {
@@ -297,61 +297,59 @@ export function stdAtsRecruitingJobOpeningOrbital(params: StdAtsRecruitingJobOpe
                   'render-ui',
                   'main',
                   {
-                    'gap': 'lg',
-                    'direction': 'vertical',
                     'children': [
                       {
-                        'type': 'stack',
-                        'justify': 'between',
-                        'gap': 'md',
+                        'align': 'center',
                         'direction': 'horizontal',
+                        'type': 'stack',
+                        'gap': 'md',
+                        'justify': 'between',
                         'children': [
                           {
-                            'gap': 'sm',
+                            'direction': 'horizontal',
                             'children': [
                               {
-                                'type': 'icon',
                                 'name': 'briefcase',
+                                'type': 'icon',
                               },
                               {
-                                'content': 'Job Openings',
-                                'type': 'typography',
                                 'variant': 'h2',
+                                'type': 'typography',
+                                'content': 'Job Openings',
                               },
                             ],
                             'type': 'stack',
-                            'direction': 'horizontal',
+                            'gap': 'sm',
                             'align': 'center',
                           },
                           {
                             'direction': 'horizontal',
-                            'gap': 'sm',
                             'children': [
                               {
-                                'action': 'CREATE',
-                                'label': 'New Opening',
-                                'type': 'button',
                                 'variant': 'primary',
                                 'icon': 'plus',
+                                'action': 'CREATE',
+                                'type': 'button',
+                                'label': 'New Opening',
                               },
                             ],
+                            'gap': 'sm',
                             'type': 'stack',
                           },
                         ],
-                        'align': 'center',
                       },
                       {
                         'type': 'divider',
                       },
                       {
                         'direction': 'horizontal',
+                        'gap': 'md',
+                        'align': 'center',
+                        'type': 'stack',
                         'children': [
                           '@trait.JobOpeningSearch',
                           '@trait.JobOpeningFilter',
                         ],
-                        'type': 'stack',
-                        'gap': 'md',
-                        'align': 'center',
                       },
                       '@trait.JobOpeningStats',
                       '@trait.JobOpeningGraphs',
@@ -361,6 +359,8 @@ export function stdAtsRecruitingJobOpeningOrbital(params: StdAtsRecruitingJobOpe
                       '@trait.JobOpeningBrowseList',
                     ],
                     'type': 'stack',
+                    'gap': 'lg',
+                    'direction': 'vertical',
                   },
                 ],
               ],
@@ -379,10 +379,15 @@ export function stdAtsRecruitingJobOpeningOrbital(params: StdAtsRecruitingJobOpe
                   'render-ui',
                   'main',
                   {
+                    'gap': 'md',
+                    'className': 'py-8',
+                    'direction': 'vertical',
+                    'type': 'stack',
+                    'align': 'center',
                     'children': [
                       {
-                        'name': 'bell',
                         'type': 'icon',
+                        'name': 'bell',
                       },
                       {
                         'type': 'typography',
@@ -396,17 +401,12 @@ export function stdAtsRecruitingJobOpeningOrbital(params: StdAtsRecruitingJobOpe
                         'variant': 'caption',
                       },
                       {
+                        'action': 'INIT',
+                        'label': 'Back to openings',
                         'variant': 'ghost',
                         'type': 'button',
-                        'label': 'Back to openings',
-                        'action': 'INIT',
                       },
                     ],
-                    'direction': 'vertical',
-                    'type': 'stack',
-                    'gap': 'md',
-                    'align': 'center',
-                    'className': 'py-8',
                   },
                 ],
               ],
@@ -419,16 +419,18 @@ export function stdAtsRecruitingJobOpeningOrbital(params: StdAtsRecruitingJobOpe
         'ref': 'Search.traits.SearchResultSearch',
         'name': 'JobOpeningSearch',
         'config': {
-          'event': 'JOB_OPENING_SEARCH',
           'placeholder': 'Search openings…',
+          'event': 'JOB_OPENING_SEARCH',
         },
       }),
       makeTraitRef({
         'ref': 'Filter.traits.FilterTargetFilter',
         'name': 'JobOpeningFilter',
         'config': {
+          'event': 'JOB_OPENING_FILTER',
           'filters': [
             {
+              'filterType': 'select',
               'label': 'Status',
               'field': 'status',
               'options': [
@@ -436,11 +438,9 @@ export function stdAtsRecruitingJobOpeningOrbital(params: StdAtsRecruitingJobOpe
                 'closed',
                 'draft',
               ],
-              'filterType': 'select',
             },
             {
               'field': 'department',
-              'label': 'Department',
               'options': [
                 'engineering',
                 'design',
@@ -451,26 +451,30 @@ export function stdAtsRecruitingJobOpeningOrbital(params: StdAtsRecruitingJobOpe
                 'operations',
               ],
               'filterType': 'select',
+              'label': 'Department',
             },
           ],
-          'event': 'JOB_OPENING_FILTER',
         },
       }),
       makeTraitRef({
         'ref': 'Stats.traits.StatsItemStats',
         'name': 'JobOpeningStats',
         'config': {
+          'title': 'Openings',
           'metrics': [
             {
-              'label': 'Total',
               'variant': 'primary',
               'format': 'number',
-              'aggregation': 'count',
               'icon': 'briefcase',
+              'aggregation': 'count',
+              'label': 'Total',
             },
             {
-              'format': 'number',
+              'variant': 'success',
+              'icon': 'circle',
               'aggregation': 'count',
+              'label': 'Open',
+              'format': 'number',
               'filter': [
                 'fn',
                 'row',
@@ -480,13 +484,12 @@ export function stdAtsRecruitingJobOpeningOrbital(params: StdAtsRecruitingJobOpe
                   'open',
                 ],
               ],
-              'label': 'Open',
-              'icon': 'circle',
-              'variant': 'success',
             },
             {
+              'variant': 'warning',
               'icon': 'edit',
               'label': 'Drafts',
+              'format': 'number',
               'filter': [
                 'fn',
                 'row',
@@ -496,20 +499,17 @@ export function stdAtsRecruitingJobOpeningOrbital(params: StdAtsRecruitingJobOpe
                   'draft',
                 ],
               ],
-              'variant': 'warning',
-              'format': 'number',
               'aggregation': 'count',
             },
             {
-              'variant': 'primary',
-              'icon': 'users',
               'format': 'number',
-              'aggregation': 'sum',
               'field': 'headcount',
+              'variant': 'primary',
+              'aggregation': 'sum',
+              'icon': 'users',
               'label': 'Seats',
             },
           ],
-          'title': 'Openings',
         },
         'listens': [
           {
@@ -526,12 +526,12 @@ export function stdAtsRecruitingJobOpeningOrbital(params: StdAtsRecruitingJobOpe
         'ref': 'Graphs.traits.GraphItemGraph',
         'name': 'JobOpeningGraphs',
         'config': {
-          'height': 240,
-          'chartType': 'bar',
-          'aggregation': 'count',
           'subtitle': 'Headcount distribution across teams',
-          'title': 'Openings by Department',
+          'chartType': 'bar',
           'categoryField': 'department',
+          'aggregation': 'count',
+          'height': 240,
+          'title': 'Openings by Department',
           'showLegend': false,
         },
         'listens': [
@@ -550,6 +550,8 @@ export function stdAtsRecruitingJobOpeningOrbital(params: StdAtsRecruitingJobOpe
         'name': 'JobOpeningBrowseList',
         'linkedEntity': canonicalName,
         'config': {
+          'cols': 1,
+          'gap': 'sm',
           'itemActions': [
             {
               'label': 'View',
@@ -557,45 +559,43 @@ export function stdAtsRecruitingJobOpeningOrbital(params: StdAtsRecruitingJobOpe
               'event': 'VIEW',
             },
             {
-              'event': 'EDIT',
               'label': 'Edit',
+              'event': 'EDIT',
               'variant': 'ghost',
             },
             {
-              'event': 'DELETE',
               'variant': 'danger',
+              'event': 'DELETE',
               'label': 'Delete',
             },
           ],
-          'cols': 1,
           'fields': [
             {
               'name': 'title',
-              'variant': 'h3',
               'icon': 'briefcase',
+              'variant': 'h3',
             },
             {
               'name': 'department',
               'variant': 'badge',
             },
             {
-              'variant': 'badge',
               'name': 'status',
+              'variant': 'badge',
             },
             {
               'name': 'location',
               'variant': 'body',
             },
             {
-              'variant': 'caption',
               'name': 'hiringManager',
+              'variant': 'caption',
             },
             {
-              'name': 'headcount',
               'variant': 'caption',
+              'name': 'headcount',
             },
           ],
-          'gap': 'sm',
         },
         'listens': [
           {
@@ -645,9 +645,7 @@ export function stdAtsRecruitingJobOpeningOrbital(params: StdAtsRecruitingJobOpe
         'name': 'JobOpeningCreate',
         'linkedEntity': canonicalName,
         'config': {
-          'title': 'New Opening',
           'mode': 'create',
-          'icon': 'plus-circle',
           'fields': [
             'title',
             'department',
@@ -656,6 +654,8 @@ export function stdAtsRecruitingJobOpeningOrbital(params: StdAtsRecruitingJobOpe
             'hiringManager',
             'headcount',
           ],
+          'title': 'New Opening',
+          'icon': 'plus-circle',
         },
         'events': {
           'OPEN': 'CREATE',
@@ -676,8 +676,6 @@ export function stdAtsRecruitingJobOpeningOrbital(params: StdAtsRecruitingJobOpe
         'name': 'JobOpeningEdit',
         'linkedEntity': canonicalName,
         'config': {
-          'icon': 'edit',
-          'title': 'Edit Opening',
           'mode': 'edit',
           'fields': [
             'title',
@@ -687,6 +685,8 @@ export function stdAtsRecruitingJobOpeningOrbital(params: StdAtsRecruitingJobOpe
             'hiringManager',
             'headcount',
           ],
+          'icon': 'edit',
+          'title': 'Edit Opening',
         },
         'events': {
           'OPEN': 'EDIT',
@@ -708,8 +708,6 @@ export function stdAtsRecruitingJobOpeningOrbital(params: StdAtsRecruitingJobOpe
         'linkedEntity': canonicalName,
         'config': {
           'mode': 'edit',
-          'title': 'View Opening',
-          'icon': 'eye',
           'fields': [
             'title',
             'department',
@@ -718,6 +716,8 @@ export function stdAtsRecruitingJobOpeningOrbital(params: StdAtsRecruitingJobOpe
             'hiringManager',
             'headcount',
           ],
+          'title': 'View Opening',
+          'icon': 'eye',
         },
         'events': {
           'OPEN': 'VIEW',
@@ -738,14 +738,14 @@ export function stdAtsRecruitingJobOpeningOrbital(params: StdAtsRecruitingJobOpe
         'name': 'JobOpeningDelete',
         'linkedEntity': canonicalName,
         'config': {
-          'alertMessage': 'This action cannot be undone.',
-          'icon': 'alert-triangle',
-          'confirmLabel': 'Delete',
           'title': 'Delete Opening',
+          'icon': 'alert-triangle',
+          'alertMessage': 'This action cannot be undone.',
+          'confirmLabel': 'Delete',
         },
         'events': {
-          'CONFIRM': 'CONFIRM_DELETE',
           'REQUEST': 'DELETE',
+          'CONFIRM': 'CONFIRM_DELETE',
         },
         'listens': [
           {
@@ -1221,10 +1221,11 @@ export function stdAtsRecruitingApplicantPipelineOrbital(params: StdAtsRecruitin
         'ref': 'AppShell.traits.AppLayout',
         'name': 'ApplicantPipelineAppLayout',
         'config': {
+          'notificationClickEvent': 'PIPELINE_NOTIFICATIONS_OPEN',
           'navItems': [
             {
-              'label': 'Openings',
               'href': '/openings',
+              'label': 'Openings',
               'icon': 'briefcase',
             },
             {
@@ -1238,16 +1239,15 @@ export function stdAtsRecruitingApplicantPipelineOrbital(params: StdAtsRecruitin
               'href': '/interviews',
             },
             {
-              'label': 'Offers',
-              'href': '/offers',
               'icon': 'file-text',
+              'href': '/offers',
+              'label': 'Offers',
             },
           ],
-          'contentTrait': '@trait.PipelineIntakeBrowse',
-          'searchEvent': 'PIPELINE_SEARCH',
-          'notifications': [],
           'appName': 'ATSRecruiting',
-          'notificationClickEvent': 'PIPELINE_NOTIFICATIONS_OPEN',
+          'searchEvent': 'PIPELINE_SEARCH',
+          'contentTrait': '@trait.PipelineIntakeBrowse',
+          'notifications': [],
         },
         'events': {
           'SEARCH': 'PIPELINE_SEARCH',
@@ -1599,33 +1599,33 @@ export function stdAtsRecruitingApplicantOrbital(params: StdAtsRecruitingApplica
         'ref': 'AppShell.traits.AppLayout',
         'name': 'ApplicantAppLayout',
         'config': {
-          'searchEvent': 'APPLICANT_SEARCH',
+          'appName': 'ATSRecruiting',
           'navItems': [
             {
+              'label': 'Openings',
               'href': '/openings',
               'icon': 'briefcase',
-              'label': 'Openings',
             },
             {
-              'href': '/pipeline',
               'label': 'Pipeline',
+              'href': '/pipeline',
               'icon': 'user-plus',
             },
             {
-              'label': 'Interviews',
               'href': '/interviews',
               'icon': 'calendar',
+              'label': 'Interviews',
             },
             {
               'icon': 'file-text',
-              'href': '/offers',
               'label': 'Offers',
+              'href': '/offers',
             },
           ],
+          'searchEvent': 'APPLICANT_SEARCH',
+          'notificationClickEvent': 'APPLICANT_NOTIFICATIONS_OPEN',
           'notifications': [],
           'contentTrait': '@trait.ApplicantList',
-          'appName': 'ATSRecruiting',
-          'notificationClickEvent': 'APPLICANT_NOTIFICATIONS_OPEN',
         },
         'events': {
           'NOTIFY_CLICK': 'APPLICANT_NOTIFICATIONS_OPEN',
@@ -1864,16 +1864,18 @@ export function stdAtsRecruitingInterviewScheduleOrbital(params: StdAtsRecruitin
         'ref': 'AppShell.traits.AppLayout',
         'name': 'InterviewScheduleAppLayout',
         'config': {
+          'notifications': [],
+          'appName': 'ATSRecruiting',
           'navItems': [
             {
-              'href': '/openings',
               'icon': 'briefcase',
               'label': 'Openings',
+              'href': '/openings',
             },
             {
               'icon': 'user-plus',
-              'href': '/pipeline',
               'label': 'Pipeline',
+              'href': '/pipeline',
             },
             {
               'label': 'Interviews',
@@ -1881,20 +1883,18 @@ export function stdAtsRecruitingInterviewScheduleOrbital(params: StdAtsRecruitin
               'href': '/interviews',
             },
             {
-              'icon': 'file-text',
               'href': '/offers',
               'label': 'Offers',
+              'icon': 'file-text',
             },
           ],
           'contentTrait': '@trait.InterviewScheduleList',
           'searchEvent': 'INTERVIEW_SEARCH',
-          'notifications': [],
           'notificationClickEvent': 'INTERVIEW_NOTIFICATIONS_OPEN',
-          'appName': 'ATSRecruiting',
         },
         'events': {
-          'NOTIFY_CLICK': 'INTERVIEW_NOTIFICATIONS_OPEN',
           'SEARCH': 'INTERVIEW_SEARCH',
+          'NOTIFY_CLICK': 'INTERVIEW_NOTIFICATIONS_OPEN',
         },
       }),
       makeTraitRef({
@@ -2125,9 +2125,6 @@ export function stdAtsRecruitingOfferLetterFlowOrbital(params: StdAtsRecruitingO
         'ref': 'AppShell.traits.AppLayout',
         'name': 'OfferLetterAppLayout',
         'config': {
-          'searchEvent': 'OFFER_SEARCH',
-          'contentTrait': '@trait.OfferLetterList',
-          'notificationClickEvent': 'OFFER_NOTIFICATIONS_OPEN',
           'navItems': [
             {
               'href': '/openings',
@@ -2135,9 +2132,9 @@ export function stdAtsRecruitingOfferLetterFlowOrbital(params: StdAtsRecruitingO
               'label': 'Openings',
             },
             {
-              'href': '/pipeline',
               'label': 'Pipeline',
               'icon': 'user-plus',
+              'href': '/pipeline',
             },
             {
               'href': '/interviews',
@@ -2146,16 +2143,19 @@ export function stdAtsRecruitingOfferLetterFlowOrbital(params: StdAtsRecruitingO
             },
             {
               'label': 'Offers',
-              'icon': 'file-text',
               'href': '/offers',
+              'icon': 'file-text',
             },
           ],
+          'contentTrait': '@trait.OfferLetterList',
           'appName': 'ATSRecruiting',
+          'searchEvent': 'OFFER_SEARCH',
           'notifications': [],
+          'notificationClickEvent': 'OFFER_NOTIFICATIONS_OPEN',
         },
         'events': {
-          'NOTIFY_CLICK': 'OFFER_NOTIFICATIONS_OPEN',
           'SEARCH': 'OFFER_SEARCH',
+          'NOTIFY_CLICK': 'OFFER_NOTIFICATIONS_OPEN',
         },
       }),
       makeTraitRef({

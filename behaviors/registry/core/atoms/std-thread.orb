@@ -302,8 +302,8 @@
                     "ThreadPost",
                     {
                       "emit": {
-                        "success": "ThreadPostLoaded",
-                        "failure": "ThreadPostLoadFailed"
+                        "failure": "ThreadPostLoadFailed",
+                        "success": "ThreadPostLoaded"
                       }
                     }
                   ],
@@ -327,39 +327,39 @@
                     "main",
                     {
                       "direction": "vertical",
+                      "type": "stack",
                       "children": [
                         {
-                          "gap": "sm",
-                          "variant": "card",
-                          "entity": "@payload.data",
-                          "fields": [
+                          "itemActions": [
                             {
-                              "label": "Author",
-                              "variant": "h4",
-                              "name": "authorName"
-                            },
-                            {
-                              "name": "content",
-                              "label": "",
-                              "variant": "body"
-                            },
-                            {
-                              "name": "voteCount",
-                              "label": "Votes",
-                              "variant": "caption"
+                              "label": "Reply",
+                              "event": "REPLY",
+                              "icon": "message-square"
                             }
                           ],
                           "type": "data-list",
-                          "itemActions": [
+                          "fields": [
                             {
-                              "event": "REPLY",
-                              "icon": "message-square",
-                              "label": "Reply"
+                              "name": "authorName",
+                              "label": "Author",
+                              "variant": "h4"
+                            },
+                            {
+                              "variant": "body",
+                              "name": "content",
+                              "label": ""
+                            },
+                            {
+                              "label": "Votes",
+                              "name": "voteCount",
+                              "variant": "caption"
                             }
-                          ]
+                          ],
+                          "gap": "sm",
+                          "entity": "@payload.data",
+                          "variant": "card"
                         }
                       ],
-                      "type": "stack",
                       "gap": "md"
                     }
                   ]
@@ -391,8 +391,8 @@
                     "ThreadPost",
                     {
                       "emit": {
-                        "failure": "ThreadPostLoadFailed",
-                        "success": "ThreadPostLoaded"
+                        "success": "ThreadPostLoaded",
+                        "failure": "ThreadPostLoadFailed"
                       }
                     }
                   ],
@@ -415,41 +415,41 @@
                     "render-ui",
                     "main",
                     {
-                      "gap": "md",
-                      "type": "stack",
-                      "direction": "vertical",
                       "children": [
                         {
                           "type": "data-list",
-                          "entity": "@payload.data",
-                          "itemActions": [
-                            {
-                              "label": "Reply",
-                              "event": "REPLY",
-                              "icon": "message-square"
-                            }
-                          ],
-                          "gap": "sm",
-                          "variant": "card",
                           "fields": [
                             {
-                              "label": "Author",
                               "name": "authorName",
-                              "variant": "h4"
+                              "variant": "h4",
+                              "label": "Author"
                             },
                             {
-                              "name": "content",
                               "label": "",
-                              "variant": "body"
+                              "variant": "body",
+                              "name": "content"
                             },
                             {
+                              "name": "voteCount",
                               "variant": "caption",
-                              "label": "Votes",
-                              "name": "voteCount"
+                              "label": "Votes"
+                            }
+                          ],
+                          "entity": "@payload.data",
+                          "variant": "card",
+                          "gap": "sm",
+                          "itemActions": [
+                            {
+                              "icon": "message-square",
+                              "label": "Reply",
+                              "event": "REPLY"
                             }
                           ]
                         }
-                      ]
+                      ],
+                      "direction": "vertical",
+                      "gap": "md",
+                      "type": "stack"
                     }
                   ]
                 ]
@@ -468,40 +468,40 @@
                     "render-ui",
                     "main",
                     {
+                      "direction": "vertical",
                       "type": "stack",
                       "children": [
                         {
                           "type": "typography",
-                          "variant": "h4",
-                          "content": "Write a reply"
+                          "content": "Write a reply",
+                          "variant": "h4"
                         },
                         {
-                          "placeholder": "Your reply…",
                           "type": "textarea",
+                          "placeholder": "Your reply…",
                           "action": "EDIT_REPLY"
                         },
                         {
-                          "type": "stack",
-                          "gap": "sm",
                           "direction": "horizontal",
+                          "gap": "sm",
                           "children": [
                             {
+                              "label": "Submit",
                               "type": "button",
                               "icon": "send",
                               "action": "SUBMIT_REPLY",
-                              "variant": "primary",
-                              "label": "Submit"
+                              "variant": "primary"
                             },
                             {
-                              "label": "Cancel",
+                              "variant": "secondary",
                               "type": "button",
-                              "action": "CANCEL_REPLY",
-                              "variant": "secondary"
+                              "label": "Cancel",
+                              "action": "CANCEL_REPLY"
                             }
-                          ]
+                          ],
+                          "type": "stack"
                         }
                       ],
-                      "direction": "vertical",
                       "gap": "md"
                     }
                   ]
@@ -531,8 +531,8 @@
                     "@payload.data",
                     {
                       "emit": {
-                        "success": "ThreadPostCreated",
-                        "failure": "ThreadPostCreateFailed"
+                        "failure": "ThreadPostCreateFailed",
+                        "success": "ThreadPostCreated"
                       }
                     }
                   ]
@@ -617,8 +617,8 @@
                     "render-ui",
                     "main",
                     {
-                      "type": "spinner",
-                      "size": "sm"
+                      "size": "sm",
+                      "type": "spinner"
                     }
                   ]
                 ]
@@ -628,11 +628,15 @@
           "config": {
             "flat": {
               "type": "boolean",
-              "default": false
+              "default": false,
+              "label": "Flat thread",
+              "description": "Render replies as a linear list instead of nested tree"
             },
             "threadRootId": {
               "type": "string",
-              "default": ""
+              "default": "",
+              "label": "Root post id",
+              "description": "Top-level post whose descendants are loaded (blank = all roots)"
             }
           },
           "scope": "collection"

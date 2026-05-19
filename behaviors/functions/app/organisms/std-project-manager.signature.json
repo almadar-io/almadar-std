@@ -63,12 +63,52 @@
         "emittedEvents": [],
         "listenedEvents": [],
         "overridableConfigKeys": [
-          "appName",
-          "contentTrait",
-          "navItems",
-          "notificationClickEvent",
-          "notifications",
-          "searchEvent"
+          {
+            "key": "appName",
+            "type": "unknown",
+            "default": "ProjectManagerApp"
+          },
+          {
+            "key": "contentTrait",
+            "type": "unknown",
+            "default": "@trait.TaskCatalog"
+          },
+          {
+            "key": "navItems",
+            "type": "unknown",
+            "default": [
+              {
+                "icon": "list-todo",
+                "label": "Tasks",
+                "href": "/tasks"
+              },
+              {
+                "href": "/sprints",
+                "label": "Sprints",
+                "icon": "zap"
+              },
+              {
+                "icon": "trending-down",
+                "label": "Burndown",
+                "href": "/burndown"
+              }
+            ]
+          },
+          {
+            "key": "notificationClickEvent",
+            "type": "unknown",
+            "default": "TASK_NOTIFICATIONS_OPEN"
+          },
+          {
+            "key": "notifications",
+            "type": "unknown",
+            "default": []
+          },
+          {
+            "key": "searchEvent",
+            "type": "unknown",
+            "default": "TASK_SEARCH"
+          }
         ],
         "capabilities": []
       },
@@ -89,8 +129,16 @@
         "emittedEvents": [],
         "listenedEvents": [],
         "overridableConfigKeys": [
-          "event",
-          "placeholder"
+          {
+            "key": "event",
+            "type": "unknown",
+            "default": "TASK_SEARCH"
+          },
+          {
+            "key": "placeholder",
+            "type": "unknown",
+            "default": "Search tasks…"
+          }
         ],
         "capabilities": []
       },
@@ -99,8 +147,49 @@
         "emittedEvents": [],
         "listenedEvents": [],
         "overridableConfigKeys": [
-          "event",
-          "filters"
+          {
+            "key": "event",
+            "type": "unknown",
+            "default": "TASK_FILTER"
+          },
+          {
+            "key": "filters",
+            "type": "unknown",
+            "default": [
+              {
+                "label": "Status",
+                "filterType": "select",
+                "field": "status",
+                "options": [
+                  "todo",
+                  "in-progress",
+                  "review",
+                  "done"
+                ]
+              },
+              {
+                "filterType": "text",
+                "field": "assignee",
+                "label": "Assignee"
+              },
+              {
+                "filterType": "select",
+                "field": "priority",
+                "options": [
+                  "low",
+                  "medium",
+                  "high",
+                  "critical"
+                ],
+                "label": "Priority"
+              },
+              {
+                "label": "Sprint",
+                "filterType": "text",
+                "field": "sprint"
+              }
+            ]
+          }
         ],
         "capabilities": []
       },
@@ -111,8 +200,88 @@
           "BrowseItemLoaded"
         ],
         "overridableConfigKeys": [
-          "metrics",
-          "title"
+          {
+            "key": "metrics",
+            "type": "unknown",
+            "default": [
+              {
+                "variant": "primary",
+                "icon": "list-todo",
+                "aggregation": "count",
+                "label": "Total",
+                "format": "number"
+              },
+              {
+                "icon": "circle",
+                "label": "Todo",
+                "variant": "muted",
+                "filter": [
+                  "fn",
+                  "row",
+                  [
+                    "=",
+                    "@row.status",
+                    "todo"
+                  ]
+                ],
+                "aggregation": "count",
+                "format": "number"
+              },
+              {
+                "aggregation": "count",
+                "variant": "warning",
+                "filter": [
+                  "fn",
+                  "row",
+                  [
+                    "=",
+                    "@row.status",
+                    "in-progress"
+                  ]
+                ],
+                "label": "In Progress",
+                "format": "number",
+                "icon": "loader"
+              },
+              {
+                "aggregation": "count",
+                "filter": [
+                  "fn",
+                  "row",
+                  [
+                    "=",
+                    "@row.status",
+                    "done"
+                  ]
+                ],
+                "label": "Done",
+                "variant": "success",
+                "icon": "check-circle",
+                "format": "number"
+              },
+              {
+                "label": "Critical",
+                "aggregation": "count",
+                "variant": "danger",
+                "filter": [
+                  "fn",
+                  "row",
+                  [
+                    "=",
+                    "@row.priority",
+                    "critical"
+                  ]
+                ],
+                "format": "number",
+                "icon": "alert-octagon"
+              }
+            ]
+          },
+          {
+            "key": "title",
+            "type": "unknown",
+            "default": "Tasks"
+          }
         ],
         "capabilities": []
       },
@@ -123,13 +292,41 @@
           "BrowseItemLoaded"
         ],
         "overridableConfigKeys": [
-          "aggregation",
-          "categoryField",
-          "chartType",
-          "height",
-          "showLegend",
-          "subtitle",
-          "title"
+          {
+            "key": "aggregation",
+            "type": "unknown",
+            "default": "count"
+          },
+          {
+            "key": "categoryField",
+            "type": "unknown",
+            "default": "status"
+          },
+          {
+            "key": "chartType",
+            "type": "unknown",
+            "default": "bar"
+          },
+          {
+            "key": "height",
+            "type": "unknown",
+            "default": 240
+          },
+          {
+            "key": "showLegend",
+            "type": "unknown",
+            "default": false
+          },
+          {
+            "key": "subtitle",
+            "type": "unknown",
+            "default": "Workload distribution across status buckets"
+          },
+          {
+            "key": "title",
+            "type": "unknown",
+            "default": "Tasks by Status"
+          }
         ],
         "capabilities": []
       },
@@ -138,9 +335,21 @@
         "emittedEvents": [],
         "listenedEvents": [],
         "overridableConfigKeys": [
-          "colorField",
-          "dateField",
-          "titleField"
+          {
+            "key": "colorField",
+            "type": "unknown",
+            "default": "priority"
+          },
+          {
+            "key": "dateField",
+            "type": "unknown",
+            "default": "dueDate"
+          },
+          {
+            "key": "titleField",
+            "type": "unknown",
+            "default": "title"
+          }
         ],
         "capabilities": []
       },
@@ -155,10 +364,66 @@
           "TASK_DELETED"
         ],
         "overridableConfigKeys": [
-          "cols",
-          "fields",
-          "gap",
-          "itemActions"
+          {
+            "key": "cols",
+            "type": "unknown",
+            "default": 1
+          },
+          {
+            "key": "fields",
+            "type": "unknown",
+            "default": [
+              {
+                "icon": "list-todo",
+                "variant": "h3",
+                "name": "title"
+              },
+              {
+                "name": "status",
+                "variant": "badge"
+              },
+              {
+                "name": "assignee",
+                "variant": "body"
+              },
+              {
+                "variant": "badge",
+                "name": "priority"
+              },
+              {
+                "label": "Due",
+                "name": "dueDate",
+                "format": "date",
+                "variant": "caption"
+              }
+            ]
+          },
+          {
+            "key": "gap",
+            "type": "unknown",
+            "default": "sm"
+          },
+          {
+            "key": "itemActions",
+            "type": "unknown",
+            "default": [
+              {
+                "label": "View",
+                "event": "VIEW",
+                "variant": "ghost"
+              },
+              {
+                "label": "Edit",
+                "event": "EDIT",
+                "variant": "ghost"
+              },
+              {
+                "event": "DELETE",
+                "label": "Delete",
+                "variant": "danger"
+              }
+            ]
+          }
         ],
         "capabilities": []
       },
@@ -169,10 +434,35 @@
           "CREATE"
         ],
         "overridableConfigKeys": [
-          "fields",
-          "icon",
-          "mode",
-          "title"
+          {
+            "key": "fields",
+            "type": "unknown",
+            "default": [
+              "title",
+              "description",
+              "assignee",
+              "priority",
+              "status",
+              "sprint",
+              "storyPoints",
+              "dueDate"
+            ]
+          },
+          {
+            "key": "icon",
+            "type": "unknown",
+            "default": "plus-circle"
+          },
+          {
+            "key": "mode",
+            "type": "unknown",
+            "default": "create"
+          },
+          {
+            "key": "title",
+            "type": "unknown",
+            "default": "New Task"
+          }
         ],
         "capabilities": []
       },
@@ -183,10 +473,35 @@
           "EDIT"
         ],
         "overridableConfigKeys": [
-          "fields",
-          "icon",
-          "mode",
-          "title"
+          {
+            "key": "fields",
+            "type": "unknown",
+            "default": [
+              "title",
+              "description",
+              "assignee",
+              "priority",
+              "status",
+              "sprint",
+              "storyPoints",
+              "dueDate"
+            ]
+          },
+          {
+            "key": "icon",
+            "type": "unknown",
+            "default": "edit"
+          },
+          {
+            "key": "mode",
+            "type": "unknown",
+            "default": "edit"
+          },
+          {
+            "key": "title",
+            "type": "unknown",
+            "default": "Edit Task"
+          }
         ],
         "capabilities": []
       },
@@ -197,10 +512,35 @@
           "VIEW"
         ],
         "overridableConfigKeys": [
-          "fields",
-          "icon",
-          "mode",
-          "title"
+          {
+            "key": "fields",
+            "type": "unknown",
+            "default": [
+              "title",
+              "description",
+              "assignee",
+              "priority",
+              "status",
+              "sprint",
+              "storyPoints",
+              "dueDate"
+            ]
+          },
+          {
+            "key": "icon",
+            "type": "unknown",
+            "default": "eye"
+          },
+          {
+            "key": "mode",
+            "type": "unknown",
+            "default": "edit"
+          },
+          {
+            "key": "title",
+            "type": "unknown",
+            "default": "View Task"
+          }
         ],
         "capabilities": []
       },
@@ -211,10 +551,26 @@
           "DELETE"
         ],
         "overridableConfigKeys": [
-          "alertMessage",
-          "confirmLabel",
-          "icon",
-          "title"
+          {
+            "key": "alertMessage",
+            "type": "unknown",
+            "default": "This action cannot be undone."
+          },
+          {
+            "key": "confirmLabel",
+            "type": "unknown",
+            "default": "Delete"
+          },
+          {
+            "key": "icon",
+            "type": "unknown",
+            "default": "alert-triangle"
+          },
+          {
+            "key": "title",
+            "type": "unknown",
+            "default": "Delete Task"
+          }
         ],
         "capabilities": []
       },
@@ -318,12 +674,52 @@
         "emittedEvents": [],
         "listenedEvents": [],
         "overridableConfigKeys": [
-          "appName",
-          "contentTrait",
-          "navItems",
-          "notificationClickEvent",
-          "notifications",
-          "searchEvent"
+          {
+            "key": "appName",
+            "type": "unknown",
+            "default": "ProjectManagerApp"
+          },
+          {
+            "key": "contentTrait",
+            "type": "unknown",
+            "default": "@trait.SprintCatalog"
+          },
+          {
+            "key": "navItems",
+            "type": "unknown",
+            "default": [
+              {
+                "icon": "list-todo",
+                "href": "/tasks",
+                "label": "Tasks"
+              },
+              {
+                "href": "/sprints",
+                "icon": "zap",
+                "label": "Sprints"
+              },
+              {
+                "label": "Burndown",
+                "href": "/burndown",
+                "icon": "trending-down"
+              }
+            ]
+          },
+          {
+            "key": "notificationClickEvent",
+            "type": "unknown",
+            "default": "SPRINT_NOTIFICATIONS_OPEN"
+          },
+          {
+            "key": "notifications",
+            "type": "unknown",
+            "default": []
+          },
+          {
+            "key": "searchEvent",
+            "type": "unknown",
+            "default": "SPRINT_SEARCH"
+          }
         ],
         "capabilities": []
       },
@@ -345,10 +741,74 @@
           "SPRINT_DELETED"
         ],
         "overridableConfigKeys": [
-          "cols",
-          "fields",
-          "gap",
-          "itemActions"
+          {
+            "key": "cols",
+            "type": "unknown",
+            "default": 1
+          },
+          {
+            "key": "fields",
+            "type": "unknown",
+            "default": [
+              {
+                "name": "name",
+                "variant": "h3",
+                "icon": "zap"
+              },
+              {
+                "variant": "badge",
+                "name": "status"
+              },
+              {
+                "variant": "body",
+                "name": "goal"
+              },
+              {
+                "label": "Start",
+                "format": "date",
+                "name": "startDate",
+                "variant": "caption"
+              },
+              {
+                "label": "End",
+                "variant": "caption",
+                "name": "endDate",
+                "format": "date"
+              },
+              {
+                "label": "Tasks",
+                "variant": "body",
+                "name": "taskCount",
+                "format": "number"
+              }
+            ]
+          },
+          {
+            "key": "gap",
+            "type": "unknown",
+            "default": "sm"
+          },
+          {
+            "key": "itemActions",
+            "type": "unknown",
+            "default": [
+              {
+                "variant": "ghost",
+                "label": "View",
+                "event": "VIEW"
+              },
+              {
+                "event": "EDIT",
+                "label": "Edit",
+                "variant": "ghost"
+              },
+              {
+                "event": "DELETE",
+                "variant": "danger",
+                "label": "Delete"
+              }
+            ]
+          }
         ],
         "capabilities": []
       },
@@ -359,10 +819,33 @@
           "CREATE"
         ],
         "overridableConfigKeys": [
-          "fields",
-          "icon",
-          "mode",
-          "title"
+          {
+            "key": "fields",
+            "type": "unknown",
+            "default": [
+              "name",
+              "startDate",
+              "endDate",
+              "goal",
+              "status",
+              "taskCount"
+            ]
+          },
+          {
+            "key": "icon",
+            "type": "unknown",
+            "default": "plus-circle"
+          },
+          {
+            "key": "mode",
+            "type": "unknown",
+            "default": "create"
+          },
+          {
+            "key": "title",
+            "type": "unknown",
+            "default": "New Sprint"
+          }
         ],
         "capabilities": []
       },
@@ -373,10 +856,33 @@
           "EDIT"
         ],
         "overridableConfigKeys": [
-          "fields",
-          "icon",
-          "mode",
-          "title"
+          {
+            "key": "fields",
+            "type": "unknown",
+            "default": [
+              "name",
+              "startDate",
+              "endDate",
+              "goal",
+              "status",
+              "taskCount"
+            ]
+          },
+          {
+            "key": "icon",
+            "type": "unknown",
+            "default": "edit"
+          },
+          {
+            "key": "mode",
+            "type": "unknown",
+            "default": "edit"
+          },
+          {
+            "key": "title",
+            "type": "unknown",
+            "default": "Edit Sprint"
+          }
         ],
         "capabilities": []
       },
@@ -387,10 +893,33 @@
           "VIEW"
         ],
         "overridableConfigKeys": [
-          "fields",
-          "icon",
-          "mode",
-          "title"
+          {
+            "key": "fields",
+            "type": "unknown",
+            "default": [
+              "name",
+              "startDate",
+              "endDate",
+              "goal",
+              "status",
+              "taskCount"
+            ]
+          },
+          {
+            "key": "icon",
+            "type": "unknown",
+            "default": "eye"
+          },
+          {
+            "key": "mode",
+            "type": "unknown",
+            "default": "edit"
+          },
+          {
+            "key": "title",
+            "type": "unknown",
+            "default": "View Sprint"
+          }
         ],
         "capabilities": []
       },
@@ -401,10 +930,26 @@
           "DELETE"
         ],
         "overridableConfigKeys": [
-          "alertMessage",
-          "confirmLabel",
-          "icon",
-          "title"
+          {
+            "key": "alertMessage",
+            "type": "unknown",
+            "default": "This action cannot be undone."
+          },
+          {
+            "key": "confirmLabel",
+            "type": "unknown",
+            "default": "Delete"
+          },
+          {
+            "key": "icon",
+            "type": "unknown",
+            "default": "alert-triangle"
+          },
+          {
+            "key": "title",
+            "type": "unknown",
+            "default": "Delete Sprint"
+          }
         ],
         "capabilities": []
       },
@@ -493,12 +1038,52 @@
         "emittedEvents": [],
         "listenedEvents": [],
         "overridableConfigKeys": [
-          "appName",
-          "contentTrait",
-          "navItems",
-          "notificationClickEvent",
-          "notifications",
-          "searchEvent"
+          {
+            "key": "appName",
+            "type": "unknown",
+            "default": "ProjectManagerApp"
+          },
+          {
+            "key": "contentTrait",
+            "type": "unknown",
+            "default": "@trait.BurndownDisplay"
+          },
+          {
+            "key": "navItems",
+            "type": "unknown",
+            "default": [
+              {
+                "icon": "list-todo",
+                "href": "/tasks",
+                "label": "Tasks"
+              },
+              {
+                "label": "Sprints",
+                "icon": "zap",
+                "href": "/sprints"
+              },
+              {
+                "icon": "trending-down",
+                "href": "/burndown",
+                "label": "Burndown"
+              }
+            ]
+          },
+          {
+            "key": "notificationClickEvent",
+            "type": "unknown",
+            "default": "BURNDOWN_NOTIFICATIONS_OPEN"
+          },
+          {
+            "key": "notifications",
+            "type": "unknown",
+            "default": []
+          },
+          {
+            "key": "searchEvent",
+            "type": "unknown",
+            "default": "BURNDOWN_SEARCH"
+          }
         ],
         "capabilities": []
       },

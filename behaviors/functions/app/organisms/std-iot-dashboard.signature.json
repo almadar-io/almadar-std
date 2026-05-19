@@ -48,12 +48,52 @@
         "emittedEvents": [],
         "listenedEvents": [],
         "overridableConfigKeys": [
-          "appName",
-          "contentTrait",
-          "navItems",
-          "notificationClickEvent",
-          "notifications",
-          "searchEvent"
+          {
+            "key": "appName",
+            "type": "unknown",
+            "default": "IoT Dashboard"
+          },
+          {
+            "key": "contentTrait",
+            "type": "unknown",
+            "default": "@trait.SensorCatalog"
+          },
+          {
+            "key": "navItems",
+            "type": "unknown",
+            "default": [
+              {
+                "label": "Sensors",
+                "href": "/sensors",
+                "icon": "layout-list"
+              },
+              {
+                "icon": "cpu",
+                "href": "/devices",
+                "label": "Devices"
+              },
+              {
+                "label": "Alerts",
+                "href": "/alerts",
+                "icon": "bell"
+              }
+            ]
+          },
+          {
+            "key": "notificationClickEvent",
+            "type": "unknown",
+            "default": "SENSOR_NOTIFICATIONS_OPEN"
+          },
+          {
+            "key": "notifications",
+            "type": "unknown",
+            "default": []
+          },
+          {
+            "key": "searchEvent",
+            "type": "unknown",
+            "default": "SENSOR_SEARCH"
+          }
         ],
         "capabilities": []
       },
@@ -71,8 +111,57 @@
           "BrowseItemLoaded"
         ],
         "overridableConfigKeys": [
-          "metrics",
-          "title"
+          {
+            "key": "metrics",
+            "type": "unknown",
+            "default": [
+              {
+                "filter": [
+                  "fn",
+                  "row",
+                  [
+                    "!=",
+                    "@row.sensorId",
+                    ""
+                  ]
+                ],
+                "icon": "activity",
+                "variant": "primary",
+                "label": "Active Sensors",
+                "aggregation": "count",
+                "format": "number"
+              },
+              {
+                "variant": "success",
+                "icon": "trending-up",
+                "label": "Avg Reading",
+                "field": "value",
+                "format": "number",
+                "aggregation": "average"
+              },
+              {
+                "aggregation": "count",
+                "label": "Anomalies",
+                "filter": [
+                  "fn",
+                  "row",
+                  [
+                    ">",
+                    "@row.value",
+                    "@row.threshold"
+                  ]
+                ],
+                "variant": "warning",
+                "format": "number",
+                "icon": "alert-triangle"
+              }
+            ]
+          },
+          {
+            "key": "title",
+            "type": "unknown",
+            "default": "Sensors"
+          }
         ],
         "capabilities": []
       },
@@ -83,13 +172,41 @@
           "BrowseItemLoaded"
         ],
         "overridableConfigKeys": [
-          "chartType",
-          "dateField",
-          "height",
-          "showLegend",
-          "subtitle",
-          "title",
-          "valueField"
+          {
+            "key": "chartType",
+            "type": "unknown",
+            "default": "line"
+          },
+          {
+            "key": "dateField",
+            "type": "unknown",
+            "default": "timestamp"
+          },
+          {
+            "key": "height",
+            "type": "unknown",
+            "default": 240
+          },
+          {
+            "key": "showLegend",
+            "type": "unknown",
+            "default": true
+          },
+          {
+            "key": "subtitle",
+            "type": "unknown",
+            "default": "Sensor values across time"
+          },
+          {
+            "key": "title",
+            "type": "unknown",
+            "default": "Readings over time"
+          },
+          {
+            "key": "valueField",
+            "type": "unknown",
+            "default": "value"
+          }
         ],
         "capabilities": []
       },
@@ -98,9 +215,50 @@
         "emittedEvents": [],
         "listenedEvents": [],
         "overridableConfigKeys": [
-          "cols",
-          "fields",
-          "gap"
+          {
+            "key": "cols",
+            "type": "unknown",
+            "default": 1
+          },
+          {
+            "key": "fields",
+            "type": "unknown",
+            "default": [
+              {
+                "label": "Sensor",
+                "icon": "thermometer",
+                "variant": "h4",
+                "name": "sensorId"
+              },
+              {
+                "label": "Type",
+                "name": "type",
+                "variant": "badge"
+              },
+              {
+                "variant": "h4",
+                "name": "value",
+                "label": "Value",
+                "format": "number"
+              },
+              {
+                "label": "Unit",
+                "variant": "caption",
+                "name": "unit"
+              },
+              {
+                "label": "Timestamp",
+                "format": "date",
+                "name": "timestamp",
+                "variant": "caption"
+              }
+            ]
+          },
+          {
+            "key": "gap",
+            "type": "unknown",
+            "default": "sm"
+          }
         ],
         "capabilities": []
       }
@@ -161,12 +319,52 @@
         "emittedEvents": [],
         "listenedEvents": [],
         "overridableConfigKeys": [
-          "appName",
-          "contentTrait",
-          "navItems",
-          "notificationClickEvent",
-          "notifications",
-          "searchEvent"
+          {
+            "key": "appName",
+            "type": "unknown",
+            "default": "IoT Dashboard"
+          },
+          {
+            "key": "contentTrait",
+            "type": "unknown",
+            "default": "@trait.DeviceCatalog"
+          },
+          {
+            "key": "navItems",
+            "type": "unknown",
+            "default": [
+              {
+                "href": "/sensors",
+                "label": "Sensors",
+                "icon": "layout-list"
+              },
+              {
+                "label": "Devices",
+                "href": "/devices",
+                "icon": "cpu"
+              },
+              {
+                "icon": "bell",
+                "href": "/alerts",
+                "label": "Alerts"
+              }
+            ]
+          },
+          {
+            "key": "notificationClickEvent",
+            "type": "unknown",
+            "default": "DEVICE_NOTIFICATIONS_OPEN"
+          },
+          {
+            "key": "notifications",
+            "type": "unknown",
+            "default": []
+          },
+          {
+            "key": "searchEvent",
+            "type": "unknown",
+            "default": "DEVICE_SEARCH"
+          }
         ],
         "capabilities": []
       },
@@ -187,8 +385,16 @@
         "emittedEvents": [],
         "listenedEvents": [],
         "overridableConfigKeys": [
-          "event",
-          "placeholder"
+          {
+            "key": "event",
+            "type": "unknown",
+            "default": "DEVICE_SEARCH"
+          },
+          {
+            "key": "placeholder",
+            "type": "unknown",
+            "default": "Search devices…"
+          }
         ],
         "capabilities": []
       },
@@ -197,8 +403,38 @@
         "emittedEvents": [],
         "listenedEvents": [],
         "overridableConfigKeys": [
-          "event",
-          "filters"
+          {
+            "key": "event",
+            "type": "unknown",
+            "default": "DEVICE_FILTER"
+          },
+          {
+            "key": "filters",
+            "type": "unknown",
+            "default": [
+              {
+                "label": "Status",
+                "filterType": "select",
+                "options": [
+                  "online",
+                  "offline",
+                  "maintenance"
+                ],
+                "field": "status"
+              },
+              {
+                "field": "type",
+                "label": "Type",
+                "options": [
+                  "sensor",
+                  "gateway",
+                  "actuator",
+                  "controller"
+                ],
+                "filterType": "select"
+              }
+            ]
+          }
         ],
         "capabilities": []
       },
@@ -213,10 +449,62 @@
           "DEVICE_DELETED"
         ],
         "overridableConfigKeys": [
-          "cols",
-          "fields",
-          "gap",
-          "itemActions"
+          {
+            "key": "cols",
+            "type": "unknown",
+            "default": 3
+          },
+          {
+            "key": "fields",
+            "type": "unknown",
+            "default": [
+              {
+                "variant": "h3",
+                "name": "name",
+                "icon": "cpu"
+              },
+              {
+                "name": "status",
+                "variant": "badge"
+              },
+              {
+                "name": "type",
+                "variant": "body"
+              },
+              {
+                "name": "lastSeen",
+                "label": "Last Seen",
+                "variant": "caption",
+                "format": "date"
+              }
+            ]
+          },
+          {
+            "key": "gap",
+            "type": "unknown",
+            "default": "md"
+          },
+          {
+            "key": "itemActions",
+            "type": "unknown",
+            "default": [
+              {
+                "label": "View",
+                "event": "VIEW",
+                "variant": "ghost"
+              },
+              {
+                "label": "Edit",
+                "variant": "ghost",
+                "event": "EDIT"
+              },
+              {
+                "event": "DELETE",
+                "variant": "danger",
+                "label": "Delete"
+              }
+            ]
+          }
         ],
         "capabilities": []
       },
@@ -227,10 +515,31 @@
           "CREATE"
         ],
         "overridableConfigKeys": [
-          "fields",
-          "icon",
-          "mode",
-          "title"
+          {
+            "key": "fields",
+            "type": "unknown",
+            "default": [
+              "name",
+              "type",
+              "status",
+              "lastSeen"
+            ]
+          },
+          {
+            "key": "icon",
+            "type": "unknown",
+            "default": "plus-circle"
+          },
+          {
+            "key": "mode",
+            "type": "unknown",
+            "default": "create"
+          },
+          {
+            "key": "title",
+            "type": "unknown",
+            "default": "Create Device"
+          }
         ],
         "capabilities": []
       },
@@ -241,10 +550,31 @@
           "EDIT"
         ],
         "overridableConfigKeys": [
-          "fields",
-          "icon",
-          "mode",
-          "title"
+          {
+            "key": "fields",
+            "type": "unknown",
+            "default": [
+              "name",
+              "type",
+              "status",
+              "lastSeen"
+            ]
+          },
+          {
+            "key": "icon",
+            "type": "unknown",
+            "default": "edit"
+          },
+          {
+            "key": "mode",
+            "type": "unknown",
+            "default": "edit"
+          },
+          {
+            "key": "title",
+            "type": "unknown",
+            "default": "Edit Device"
+          }
         ],
         "capabilities": []
       },
@@ -255,10 +585,31 @@
           "VIEW"
         ],
         "overridableConfigKeys": [
-          "fields",
-          "icon",
-          "mode",
-          "title"
+          {
+            "key": "fields",
+            "type": "unknown",
+            "default": [
+              "name",
+              "type",
+              "status",
+              "lastSeen"
+            ]
+          },
+          {
+            "key": "icon",
+            "type": "unknown",
+            "default": "eye"
+          },
+          {
+            "key": "mode",
+            "type": "unknown",
+            "default": "edit"
+          },
+          {
+            "key": "title",
+            "type": "unknown",
+            "default": "View Device"
+          }
         ],
         "capabilities": []
       },
@@ -269,10 +620,26 @@
           "DELETE"
         ],
         "overridableConfigKeys": [
-          "alertMessage",
-          "confirmLabel",
-          "icon",
-          "title"
+          {
+            "key": "alertMessage",
+            "type": "unknown",
+            "default": "This action cannot be undone."
+          },
+          {
+            "key": "confirmLabel",
+            "type": "unknown",
+            "default": "Delete"
+          },
+          {
+            "key": "icon",
+            "type": "unknown",
+            "default": "alert-triangle"
+          },
+          {
+            "key": "title",
+            "type": "unknown",
+            "default": "Delete Device"
+          }
         ],
         "capabilities": []
       },
@@ -380,12 +747,52 @@
         "emittedEvents": [],
         "listenedEvents": [],
         "overridableConfigKeys": [
-          "appName",
-          "contentTrait",
-          "navItems",
-          "notificationClickEvent",
-          "notifications",
-          "searchEvent"
+          {
+            "key": "appName",
+            "type": "unknown",
+            "default": "IoT Dashboard"
+          },
+          {
+            "key": "contentTrait",
+            "type": "unknown",
+            "default": "@trait.AlertCatalog"
+          },
+          {
+            "key": "navItems",
+            "type": "unknown",
+            "default": [
+              {
+                "label": "Sensors",
+                "href": "/sensors",
+                "icon": "layout-list"
+              },
+              {
+                "label": "Devices",
+                "href": "/devices",
+                "icon": "cpu"
+              },
+              {
+                "label": "Alerts",
+                "href": "/alerts",
+                "icon": "bell"
+              }
+            ]
+          },
+          {
+            "key": "notificationClickEvent",
+            "type": "unknown",
+            "default": "ALERT_NOTIFICATIONS_OPEN"
+          },
+          {
+            "key": "notifications",
+            "type": "unknown",
+            "default": []
+          },
+          {
+            "key": "searchEvent",
+            "type": "unknown",
+            "default": "ALERT_SEARCH"
+          }
         ],
         "capabilities": []
       },
@@ -407,10 +814,65 @@
           "ALERT_DELETED"
         ],
         "overridableConfigKeys": [
-          "cols",
-          "fields",
-          "gap",
-          "itemActions"
+          {
+            "key": "cols",
+            "type": "unknown",
+            "default": 1
+          },
+          {
+            "key": "fields",
+            "type": "unknown",
+            "default": [
+              {
+                "name": "deviceId",
+                "label": "Device",
+                "icon": "cpu",
+                "variant": "h4"
+              },
+              {
+                "variant": "badge",
+                "name": "severity",
+                "label": "Severity"
+              },
+              {
+                "name": "message",
+                "label": "Message",
+                "variant": "body"
+              },
+              {
+                "label": "Acknowledged",
+                "format": "boolean",
+                "variant": "badge",
+                "name": "acknowledged"
+              }
+            ]
+          },
+          {
+            "key": "gap",
+            "type": "unknown",
+            "default": "sm"
+          },
+          {
+            "key": "itemActions",
+            "type": "unknown",
+            "default": [
+              {
+                "variant": "ghost",
+                "label": "View",
+                "event": "VIEW"
+              },
+              {
+                "label": "Edit",
+                "variant": "ghost",
+                "event": "EDIT"
+              },
+              {
+                "label": "Delete",
+                "event": "DELETE",
+                "variant": "danger"
+              }
+            ]
+          }
         ],
         "capabilities": []
       },
@@ -421,10 +883,31 @@
           "CREATE"
         ],
         "overridableConfigKeys": [
-          "fields",
-          "icon",
-          "mode",
-          "title"
+          {
+            "key": "fields",
+            "type": "unknown",
+            "default": [
+              "deviceId",
+              "severity",
+              "message",
+              "acknowledged"
+            ]
+          },
+          {
+            "key": "icon",
+            "type": "unknown",
+            "default": "plus-circle"
+          },
+          {
+            "key": "mode",
+            "type": "unknown",
+            "default": "create"
+          },
+          {
+            "key": "title",
+            "type": "unknown",
+            "default": "New Alert"
+          }
         ],
         "capabilities": []
       },
@@ -435,10 +918,31 @@
           "EDIT"
         ],
         "overridableConfigKeys": [
-          "fields",
-          "icon",
-          "mode",
-          "title"
+          {
+            "key": "fields",
+            "type": "unknown",
+            "default": [
+              "deviceId",
+              "severity",
+              "message",
+              "acknowledged"
+            ]
+          },
+          {
+            "key": "icon",
+            "type": "unknown",
+            "default": "edit"
+          },
+          {
+            "key": "mode",
+            "type": "unknown",
+            "default": "edit"
+          },
+          {
+            "key": "title",
+            "type": "unknown",
+            "default": "Edit Alert"
+          }
         ],
         "capabilities": []
       },
@@ -449,10 +953,31 @@
           "VIEW"
         ],
         "overridableConfigKeys": [
-          "fields",
-          "icon",
-          "mode",
-          "title"
+          {
+            "key": "fields",
+            "type": "unknown",
+            "default": [
+              "deviceId",
+              "severity",
+              "message",
+              "acknowledged"
+            ]
+          },
+          {
+            "key": "icon",
+            "type": "unknown",
+            "default": "eye"
+          },
+          {
+            "key": "mode",
+            "type": "unknown",
+            "default": "edit"
+          },
+          {
+            "key": "title",
+            "type": "unknown",
+            "default": "View Alert"
+          }
         ],
         "capabilities": []
       },
@@ -463,10 +988,26 @@
           "DELETE"
         ],
         "overridableConfigKeys": [
-          "alertMessage",
-          "confirmLabel",
-          "icon",
-          "title"
+          {
+            "key": "alertMessage",
+            "type": "unknown",
+            "default": "This action cannot be undone."
+          },
+          {
+            "key": "confirmLabel",
+            "type": "unknown",
+            "default": "Delete"
+          },
+          {
+            "key": "icon",
+            "type": "unknown",
+            "default": "alert-triangle"
+          },
+          {
+            "key": "title",
+            "type": "unknown",
+            "default": "Delete Alert"
+          }
         ],
         "capabilities": []
       },
@@ -499,11 +1040,31 @@
           "ALERT_CREATED"
         ],
         "overridableConfigKeys": [
-          "body",
-          "recipient",
-          "sender",
-          "subject",
-          "uiTrait"
+          {
+            "key": "body",
+            "type": "unknown",
+            "default": "A critical alert was raised on a device. Investigate immediately."
+          },
+          {
+            "key": "recipient",
+            "type": "unknown",
+            "default": "ops@example.com"
+          },
+          {
+            "key": "sender",
+            "type": "unknown",
+            "default": "alerts@example.com"
+          },
+          {
+            "key": "subject",
+            "type": "unknown",
+            "default": "Critical alert raised"
+          },
+          {
+            "key": "uiTrait",
+            "type": "unknown",
+            "default": "@trait.AlertEmailNotice"
+          }
         ],
         "capabilities": []
       },

@@ -53,12 +53,57 @@
         "emittedEvents": [],
         "listenedEvents": [],
         "overridableConfigKeys": [
-          "appName",
-          "contentTrait",
-          "navItems",
-          "notificationClickEvent",
-          "notifications",
-          "searchEvent"
+          {
+            "key": "appName",
+            "type": "unknown",
+            "default": "Donations"
+          },
+          {
+            "key": "contentTrait",
+            "type": "unknown",
+            "default": "@trait.CampaignCatalog"
+          },
+          {
+            "key": "navItems",
+            "type": "unknown",
+            "default": [
+              {
+                "icon": "target",
+                "label": "Campaigns",
+                "href": "/campaigns"
+              },
+              {
+                "label": "Donors",
+                "href": "/donors",
+                "icon": "heart-handshake"
+              },
+              {
+                "href": "/goals",
+                "label": "Goals",
+                "icon": "flag"
+              },
+              {
+                "icon": "receipt",
+                "label": "Receipts",
+                "href": "/receipts"
+              }
+            ]
+          },
+          {
+            "key": "notificationClickEvent",
+            "type": "unknown",
+            "default": "CAMPAIGN_NOTIFICATIONS_OPEN"
+          },
+          {
+            "key": "notifications",
+            "type": "unknown",
+            "default": []
+          },
+          {
+            "key": "searchEvent",
+            "type": "unknown",
+            "default": "CAMPAIGN_SEARCH"
+          }
         ],
         "capabilities": []
       },
@@ -79,8 +124,16 @@
         "emittedEvents": [],
         "listenedEvents": [],
         "overridableConfigKeys": [
-          "event",
-          "placeholder"
+          {
+            "key": "event",
+            "type": "unknown",
+            "default": "CAMPAIGN_SEARCH"
+          },
+          {
+            "key": "placeholder",
+            "type": "unknown",
+            "default": "Search campaigns…"
+          }
         ],
         "capabilities": []
       },
@@ -89,8 +142,28 @@
         "emittedEvents": [],
         "listenedEvents": [],
         "overridableConfigKeys": [
-          "event",
-          "filters"
+          {
+            "key": "event",
+            "type": "unknown",
+            "default": "CAMPAIGN_FILTER"
+          },
+          {
+            "key": "filters",
+            "type": "unknown",
+            "default": [
+              {
+                "filterType": "select",
+                "field": "status",
+                "label": "Status",
+                "options": [
+                  "active",
+                  "completed",
+                  "paused",
+                  "draft"
+                ]
+              }
+            ]
+          }
         ],
         "capabilities": []
       },
@@ -101,8 +174,56 @@
           "BrowseItemLoaded"
         ],
         "overridableConfigKeys": [
-          "metrics",
-          "title"
+          {
+            "key": "metrics",
+            "type": "unknown",
+            "default": [
+              {
+                "icon": "target",
+                "label": "Total",
+                "aggregation": "count",
+                "variant": "primary",
+                "format": "number"
+              },
+              {
+                "variant": "success",
+                "label": "Active",
+                "aggregation": "count",
+                "filter": [
+                  "fn",
+                  "row",
+                  [
+                    "=",
+                    "@row.status",
+                    "active"
+                  ]
+                ],
+                "icon": "zap",
+                "format": "number"
+              },
+              {
+                "aggregation": "sum",
+                "variant": "info",
+                "field": "goalAmount",
+                "icon": "flag",
+                "label": "Goal",
+                "format": "number"
+              },
+              {
+                "format": "number",
+                "label": "Raised",
+                "variant": "success",
+                "aggregation": "sum",
+                "field": "raisedAmount",
+                "icon": "trending-up"
+              }
+            ]
+          },
+          {
+            "key": "title",
+            "type": "unknown",
+            "default": "Campaigns"
+          }
         ],
         "capabilities": []
       },
@@ -113,13 +234,41 @@
           "BrowseItemLoaded"
         ],
         "overridableConfigKeys": [
-          "aggregation",
-          "categoryField",
-          "chartType",
-          "height",
-          "showLegend",
-          "subtitle",
-          "title"
+          {
+            "key": "aggregation",
+            "type": "unknown",
+            "default": "count"
+          },
+          {
+            "key": "categoryField",
+            "type": "unknown",
+            "default": "status"
+          },
+          {
+            "key": "chartType",
+            "type": "unknown",
+            "default": "bar"
+          },
+          {
+            "key": "height",
+            "type": "unknown",
+            "default": 240
+          },
+          {
+            "key": "showLegend",
+            "type": "unknown",
+            "default": false
+          },
+          {
+            "key": "subtitle",
+            "type": "unknown",
+            "default": "Volume across campaign lifecycle"
+          },
+          {
+            "key": "title",
+            "type": "unknown",
+            "default": "Campaigns by Status"
+          }
         ],
         "capabilities": []
       },
@@ -134,10 +283,72 @@
           "CAMPAIGN_DELETED"
         ],
         "overridableConfigKeys": [
-          "cols",
-          "fields",
-          "gap",
-          "itemActions"
+          {
+            "key": "cols",
+            "type": "unknown",
+            "default": 1
+          },
+          {
+            "key": "fields",
+            "type": "unknown",
+            "default": [
+              {
+                "name": "name",
+                "icon": "target",
+                "variant": "h3"
+              },
+              {
+                "name": "status",
+                "variant": "badge"
+              },
+              {
+                "variant": "body",
+                "format": "number",
+                "name": "goalAmount"
+              },
+              {
+                "name": "raisedAmount",
+                "variant": "body",
+                "format": "number"
+              },
+              {
+                "name": "startDate",
+                "format": "date",
+                "variant": "caption"
+              },
+              {
+                "variant": "caption",
+                "name": "endDate",
+                "format": "date"
+              }
+            ]
+          },
+          {
+            "key": "gap",
+            "type": "unknown",
+            "default": "sm"
+          },
+          {
+            "key": "itemActions",
+            "type": "unknown",
+            "default": [
+              {
+                "label": "View",
+                "event": "VIEW",
+                "variant": "ghost"
+              },
+              {
+                "variant": "ghost",
+                "event": "EDIT",
+                "label": "Edit"
+              },
+              {
+                "event": "DELETE",
+                "variant": "danger",
+                "label": "Delete"
+              }
+            ]
+          }
         ],
         "capabilities": []
       },
@@ -148,10 +359,33 @@
           "CREATE"
         ],
         "overridableConfigKeys": [
-          "fields",
-          "icon",
-          "mode",
-          "title"
+          {
+            "key": "fields",
+            "type": "unknown",
+            "default": [
+              "name",
+              "goalAmount",
+              "raisedAmount",
+              "status",
+              "startDate",
+              "endDate"
+            ]
+          },
+          {
+            "key": "icon",
+            "type": "unknown",
+            "default": "plus-circle"
+          },
+          {
+            "key": "mode",
+            "type": "unknown",
+            "default": "create"
+          },
+          {
+            "key": "title",
+            "type": "unknown",
+            "default": "New Campaign"
+          }
         ],
         "capabilities": []
       },
@@ -162,10 +396,33 @@
           "EDIT"
         ],
         "overridableConfigKeys": [
-          "fields",
-          "icon",
-          "mode",
-          "title"
+          {
+            "key": "fields",
+            "type": "unknown",
+            "default": [
+              "name",
+              "goalAmount",
+              "raisedAmount",
+              "status",
+              "startDate",
+              "endDate"
+            ]
+          },
+          {
+            "key": "icon",
+            "type": "unknown",
+            "default": "edit"
+          },
+          {
+            "key": "mode",
+            "type": "unknown",
+            "default": "edit"
+          },
+          {
+            "key": "title",
+            "type": "unknown",
+            "default": "Edit Campaign"
+          }
         ],
         "capabilities": []
       },
@@ -176,10 +433,33 @@
           "VIEW"
         ],
         "overridableConfigKeys": [
-          "fields",
-          "icon",
-          "mode",
-          "title"
+          {
+            "key": "fields",
+            "type": "unknown",
+            "default": [
+              "name",
+              "goalAmount",
+              "raisedAmount",
+              "status",
+              "startDate",
+              "endDate"
+            ]
+          },
+          {
+            "key": "icon",
+            "type": "unknown",
+            "default": "eye"
+          },
+          {
+            "key": "mode",
+            "type": "unknown",
+            "default": "edit"
+          },
+          {
+            "key": "title",
+            "type": "unknown",
+            "default": "View Campaign"
+          }
         ],
         "capabilities": []
       },
@@ -190,10 +470,26 @@
           "DELETE"
         ],
         "overridableConfigKeys": [
-          "alertMessage",
-          "confirmLabel",
-          "icon",
-          "title"
+          {
+            "key": "alertMessage",
+            "type": "unknown",
+            "default": "This action cannot be undone."
+          },
+          {
+            "key": "confirmLabel",
+            "type": "unknown",
+            "default": "Delete"
+          },
+          {
+            "key": "icon",
+            "type": "unknown",
+            "default": "alert-triangle"
+          },
+          {
+            "key": "title",
+            "type": "unknown",
+            "default": "Delete Campaign"
+          }
         ],
         "capabilities": []
       },
@@ -217,7 +513,11 @@
         "emittedEvents": [],
         "listenedEvents": [],
         "overridableConfigKeys": [
-          "title"
+          {
+            "key": "title",
+            "type": "unknown",
+            "default": "Donors"
+          }
         ],
         "capabilities": []
       },
@@ -226,7 +526,11 @@
         "emittedEvents": [],
         "listenedEvents": [],
         "overridableConfigKeys": [
-          "title"
+          {
+            "key": "title",
+            "type": "unknown",
+            "default": "Campaign Goals"
+          }
         ],
         "capabilities": []
       },
@@ -235,7 +539,11 @@
         "emittedEvents": [],
         "listenedEvents": [],
         "overridableConfigKeys": [
-          "title"
+          {
+            "key": "title",
+            "type": "unknown",
+            "default": "Donation Receipts"
+          }
         ],
         "capabilities": []
       }

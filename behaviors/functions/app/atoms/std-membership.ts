@@ -96,9 +96,9 @@ export interface StdMembershipMembershipLoadFailedPayload {
 export interface StdMembershipConfig {
   /** Default: `"Memberships"` */
   title?: string;
-  /** Default: `[{"variant":"primary","event":"OPEN_MEMBERSHIP","icon":"arrow-right","label":"Open"},{"variant":"danger","label":"Cancel","event":"CANCEL_MEMBERSHIP"}]` */
+  /** Default: `[{"label":"Open","variant":"primary","icon":"arrow-right","event":"OPEN_MEMBERSHIP"},{"label":"Cancel","event":"CANCEL_MEMBERSHIP","variant":"danger"}]` */
   itemActions?: TraitConfig[];
-  /** Default: `[{"variant":"caption","name":"memberName","label":"Member"},{"variant":"badge","label":"Tier","name":"tier"},{"label":"Monthly Dues","name":"monthlyDues","variant":"caption"},{"variant":"caption","name":"renewalDate","label":"Renews"},{"name":"status","label":"Status","variant":"badge"}]` */
+  /** Default: `[{"label":"Member","variant":"caption","name":"memberName"},{"variant":"badge","label":"Tier","name":"tier"},{"variant":"caption","name":"monthlyDues","label":"Monthly Dues"},{"label":"Renews","variant":"caption","name":"renewalDate"},{"variant":"badge","label":"Status","name":"status"}]` */
   fields?: TraitConfig[];
 }
 

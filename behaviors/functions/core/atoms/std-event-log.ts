@@ -83,12 +83,12 @@ export interface StdEventLogEventLogSaveFailedPayload {
  * without modifying its state-machine topology.
  */
 export interface StdEventLogConfig {
+  /** Default: `[{"label":"Created","icon":"plus-circle","key":"created","status":"active"},{"status":"pending","key":"updated","label":"Updated","icon":"edit-3"},{"key":"approved","label":"Approved","status":"complete","icon":"check-circle"},{"label":"Rejected","icon":"x-circle","status":"error","key":"rejected"}]` */
+  kindOptions?: TraitConfig[];
   /** Default: `["backfillTitle","backfillDescription","backfillKind","backfillDate"]` */
   formFields?: string[];
   /** Default: `"Activity"` */
   title?: string;
-  /** Default: `[{"key":"created","label":"Created","status":"active","icon":"plus-circle"},{"icon":"edit-3","status":"pending","key":"updated","label":"Updated"},{"key":"approved","label":"Approved","icon":"check-circle","status":"complete"},{"label":"Rejected","key":"rejected","status":"error","icon":"x-circle"}]` */
-  kindOptions?: TraitConfig[];
 }
 
 /**

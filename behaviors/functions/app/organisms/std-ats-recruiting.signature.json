@@ -53,12 +53,57 @@
         "emittedEvents": [],
         "listenedEvents": [],
         "overridableConfigKeys": [
-          "appName",
-          "contentTrait",
-          "navItems",
-          "notificationClickEvent",
-          "notifications",
-          "searchEvent"
+          {
+            "key": "appName",
+            "type": "unknown",
+            "default": "ATSRecruiting"
+          },
+          {
+            "key": "contentTrait",
+            "type": "unknown",
+            "default": "@trait.JobOpeningCatalog"
+          },
+          {
+            "key": "navItems",
+            "type": "unknown",
+            "default": [
+              {
+                "label": "Openings",
+                "icon": "briefcase",
+                "href": "/openings"
+              },
+              {
+                "label": "Pipeline",
+                "href": "/pipeline",
+                "icon": "user-plus"
+              },
+              {
+                "label": "Interviews",
+                "href": "/interviews",
+                "icon": "calendar"
+              },
+              {
+                "label": "Offers",
+                "icon": "file-text",
+                "href": "/offers"
+              }
+            ]
+          },
+          {
+            "key": "notificationClickEvent",
+            "type": "unknown",
+            "default": "JOB_OPENING_NOTIFICATIONS_OPEN"
+          },
+          {
+            "key": "notifications",
+            "type": "unknown",
+            "default": []
+          },
+          {
+            "key": "searchEvent",
+            "type": "unknown",
+            "default": "JOB_OPENING_SEARCH"
+          }
         ],
         "capabilities": []
       },
@@ -79,8 +124,16 @@
         "emittedEvents": [],
         "listenedEvents": [],
         "overridableConfigKeys": [
-          "event",
-          "placeholder"
+          {
+            "key": "event",
+            "type": "unknown",
+            "default": "JOB_OPENING_SEARCH"
+          },
+          {
+            "key": "placeholder",
+            "type": "unknown",
+            "default": "Search openings…"
+          }
         ],
         "capabilities": []
       },
@@ -89,8 +142,41 @@
         "emittedEvents": [],
         "listenedEvents": [],
         "overridableConfigKeys": [
-          "event",
-          "filters"
+          {
+            "key": "event",
+            "type": "unknown",
+            "default": "JOB_OPENING_FILTER"
+          },
+          {
+            "key": "filters",
+            "type": "unknown",
+            "default": [
+              {
+                "filterType": "select",
+                "label": "Status",
+                "field": "status",
+                "options": [
+                  "open",
+                  "closed",
+                  "draft"
+                ]
+              },
+              {
+                "field": "department",
+                "options": [
+                  "engineering",
+                  "design",
+                  "marketing",
+                  "sales",
+                  "hr",
+                  "finance",
+                  "operations"
+                ],
+                "filterType": "select",
+                "label": "Department"
+              }
+            ]
+          }
         ],
         "capabilities": []
       },
@@ -101,8 +187,64 @@
           "BrowseItemLoaded"
         ],
         "overridableConfigKeys": [
-          "metrics",
-          "title"
+          {
+            "key": "metrics",
+            "type": "unknown",
+            "default": [
+              {
+                "variant": "primary",
+                "format": "number",
+                "icon": "briefcase",
+                "aggregation": "count",
+                "label": "Total"
+              },
+              {
+                "variant": "success",
+                "icon": "circle",
+                "aggregation": "count",
+                "label": "Open",
+                "format": "number",
+                "filter": [
+                  "fn",
+                  "row",
+                  [
+                    "=",
+                    "@row.status",
+                    "open"
+                  ]
+                ]
+              },
+              {
+                "variant": "warning",
+                "icon": "edit",
+                "label": "Drafts",
+                "format": "number",
+                "filter": [
+                  "fn",
+                  "row",
+                  [
+                    "=",
+                    "@row.status",
+                    "draft"
+                  ]
+                ],
+                "aggregation": "count"
+              },
+              {
+                "format": "number",
+                "field": "headcount",
+                "variant": "primary",
+                "aggregation": "sum",
+                "icon": "users",
+                "label": "Seats"
+              }
+            ]
+          },
+          {
+            "key": "title",
+            "type": "unknown",
+            "default": "Openings"
+          }
         ],
         "capabilities": []
       },
@@ -113,13 +255,41 @@
           "BrowseItemLoaded"
         ],
         "overridableConfigKeys": [
-          "aggregation",
-          "categoryField",
-          "chartType",
-          "height",
-          "showLegend",
-          "subtitle",
-          "title"
+          {
+            "key": "aggregation",
+            "type": "unknown",
+            "default": "count"
+          },
+          {
+            "key": "categoryField",
+            "type": "unknown",
+            "default": "department"
+          },
+          {
+            "key": "chartType",
+            "type": "unknown",
+            "default": "bar"
+          },
+          {
+            "key": "height",
+            "type": "unknown",
+            "default": 240
+          },
+          {
+            "key": "showLegend",
+            "type": "unknown",
+            "default": false
+          },
+          {
+            "key": "subtitle",
+            "type": "unknown",
+            "default": "Headcount distribution across teams"
+          },
+          {
+            "key": "title",
+            "type": "unknown",
+            "default": "Openings by Department"
+          }
         ],
         "capabilities": []
       },
@@ -134,10 +304,68 @@
           "JOB_OPENING_DELETED"
         ],
         "overridableConfigKeys": [
-          "cols",
-          "fields",
-          "gap",
-          "itemActions"
+          {
+            "key": "cols",
+            "type": "unknown",
+            "default": 1
+          },
+          {
+            "key": "fields",
+            "type": "unknown",
+            "default": [
+              {
+                "name": "title",
+                "icon": "briefcase",
+                "variant": "h3"
+              },
+              {
+                "name": "department",
+                "variant": "badge"
+              },
+              {
+                "name": "status",
+                "variant": "badge"
+              },
+              {
+                "name": "location",
+                "variant": "body"
+              },
+              {
+                "name": "hiringManager",
+                "variant": "caption"
+              },
+              {
+                "variant": "caption",
+                "name": "headcount"
+              }
+            ]
+          },
+          {
+            "key": "gap",
+            "type": "unknown",
+            "default": "sm"
+          },
+          {
+            "key": "itemActions",
+            "type": "unknown",
+            "default": [
+              {
+                "label": "View",
+                "variant": "ghost",
+                "event": "VIEW"
+              },
+              {
+                "label": "Edit",
+                "event": "EDIT",
+                "variant": "ghost"
+              },
+              {
+                "variant": "danger",
+                "event": "DELETE",
+                "label": "Delete"
+              }
+            ]
+          }
         ],
         "capabilities": []
       },
@@ -148,10 +376,33 @@
           "CREATE"
         ],
         "overridableConfigKeys": [
-          "fields",
-          "icon",
-          "mode",
-          "title"
+          {
+            "key": "fields",
+            "type": "unknown",
+            "default": [
+              "title",
+              "department",
+              "status",
+              "location",
+              "hiringManager",
+              "headcount"
+            ]
+          },
+          {
+            "key": "icon",
+            "type": "unknown",
+            "default": "plus-circle"
+          },
+          {
+            "key": "mode",
+            "type": "unknown",
+            "default": "create"
+          },
+          {
+            "key": "title",
+            "type": "unknown",
+            "default": "New Opening"
+          }
         ],
         "capabilities": []
       },
@@ -162,10 +413,33 @@
           "EDIT"
         ],
         "overridableConfigKeys": [
-          "fields",
-          "icon",
-          "mode",
-          "title"
+          {
+            "key": "fields",
+            "type": "unknown",
+            "default": [
+              "title",
+              "department",
+              "status",
+              "location",
+              "hiringManager",
+              "headcount"
+            ]
+          },
+          {
+            "key": "icon",
+            "type": "unknown",
+            "default": "edit"
+          },
+          {
+            "key": "mode",
+            "type": "unknown",
+            "default": "edit"
+          },
+          {
+            "key": "title",
+            "type": "unknown",
+            "default": "Edit Opening"
+          }
         ],
         "capabilities": []
       },
@@ -176,10 +450,33 @@
           "VIEW"
         ],
         "overridableConfigKeys": [
-          "fields",
-          "icon",
-          "mode",
-          "title"
+          {
+            "key": "fields",
+            "type": "unknown",
+            "default": [
+              "title",
+              "department",
+              "status",
+              "location",
+              "hiringManager",
+              "headcount"
+            ]
+          },
+          {
+            "key": "icon",
+            "type": "unknown",
+            "default": "eye"
+          },
+          {
+            "key": "mode",
+            "type": "unknown",
+            "default": "edit"
+          },
+          {
+            "key": "title",
+            "type": "unknown",
+            "default": "View Opening"
+          }
         ],
         "capabilities": []
       },
@@ -190,10 +487,26 @@
           "DELETE"
         ],
         "overridableConfigKeys": [
-          "alertMessage",
-          "confirmLabel",
-          "icon",
-          "title"
+          {
+            "key": "alertMessage",
+            "type": "unknown",
+            "default": "This action cannot be undone."
+          },
+          {
+            "key": "confirmLabel",
+            "type": "unknown",
+            "default": "Delete"
+          },
+          {
+            "key": "icon",
+            "type": "unknown",
+            "default": "alert-triangle"
+          },
+          {
+            "key": "title",
+            "type": "unknown",
+            "default": "Delete Opening"
+          }
         ],
         "capabilities": []
       },
@@ -317,12 +630,57 @@
         "emittedEvents": [],
         "listenedEvents": [],
         "overridableConfigKeys": [
-          "appName",
-          "contentTrait",
-          "navItems",
-          "notificationClickEvent",
-          "notifications",
-          "searchEvent"
+          {
+            "key": "appName",
+            "type": "unknown",
+            "default": "ATSRecruiting"
+          },
+          {
+            "key": "contentTrait",
+            "type": "unknown",
+            "default": "@trait.PipelineIntakeBrowse"
+          },
+          {
+            "key": "navItems",
+            "type": "unknown",
+            "default": [
+              {
+                "href": "/openings",
+                "label": "Openings",
+                "icon": "briefcase"
+              },
+              {
+                "href": "/pipeline",
+                "label": "Pipeline",
+                "icon": "user-plus"
+              },
+              {
+                "icon": "calendar",
+                "label": "Interviews",
+                "href": "/interviews"
+              },
+              {
+                "icon": "file-text",
+                "href": "/offers",
+                "label": "Offers"
+              }
+            ]
+          },
+          {
+            "key": "notificationClickEvent",
+            "type": "unknown",
+            "default": "PIPELINE_NOTIFICATIONS_OPEN"
+          },
+          {
+            "key": "notifications",
+            "type": "unknown",
+            "default": []
+          },
+          {
+            "key": "searchEvent",
+            "type": "unknown",
+            "default": "PIPELINE_SEARCH"
+          }
         ],
         "capabilities": []
       },
@@ -454,12 +812,57 @@
         "emittedEvents": [],
         "listenedEvents": [],
         "overridableConfigKeys": [
-          "appName",
-          "contentTrait",
-          "navItems",
-          "notificationClickEvent",
-          "notifications",
-          "searchEvent"
+          {
+            "key": "appName",
+            "type": "unknown",
+            "default": "ATSRecruiting"
+          },
+          {
+            "key": "contentTrait",
+            "type": "unknown",
+            "default": "@trait.ApplicantList"
+          },
+          {
+            "key": "navItems",
+            "type": "unknown",
+            "default": [
+              {
+                "label": "Openings",
+                "href": "/openings",
+                "icon": "briefcase"
+              },
+              {
+                "label": "Pipeline",
+                "href": "/pipeline",
+                "icon": "user-plus"
+              },
+              {
+                "href": "/interviews",
+                "icon": "calendar",
+                "label": "Interviews"
+              },
+              {
+                "icon": "file-text",
+                "label": "Offers",
+                "href": "/offers"
+              }
+            ]
+          },
+          {
+            "key": "notificationClickEvent",
+            "type": "unknown",
+            "default": "APPLICANT_NOTIFICATIONS_OPEN"
+          },
+          {
+            "key": "notifications",
+            "type": "unknown",
+            "default": []
+          },
+          {
+            "key": "searchEvent",
+            "type": "unknown",
+            "default": "APPLICANT_SEARCH"
+          }
         ],
         "capabilities": []
       },
@@ -468,7 +871,11 @@
         "emittedEvents": [],
         "listenedEvents": [],
         "overridableConfigKeys": [
-          "title"
+          {
+            "key": "title",
+            "type": "unknown",
+            "default": "Applicants"
+          }
         ],
         "capabilities": []
       }
@@ -542,12 +949,57 @@
         "emittedEvents": [],
         "listenedEvents": [],
         "overridableConfigKeys": [
-          "appName",
-          "contentTrait",
-          "navItems",
-          "notificationClickEvent",
-          "notifications",
-          "searchEvent"
+          {
+            "key": "appName",
+            "type": "unknown",
+            "default": "ATSRecruiting"
+          },
+          {
+            "key": "contentTrait",
+            "type": "unknown",
+            "default": "@trait.InterviewScheduleList"
+          },
+          {
+            "key": "navItems",
+            "type": "unknown",
+            "default": [
+              {
+                "icon": "briefcase",
+                "label": "Openings",
+                "href": "/openings"
+              },
+              {
+                "icon": "user-plus",
+                "label": "Pipeline",
+                "href": "/pipeline"
+              },
+              {
+                "label": "Interviews",
+                "icon": "calendar",
+                "href": "/interviews"
+              },
+              {
+                "href": "/offers",
+                "label": "Offers",
+                "icon": "file-text"
+              }
+            ]
+          },
+          {
+            "key": "notificationClickEvent",
+            "type": "unknown",
+            "default": "INTERVIEW_NOTIFICATIONS_OPEN"
+          },
+          {
+            "key": "notifications",
+            "type": "unknown",
+            "default": []
+          },
+          {
+            "key": "searchEvent",
+            "type": "unknown",
+            "default": "INTERVIEW_SEARCH"
+          }
         ],
         "capabilities": []
       },
@@ -556,7 +1008,11 @@
         "emittedEvents": [],
         "listenedEvents": [],
         "overridableConfigKeys": [
-          "title"
+          {
+            "key": "title",
+            "type": "unknown",
+            "default": "Interview Schedule"
+          }
         ],
         "capabilities": []
       }
@@ -630,12 +1086,57 @@
         "emittedEvents": [],
         "listenedEvents": [],
         "overridableConfigKeys": [
-          "appName",
-          "contentTrait",
-          "navItems",
-          "notificationClickEvent",
-          "notifications",
-          "searchEvent"
+          {
+            "key": "appName",
+            "type": "unknown",
+            "default": "ATSRecruiting"
+          },
+          {
+            "key": "contentTrait",
+            "type": "unknown",
+            "default": "@trait.OfferLetterList"
+          },
+          {
+            "key": "navItems",
+            "type": "unknown",
+            "default": [
+              {
+                "href": "/openings",
+                "icon": "briefcase",
+                "label": "Openings"
+              },
+              {
+                "label": "Pipeline",
+                "icon": "user-plus",
+                "href": "/pipeline"
+              },
+              {
+                "href": "/interviews",
+                "label": "Interviews",
+                "icon": "calendar"
+              },
+              {
+                "label": "Offers",
+                "href": "/offers",
+                "icon": "file-text"
+              }
+            ]
+          },
+          {
+            "key": "notificationClickEvent",
+            "type": "unknown",
+            "default": "OFFER_NOTIFICATIONS_OPEN"
+          },
+          {
+            "key": "notifications",
+            "type": "unknown",
+            "default": []
+          },
+          {
+            "key": "searchEvent",
+            "type": "unknown",
+            "default": "OFFER_SEARCH"
+          }
         ],
         "capabilities": []
       },
@@ -644,7 +1145,11 @@
         "emittedEvents": [],
         "listenedEvents": [],
         "overridableConfigKeys": [
-          "title"
+          {
+            "key": "title",
+            "type": "unknown",
+            "default": "Offer Letters"
+          }
         ],
         "capabilities": []
       }

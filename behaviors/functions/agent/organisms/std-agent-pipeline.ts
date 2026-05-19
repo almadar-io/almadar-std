@@ -650,28 +650,28 @@ export function stdAgentPipelinePipelinePlanOrbital(params: StdAgentPipelinePipe
                   'render-ui',
                   'main',
                   {
-                    'type': 'dashboard-layout',
-                    'appName': 'Agent Pipeline',
                     'navItems': [
                       {
-                        'icon': 'git-branch',
                         'label': 'Pipeline',
                         'href': '/pipeline',
+                        'icon': 'git-branch',
                       },
                       {
                         'icon': 'play',
-                        'label': 'Execution',
                         'href': '/execution',
+                        'label': 'Execution',
                       },
                       {
                         'href': '/logs',
-                        'icon': 'terminal',
                         'label': 'Logs',
+                        'icon': 'terminal',
                       },
                     ],
                     'children': [
                       {
+                        'type': 'stack',
                         'direction': 'vertical',
+                        'gap': 'lg',
                         'children': [
                           {
                             'children': [
@@ -680,15 +680,15 @@ export function stdAgentPipelinePipelinePlanOrbital(params: StdAgentPipelinePipe
                                 'name': 'map',
                               },
                               {
-                                'content': 'Task Planner',
                                 'variant': 'h2',
                                 'type': 'typography',
+                                'content': 'Task Planner',
                               },
                             ],
-                            'direction': 'horizontal',
-                            'type': 'stack',
-                            'align': 'center',
                             'gap': 'sm',
+                            'type': 'stack',
+                            'direction': 'horizontal',
+                            'align': 'center',
                           },
                           {
                             'type': 'divider',
@@ -697,33 +697,33 @@ export function stdAgentPipelinePipelinePlanOrbital(params: StdAgentPipelinePipe
                             'type': 'card',
                             'children': [
                               {
-                                'gap': 'md',
-                                'direction': 'vertical',
+                                'type': 'stack',
                                 'children': [
                                   {
-                                    'content': 'Describe the task to plan',
-                                    'variant': 'body',
                                     'type': 'typography',
+                                    'variant': 'body',
+                                    'content': 'Describe the task to plan',
                                   },
                                   {
-                                    'submitEvent': 'PLAN',
                                     'fields': [
                                       'task',
                                     ],
-                                    'mode': 'edit',
                                     'type': 'form-section',
+                                    'mode': 'edit',
                                     'entity': '@entity',
+                                    'submitEvent': 'PLAN',
                                   },
                                 ],
-                                'type': 'stack',
+                                'gap': 'md',
+                                'direction': 'vertical',
                               },
                             ],
                           },
                         ],
-                        'gap': 'lg',
-                        'type': 'stack',
                       },
                     ],
+                    'appName': 'Agent Pipeline',
+                    'type': 'dashboard-layout',
                   },
                 ],
               ],
@@ -756,38 +756,39 @@ export function stdAgentPipelinePipelinePlanOrbital(params: StdAgentPipelinePipe
                   'render-ui',
                   'main',
                   {
+                    'appName': 'Agent Pipeline',
+                    'type': 'dashboard-layout',
                     'navItems': [
                       {
-                        'icon': 'git-branch',
                         'href': '/pipeline',
+                        'icon': 'git-branch',
                         'label': 'Pipeline',
                       },
                       {
-                        'label': 'Execution',
                         'icon': 'play',
                         'href': '/execution',
+                        'label': 'Execution',
                       },
                       {
-                        'icon': 'terminal',
                         'href': '/logs',
                         'label': 'Logs',
+                        'icon': 'terminal',
                       },
                     ],
-                    'appName': 'Agent Pipeline',
-                    'type': 'dashboard-layout',
                     'children': [
                       {
+                        'direction': 'vertical',
                         'gap': 'lg',
                         'align': 'center',
                         'children': [
                           {
-                            'type': 'icon',
                             'name': 'tag',
+                            'type': 'icon',
                           },
                           {
-                            'type': 'typography',
                             'variant': 'h3',
                             'content': 'Classifying task...',
+                            'type': 'typography',
                           },
                           {
                             'type': 'spinner',
@@ -799,7 +800,6 @@ export function stdAgentPipelinePipelinePlanOrbital(params: StdAgentPipelinePipe
                           },
                         ],
                         'type': 'stack',
-                        'direction': 'vertical',
                       },
                     ],
                   },
@@ -836,48 +836,48 @@ export function stdAgentPipelinePipelinePlanOrbital(params: StdAgentPipelinePipe
                   'main',
                   {
                     'type': 'dashboard-layout',
-                    'appName': 'Agent Pipeline',
                     'navItems': [
                       {
-                        'label': 'Pipeline',
                         'icon': 'git-branch',
+                        'label': 'Pipeline',
                         'href': '/pipeline',
                       },
                       {
-                        'href': '/execution',
-                        'label': 'Execution',
                         'icon': 'play',
+                        'label': 'Execution',
+                        'href': '/execution',
                       },
                       {
-                        'label': 'Logs',
                         'href': '/logs',
+                        'label': 'Logs',
                         'icon': 'terminal',
                       },
                     ],
+                    'appName': 'Agent Pipeline',
                     'children': [
                       {
                         'direction': 'vertical',
-                        'align': 'center',
                         'children': [
                           {
                             'type': 'icon',
                             'name': 'brain',
                           },
                           {
-                            'variant': 'h3',
                             'type': 'typography',
+                            'variant': 'h3',
                             'content': 'Recalling relevant experience...',
                           },
                           {
                             'type': 'spinner',
                           },
                           {
-                            'label': '@entity.category',
                             'type': 'badge',
+                            'label': '@entity.category',
                           },
                         ],
-                        'type': 'stack',
+                        'align': 'center',
                         'gap': 'lg',
+                        'type': 'stack',
                       },
                     ],
                   },
@@ -903,47 +903,17 @@ export function stdAgentPipelinePipelinePlanOrbital(params: StdAgentPipelinePipe
                   'render-ui',
                   'main',
                   {
-                    'children': [
-                      {
-                        'align': 'center',
-                        'type': 'stack',
-                        'direction': 'vertical',
-                        'gap': 'lg',
-                        'children': [
-                          {
-                            'type': 'icon',
-                            'name': 'alert-triangle',
-                          },
-                          {
-                            'variant': 'h2',
-                            'type': 'typography',
-                            'content': 'Planning Failed',
-                          },
-                          {
-                            'variant': 'error',
-                            'type': 'alert',
-                            'message': '@entity.error',
-                          },
-                          {
-                            'action': 'RESET',
-                            'icon': 'rotate-ccw',
-                            'type': 'button',
-                            'variant': 'primary',
-                            'label': 'Try Again',
-                          },
-                        ],
-                      },
-                    ],
+                    'type': 'dashboard-layout',
                     'navItems': [
                       {
+                        'icon': 'git-branch',
                         'label': 'Pipeline',
                         'href': '/pipeline',
-                        'icon': 'git-branch',
                       },
                       {
                         'label': 'Execution',
-                        'icon': 'play',
                         'href': '/execution',
+                        'icon': 'play',
                       },
                       {
                         'label': 'Logs',
@@ -951,8 +921,38 @@ export function stdAgentPipelinePipelinePlanOrbital(params: StdAgentPipelinePipe
                         'icon': 'terminal',
                       },
                     ],
-                    'type': 'dashboard-layout',
                     'appName': 'Agent Pipeline',
+                    'children': [
+                      {
+                        'children': [
+                          {
+                            'type': 'icon',
+                            'name': 'alert-triangle',
+                          },
+                          {
+                            'type': 'typography',
+                            'variant': 'h2',
+                            'content': 'Planning Failed',
+                          },
+                          {
+                            'type': 'alert',
+                            'variant': 'error',
+                            'message': '@entity.error',
+                          },
+                          {
+                            'type': 'button',
+                            'action': 'RESET',
+                            'variant': 'primary',
+                            'label': 'Try Again',
+                            'icon': 'rotate-ccw',
+                          },
+                        ],
+                        'type': 'stack',
+                        'gap': 'lg',
+                        'direction': 'vertical',
+                        'align': 'center',
+                      },
+                    ],
                   },
                 ],
               ],
@@ -998,39 +998,21 @@ export function stdAgentPipelinePipelinePlanOrbital(params: StdAgentPipelinePipe
                   'render-ui',
                   'main',
                   {
-                    'appName': 'Agent Pipeline',
-                    'navItems': [
-                      {
-                        'href': '/pipeline',
-                        'icon': 'git-branch',
-                        'label': 'Pipeline',
-                      },
-                      {
-                        'href': '/execution',
-                        'icon': 'play',
-                        'label': 'Execution',
-                      },
-                      {
-                        'icon': 'terminal',
-                        'label': 'Logs',
-                        'href': '/logs',
-                      },
-                    ],
-                    'type': 'dashboard-layout',
                     'children': [
                       {
+                        'gap': 'lg',
                         'type': 'stack',
-                        'align': 'center',
                         'direction': 'vertical',
+                        'align': 'center',
                         'children': [
                           {
-                            'type': 'icon',
                             'name': 'cpu',
+                            'type': 'icon',
                           },
                           {
                             'content': 'Generating plan...',
-                            'type': 'typography',
                             'variant': 'h3',
+                            'type': 'typography',
                           },
                           {
                             'type': 'spinner',
@@ -1038,8 +1020,6 @@ export function stdAgentPipelinePipelinePlanOrbital(params: StdAgentPipelinePipe
                           {
                             'type': 'stack',
                             'direction': 'horizontal',
-                            'gap': 'md',
-                            'justify': 'center',
                             'children': [
                               {
                                 'type': 'badge',
@@ -1050,9 +1030,29 @@ export function stdAgentPipelinePipelinePlanOrbital(params: StdAgentPipelinePipe
                                 'label': '@entity.memoryCount',
                               },
                             ],
+                            'gap': 'md',
+                            'justify': 'center',
                           },
                         ],
-                        'gap': 'lg',
+                      },
+                    ],
+                    'appName': 'Agent Pipeline',
+                    'type': 'dashboard-layout',
+                    'navItems': [
+                      {
+                        'icon': 'git-branch',
+                        'label': 'Pipeline',
+                        'href': '/pipeline',
+                      },
+                      {
+                        'icon': 'play',
+                        'label': 'Execution',
+                        'href': '/execution',
+                      },
+                      {
+                        'href': '/logs',
+                        'label': 'Logs',
+                        'icon': 'terminal',
                       },
                     ],
                   },
@@ -1078,11 +1078,13 @@ export function stdAgentPipelinePipelinePlanOrbital(params: StdAgentPipelinePipe
                   'render-ui',
                   'main',
                   {
-                    'appName': 'Agent Pipeline',
                     'type': 'dashboard-layout',
+                    'appName': 'Agent Pipeline',
                     'children': [
                       {
                         'gap': 'lg',
+                        'direction': 'vertical',
+                        'type': 'stack',
                         'children': [
                           {
                             'type': 'icon',
@@ -1090,8 +1092,8 @@ export function stdAgentPipelinePipelinePlanOrbital(params: StdAgentPipelinePipe
                           },
                           {
                             'variant': 'h2',
-                            'content': 'Planning Failed',
                             'type': 'typography',
+                            'content': 'Planning Failed',
                           },
                           {
                             'type': 'alert',
@@ -1099,28 +1101,26 @@ export function stdAgentPipelinePipelinePlanOrbital(params: StdAgentPipelinePipe
                             'variant': 'error',
                           },
                           {
-                            'label': 'Try Again',
-                            'type': 'button',
                             'variant': 'primary',
                             'icon': 'rotate-ccw',
                             'action': 'RESET',
+                            'label': 'Try Again',
+                            'type': 'button',
                           },
                         ],
                         'align': 'center',
-                        'direction': 'vertical',
-                        'type': 'stack',
                       },
                     ],
                     'navItems': [
                       {
+                        'label': 'Pipeline',
                         'href': '/pipeline',
                         'icon': 'git-branch',
-                        'label': 'Pipeline',
                       },
                       {
-                        'label': 'Execution',
                         'href': '/execution',
                         'icon': 'play',
+                        'label': 'Execution',
                       },
                       {
                         'href': '/logs',
@@ -1171,43 +1171,61 @@ export function stdAgentPipelinePipelinePlanOrbital(params: StdAgentPipelinePipe
                   'render-ui',
                   'main',
                   {
+                    'navItems': [
+                      {
+                        'label': 'Pipeline',
+                        'href': '/pipeline',
+                        'icon': 'git-branch',
+                      },
+                      {
+                        'icon': 'play',
+                        'label': 'Execution',
+                        'href': '/execution',
+                      },
+                      {
+                        'href': '/logs',
+                        'label': 'Logs',
+                        'icon': 'terminal',
+                      },
+                    ],
                     'children': [
                       {
+                        'type': 'stack',
                         'direction': 'vertical',
                         'gap': 'lg',
                         'children': [
                           {
-                            'justify': 'between',
+                            'type': 'stack',
                             'gap': 'sm',
+                            'align': 'center',
                             'children': [
                               {
                                 'direction': 'horizontal',
-                                'gap': 'sm',
                                 'children': [
                                   {
-                                    'name': 'check-circle',
                                     'type': 'icon',
+                                    'name': 'check-circle',
                                   },
                                   {
+                                    'type': 'typography',
                                     'content': 'Plan Ready',
                                     'variant': 'h2',
-                                    'type': 'typography',
                                   },
                                 ],
                                 'type': 'stack',
+                                'gap': 'sm',
                                 'align': 'center',
                               },
                               {
+                                'type': 'button',
+                                'label': 'New Plan',
+                                'variant': 'ghost',
                                 'action': 'RESET',
                                 'icon': 'rotate-ccw',
-                                'label': 'New Plan',
-                                'type': 'button',
-                                'variant': 'ghost',
                               },
                             ],
                             'direction': 'horizontal',
-                            'type': 'stack',
-                            'align': 'center',
+                            'justify': 'between',
                           },
                           {
                             'type': 'divider',
@@ -1217,22 +1235,22 @@ export function stdAgentPipelinePipelinePlanOrbital(params: StdAgentPipelinePipe
                             'cols': 3,
                             'children': [
                               {
-                                'value': '@entity.category',
                                 'label': 'Category',
-                                'type': 'stat-display',
                                 'icon': 'tag',
+                                'value': '@entity.category',
+                                'type': 'stat-display',
                               },
                               {
-                                'type': 'stat-display',
-                                'value': '@entity.confidence',
-                                'icon': 'target',
                                 'label': 'Confidence',
+                                'icon': 'target',
+                                'value': '@entity.confidence',
+                                'type': 'stat-display',
                               },
                               {
-                                'type': 'stat-display',
                                 'label': 'Memories Used',
                                 'icon': 'brain',
                                 'value': '@entity.memoryCount',
+                                'type': 'stat-display',
                               },
                             ],
                           },
@@ -1240,85 +1258,67 @@ export function stdAgentPipelinePipelinePlanOrbital(params: StdAgentPipelinePipe
                             'type': 'divider',
                           },
                           {
-                            'type': 'card',
                             'children': [
                               {
-                                'direction': 'vertical',
-                                'type': 'stack',
-                                'gap': 'md',
                                 'children': [
                                   {
-                                    'variant': 'caption',
                                     'content': 'Task',
+                                    'variant': 'caption',
                                     'type': 'typography',
                                   },
                                   {
-                                    'content': '@entity.task',
-                                    'type': 'typography',
                                     'variant': 'body',
+                                    'type': 'typography',
+                                    'content': '@entity.task',
                                   },
                                   {
                                     'type': 'divider',
                                   },
                                   {
-                                    'content': 'Execution Plan',
-                                    'type': 'typography',
                                     'variant': 'caption',
+                                    'type': 'typography',
+                                    'content': 'Execution Plan',
                                   },
                                   {
-                                    'type': 'typography',
-                                    'variant': 'body',
                                     'content': '@entity.steps',
+                                    'variant': 'body',
+                                    'type': 'typography',
                                   },
                                 ],
+                                'direction': 'vertical',
+                                'type': 'stack',
+                                'gap': 'md',
                               },
                             ],
+                            'type': 'card',
                           },
                           {
                             'type': 'card',
                             'children': [
                               {
-                                'type': 'stack',
-                                'gap': 'sm',
-                                'direction': 'vertical',
                                 'children': [
                                   {
+                                    'content': 'Relevant Memories',
                                     'type': 'typography',
                                     'variant': 'caption',
-                                    'content': 'Relevant Memories',
                                   },
                                   {
-                                    'content': '@entity.relevantMemories',
                                     'variant': 'body',
                                     'type': 'typography',
+                                    'content': '@entity.relevantMemories',
                                   },
                                 ],
+                                'type': 'stack',
+                                'direction': 'vertical',
+                                'gap': 'sm',
                               },
                             ],
                           },
                         ],
-                        'type': 'stack',
                       },
                     ],
-                    'appName': 'Agent Pipeline',
                     'type': 'dashboard-layout',
-                    'navItems': [
-                      {
-                        'label': 'Pipeline',
-                        'icon': 'git-branch',
-                        'href': '/pipeline',
-                      },
-                      {
-                        'icon': 'play',
-                        'label': 'Execution',
-                        'href': '/execution',
-                      },
-                      {
-                        'icon': 'terminal',
-                        'label': 'Logs',
-                        'href': '/logs',
-                      },
-                    ],
+                    'appName': 'Agent Pipeline',
                   },
                 ],
               ],
@@ -1342,7 +1342,6 @@ export function stdAgentPipelinePipelinePlanOrbital(params: StdAgentPipelinePipe
                   'render-ui',
                   'main',
                   {
-                    'appName': 'Agent Pipeline',
                     'navItems': [
                       {
                         'icon': 'git-branch',
@@ -1350,23 +1349,23 @@ export function stdAgentPipelinePipelinePlanOrbital(params: StdAgentPipelinePipe
                         'href': '/pipeline',
                       },
                       {
-                        'href': '/execution',
-                        'label': 'Execution',
                         'icon': 'play',
+                        'label': 'Execution',
+                        'href': '/execution',
                       },
                       {
+                        'icon': 'terminal',
                         'href': '/logs',
                         'label': 'Logs',
-                        'icon': 'terminal',
                       },
                     ],
-                    'type': 'dashboard-layout',
                     'children': [
                       {
+                        'direction': 'vertical',
                         'children': [
                           {
-                            'type': 'icon',
                             'name': 'alert-triangle',
+                            'type': 'icon',
                           },
                           {
                             'variant': 'h2',
@@ -1374,24 +1373,25 @@ export function stdAgentPipelinePipelinePlanOrbital(params: StdAgentPipelinePipe
                             'type': 'typography',
                           },
                           {
-                            'message': '@entity.error',
                             'type': 'alert',
                             'variant': 'error',
+                            'message': '@entity.error',
                           },
                           {
-                            'icon': 'rotate-ccw',
-                            'label': 'Try Again',
-                            'variant': 'primary',
-                            'action': 'RESET',
                             'type': 'button',
+                            'variant': 'primary',
+                            'icon': 'rotate-ccw',
+                            'action': 'RESET',
+                            'label': 'Try Again',
                           },
                         ],
-                        'direction': 'vertical',
-                        'type': 'stack',
-                        'gap': 'lg',
                         'align': 'center',
+                        'gap': 'lg',
+                        'type': 'stack',
                       },
                     ],
+                    'appName': 'Agent Pipeline',
+                    'type': 'dashboard-layout',
                   },
                 ],
               ],
@@ -1445,63 +1445,62 @@ export function stdAgentPipelinePipelinePlanOrbital(params: StdAgentPipelinePipe
                   'render-ui',
                   'main',
                   {
-                    'type': 'dashboard-layout',
-                    'appName': 'Agent Pipeline',
                     'children': [
                       {
+                        'gap': 'lg',
                         'type': 'stack',
-                        'direction': 'vertical',
                         'children': [
                           {
-                            'align': 'center',
-                            'children': [
-                              {
-                                'name': 'map',
-                                'type': 'icon',
-                              },
-                              {
-                                'type': 'typography',
-                                'content': 'Task Planner',
-                                'variant': 'h2',
-                              },
-                            ],
                             'direction': 'horizontal',
                             'gap': 'sm',
+                            'children': [
+                              {
+                                'type': 'icon',
+                                'name': 'map',
+                              },
+                              {
+                                'variant': 'h2',
+                                'type': 'typography',
+                                'content': 'Task Planner',
+                              },
+                            ],
+                            'align': 'center',
                             'type': 'stack',
                           },
                           {
                             'type': 'divider',
                           },
                           {
-                            'type': 'card',
                             'children': [
                               {
-                                'gap': 'md',
                                 'direction': 'vertical',
                                 'children': [
                                   {
-                                    'content': 'Describe the task to plan',
-                                    'type': 'typography',
                                     'variant': 'body',
+                                    'type': 'typography',
+                                    'content': 'Describe the task to plan',
                                   },
                                   {
+                                    'type': 'form-section',
+                                    'submitEvent': 'PLAN',
                                     'fields': [
                                       'task',
                                     ],
-                                    'type': 'form-section',
                                     'entity': '@entity',
-                                    'submitEvent': 'PLAN',
                                     'mode': 'edit',
                                   },
                                 ],
                                 'type': 'stack',
+                                'gap': 'md',
                               },
                             ],
+                            'type': 'card',
                           },
                         ],
-                        'gap': 'lg',
+                        'direction': 'vertical',
                       },
                     ],
+                    'type': 'dashboard-layout',
                     'navItems': [
                       {
                         'label': 'Pipeline',
@@ -1509,9 +1508,9 @@ export function stdAgentPipelinePipelinePlanOrbital(params: StdAgentPipelinePipe
                         'icon': 'git-branch',
                       },
                       {
+                        'icon': 'play',
                         'href': '/execution',
                         'label': 'Execution',
-                        'icon': 'play',
                       },
                       {
                         'label': 'Logs',
@@ -1519,6 +1518,7 @@ export function stdAgentPipelinePipelinePlanOrbital(params: StdAgentPipelinePipe
                         'icon': 'terminal',
                       },
                     ],
+                    'appName': 'Agent Pipeline',
                   },
                 ],
               ],
@@ -1629,8 +1629,8 @@ export function stdAgentPipelinePipelinePlanOrbital(params: StdAgentPipelinePipe
                   'PipelinePlan',
                   {
                     'emit': {
-                      'failure': 'PipelinePlanLoadFailed',
                       'success': 'PipelinePlanLoaded',
+                      'failure': 'PipelinePlanLoadFailed',
                     },
                   },
                 ],
@@ -1646,27 +1646,27 @@ export function stdAgentPipelinePipelinePlanOrbital(params: StdAgentPipelinePipe
                   'modal',
                   {
                     'type': 'stack',
-                    'direction': 'vertical',
                     'gap': 'md',
+                    'direction': 'vertical',
                     'children': [
                       {
-                        'type': 'icon',
                         'name': 'map',
+                        'type': 'icon',
                       },
                       {
-                        'content': 'Describe the task to plan',
-                        'type': 'typography',
                         'variant': 'h3',
+                        'type': 'typography',
+                        'content': 'Describe the task to plan',
                       },
                       {
                         'type': 'divider',
                       },
                       {
-                        'cancelEvent': 'CLOSE',
-                        'mode': 'edit',
-                        'type': 'form-section',
-                        'entity': '@entity',
                         'submitEvent': 'PLAN',
+                        'entity': '@entity',
+                        'type': 'form-section',
+                        'mode': 'edit',
+                        'cancelEvent': 'CLOSE',
                         'fields': [
                           'task',
                         ],
@@ -1885,8 +1885,8 @@ export function stdAgentPipelinePipelinePlanOrbital(params: StdAgentPipelinePipe
                   'PipelinePlan',
                   {
                     'emit': {
-                      'failure': 'PipelinePlanLoadFailed',
                       'success': 'PipelinePlanLoaded',
+                      'failure': 'PipelinePlanLoadFailed',
                     },
                   },
                 ],
@@ -1894,74 +1894,74 @@ export function stdAgentPipelinePipelinePlanOrbital(params: StdAgentPipelinePipe
                   'render-ui',
                   'main',
                   {
-                    'type': 'dashboard-layout',
-                    'appName': 'Agent Pipeline',
-                    'navItems': [
-                      {
-                        'label': 'Pipeline',
-                        'href': '/pipeline',
-                        'icon': 'git-branch',
-                      },
-                      {
-                        'href': '/execution',
-                        'icon': 'play',
-                        'label': 'Execution',
-                      },
-                      {
-                        'label': 'Logs',
-                        'icon': 'terminal',
-                        'href': '/logs',
-                      },
-                    ],
                     'children': [
                       {
+                        'type': 'stack',
                         'direction': 'vertical',
+                        'gap': 'lg',
                         'children': [
                           {
-                            'justify': 'between',
                             'children': [
                               {
-                                'type': 'stack',
                                 'direction': 'horizontal',
+                                'gap': 'md',
+                                'type': 'stack',
                                 'children': [
                                   {
-                                    'type': 'icon',
                                     'name': 'tag',
+                                    'type': 'icon',
                                   },
                                   {
                                     'type': 'typography',
-                                    'variant': 'h2',
                                     'content': 'PipelinePlan',
+                                    'variant': 'h2',
                                   },
                                 ],
-                                'gap': 'md',
                               },
                               {
+                                'action': 'CLASSIFY',
                                 'type': 'button',
                                 'label': 'Open',
                                 'variant': 'primary',
                                 'icon': 'tag',
-                                'action': 'CLASSIFY',
                               },
                             ],
                             'type': 'stack',
-                            'direction': 'horizontal',
                             'gap': 'md',
+                            'direction': 'horizontal',
+                            'justify': 'between',
                           },
                           {
                             'type': 'divider',
                           },
                           {
-                            'description': 'Click Open to view details in a modal overlay.',
-                            'icon': 'tag',
-                            'type': 'empty-state',
                             'title': 'Nothing open',
+                            'type': 'empty-state',
+                            'icon': 'tag',
+                            'description': 'Click Open to view details in a modal overlay.',
                           },
                         ],
-                        'type': 'stack',
-                        'gap': 'lg',
                       },
                     ],
+                    'navItems': [
+                      {
+                        'icon': 'git-branch',
+                        'href': '/pipeline',
+                        'label': 'Pipeline',
+                      },
+                      {
+                        'icon': 'play',
+                        'label': 'Execution',
+                        'href': '/execution',
+                      },
+                      {
+                        'icon': 'terminal',
+                        'label': 'Logs',
+                        'href': '/logs',
+                      },
+                    ],
+                    'type': 'dashboard-layout',
+                    'appName': 'Agent Pipeline',
                   },
                 ],
               ],
@@ -1976,75 +1976,75 @@ export function stdAgentPipelinePipelinePlanOrbital(params: StdAgentPipelinePipe
                   'modal',
                   {
                     'gap': 'md',
+                    'direction': 'vertical',
                     'type': 'stack',
                     'children': [
                       {
-                        'type': 'stack',
-                        'gap': 'sm',
                         'children': [
                           {
-                            'name': 'tag',
                             'type': 'icon',
+                            'name': 'tag',
                           },
                           {
-                            'type': 'typography',
                             'content': 'PipelinePlan',
                             'variant': 'h3',
+                            'type': 'typography',
                           },
                         ],
+                        'type': 'stack',
                         'direction': 'horizontal',
+                        'gap': 'sm',
                       },
                       {
                         'type': 'divider',
                       },
                       {
-                        'gap': 'sm',
                         'children': [
                           {
+                            'type': 'typography',
                             'variant': 'caption',
                             'content': 'Categories:',
-                            'type': 'typography',
                           },
                           {
+                            'type': 'badge',
                             'label': 'data',
-                            'type': 'badge',
                             'variant': 'secondary',
                           },
                           {
+                            'variant': 'secondary',
+                            'type': 'badge',
                             'label': 'transform',
-                            'type': 'badge',
-                            'variant': 'secondary',
                           },
                           {
-                            'variant': 'secondary',
-                            'type': 'badge',
                             'label': 'validate',
+                            'variant': 'secondary',
+                            'type': 'badge',
                           },
                           {
+                            'label': 'deploy',
                             'type': 'badge',
                             'variant': 'secondary',
-                            'label': 'deploy',
                           },
                           {
-                            'label': 'test',
                             'type': 'badge',
+                            'label': 'test',
                             'variant': 'secondary',
                           },
                         ],
+                        'gap': 'sm',
                         'type': 'stack',
                         'direction': 'horizontal',
                       },
                       {
-                        'cancelEvent': 'CLOSE',
+                        'submitEvent': 'SAVE',
+                        'mode': 'create',
                         'fields': [
                           'input',
                         ],
-                        'submitEvent': 'SAVE',
-                        'mode': 'create',
                         'type': 'form-section',
+                        'cancelEvent': 'CLOSE',
                       },
                     ],
-                    'direction': 'vertical',
                   },
                 ],
               ],
@@ -2069,8 +2069,8 @@ export function stdAgentPipelinePipelinePlanOrbital(params: StdAgentPipelinePipe
                   'PipelinePlan',
                   {
                     'emit': {
-                      'failure': 'PipelinePlanLoadFailed',
                       'success': 'PipelinePlanLoaded',
+                      'failure': 'PipelinePlanLoadFailed',
                     },
                   },
                 ],
@@ -2078,72 +2078,72 @@ export function stdAgentPipelinePipelinePlanOrbital(params: StdAgentPipelinePipe
                   'render-ui',
                   'main',
                   {
-                    'type': 'dashboard-layout',
                     'children': [
                       {
-                        'type': 'stack',
-                        'gap': 'lg',
-                        'direction': 'vertical',
                         'children': [
                           {
+                            'gap': 'md',
+                            'direction': 'horizontal',
                             'type': 'stack',
                             'justify': 'between',
                             'children': [
                               {
-                                'type': 'stack',
                                 'children': [
                                   {
-                                    'name': 'tag',
                                     'type': 'icon',
+                                    'name': 'tag',
                                   },
                                   {
+                                    'content': 'PipelinePlan',
                                     'type': 'typography',
                                     'variant': 'h2',
-                                    'content': 'PipelinePlan',
                                   },
                                 ],
+                                'type': 'stack',
                                 'direction': 'horizontal',
                                 'gap': 'md',
                               },
                               {
                                 'type': 'button',
-                                'action': 'CLASSIFY',
-                                'label': 'Open',
                                 'variant': 'primary',
+                                'action': 'CLASSIFY',
                                 'icon': 'tag',
+                                'label': 'Open',
                               },
                             ],
-                            'direction': 'horizontal',
-                            'gap': 'md',
                           },
                           {
                             'type': 'divider',
                           },
                           {
-                            'icon': 'tag',
-                            'type': 'empty-state',
                             'title': 'Nothing open',
+                            'type': 'empty-state',
+                            'icon': 'tag',
                             'description': 'Click Open to view details in a modal overlay.',
                           },
                         ],
+                        'direction': 'vertical',
+                        'type': 'stack',
+                        'gap': 'lg',
                       },
                     ],
+                    'type': 'dashboard-layout',
                     'appName': 'Agent Pipeline',
                     'navItems': [
                       {
-                        'href': '/pipeline',
                         'label': 'Pipeline',
+                        'href': '/pipeline',
                         'icon': 'git-branch',
                       },
                       {
                         'icon': 'play',
-                        'label': 'Execution',
                         'href': '/execution',
+                        'label': 'Execution',
                       },
                       {
                         'label': 'Logs',
-                        'href': '/logs',
                         'icon': 'terminal',
+                        'href': '/logs',
                       },
                     ],
                   },
@@ -2191,10 +2191,35 @@ export function stdAgentPipelinePipelinePlanOrbital(params: StdAgentPipelinePipe
                   'main',
                   {
                     'type': 'dashboard-layout',
+                    'navItems': [
+                      {
+                        'icon': 'git-branch',
+                        'label': 'Pipeline',
+                        'href': '/pipeline',
+                      },
+                      {
+                        'icon': 'play',
+                        'label': 'Execution',
+                        'href': '/execution',
+                      },
+                      {
+                        'icon': 'terminal',
+                        'label': 'Logs',
+                        'href': '/logs',
+                      },
+                    ],
+                    'appName': 'Agent Pipeline',
                     'children': [
                       {
+                        'direction': 'vertical',
+                        'gap': 'lg',
+                        'type': 'stack',
                         'children': [
                           {
+                            'gap': 'md',
+                            'justify': 'between',
+                            'type': 'stack',
+                            'direction': 'horizontal',
                             'children': [
                               {
                                 'type': 'stack',
@@ -2205,59 +2230,34 @@ export function stdAgentPipelinePipelinePlanOrbital(params: StdAgentPipelinePipe
                                     'name': 'tag',
                                   },
                                   {
-                                    'content': 'PipelinePlan',
                                     'type': 'typography',
+                                    'content': 'PipelinePlan',
                                     'variant': 'h2',
                                   },
                                 ],
                                 'direction': 'horizontal',
                               },
                               {
+                                'action': 'CLASSIFY',
+                                'icon': 'tag',
+                                'label': 'Open',
                                 'variant': 'primary',
                                 'type': 'button',
-                                'icon': 'tag',
-                                'action': 'CLASSIFY',
-                                'label': 'Open',
                               },
                             ],
-                            'type': 'stack',
-                            'justify': 'between',
-                            'gap': 'md',
-                            'direction': 'horizontal',
                           },
                           {
                             'type': 'divider',
                           },
                           {
                             'description': 'Click Open to view details in a modal overlay.',
-                            'title': 'Nothing open',
                             'icon': 'tag',
                             'type': 'empty-state',
+                            'title': 'Nothing open',
                           },
                         ],
-                        'type': 'stack',
-                        'gap': 'lg',
-                        'direction': 'vertical',
                       },
                     ],
-                    'navItems': [
-                      {
-                        'label': 'Pipeline',
-                        'href': '/pipeline',
-                        'icon': 'git-branch',
-                      },
-                      {
-                        'label': 'Execution',
-                        'href': '/execution',
-                        'icon': 'play',
-                      },
-                      {
-                        'icon': 'terminal',
-                        'label': 'Logs',
-                        'href': '/logs',
-                      },
-                    ],
-                    'appName': 'Agent Pipeline',
                   },
                 ],
               ],
@@ -2447,61 +2447,11 @@ export function stdAgentPipelinePipelinePlanOrbital(params: StdAgentPipelinePipe
                   'render-ui',
                   'main',
                   {
-                    'children': [
-                      {
-                        'type': 'stack',
-                        'direction': 'vertical',
-                        'children': [
-                          {
-                            'children': [
-                              {
-                                'gap': 'md',
-                                'direction': 'horizontal',
-                                'children': [
-                                  {
-                                    'type': 'icon',
-                                    'name': 'sparkles',
-                                  },
-                                  {
-                                    'type': 'typography',
-                                    'variant': 'h2',
-                                    'content': 'PipelinePlan',
-                                  },
-                                ],
-                                'type': 'stack',
-                              },
-                              {
-                                'label': 'Open',
-                                'variant': 'primary',
-                                'action': 'GENERATE',
-                                'icon': 'sparkles',
-                                'type': 'button',
-                              },
-                            ],
-                            'justify': 'between',
-                            'type': 'stack',
-                            'gap': 'md',
-                            'direction': 'horizontal',
-                          },
-                          {
-                            'type': 'divider',
-                          },
-                          {
-                            'type': 'empty-state',
-                            'title': 'Nothing open',
-                            'icon': 'sparkles',
-                            'description': 'Click Open to view details in a modal overlay.',
-                          },
-                        ],
-                        'gap': 'lg',
-                      },
-                    ],
                     'type': 'dashboard-layout',
-                    'appName': 'Agent Pipeline',
                     'navItems': [
                       {
-                        'label': 'Pipeline',
                         'icon': 'git-branch',
+                        'label': 'Pipeline',
                         'href': '/pipeline',
                       },
                       {
@@ -2510,11 +2460,61 @@ export function stdAgentPipelinePipelinePlanOrbital(params: StdAgentPipelinePipe
                         'icon': 'play',
                       },
                       {
+                        'href': '/logs',
                         'icon': 'terminal',
                         'label': 'Logs',
-                        'href': '/logs',
                       },
                     ],
+                    'children': [
+                      {
+                        'type': 'stack',
+                        'direction': 'vertical',
+                        'gap': 'lg',
+                        'children': [
+                          {
+                            'type': 'stack',
+                            'gap': 'md',
+                            'justify': 'between',
+                            'direction': 'horizontal',
+                            'children': [
+                              {
+                                'type': 'stack',
+                                'gap': 'md',
+                                'children': [
+                                  {
+                                    'type': 'icon',
+                                    'name': 'sparkles',
+                                  },
+                                  {
+                                    'content': 'PipelinePlan',
+                                    'type': 'typography',
+                                    'variant': 'h2',
+                                  },
+                                ],
+                                'direction': 'horizontal',
+                              },
+                              {
+                                'type': 'button',
+                                'variant': 'primary',
+                                'action': 'GENERATE',
+                                'icon': 'sparkles',
+                                'label': 'Open',
+                              },
+                            ],
+                          },
+                          {
+                            'type': 'divider',
+                          },
+                          {
+                            'type': 'empty-state',
+                            'icon': 'sparkles',
+                            'title': 'Nothing open',
+                            'description': 'Click Open to view details in a modal overlay.',
+                          },
+                        ],
+                      },
+                    ],
+                    'appName': 'Agent Pipeline',
                   },
                 ],
               ],
@@ -2528,14 +2528,11 @@ export function stdAgentPipelinePipelinePlanOrbital(params: StdAgentPipelinePipe
                   'render-ui',
                   'modal',
                   {
+                    'gap': 'md',
                     'direction': 'vertical',
                     'type': 'stack',
-                    'gap': 'md',
                     'children': [
                       {
-                        'gap': 'sm',
-                        'type': 'stack',
-                        'direction': 'horizontal',
                         'children': [
                           {
                             'type': 'icon',
@@ -2547,33 +2544,36 @@ export function stdAgentPipelinePipelinePlanOrbital(params: StdAgentPipelinePipe
                             'variant': 'h3',
                           },
                         ],
-                      },
-                      {
-                        'type': 'divider',
-                      },
-                      {
-                        'children': [
-                          {
-                            'type': 'badge',
-                            'label': '@entity.provider',
-                          },
-                          {
-                            'type': 'badge',
-                            'label': '@entity.model',
-                          },
-                        ],
                         'type': 'stack',
                         'direction': 'horizontal',
                         'gap': 'sm',
                       },
                       {
+                        'type': 'divider',
+                      },
+                      {
+                        'gap': 'sm',
+                        'direction': 'horizontal',
+                        'type': 'stack',
+                        'children': [
+                          {
+                            'label': '@entity.provider',
+                            'type': 'badge',
+                          },
+                          {
+                            'label': '@entity.model',
+                            'type': 'badge',
+                          },
+                        ],
+                      },
+                      {
+                        'submitEvent': 'SAVE',
                         'type': 'form-section',
-                        'mode': 'create',
+                        'cancelEvent': 'CLOSE',
                         'fields': [
                           'prompt',
                         ],
-                        'cancelEvent': 'CLOSE',
-                        'submitEvent': 'SAVE',
+                        'mode': 'create',
                       },
                     ],
                   },
@@ -2611,33 +2611,34 @@ export function stdAgentPipelinePipelinePlanOrbital(params: StdAgentPipelinePipe
                   {
                     'navItems': [
                       {
+                        'label': 'Pipeline',
                         'icon': 'git-branch',
                         'href': '/pipeline',
-                        'label': 'Pipeline',
                       },
                       {
+                        'label': 'Execution',
                         'icon': 'play',
                         'href': '/execution',
-                        'label': 'Execution',
                       },
                       {
                         'icon': 'terminal',
-                        'label': 'Logs',
                         'href': '/logs',
+                        'label': 'Logs',
                       },
                     ],
+                    'appName': 'Agent Pipeline',
                     'type': 'dashboard-layout',
                     'children': [
                       {
-                        'gap': 'lg',
                         'type': 'stack',
+                        'gap': 'lg',
                         'children': [
                           {
-                            'direction': 'horizontal',
                             'gap': 'md',
                             'justify': 'between',
                             'children': [
                               {
+                                'gap': 'md',
                                 'direction': 'horizontal',
                                 'children': [
                                   {
@@ -2645,38 +2646,37 @@ export function stdAgentPipelinePipelinePlanOrbital(params: StdAgentPipelinePipe
                                     'type': 'icon',
                                   },
                                   {
+                                    'variant': 'h2',
                                     'type': 'typography',
                                     'content': 'PipelinePlan',
-                                    'variant': 'h2',
                                   },
                                 ],
                                 'type': 'stack',
-                                'gap': 'md',
                               },
                               {
-                                'action': 'GENERATE',
                                 'label': 'Open',
                                 'icon': 'sparkles',
-                                'variant': 'primary',
                                 'type': 'button',
+                                'action': 'GENERATE',
+                                'variant': 'primary',
                               },
                             ],
+                            'direction': 'horizontal',
                             'type': 'stack',
                           },
                           {
                             'type': 'divider',
                           },
                           {
-                            'description': 'Click Open to view details in a modal overlay.',
+                            'title': 'Nothing open',
                             'type': 'empty-state',
                             'icon': 'sparkles',
-                            'title': 'Nothing open',
+                            'description': 'Click Open to view details in a modal overlay.',
                           },
                         ],
                         'direction': 'vertical',
                       },
                     ],
-                    'appName': 'Agent Pipeline',
                   },
                 ],
               ],
@@ -2712,8 +2712,8 @@ export function stdAgentPipelinePipelinePlanOrbital(params: StdAgentPipelinePipe
                   'PipelinePlan',
                   {
                     'emit': {
-                      'failure': 'PipelinePlanLoadFailed',
                       'success': 'PipelinePlanLoaded',
+                      'failure': 'PipelinePlanLoadFailed',
                     },
                   },
                 ],
@@ -2726,48 +2726,48 @@ export function stdAgentPipelinePipelinePlanOrbital(params: StdAgentPipelinePipe
                     'children': [
                       {
                         'direction': 'vertical',
-                        'type': 'stack',
                         'gap': 'lg',
+                        'type': 'stack',
                         'children': [
                           {
-                            'type': 'stack',
-                            'direction': 'horizontal',
                             'gap': 'md',
-                            'justify': 'between',
                             'children': [
                               {
-                                'direction': 'horizontal',
                                 'children': [
                                   {
                                     'type': 'icon',
                                     'name': 'sparkles',
                                   },
                                   {
+                                    'content': 'PipelinePlan',
                                     'variant': 'h2',
                                     'type': 'typography',
-                                    'content': 'PipelinePlan',
                                   },
                                 ],
                                 'type': 'stack',
+                                'direction': 'horizontal',
                                 'gap': 'md',
                               },
                               {
-                                'icon': 'sparkles',
+                                'label': 'Open',
                                 'type': 'button',
                                 'variant': 'primary',
+                                'icon': 'sparkles',
                                 'action': 'GENERATE',
-                                'label': 'Open',
                               },
                             ],
+                            'type': 'stack',
+                            'direction': 'horizontal',
+                            'justify': 'between',
                           },
                           {
                             'type': 'divider',
                           },
                           {
-                            'description': 'Click Open to view details in a modal overlay.',
-                            'icon': 'sparkles',
-                            'type': 'empty-state',
                             'title': 'Nothing open',
+                            'icon': 'sparkles',
+                            'description': 'Click Open to view details in a modal overlay.',
+                            'type': 'empty-state',
                           },
                         ],
                       },
@@ -2775,8 +2775,8 @@ export function stdAgentPipelinePipelinePlanOrbital(params: StdAgentPipelinePipe
                     'navItems': [
                       {
                         'href': '/pipeline',
-                        'label': 'Pipeline',
                         'icon': 'git-branch',
+                        'label': 'Pipeline',
                       },
                       {
                         'icon': 'play',
@@ -2931,21 +2931,21 @@ export function stdAgentPipelinePipelinePlanOrbital(params: StdAgentPipelinePipe
                   'render-ui',
                   'main',
                   {
+                    'type': 'stack',
+                    'direction': 'vertical',
+                    'gap': 'md',
+                    'align': 'center',
                     'children': [
                       {
                         'type': 'spinner',
                       },
                       {
-                        'content': 'Loading…',
                         'type': 'typography',
+                        'content': 'Loading…',
                         'variant': 'caption',
                         'color': 'muted',
                       },
                     ],
-                    'direction': 'vertical',
-                    'type': 'stack',
-                    'gap': 'md',
-                    'align': 'center',
                     'className': 'py-12',
                   },
                 ],
@@ -2960,83 +2960,66 @@ export function stdAgentPipelinePipelinePlanOrbital(params: StdAgentPipelinePipe
                   'render-ui',
                   'main',
                   {
-                    'appName': 'Agent Pipeline',
-                    'navItems': [
-                      {
-                        'href': '/pipeline',
-                        'label': 'Pipeline',
-                        'icon': 'git-branch',
-                      },
-                      {
-                        'label': 'Execution',
-                        'href': '/execution',
-                        'icon': 'play',
-                      },
-                      {
-                        'href': '/logs',
-                        'icon': 'terminal',
-                        'label': 'Logs',
-                      },
-                    ],
                     'type': 'dashboard-layout',
+                    'appName': 'Agent Pipeline',
                     'children': [
                       {
+                        'gap': 'lg',
                         'children': [
                           {
-                            'direction': 'horizontal',
                             'justify': 'between',
                             'align': 'center',
+                            'direction': 'horizontal',
+                            'gap': 'md',
                             'children': [
                               {
+                                'direction': 'horizontal',
+                                'gap': 'sm',
                                 'type': 'stack',
                                 'align': 'center',
-                                'direction': 'horizontal',
                                 'children': [
                                   {
-                                    'type': 'icon',
                                     'name': 'brain',
+                                    'type': 'icon',
                                   },
                                   {
-                                    'variant': 'h2',
                                     'type': 'typography',
+                                    'variant': 'h2',
                                     'content': 'PipelinePlan Manager',
                                   },
                                 ],
-                                'gap': 'sm',
                               },
                             ],
-                            'gap': 'md',
                             'type': 'stack',
                           },
                           {
                             'type': 'divider',
                           },
                           {
-                            'entity': '@payload.data',
                             'fields': [
                               {
                                 'name': 'content',
                                 'label': 'Content',
-                                'icon': 'brain',
                                 'variant': 'h4',
+                                'icon': 'brain',
                               },
                               {
+                                'variant': 'badge',
                                 'name': 'category',
                                 'label': 'Category',
-                                'variant': 'badge',
                                 'colorMap': {
-                                  'inactive': 'neutral',
                                   'active': 'success',
-                                  'disabled': 'neutral',
-                                  'completed': 'success',
-                                  'pending': 'warning',
-                                  'archived': 'neutral',
                                   'draft': 'warning',
-                                  'error': 'destructive',
-                                  'failed': 'destructive',
-                                  'done': 'success',
                                   'scheduled': 'warning',
+                                  'inactive': 'neutral',
+                                  'pending': 'warning',
+                                  'disabled': 'neutral',
+                                  'done': 'success',
+                                  'completed': 'success',
+                                  'archived': 'neutral',
+                                  'error': 'destructive',
                                   'cancelled': 'destructive',
+                                  'failed': 'destructive',
                                 },
                               },
                               {
@@ -3045,13 +3028,30 @@ export function stdAgentPipelinePipelinePlanOrbital(params: StdAgentPipelinePipe
                                 'name': 'strength',
                               },
                             ],
+                            'entity': '@payload.data',
                             'type': 'data-grid',
                           },
                         ],
-                        'className': 'max-w-5xl mx-auto w-full',
-                        'gap': 'lg',
                         'type': 'stack',
                         'direction': 'vertical',
+                        'className': 'max-w-5xl mx-auto w-full',
+                      },
+                    ],
+                    'navItems': [
+                      {
+                        'label': 'Pipeline',
+                        'href': '/pipeline',
+                        'icon': 'git-branch',
+                      },
+                      {
+                        'label': 'Execution',
+                        'href': '/execution',
+                        'icon': 'play',
+                      },
+                      {
+                        'label': 'Logs',
+                        'href': '/logs',
+                        'icon': 'terminal',
                       },
                     ],
                   },
@@ -3067,36 +3067,36 @@ export function stdAgentPipelinePipelinePlanOrbital(params: StdAgentPipelinePipe
                   'render-ui',
                   'main',
                   {
-                    'className': 'py-12',
-                    'type': 'stack',
-                    'direction': 'vertical',
                     'children': [
                       {
-                        'color': 'destructive',
                         'type': 'icon',
                         'name': 'alert-triangle',
+                        'color': 'destructive',
                       },
                       {
+                        'type': 'typography',
                         'variant': 'h3',
                         'content': 'Failed to load pipelineplan',
-                        'type': 'typography',
                       },
                       {
-                        'variant': 'body',
                         'type': 'typography',
                         'color': 'muted',
                         'content': '@payload.error',
+                        'variant': 'body',
                       },
                       {
-                        'type': 'button',
                         'variant': 'primary',
-                        'icon': 'rotate-ccw',
                         'action': 'INIT',
+                        'icon': 'rotate-ccw',
+                        'type': 'button',
                         'label': 'Retry',
                       },
                     ],
                     'align': 'center',
+                    'type': 'stack',
+                    'className': 'py-12',
                     'gap': 'md',
+                    'direction': 'vertical',
                   },
                 ],
               ],
@@ -3588,18 +3588,37 @@ export function stdAgentPipelinePipelineExecOrbital(params: StdAgentPipelinePipe
                   'render-ui',
                   'main',
                   {
-                    'appName': 'Agent Pipeline',
+                    'type': 'dashboard-layout',
+                    'navItems': [
+                      {
+                        'label': 'Pipeline',
+                        'icon': 'git-branch',
+                        'href': '/pipeline',
+                      },
+                      {
+                        'href': '/execution',
+                        'label': 'Execution',
+                        'icon': 'play',
+                      },
+                      {
+                        'icon': 'terminal',
+                        'label': 'Logs',
+                        'href': '/logs',
+                      },
+                    ],
                     'children': [
                       {
                         'type': 'stack',
-                        'gap': 'lg',
-                        'direction': 'vertical',
                         'children': [
                           {
+                            'align': 'center',
+                            'type': 'stack',
+                            'direction': 'horizontal',
+                            'gap': 'sm',
                             'children': [
                               {
-                                'type': 'icon',
                                 'name': 'repeat',
+                                'type': 'icon',
                               },
                               {
                                 'type': 'typography',
@@ -3607,10 +3626,6 @@ export function stdAgentPipelinePipelineExecOrbital(params: StdAgentPipelinePipe
                                 'variant': 'h2',
                               },
                             ],
-                            'direction': 'horizontal',
-                            'gap': 'sm',
-                            'type': 'stack',
-                            'align': 'center',
                           },
                           {
                             'type': 'divider',
@@ -3619,49 +3634,34 @@ export function stdAgentPipelinePipelineExecOrbital(params: StdAgentPipelinePipe
                             'type': 'card',
                             'children': [
                               {
+                                'direction': 'vertical',
                                 'type': 'stack',
+                                'gap': 'md',
                                 'children': [
                                   {
+                                    'variant': 'body',
                                     'type': 'typography',
                                     'content': 'Describe the task to execute with tools',
-                                    'variant': 'body',
                                   },
                                   {
                                     'mode': 'edit',
-                                    'type': 'form-section',
+                                    'entity': '@entity',
                                     'submitEvent': 'EXECUTE',
                                     'fields': [
                                       'task',
                                     ],
-                                    'entity': '@entity',
+                                    'type': 'form-section',
                                   },
                                 ],
-                                'direction': 'vertical',
-                                'gap': 'md',
                               },
                             ],
                           },
                         ],
+                        'gap': 'lg',
+                        'direction': 'vertical',
                       },
                     ],
-                    'navItems': [
-                      {
-                        'href': '/pipeline',
-                        'icon': 'git-branch',
-                        'label': 'Pipeline',
-                      },
-                      {
-                        'icon': 'play',
-                        'href': '/execution',
-                        'label': 'Execution',
-                      },
-                      {
-                        'icon': 'terminal',
-                        'href': '/logs',
-                        'label': 'Logs',
-                      },
-                    ],
-                    'type': 'dashboard-layout',
+                    'appName': 'Agent Pipeline',
                   },
                 ],
               ],
@@ -3702,9 +3702,11 @@ export function stdAgentPipelinePipelineExecOrbital(params: StdAgentPipelinePipe
                   'render-ui',
                   'main',
                   {
+                    'appName': 'Agent Pipeline',
+                    'type': 'dashboard-layout',
                     'children': [
                       {
-                        'direction': 'vertical',
+                        'gap': 'lg',
                         'align': 'center',
                         'children': [
                           {
@@ -3713,39 +3715,37 @@ export function stdAgentPipelinePipelineExecOrbital(params: StdAgentPipelinePipe
                           },
                           {
                             'content': 'Planning execution...',
-                            'variant': 'h3',
                             'type': 'typography',
+                            'variant': 'h3',
                           },
                           {
                             'type': 'spinner',
                           },
                           {
+                            'type': 'typography',
                             'content': '@entity.task',
                             'variant': 'caption',
-                            'type': 'typography',
                           },
                         ],
                         'type': 'stack',
-                        'gap': 'lg',
+                        'direction': 'vertical',
                       },
                     ],
-                    'appName': 'Agent Pipeline',
-                    'type': 'dashboard-layout',
                     'navItems': [
                       {
-                        'href': '/pipeline',
                         'label': 'Pipeline',
+                        'href': '/pipeline',
                         'icon': 'git-branch',
                       },
                       {
-                        'href': '/execution',
                         'label': 'Execution',
+                        'href': '/execution',
                         'icon': 'play',
                       },
                       {
-                        'label': 'Logs',
                         'href': '/logs',
                         'icon': 'terminal',
+                        'label': 'Logs',
                       },
                     ],
                   },
@@ -3785,39 +3785,42 @@ export function stdAgentPipelinePipelineExecOrbital(params: StdAgentPipelinePipe
                   'render-ui',
                   'main',
                   {
+                    'appName': 'Agent Pipeline',
+                    'type': 'dashboard-layout',
                     'children': [
                       {
-                        'direction': 'vertical',
+                        'type': 'stack',
+                        'gap': 'lg',
                         'children': [
                           {
+                            'justify': 'between',
+                            'type': 'stack',
+                            'direction': 'horizontal',
+                            'gap': 'sm',
+                            'align': 'center',
                             'children': [
                               {
+                                'type': 'stack',
                                 'gap': 'sm',
+                                'align': 'center',
+                                'direction': 'horizontal',
                                 'children': [
                                   {
                                     'name': 'tool',
                                     'type': 'icon',
                                   },
                                   {
-                                    'content': 'Executing Tool',
-                                    'variant': 'h2',
                                     'type': 'typography',
+                                    'variant': 'h2',
+                                    'content': 'Executing Tool',
                                   },
                                 ],
-                                'align': 'center',
-                                'type': 'stack',
-                                'direction': 'horizontal',
                               },
                               {
                                 'type': 'badge',
                                 'label': '@entity.maxIterations',
                               },
                             ],
-                            'type': 'stack',
-                            'direction': 'horizontal',
-                            'gap': 'sm',
-                            'align': 'center',
-                            'justify': 'between',
                           },
                           {
                             'type': 'divider',
@@ -3825,6 +3828,8 @@ export function stdAgentPipelinePipelineExecOrbital(params: StdAgentPipelinePipe
                           {
                             'children': [
                               {
+                                'type': 'stack',
+                                'direction': 'vertical',
                                 'gap': 'sm',
                                 'children': [
                                   {
@@ -3833,16 +3838,14 @@ export function stdAgentPipelinePipelineExecOrbital(params: StdAgentPipelinePipe
                                     'content': 'Current Tool',
                                   },
                                   {
-                                    'type': 'typography',
-                                    'content': '@entity.currentTool',
                                     'variant': 'h4',
+                                    'content': '@entity.currentTool',
+                                    'type': 'typography',
                                   },
                                   {
                                     'type': 'spinner',
                                   },
                                 ],
-                                'direction': 'vertical',
-                                'type': 'stack',
                               },
                             ],
                             'type': 'card',
@@ -3851,12 +3854,13 @@ export function stdAgentPipelinePipelineExecOrbital(params: StdAgentPipelinePipe
                             'type': 'card',
                             'children': [
                               {
+                                'type': 'stack',
                                 'direction': 'vertical',
                                 'children': [
                                   {
-                                    'variant': 'caption',
                                     'type': 'typography',
                                     'content': 'Plan',
+                                    'variant': 'caption',
                                   },
                                   {
                                     'type': 'typography',
@@ -3865,27 +3869,23 @@ export function stdAgentPipelinePipelineExecOrbital(params: StdAgentPipelinePipe
                                   },
                                 ],
                                 'gap': 'sm',
-                                'type': 'stack',
                               },
                             ],
                           },
                         ],
-                        'gap': 'lg',
-                        'type': 'stack',
+                        'direction': 'vertical',
                       },
                     ],
-                    'appName': 'Agent Pipeline',
-                    'type': 'dashboard-layout',
                     'navItems': [
                       {
-                        'href': '/pipeline',
-                        'label': 'Pipeline',
                         'icon': 'git-branch',
+                        'label': 'Pipeline',
+                        'href': '/pipeline',
                       },
                       {
-                        'label': 'Execution',
-                        'href': '/execution',
                         'icon': 'play',
+                        'href': '/execution',
+                        'label': 'Execution',
                       },
                       {
                         'href': '/logs',
@@ -3916,74 +3916,74 @@ export function stdAgentPipelinePipelineExecOrbital(params: StdAgentPipelinePipe
                   'render-ui',
                   'main',
                   {
-                    'children': [
-                      {
-                        'type': 'stack',
-                        'direction': 'vertical',
-                        'children': [
-                          {
-                            'type': 'icon',
-                            'name': 'x-circle',
-                          },
-                          {
-                            'type': 'typography',
-                            'variant': 'h2',
-                            'content': 'Loop Failed',
-                          },
-                          {
-                            'variant': 'error',
-                            'type': 'alert',
-                            'message': '@entity.error',
-                          },
-                          {
-                            'children': [
-                              {
-                                'label': 'Iterations Used',
-                                'value': '@entity.iterations',
-                                'icon': 'repeat',
-                                'type': 'stat-display',
-                              },
-                              {
-                                'icon': 'shield',
-                                'type': 'stat-display',
-                                'label': 'Max Allowed',
-                                'value': '@entity.maxIterations',
-                              },
-                            ],
-                            'cols': 2,
-                            'type': 'simple-grid',
-                          },
-                          {
-                            'variant': 'primary',
-                            'action': 'RESET',
-                            'icon': 'rotate-ccw',
-                            'type': 'button',
-                            'label': 'Retry',
-                          },
-                        ],
-                        'align': 'center',
-                        'gap': 'lg',
-                      },
-                    ],
-                    'type': 'dashboard-layout',
-                    'appName': 'Agent Pipeline',
                     'navItems': [
                       {
-                        'label': 'Pipeline',
                         'icon': 'git-branch',
+                        'label': 'Pipeline',
                         'href': '/pipeline',
                       },
                       {
                         'href': '/execution',
-                        'label': 'Execution',
                         'icon': 'play',
+                        'label': 'Execution',
                       },
                       {
-                        'href': '/logs',
                         'label': 'Logs',
+                        'href': '/logs',
                         'icon': 'terminal',
                       },
                     ],
+                    'type': 'dashboard-layout',
+                    'children': [
+                      {
+                        'direction': 'vertical',
+                        'align': 'center',
+                        'children': [
+                          {
+                            'name': 'x-circle',
+                            'type': 'icon',
+                          },
+                          {
+                            'type': 'typography',
+                            'content': 'Loop Failed',
+                            'variant': 'h2',
+                          },
+                          {
+                            'type': 'alert',
+                            'message': '@entity.error',
+                            'variant': 'error',
+                          },
+                          {
+                            'children': [
+                              {
+                                'icon': 'repeat',
+                                'value': '@entity.iterations',
+                                'label': 'Iterations Used',
+                                'type': 'stat-display',
+                              },
+                              {
+                                'value': '@entity.maxIterations',
+                                'type': 'stat-display',
+                                'icon': 'shield',
+                                'label': 'Max Allowed',
+                              },
+                            ],
+                            'type': 'simple-grid',
+                            'cols': 2,
+                          },
+                          {
+                            'label': 'Retry',
+                            'variant': 'primary',
+                            'action': 'RESET',
+                            'type': 'button',
+                            'icon': 'rotate-ccw',
+                          },
+                        ],
+                        'type': 'stack',
+                        'gap': 'lg',
+                      },
+                    ],
+                    'appName': 'Agent Pipeline',
                   },
                 ],
               ],
@@ -4015,29 +4015,27 @@ export function stdAgentPipelinePipelineExecOrbital(params: StdAgentPipelinePipe
                   'render-ui',
                   'main',
                   {
-                    'appName': 'Agent Pipeline',
                     'navItems': [
                       {
                         'label': 'Pipeline',
-                        'icon': 'git-branch',
                         'href': '/pipeline',
+                        'icon': 'git-branch',
                       },
                       {
-                        'icon': 'play',
                         'href': '/execution',
                         'label': 'Execution',
+                        'icon': 'play',
                       },
                       {
-                        'label': 'Logs',
                         'icon': 'terminal',
+                        'label': 'Logs',
                         'href': '/logs',
                       },
                     ],
+                    'appName': 'Agent Pipeline',
+                    'type': 'dashboard-layout',
                     'children': [
                       {
-                        'gap': 'lg',
-                        'align': 'center',
-                        'direction': 'vertical',
                         'children': [
                           {
                             'name': 'eye',
@@ -4052,14 +4050,16 @@ export function stdAgentPipelinePipelineExecOrbital(params: StdAgentPipelinePipe
                             'type': 'spinner',
                           },
                           {
-                            'type': 'badge',
                             'label': '@entity.iterations',
+                            'type': 'badge',
                           },
                         ],
+                        'gap': 'lg',
+                        'align': 'center',
+                        'direction': 'vertical',
                         'type': 'stack',
                       },
                     ],
-                    'type': 'dashboard-layout',
                   },
                 ],
               ],
@@ -4083,13 +4083,31 @@ export function stdAgentPipelinePipelineExecOrbital(params: StdAgentPipelinePipe
                   'render-ui',
                   'main',
                   {
+                    'appName': 'Agent Pipeline',
+                    'navItems': [
+                      {
+                        'icon': 'git-branch',
+                        'href': '/pipeline',
+                        'label': 'Pipeline',
+                      },
+                      {
+                        'label': 'Execution',
+                        'href': '/execution',
+                        'icon': 'play',
+                      },
+                      {
+                        'label': 'Logs',
+                        'icon': 'terminal',
+                        'href': '/logs',
+                      },
+                    ],
                     'children': [
                       {
-                        'direction': 'vertical',
+                        'type': 'stack',
                         'children': [
                           {
-                            'name': 'x-circle',
                             'type': 'icon',
+                            'name': 'x-circle',
                           },
                           {
                             'type': 'typography',
@@ -4097,60 +4115,42 @@ export function stdAgentPipelinePipelineExecOrbital(params: StdAgentPipelinePipe
                             'variant': 'h2',
                           },
                           {
-                            'variant': 'error',
-                            'type': 'alert',
                             'message': '@entity.error',
+                            'type': 'alert',
+                            'variant': 'error',
                           },
                           {
                             'cols': 2,
+                            'type': 'simple-grid',
                             'children': [
                               {
-                                'icon': 'repeat',
-                                'value': '@entity.iterations',
                                 'type': 'stat-display',
+                                'value': '@entity.iterations',
                                 'label': 'Iterations Used',
+                                'icon': 'repeat',
                               },
                               {
-                                'type': 'stat-display',
                                 'label': 'Max Allowed',
                                 'value': '@entity.maxIterations',
+                                'type': 'stat-display',
                                 'icon': 'shield',
                               },
                             ],
-                            'type': 'simple-grid',
                           },
                           {
-                            'icon': 'rotate-ccw',
                             'action': 'RESET',
                             'type': 'button',
-                            'label': 'Retry',
                             'variant': 'primary',
+                            'icon': 'rotate-ccw',
+                            'label': 'Retry',
                           },
                         ],
-                        'type': 'stack',
+                        'direction': 'vertical',
                         'align': 'center',
                         'gap': 'lg',
                       },
                     ],
                     'type': 'dashboard-layout',
-                    'navItems': [
-                      {
-                        'href': '/pipeline',
-                        'icon': 'git-branch',
-                        'label': 'Pipeline',
-                      },
-                      {
-                        'icon': 'play',
-                        'href': '/execution',
-                        'label': 'Execution',
-                      },
-                      {
-                        'icon': 'terminal',
-                        'href': '/logs',
-                        'label': 'Logs',
-                      },
-                    ],
-                    'appName': 'Agent Pipeline',
                   },
                 ],
               ],
@@ -4174,60 +4174,44 @@ export function stdAgentPipelinePipelineExecOrbital(params: StdAgentPipelinePipe
                   'render-ui',
                   'main',
                   {
-                    'appName': 'Agent Pipeline',
-                    'type': 'dashboard-layout',
-                    'navItems': [
-                      {
-                        'href': '/pipeline',
-                        'icon': 'git-branch',
-                        'label': 'Pipeline',
-                      },
-                      {
-                        'label': 'Execution',
-                        'icon': 'play',
-                        'href': '/execution',
-                      },
-                      {
-                        'icon': 'terminal',
-                        'label': 'Logs',
-                        'href': '/logs',
-                      },
-                    ],
                     'children': [
                       {
+                        'direction': 'vertical',
+                        'type': 'stack',
+                        'gap': 'lg',
                         'children': [
                           {
-                            'type': 'stack',
                             'align': 'center',
                             'justify': 'between',
+                            'type': 'stack',
+                            'gap': 'sm',
                             'children': [
                               {
                                 'align': 'center',
+                                'direction': 'horizontal',
                                 'type': 'stack',
-                                'gap': 'sm',
                                 'children': [
                                   {
-                                    'type': 'icon',
                                     'name': 'check-circle',
+                                    'type': 'icon',
                                   },
                                   {
-                                    'variant': 'h2',
-                                    'content': 'Loop Complete',
                                     'type': 'typography',
+                                    'content': 'Loop Complete',
+                                    'variant': 'h2',
                                   },
                                 ],
-                                'direction': 'horizontal',
+                                'gap': 'sm',
                               },
                               {
                                 'icon': 'rotate-ccw',
-                                'type': 'button',
-                                'label': 'New Task',
                                 'action': 'RESET',
+                                'label': 'New Task',
                                 'variant': 'ghost',
+                                'type': 'button',
                               },
                             ],
                             'direction': 'horizontal',
-                            'gap': 'sm',
                           },
                           {
                             'type': 'divider',
@@ -4235,16 +4219,16 @@ export function stdAgentPipelinePipelineExecOrbital(params: StdAgentPipelinePipe
                           {
                             'children': [
                               {
-                                'value': '@entity.iterations',
                                 'label': 'Iterations',
-                                'icon': 'repeat',
                                 'type': 'stat-display',
+                                'value': '@entity.iterations',
+                                'icon': 'repeat',
                               },
                               {
+                                'label': 'Status',
                                 'icon': 'check',
                                 'value': '@entity.status',
                                 'type': 'stat-display',
-                                'label': 'Status',
                               },
                             ],
                             'type': 'simple-grid',
@@ -4254,44 +4238,60 @@ export function stdAgentPipelinePipelineExecOrbital(params: StdAgentPipelinePipe
                             'type': 'divider',
                           },
                           {
+                            'type': 'card',
                             'children': [
                               {
-                                'type': 'stack',
                                 'direction': 'vertical',
-                                'gap': 'md',
                                 'children': [
                                   {
-                                    'content': 'Task',
-                                    'variant': 'caption',
                                     'type': 'typography',
+                                    'variant': 'caption',
+                                    'content': 'Task',
                                   },
                                   {
                                     'variant': 'body',
-                                    'content': '@entity.task',
                                     'type': 'typography',
+                                    'content': '@entity.task',
                                   },
                                   {
                                     'type': 'divider',
                                   },
                                   {
-                                    'content': 'Result',
                                     'variant': 'caption',
                                     'type': 'typography',
+                                    'content': 'Result',
                                   },
                                   {
-                                    'type': 'typography',
                                     'content': '@entity.result',
                                     'variant': 'body',
+                                    'type': 'typography',
                                   },
                                 ],
+                                'type': 'stack',
+                                'gap': 'md',
                               },
                             ],
-                            'type': 'card',
                           },
                         ],
-                        'direction': 'vertical',
-                        'gap': 'lg',
-                        'type': 'stack',
+                      },
+                    ],
+                    'appName': 'Agent Pipeline',
+                    'type': 'dashboard-layout',
+                    'navItems': [
+                      {
+                        'icon': 'git-branch',
+                        'label': 'Pipeline',
+                        'href': '/pipeline',
+                      },
+                      {
+                        'label': 'Execution',
+                        'href': '/execution',
+                        'icon': 'play',
+                      },
+                      {
+                        'label': 'Logs',
+                        'href': '/logs',
+                        'icon': 'terminal',
                       },
                     ],
                   },
@@ -4345,39 +4345,59 @@ export function stdAgentPipelinePipelineExecOrbital(params: StdAgentPipelinePipe
                   'main',
                   {
                     'appName': 'Agent Pipeline',
+                    'type': 'dashboard-layout',
+                    'navItems': [
+                      {
+                        'href': '/pipeline',
+                        'icon': 'git-branch',
+                        'label': 'Pipeline',
+                      },
+                      {
+                        'icon': 'play',
+                        'href': '/execution',
+                        'label': 'Execution',
+                      },
+                      {
+                        'href': '/logs',
+                        'label': 'Logs',
+                        'icon': 'terminal',
+                      },
+                    ],
                     'children': [
                       {
                         'direction': 'vertical',
+                        'type': 'stack',
+                        'gap': 'lg',
                         'children': [
                           {
+                            'direction': 'horizontal',
                             'gap': 'sm',
+                            'justify': 'between',
                             'children': [
                               {
-                                'direction': 'horizontal',
-                                'gap': 'sm',
-                                'type': 'stack',
-                                'align': 'center',
                                 'children': [
                                   {
-                                    'name': 'tool',
                                     'type': 'icon',
+                                    'name': 'tool',
                                   },
                                   {
-                                    'variant': 'h2',
                                     'type': 'typography',
+                                    'variant': 'h2',
                                     'content': 'Executing Tool',
                                   },
                                 ],
+                                'align': 'center',
+                                'type': 'stack',
+                                'direction': 'horizontal',
+                                'gap': 'sm',
                               },
                               {
                                 'label': '@entity.maxIterations',
                                 'type': 'badge',
                               },
                             ],
-                            'direction': 'horizontal',
-                            'type': 'stack',
                             'align': 'center',
-                            'justify': 'between',
+                            'type': 'stack',
                           },
                           {
                             'type': 'divider',
@@ -4387,69 +4407,49 @@ export function stdAgentPipelinePipelineExecOrbital(params: StdAgentPipelinePipe
                               {
                                 'gap': 'sm',
                                 'direction': 'vertical',
+                                'type': 'stack',
                                 'children': [
                                   {
-                                    'content': 'Current Tool',
-                                    'type': 'typography',
                                     'variant': 'caption',
+                                    'type': 'typography',
+                                    'content': 'Current Tool',
                                   },
                                   {
+                                    'content': '@entity.currentTool',
                                     'type': 'typography',
                                     'variant': 'h4',
-                                    'content': '@entity.currentTool',
                                   },
                                   {
                                     'type': 'spinner',
                                   },
                                 ],
-                                'type': 'stack',
                               },
                             ],
                             'type': 'card',
                           },
                           {
-                            'type': 'card',
                             'children': [
                               {
                                 'direction': 'vertical',
+                                'gap': 'sm',
+                                'type': 'stack',
                                 'children': [
                                   {
                                     'content': 'Plan',
-                                    'variant': 'caption',
                                     'type': 'typography',
+                                    'variant': 'caption',
                                   },
                                   {
-                                    'type': 'typography',
-                                    'content': '@entity.plan',
                                     'variant': 'body',
+                                    'content': '@entity.plan',
+                                    'type': 'typography',
                                   },
                                 ],
-                                'gap': 'sm',
-                                'type': 'stack',
                               },
                             ],
+                            'type': 'card',
                           },
                         ],
-                        'type': 'stack',
-                        'gap': 'lg',
-                      },
-                    ],
-                    'type': 'dashboard-layout',
-                    'navItems': [
-                      {
-                        'label': 'Pipeline',
-                        'icon': 'git-branch',
-                        'href': '/pipeline',
-                      },
-                      {
-                        'icon': 'play',
-                        'href': '/execution',
-                        'label': 'Execution',
-                      },
-                      {
-                        'icon': 'terminal',
-                        'href': '/logs',
-                        'label': 'Logs',
                       },
                     ],
                   },
@@ -4475,72 +4475,72 @@ export function stdAgentPipelinePipelineExecOrbital(params: StdAgentPipelinePipe
                   'render-ui',
                   'main',
                   {
-                    'type': 'dashboard-layout',
                     'navItems': [
                       {
-                        'label': 'Pipeline',
                         'icon': 'git-branch',
                         'href': '/pipeline',
+                        'label': 'Pipeline',
                       },
                       {
+                        'href': '/execution',
                         'label': 'Execution',
                         'icon': 'play',
-                        'href': '/execution',
                       },
                       {
-                        'label': 'Logs',
-                        'href': '/logs',
                         'icon': 'terminal',
+                        'href': '/logs',
+                        'label': 'Logs',
                       },
                     ],
                     'appName': 'Agent Pipeline',
+                    'type': 'dashboard-layout',
                     'children': [
                       {
-                        'type': 'stack',
                         'direction': 'vertical',
                         'gap': 'lg',
-                        'align': 'center',
                         'children': [
                           {
-                            'type': 'icon',
                             'name': 'x-circle',
+                            'type': 'icon',
                           },
                           {
-                            'content': 'Loop Failed',
                             'variant': 'h2',
                             'type': 'typography',
+                            'content': 'Loop Failed',
                           },
                           {
+                            'message': '@entity.error',
                             'variant': 'error',
                             'type': 'alert',
-                            'message': '@entity.error',
                           },
                           {
                             'cols': 2,
-                            'type': 'simple-grid',
                             'children': [
                               {
                                 'value': '@entity.iterations',
-                                'type': 'stat-display',
-                                'icon': 'repeat',
                                 'label': 'Iterations Used',
+                                'icon': 'repeat',
+                                'type': 'stat-display',
                               },
                               {
                                 'label': 'Max Allowed',
                                 'icon': 'shield',
-                                'value': '@entity.maxIterations',
                                 'type': 'stat-display',
+                                'value': '@entity.maxIterations',
                               },
                             ],
+                            'type': 'simple-grid',
                           },
                           {
-                            'label': 'Retry',
                             'type': 'button',
                             'action': 'RESET',
-                            'icon': 'rotate-ccw',
                             'variant': 'primary',
+                            'icon': 'rotate-ccw',
+                            'label': 'Retry',
                           },
                         ],
+                        'align': 'center',
+                        'type': 'stack',
                       },
                     ],
                   },
@@ -4597,30 +4597,13 @@ export function stdAgentPipelinePipelineExecOrbital(params: StdAgentPipelinePipe
                   'main',
                   {
                     'type': 'dashboard-layout',
-                    'navItems': [
-                      {
-                        'label': 'Pipeline',
-                        'href': '/pipeline',
-                        'icon': 'git-branch',
-                      },
-                      {
-                        'href': '/execution',
-                        'icon': 'play',
-                        'label': 'Execution',
-                      },
-                      {
-                        'href': '/logs',
-                        'icon': 'terminal',
-                        'label': 'Logs',
-                      },
-                    ],
+                    'appName': 'Agent Pipeline',
                     'children': [
                       {
-                        'direction': 'vertical',
-                        'gap': 'lg',
-                        'type': 'stack',
                         'children': [
                           {
+                            'direction': 'horizontal',
+                            'align': 'center',
                             'children': [
                               {
                                 'name': 'repeat',
@@ -4633,43 +4616,60 @@ export function stdAgentPipelinePipelineExecOrbital(params: StdAgentPipelinePipe
                               },
                             ],
                             'type': 'stack',
-                            'align': 'center',
-                            'direction': 'horizontal',
                             'gap': 'sm',
                           },
                           {
                             'type': 'divider',
                           },
                           {
-                            'type': 'card',
                             'children': [
                               {
+                                'gap': 'md',
+                                'direction': 'vertical',
                                 'children': [
                                   {
+                                    'variant': 'body',
                                     'type': 'typography',
                                     'content': 'Describe the task to execute with tools',
-                                    'variant': 'body',
                                   },
                                   {
+                                    'mode': 'edit',
+                                    'type': 'form-section',
+                                    'entity': '@entity',
+                                    'submitEvent': 'EXECUTE',
                                     'fields': [
                                       'task',
                                     ],
-                                    'entity': '@entity',
-                                    'submitEvent': 'EXECUTE',
-                                    'mode': 'edit',
-                                    'type': 'form-section',
                                   },
                                 ],
                                 'type': 'stack',
-                                'direction': 'vertical',
-                                'gap': 'md',
                               },
                             ],
+                            'type': 'card',
                           },
                         ],
+                        'direction': 'vertical',
+                        'gap': 'lg',
+                        'type': 'stack',
                       },
                     ],
-                    'appName': 'Agent Pipeline',
+                    'navItems': [
+                      {
+                        'href': '/pipeline',
+                        'icon': 'git-branch',
+                        'label': 'Pipeline',
+                      },
+                      {
+                        'label': 'Execution',
+                        'icon': 'play',
+                        'href': '/execution',
+                      },
+                      {
+                        'label': 'Logs',
+                        'href': '/logs',
+                        'icon': 'terminal',
+                      },
+                    ],
                   },
                 ],
               ],
@@ -4723,65 +4723,10 @@ export function stdAgentPipelinePipelineExecOrbital(params: StdAgentPipelinePipe
                   'render-ui',
                   'main',
                   {
-                    'children': [
-                      {
-                        'direction': 'vertical',
-                        'children': [
-                          {
-                            'children': [
-                              {
-                                'type': 'icon',
-                                'name': 'repeat',
-                              },
-                              {
-                                'type': 'typography',
-                                'variant': 'h2',
-                                'content': 'Tool Execution Loop',
-                              },
-                            ],
-                            'direction': 'horizontal',
-                            'gap': 'sm',
-                            'type': 'stack',
-                            'align': 'center',
-                          },
-                          {
-                            'type': 'divider',
-                          },
-                          {
-                            'children': [
-                              {
-                                'type': 'stack',
-                                'direction': 'vertical',
-                                'gap': 'md',
-                                'children': [
-                                  {
-                                    'variant': 'body',
-                                    'type': 'typography',
-                                    'content': 'Describe the task to execute with tools',
-                                  },
-                                  {
-                                    'fields': [
-                                      'task',
-                                    ],
-                                    'submitEvent': 'EXECUTE',
-                                    'mode': 'edit',
-                                    'type': 'form-section',
-                                    'entity': '@entity',
-                                  },
-                                ],
-                              },
-                            ],
-                            'type': 'card',
-                          },
-                        ],
-                        'type': 'stack',
-                        'gap': 'lg',
-                      },
-                    ],
                     'navItems': [
                       {
-                        'href': '/pipeline',
                         'label': 'Pipeline',
+                        'href': '/pipeline',
                         'icon': 'git-branch',
                       },
                       {
@@ -4791,11 +4736,66 @@ export function stdAgentPipelinePipelineExecOrbital(params: StdAgentPipelinePipe
                       },
                       {
                         'href': '/logs',
-                        'icon': 'terminal',
                         'label': 'Logs',
+                        'icon': 'terminal',
                       },
                     ],
                     'appName': 'Agent Pipeline',
+                    'children': [
+                      {
+                        'direction': 'vertical',
+                        'children': [
+                          {
+                            'children': [
+                              {
+                                'name': 'repeat',
+                                'type': 'icon',
+                              },
+                              {
+                                'type': 'typography',
+                                'content': 'Tool Execution Loop',
+                                'variant': 'h2',
+                              },
+                            ],
+                            'align': 'center',
+                            'gap': 'sm',
+                            'direction': 'horizontal',
+                            'type': 'stack',
+                          },
+                          {
+                            'type': 'divider',
+                          },
+                          {
+                            'children': [
+                              {
+                                'type': 'stack',
+                                'children': [
+                                  {
+                                    'type': 'typography',
+                                    'variant': 'body',
+                                    'content': 'Describe the task to execute with tools',
+                                  },
+                                  {
+                                    'type': 'form-section',
+                                    'fields': [
+                                      'task',
+                                    ],
+                                    'mode': 'edit',
+                                    'submitEvent': 'EXECUTE',
+                                    'entity': '@entity',
+                                  },
+                                ],
+                                'gap': 'md',
+                                'direction': 'vertical',
+                              },
+                            ],
+                            'type': 'card',
+                          },
+                        ],
+                        'type': 'stack',
+                        'gap': 'lg',
+                      },
+                    ],
                     'type': 'dashboard-layout',
                   },
                 ],
@@ -4940,8 +4940,8 @@ export function stdAgentPipelinePipelineExecOrbital(params: StdAgentPipelinePipe
                   'PipelineExec',
                   {
                     'emit': {
-                      'failure': 'PipelineExecLoadFailed',
                       'success': 'PipelineExecLoaded',
+                      'failure': 'PipelineExecLoadFailed',
                     },
                   },
                 ],
@@ -4949,25 +4949,6 @@ export function stdAgentPipelinePipelineExecOrbital(params: StdAgentPipelinePipe
                   'render-ui',
                   'main',
                   {
-                    'type': 'dashboard-layout',
-                    'appName': 'Agent Pipeline',
-                    'navItems': [
-                      {
-                        'href': '/pipeline',
-                        'label': 'Pipeline',
-                        'icon': 'git-branch',
-                      },
-                      {
-                        'href': '/execution',
-                        'label': 'Execution',
-                        'icon': 'play',
-                      },
-                      {
-                        'href': '/logs',
-                        'icon': 'terminal',
-                        'label': 'Logs',
-                      },
-                    ],
                     'children': [
                       {
                         'type': 'stack',
@@ -4975,26 +4956,26 @@ export function stdAgentPipelinePipelineExecOrbital(params: StdAgentPipelinePipe
                         'gap': 'lg',
                         'children': [
                           {
+                            'type': 'stack',
+                            'align': 'center',
                             'children': [
                               {
-                                'type': 'icon',
                                 'name': 'list-ordered',
+                                'type': 'icon',
                               },
                               {
-                                'type': 'typography',
-                                'variant': 'h2',
                                 'content': 'PipelineExec',
+                                'variant': 'h2',
+                                'type': 'typography',
                               },
                               {
-                                'label': 'Idle',
                                 'type': 'badge',
                                 'variant': 'default',
+                                'label': 'Idle',
                               },
                             ],
-                            'direction': 'horizontal',
-                            'align': 'center',
-                            'type': 'stack',
                             'gap': 'sm',
+                            'direction': 'horizontal',
                           },
                           {
                             'type': 'divider',
@@ -5016,21 +4997,40 @@ export function stdAgentPipelinePipelineExecOrbital(params: StdAgentPipelinePipe
                                 'title': 'Check',
                               },
                               {
-                                'title': 'Complete',
                                 'id': '3',
+                                'title': 'Complete',
                               },
                             ],
                           },
                           {
-                            'variant': 'primary',
                             'type': 'button',
-                            'icon': 'play',
-                            'action': 'START',
                             'label': 'Start',
+                            'action': 'START',
+                            'variant': 'primary',
+                            'icon': 'play',
                           },
                         ],
                       },
                     ],
+                    'navItems': [
+                      {
+                        'href': '/pipeline',
+                        'label': 'Pipeline',
+                        'icon': 'git-branch',
+                      },
+                      {
+                        'href': '/execution',
+                        'icon': 'play',
+                        'label': 'Execution',
+                      },
+                      {
+                        'icon': 'terminal',
+                        'label': 'Logs',
+                        'href': '/logs',
+                      },
+                    ],
+                    'appName': 'Agent Pipeline',
+                    'type': 'dashboard-layout',
                   },
                 ],
               ],
@@ -5054,64 +5054,48 @@ export function stdAgentPipelinePipelineExecOrbital(params: StdAgentPipelinePipe
                   'render-ui',
                   'main',
                   {
-                    'navItems': [
-                      {
-                        'icon': 'git-branch',
-                        'label': 'Pipeline',
-                        'href': '/pipeline',
-                      },
-                      {
-                        'href': '/execution',
-                        'icon': 'play',
-                        'label': 'Execution',
-                      },
-                      {
-                        'icon': 'terminal',
-                        'label': 'Logs',
-                        'href': '/logs',
-                      },
-                    ],
-                    'type': 'dashboard-layout',
+                    'appName': 'Agent Pipeline',
                     'children': [
                       {
-                        'type': 'stack',
+                        'direction': 'vertical',
+                        'gap': 'lg',
                         'children': [
                           {
-                            'align': 'center',
-                            'direction': 'horizontal',
                             'children': [
                               {
-                                'type': 'icon',
                                 'name': 'loader',
+                                'type': 'icon',
                               },
                               {
-                                'variant': 'h2',
                                 'type': 'typography',
                                 'content': 'PipelineExec',
+                                'variant': 'h2',
                               },
                               {
-                                'variant': 'warning',
                                 'type': 'badge',
+                                'variant': 'warning',
                                 'label': 'In Progress',
                               },
                             ],
-                            'type': 'stack',
                             'gap': 'sm',
+                            'direction': 'horizontal',
+                            'align': 'center',
+                            'type': 'stack',
                           },
                           {
                             'type': 'divider',
                           },
                           {
-                            'currentStep': '@entity.currentStep',
                             'type': 'wizard-progress',
+                            'currentStep': '@entity.currentStep',
                             'steps': [
                               {
-                                'id': '0',
                                 'title': 'Plan',
+                                'id': '0',
                               },
                               {
-                                'title': 'Execute',
                                 'id': '1',
+                                'title': 'Execute',
                               },
                               {
                                 'id': '2',
@@ -5124,22 +5108,22 @@ export function stdAgentPipelinePipelineExecOrbital(params: StdAgentPipelinePipe
                             ],
                           },
                           {
-                            'type': 'stack',
+                            'align': 'center',
                             'children': [
                               {
-                                'label': 'Current Step',
-                                'type': 'stat-display',
                                 'value': '@entity.currentStep',
+                                'type': 'stat-display',
+                                'label': 'Current Step',
                               },
                               {
-                                'label': 'Total Steps',
                                 'value': '@entity.totalSteps',
+                                'label': 'Total Steps',
                                 'type': 'stat-display',
                               },
                             ],
-                            'align': 'center',
-                            'gap': 'sm',
                             'direction': 'horizontal',
+                            'gap': 'sm',
+                            'type': 'stack',
                           },
                           {
                             'type': 'stack',
@@ -5147,27 +5131,43 @@ export function stdAgentPipelinePipelineExecOrbital(params: StdAgentPipelinePipe
                             'children': [
                               {
                                 'type': 'button',
-                                'variant': 'primary',
                                 'action': 'ADVANCE',
-                                'icon': 'chevron-right',
+                                'variant': 'primary',
                                 'label': 'Advance',
+                                'icon': 'chevron-right',
                               },
                               {
                                 'label': 'Reset',
-                                'type': 'button',
                                 'icon': 'rotate-ccw',
                                 'action': 'RESET',
+                                'type': 'button',
                                 'variant': 'ghost',
                               },
                             ],
                             'gap': 'sm',
                           },
                         ],
-                        'gap': 'lg',
-                        'direction': 'vertical',
+                        'type': 'stack',
                       },
                     ],
-                    'appName': 'Agent Pipeline',
+                    'navItems': [
+                      {
+                        'label': 'Pipeline',
+                        'href': '/pipeline',
+                        'icon': 'git-branch',
+                      },
+                      {
+                        'icon': 'play',
+                        'label': 'Execution',
+                        'href': '/execution',
+                      },
+                      {
+                        'icon': 'terminal',
+                        'label': 'Logs',
+                        'href': '/logs',
+                      },
+                    ],
+                    'type': 'dashboard-layout',
                   },
                 ],
               ],
@@ -5191,6 +5191,7 @@ export function stdAgentPipelinePipelineExecOrbital(params: StdAgentPipelinePipe
                   'render-ui',
                   'main',
                   {
+                    'appName': 'Agent Pipeline',
                     'navItems': [
                       {
                         'label': 'Pipeline',
@@ -5198,61 +5199,60 @@ export function stdAgentPipelinePipelineExecOrbital(params: StdAgentPipelinePipe
                         'icon': 'git-branch',
                       },
                       {
+                        'icon': 'play',
                         'label': 'Execution',
                         'href': '/execution',
-                        'icon': 'play',
                       },
                       {
-                        'label': 'Logs',
-                        'href': '/logs',
                         'icon': 'terminal',
+                        'href': '/logs',
+                        'label': 'Logs',
                       },
                     ],
-                    'appName': 'Agent Pipeline',
                     'children': [
                       {
-                        'gap': 'lg',
+                        'type': 'stack',
                         'children': [
                           {
                             'type': 'stack',
-                            'direction': 'horizontal',
-                            'gap': 'sm',
-                            'align': 'center',
                             'children': [
                               {
-                                'name': 'list-ordered',
                                 'type': 'icon',
+                                'name': 'list-ordered',
                               },
                               {
-                                'type': 'typography',
                                 'content': 'PipelineExec',
                                 'variant': 'h2',
+                                'type': 'typography',
                               },
                               {
-                                'type': 'badge',
-                                'variant': 'default',
                                 'label': 'Idle',
+                                'variant': 'default',
+                                'type': 'badge',
                               },
                             ],
+                            'gap': 'sm',
+                            'direction': 'horizontal',
+                            'align': 'center',
                           },
                           {
                             'type': 'divider',
                           },
                           {
-                            'type': 'wizard-progress',
                             'currentStep': '@entity.currentStep',
+                            'type': 'wizard-progress',
                             'steps': [
                               {
-                                'title': 'Plan',
                                 'id': '0',
+                                'title': 'Plan',
                               },
                               {
-                                'id': '1',
                                 'title': 'Execute',
+                                'id': '1',
                               },
                               {
-                                'id': '2',
                                 'title': 'Check',
+                                'id': '2',
                               },
                               {
                                 'id': '3',
@@ -5261,15 +5261,15 @@ export function stdAgentPipelinePipelineExecOrbital(params: StdAgentPipelinePipe
                             ],
                           },
                           {
-                            'variant': 'primary',
-                            'icon': 'play',
-                            'label': 'Start',
-                            'action': 'START',
                             'type': 'button',
+                            'variant': 'primary',
+                            'action': 'START',
+                            'label': 'Start',
+                            'icon': 'play',
                           },
                         ],
-                        'type': 'stack',
                         'direction': 'vertical',
+                        'gap': 'lg',
                       },
                     ],
                     'type': 'dashboard-layout',
@@ -5300,12 +5300,36 @@ export function stdAgentPipelinePipelineExecOrbital(params: StdAgentPipelinePipe
                   'render-ui',
                   'main',
                   {
+                    'appName': 'Agent Pipeline',
+                    'navItems': [
+                      {
+                        'label': 'Pipeline',
+                        'icon': 'git-branch',
+                        'href': '/pipeline',
+                      },
+                      {
+                        'href': '/execution',
+                        'icon': 'play',
+                        'label': 'Execution',
+                      },
+                      {
+                        'href': '/logs',
+                        'icon': 'terminal',
+                        'label': 'Logs',
+                      },
+                    ],
                     'type': 'dashboard-layout',
                     'children': [
                       {
+                        'gap': 'lg',
                         'type': 'stack',
+                        'direction': 'vertical',
                         'children': [
                           {
+                            'gap': 'sm',
+                            'type': 'stack',
+                            'direction': 'horizontal',
+                            'align': 'center',
                             'children': [
                               {
                                 'type': 'icon',
@@ -5322,17 +5346,13 @@ export function stdAgentPipelinePipelineExecOrbital(params: StdAgentPipelinePipe
                                 'variant': 'warning',
                               },
                             ],
-                            'direction': 'horizontal',
-                            'type': 'stack',
-                            'gap': 'sm',
-                            'align': 'center',
                           },
                           {
                             'type': 'divider',
                           },
                           {
-                            'type': 'wizard-progress',
                             'currentStep': '@entity.currentStep',
+                            'type': 'wizard-progress',
                             'steps': [
                               {
                                 'title': 'Plan',
@@ -5353,65 +5373,45 @@ export function stdAgentPipelinePipelineExecOrbital(params: StdAgentPipelinePipe
                             ],
                           },
                           {
-                            'align': 'center',
+                            'direction': 'horizontal',
                             'type': 'stack',
+                            'align': 'center',
                             'children': [
                               {
-                                'label': 'Current Step',
                                 'type': 'stat-display',
                                 'value': '@entity.currentStep',
+                                'label': 'Current Step',
                               },
                               {
-                                'type': 'stat-display',
                                 'label': 'Total Steps',
+                                'type': 'stat-display',
                                 'value': '@entity.totalSteps',
                               },
                             ],
-                            'direction': 'horizontal',
                             'gap': 'sm',
                           },
                           {
                             'children': [
                               {
+                                'icon': 'chevron-right',
                                 'action': 'ADVANCE',
                                 'label': 'Advance',
-                                'icon': 'chevron-right',
                                 'type': 'button',
                                 'variant': 'primary',
                               },
                               {
-                                'label': 'Reset',
-                                'icon': 'rotate-ccw',
-                                'type': 'button',
                                 'variant': 'ghost',
+                                'type': 'button',
+                                'icon': 'rotate-ccw',
                                 'action': 'RESET',
+                                'label': 'Reset',
                               },
                             ],
-                            'direction': 'horizontal',
                             'gap': 'sm',
                             'type': 'stack',
+                            'direction': 'horizontal',
                           },
                         ],
-                        'gap': 'lg',
-                        'direction': 'vertical',
-                      },
-                    ],
-                    'appName': 'Agent Pipeline',
-                    'navItems': [
-                      {
-                        'label': 'Pipeline',
-                        'icon': 'git-branch',
-                        'href': '/pipeline',
-                      },
-                      {
-                        'href': '/execution',
-                        'label': 'Execution',
-                        'icon': 'play',
-                      },
-                      {
-                        'label': 'Logs',
-                        'href': '/logs',
-                        'icon': 'terminal',
                       },
                     ],
                   },
@@ -5437,18 +5437,37 @@ export function stdAgentPipelinePipelineExecOrbital(params: StdAgentPipelinePipe
                   'render-ui',
                   'main',
                   {
-                    'type': 'dashboard-layout',
                     'appName': 'Agent Pipeline',
+                    'type': 'dashboard-layout',
+                    'navItems': [
+                      {
+                        'label': 'Pipeline',
+                        'href': '/pipeline',
+                        'icon': 'git-branch',
+                      },
+                      {
+                        'icon': 'play',
+                        'href': '/execution',
+                        'label': 'Execution',
+                      },
+                      {
+                        'href': '/logs',
+                        'icon': 'terminal',
+                        'label': 'Logs',
+                      },
+                    ],
                     'children': [
                       {
+                        'type': 'stack',
+                        'gap': 'lg',
                         'children': [
                           {
-                            'align': 'center',
                             'gap': 'sm',
+                            'direction': 'horizontal',
                             'children': [
                               {
-                                'name': 'check-circle',
                                 'type': 'icon',
+                                'name': 'check-circle',
                               },
                               {
                                 'type': 'typography',
@@ -5456,18 +5475,20 @@ export function stdAgentPipelinePipelineExecOrbital(params: StdAgentPipelinePipe
                                 'content': 'PipelineExec',
                               },
                               {
-                                'label': 'Completed',
-                                'type': 'badge',
                                 'variant': 'success',
+                                'type': 'badge',
+                                'label': 'Completed',
                               },
                             ],
+                            'align': 'center',
                             'type': 'stack',
-                            'direction': 'horizontal',
                           },
                           {
                             'type': 'divider',
                           },
                           {
+                            'type': 'wizard-progress',
+                            'currentStep': '@entity.totalSteps',
                             'steps': [
                               {
                                 'title': 'Plan',
@@ -5486,42 +5507,21 @@ export function stdAgentPipelinePipelineExecOrbital(params: StdAgentPipelinePipe
                                 'title': 'Complete',
                               },
                             ],
-                            'type': 'wizard-progress',
-                            'currentStep': '@entity.totalSteps',
                           },
                           {
-                            'variant': 'success',
                             'message': 'All steps completed successfully.',
+                            'variant': 'success',
                             'type': 'alert',
                           },
                           {
-                            'variant': 'ghost',
                             'type': 'button',
                             'action': 'RESET',
-                            'icon': 'rotate-ccw',
                             'label': 'Reset',
+                            'variant': 'ghost',
+                            'icon': 'rotate-ccw',
                           },
                         ],
                         'direction': 'vertical',
-                        'type': 'stack',
-                        'gap': 'lg',
-                      },
-                    ],
-                    'navItems': [
-                      {
-                        'label': 'Pipeline',
-                        'href': '/pipeline',
-                        'icon': 'git-branch',
-                      },
-                      {
-                        'href': '/execution',
-                        'icon': 'play',
-                        'label': 'Execution',
-                      },
-                      {
-                        'href': '/logs',
-                        'icon': 'terminal',
-                        'label': 'Logs',
                       },
                     ],
                   },
@@ -5546,25 +5546,25 @@ export function stdAgentPipelinePipelineExecOrbital(params: StdAgentPipelinePipe
                       {
                         'children': [
                           {
-                            'direction': 'horizontal',
-                            'type': 'stack',
-                            'align': 'center',
                             'children': [
                               {
                                 'name': 'x-circle',
                                 'type': 'icon',
                               },
                               {
-                                'variant': 'h2',
                                 'type': 'typography',
                                 'content': 'PipelineExec',
+                                'variant': 'h2',
                               },
                               {
-                                'variant': 'danger',
-                                'type': 'badge',
                                 'label': 'Failed',
+                                'type': 'badge',
+                                'variant': 'danger',
                               },
                             ],
+                            'align': 'center',
+                            'type': 'stack',
+                            'direction': 'horizontal',
                             'gap': 'sm',
                           },
                           {
@@ -5583,64 +5583,64 @@ export function stdAgentPipelinePipelineExecOrbital(params: StdAgentPipelinePipe
                                 'title': 'Execute',
                               },
                               {
-                                'id': '2',
                                 'title': 'Check',
+                                'id': '2',
                               },
                               {
-                                'id': '3',
                                 'title': 'Complete',
+                                'id': '3',
                               },
                             ],
                           },
                           {
                             'message': 'Pipeline failed at the current step.',
-                            'variant': 'error',
                             'type': 'alert',
+                            'variant': 'error',
                           },
                           {
-                            'type': 'stack',
                             'children': [
                               {
-                                'label': 'Failed At Step',
                                 'type': 'stat-display',
+                                'label': 'Failed At Step',
                                 'value': '@entity.currentStep',
                               },
                             ],
-                            'gap': 'sm',
                             'direction': 'horizontal',
+                            'gap': 'sm',
+                            'type': 'stack',
                           },
                           {
-                            'icon': 'rotate-ccw',
-                            'action': 'RESET',
                             'type': 'button',
                             'label': 'Reset',
+                            'icon': 'rotate-ccw',
+                            'action': 'RESET',
                             'variant': 'ghost',
                           },
                         ],
-                        'gap': 'lg',
                         'type': 'stack',
+                        'gap': 'lg',
                         'direction': 'vertical',
                       },
                     ],
-                    'appName': 'Agent Pipeline',
                     'navItems': [
                       {
-                        'label': 'Pipeline',
                         'icon': 'git-branch',
+                        'label': 'Pipeline',
                         'href': '/pipeline',
                       },
                       {
-                        'icon': 'play',
                         'href': '/execution',
                         'label': 'Execution',
+                        'icon': 'play',
                       },
                       {
-                        'label': 'Logs',
                         'href': '/logs',
+                        'label': 'Logs',
                         'icon': 'terminal',
                       },
                     ],
                     'type': 'dashboard-layout',
+                    'appName': 'Agent Pipeline',
                   },
                 ],
               ],
@@ -5664,21 +5664,22 @@ export function stdAgentPipelinePipelineExecOrbital(params: StdAgentPipelinePipe
                   'render-ui',
                   'main',
                   {
-                    'type': 'dashboard-layout',
+                    'appName': 'Agent Pipeline',
                     'children': [
                       {
                         'type': 'stack',
                         'direction': 'vertical',
+                        'gap': 'lg',
                         'children': [
                           {
-                            'direction': 'horizontal',
                             'gap': 'sm',
-                            'type': 'stack',
                             'align': 'center',
+                            'direction': 'horizontal',
+                            'type': 'stack',
                             'children': [
                               {
-                                'type': 'icon',
                                 'name': 'list-ordered',
+                                'type': 'icon',
                               },
                               {
                                 'type': 'typography',
@@ -5697,7 +5698,6 @@ export function stdAgentPipelinePipelineExecOrbital(params: StdAgentPipelinePipe
                           },
                           {
                             'currentStep': '@entity.currentStep',
-                            'type': 'wizard-progress',
                             'steps': [
                               {
                                 'title': 'Plan',
@@ -5708,32 +5708,32 @@ export function stdAgentPipelinePipelineExecOrbital(params: StdAgentPipelinePipe
                                 'title': 'Execute',
                               },
                               {
-                                'title': 'Check',
                                 'id': '2',
+                                'title': 'Check',
                               },
                               {
-                                'id': '3',
                                 'title': 'Complete',
+                                'id': '3',
                               },
                             ],
+                            'type': 'wizard-progress',
                           },
                           {
-                            'type': 'button',
                             'label': 'Start',
-                            'icon': 'play',
                             'variant': 'primary',
+                            'icon': 'play',
+                            'type': 'button',
                             'action': 'START',
                           },
                         ],
-                        'gap': 'lg',
                       },
                     ],
-                    'appName': 'Agent Pipeline',
+                    'type': 'dashboard-layout',
                     'navItems': [
                       {
-                        'href': '/pipeline',
-                        'label': 'Pipeline',
                         'icon': 'git-branch',
+                        'label': 'Pipeline',
+                        'href': '/pipeline',
                       },
                       {
                         'icon': 'play',
@@ -5772,14 +5772,14 @@ export function stdAgentPipelinePipelineExecOrbital(params: StdAgentPipelinePipe
                     'type': 'dashboard-layout',
                     'navItems': [
                       {
-                        'icon': 'git-branch',
-                        'href': '/pipeline',
                         'label': 'Pipeline',
+                        'href': '/pipeline',
+                        'icon': 'git-branch',
                       },
                       {
+                        'label': 'Execution',
                         'href': '/execution',
                         'icon': 'play',
-                        'label': 'Execution',
                       },
                       {
                         'icon': 'terminal',
@@ -5790,46 +5790,43 @@ export function stdAgentPipelinePipelineExecOrbital(params: StdAgentPipelinePipe
                     'appName': 'Agent Pipeline',
                     'children': [
                       {
-                        'direction': 'vertical',
-                        'gap': 'lg',
-                        'type': 'stack',
                         'children': [
                           {
+                            'align': 'center',
+                            'direction': 'horizontal',
+                            'type': 'stack',
+                            'gap': 'sm',
                             'children': [
                               {
-                                'name': 'list-ordered',
                                 'type': 'icon',
+                                'name': 'list-ordered',
                               },
                               {
                                 'type': 'typography',
-                                'content': 'PipelineExec',
                                 'variant': 'h2',
+                                'content': 'PipelineExec',
                               },
                               {
-                                'label': 'Idle',
                                 'variant': 'default',
+                                'label': 'Idle',
                                 'type': 'badge',
                               },
                             ],
-                            'gap': 'sm',
-                            'direction': 'horizontal',
-                            'type': 'stack',
-                            'align': 'center',
                           },
                           {
                             'type': 'divider',
                           },
                           {
-                            'type': 'wizard-progress',
                             'currentStep': '@entity.currentStep',
+                            'type': 'wizard-progress',
                             'steps': [
                               {
                                 'id': '0',
                                 'title': 'Plan',
                               },
                               {
-                                'id': '1',
                                 'title': 'Execute',
+                                'id': '1',
                               },
                               {
                                 'id': '2',
@@ -5842,13 +5839,16 @@ export function stdAgentPipelinePipelineExecOrbital(params: StdAgentPipelinePipe
                             ],
                           },
                           {
-                            'icon': 'play',
                             'type': 'button',
-                            'label': 'Start',
+                            'icon': 'play',
                             'action': 'START',
                             'variant': 'primary',
+                            'label': 'Start',
                           },
                         ],
+                        'type': 'stack',
+                        'direction': 'vertical',
+                        'gap': 'lg',
                       },
                     ],
                   },
@@ -5874,13 +5874,11 @@ export function stdAgentPipelinePipelineExecOrbital(params: StdAgentPipelinePipe
                   'render-ui',
                   'main',
                   {
-                    'type': 'dashboard-layout',
-                    'appName': 'Agent Pipeline',
                     'navItems': [
                       {
+                        'label': 'Pipeline',
                         'href': '/pipeline',
                         'icon': 'git-branch',
-                        'label': 'Pipeline',
                       },
                       {
                         'label': 'Execution',
@@ -5895,48 +5893,46 @@ export function stdAgentPipelinePipelineExecOrbital(params: StdAgentPipelinePipe
                     ],
                     'children': [
                       {
-                        'type': 'stack',
-                        'direction': 'vertical',
+                        'gap': 'lg',
                         'children': [
                           {
-                            'gap': 'sm',
-                            'type': 'stack',
                             'direction': 'horizontal',
-                            'align': 'center',
+                            'gap': 'sm',
                             'children': [
                               {
                                 'type': 'icon',
                                 'name': 'list-ordered',
                               },
                               {
+                                'variant': 'h2',
                                 'type': 'typography',
                                 'content': 'PipelineExec',
-                                'variant': 'h2',
                               },
                               {
-                                'type': 'badge',
-                                'variant': 'default',
                                 'label': 'Idle',
+                                'variant': 'default',
+                                'type': 'badge',
                               },
                             ],
+                            'type': 'stack',
+                            'align': 'center',
                           },
                           {
                             'type': 'divider',
                           },
                           {
-                            'currentStep': '@entity.currentStep',
                             'steps': [
                               {
                                 'id': '0',
                                 'title': 'Plan',
                               },
                               {
-                                'id': '1',
                                 'title': 'Execute',
+                                'id': '1',
                               },
                               {
-                                'id': '2',
                                 'title': 'Check',
+                                'id': '2',
                               },
                               {
                                 'id': '3',
@@ -5944,18 +5940,22 @@ export function stdAgentPipelinePipelineExecOrbital(params: StdAgentPipelinePipe
                               },
                             ],
                             'type': 'wizard-progress',
+                            'currentStep': '@entity.currentStep',
                           },
                           {
-                            'action': 'START',
-                            'icon': 'play',
+                            'variant': 'primary',
                             'label': 'Start',
                             'type': 'button',
-                            'variant': 'primary',
+                            'icon': 'play',
+                            'action': 'START',
                           },
                         ],
-                        'gap': 'lg',
+                        'type': 'stack',
+                        'direction': 'vertical',
                       },
                     ],
+                    'type': 'dashboard-layout',
+                    'appName': 'Agent Pipeline',
                   },
                 ],
               ],
@@ -6144,32 +6144,37 @@ export function stdAgentPipelinePipelineExecOrbital(params: StdAgentPipelinePipe
                   'render-ui',
                   'main',
                   {
+                    'appName': 'Agent Pipeline',
                     'navItems': [
                       {
-                        'label': 'Pipeline',
-                        'href': '/pipeline',
                         'icon': 'git-branch',
+                        'href': '/pipeline',
+                        'label': 'Pipeline',
                       },
                       {
-                        'label': 'Execution',
                         'icon': 'play',
                         'href': '/execution',
+                        'label': 'Execution',
                       },
                       {
-                        'icon': 'terminal',
                         'label': 'Logs',
                         'href': '/logs',
+                        'icon': 'terminal',
                       },
                     ],
+                    'type': 'dashboard-layout',
                     'children': [
                       {
+                        'gap': 'lg',
                         'children': [
                           {
-                            'direction': 'horizontal',
+                            'gap': 'md',
+                            'type': 'stack',
+                            'justify': 'between',
                             'children': [
                               {
-                                'gap': 'md',
                                 'type': 'stack',
+                                'gap': 'md',
                                 'direction': 'horizontal',
                                 'children': [
                                   {
@@ -6178,40 +6183,35 @@ export function stdAgentPipelinePipelineExecOrbital(params: StdAgentPipelinePipe
                                   },
                                   {
                                     'type': 'typography',
-                                    'variant': 'h2',
                                     'content': 'PipelineExec',
+                                    'variant': 'h2',
                                   },
                                 ],
                               },
                               {
-                                'action': 'GENERATE',
-                                'type': 'button',
                                 'label': 'Open',
                                 'variant': 'primary',
                                 'icon': 'sparkles',
+                                'type': 'button',
+                                'action': 'GENERATE',
                               },
                             ],
-                            'gap': 'md',
-                            'type': 'stack',
-                            'justify': 'between',
+                            'direction': 'horizontal',
                           },
                           {
                             'type': 'divider',
                           },
                           {
-                            'description': 'Click Open to view details in a modal overlay.',
                             'icon': 'sparkles',
-                            'title': 'Nothing open',
                             'type': 'empty-state',
+                            'description': 'Click Open to view details in a modal overlay.',
+                            'title': 'Nothing open',
                           },
                         ],
                         'type': 'stack',
                         'direction': 'vertical',
-                        'gap': 'lg',
                       },
                     ],
-                    'type': 'dashboard-layout',
-                    'appName': 'Agent Pipeline',
                   },
                 ],
               ],
@@ -6226,53 +6226,53 @@ export function stdAgentPipelinePipelineExecOrbital(params: StdAgentPipelinePipe
                   'modal',
                   {
                     'type': 'stack',
+                    'direction': 'vertical',
+                    'gap': 'md',
                     'children': [
                       {
-                        'gap': 'sm',
+                        'type': 'stack',
+                        'direction': 'horizontal',
                         'children': [
                           {
-                            'name': 'sparkles',
                             'type': 'icon',
+                            'name': 'sparkles',
                           },
                           {
-                            'variant': 'h3',
                             'type': 'typography',
+                            'variant': 'h3',
                             'content': 'PipelineExec',
                           },
                         ],
-                        'direction': 'horizontal',
-                        'type': 'stack',
+                        'gap': 'sm',
                       },
                       {
                         'type': 'divider',
                       },
                       {
-                        'direction': 'horizontal',
+                        'gap': 'sm',
                         'children': [
                           {
                             'label': '@entity.provider',
                             'type': 'badge',
                           },
                           {
-                            'label': '@entity.model',
                             'type': 'badge',
+                            'label': '@entity.model',
                           },
                         ],
+                        'direction': 'horizontal',
                         'type': 'stack',
-                        'gap': 'sm',
                       },
                       {
-                        'cancelEvent': 'CLOSE',
                         'mode': 'create',
-                        'type': 'form-section',
+                        'submitEvent': 'SAVE',
                         'fields': [
                           'prompt',
                         ],
-                        'submitEvent': 'SAVE',
+                        'type': 'form-section',
+                        'cancelEvent': 'CLOSE',
                       },
                     ],
-                    'direction': 'vertical',
-                    'gap': 'md',
                   },
                 ],
               ],
@@ -6306,74 +6306,74 @@ export function stdAgentPipelinePipelineExecOrbital(params: StdAgentPipelinePipe
                   'render-ui',
                   'main',
                   {
-                    'type': 'dashboard-layout',
+                    'appName': 'Agent Pipeline',
                     'navItems': [
                       {
-                        'label': 'Pipeline',
                         'href': '/pipeline',
+                        'label': 'Pipeline',
                         'icon': 'git-branch',
                       },
                       {
-                        'href': '/execution',
                         'icon': 'play',
+                        'href': '/execution',
                         'label': 'Execution',
                       },
                       {
+                        'href': '/logs',
                         'label': 'Logs',
                         'icon': 'terminal',
-                        'href': '/logs',
                       },
                     ],
-                    'appName': 'Agent Pipeline',
                     'children': [
                       {
-                        'type': 'stack',
                         'gap': 'lg',
+                        'type': 'stack',
                         'direction': 'vertical',
                         'children': [
                           {
+                            'gap': 'md',
+                            'direction': 'horizontal',
+                            'justify': 'between',
                             'children': [
                               {
+                                'gap': 'md',
                                 'type': 'stack',
-                                'direction': 'horizontal',
                                 'children': [
                                   {
                                     'type': 'icon',
                                     'name': 'sparkles',
                                   },
                                   {
+                                    'content': 'PipelineExec',
                                     'variant': 'h2',
                                     'type': 'typography',
-                                    'content': 'PipelineExec',
                                   },
                                 ],
-                                'gap': 'md',
+                                'direction': 'horizontal',
                               },
                               {
-                                'action': 'GENERATE',
-                                'type': 'button',
                                 'icon': 'sparkles',
+                                'type': 'button',
                                 'variant': 'primary',
+                                'action': 'GENERATE',
                                 'label': 'Open',
                               },
                             ],
-                            'justify': 'between',
                             'type': 'stack',
-                            'direction': 'horizontal',
-                            'gap': 'md',
                           },
                           {
                             'type': 'divider',
                           },
                           {
-                            'type': 'empty-state',
                             'title': 'Nothing open',
                             'description': 'Click Open to view details in a modal overlay.',
                             'icon': 'sparkles',
+                            'type': 'empty-state',
                           },
                         ],
                       },
                     ],
+                    'type': 'dashboard-layout',
                   },
                 ],
               ],
@@ -6418,6 +6418,7 @@ export function stdAgentPipelinePipelineExecOrbital(params: StdAgentPipelinePipe
                   'render-ui',
                   'main',
                   {
+                    'appName': 'Agent Pipeline',
                     'type': 'dashboard-layout',
                     'navItems': [
                       {
@@ -6426,66 +6427,65 @@ export function stdAgentPipelinePipelineExecOrbital(params: StdAgentPipelinePipe
                         'icon': 'git-branch',
                       },
                       {
-                        'label': 'Execution',
-                        'icon': 'play',
                         'href': '/execution',
+                        'icon': 'play',
+                        'label': 'Execution',
                       },
                       {
-                        'href': '/logs',
                         'label': 'Logs',
+                        'href': '/logs',
                         'icon': 'terminal',
                       },
                     ],
                     'children': [
                       {
-                        'direction': 'vertical',
-                        'type': 'stack',
-                        'gap': 'lg',
                         'children': [
                           {
-                            'type': 'stack',
+                            'direction': 'horizontal',
                             'gap': 'md',
+                            'type': 'stack',
                             'children': [
                               {
                                 'gap': 'md',
-                                'direction': 'horizontal',
-                                'type': 'stack',
                                 'children': [
                                   {
-                                    'type': 'icon',
                                     'name': 'sparkles',
+                                    'type': 'icon',
                                   },
                                   {
-                                    'content': 'PipelineExec',
                                     'variant': 'h2',
+                                    'content': 'PipelineExec',
                                     'type': 'typography',
                                   },
                                 ],
+                                'direction': 'horizontal',
+                                'type': 'stack',
                               },
                               {
+                                'label': 'Open',
                                 'action': 'GENERATE',
                                 'type': 'button',
-                                'label': 'Open',
-                                'icon': 'sparkles',
                                 'variant': 'primary',
+                                'icon': 'sparkles',
                               },
                             ],
-                            'direction': 'horizontal',
                             'justify': 'between',
                           },
                           {
                             'type': 'divider',
                           },
                           {
-                            'type': 'empty-state',
-                            'icon': 'sparkles',
-                            'description': 'Click Open to view details in a modal overlay.',
                             'title': 'Nothing open',
+                            'icon': 'sparkles',
+                            'type': 'empty-state',
+                            'description': 'Click Open to view details in a modal overlay.',
                           },
                         ],
+                        'direction': 'vertical',
+                        'gap': 'lg',
+                        'type': 'stack',
                       },
                     ],
-                    'appName': 'Agent Pipeline',
                   },
                 ],
               ],
@@ -6664,49 +6664,28 @@ export function stdAgentPipelinePipelineExecOrbital(params: StdAgentPipelinePipe
                   'render-ui',
                   'main',
                   {
-                    'appName': 'Agent Pipeline',
-                    'type': 'dashboard-layout',
-                    'navItems': [
-                      {
-                        'icon': 'git-branch',
-                        'href': '/pipeline',
-                        'label': 'Pipeline',
-                      },
-                      {
-                        'icon': 'play',
-                        'href': '/execution',
-                        'label': 'Execution',
-                      },
-                      {
-                        'href': '/logs',
-                        'icon': 'terminal',
-                        'label': 'Logs',
-                      },
-                    ],
                     'children': [
                       {
-                        'direction': 'vertical',
                         'type': 'stack',
+                        'direction': 'vertical',
                         'gap': 'lg',
                         'children': [
                           {
-                            'direction': 'horizontal',
-                            'gap': 'md',
-                            'justify': 'between',
                             'type': 'stack',
+                            'direction': 'horizontal',
                             'children': [
                               {
                                 'type': 'stack',
-                                'direction': 'horizontal',
                                 'gap': 'md',
+                                'direction': 'horizontal',
                                 'children': [
                                   {
                                     'type': 'icon',
                                     'name': 'wrench',
                                   },
                                   {
-                                    'type': 'typography',
                                     'content': 'Invoke Tool',
+                                    'type': 'typography',
                                     'variant': 'h2',
                                   },
                                 ],
@@ -6715,23 +6694,44 @@ export function stdAgentPipelinePipelineExecOrbital(params: StdAgentPipelinePipe
                                 'type': 'button',
                                 'icon': 'wrench',
                                 'label': 'Open',
-                                'action': 'INVOKE',
                                 'variant': 'primary',
+                                'action': 'INVOKE',
                               },
                             ],
+                            'justify': 'between',
+                            'gap': 'md',
                           },
                           {
                             'type': 'divider',
                           },
                           {
-                            'icon': 'wrench',
-                            'title': 'Nothing open',
                             'description': 'Click Open to view details in a modal overlay.',
                             'type': 'empty-state',
+                            'icon': 'wrench',
+                            'title': 'Nothing open',
                           },
                         ],
                       },
                     ],
+                    'navItems': [
+                      {
+                        'icon': 'git-branch',
+                        'href': '/pipeline',
+                        'label': 'Pipeline',
+                      },
+                      {
+                        'icon': 'play',
+                        'label': 'Execution',
+                        'href': '/execution',
+                      },
+                      {
+                        'href': '/logs',
+                        'label': 'Logs',
+                        'icon': 'terminal',
+                      },
+                    ],
+                    'type': 'dashboard-layout',
+                    'appName': 'Agent Pipeline',
                   },
                 ],
               ],
@@ -6746,9 +6746,10 @@ export function stdAgentPipelinePipelineExecOrbital(params: StdAgentPipelinePipe
                   'modal',
                   {
                     'gap': 'md',
+                    'type': 'stack',
+                    'direction': 'vertical',
                     'children': [
                       {
-                        'type': 'stack',
                         'gap': 'sm',
                         'children': [
                           {
@@ -6756,29 +6757,28 @@ export function stdAgentPipelinePipelineExecOrbital(params: StdAgentPipelinePipe
                             'name': 'wrench',
                           },
                           {
-                            'variant': 'h3',
-                            'type': 'typography',
                             'content': 'Invoke Tool',
+                            'type': 'typography',
+                            'variant': 'h3',
                           },
                         ],
+                        'type': 'stack',
                         'direction': 'horizontal',
                       },
                       {
                         'type': 'divider',
                       },
                       {
+                        'cancelEvent': 'CLOSE',
                         'mode': 'create',
-                        'submitEvent': 'SAVE',
                         'fields': [
                           'toolName',
                           'args',
                         ],
-                        'cancelEvent': 'CLOSE',
                         'type': 'form-section',
+                        'submitEvent': 'SAVE',
                       },
                     ],
-                    'type': 'stack',
-                    'direction': 'vertical',
                   },
                 ],
               ],
@@ -6803,8 +6803,8 @@ export function stdAgentPipelinePipelineExecOrbital(params: StdAgentPipelinePipe
                   'PipelineExec',
                   {
                     'emit': {
-                      'success': 'PipelineExecLoaded',
                       'failure': 'PipelineExecLoadFailed',
+                      'success': 'PipelineExecLoaded',
                     },
                   },
                 ],
@@ -6812,72 +6812,72 @@ export function stdAgentPipelinePipelineExecOrbital(params: StdAgentPipelinePipe
                   'render-ui',
                   'main',
                   {
-                    'type': 'dashboard-layout',
-                    'appName': 'Agent Pipeline',
                     'navItems': [
                       {
                         'icon': 'git-branch',
-                        'href': '/pipeline',
                         'label': 'Pipeline',
+                        'href': '/pipeline',
                       },
                       {
                         'label': 'Execution',
-                        'href': '/execution',
                         'icon': 'play',
+                        'href': '/execution',
                       },
                       {
+                        'href': '/logs',
                         'icon': 'terminal',
                         'label': 'Logs',
-                        'href': '/logs',
                       },
                     ],
+                    'type': 'dashboard-layout',
+                    'appName': 'Agent Pipeline',
                     'children': [
                       {
+                        'gap': 'lg',
+                        'type': 'stack',
+                        'direction': 'vertical',
                         'children': [
                           {
                             'type': 'stack',
-                            'direction': 'horizontal',
                             'gap': 'md',
+                            'justify': 'between',
+                            'direction': 'horizontal',
                             'children': [
                               {
                                 'gap': 'md',
+                                'type': 'stack',
+                                'direction': 'horizontal',
                                 'children': [
                                   {
-                                    'name': 'wrench',
                                     'type': 'icon',
+                                    'name': 'wrench',
                                   },
                                   {
                                     'content': 'Invoke Tool',
-                                    'variant': 'h2',
                                     'type': 'typography',
+                                    'variant': 'h2',
                                   },
                                 ],
-                                'direction': 'horizontal',
-                                'type': 'stack',
                               },
                               {
-                                'type': 'button',
                                 'action': 'INVOKE',
-                                'icon': 'wrench',
-                                'variant': 'primary',
+                                'type': 'button',
                                 'label': 'Open',
+                                'variant': 'primary',
+                                'icon': 'wrench',
                               },
                             ],
-                            'justify': 'between',
                           },
                           {
                             'type': 'divider',
                           },
                           {
-                            'description': 'Click Open to view details in a modal overlay.',
-                            'type': 'empty-state',
                             'icon': 'wrench',
+                            'type': 'empty-state',
+                            'description': 'Click Open to view details in a modal overlay.',
                             'title': 'Nothing open',
                           },
                         ],
-                        'direction': 'vertical',
-                        'gap': 'lg',
-                        'type': 'stack',
                       },
                     ],
                   },
@@ -6915,8 +6915,8 @@ export function stdAgentPipelinePipelineExecOrbital(params: StdAgentPipelinePipe
                   'PipelineExec',
                   {
                     'emit': {
-                      'failure': 'PipelineExecLoadFailed',
                       'success': 'PipelineExecLoaded',
+                      'failure': 'PipelineExecLoadFailed',
                     },
                   },
                 ],
@@ -6924,37 +6924,17 @@ export function stdAgentPipelinePipelineExecOrbital(params: StdAgentPipelinePipe
                   'render-ui',
                   'main',
                   {
-                    'navItems': [
-                      {
-                        'icon': 'git-branch',
-                        'label': 'Pipeline',
-                        'href': '/pipeline',
-                      },
-                      {
-                        'href': '/execution',
-                        'label': 'Execution',
-                        'icon': 'play',
-                      },
-                      {
-                        'href': '/logs',
-                        'icon': 'terminal',
-                        'label': 'Logs',
-                      },
-                    ],
-                    'type': 'dashboard-layout',
-                    'appName': 'Agent Pipeline',
                     'children': [
                       {
-                        'direction': 'vertical',
                         'type': 'stack',
                         'gap': 'lg',
+                        'direction': 'vertical',
                         'children': [
                           {
-                            'direction': 'horizontal',
-                            'type': 'stack',
-                            'gap': 'md',
                             'children': [
                               {
+                                'gap': 'md',
+                                'type': 'stack',
                                 'direction': 'horizontal',
                                 'children': [
                                   {
@@ -6963,21 +6943,22 @@ export function stdAgentPipelinePipelineExecOrbital(params: StdAgentPipelinePipe
                                   },
                                   {
                                     'type': 'typography',
-                                    'content': 'Invoke Tool',
                                     'variant': 'h2',
+                                    'content': 'Invoke Tool',
                                   },
                                 ],
-                                'type': 'stack',
-                                'gap': 'md',
                               },
                               {
-                                'variant': 'primary',
-                                'icon': 'wrench',
-                                'action': 'INVOKE',
                                 'label': 'Open',
+                                'variant': 'primary',
+                                'action': 'INVOKE',
+                                'icon': 'wrench',
                                 'type': 'button',
                               },
                             ],
+                            'type': 'stack',
+                            'direction': 'horizontal',
+                            'gap': 'md',
                             'justify': 'between',
                           },
                           {
@@ -6986,12 +6967,31 @@ export function stdAgentPipelinePipelineExecOrbital(params: StdAgentPipelinePipe
                           {
                             'icon': 'wrench',
                             'type': 'empty-state',
-                            'title': 'Nothing open',
                             'description': 'Click Open to view details in a modal overlay.',
+                            'title': 'Nothing open',
                           },
                         ],
                       },
                     ],
+                    'navItems': [
+                      {
+                        'href': '/pipeline',
+                        'label': 'Pipeline',
+                        'icon': 'git-branch',
+                      },
+                      {
+                        'label': 'Execution',
+                        'icon': 'play',
+                        'href': '/execution',
+                      },
+                      {
+                        'label': 'Logs',
+                        'href': '/logs',
+                        'icon': 'terminal',
+                      },
+                    ],
+                    'appName': 'Agent Pipeline',
+                    'type': 'dashboard-layout',
                   },
                 ],
               ],
@@ -7130,8 +7130,8 @@ export function stdAgentPipelinePipelineExecOrbital(params: StdAgentPipelinePipe
                   'PipelineExec',
                   {
                     'emit': {
-                      'failure': 'PipelineExecLoadFailed',
                       'success': 'PipelineExecLoaded',
+                      'failure': 'PipelineExecLoadFailed',
                     },
                   },
                 ],
@@ -7139,88 +7139,88 @@ export function stdAgentPipelinePipelineExecOrbital(params: StdAgentPipelinePipe
                   'render-ui',
                   'main',
                   {
+                    'navItems': [
+                      {
+                        'href': '/pipeline',
+                        'icon': 'git-branch',
+                        'label': 'Pipeline',
+                      },
+                      {
+                        'href': '/execution',
+                        'icon': 'play',
+                        'label': 'Execution',
+                      },
+                      {
+                        'href': '/logs',
+                        'label': 'Logs',
+                        'icon': 'terminal',
+                      },
+                    ],
                     'children': [
                       {
-                        'gap': 'lg',
-                        'direction': 'vertical',
-                        'type': 'stack',
                         'children': [
                           {
-                            'direction': 'horizontal',
-                            'align': 'center',
-                            'type': 'stack',
                             'children': [
                               {
                                 'type': 'icon',
                                 'name': 'gauge',
                               },
                               {
-                                'variant': 'h2',
                                 'content': 'Token Usage',
+                                'variant': 'h2',
                                 'type': 'typography',
                               },
                               {
                                 'label': 'Normal',
-                                'variant': 'default',
                                 'type': 'badge',
+                                'variant': 'default',
                               },
                             ],
+                            'direction': 'horizontal',
+                            'type': 'stack',
                             'gap': 'sm',
+                            'align': 'center',
                           },
                           {
                             'type': 'divider',
                           },
                           {
-                            'value': '@entity.current',
-                            'max': '@entity.max',
                             'type': 'progress-bar',
+                            'max': '@entity.max',
+                            'value': '@entity.current',
                           },
                           {
                             'type': 'stack',
-                            'gap': 'md',
+                            'direction': 'horizontal',
                             'children': [
                               {
+                                'value': '@entity.current',
                                 'type': 'stat-display',
                                 'label': 'Tokens Used',
-                                'value': '@entity.current',
                               },
                               {
-                                'value': '@entity.max',
                                 'type': 'stat-display',
+                                'value': '@entity.max',
                                 'label': 'Max Tokens',
                               },
                             ],
-                            'direction': 'horizontal',
+                            'gap': 'md',
                           },
                           {
-                            'icon': 'rotate-ccw',
-                            'type': 'button',
                             'action': 'RESET',
+                            'type': 'button',
                             'label': 'Reset',
                             'variant': 'ghost',
+                            'icon': 'rotate-ccw',
                           },
                         ],
+                        'gap': 'lg',
+                        'type': 'stack',
+                        'direction': 'vertical',
                       },
                     ],
-                    'type': 'dashboard-layout',
                     'appName': 'Agent Pipeline',
-                    'navItems': [
-                      {
-                        'icon': 'git-branch',
-                        'label': 'Pipeline',
-                        'href': '/pipeline',
-                      },
-                      {
-                        'label': 'Execution',
-                        'href': '/execution',
-                        'icon': 'play',
-                      },
-                      {
-                        'icon': 'terminal',
-                        'label': 'Logs',
-                        'href': '/logs',
-                      },
-                    ],
+                    'type': 'dashboard-layout',
                   },
                 ],
               ],
@@ -7248,50 +7248,48 @@ export function stdAgentPipelinePipelineExecOrbital(params: StdAgentPipelinePipe
                   'render-ui',
                   'main',
                   {
-                    'type': 'dashboard-layout',
                     'children': [
                       {
                         'direction': 'vertical',
                         'type': 'stack',
+                        'gap': 'lg',
                         'children': [
                           {
+                            'gap': 'sm',
+                            'type': 'stack',
+                            'align': 'center',
+                            'direction': 'horizontal',
                             'children': [
                               {
-                                'name': 'gauge',
                                 'type': 'icon',
+                                'name': 'gauge',
                               },
                               {
                                 'content': 'Token Usage',
-                                'type': 'typography',
                                 'variant': 'h2',
+                                'type': 'typography',
                               },
                               {
-                                'variant': 'default',
                                 'type': 'badge',
                                 'label': 'Normal',
+                                'variant': 'default',
                               },
                             ],
-                            'type': 'stack',
-                            'direction': 'horizontal',
-                            'align': 'center',
-                            'gap': 'sm',
                           },
                           {
                             'type': 'divider',
                           },
                           {
+                            'max': '@entity.max',
                             'value': '@entity.current',
                             'type': 'progress-bar',
-                            'max': '@entity.max',
                           },
                           {
-                            'direction': 'horizontal',
-                            'gap': 'md',
                             'children': [
                               {
                                 'value': '@entity.current',
-                                'type': 'stat-display',
                                 'label': 'Tokens Used',
+                                'type': 'stat-display',
                               },
                               {
                                 'type': 'stat-display',
@@ -7299,36 +7297,38 @@ export function stdAgentPipelinePipelineExecOrbital(params: StdAgentPipelinePipe
                                 'value': '@entity.max',
                               },
                             ],
+                            'direction': 'horizontal',
+                            'gap': 'md',
                             'type': 'stack',
                           },
                           {
-                            'icon': 'rotate-ccw',
+                            'action': 'RESET',
                             'variant': 'ghost',
                             'type': 'button',
                             'label': 'Reset',
-                            'action': 'RESET',
+                            'icon': 'rotate-ccw',
                           },
                         ],
-                        'gap': 'lg',
                       },
                     ],
                     'navItems': [
                       {
-                        'href': '/pipeline',
                         'icon': 'git-branch',
                         'label': 'Pipeline',
+                        'href': '/pipeline',
                       },
                       {
-                        'label': 'Execution',
-                        'icon': 'play',
                         'href': '/execution',
+                        'icon': 'play',
+                        'label': 'Execution',
                       },
                       {
-                        'href': '/logs',
-                        'label': 'Logs',
                         'icon': 'terminal',
+                        'label': 'Logs',
+                        'href': '/logs',
                       },
                     ],
+                    'type': 'dashboard-layout',
                     'appName': 'Agent Pipeline',
                   },
                 ],
@@ -7369,14 +7369,16 @@ export function stdAgentPipelinePipelineExecOrbital(params: StdAgentPipelinePipe
                   'render-ui',
                   'main',
                   {
+                    'type': 'dashboard-layout',
+                    'appName': 'Agent Pipeline',
                     'children': [
                       {
-                        'direction': 'vertical',
                         'children': [
                           {
                             'type': 'stack',
-                            'align': 'center',
                             'direction': 'horizontal',
+                            'align': 'center',
+                            'gap': 'sm',
                             'children': [
                               {
                                 'name': 'alert-triangle',
@@ -7388,86 +7390,84 @@ export function stdAgentPipelinePipelineExecOrbital(params: StdAgentPipelinePipe
                                 'content': 'Token Usage',
                               },
                               {
-                                'label': 'Warning',
                                 'type': 'badge',
+                                'label': 'Warning',
                                 'variant': 'warning',
                               },
                             ],
-                            'gap': 'sm',
                           },
                           {
                             'type': 'divider',
                           },
                           {
                             'variant': 'warning',
-                            'type': 'alert',
                             'message': 'Token usage approaching limit. Consider compacting.',
+                            'type': 'alert',
                           },
                           {
+                            'value': '@entity.current',
                             'max': '@entity.max',
                             'type': 'progress-bar',
-                            'value': '@entity.current',
                           },
                           {
                             'gap': 'md',
-                            'direction': 'horizontal',
                             'children': [
                               {
-                                'type': 'stat-display',
-                                'label': 'Tokens Used',
                                 'value': '@entity.current',
+                                'label': 'Tokens Used',
+                                'type': 'stat-display',
                               },
                               {
-                                'value': '@entity.max',
                                 'type': 'stat-display',
                                 'label': 'Max Tokens',
+                                'value': '@entity.max',
                               },
                             ],
+                            'direction': 'horizontal',
                             'type': 'stack',
                           },
                           {
+                            'type': 'stack',
+                            'direction': 'horizontal',
                             'gap': 'sm',
                             'children': [
                               {
                                 'action': 'COMPACT',
-                                'type': 'button',
                                 'variant': 'primary',
-                                'label': 'Compact',
+                                'type': 'button',
                                 'icon': 'minimize-2',
+                                'label': 'Compact',
                               },
                               {
                                 'label': 'Reset',
-                                'icon': 'rotate-ccw',
-                                'type': 'button',
                                 'action': 'RESET',
+                                'icon': 'rotate-ccw',
                                 'variant': 'ghost',
+                                'type': 'button',
                               },
                             ],
-                            'direction': 'horizontal',
-                            'type': 'stack',
                           },
                         ],
+                        'direction': 'vertical',
                         'gap': 'lg',
                         'type': 'stack',
                       },
                     ],
-                    'type': 'dashboard-layout',
-                    'appName': 'Agent Pipeline',
                     'navItems': [
                       {
                         'label': 'Pipeline',
-                        'href': '/pipeline',
                         'icon': 'git-branch',
+                        'href': '/pipeline',
                       },
                       {
-                        'href': '/execution',
                         'icon': 'play',
                         'label': 'Execution',
+                        'href': '/execution',
                       },
                       {
-                        'label': 'Logs',
                         'href': '/logs',
                         'icon': 'terminal',
+                        'label': 'Logs',
                       },
                     ],
                   },
@@ -7497,40 +7497,35 @@ export function stdAgentPipelinePipelineExecOrbital(params: StdAgentPipelinePipe
                   'render-ui',
                   'main',
                   {
-                    'appName': 'Agent Pipeline',
                     'navItems': [
                       {
-                        'href': '/pipeline',
                         'icon': 'git-branch',
                         'label': 'Pipeline',
+                        'href': '/pipeline',
                       },
                       {
-                        'icon': 'play',
                         'href': '/execution',
                         'label': 'Execution',
+                        'icon': 'play',
                       },
                       {
-                        'label': 'Logs',
                         'href': '/logs',
+                        'label': 'Logs',
                         'icon': 'terminal',
                       },
                     ],
-                    'type': 'dashboard-layout',
                     'children': [
                       {
-                        'type': 'stack',
                         'direction': 'vertical',
-                        'gap': 'lg',
                         'children': [
                           {
-                            'direction': 'horizontal',
                             'gap': 'sm',
+                            'direction': 'horizontal',
                             'align': 'center',
-                            'type': 'stack',
                             'children': [
                               {
-                                'name': 'alert-octagon',
                                 'type': 'icon',
+                                'name': 'alert-octagon',
                               },
                               {
                                 'content': 'Token Usage',
@@ -7538,66 +7533,71 @@ export function stdAgentPipelinePipelineExecOrbital(params: StdAgentPipelinePipe
                                 'type': 'typography',
                               },
                               {
-                                'label': 'Critical',
                                 'type': 'badge',
+                                'label': 'Critical',
                                 'variant': 'danger',
                               },
                             ],
+                            'type': 'stack',
                           },
                           {
                             'type': 'divider',
                           },
                           {
-                            'type': 'alert',
                             'variant': 'error',
+                            'type': 'alert',
                             'message': 'Token usage critical. Compact immediately to avoid truncation.',
                           },
                           {
+                            'value': '@entity.current',
                             'max': '@entity.max',
                             'type': 'progress-bar',
-                            'value': '@entity.current',
                           },
                           {
+                            'gap': 'md',
+                            'type': 'stack',
                             'children': [
                               {
-                                'type': 'stat-display',
                                 'value': '@entity.current',
+                                'type': 'stat-display',
                                 'label': 'Tokens Used',
                               },
                               {
                                 'label': 'Max Tokens',
-                                'type': 'stat-display',
                                 'value': '@entity.max',
+                                'type': 'stat-display',
                               },
                             ],
-                            'gap': 'md',
                             'direction': 'horizontal',
-                            'type': 'stack',
                           },
                           {
                             'children': [
                               {
                                 'variant': 'primary',
-                                'icon': 'minimize-2',
-                                'type': 'button',
-                                'label': 'Compact Now',
                                 'action': 'COMPACT',
+                                'label': 'Compact Now',
+                                'type': 'button',
+                                'icon': 'minimize-2',
                               },
                               {
-                                'label': 'Reset',
-                                'icon': 'rotate-ccw',
-                                'variant': 'ghost',
                                 'action': 'RESET',
+                                'label': 'Reset',
                                 'type': 'button',
+                                'variant': 'ghost',
+                                'icon': 'rotate-ccw',
                               },
                             ],
-                            'type': 'stack',
                             'gap': 'sm',
                             'direction': 'horizontal',
+                            'type': 'stack',
                           },
                         ],
+                        'gap': 'lg',
+                        'type': 'stack',
                       },
                     ],
+                    'appName': 'Agent Pipeline',
+                    'type': 'dashboard-layout',
                   },
                 ],
               ],
@@ -7622,70 +7622,6 @@ export function stdAgentPipelinePipelineExecOrbital(params: StdAgentPipelinePipe
                   'render-ui',
                   'main',
                   {
-                    'children': [
-                      {
-                        'children': [
-                          {
-                            'align': 'center',
-                            'gap': 'sm',
-                            'direction': 'horizontal',
-                            'children': [
-                              {
-                                'name': 'gauge',
-                                'type': 'icon',
-                              },
-                              {
-                                'variant': 'h2',
-                                'content': 'Token Usage',
-                                'type': 'typography',
-                              },
-                              {
-                                'label': 'Normal',
-                                'variant': 'default',
-                                'type': 'badge',
-                              },
-                            ],
-                            'type': 'stack',
-                          },
-                          {
-                            'type': 'divider',
-                          },
-                          {
-                            'value': '@entity.current',
-                            'type': 'progress-bar',
-                            'max': '@entity.max',
-                          },
-                          {
-                            'gap': 'md',
-                            'type': 'stack',
-                            'children': [
-                              {
-                                'value': '@entity.current',
-                                'type': 'stat-display',
-                                'label': 'Tokens Used',
-                              },
-                              {
-                                'label': 'Max Tokens',
-                                'value': '@entity.max',
-                                'type': 'stat-display',
-                              },
-                            ],
-                            'direction': 'horizontal',
-                          },
-                          {
-                            'type': 'button',
-                            'label': 'Reset',
-                            'action': 'RESET',
-                            'variant': 'ghost',
-                            'icon': 'rotate-ccw',
-                          },
-                        ],
-                        'direction': 'vertical',
-                        'type': 'stack',
-                        'gap': 'lg',
-                      },
-                    ],
-                    'type': 'dashboard-layout',
                     'navItems': [
                       {
                         'label': 'Pipeline',
@@ -7693,17 +7629,81 @@ export function stdAgentPipelinePipelineExecOrbital(params: StdAgentPipelinePipe
                         'icon': 'git-branch',
                       },
                       {
-                        'label': 'Execution',
                         'href': '/execution',
                         'icon': 'play',
+                        'label': 'Execution',
                       },
                       {
-                        'icon': 'terminal',
                         'label': 'Logs',
                         'href': '/logs',
+                        'icon': 'terminal',
+                      },
+                    ],
+                    'children': [
+                      {
+                        'gap': 'lg',
+                        'type': 'stack',
+                        'direction': 'vertical',
+                        'children': [
+                          {
+                            'align': 'center',
+                            'children': [
+                              {
+                                'type': 'icon',
+                                'name': 'gauge',
+                              },
+                              {
+                                'content': 'Token Usage',
+                                'type': 'typography',
+                                'variant': 'h2',
+                              },
+                              {
+                                'type': 'badge',
+                                'label': 'Normal',
+                                'variant': 'default',
+                              },
+                            ],
+                            'gap': 'sm',
+                            'direction': 'horizontal',
+                            'type': 'stack',
+                          },
+                          {
+                            'type': 'divider',
+                          },
+                          {
+                            'value': '@entity.current',
+                            'max': '@entity.max',
+                            'type': 'progress-bar',
+                          },
+                          {
+                            'gap': 'md',
+                            'type': 'stack',
+                            'direction': 'horizontal',
+                            'children': [
+                              {
+                                'type': 'stat-display',
+                                'value': '@entity.current',
+                                'label': 'Tokens Used',
+                              },
+                              {
+                                'value': '@entity.max',
+                                'label': 'Max Tokens',
+                                'type': 'stat-display',
+                              },
+                            ],
+                          },
+                          {
+                            'type': 'button',
+                            'label': 'Reset',
+                            'icon': 'rotate-ccw',
+                            'action': 'RESET',
+                            'variant': 'ghost',
+                          },
+                        ],
                       },
                     ],
                     'appName': 'Agent Pipeline',
+                    'type': 'dashboard-layout',
                   },
                 ],
               ],
@@ -7722,13 +7722,32 @@ export function stdAgentPipelinePipelineExecOrbital(params: StdAgentPipelinePipe
                   'render-ui',
                   'main',
                   {
+                    'appName': 'Agent Pipeline',
+                    'navItems': [
+                      {
+                        'icon': 'git-branch',
+                        'label': 'Pipeline',
+                        'href': '/pipeline',
+                      },
+                      {
+                        'href': '/execution',
+                        'icon': 'play',
+                        'label': 'Execution',
+                      },
+                      {
+                        'label': 'Logs',
+                        'href': '/logs',
+                        'icon': 'terminal',
+                      },
+                    ],
+                    'type': 'dashboard-layout',
                     'children': [
                       {
+                        'direction': 'vertical',
                         'children': [
                           {
-                            'type': 'stack',
+                            'gap': 'sm',
                             'align': 'center',
-                            'direction': 'horizontal',
                             'children': [
                               {
                                 'type': 'icon',
@@ -7740,20 +7759,21 @@ export function stdAgentPipelinePipelineExecOrbital(params: StdAgentPipelinePipe
                                 'type': 'typography',
                               },
                               {
-                                'type': 'badge',
                                 'label': 'Normal',
+                                'type': 'badge',
                                 'variant': 'default',
                               },
                             ],
-                            'gap': 'sm',
+                            'type': 'stack',
+                            'direction': 'horizontal',
                           },
                           {
                             'type': 'divider',
                           },
                           {
-                            'value': '@entity.current',
                             'max': '@entity.max',
                             'type': 'progress-bar',
+                            'value': '@entity.current',
                           },
                           {
                             'type': 'stack',
@@ -7761,9 +7781,9 @@ export function stdAgentPipelinePipelineExecOrbital(params: StdAgentPipelinePipe
                             'gap': 'md',
                             'children': [
                               {
-                                'type': 'stat-display',
                                 'value': '@entity.current',
                                 'label': 'Tokens Used',
+                                'type': 'stat-display',
                               },
                               {
                                 'type': 'stat-display',
@@ -7773,35 +7793,15 @@ export function stdAgentPipelinePipelineExecOrbital(params: StdAgentPipelinePipe
                             ],
                           },
                           {
-                            'label': 'Reset',
-                            'icon': 'rotate-ccw',
-                            'variant': 'ghost',
-                            'type': 'button',
                             'action': 'RESET',
+                            'label': 'Reset',
+                            'variant': 'ghost',
+                            'icon': 'rotate-ccw',
+                            'type': 'button',
                           },
                         ],
                         'type': 'stack',
                         'gap': 'lg',
-                        'direction': 'vertical',
-                      },
-                    ],
-                    'type': 'dashboard-layout',
-                    'appName': 'Agent Pipeline',
-                    'navItems': [
-                      {
-                        'label': 'Pipeline',
-                        'icon': 'git-branch',
-                        'href': '/pipeline',
-                      },
-                      {
-                        'href': '/execution',
-                        'label': 'Execution',
-                        'icon': 'play',
-                      },
-                      {
-                        'icon': 'terminal',
-                        'href': '/logs',
-                        'label': 'Logs',
                       },
                     ],
                   },
@@ -7843,6 +7843,7 @@ export function stdAgentPipelinePipelineExecOrbital(params: StdAgentPipelinePipe
                   'render-ui',
                   'main',
                   {
+                    'type': 'dashboard-layout',
                     'appName': 'Agent Pipeline',
                     'navItems': [
                       {
@@ -7857,17 +7858,19 @@ export function stdAgentPipelinePipelineExecOrbital(params: StdAgentPipelinePipe
                       },
                       {
                         'href': '/logs',
-                        'icon': 'terminal',
                         'label': 'Logs',
+                        'icon': 'terminal',
                       },
                     ],
                     'children': [
                       {
                         'gap': 'lg',
                         'type': 'stack',
-                        'direction': 'vertical',
                         'children': [
                           {
+                            'align': 'center',
+                            'type': 'stack',
+                            'gap': 'sm',
                             'direction': 'horizontal',
                             'children': [
                               {
@@ -7875,9 +7878,9 @@ export function stdAgentPipelinePipelineExecOrbital(params: StdAgentPipelinePipe
                                 'name': 'alert-triangle',
                               },
                               {
-                                'type': 'typography',
                                 'variant': 'h2',
                                 'content': 'Token Usage',
+                                'type': 'typography',
                               },
                               {
                                 'type': 'badge',
@@ -7885,9 +7888,6 @@ export function stdAgentPipelinePipelineExecOrbital(params: StdAgentPipelinePipe
                                 'label': 'Warning',
                               },
                             ],
-                            'align': 'center',
-                            'gap': 'sm',
-                            'type': 'stack',
                           },
                           {
                             'type': 'divider',
@@ -7898,52 +7898,52 @@ export function stdAgentPipelinePipelineExecOrbital(params: StdAgentPipelinePipe
                             'message': 'Token usage approaching limit. Consider compacting.',
                           },
                           {
-                            'max': '@entity.max',
                             'value': '@entity.current',
+                            'max': '@entity.max',
                             'type': 'progress-bar',
                           },
                           {
                             'type': 'stack',
-                            'direction': 'horizontal',
-                            'gap': 'md',
                             'children': [
                               {
-                                'value': '@entity.current',
-                                'type': 'stat-display',
                                 'label': 'Tokens Used',
+                                'type': 'stat-display',
+                                'value': '@entity.current',
                               },
                               {
                                 'value': '@entity.max',
-                                'type': 'stat-display',
                                 'label': 'Max Tokens',
+                                'type': 'stat-display',
                               },
                             ],
+                            'gap': 'md',
+                            'direction': 'horizontal',
                           },
                           {
+                            'type': 'stack',
+                            'gap': 'sm',
                             'children': [
                               {
                                 'label': 'Compact',
-                                'icon': 'minimize-2',
-                                'action': 'COMPACT',
                                 'type': 'button',
+                                'icon': 'minimize-2',
                                 'variant': 'primary',
+                                'action': 'COMPACT',
                               },
                               {
                                 'label': 'Reset',
-                                'type': 'button',
                                 'icon': 'rotate-ccw',
+                                'type': 'button',
                                 'variant': 'ghost',
                                 'action': 'RESET',
                               },
                             ],
-                            'gap': 'sm',
                             'direction': 'horizontal',
-                            'type': 'stack',
                           },
                         ],
+                        'direction': 'vertical',
                       },
                     ],
-                    'type': 'dashboard-layout',
                   },
                 ],
               ],
@@ -7973,105 +7973,105 @@ export function stdAgentPipelinePipelineExecOrbital(params: StdAgentPipelinePipe
                   {
                     'navItems': [
                       {
-                        'label': 'Pipeline',
-                        'icon': 'git-branch',
                         'href': '/pipeline',
+                        'icon': 'git-branch',
+                        'label': 'Pipeline',
                       },
                       {
-                        'href': '/execution',
                         'label': 'Execution',
+                        'href': '/execution',
                         'icon': 'play',
                       },
                       {
-                        'label': 'Logs',
                         'icon': 'terminal',
+                        'label': 'Logs',
                         'href': '/logs',
                       },
                     ],
+                    'type': 'dashboard-layout',
                     'appName': 'Agent Pipeline',
                     'children': [
                       {
                         'type': 'stack',
-                        'gap': 'lg',
                         'direction': 'vertical',
+                        'gap': 'lg',
                         'children': [
                           {
-                            'type': 'stack',
-                            'direction': 'horizontal',
+                            'gap': 'sm',
+                            'align': 'center',
                             'children': [
                               {
                                 'name': 'alert-octagon',
                                 'type': 'icon',
                               },
                               {
-                                'variant': 'h2',
-                                'type': 'typography',
                                 'content': 'Token Usage',
+                                'type': 'typography',
+                                'variant': 'h2',
                               },
                               {
                                 'label': 'Critical',
-                                'variant': 'danger',
                                 'type': 'badge',
+                                'variant': 'danger',
                               },
                             ],
-                            'gap': 'sm',
-                            'align': 'center',
+                            'type': 'stack',
+                            'direction': 'horizontal',
                           },
                           {
                             'type': 'divider',
                           },
                           {
-                            'type': 'alert',
                             'message': 'Token usage critical. Compact immediately to avoid truncation.',
                             'variant': 'error',
+                            'type': 'alert',
                           },
                           {
                             'max': '@entity.max',
-                            'type': 'progress-bar',
                             'value': '@entity.current',
+                            'type': 'progress-bar',
                           },
                           {
                             'type': 'stack',
-                            'gap': 'md',
                             'direction': 'horizontal',
+                            'gap': 'md',
                             'children': [
                               {
+                                'type': 'stat-display',
                                 'label': 'Tokens Used',
                                 'value': '@entity.current',
-                                'type': 'stat-display',
                               },
                               {
-                                'type': 'stat-display',
-                                'value': '@entity.max',
                                 'label': 'Max Tokens',
+                                'value': '@entity.max',
+                                'type': 'stat-display',
                               },
                             ],
                           },
                           {
+                            'type': 'stack',
                             'direction': 'horizontal',
-                            'gap': 'sm',
                             'children': [
                               {
-                                'variant': 'primary',
-                                'icon': 'minimize-2',
                                 'type': 'button',
-                                'action': 'COMPACT',
                                 'label': 'Compact Now',
+                                'action': 'COMPACT',
+                                'icon': 'minimize-2',
+                                'variant': 'primary',
                               },
                               {
-                                'action': 'RESET',
+                                'icon': 'rotate-ccw',
+                                'label': 'Reset',
                                 'variant': 'ghost',
                                 'type': 'button',
-                                'label': 'Reset',
-                                'icon': 'rotate-ccw',
+                                'action': 'RESET',
                               },
                             ],
-                            'type': 'stack',
+                            'gap': 'sm',
                           },
                         ],
                       },
                     ],
-                    'type': 'dashboard-layout',
                   },
                 ],
               ],
@@ -8099,30 +8099,31 @@ export function stdAgentPipelinePipelineExecOrbital(params: StdAgentPipelinePipe
                   'render-ui',
                   'main',
                   {
-                    'appName': 'Agent Pipeline',
-                    'type': 'dashboard-layout',
                     'navItems': [
                       {
                         'label': 'Pipeline',
-                        'icon': 'git-branch',
                         'href': '/pipeline',
+                        'icon': 'git-branch',
                       },
                       {
+                        'label': 'Execution',
                         'href': '/execution',
                         'icon': 'play',
-                        'label': 'Execution',
                       },
                       {
-                        'label': 'Logs',
-                        'href': '/logs',
                         'icon': 'terminal',
+                        'href': '/logs',
+                        'label': 'Logs',
                       },
                     ],
+                    'appName': 'Agent Pipeline',
                     'children': [
                       {
+                        'direction': 'vertical',
                         'children': [
                           {
-                            'align': 'center',
+                            'gap': 'sm',
+                            'direction': 'horizontal',
                             'type': 'stack',
                             'children': [
                               {
@@ -8131,56 +8132,55 @@ export function stdAgentPipelinePipelineExecOrbital(params: StdAgentPipelinePipe
                               },
                               {
                                 'type': 'typography',
-                                'variant': 'h2',
                                 'content': 'Token Usage',
+                                'variant': 'h2',
                               },
                               {
-                                'label': 'Normal',
                                 'type': 'badge',
+                                'label': 'Normal',
                                 'variant': 'default',
                               },
                             ],
-                            'gap': 'sm',
-                            'direction': 'horizontal',
+                            'align': 'center',
                           },
                           {
                             'type': 'divider',
                           },
                           {
-                            'max': '@entity.max',
                             'type': 'progress-bar',
                             'value': '@entity.current',
+                            'max': '@entity.max',
                           },
                           {
-                            'gap': 'md',
+                            'direction': 'horizontal',
                             'children': [
                               {
-                                'value': '@entity.current',
                                 'type': 'stat-display',
                                 'label': 'Tokens Used',
+                                'value': '@entity.current',
                               },
                               {
-                                'label': 'Max Tokens',
                                 'type': 'stat-display',
+                                'label': 'Max Tokens',
                                 'value': '@entity.max',
                               },
                             ],
                             'type': 'stack',
-                            'direction': 'horizontal',
+                            'gap': 'md',
                           },
                           {
-                            'icon': 'rotate-ccw',
-                            'action': 'RESET',
-                            'label': 'Reset',
                             'type': 'button',
                             'variant': 'ghost',
+                            'label': 'Reset',
+                            'action': 'RESET',
+                            'icon': 'rotate-ccw',
                           },
                         ],
                         'gap': 'lg',
-                        'direction': 'vertical',
                         'type': 'stack',
                       },
                     ],
+                    'type': 'dashboard-layout',
                   },
                 ],
               ],
@@ -8205,23 +8205,6 @@ export function stdAgentPipelinePipelineExecOrbital(params: StdAgentPipelinePipe
                   'render-ui',
                   'main',
                   {
-                    'navItems': [
-                      {
-                        'label': 'Pipeline',
-                        'icon': 'git-branch',
-                        'href': '/pipeline',
-                      },
-                      {
-                        'icon': 'play',
-                        'label': 'Execution',
-                        'href': '/execution',
-                      },
-                      {
-                        'href': '/logs',
-                        'label': 'Logs',
-                        'icon': 'terminal',
-                      },
-                    ],
                     'appName': 'Agent Pipeline',
                     'type': 'dashboard-layout',
                     'children': [
@@ -8229,62 +8212,79 @@ export function stdAgentPipelinePipelineExecOrbital(params: StdAgentPipelinePipe
                         'direction': 'vertical',
                         'children': [
                           {
+                            'type': 'stack',
+                            'gap': 'sm',
+                            'align': 'center',
                             'children': [
                               {
                                 'type': 'icon',
                                 'name': 'gauge',
                               },
                               {
-                                'content': 'Token Usage',
                                 'type': 'typography',
+                                'content': 'Token Usage',
                                 'variant': 'h2',
                               },
                               {
-                                'label': 'Normal',
-                                'type': 'badge',
                                 'variant': 'default',
+                                'type': 'badge',
+                                'label': 'Normal',
                               },
                             ],
-                            'align': 'center',
                             'direction': 'horizontal',
-                            'type': 'stack',
-                            'gap': 'sm',
                           },
                           {
                             'type': 'divider',
                           },
                           {
-                            'max': '@entity.max',
                             'type': 'progress-bar',
+                            'max': '@entity.max',
                             'value': '@entity.current',
                           },
                           {
+                            'direction': 'horizontal',
                             'type': 'stack',
+                            'gap': 'md',
                             'children': [
                               {
-                                'label': 'Tokens Used',
-                                'type': 'stat-display',
                                 'value': '@entity.current',
+                                'type': 'stat-display',
+                                'label': 'Tokens Used',
                               },
                               {
-                                'label': 'Max Tokens',
                                 'value': '@entity.max',
+                                'label': 'Max Tokens',
                                 'type': 'stat-display',
                               },
                             ],
-                            'direction': 'horizontal',
-                            'gap': 'md',
                           },
                           {
+                            'variant': 'ghost',
+                            'label': 'Reset',
                             'icon': 'rotate-ccw',
                             'type': 'button',
-                            'label': 'Reset',
                             'action': 'RESET',
-                            'variant': 'ghost',
                           },
                         ],
                         'type': 'stack',
                         'gap': 'lg',
+                      },
+                    ],
+                    'navItems': [
+                      {
+                        'href': '/pipeline',
+                        'label': 'Pipeline',
+                        'icon': 'git-branch',
+                      },
+                      {
+                        'label': 'Execution',
+                        'href': '/execution',
+                        'icon': 'play',
+                      },
+                      {
+                        'icon': 'terminal',
+                        'label': 'Logs',
+                        'href': '/logs',
                       },
                     ],
                   },
@@ -8305,66 +8305,64 @@ export function stdAgentPipelinePipelineExecOrbital(params: StdAgentPipelinePipe
                   'render-ui',
                   'main',
                   {
-                    'type': 'dashboard-layout',
-                    'appName': 'Agent Pipeline',
                     'children': [
                       {
-                        'direction': 'vertical',
                         'type': 'stack',
+                        'direction': 'vertical',
                         'gap': 'lg',
                         'children': [
                           {
+                            'align': 'center',
                             'type': 'stack',
+                            'gap': 'sm',
+                            'direction': 'horizontal',
                             'children': [
                               {
                                 'type': 'icon',
                                 'name': 'gauge',
                               },
                               {
-                                'variant': 'h2',
                                 'content': 'Token Usage',
+                                'variant': 'h2',
                                 'type': 'typography',
                               },
                               {
                                 'label': 'Normal',
-                                'type': 'badge',
                                 'variant': 'default',
+                                'type': 'badge',
                               },
                             ],
-                            'align': 'center',
-                            'direction': 'horizontal',
-                            'gap': 'sm',
                           },
                           {
                             'type': 'divider',
                           },
                           {
-                            'value': '@entity.current',
                             'max': '@entity.max',
+                            'value': '@entity.current',
                             'type': 'progress-bar',
                           },
                           {
                             'type': 'stack',
-                            'children': [
-                              {
-                                'type': 'stat-display',
-                                'label': 'Tokens Used',
-                                'value': '@entity.current',
-                              },
-                              {
-                                'type': 'stat-display',
-                                'value': '@entity.max',
-                                'label': 'Max Tokens',
-                              },
-                            ],
                             'gap': 'md',
                             'direction': 'horizontal',
+                            'children': [
+                              {
+                                'value': '@entity.current',
+                                'label': 'Tokens Used',
+                                'type': 'stat-display',
+                              },
+                              {
+                                'label': 'Max Tokens',
+                                'type': 'stat-display',
+                                'value': '@entity.max',
+                              },
+                            ],
                           },
                           {
+                            'type': 'button',
                             'icon': 'rotate-ccw',
                             'label': 'Reset',
                             'variant': 'ghost',
-                            'type': 'button',
                             'action': 'RESET',
                           },
                         ],
@@ -8372,21 +8370,23 @@ export function stdAgentPipelinePipelineExecOrbital(params: StdAgentPipelinePipe
                     ],
                     'navItems': [
                       {
-                        'label': 'Pipeline',
                         'href': '/pipeline',
                         'icon': 'git-branch',
+                        'label': 'Pipeline',
                       },
                       {
                         'label': 'Execution',
-                        'icon': 'play',
                         'href': '/execution',
+                        'icon': 'play',
                       },
                       {
-                        'label': 'Logs',
                         'icon': 'terminal',
                         'href': '/logs',
+                        'label': 'Logs',
                       },
                     ],
+                    'appName': 'Agent Pipeline',
+                    'type': 'dashboard-layout',
                   },
                 ],
               ],
@@ -8414,14 +8414,16 @@ export function stdAgentPipelinePipelineExecOrbital(params: StdAgentPipelinePipe
                   'render-ui',
                   'main',
                   {
-                    'type': 'dashboard-layout',
                     'children': [
                       {
                         'type': 'stack',
+                        'gap': 'lg',
                         'children': [
                           {
-                            'align': 'center',
+                            'gap': 'sm',
                             'type': 'stack',
+                            'direction': 'horizontal',
+                            'align': 'center',
                             'children': [
                               {
                                 'type': 'icon',
@@ -8429,17 +8431,15 @@ export function stdAgentPipelinePipelineExecOrbital(params: StdAgentPipelinePipe
                               },
                               {
                                 'content': 'Token Usage',
-                                'variant': 'h2',
                                 'type': 'typography',
+                                'variant': 'h2',
                               },
                               {
-                                'variant': 'danger',
-                                'type': 'badge',
                                 'label': 'Critical',
+                                'type': 'badge',
+                                'variant': 'danger',
                               },
                             ],
-                            'direction': 'horizontal',
-                            'gap': 'sm',
                           },
                           {
                             'type': 'divider',
@@ -8451,57 +8451,57 @@ export function stdAgentPipelinePipelineExecOrbital(params: StdAgentPipelinePipe
                           },
                           {
                             'type': 'progress-bar',
-                            'max': '@entity.max',
                             'value': '@entity.current',
+                            'max': '@entity.max',
                           },
                           {
+                            'direction': 'horizontal',
                             'children': [
                               {
-                                'type': 'stat-display',
-                                'value': '@entity.current',
                                 'label': 'Tokens Used',
+                                'value': '@entity.current',
+                                'type': 'stat-display',
                               },
                               {
-                                'label': 'Max Tokens',
                                 'type': 'stat-display',
+                                'label': 'Max Tokens',
                                 'value': '@entity.max',
                               },
                             ],
                             'type': 'stack',
-                            'direction': 'horizontal',
                             'gap': 'md',
                           },
                           {
+                            'gap': 'sm',
+                            'type': 'stack',
                             'children': [
                               {
-                                'label': 'Compact Now',
                                 'variant': 'primary',
-                                'type': 'button',
                                 'icon': 'minimize-2',
+                                'type': 'button',
+                                'label': 'Compact Now',
                                 'action': 'COMPACT',
                               },
                               {
                                 'label': 'Reset',
-                                'type': 'button',
                                 'action': 'RESET',
+                                'type': 'button',
                                 'variant': 'ghost',
                                 'icon': 'rotate-ccw',
                               },
                             ],
                             'direction': 'horizontal',
-                            'type': 'stack',
-                            'gap': 'sm',
                           },
                         ],
-                        'gap': 'lg',
                         'direction': 'vertical',
                       },
                     ],
+                    'type': 'dashboard-layout',
                     'navItems': [
                       {
+                        'href': '/pipeline',
                         'icon': 'git-branch',
                         'label': 'Pipeline',
-                        'href': '/pipeline',
                       },
                       {
                         'icon': 'play',
@@ -8509,9 +8509,9 @@ export function stdAgentPipelinePipelineExecOrbital(params: StdAgentPipelinePipe
                         'href': '/execution',
                       },
                       {
-                        'icon': 'terminal',
-                        'label': 'Logs',
                         'href': '/logs',
+                        'label': 'Logs',
+                        'icon': 'terminal',
                       },
                     ],
                     'appName': 'Agent Pipeline',
@@ -8555,16 +8555,32 @@ export function stdAgentPipelinePipelineExecOrbital(params: StdAgentPipelinePipe
                   'main',
                   {
                     'type': 'dashboard-layout',
+                    'appName': 'Agent Pipeline',
+                    'navItems': [
+                      {
+                        'label': 'Pipeline',
+                        'href': '/pipeline',
+                        'icon': 'git-branch',
+                      },
+                      {
+                        'label': 'Execution',
+                        'icon': 'play',
+                        'href': '/execution',
+                      },
+                      {
+                        'icon': 'terminal',
+                        'href': '/logs',
+                        'label': 'Logs',
+                      },
+                    ],
                     'children': [
                       {
-                        'direction': 'vertical',
-                        'gap': 'lg',
-                        'type': 'stack',
                         'children': [
                           {
-                            'direction': 'horizontal',
                             'align': 'center',
                             'gap': 'sm',
+                            'direction': 'horizontal',
+                            'type': 'stack',
                             'children': [
                               {
                                 'name': 'alert-triangle',
@@ -8577,19 +8593,18 @@ export function stdAgentPipelinePipelineExecOrbital(params: StdAgentPipelinePipe
                               },
                               {
                                 'type': 'badge',
-                                'label': 'Warning',
                                 'variant': 'warning',
+                                'label': 'Warning',
                               },
                             ],
-                            'type': 'stack',
                           },
                           {
                             'type': 'divider',
                           },
                           {
-                            'variant': 'warning',
                             'type': 'alert',
                             'message': 'Token usage approaching limit. Consider compacting.',
+                            'variant': 'warning',
                           },
                           {
                             'value': '@entity.current',
@@ -8598,63 +8613,48 @@ export function stdAgentPipelinePipelineExecOrbital(params: StdAgentPipelinePipe
                           },
                           {
                             'type': 'stack',
+                            'gap': 'md',
                             'children': [
                               {
-                                'label': 'Tokens Used',
                                 'value': '@entity.current',
+                                'label': 'Tokens Used',
                                 'type': 'stat-display',
                               },
                               {
+                                'label': 'Max Tokens',
                                 'value': '@entity.max',
                                 'type': 'stat-display',
-                                'label': 'Max Tokens',
                               },
                             ],
-                            'gap': 'md',
                             'direction': 'horizontal',
                           },
                           {
+                            'gap': 'sm',
+                            'direction': 'horizontal',
                             'children': [
                               {
-                                'action': 'COMPACT',
-                                'type': 'button',
-                                'variant': 'primary',
                                 'label': 'Compact',
                                 'icon': 'minimize-2',
+                                'type': 'button',
+                                'action': 'COMPACT',
+                                'variant': 'primary',
                               },
                               {
-                                'variant': 'ghost',
-                                'icon': 'rotate-ccw',
                                 'type': 'button',
                                 'action': 'RESET',
+                                'icon': 'rotate-ccw',
                                 'label': 'Reset',
+                                'variant': 'ghost',
                               },
                             ],
                             'type': 'stack',
-                            'gap': 'sm',
-                            'direction': 'horizontal',
                           },
                         ],
+                        'direction': 'vertical',
+                        'gap': 'lg',
+                        'type': 'stack',
                       },
                     ],
-                    'navItems': [
-                      {
-                        'label': 'Pipeline',
-                        'href': '/pipeline',
-                        'icon': 'git-branch',
-                      },
-                      {
-                        'href': '/execution',
-                        'icon': 'play',
-                        'label': 'Execution',
-                      },
-                      {
-                        'icon': 'terminal',
-                        'label': 'Logs',
-                        'href': '/logs',
-                      },
-                    ],
-                    'appName': 'Agent Pipeline',
                   },
                 ],
               ],
@@ -8683,7 +8683,6 @@ export function stdAgentPipelinePipelineExecOrbital(params: StdAgentPipelinePipe
                   'main',
                   {
                     'type': 'dashboard-layout',
-                    'appName': 'Agent Pipeline',
                     'navItems': [
                       {
                         'href': '/pipeline',
@@ -8691,38 +8690,41 @@ export function stdAgentPipelinePipelineExecOrbital(params: StdAgentPipelinePipe
                         'label': 'Pipeline',
                       },
                       {
-                        'icon': 'play',
-                        'href': '/execution',
                         'label': 'Execution',
+                        'href': '/execution',
+                        'icon': 'play',
                       },
                       {
-                        'icon': 'terminal',
                         'href': '/logs',
+                        'icon': 'terminal',
                         'label': 'Logs',
                       },
                     ],
+                    'appName': 'Agent Pipeline',
                     'children': [
                       {
+                        'gap': 'lg',
+                        'type': 'stack',
                         'children': [
                           {
-                            'direction': 'horizontal',
                             'type': 'stack',
+                            'direction': 'horizontal',
                             'gap': 'sm',
                             'align': 'center',
                             'children': [
                               {
-                                'name': 'gauge',
                                 'type': 'icon',
+                                'name': 'gauge',
                               },
                               {
                                 'type': 'typography',
-                                'content': 'Token Usage',
                                 'variant': 'h2',
+                                'content': 'Token Usage',
                               },
                               {
-                                'type': 'badge',
-                                'label': 'Normal',
                                 'variant': 'default',
+                                'label': 'Normal',
+                                'type': 'badge',
                               },
                             ],
                           },
@@ -8730,38 +8732,36 @@ export function stdAgentPipelinePipelineExecOrbital(params: StdAgentPipelinePipe
                             'type': 'divider',
                           },
                           {
-                            'type': 'progress-bar',
-                            'value': '@entity.current',
                             'max': '@entity.max',
+                            'value': '@entity.current',
+                            'type': 'progress-bar',
                           },
                           {
+                            'direction': 'horizontal',
                             'children': [
                               {
-                                'type': 'stat-display',
-                                'label': 'Tokens Used',
                                 'value': '@entity.current',
+                                'label': 'Tokens Used',
+                                'type': 'stat-display',
                               },
                               {
-                                'type': 'stat-display',
                                 'label': 'Max Tokens',
                                 'value': '@entity.max',
+                                'type': 'stat-display',
                               },
                             ],
-                            'type': 'stack',
-                            'direction': 'horizontal',
                             'gap': 'md',
+                            'type': 'stack',
                           },
                           {
-                            'label': 'Reset',
-                            'type': 'button',
                             'action': 'RESET',
+                            'type': 'button',
                             'variant': 'ghost',
                             'icon': 'rotate-ccw',
+                            'label': 'Reset',
                           },
                         ],
-                        'gap': 'lg',
                         'direction': 'vertical',
-                        'type': 'stack',
                       },
                     ],
                   },
@@ -8788,41 +8788,44 @@ export function stdAgentPipelinePipelineExecOrbital(params: StdAgentPipelinePipe
                   'render-ui',
                   'main',
                   {
-                    'appName': 'Agent Pipeline',
                     'type': 'dashboard-layout',
                     'navItems': [
                       {
-                        'label': 'Pipeline',
                         'href': '/pipeline',
                         'icon': 'git-branch',
+                        'label': 'Pipeline',
                       },
                       {
-                        'href': '/execution',
-                        'icon': 'play',
                         'label': 'Execution',
+                        'icon': 'play',
+                        'href': '/execution',
                       },
                       {
-                        'href': '/logs',
                         'label': 'Logs',
                         'icon': 'terminal',
+                        'href': '/logs',
                       },
                     ],
+                    'appName': 'Agent Pipeline',
                     'children': [
                       {
                         'direction': 'vertical',
                         'type': 'stack',
                         'children': [
                           {
+                            'type': 'stack',
                             'align': 'center',
+                            'gap': 'sm',
+                            'direction': 'horizontal',
                             'children': [
                               {
-                                'name': 'gauge',
                                 'type': 'icon',
+                                'name': 'gauge',
                               },
                               {
                                 'content': 'Token Usage',
-                                'type': 'typography',
                                 'variant': 'h2',
+                                'type': 'typography',
                               },
                               {
                                 'label': 'Normal',
@@ -8830,41 +8833,38 @@ export function stdAgentPipelinePipelineExecOrbital(params: StdAgentPipelinePipe
                                 'variant': 'default',
                               },
                             ],
-                            'type': 'stack',
-                            'gap': 'sm',
-                            'direction': 'horizontal',
                           },
                           {
                             'type': 'divider',
                           },
                           {
-                            'value': '@entity.current',
                             'type': 'progress-bar',
+                            'value': '@entity.current',
                             'max': '@entity.max',
                           },
                           {
-                            'gap': 'md',
                             'direction': 'horizontal',
+                            'type': 'stack',
+                            'gap': 'md',
                             'children': [
                               {
                                 'type': 'stat-display',
-                                'label': 'Tokens Used',
                                 'value': '@entity.current',
+                                'label': 'Tokens Used',
                               },
                               {
-                                'value': '@entity.max',
-                                'type': 'stat-display',
                                 'label': 'Max Tokens',
+                                'type': 'stat-display',
+                                'value': '@entity.max',
                               },
                             ],
-                            'type': 'stack',
                           },
                           {
-                            'type': 'button',
-                            'action': 'RESET',
+                            'label': 'Reset',
                             'variant': 'ghost',
                             'icon': 'rotate-ccw',
-                            'label': 'Reset',
+                            'action': 'RESET',
+                            'type': 'button',
                           },
                         ],
                         'gap': 'lg',
@@ -8888,16 +8888,80 @@ export function stdAgentPipelinePipelineExecOrbital(params: StdAgentPipelinePipe
                   'render-ui',
                   'main',
                   {
+                    'children': [
+                      {
+                        'type': 'stack',
+                        'gap': 'lg',
+                        'children': [
+                          {
+                            'type': 'stack',
+                            'children': [
+                              {
+                                'type': 'icon',
+                                'name': 'gauge',
+                              },
+                              {
+                                'content': 'Token Usage',
+                                'type': 'typography',
+                                'variant': 'h2',
+                              },
+                              {
+                                'label': 'Normal',
+                                'variant': 'default',
+                                'type': 'badge',
+                              },
+                            ],
+                            'gap': 'sm',
+                            'direction': 'horizontal',
+                            'align': 'center',
+                          },
+                          {
+                            'type': 'divider',
+                          },
+                          {
+                            'type': 'progress-bar',
+                            'max': '@entity.max',
+                            'value': '@entity.current',
+                          },
+                          {
+                            'type': 'stack',
+                            'direction': 'horizontal',
+                            'gap': 'md',
+                            'children': [
+                              {
+                                'type': 'stat-display',
+                                'label': 'Tokens Used',
+                                'value': '@entity.current',
+                              },
+                              {
+                                'value': '@entity.max',
+                                'label': 'Max Tokens',
+                                'type': 'stat-display',
+                              },
+                            ],
+                          },
+                          {
+                            'variant': 'ghost',
+                            'label': 'Reset',
+                            'icon': 'rotate-ccw',
+                            'type': 'button',
+                            'action': 'RESET',
+                          },
+                        ],
+                        'direction': 'vertical',
+                      },
+                    ],
+                    'type': 'dashboard-layout',
                     'navItems': [
                       {
                         'href': '/pipeline',
-                        'icon': 'git-branch',
                         'label': 'Pipeline',
+                        'icon': 'git-branch',
                       },
                       {
                         'href': '/execution',
-                        'icon': 'play',
                         'label': 'Execution',
+                        'icon': 'play',
                       },
                       {
                         'label': 'Logs',
@@ -8905,70 +8969,6 @@ export function stdAgentPipelinePipelineExecOrbital(params: StdAgentPipelinePipe
                         'icon': 'terminal',
                       },
                     ],
-                    'children': [
-                      {
-                        'gap': 'lg',
-                        'children': [
-                          {
-                            'children': [
-                              {
-                                'name': 'gauge',
-                                'type': 'icon',
-                              },
-                              {
-                                'type': 'typography',
-                                'content': 'Token Usage',
-                                'variant': 'h2',
-                              },
-                              {
-                                'variant': 'default',
-                                'type': 'badge',
-                                'label': 'Normal',
-                              },
-                            ],
-                            'direction': 'horizontal',
-                            'type': 'stack',
-                            'align': 'center',
-                            'gap': 'sm',
-                          },
-                          {
-                            'type': 'divider',
-                          },
-                          {
-                            'value': '@entity.current',
-                            'max': '@entity.max',
-                            'type': 'progress-bar',
-                          },
-                          {
-                            'direction': 'horizontal',
-                            'children': [
-                              {
-                                'value': '@entity.current',
-                                'type': 'stat-display',
-                                'label': 'Tokens Used',
-                              },
-                              {
-                                'type': 'stat-display',
-                                'value': '@entity.max',
-                                'label': 'Max Tokens',
-                              },
-                            ],
-                            'type': 'stack',
-                            'gap': 'md',
-                          },
-                          {
-                            'icon': 'rotate-ccw',
-                            'type': 'button',
-                            'label': 'Reset',
-                            'variant': 'ghost',
-                            'action': 'RESET',
-                          },
-                        ],
-                        'direction': 'vertical',
-                        'type': 'stack',
-                      },
-                    ],
-                    'type': 'dashboard-layout',
                     'appName': 'Agent Pipeline',
                   },
                 ],
@@ -9303,21 +9303,21 @@ export function stdAgentPipelinePipelineSessionOrbital(params: StdAgentPipelineP
                   'main',
                   {
                     'type': 'stack',
-                    'align': 'center',
-                    'className': 'py-12',
-                    'direction': 'vertical',
                     'children': [
                       {
                         'type': 'spinner',
                       },
                       {
+                        'content': 'Loading…',
                         'type': 'typography',
                         'variant': 'caption',
-                        'content': 'Loading…',
                         'color': 'muted',
                       },
                     ],
                     'gap': 'md',
+                    'direction': 'vertical',
+                    'align': 'center',
+                    'className': 'py-12',
                   },
                 ],
               ],
@@ -9331,12 +9331,12 @@ export function stdAgentPipelinePipelineSessionOrbital(params: StdAgentPipelineP
                   'render-ui',
                   'main',
                   {
-                    'appName': 'Agent Pipeline',
+                    'type': 'dashboard-layout',
                     'navItems': [
                       {
                         'icon': 'git-branch',
-                        'label': 'Pipeline',
                         'href': '/pipeline',
+                        'label': 'Pipeline',
                       },
                       {
                         'href': '/execution',
@@ -9344,115 +9344,115 @@ export function stdAgentPipelinePipelineSessionOrbital(params: StdAgentPipelineP
                         'label': 'Execution',
                       },
                       {
-                        'href': '/logs',
                         'icon': 'terminal',
+                        'href': '/logs',
                         'label': 'Logs',
                       },
                     ],
-                    'type': 'dashboard-layout',
                     'children': [
                       {
+                        'direction': 'vertical',
                         'children': [
                           {
-                            'gap': 'md',
-                            'type': 'stack',
-                            'justify': 'between',
-                            'direction': 'horizontal',
-                            'align': 'center',
                             'children': [
                               {
                                 'gap': 'sm',
                                 'direction': 'horizontal',
-                                'align': 'center',
+                                'type': 'stack',
                                 'children': [
                                   {
-                                    'name': 'terminal',
                                     'type': 'icon',
+                                    'name': 'terminal',
                                   },
                                   {
                                     'type': 'typography',
-                                    'variant': 'h2',
                                     'content': 'PipelineSession Manager',
+                                    'variant': 'h2',
                                   },
                                 ],
-                                'type': 'stack',
+                                'align': 'center',
                               },
                               {
-                                'type': 'stack',
-                                'direction': 'horizontal',
                                 'gap': 'sm',
                                 'children': [
                                   {
-                                    'icon': 'git-branch',
                                     'type': 'button',
+                                    'label': 'Fork',
                                     'variant': 'secondary',
                                     'action': 'FORK',
-                                    'label': 'Fork',
+                                    'icon': 'git-branch',
                                   },
                                   {
-                                    'icon': 'tag',
                                     'type': 'button',
+                                    'label': 'Label',
                                     'action': 'LABEL',
                                     'variant': 'secondary',
-                                    'label': 'Label',
+                                    'icon': 'tag',
                                   },
                                   {
+                                    'icon': 'square',
                                     'label': 'End',
-                                    'variant': 'ghost',
                                     'action': 'END',
                                     'type': 'button',
-                                    'icon': 'square',
+                                    'variant': 'ghost',
                                   },
                                 ],
+                                'type': 'stack',
+                                'direction': 'horizontal',
                               },
                             ],
+                            'type': 'stack',
+                            'justify': 'between',
+                            'direction': 'horizontal',
+                            'gap': 'md',
+                            'align': 'center',
                           },
                           {
                             'type': 'divider',
                           },
                           {
                             'type': 'data-grid',
+                            'entity': '@payload.data',
                             'fields': [
                               {
-                                'icon': 'terminal',
-                                'name': 'sessionId',
-                                'variant': 'h4',
                                 'label': 'Session ID',
+                                'name': 'sessionId',
+                                'icon': 'terminal',
+                                'variant': 'h4',
                               },
                               {
+                                'name': 'status',
                                 'label': 'Status',
+                                'variant': 'badge',
                                 'colorMap': {
-                                  'active': 'success',
-                                  'inactive': 'neutral',
-                                  'error': 'destructive',
-                                  'cancelled': 'destructive',
-                                  'failed': 'destructive',
-                                  'scheduled': 'warning',
-                                  'disabled': 'neutral',
-                                  'archived': 'neutral',
                                   'completed': 'success',
                                   'pending': 'warning',
+                                  'scheduled': 'warning',
+                                  'error': 'destructive',
+                                  'cancelled': 'destructive',
                                   'draft': 'warning',
+                                  'disabled': 'neutral',
                                   'done': 'success',
+                                  'failed': 'destructive',
+                                  'active': 'success',
+                                  'inactive': 'neutral',
+                                  'archived': 'neutral',
                                 },
-                                'name': 'status',
-                                'variant': 'badge',
                               },
                               {
-                                'variant': 'caption',
                                 'label': 'Label',
+                                'variant': 'caption',
                                 'name': 'label',
                               },
                             ],
-                            'entity': '@payload.data',
                           },
                         ],
+                        'gap': 'lg',
                         'type': 'stack',
                         'className': 'max-w-5xl mx-auto w-full',
-                        'gap': 'lg',
-                        'direction': 'vertical',
                       },
                     ],
+                    'appName': 'Agent Pipeline',
                   },
                 ],
               ],
@@ -9466,36 +9466,36 @@ export function stdAgentPipelinePipelineSessionOrbital(params: StdAgentPipelineP
                   'render-ui',
                   'main',
                   {
+                    'align': 'center',
                     'type': 'stack',
+                    'direction': 'vertical',
                     'className': 'py-12',
                     'gap': 'md',
                     'children': [
                       {
-                        'type': 'icon',
                         'color': 'destructive',
+                        'type': 'icon',
                         'name': 'alert-triangle',
                       },
                       {
-                        'type': 'typography',
                         'content': 'Failed to load pipelinesession',
+                        'type': 'typography',
                         'variant': 'h3',
                       },
                       {
+                        'type': 'typography',
                         'content': '@payload.error',
                         'color': 'muted',
-                        'type': 'typography',
                         'variant': 'body',
                       },
                       {
-                        'icon': 'rotate-ccw',
                         'label': 'Retry',
+                        'type': 'button',
+                        'icon': 'rotate-ccw',
                         'variant': 'primary',
                         'action': 'INIT',
-                        'type': 'button',
                       },
                     ],
-                    'align': 'center',
-                    'direction': 'vertical',
                   },
                 ],
               ],
@@ -9675,8 +9675,8 @@ export function stdAgentPipelinePipelineSessionOrbital(params: StdAgentPipelineP
                   'PipelineSession',
                   {
                     'emit': {
-                      'success': 'PipelineSessionLoaded',
                       'failure': 'PipelineSessionLoadFailed',
+                      'success': 'PipelineSessionLoaded',
                     },
                   },
                 ],
@@ -9703,30 +9703,30 @@ export function stdAgentPipelinePipelineSessionOrbital(params: StdAgentPipelineP
                   {
                     'direction': 'vertical',
                     'type': 'stack',
+                    'gap': 'md',
                     'children': [
                       {
                         'direction': 'horizontal',
                         'children': [
                           {
-                            'name': 'tag',
                             'type': 'icon',
+                            'name': 'tag',
                           },
                           {
-                            'variant': 'h3',
                             'content': 'Label Session',
+                            'variant': 'h3',
                             'type': 'typography',
                           },
                         ],
-                        'gap': 'sm',
                         'type': 'stack',
+                        'gap': 'sm',
                       },
                       {
                         'type': 'divider',
                       },
                       {
-                        'direction': 'horizontal',
                         'type': 'stack',
-                        'gap': 'md',
+                        'direction': 'horizontal',
                         'children': [
                           {
                             'type': 'typography',
@@ -9734,23 +9734,23 @@ export function stdAgentPipelinePipelineSessionOrbital(params: StdAgentPipelineP
                             'content': 'Session:',
                           },
                           {
-                            'label': '@entity.sessionId',
                             'type': 'badge',
+                            'label': '@entity.sessionId',
                           },
                         ],
+                        'gap': 'md',
                       },
                       {
-                        'entity': '@entity',
                         'mode': 'edit',
-                        'cancelEvent': 'CLOSE',
                         'type': 'form-section',
                         'submitEvent': 'SAVE',
+                        'entity': '@entity',
+                        'cancelEvent': 'CLOSE',
                         'fields': [
                           'label',
                         ],
                       },
                     ],
-                    'gap': 'md',
                   },
                 ],
               ],
@@ -9993,8 +9993,8 @@ export function stdAgentPipelinePipelineSessionOrbital(params: StdAgentPipelineP
                   'PipelineSession',
                   {
                     'emit': {
-                      'success': 'PipelineSessionLoaded',
                       'failure': 'PipelineSessionLoadFailed',
+                      'success': 'PipelineSessionLoaded',
                     },
                   },
                 ],
@@ -10010,31 +10010,31 @@ export function stdAgentPipelinePipelineSessionOrbital(params: StdAgentPipelineP
                   'render-ui',
                   'main',
                   {
-                    'navItems': [
-                      {
-                        'label': 'Pipeline',
-                        'icon': 'git-branch',
-                        'href': '/pipeline',
-                      },
-                      {
-                        'icon': 'play',
-                        'label': 'Execution',
-                        'href': '/execution',
-                      },
-                      {
-                        'label': 'Logs',
-                        'icon': 'terminal',
-                        'href': '/logs',
-                      },
-                    ],
-                    'appName': 'Agent Pipeline',
                     'type': 'dashboard-layout',
                     'children': [
                       {
+                        'type': 'empty-state',
                         'icon': 'git-branch',
                         'description': 'Session is ready',
-                        'type': 'empty-state',
                         'title': 'Session',
+                      },
+                    ],
+                    'appName': 'Agent Pipeline',
+                    'navItems': [
+                      {
+                        'label': 'Pipeline',
+                        'href': '/pipeline',
+                        'icon': 'git-branch',
+                      },
+                      {
+                        'href': '/execution',
+                        'icon': 'play',
+                        'label': 'Execution',
+                      },
+                      {
+                        'icon': 'terminal',
+                        'href': '/logs',
+                        'label': 'Logs',
                       },
                     ],
                   },
@@ -10063,9 +10063,9 @@ export function stdAgentPipelinePipelineSessionOrbital(params: StdAgentPipelineP
                   'PipelineSession',
                   {
                     'parentId': '@entity.parentId',
+                    'createdAt': '@now',
                     'status': 'forked',
                     'sessionId': '@entity.sessionId',
-                    'createdAt': '@now',
                   },
                   {
                     'emit': {
@@ -10105,8 +10105,8 @@ export function stdAgentPipelinePipelineSessionOrbital(params: StdAgentPipelineP
                   'PipelineSession',
                   {
                     'emit': {
-                      'success': 'PipelineSessionLoaded',
                       'failure': 'PipelineSessionLoadFailed',
+                      'success': 'PipelineSessionLoaded',
                     },
                   },
                 ],
@@ -10149,10 +10149,10 @@ export function stdAgentPipelinePipelineSessionOrbital(params: StdAgentPipelineP
                   'create',
                   'PipelineSession',
                   {
-                    'createdAt': '@now',
-                    'status': 'forked',
                     'parentId': '@entity.parentId',
+                    'status': 'forked',
                     'sessionId': '@entity.sessionId',
+                    'createdAt': '@now',
                   },
                   {
                     'emit': {
@@ -10247,30 +10247,30 @@ export function stdAgentPipelinePipelineSessionOrbital(params: StdAgentPipelineP
                   'render-ui',
                   'main',
                   {
-                    'type': 'dashboard-layout',
                     'children': [
                       {
-                        'title': 'Session',
                         'description': 'Session is ready',
+                        'title': 'Session',
                         'type': 'empty-state',
                         'icon': 'git-branch',
                       },
                     ],
+                    'type': 'dashboard-layout',
                     'navItems': [
                       {
                         'label': 'Pipeline',
-                        'icon': 'git-branch',
                         'href': '/pipeline',
+                        'icon': 'git-branch',
                       },
                       {
-                        'label': 'Execution',
-                        'icon': 'play',
                         'href': '/execution',
+                        'icon': 'play',
+                        'label': 'Execution',
                       },
                       {
-                        'icon': 'terminal',
                         'label': 'Logs',
                         'href': '/logs',
+                        'icon': 'terminal',
                       },
                     ],
                     'appName': 'Agent Pipeline',
@@ -10758,8 +10758,8 @@ export function stdAgentPipelineExecutionLogOrbital(params: StdAgentPipelineExec
                   'ExecutionLog',
                   {
                     'emit': {
-                      'success': 'ExecutionLogLoaded',
                       'failure': 'ExecutionLogLoadFailed',
+                      'success': 'ExecutionLogLoaded',
                     },
                   },
                 ],
@@ -10767,22 +10767,22 @@ export function stdAgentPipelineExecutionLogOrbital(params: StdAgentPipelineExec
                   'render-ui',
                   'main',
                   {
-                    'align': 'center',
-                    'gap': 'md',
-                    'className': 'py-12',
+                    'type': 'stack',
                     'children': [
                       {
                         'type': 'spinner',
                       },
                       {
-                        'color': 'muted',
-                        'type': 'typography',
                         'variant': 'caption',
+                        'type': 'typography',
                         'content': 'Loading…',
+                        'color': 'muted',
                       },
                     ],
-                    'type': 'stack',
+                    'align': 'center',
+                    'className': 'py-12',
                     'direction': 'vertical',
+                    'gap': 'md',
                   },
                 ],
               ],
@@ -10796,145 +10796,145 @@ export function stdAgentPipelineExecutionLogOrbital(params: StdAgentPipelineExec
                   'render-ui',
                   'main',
                   {
-                    'navItems': [
-                      {
-                        'icon': 'git-branch',
-                        'label': 'Pipeline',
-                        'href': '/pipeline',
-                      },
-                      {
-                        'href': '/execution',
-                        'icon': 'play',
-                        'label': 'Execution',
-                      },
-                      {
-                        'href': '/logs',
-                        'icon': 'terminal',
-                        'label': 'Logs',
-                      },
-                    ],
-                    'type': 'dashboard-layout',
                     'children': [
                       {
-                        'className': 'max-w-5xl mx-auto w-full',
-                        'gap': 'lg',
-                        'direction': 'vertical',
                         'children': [
                           {
-                            'align': 'center',
                             'children': [
                               {
+                                'align': 'center',
+                                'type': 'stack',
+                                'direction': 'horizontal',
+                                'gap': 'sm',
                                 'children': [
                                   {
                                     'type': 'icon',
                                     'name': 'brain',
                                   },
                                   {
-                                    'content': 'ExecutionLog Manager',
                                     'variant': 'h2',
+                                    'content': 'ExecutionLog Manager',
                                     'type': 'typography',
                                   },
                                 ],
-                                'align': 'center',
-                                'type': 'stack',
-                                'direction': 'horizontal',
-                                'gap': 'sm',
                               },
                               {
-                                'direction': 'horizontal',
-                                'type': 'stack',
-                                'gap': 'sm',
                                 'children': [
                                   {
-                                    'label': 'Memorize',
-                                    'type': 'button',
-                                    'action': 'MEMORIZE',
                                     'variant': 'primary',
+                                    'action': 'MEMORIZE',
                                     'icon': 'plus',
+                                    'type': 'button',
+                                    'label': 'Memorize',
                                   },
                                   {
                                     'action': 'RECALL',
-                                    'label': 'Recall',
-                                    'type': 'button',
                                     'variant': 'secondary',
                                     'icon': 'search',
+                                    'type': 'button',
+                                    'label': 'Recall',
                                   },
                                   {
+                                    'icon': 'clock',
                                     'action': 'DECAY',
-                                    'type': 'button',
                                     'variant': 'ghost',
                                     'label': 'Decay All',
-                                    'icon': 'clock',
+                                    'type': 'button',
                                   },
                                 ],
+                                'type': 'stack',
+                                'gap': 'sm',
+                                'direction': 'horizontal',
                               },
                             ],
-                            'direction': 'horizontal',
-                            'type': 'stack',
-                            'gap': 'md',
                             'justify': 'between',
+                            'type': 'stack',
+                            'direction': 'horizontal',
+                            'gap': 'md',
+                            'align': 'center',
                           },
                           {
                             'type': 'divider',
                           },
                           {
-                            'type': 'data-grid',
-                            'itemActions': [
-                              {
-                                'variant': 'ghost',
-                                'label': 'Pin',
-                                'event': 'PIN',
-                              },
-                              {
-                                'event': 'REINFORCE',
-                                'label': 'Reinforce',
-                                'variant': 'ghost',
-                              },
-                              {
-                                'event': 'FORGET',
-                                'label': 'Forget',
-                                'variant': 'danger',
-                              },
-                            ],
-                            'entity': '@payload.data',
                             'fields': [
                               {
-                                'name': 'content',
                                 'label': 'Content',
                                 'variant': 'h4',
+                                'name': 'content',
                                 'icon': 'brain',
                               },
                               {
-                                'label': 'Category',
                                 'variant': 'badge',
                                 'colorMap': {
-                                  'error': 'destructive',
                                   'done': 'success',
-                                  'scheduled': 'warning',
-                                  'completed': 'success',
+                                  'error': 'destructive',
+                                  'pending': 'warning',
                                   'inactive': 'neutral',
+                                  'active': 'success',
+                                  'cancelled': 'destructive',
+                                  'draft': 'warning',
+                                  'completed': 'success',
+                                  'archived': 'neutral',
                                   'disabled': 'neutral',
                                   'failed': 'destructive',
-                                  'archived': 'neutral',
-                                  'cancelled': 'destructive',
-                                  'pending': 'warning',
-                                  'draft': 'warning',
-                                  'active': 'success',
+                                  'scheduled': 'warning',
                                 },
                                 'name': 'category',
+                                'label': 'Category',
                               },
                               {
-                                'label': 'Strength',
                                 'name': 'strength',
+                                'label': 'Strength',
                                 'variant': 'caption',
                               },
                             ],
+                            'entity': '@payload.data',
+                            'itemActions': [
+                              {
+                                'label': 'Pin',
+                                'variant': 'ghost',
+                                'event': 'PIN',
+                              },
+                              {
+                                'label': 'Reinforce',
+                                'variant': 'ghost',
+                                'event': 'REINFORCE',
+                              },
+                              {
+                                'variant': 'danger',
+                                'event': 'FORGET',
+                                'label': 'Forget',
+                              },
+                            ],
+                            'type': 'data-grid',
                           },
                         ],
+                        'gap': 'lg',
+                        'direction': 'vertical',
                         'type': 'stack',
+                        'className': 'max-w-5xl mx-auto w-full',
                       },
                     ],
+                    'type': 'dashboard-layout',
                     'appName': 'Agent Pipeline',
+                    'navItems': [
+                      {
+                        'href': '/pipeline',
+                        'icon': 'git-branch',
+                        'label': 'Pipeline',
+                      },
+                      {
+                        'label': 'Execution',
+                        'href': '/execution',
+                        'icon': 'play',
+                      },
+                      {
+                        'icon': 'terminal',
+                        'label': 'Logs',
+                        'href': '/logs',
+                      },
+                    ],
                   },
                 ],
               ],
@@ -10950,34 +10950,34 @@ export function stdAgentPipelineExecutionLogOrbital(params: StdAgentPipelineExec
                   {
                     'children': [
                       {
-                        'type': 'icon',
                         'name': 'alert-triangle',
+                        'type': 'icon',
                         'color': 'destructive',
                       },
                       {
-                        'content': 'Failed to load executionlog',
                         'type': 'typography',
                         'variant': 'h3',
+                        'content': 'Failed to load executionlog',
                       },
                       {
+                        'color': 'muted',
+                        'type': 'typography',
                         'variant': 'body',
                         'content': '@payload.error',
-                        'type': 'typography',
-                        'color': 'muted',
                       },
                       {
-                        'label': 'Retry',
-                        'action': 'INIT',
-                        'type': 'button',
                         'variant': 'primary',
                         'icon': 'rotate-ccw',
+                        'type': 'button',
+                        'label': 'Retry',
+                        'action': 'INIT',
                       },
                     ],
-                    'className': 'py-12',
-                    'type': 'stack',
-                    'direction': 'vertical',
-                    'gap': 'md',
                     'align': 'center',
+                    'type': 'stack',
+                    'className': 'py-12',
+                    'gap': 'md',
+                    'direction': 'vertical',
                   },
                 ],
               ],
@@ -11168,11 +11168,10 @@ export function stdAgentPipelineExecutionLogOrbital(params: StdAgentPipelineExec
                   'render-ui',
                   'modal',
                   {
-                    'direction': 'vertical',
                     'gap': 'md',
-                    'type': 'stack',
                     'children': [
                       {
+                        'type': 'stack',
                         'direction': 'horizontal',
                         'children': [
                           {
@@ -11180,29 +11179,30 @@ export function stdAgentPipelineExecutionLogOrbital(params: StdAgentPipelineExec
                             'name': 'plus-circle',
                           },
                           {
-                            'type': 'typography',
                             'content': 'Memorize',
                             'variant': 'h3',
+                            'type': 'typography',
                           },
                         ],
-                        'type': 'stack',
                         'gap': 'sm',
                       },
                       {
                         'type': 'divider',
                       },
                       {
-                        'submitEvent': 'SAVE',
-                        'cancelEvent': 'CLOSE',
-                        'type': 'form-section',
                         'mode': 'create',
+                        'cancelEvent': 'CLOSE',
                         'fields': [
                           'content',
                           'category',
                           'scope',
                         ],
+                        'submitEvent': 'SAVE',
+                        'type': 'form-section',
                       },
                     ],
+                    'type': 'stack',
+                    'direction': 'vertical',
                   },
                 ],
               ],
@@ -11566,8 +11566,8 @@ export function stdAgentPipelineExecutionLogOrbital(params: StdAgentPipelineExec
                   'ExecutionLog',
                   {
                     'emit': {
-                      'success': 'ExecutionLogLoaded',
                       'failure': 'ExecutionLogLoadFailed',
+                      'success': 'ExecutionLogLoaded',
                     },
                   },
                 ],
@@ -11575,7 +11575,7 @@ export function stdAgentPipelineExecutionLogOrbital(params: StdAgentPipelineExec
                   'render-ui',
                   'main',
                   {
-                    'type': 'dashboard-layout',
+                    'appName': 'Agent Pipeline',
                     'navItems': [
                       {
                         'label': 'Pipeline',
@@ -11588,20 +11588,20 @@ export function stdAgentPipelineExecutionLogOrbital(params: StdAgentPipelineExec
                         'href': '/execution',
                       },
                       {
-                        'href': '/logs',
-                        'icon': 'terminal',
                         'label': 'Logs',
+                        'icon': 'terminal',
+                        'href': '/logs',
                       },
                     ],
+                    'type': 'dashboard-layout',
                     'children': [
                       {
-                        'type': 'empty-state',
                         'icon': 'brain',
+                        'type': 'empty-state',
                         'description': 'Memory is ready',
                         'title': 'Memory',
                       },
                     ],
-                    'appName': 'Agent Pipeline',
                   },
                 ],
               ],
@@ -11654,8 +11654,8 @@ export function stdAgentPipelineExecutionLogOrbital(params: StdAgentPipelineExec
                   'ExecutionLog',
                   {
                     'emit': {
-                      'success': 'ExecutionLogLoaded',
                       'failure': 'ExecutionLogLoadFailed',
+                      'success': 'ExecutionLogLoaded',
                     },
                   },
                 ],

@@ -262,8 +262,8 @@
                     "EmailBroadcast",
                     {
                       "emit": {
-                        "success": "EmailBroadcastLoaded",
-                        "failure": "EmailBroadcastLoadFailed"
+                        "failure": "EmailBroadcastLoadFailed",
+                        "success": "EmailBroadcastLoaded"
                       }
                     }
                   ],
@@ -271,22 +271,22 @@
                     "render-ui",
                     "main",
                     {
+                      "type": "stack",
                       "children": [
                         {
                           "type": "spinner"
                         },
                         {
-                          "type": "typography",
-                          "variant": "caption",
+                          "content": "Loading broadcasts…",
                           "color": "muted",
-                          "content": "Loading broadcasts…"
+                          "variant": "caption",
+                          "type": "typography"
                         }
                       ],
-                      "className": "py-12",
                       "direction": "vertical",
                       "gap": "md",
                       "align": "center",
-                      "type": "stack"
+                      "className": "py-12"
                     }
                   ]
                 ]
@@ -300,68 +300,68 @@
                     "render-ui",
                     "main",
                     {
+                      "gap": "md",
+                      "direction": "vertical",
                       "children": [
                         {
-                          "gap": "sm",
-                          "direction": "horizontal",
                           "children": [
                             {
                               "type": "icon",
                               "name": "mail"
                             },
                             {
-                              "variant": "h3",
                               "type": "typography",
-                              "content": "@config.title"
+                              "content": "@config.title",
+                              "variant": "h3"
                             }
                           ],
+                          "gap": "sm",
+                          "direction": "horizontal",
                           "type": "stack",
                           "align": "center"
                         },
                         {
-                          "cols": 4.0,
-                          "type": "simple-grid",
                           "children": [
                             {
-                              "type": "stat-display",
                               "label": "Total broadcasts",
                               "icon": "mail",
-                              "value": "@payload.data.length"
-                            },
-                            {
-                              "icon": "send",
-                              "label": "Sent this month",
-                              "type": "stat-display",
-                              "value": "23"
-                            },
-                            {
-                              "label": "Open rate",
-                              "value": "41%",
-                              "icon": "eye",
+                              "value": "@payload.data.length",
                               "type": "stat-display"
                             },
                             {
-                              "label": "Click rate",
+                              "icon": "send",
+                              "value": "23",
                               "type": "stat-display",
-                              "icon": "mouse-pointer",
-                              "value": "12%"
+                              "label": "Sent this month"
+                            },
+                            {
+                              "type": "stat-display",
+                              "value": "41%",
+                              "icon": "eye",
+                              "label": "Open rate"
+                            },
+                            {
+                              "value": "12%",
+                              "type": "stat-display",
+                              "label": "Click rate",
+                              "icon": "mouse-pointer"
                             }
-                          ]
+                          ],
+                          "cols": 4.0,
+                          "type": "simple-grid"
                         },
                         {
                           "type": "divider"
                         },
                         {
-                          "entity": "@payload.data",
                           "cols": 1.0,
-                          "type": "data-grid",
-                          "itemActions": "@config.itemActions",
+                          "entity": "@payload.data",
                           "fields": "@config.fields",
-                          "gap": "sm"
+                          "gap": "sm",
+                          "itemActions": "@config.itemActions",
+                          "type": "data-grid"
                         }
                       ],
-                      "gap": "md",
-                      "direction": "vertical",
                       "type": "stack"
                     }
                   ]
@@ -376,9 +376,9 @@
                     "render-ui",
                     "main",
                     {
+                      "type": "alert",
                       "message": "@payload.error",
-                      "variant": "error",
-                      "type": "alert"
+                      "variant": "error"
                     }
                   ]
                 ]
@@ -437,17 +437,16 @@
                     "render-ui",
                     "main",
                     {
-                      "direction": "vertical",
                       "children": [
                         {
                           "type": "stack",
-                          "gap": "sm",
                           "direction": "horizontal",
+                          "align": "center",
                           "children": [
                             {
-                              "label": "Back",
                               "variant": "ghost",
                               "action": "CLOSE_VIEW",
+                              "label": "Back",
                               "type": "button"
                             },
                             {
@@ -455,80 +454,16 @@
                               "name": "mail"
                             },
                             {
-                              "content": "@entity.name",
                               "type": "typography",
+                              "content": "@entity.name",
                               "variant": "h3"
                             },
                             {
-                              "label": "@entity.status",
                               "type": "badge",
-                              "variant": "primary"
+                              "variant": "primary",
+                              "label": "@entity.status"
                             }
                           ],
-                          "align": "center"
-                        },
-                        {
-                          "type": "divider"
-                        },
-                        {
-                          "type": "stack",
-                          "children": [
-                            {
-                              "direction": "horizontal",
-                              "children": [
-                                {
-                                  "content": "Subject",
-                                  "type": "typography",
-                                  "color": "muted",
-                                  "variant": "caption"
-                                },
-                                {
-                                  "variant": "body",
-                                  "content": "@entity.subject",
-                                  "type": "typography"
-                                }
-                              ],
-                              "type": "stack",
-                              "gap": "md"
-                            },
-                            {
-                              "direction": "horizontal",
-                              "children": [
-                                {
-                                  "content": "Segment",
-                                  "color": "muted",
-                                  "variant": "caption",
-                                  "type": "typography"
-                                },
-                                {
-                                  "type": "typography",
-                                  "variant": "body",
-                                  "content": "@entity.segmentId"
-                                }
-                              ],
-                              "type": "stack",
-                              "gap": "md"
-                            },
-                            {
-                              "gap": "md",
-                              "direction": "horizontal",
-                              "children": [
-                                {
-                                  "type": "typography",
-                                  "variant": "caption",
-                                  "content": "Template",
-                                  "color": "muted"
-                                },
-                                {
-                                  "type": "typography",
-                                  "variant": "body",
-                                  "content": "@entity.templateId"
-                                }
-                              ],
-                              "type": "stack"
-                            }
-                          ],
-                          "direction": "vertical",
                           "gap": "sm"
                         },
                         {
@@ -537,55 +472,120 @@
                         {
                           "children": [
                             {
+                              "type": "stack",
+                              "gap": "md",
+                              "children": [
+                                {
+                                  "type": "typography",
+                                  "color": "muted",
+                                  "variant": "caption",
+                                  "content": "Subject"
+                                },
+                                {
+                                  "type": "typography",
+                                  "content": "@entity.subject",
+                                  "variant": "body"
+                                }
+                              ],
+                              "direction": "horizontal"
+                            },
+                            {
+                              "gap": "md",
+                              "type": "stack",
+                              "direction": "horizontal",
+                              "children": [
+                                {
+                                  "type": "typography",
+                                  "content": "Segment",
+                                  "color": "muted",
+                                  "variant": "caption"
+                                },
+                                {
+                                  "type": "typography",
+                                  "content": "@entity.segmentId",
+                                  "variant": "body"
+                                }
+                              ]
+                            },
+                            {
+                              "type": "stack",
+                              "children": [
+                                {
+                                  "type": "typography",
+                                  "color": "muted",
+                                  "content": "Template",
+                                  "variant": "caption"
+                                },
+                                {
+                                  "type": "typography",
+                                  "content": "@entity.templateId",
+                                  "variant": "body"
+                                }
+                              ],
+                              "gap": "md",
+                              "direction": "horizontal"
+                            }
+                          ],
+                          "type": "stack",
+                          "direction": "vertical",
+                          "gap": "sm"
+                        },
+                        {
+                          "type": "divider"
+                        },
+                        {
+                          "type": "simple-grid",
+                          "children": [
+                            {
                               "type": "stat-display",
                               "value": "@entity.recipientCount",
                               "label": "Recipients",
                               "icon": "users"
                             },
                             {
+                              "value": "@entity.sentCount",
                               "label": "Sent",
                               "type": "stat-display",
-                              "value": "@entity.sentCount",
                               "icon": "send"
                             },
                             {
                               "label": "Scheduled",
-                              "icon": "calendar",
+                              "type": "stat-display",
                               "value": "@entity.scheduledAt",
-                              "type": "stat-display"
+                              "icon": "calendar"
                             }
                           ],
-                          "type": "simple-grid",
                           "cols": 3.0
                         },
                         {
                           "direction": "horizontal",
-                          "type": "stack",
+                          "gap": "sm",
                           "children": [
                             {
-                              "action": "SEND",
                               "type": "button",
                               "actionPayload": {
-                                "id": "@entity.id",
-                                "broadcastId": "@entity.id"
+                                "broadcastId": "@entity.id",
+                                "id": "@entity.id"
                               },
                               "variant": "primary",
+                              "action": "SEND",
                               "label": "Send Now"
                             },
                             {
+                              "variant": "danger",
+                              "type": "button",
+                              "label": "Cancel",
                               "actionPayload": {
                                 "id": "@entity.id"
                               },
-                              "type": "button",
-                              "variant": "danger",
-                              "label": "Cancel",
                               "action": "CANCEL_BROADCAST"
                             }
                           ],
-                          "gap": "sm",
+                          "type": "stack",
                           "align": "center"
                         }
                       ],
+                      "direction": "vertical",
                       "gap": "md",
                       "type": "stack"
                     }
@@ -607,8 +607,8 @@
                     "EmailBroadcast",
                     {
                       "emit": {
-                        "failure": "EmailBroadcastLoadFailed",
-                        "success": "EmailBroadcastLoaded"
+                        "success": "EmailBroadcastLoaded",
+                        "failure": "EmailBroadcastLoadFailed"
                       }
                     }
                   ],
@@ -617,21 +617,21 @@
                     "main",
                     {
                       "direction": "vertical",
-                      "type": "stack",
+                      "align": "center",
                       "className": "py-12",
+                      "type": "stack",
+                      "gap": "md",
                       "children": [
                         {
                           "type": "spinner"
                         },
                         {
-                          "color": "muted",
-                          "variant": "caption",
                           "content": "Cancelling broadcast…",
-                          "type": "typography"
+                          "type": "typography",
+                          "variant": "caption",
+                          "color": "muted"
                         }
-                      ],
-                      "gap": "md",
-                      "align": "center"
+                      ]
                     }
                   ]
                 ]
@@ -646,8 +646,8 @@
                     "EmailBroadcast",
                     {
                       "emit": {
-                        "failure": "EmailBroadcastLoadFailed",
-                        "success": "EmailBroadcastLoaded"
+                        "success": "EmailBroadcastLoaded",
+                        "failure": "EmailBroadcastLoadFailed"
                       }
                     }
                   ],
@@ -655,22 +655,22 @@
                     "render-ui",
                     "main",
                     {
+                      "direction": "vertical",
                       "children": [
                         {
                           "type": "spinner"
                         },
                         {
-                          "variant": "caption",
-                          "content": "Loading broadcasts…",
+                          "color": "muted",
                           "type": "typography",
-                          "color": "muted"
+                          "variant": "caption",
+                          "content": "Loading broadcasts…"
                         }
                       ],
                       "gap": "md",
-                      "type": "stack",
-                      "direction": "vertical",
+                      "className": "py-12",
                       "align": "center",
-                      "className": "py-12"
+                      "type": "stack"
                     }
                   ]
                 ]
@@ -699,22 +699,22 @@
                     "render-ui",
                     "main",
                     {
+                      "type": "stack",
                       "children": [
                         {
                           "type": "spinner"
                         },
                         {
                           "variant": "caption",
+                          "content": "Sending broadcast…",
                           "type": "typography",
-                          "color": "muted",
-                          "content": "Sending broadcast…"
+                          "color": "muted"
                         }
                       ],
-                      "direction": "vertical",
                       "align": "center",
                       "gap": "md",
                       "className": "py-12",
-                      "type": "stack"
+                      "direction": "vertical"
                     }
                   ]
                 ]
@@ -734,8 +734,8 @@
                     "EmailBroadcast",
                     {
                       "emit": {
-                        "success": "EmailBroadcastLoaded",
-                        "failure": "EmailBroadcastLoadFailed"
+                        "failure": "EmailBroadcastLoadFailed",
+                        "success": "EmailBroadcastLoaded"
                       }
                     }
                   ],
@@ -743,22 +743,22 @@
                     "render-ui",
                     "main",
                     {
-                      "gap": "md",
-                      "className": "py-12",
-                      "direction": "vertical",
                       "align": "center",
+                      "direction": "vertical",
+                      "gap": "md",
                       "type": "stack",
                       "children": [
                         {
                           "type": "spinner"
                         },
                         {
-                          "variant": "caption",
-                          "color": "muted",
                           "type": "typography",
-                          "content": "Cancelling broadcast…"
+                          "color": "muted",
+                          "content": "Cancelling broadcast…",
+                          "variant": "caption"
                         }
-                      ]
+                      ],
+                      "className": "py-12"
                     }
                   ]
                 ]
@@ -773,8 +773,8 @@
                     "EmailBroadcast",
                     {
                       "emit": {
-                        "success": "EmailBroadcastLoaded",
-                        "failure": "EmailBroadcastLoadFailed"
+                        "failure": "EmailBroadcastLoadFailed",
+                        "success": "EmailBroadcastLoaded"
                       }
                     }
                   ],
@@ -791,60 +791,66 @@
             ]
           },
           "config": {
+            "title": {
+              "type": "string",
+              "default": "Email Broadcasts",
+              "label": "Section title",
+              "description": "Heading shown above the email blast list"
+            },
             "itemActions": {
               "type": "[object]",
               "default": [
                 {
-                  "variant": "primary",
-                  "icon": "arrow-right",
+                  "event": "OPEN_BROADCAST",
                   "label": "Open",
-                  "event": "OPEN_BROADCAST"
+                  "variant": "primary",
+                  "icon": "arrow-right"
                 },
                 {
+                  "event": "CANCEL_BROADCAST",
                   "label": "Cancel",
-                  "variant": "danger",
-                  "event": "CANCEL_BROADCAST"
+                  "variant": "danger"
                 }
-              ]
-            },
-            "title": {
-              "type": "string",
-              "default": "Email Broadcasts"
+              ],
+              "label": "Row actions",
+              "description": "Buttons users can click on each broadcast row"
             },
             "fields": {
               "type": "[object]",
               "default": [
                 {
+                  "variant": "caption",
                   "name": "name",
-                  "label": "Name",
-                  "variant": "caption"
+                  "label": "Name"
                 },
                 {
-                  "variant": "caption",
+                  "name": "subject",
                   "label": "Subject",
-                  "name": "subject"
-                },
-                {
-                  "name": "status",
-                  "label": "Status",
-                  "variant": "badge"
-                },
-                {
-                  "label": "Recipients",
-                  "name": "recipientCount",
                   "variant": "caption"
                 },
                 {
-                  "variant": "caption",
-                  "name": "sentCount",
-                  "label": "Sent"
+                  "variant": "badge",
+                  "label": "Status",
+                  "name": "status"
                 },
                 {
-                  "label": "Scheduled",
+                  "name": "recipientCount",
+                  "variant": "caption",
+                  "label": "Recipients"
+                },
+                {
+                  "label": "Sent",
+                  "variant": "caption",
+                  "name": "sentCount"
+                },
+                {
                   "name": "scheduledAt",
+                  "label": "Scheduled",
                   "variant": "caption"
                 }
-              ]
+              ],
+              "label": "Columns to show",
+              "description": "Each column maps to one field on the Email Broadcast entity"
             }
           },
           "scope": "collection"

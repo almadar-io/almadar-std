@@ -97,12 +97,12 @@ export interface StdRfiRfiLoadFailedPayload {
  * without modifying its state-machine topology.
  */
 export interface StdRfiConfig {
-  /** Default: `[{"variant":"primary","icon":"arrow-right","label":"Open","event":"OPEN_RFI"},{"variant":"danger","event":"CLOSE","label":"Close"}]` */
-  itemActions?: TraitConfig[];
-  /** Default: `[{"variant":"caption","label":"RFI #","name":"rfiNumber"},{"name":"subject","label":"Subject","variant":"caption"},{"name":"status","variant":"badge","label":"Status"},{"name":"raisedBy","variant":"caption","label":"Raised By"},{"label":"Assigned","variant":"caption","name":"assignedTo"},{"name":"dueAt","variant":"caption","label":"Due"}]` */
-  fields?: TraitConfig[];
   /** Default: `"RFIs"` */
   title?: string;
+  /** Default: `[{"name":"rfiNumber","label":"RFI #","variant":"caption"},{"variant":"caption","name":"subject","label":"Subject"},{"name":"status","variant":"badge","label":"Status"},{"variant":"caption","name":"raisedBy","label":"Raised By"},{"label":"Assigned","variant":"caption","name":"assignedTo"},{"variant":"caption","name":"dueAt","label":"Due"}]` */
+  fields?: TraitConfig[];
+  /** Default: `[{"variant":"primary","label":"Open","event":"OPEN_RFI","icon":"arrow-right"},{"event":"CLOSE","label":"Close","variant":"danger"}]` */
+  itemActions?: TraitConfig[];
 }
 
 /**

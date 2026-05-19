@@ -158,14 +158,14 @@ export interface StdKitchenDisplayKitchenTicketUpdateFailedPayload {
  * without modifying its state-machine topology.
  */
 export interface StdKitchenDisplayConfig {
-  /** Default: `[{"variant":"primary","icon":"arrow-right","event":"OPEN_TICKET","label":"Open"},{"label":"Mark Served","variant":"danger","icon":"utensils","event":"MARK_SERVED"}]` */
-  itemActions?: TraitConfig[];
   /** Default: `"Kitchen Display"` */
   title?: string;
   /** Default: `20` */
   overdueMinutes?: number;
-  /** Default: `[{"name":"orderId","label":"Order","variant":"caption"},{"label":"Table","variant":"caption","name":"tableLabel"},{"name":"serverName","variant":"caption","label":"Server"},{"label":"Status","name":"status","variant":"badge"},{"variant":"badge","name":"aging","label":"Aging"},{"label":"Received","name":"receivedAt","variant":"caption"}]` */
+  /** Default: `[{"name":"orderId","label":"Order","variant":"caption"},{"name":"tableLabel","label":"Table","variant":"caption"},{"label":"Server","name":"serverName","variant":"caption"},{"label":"Status","variant":"badge","name":"status"},{"name":"aging","variant":"badge","label":"Aging"},{"variant":"caption","name":"receivedAt","label":"Received"}]` */
   fields?: TraitConfig[];
+  /** Default: `[{"event":"OPEN_TICKET","variant":"primary","icon":"arrow-right","label":"Open"},{"variant":"danger","event":"MARK_SERVED","icon":"utensils","label":"Mark Served"}]` */
+  itemActions?: TraitConfig[];
 }
 
 /**

@@ -39,44 +39,44 @@ export type StdGraphsEventKey = 'INIT' | 'ITEMS_LOADED';
  * without modifying its state-machine topology.
  */
 export interface StdGraphsConfig {
-  /** Default: `[]` */
-  series?: EntityRow[];
   /** Default: `false` */
   showValues?: boolean;
-  /** Default: `"bar"` */
-  chartType?: 'bar' | 'line' | 'pie' | 'area' | 'donut' | 'histogram' | 'scatter';
-  /** Default: `"chart"` */
-  viewPattern?: unknown;
-  /** Default: `false` */
-  timeAxis?: boolean;
-  /** Default: `"status"` */
-  categoryField?: string;
-  /** Default: `""` */
-  valueField?: string;
-  /** Default: `"none"` */
-  sortField?: 'value' | 'label' | 'none';
-  /** Default: `280` */
-  height?: number;
+  /** Default: `0` */
+  limit?: number;
   /** Default: `"Distribution"` */
   title?: string;
+  /** Default: `"bar"` */
+  chartType?: 'bar' | 'line' | 'pie' | 'area' | 'donut' | 'histogram' | 'scatter';
+  /** Default: `"desc"` */
+  sortDir?: 'asc' | 'desc';
+  /** Default: `280` */
+  height?: number;
+  /** Default: `"chart"` */
+  viewPattern?: unknown;
   /** Default: `"count"` */
   aggregation?: 'count' | 'sum' | 'avg' | 'min' | 'max';
   /** Default: `"date"` */
   timeField?: string;
-  /** Default: `0` */
-  limit?: number;
   /** Default: `""` */
-  drillEvent?: string;
+  valueField?: string;
+  /** Default: `false` */
+  timeAxis?: boolean;
   /** Default: `"none"` */
   stack?: 'none' | 'stack' | 'normalize';
   /** Default: `"month"` */
   period?: 'day' | 'week' | 'month' | 'quarter' | 'year';
-  /** Default: `"desc"` */
-  sortDir?: 'asc' | 'desc';
-  /** Default: `true` */
-  showLegend?: boolean;
+  /** Default: `"status"` */
+  categoryField?: string;
+  /** Default: `"none"` */
+  sortField?: 'value' | 'label' | 'none';
   /** Default: `"Counts per category"` */
   subtitle?: string;
+  /** Default: `[]` */
+  series?: EntityRow[];
+  /** Default: `true` */
+  showLegend?: boolean;
+  /** Default: `""` */
+  drillEvent?: string;
 }
 
 /**

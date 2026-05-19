@@ -104,11 +104,11 @@ export interface StdSubmittalSubmittalLoadFailedPayload {
  * without modifying its state-machine topology.
  */
 export interface StdSubmittalConfig {
-  /** Default: `[{"event":"OPEN_SUBMITTAL","label":"Open","icon":"arrow-right","variant":"primary"},{"label":"Delete","event":"REQUEST_DELETE","variant":"danger"}]` */
+  /** Default: `[{"event":"OPEN_SUBMITTAL","label":"Open","icon":"arrow-right","variant":"primary"},{"variant":"danger","label":"Delete","event":"REQUEST_DELETE"}]` */
   itemActions?: TraitConfig[];
   /** Default: `"Submittals"` */
   title?: string;
-  /** Default: `[{"name":"submittalNumber","variant":"caption","label":"Number"},{"name":"specSection","variant":"caption","label":"Spec Section"},{"label":"Title","name":"title","variant":"caption"},{"label":"Contractor","variant":"caption","name":"contractor"},{"name":"status","label":"Status","variant":"badge"},{"name":"revisionNumber","label":"Rev","variant":"caption"}]` */
+  /** Default: `[{"label":"Number","variant":"caption","name":"submittalNumber"},{"variant":"caption","name":"specSection","label":"Spec Section"},{"label":"Title","variant":"caption","name":"title"},{"variant":"caption","name":"contractor","label":"Contractor"},{"label":"Status","variant":"badge","name":"status"},{"variant":"caption","label":"Rev","name":"revisionNumber"}]` */
   fields?: TraitConfig[];
 }
 

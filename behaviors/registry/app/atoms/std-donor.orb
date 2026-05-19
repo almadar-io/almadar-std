@@ -279,22 +279,22 @@
                     "render-ui",
                     "main",
                     {
-                      "gap": "md",
+                      "direction": "vertical",
                       "children": [
                         {
                           "type": "spinner"
                         },
                         {
-                          "color": "muted",
-                          "variant": "caption",
                           "content": "Loading donors…",
-                          "type": "typography"
+                          "type": "typography",
+                          "color": "muted",
+                          "variant": "caption"
                         }
                       ],
-                      "direction": "vertical",
+                      "type": "stack",
+                      "gap": "md",
                       "className": "py-12",
-                      "align": "center",
-                      "type": "stack"
+                      "align": "center"
                     }
                   ]
                 ]
@@ -308,13 +308,10 @@
                     "render-ui",
                     "main",
                     {
-                      "type": "stack",
                       "direction": "vertical",
-                      "gap": "md",
                       "children": [
                         {
                           "type": "stack",
-                          "direction": "horizontal",
                           "gap": "sm",
                           "align": "center",
                           "children": [
@@ -327,48 +324,51 @@
                               "content": "@config.title",
                               "type": "typography"
                             }
-                          ]
+                          ],
+                          "direction": "horizontal"
                         },
                         {
+                          "type": "simple-grid",
                           "cols": 4.0,
                           "children": [
                             {
                               "icon": "heart",
-                              "value": "@payload.data.length",
                               "type": "stat-display",
-                              "label": "Total donors"
+                              "label": "Total donors",
+                              "value": "@payload.data.length"
                             },
                             {
                               "type": "stat-display",
-                              "icon": "refresh-cw",
                               "label": "Recurring",
-                              "value": "184"
+                              "value": "184",
+                              "icon": "refresh-cw"
                             },
                             {
                               "label": "Total lifetime",
+                              "icon": "dollar-sign",
                               "value": "$2.4M",
-                              "type": "stat-display",
-                              "icon": "dollar-sign"
+                              "type": "stat-display"
                             },
                             {
-                              "label": "Avg gift",
-                              "type": "stat-display",
+                              "icon": "trending-up",
                               "value": "$148",
-                              "icon": "trending-up"
+                              "label": "Avg gift",
+                              "type": "stat-display"
                             }
-                          ],
-                          "type": "simple-grid"
+                          ]
                         },
                         {
                           "type": "divider"
                         },
                         {
-                          "entity": "@payload.data",
-                          "fields": "@config.fields",
+                          "type": "data-grid",
                           "itemActions": "@config.itemActions",
-                          "type": "data-grid"
+                          "fields": "@config.fields",
+                          "entity": "@payload.data"
                         }
-                      ]
+                      ],
+                      "type": "stack",
+                      "gap": "md"
                     }
                   ]
                 ]
@@ -382,8 +382,8 @@
                     "render-ui",
                     "main",
                     {
-                      "type": "alert",
                       "variant": "error",
+                      "type": "alert",
                       "message": "@payload.error"
                     }
                   ]
@@ -443,98 +443,100 @@
                     "render-ui",
                     "main",
                     {
+                      "type": "stack",
+                      "direction": "vertical",
                       "gap": "md",
                       "children": [
                         {
-                          "type": "stack",
-                          "direction": "horizontal",
-                          "gap": "sm",
                           "children": [
                             {
-                              "action": "CLOSE_VIEW",
-                              "label": "Back",
                               "type": "button",
-                              "variant": "ghost"
+                              "label": "Back",
+                              "variant": "ghost",
+                              "action": "CLOSE_VIEW"
                             },
                             {
-                              "name": "heart",
-                              "type": "icon"
+                              "type": "icon",
+                              "name": "heart"
                             },
                             {
-                              "type": "typography",
                               "content": "@entity.name",
+                              "type": "typography",
                               "variant": "h3"
                             },
                             {
+                              "variant": "default",
                               "type": "badge",
-                              "label": "@entity.donorType",
-                              "variant": "default"
+                              "label": "@entity.donorType"
                             }
                           ],
-                          "align": "center"
+                          "type": "stack",
+                          "align": "center",
+                          "direction": "horizontal",
+                          "gap": "sm"
                         },
                         {
                           "type": "divider"
                         },
                         {
+                          "gap": "sm",
                           "children": [
                             {
-                              "children": [
-                                {
-                                  "content": "Email",
-                                  "variant": "caption",
-                                  "type": "typography",
-                                  "color": "muted"
-                                },
-                                {
-                                  "content": "@entity.email",
-                                  "type": "typography",
-                                  "variant": "body"
-                                }
-                              ],
-                              "direction": "horizontal",
-                              "type": "stack",
-                              "gap": "md"
-                            },
-                            {
-                              "direction": "horizontal",
                               "gap": "md",
+                              "direction": "horizontal",
                               "children": [
                                 {
-                                  "variant": "caption",
-                                  "type": "typography",
                                   "color": "muted",
-                                  "content": "Phone"
+                                  "type": "typography",
+                                  "content": "Email",
+                                  "variant": "caption"
                                 },
                                 {
                                   "variant": "body",
-                                  "content": "@entity.phone",
+                                  "content": "@entity.email",
                                   "type": "typography"
                                 }
                               ],
                               "type": "stack"
                             },
                             {
-                              "type": "stack",
-                              "direction": "horizontal",
                               "gap": "md",
                               "children": [
                                 {
-                                  "content": "Preferred campaign",
-                                  "color": "muted",
+                                  "content": "Phone",
                                   "type": "typography",
+                                  "color": "muted",
                                   "variant": "caption"
                                 },
                                 {
-                                  "variant": "body",
                                   "type": "typography",
-                                  "content": "@entity.preferredCampaign"
+                                  "variant": "body",
+                                  "content": "@entity.phone"
+                                }
+                              ],
+                              "type": "stack",
+                              "direction": "horizontal"
+                            },
+                            {
+                              "direction": "horizontal",
+                              "gap": "md",
+                              "type": "stack",
+                              "children": [
+                                {
+                                  "color": "muted",
+                                  "variant": "caption",
+                                  "type": "typography",
+                                  "content": "Preferred campaign"
+                                },
+                                {
+                                  "variant": "body",
+                                  "content": "@entity.preferredCampaign",
+                                  "type": "typography"
                                 }
                               ]
                             }
                           ],
                           "direction": "vertical",
-                          "gap": "sm",
                           "type": "stack"
                         },
                         {
@@ -555,44 +557,42 @@
                               "type": "stat-display"
                             },
                             {
-                              "value": "@entity.lastDonationAt",
                               "type": "stat-display",
-                              "label": "Last donation",
-                              "icon": "calendar-check"
+                              "icon": "calendar-check",
+                              "value": "@entity.lastDonationAt",
+                              "label": "Last donation"
                             }
                           ],
                           "cols": 3.0,
                           "type": "simple-grid"
                         },
                         {
-                          "align": "center",
+                          "gap": "sm",
                           "children": [
                             {
-                              "label": "Thank Donor",
-                              "type": "button",
-                              "variant": "primary",
                               "action": "THANK_DONOR",
-                              "actionPayload": {
-                                "id": "@entity.id"
-                              }
-                            },
-                            {
-                              "variant": "secondary",
-                              "type": "button",
-                              "label": "Solicit",
+                              "label": "Thank Donor",
                               "actionPayload": {
                                 "id": "@entity.id"
                               },
-                              "action": "SOLICIT_DONOR"
+                              "variant": "primary",
+                              "type": "button"
+                            },
+                            {
+                              "actionPayload": {
+                                "id": "@entity.id"
+                              },
+                              "label": "Solicit",
+                              "action": "SOLICIT_DONOR",
+                              "variant": "secondary",
+                              "type": "button"
                             }
                           ],
-                          "direction": "horizontal",
+                          "align": "center",
                           "type": "stack",
-                          "gap": "sm"
+                          "direction": "horizontal"
                         }
-                      ],
-                      "type": "stack",
-                      "direction": "vertical"
+                      ]
                     }
                   ]
                 ]
@@ -612,8 +612,8 @@
                     "Donor",
                     {
                       "emit": {
-                        "success": "DonorLoaded",
-                        "failure": "DonorLoadFailed"
+                        "failure": "DonorLoadFailed",
+                        "success": "DonorLoaded"
                       }
                     }
                   ],
@@ -621,22 +621,22 @@
                     "render-ui",
                     "main",
                     {
-                      "type": "stack",
                       "direction": "vertical",
-                      "align": "center",
+                      "type": "stack",
+                      "gap": "md",
                       "className": "py-12",
                       "children": [
                         {
                           "type": "spinner"
                         },
                         {
-                          "variant": "caption",
-                          "type": "typography",
                           "color": "muted",
-                          "content": "Sending thanks…"
+                          "variant": "caption",
+                          "content": "Sending thanks…",
+                          "type": "typography"
                         }
                       ],
-                      "gap": "md"
+                      "align": "center"
                     }
                   ]
                 ]
@@ -660,22 +660,22 @@
                     "render-ui",
                     "main",
                     {
+                      "className": "py-12",
+                      "align": "center",
                       "children": [
                         {
                           "type": "spinner"
                         },
                         {
-                          "variant": "caption",
-                          "type": "typography",
+                          "color": "muted",
                           "content": "Loading donors…",
-                          "color": "muted"
+                          "type": "typography",
+                          "variant": "caption"
                         }
                       ],
                       "gap": "md",
-                      "type": "stack",
                       "direction": "vertical",
-                      "align": "center",
-                      "className": "py-12"
+                      "type": "stack"
                     }
                   ]
                 ]
@@ -704,22 +704,22 @@
                     "render-ui",
                     "main",
                     {
-                      "align": "center",
-                      "direction": "vertical",
-                      "className": "py-12",
-                      "gap": "md",
-                      "type": "stack",
                       "children": [
                         {
                           "type": "spinner"
                         },
                         {
-                          "color": "muted",
                           "type": "typography",
                           "variant": "caption",
-                          "content": "Sending thanks…"
+                          "content": "Sending thanks…",
+                          "color": "muted"
                         }
-                      ]
+                      ],
+                      "type": "stack",
+                      "align": "center",
+                      "direction": "vertical",
+                      "gap": "md",
+                      "className": "py-12"
                     }
                   ]
                 ]
@@ -739,8 +739,8 @@
                     "Donor",
                     {
                       "emit": {
-                        "failure": "DonorLoadFailed",
-                        "success": "DonorLoaded"
+                        "success": "DonorLoaded",
+                        "failure": "DonorLoadFailed"
                       }
                     }
                   ],
@@ -753,17 +753,17 @@
                           "type": "spinner"
                         },
                         {
-                          "content": "Soliciting donor…",
                           "type": "typography",
                           "variant": "caption",
-                          "color": "muted"
+                          "color": "muted",
+                          "content": "Soliciting donor…"
                         }
                       ],
-                      "direction": "vertical",
                       "align": "center",
-                      "className": "py-12",
+                      "direction": "vertical",
                       "type": "stack",
-                      "gap": "md"
+                      "gap": "md",
+                      "className": "py-12"
                     }
                   ]
                 ]
@@ -796,18 +796,36 @@
             ]
           },
           "config": {
+            "itemActions": {
+              "type": "[object]",
+              "default": [
+                {
+                  "label": "Open",
+                  "event": "OPEN_DONOR",
+                  "icon": "arrow-right",
+                  "variant": "primary"
+                },
+                {
+                  "event": "THANK_DONOR",
+                  "variant": "secondary",
+                  "label": "Thank"
+                }
+              ],
+              "label": "Row actions",
+              "description": "Buttons users can click on each donor row"
+            },
             "fields": {
               "type": "[object]",
               "default": [
                 {
+                  "variant": "h4",
                   "name": "name",
-                  "label": "Name",
-                  "variant": "h4"
+                  "label": "Name"
                 },
                 {
                   "name": "donorType",
-                  "variant": "badge",
-                  "label": "Type"
+                  "label": "Type",
+                  "variant": "badge"
                 },
                 {
                   "name": "email",
@@ -815,36 +833,24 @@
                   "variant": "body"
                 },
                 {
-                  "name": "lifetimeAmount",
                   "label": "Lifetime",
+                  "name": "lifetimeAmount",
                   "variant": "caption"
                 },
                 {
-                  "variant": "caption",
+                  "label": "Last gift",
                   "name": "lastDonationAt",
-                  "label": "Last gift"
+                  "variant": "caption"
                 }
-              ]
+              ],
+              "label": "Columns to show",
+              "description": "Each column maps to one field on the Donor entity"
             },
             "title": {
               "type": "string",
-              "default": "Donors"
-            },
-            "itemActions": {
-              "type": "[object]",
-              "default": [
-                {
-                  "variant": "primary",
-                  "icon": "arrow-right",
-                  "label": "Open",
-                  "event": "OPEN_DONOR"
-                },
-                {
-                  "label": "Thank",
-                  "event": "THANK_DONOR",
-                  "variant": "secondary"
-                }
-              ]
+              "default": "Donors",
+              "label": "Section title",
+              "description": "Heading shown above the donor roster"
             }
           },
           "scope": "collection"
