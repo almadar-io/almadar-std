@@ -75,30 +75,30 @@ export interface StdMultiPartyFlowFlowLoadFailedPayload {
  * without modifying its state-machine topology.
  */
 export interface StdMultiPartyFlowConfig {
-  /** Default: `"Open dispute"` */
-  disputeLabel?: string;
   /** Default: `"Release funds"` */
   releaseLabel?: string;
-  /** Default: `"$28,500"` */
-  transactionAmount?: string;
-  /** Default: `"Sale of 2024 Honda CR-V"` */
-  transactionSubject?: string;
-  /** Default: `"x"` */
-  cancelIcon?: string;
-  /** Default: `["reason"]` */
-  reasonFields?: string[];
   /** Default: `"unlock"` */
   releaseIcon?: string;
-  /** Default: `[{"actionDescription":"Authorize $28,500 to be held in escrow until delivery is confirmed.","description":"Funds the transaction and confirms receipt of the vehicle.","icon":"user","id":"buyer","actionLabel":"Confirm payment","actor":"Alice Chen","actionIcon":"credit-card","stepLabel":"Step 1 of 2","title":"Buyer"},{"title":"Seller","icon":"user-check","id":"seller","actor":"Bob's Auto Sales LLC","actionDescription":"Mark the vehicle as shipped. Funds will release after the buyer confirms receipt.","stepLabel":"Step 2 of 2","actionLabel":"Confirm shipment","description":"Ships the vehicle and uploads delivery proof.","actionIcon":"package"}]` */
-  parties?: TraitConfig[];
+  /** Default: `"Sale of 2024 Honda CR-V"` */
+  transactionSubject?: string;
   /** Default: `"TXN-A8B2C-2024-001"` */
   transactionReference?: string;
-  /** Default: `"Escrow transaction"` */
-  title?: string;
+  /** Default: `[{"id":"buyer","actionIcon":"credit-card","icon":"user","description":"Funds the transaction and confirms receipt of the vehicle.","actionLabel":"Confirm payment","actionDescription":"Authorize $28,500 to be held in escrow until delivery is confirmed.","title":"Buyer","actor":"Alice Chen","stepLabel":"Step 1 of 2"},{"actor":"Bob's Auto Sales LLC","title":"Seller","actionLabel":"Confirm shipment","id":"seller","stepLabel":"Step 2 of 2","description":"Ships the vehicle and uploads delivery proof.","icon":"user-check","actionIcon":"package","actionDescription":"Mark the vehicle as shipped. Funds will release after the buyer confirms receipt."}]` */
+  parties?: TraitConfig[];
+  /** Default: `"$28,500"` */
+  transactionAmount?: string;
   /** Default: `"alert-triangle"` */
   disputeIcon?: string;
   /** Default: `"Cancel transaction"` */
   cancelLabel?: string;
+  /** Default: `"x"` */
+  cancelIcon?: string;
+  /** Default: `"Open dispute"` */
+  disputeLabel?: string;
+  /** Default: `["reason"]` */
+  reasonFields?: string[];
+  /** Default: `"Escrow transaction"` */
+  title?: string;
 }
 
 /**

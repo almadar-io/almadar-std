@@ -39,42 +39,44 @@ export type StdGraphsEventKey = 'INIT' | 'ITEMS_LOADED';
  * without modifying its state-machine topology.
  */
 export interface StdGraphsConfig {
-  /** Default: `280` */
-  height?: number;
-  /** Default: `true` */
-  showLegend?: boolean;
-  /** Default: `""` */
-  valueField?: string;
-  /** Default: `"date"` */
-  timeField?: string;
-  /** Default: `"status"` */
-  categoryField?: string;
-  /** Default: `"count"` */
-  aggregation?: 'count' | 'sum' | 'avg' | 'min' | 'max';
-  /** Default: `"none"` */
-  stack?: 'none' | 'stack' | 'normalize';
+  /** Default: `[]` */
+  series?: EntityRow[];
   /** Default: `false` */
   showValues?: boolean;
-  /** Default: `"month"` */
-  period?: 'day' | 'week' | 'month' | 'quarter' | 'year';
-  /** Default: `0` */
-  limit?: number;
+  /** Default: `"bar"` */
+  chartType?: 'bar' | 'line' | 'pie' | 'area' | 'donut' | 'histogram' | 'scatter';
+  /** Default: `"chart"` */
+  viewPattern?: unknown;
+  /** Default: `false` */
+  timeAxis?: boolean;
+  /** Default: `"status"` */
+  categoryField?: string;
+  /** Default: `""` */
+  valueField?: string;
+  /** Default: `"none"` */
+  sortField?: 'value' | 'label' | 'none';
+  /** Default: `280` */
+  height?: number;
   /** Default: `"Distribution"` */
   title?: string;
-  /** Default: `"desc"` */
-  sortDir?: 'asc' | 'desc';
-  /** Default: `"Counts per category"` */
-  subtitle?: string;
+  /** Default: `"count"` */
+  aggregation?: 'count' | 'sum' | 'avg' | 'min' | 'max';
+  /** Default: `"date"` */
+  timeField?: string;
+  /** Default: `0` */
+  limit?: number;
   /** Default: `""` */
   drillEvent?: string;
   /** Default: `"none"` */
-  sortField?: 'value' | 'label' | 'none';
-  /** Default: `"bar"` */
-  chartType?: 'bar' | 'line' | 'pie' | 'area' | 'donut' | 'histogram' | 'scatter';
-  /** Default: `false` */
-  timeAxis?: boolean;
-  /** Default: `[]` */
-  series?: EntityRow[];
+  stack?: 'none' | 'stack' | 'normalize';
+  /** Default: `"month"` */
+  period?: 'day' | 'week' | 'month' | 'quarter' | 'year';
+  /** Default: `"desc"` */
+  sortDir?: 'asc' | 'desc';
+  /** Default: `true` */
+  showLegend?: boolean;
+  /** Default: `"Counts per category"` */
+  subtitle?: string;
 }
 
 /**
