@@ -62,6 +62,10 @@
         {
           "name": "ServiceOauthDefaultForm",
           "category": "interaction",
+          "capabilities": [
+            "identity",
+            "oauth"
+          ],
           "emits": [
             {
               "event": "LOGIN",
@@ -101,11 +105,14 @@
                     "render-ui",
                     "main",
                     {
+                      "direction": "vertical",
                       "gap": "lg",
+                      "type": "stack",
                       "align": "center",
                       "children": [
                         {
-                          "type": "stack",
+                          "gap": "md",
+                          "direction": "horizontal",
                           "align": "center",
                           "children": [
                             {
@@ -113,13 +120,12 @@
                               "name": "lock"
                             },
                             {
+                              "type": "typography",
                               "content": "Sign In",
-                              "variant": "h2",
-                              "type": "typography"
+                              "variant": "h2"
                             }
                           ],
-                          "gap": "md",
-                          "direction": "horizontal"
+                          "type": "stack"
                         },
                         {
                           "type": "divider"
@@ -132,8 +138,8 @@
                               "value": "google"
                             },
                             {
-                              "value": "github",
-                              "label": "GitHub"
+                              "label": "GitHub",
+                              "value": "github"
                             },
                             {
                               "label": "Microsoft",
@@ -147,14 +153,12 @@
                         },
                         {
                           "label": "Sign in with provider",
-                          "variant": "primary",
                           "type": "button",
+                          "variant": "primary",
                           "action": "LOGIN",
                           "icon": "log-in"
                         }
-                      ],
-                      "type": "stack",
-                      "direction": "vertical"
+                      ]
                     }
                   ]
                 ]
@@ -166,6 +170,10 @@
         {
           "name": "ServiceOauthOauth",
           "category": "interaction",
+          "capabilities": [
+            "identity",
+            "oauth"
+          ],
           "linkedEntity": "ServiceOauth",
           "emits": [
             {
@@ -346,8 +354,8 @@
                     "ServiceOauth",
                     {
                       "emit": {
-                        "failure": "ServiceOauthLoadFailed",
-                        "success": "ServiceOauthLoaded"
+                        "success": "ServiceOauthLoaded",
+                        "failure": "ServiceOauthLoadFailed"
                       }
                     }
                   ],
@@ -355,11 +363,11 @@
                     "render-ui",
                     "main",
                     {
-                      "gap": "md",
                       "children": [
                         "@config.uiTrait"
                       ],
                       "type": "stack",
+                      "gap": "md",
                       "direction": "vertical"
                     }
                   ]
@@ -375,8 +383,8 @@
                     "main",
                     {
                       "title": "Signing in...",
-                      "type": "loading-state",
-                      "message": "Authenticating with provider."
+                      "message": "Authenticating with provider.",
+                      "type": "loading-state"
                     }
                   ],
                   [
@@ -390,8 +398,8 @@
                     },
                     {
                       "emit": {
-                        "failure": "FAILED",
-                        "success": "OAuthLoggedIn"
+                        "success": "OAuthLoggedIn",
+                        "failure": "FAILED"
                       }
                     }
                   ]
@@ -426,34 +434,34 @@
                     "render-ui",
                     "main",
                     {
+                      "gap": "lg",
+                      "type": "stack",
+                      "direction": "vertical",
+                      "align": "center",
                       "children": [
                         {
                           "type": "icon",
                           "name": "check-circle"
                         },
                         {
-                          "type": "alert",
+                          "message": "Signed in successfully",
                           "variant": "success",
-                          "message": "Signed in successfully"
+                          "type": "alert"
                         },
                         {
                           "variant": "body",
-                          "color": "muted",
+                          "type": "typography",
                           "content": "@entity.accessToken",
-                          "type": "typography"
+                          "color": "muted"
                         },
                         {
-                          "variant": "ghost",
+                          "type": "button",
                           "action": "RESET",
+                          "variant": "ghost",
                           "icon": "log-out",
-                          "label": "Sign Out",
-                          "type": "button"
+                          "label": "Sign Out"
                         }
-                      ],
-                      "direction": "vertical",
-                      "type": "stack",
-                      "gap": "lg",
-                      "align": "center"
+                      ]
                     }
                   ]
                 ]
@@ -480,10 +488,10 @@
                     "render-ui",
                     "main",
                     {
-                      "message": "@entity.error",
-                      "title": "Sign In Failed",
+                      "onRetry": "RETRY",
                       "type": "error-state",
-                      "onRetry": "RETRY"
+                      "title": "Sign In Failed",
+                      "message": "@entity.error"
                     }
                   ]
                 ]
@@ -502,10 +510,10 @@
                     "render-ui",
                     "main",
                     {
+                      "gap": "md",
                       "children": [
                         "@config.uiTrait"
                       ],
-                      "gap": "md",
                       "type": "stack",
                       "direction": "vertical"
                     }
@@ -531,12 +539,12 @@
                     "render-ui",
                     "main",
                     {
-                      "direction": "vertical",
                       "type": "stack",
-                      "gap": "md",
                       "children": [
                         "@config.uiTrait"
-                      ]
+                      ],
+                      "gap": "md",
+                      "direction": "vertical"
                     }
                   ]
                 ]
@@ -550,12 +558,12 @@
                     "render-ui",
                     "main",
                     {
+                      "gap": "md",
                       "children": [
                         "@config.uiTrait"
                       ],
                       "type": "stack",
-                      "direction": "vertical",
-                      "gap": "md"
+                      "direction": "vertical"
                     }
                   ]
                 ]
@@ -563,13 +571,17 @@
             ]
           },
           "config": {
+            "uiTrait": {
+              "type": "trait",
+              "default": "@trait.ServiceOauthDefaultForm"
+            },
             "scopes": {
               "type": "[string]",
               "default": []
             },
-            "uiTrait": {
-              "type": "trait",
-              "default": "@trait.ServiceOauthDefaultForm"
+            "redirectUri": {
+              "type": "string",
+              "default": ""
             },
             "provider": {
               "type": "string",
@@ -580,10 +592,6 @@
                 "microsoft",
                 "okta"
               ]
-            },
-            "redirectUri": {
-              "type": "string",
-              "default": ""
             }
           },
           "scope": "instance"

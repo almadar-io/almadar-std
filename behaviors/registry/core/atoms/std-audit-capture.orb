@@ -46,6 +46,10 @@
         {
           "name": "AuditCaptureListener",
           "category": "lifecycle",
+          "capabilities": [
+            "audit",
+            "compliance"
+          ],
           "linkedEntity": "AuditEntry",
           "emits": [
             {
@@ -160,10 +164,10 @@
                     "create",
                     "AuditEntry",
                     {
-                      "recordedAt": 0.0,
+                      "actor": "@user.id",
                       "entityId": "@payload.data.id",
                       "action": "EntityMutated",
-                      "actor": "@user.id",
+                      "recordedAt": 0.0,
                       "entityType": "@config.captureEntity"
                     }
                   ],
@@ -172,9 +176,9 @@
                     "AuditRecorded",
                     {
                       "recordedAt": 0.0,
-                      "entityType": "@config.captureEntity",
                       "actor": "@user.id",
                       "action": "EntityMutated",
+                      "entityType": "@config.captureEntity",
                       "entityId": "@payload.data.id"
                     }
                   ]
@@ -183,6 +187,10 @@
             ]
           },
           "config": {
+            "excludeFields": {
+              "type": "[string]",
+              "default": []
+            },
             "captureEntity": {
               "type": "string",
               "default": ""
@@ -193,10 +201,6 @@
                 "Saved",
                 "Deleted"
               ]
-            },
-            "excludeFields": {
-              "type": "[string]",
-              "default": []
             }
           },
           "scope": "instance"
