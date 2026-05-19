@@ -97,20 +97,20 @@ export interface StdRatingReviewReviewSaveFailedPayload {
  * without modifying its state-machine topology.
  */
 export interface StdRatingReviewConfig {
-  /** Default: `"Submit review"` */
-  submitLabel?: string;
-  /** Default: `[{"id":"recent","label":"Most recent","icon":"clock"},{"icon":"star","id":"highest","label":"Top rated"},{"label":"Lowest","id":"lowest","icon":"trending-down"}]` */
+  /** Default: `[{"label":"Most recent","id":"recent","icon":"clock"},{"icon":"star","label":"Top rated","id":"highest"},{"id":"lowest","label":"Lowest","icon":"trending-down"}]` */
   sortOptions?: TraitConfig[];
-  /** Default: `[{"label":"5 stars","percentage":74},{"label":"4 stars","percentage":18},{"percentage":5,"label":"3 stars"},{"label":"2 stars","percentage":2},{"percentage":1,"label":"1 star"}]` */
-  starDistribution?: TraitConfig[];
   /** Default: `"Cancel"` */
   cancelLabel?: string;
+  /** Default: `[{"percentage":74,"label":"5 stars"},{"label":"4 stars","percentage":18},{"label":"3 stars","percentage":5},{"percentage":2,"label":"2 stars"},{"percentage":1,"label":"1 star"}]` */
+  starDistribution?: TraitConfig[];
   /** Default: `"Bali Sunset Villa · 3 nights"` */
   subjectTitle?: string;
   /** Default: `["draftComment"]` */
   reviewFields?: string[];
   /** Default: `"Write a review"` */
   writeLabel?: string;
+  /** Default: `"Submit review"` */
+  submitLabel?: string;
 }
 
 /**
@@ -144,7 +144,7 @@ export interface StdRatingReviewParams {
 }
 
 /** Trait descriptor: `RatingReview.traits.RatingReviewBoard`. */
-export function stdRatingReviewTrait(params: StdRatingReviewParams): TraitReference {
+export function stdRatingReviewRatingReviewBoardTrait(params: StdRatingReviewParams): TraitReference {
   return makeTraitRef({
     from: BEHAVIOR_PATH,
     ref: `${ALIAS}.traits.RatingReviewBoard`,
@@ -158,11 +158,36 @@ export function stdRatingReviewTrait(params: StdRatingReviewParams): TraitRefere
   });
 }
 
+/** Trait descriptor: `RatingReview.traits.RatingReviewSubmit`. */
+export function stdRatingReviewRatingReviewSubmitTrait(params: StdRatingReviewParams): TraitReference {
+  return makeTraitRef({
+    from: BEHAVIOR_PATH,
+    ref: `${ALIAS}.traits.RatingReviewSubmit`,
+    linkedEntity: params.entityName,
+    ...(params.traitName !== undefined ? { name: params.traitName } : {}),
+    ...(params.events !== undefined ? { events: params.events as Record<string, string> } : {}),
+    ...(params.effects !== undefined ? { effects: params.effects } : {}),
+    ...(params.listens !== undefined ? { listens: params.listens } : {}),
+    ...(params.emitsScope !== undefined ? { emitsScope: params.emitsScope } : {}),
+    ...(params.config !== undefined ? { config: params.config as TraitConfig } : {}),
+  });
+}
+
 /** Page descriptor: `RatingReview.pages.RatingReviewPage`. */
-export function stdRatingReviewPage(params: StdRatingReviewParams): PageRefObject {
+export function stdRatingReviewRatingReviewPagePage(params: StdRatingReviewParams): PageRefObject {
   return makePageRef({
     from: BEHAVIOR_PATH,
     ref: `${ALIAS}.pages.RatingReviewPage`,
+    ...(params.pagePath !== undefined ? { path: params.pagePath } : {}),
+    linkedEntity: params.entityName,
+  });
+}
+
+/** Page descriptor: `RatingReview.pages.RatingReviewSubmitPage`. */
+export function stdRatingReviewRatingReviewSubmitPagePage(params: StdRatingReviewParams): PageRefObject {
+  return makePageRef({
+    from: BEHAVIOR_PATH,
+    ref: `${ALIAS}.pages.RatingReviewSubmitPage`,
     ...(params.pagePath !== undefined ? { path: params.pagePath } : {}),
     linkedEntity: params.entityName,
   });
@@ -180,10 +205,12 @@ export function stdRatingReview(params: StdRatingReviewParams): OrbitalDefinitio
     uses: [{ from: BEHAVIOR_PATH, as: ALIAS }],
     entity,
     traits: [
-      stdRatingReviewTrait(params),
+      stdRatingReviewRatingReviewBoardTrait(params),
+      stdRatingReviewRatingReviewSubmitTrait(params),
     ],
     pages: [
-      stdRatingReviewPage(params),
+      stdRatingReviewRatingReviewPagePage(params),
+      stdRatingReviewRatingReviewSubmitPagePage(params),
     ],
   });
 }
