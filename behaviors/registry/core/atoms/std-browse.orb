@@ -282,20 +282,20 @@
                     "fetch",
                     "BrowseItem",
                     {
-                      "offset": 0.0,
                       "limit": "@config.pageSize",
                       "emit": {
-                        "success": "BrowseItemLoaded",
-                        "failure": "BrowseItemLoadFailed"
-                      }
+                        "failure": "BrowseItemLoadFailed",
+                        "success": "BrowseItemLoaded"
+                      },
+                      "offset": 0.0
                     }
                   ],
                   [
                     "render-ui",
                     "main",
                     {
-                      "type": "spinner",
-                      "size": "sm"
+                      "size": "sm",
+                      "type": "spinner"
                     }
                   ]
                 ]
@@ -309,19 +309,19 @@
                     "render-ui",
                     "main",
                     {
+                      "type": "stack",
                       "children": [
                         {
-                          "gap": "@config.gap",
-                          "imageField": "@config.imageField",
                           "fields": "@config.fields",
-                          "type": "data-grid",
-                          "cols": "@config.cols",
-                          "entity": "@payload.data",
                           "itemActions": "@config.itemActions",
-                          "pageSize": "@config.displayPageSize"
+                          "cols": "@config.cols",
+                          "type": "@config.viewPattern",
+                          "entity": "@payload.data",
+                          "imageField": "@config.imageField",
+                          "pageSize": "@config.displayPageSize",
+                          "gap": "@config.gap"
                         }
                       ],
-                      "type": "stack",
                       "direction": "vertical"
                     }
                   ]
@@ -336,10 +336,10 @@
                     "render-ui",
                     "main",
                     {
-                      "type": "typography",
-                      "content": "@payload.error",
                       "color": "error",
-                      "variant": "caption"
+                      "variant": "caption",
+                      "type": "typography",
+                      "content": "@payload.error"
                     }
                   ]
                 ]
@@ -353,12 +353,12 @@
                     "fetch",
                     "BrowseItem",
                     {
+                      "offset": 0.0,
                       "limit": "@config.pageSize",
                       "emit": {
                         "success": "BrowseItemLoaded",
                         "failure": "BrowseItemLoadFailed"
-                      },
-                      "offset": 0.0
+                      }
                     }
                   ],
                   [
@@ -380,6 +380,7 @@
                     "fetch",
                     "BrowseItem",
                     {
+                      "limit": "@config.pageSize",
                       "filter": [
                         "or",
                         [
@@ -401,8 +402,7 @@
                         "success": "BrowseItemLoaded",
                         "failure": "BrowseItemLoadFailed"
                       },
-                      "offset": 0.0,
-                      "limit": "@config.pageSize"
+                      "offset": 0.0
                     }
                   ]
                 ]
@@ -417,11 +417,11 @@
                     "BrowseItem",
                     {
                       "emit": {
-                        "failure": "BrowseItemLoadFailed",
-                        "success": "BrowseItemLoaded"
+                        "success": "BrowseItemLoaded",
+                        "failure": "BrowseItemLoadFailed"
                       },
-                      "offset": 0.0,
                       "limit": "@config.pageSize",
+                      "offset": 0.0,
                       "filter": [
                         "or",
                         [
@@ -479,20 +479,20 @@
                     "render-ui",
                     "main",
                     {
+                      "type": "stack",
                       "direction": "vertical",
                       "children": [
                         {
                           "imageField": "@config.imageField",
-                          "fields": "@config.fields",
-                          "type": "data-grid",
+                          "pageSize": "@config.displayPageSize",
                           "cols": "@config.cols",
+                          "type": "@config.viewPattern",
+                          "fields": "@config.fields",
                           "entity": "@payload.data",
                           "itemActions": "@config.itemActions",
-                          "gap": "@config.gap",
-                          "pageSize": "@config.displayPageSize"
+                          "gap": "@config.gap"
                         }
-                      ],
-                      "type": "stack"
+                      ]
                     }
                   ]
                 ]
@@ -527,9 +527,37 @@
             ]
           },
           "config": {
+            "fields": {
+              "type": "[object]",
+              "default": [
+                {
+                  "name": "name",
+                  "variant": "h4",
+                  "label": "Name"
+                },
+                {
+                  "variant": "caption",
+                  "name": "description",
+                  "label": "Description"
+                },
+                {
+                  "name": "status",
+                  "label": "Status",
+                  "variant": "badge"
+                }
+              ]
+            },
+            "pageSize": {
+              "type": "number",
+              "default": 10.0
+            },
             "imageField": {
               "type": "string",
               "default": ""
+            },
+            "displayPageSize": {
+              "type": "number",
+              "default": 10.0
             },
             "cols": {
               "type": "number",
@@ -543,33 +571,9 @@
               "type": "string",
               "default": "md"
             },
-            "pageSize": {
-              "type": "number",
-              "default": 10.0
-            },
-            "fields": {
-              "type": "[object]",
-              "default": [
-                {
-                  "name": "name",
-                  "variant": "h4",
-                  "label": "Name"
-                },
-                {
-                  "label": "Description",
-                  "variant": "caption",
-                  "name": "description"
-                },
-                {
-                  "name": "status",
-                  "variant": "badge",
-                  "label": "Status"
-                }
-              ]
-            },
-            "displayPageSize": {
-              "type": "number",
-              "default": 10.0
+            "viewPattern": {
+              "type": "string",
+              "default": "data-grid"
             }
           },
           "scope": "collection"

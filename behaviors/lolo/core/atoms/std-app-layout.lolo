@@ -19,11 +19,13 @@ orbital AppLayoutOrbital {
       topBarActions          : [object] = []
       notifications          : [object] = []
       notificationClickEvent : string   = "NOTIFY_CLICK"
+      layoutPattern          : string   = "dashboard-layout"
+      detailSlot             : string   = "modal"
     }
     state composing {
       INIT -> composing
         (fetch AppLayoutState { emit: { success: "AppLayoutStateLoaded", failure: "AppLayoutStateLoadFailed" } })
-        (render-ui main { type: "dashboard-layout", appName: "@config.appName", navItems: "@config.navItems", searchEvent: "@config.searchEvent", topBarActions: "@config.topBarActions", notifications: "@config.notifications", notificationClickEvent: "@config.notificationClickEvent", children: [{ type: "stack", direction: "vertical", gap: "lg", className: "max-w-5xl mx-auto w-full", children: ["@config.contentTrait"] }] })
+        (render-ui main { type: "@config.layoutPattern", appName: "@config.appName", navItems: "@config.navItems", searchEvent: "@config.searchEvent", topBarActions: "@config.topBarActions", notifications: "@config.notifications", notificationClickEvent: "@config.notificationClickEvent", children: [{ type: "stack", direction: "vertical", gap: "lg", className: "max-w-5xl mx-auto w-full", children: ["@config.contentTrait"] }] })
       AppLayoutStateLoaded -> composing
       AppLayoutStateLoadFailed -> composing
       SEARCH -> composing
