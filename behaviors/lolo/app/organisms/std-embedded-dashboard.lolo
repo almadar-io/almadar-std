@@ -1,5 +1,5 @@
-app std-embedded-dashboard "1.3.0"
-"Use for any analytics/BI dashboard (KPIs + charts + filters + export). Every preset tile and every layout slot is config-driven; callers can swap chart types, fields, aggregations, sort, drill events, tile layout, nav, and toolbar/filter wiring without touching the .orb."
+app std-embedded-dashboard "1.4.0"
+"Use for any analytics/BI dashboard (KPIs + charts + filters + export). Every preset tile and every layout slot is config-driven; callers can swap chart types, fields, aggregations, sort, drill events, tile layout, nav, and toolbar/filter wiring without touching the .orb. DefaultDataSource fetches the (rebindable) entity and emits ITEMS_LOADED — chart traits consume it via the bus, so rebinding entityName threads through the actual data fetch."
 
 orbital DashboardOrbital {
   uses Layout    from "std/behaviors/std-dashboard-grid-embedded"
@@ -9,11 +9,11 @@ orbital DashboardOrbital {
   uses DateRange from "std/behaviors/std-date-range"
   uses Export    from "std/behaviors/std-export"
 
-  entity Dashboard [runtime] {
+  entity Dashboard [persistent: dashboards] {
     id : string!
   }
 
-  trait EmptyTile -> Dashboard [interaction, instance] {
+  trait EmptyTile [interaction, instance] {
     initial: idle
     state idle {
       INIT -> idle
@@ -21,7 +21,28 @@ orbital DashboardOrbital {
     }
   }
 
-  trait DefaultKpiStats = Stats.traits.StatsItemStats -> Dashboard {
+  trait DefaultDataSource -> Dashboard [interaction, collection] {
+    initial: loading
+    state loading {
+      INIT -> loaded
+        (fetch Dashboard { emit: { success: "ITEMS_LOADED", failure: "ITEMS_LOAD_FAILED" } })
+        (render-ui main { type: "box" })
+    }
+    state loaded {
+      DATE_RANGE_CHANGED -> loaded
+        (fetch Dashboard { emit: { success: "ITEMS_LOADED", failure: "ITEMS_LOAD_FAILED" } })
+        (render-ui main { type: "box" })
+    }
+    emits {
+      ITEMS_LOADED                  { data : [object], totalCount : number }
+      ITEMS_LOAD_FAILED -> external { error : string }
+    }
+    listens {
+      DATE_RANGE_CHANGED { from : string!, to : string! }
+    }
+  }
+
+  trait DefaultKpiStats = Stats.traits.StatsItemStats {
     config: {
       title: "Key Metrics",
       viewPattern: "data-grid",
@@ -34,7 +55,7 @@ orbital DashboardOrbital {
     }
   }
 
-  trait DefaultRevenueChart = Graphs.traits.GraphItemGraph -> Dashboard {
+  trait DefaultRevenueChart = Graphs.traits.GraphItemGraph {
     config: {
       title:         "Revenue by Quarter",
       subtitle:      "Last 4 quarters",
@@ -58,7 +79,7 @@ orbital DashboardOrbital {
     }
   }
 
-  trait DefaultDistributionChart = Graphs.traits.GraphItemGraph -> Dashboard {
+  trait DefaultDistributionChart = Graphs.traits.GraphItemGraph {
     config: {
       title:         "Revenue Distribution",
       subtitle:      "By segment",
@@ -82,7 +103,7 @@ orbital DashboardOrbital {
     }
   }
 
-  trait DefaultGrowthChart = Graphs.traits.GraphItemGraph -> Dashboard {
+  trait DefaultGrowthChart = Graphs.traits.GraphItemGraph {
     config: {
       title:         "Growth Over Time",
       subtitle:      "Monthly trend",
@@ -106,7 +127,7 @@ orbital DashboardOrbital {
     }
   }
 
-  trait DefaultTopProductsChart = Graphs.traits.GraphItemGraph -> Dashboard {
+  trait DefaultTopProductsChart = Graphs.traits.GraphItemGraph {
     config: {
       title:         "Top Products",
       subtitle:      "Top 5 by revenue",
@@ -130,7 +151,7 @@ orbital DashboardOrbital {
     }
   }
 
-  trait DefaultAreaChart = Graphs.traits.GraphItemGraph -> Dashboard {
+  trait DefaultAreaChart = Graphs.traits.GraphItemGraph {
     config: {
       title:         "Cumulative Sales",
       subtitle:      "Year-to-date",
@@ -154,7 +175,7 @@ orbital DashboardOrbital {
     }
   }
 
-  trait DefaultDonutChart = Graphs.traits.GraphItemGraph -> Dashboard {
+  trait DefaultDonutChart = Graphs.traits.GraphItemGraph {
     config: {
       title:         "Channel Mix",
       subtitle:      "By marketing channel",
@@ -178,7 +199,7 @@ orbital DashboardOrbital {
     }
   }
 
-  trait DefaultActivityHistogram = Graphs.traits.GraphItemGraph -> Dashboard {
+  trait DefaultActivityHistogram = Graphs.traits.GraphItemGraph {
     config: {
       title:         "Activity Distribution",
       subtitle:      "Order count per bucket",
@@ -202,7 +223,7 @@ orbital DashboardOrbital {
     }
   }
 
-  trait DefaultScatter = Scatter.traits.ScatterItemPlot -> Dashboard {
+  trait DefaultScatter = Scatter.traits.ScatterItemPlot {
     config: {
       title:      "Spend vs Revenue",
       subtitle:   "Per customer",
@@ -216,7 +237,7 @@ orbital DashboardOrbital {
     }
   }
 
-  trait DefaultDateRange = DateRange.traits.DateRangeFilter -> Dashboard {
+  trait DefaultDateRange = DateRange.traits.DateRangeFilter {
     config: {
       event:       "DATE_RANGE_CHANGED",
       fromLabel:   "From",
@@ -225,7 +246,7 @@ orbital DashboardOrbital {
     }
   }
 
-  trait DefaultExport = Export.traits.ExportMenu -> Dashboard {
+  trait DefaultExport = Export.traits.ExportMenu {
     config: {
       event:   "EXPORT_REQUESTED",
       tileId:  "dashboard",
@@ -238,7 +259,7 @@ orbital DashboardOrbital {
     }
   }
 
-  trait DashboardLayout = Layout.traits.DashboardGridEmbedded -> Dashboard {
+  trait DashboardLayout = Layout.traits.DashboardGridEmbedded {
     config: {
       minTileWidth: 320,
       toolbar1Trait: "@trait.DefaultExport",
@@ -263,5 +284,5 @@ orbital DashboardOrbital {
     }
   }
 
-  page "/dashboard" as DashboardPage -> DashboardLayout, DefaultKpiStats, DefaultRevenueChart, DefaultDistributionChart, DefaultScatter, DefaultGrowthChart, DefaultTopProductsChart, DefaultAreaChart, DefaultDonutChart, DefaultActivityHistogram, DefaultDateRange, DefaultExport, EmptyTile
+  page "/dashboard" as DashboardPage -> DashboardLayout, DefaultDataSource, DefaultKpiStats, DefaultRevenueChart, DefaultDistributionChart, DefaultScatter, DefaultGrowthChart, DefaultTopProductsChart, DefaultAreaChart, DefaultDonutChart, DefaultActivityHistogram, DefaultDateRange, DefaultExport, EmptyTile
 }
