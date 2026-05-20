@@ -73,19 +73,19 @@
             "type": "unknown",
             "default": [
               {
+                "href": "/employees",
                 "icon": "users",
-                "label": "Employees",
-                "href": "/employees"
+                "label": "Employees"
               },
               {
-                "label": "Timesheets",
+                "icon": "clipboard",
                 "href": "/timesheets",
-                "icon": "clipboard"
+                "label": "Timesheets"
               },
               {
+                "icon": "clock",
                 "href": "/time-entries",
-                "label": "Time Entries",
-                "icon": "clock"
+                "label": "Time Entries"
               },
               {
                 "href": "/billable",
@@ -93,9 +93,9 @@
                 "label": "Billable Hours"
               },
               {
-                "label": "Approvals",
+                "href": "/approvals",
                 "icon": "check-circle",
-                "href": "/approvals"
+                "label": "Approvals"
               }
             ]
           },
@@ -115,7 +115,8 @@
             "default": "EMPLOYEE_SEARCH"
           }
         ],
-        "capabilities": []
+        "capabilities": [],
+        "ref": "AppShell.traits.AppLayout"
       },
       {
         "name": "EmployeeCatalog",
@@ -145,7 +146,8 @@
             "default": "Search employees…"
           }
         ],
-        "capabilities": []
+        "capabilities": [],
+        "ref": "Search.traits.SearchResultSearch"
       },
       {
         "name": "EmployeeFilter",
@@ -163,6 +165,7 @@
             "default": [
               {
                 "field": "department",
+                "label": "Department",
                 "options": [
                   "engineering",
                   "sales",
@@ -170,23 +173,23 @@
                   "hr",
                   "finance"
                 ],
-                "label": "Department",
                 "filterType": "select"
               },
               {
+                "field": "status",
                 "options": [
                   "active",
                   "on-leave",
                   "terminated"
                 ],
-                "field": "status",
                 "label": "Status",
                 "filterType": "select"
               }
             ]
           }
         ],
-        "capabilities": []
+        "capabilities": [],
+        "ref": "Filter.traits.FilterTargetFilter"
       },
       {
         "name": "EmployeeStats",
@@ -200,17 +203,13 @@
             "type": "unknown",
             "default": [
               {
-                "variant": "primary",
-                "label": "Total",
-                "aggregation": "count",
                 "format": "number",
-                "icon": "users"
+                "aggregation": "count",
+                "variant": "primary",
+                "icon": "users",
+                "label": "Total"
               },
               {
-                "aggregation": "count",
-                "icon": "check-circle",
-                "format": "number",
-                "variant": "success",
                 "filter": [
                   "fn",
                   "row",
@@ -220,14 +219,15 @@
                     "active"
                   ]
                 ],
+                "icon": "check-circle",
+                "variant": "success",
+                "format": "number",
+                "aggregation": "count",
                 "label": "Active"
               },
               {
-                "icon": "pause-circle",
-                "label": "On Leave",
-                "aggregation": "count",
                 "format": "number",
-                "variant": "warning",
+                "label": "On Leave",
                 "filter": [
                   "fn",
                   "row",
@@ -236,15 +236,18 @@
                     "@row.status",
                     "on-leave"
                   ]
-                ]
+                ],
+                "icon": "pause-circle",
+                "aggregation": "count",
+                "variant": "warning"
               },
               {
-                "format": "currency",
-                "label": "Avg Rate",
-                "icon": "dollar-sign",
-                "aggregation": "avg",
+                "variant": "info",
                 "field": "defaultHourlyRate",
-                "variant": "info"
+                "aggregation": "avg",
+                "format": "currency",
+                "icon": "dollar-sign",
+                "label": "Avg Rate"
               }
             ]
           },
@@ -254,7 +257,8 @@
             "default": "Employees"
           }
         ],
-        "capabilities": []
+        "capabilities": [],
+        "ref": "Stats.traits.StatsItemStats"
       },
       {
         "name": "EmployeeGraphs",
@@ -299,7 +303,8 @@
             "default": "Employees by Department"
           }
         ],
-        "capabilities": []
+        "capabilities": [],
+        "ref": "Graphs.traits.GraphItemGraph"
       },
       {
         "name": "EmployeeBrowseList",
@@ -331,12 +336,12 @@
                 "name": "role"
               },
               {
-                "name": "department",
-                "variant": "badge"
+                "variant": "badge",
+                "name": "department"
               },
               {
-                "variant": "badge",
-                "name": "status"
+                "name": "status",
+                "variant": "badge"
               },
               {
                 "name": "defaultHourlyRate",
@@ -354,24 +359,25 @@
             "type": "unknown",
             "default": [
               {
+                "variant": "ghost",
                 "label": "View",
-                "event": "VIEW",
+                "event": "VIEW"
+              },
+              {
+                "event": "EDIT",
+                "label": "Edit",
                 "variant": "ghost"
               },
               {
-                "variant": "ghost",
-                "event": "EDIT",
-                "label": "Edit"
-              },
-              {
+                "event": "DELETE",
                 "label": "Delete",
-                "variant": "danger",
-                "event": "DELETE"
+                "variant": "danger"
               }
             ]
           }
         ],
-        "capabilities": []
+        "capabilities": [],
+        "ref": "Browse.traits.BrowseItemBrowse"
       },
       {
         "name": "EmployeeCreate",
@@ -409,7 +415,8 @@
             "default": "New Employee"
           }
         ],
-        "capabilities": []
+        "capabilities": [],
+        "ref": "Modal.traits.ModalRecordModal"
       },
       {
         "name": "EmployeeEdit",
@@ -447,7 +454,8 @@
             "default": "Edit Employee"
           }
         ],
-        "capabilities": []
+        "capabilities": [],
+        "ref": "Modal.traits.ModalRecordModal"
       },
       {
         "name": "EmployeeView",
@@ -485,7 +493,8 @@
             "default": "View Employee"
           }
         ],
-        "capabilities": []
+        "capabilities": [],
+        "ref": "Modal.traits.ModalRecordModal"
       },
       {
         "name": "EmployeeDelete",
@@ -515,7 +524,8 @@
             "default": "Delete Employee"
           }
         ],
-        "capabilities": []
+        "capabilities": [],
+        "ref": "Confirmation.traits.ConfirmActionConfirmation"
       },
       {
         "name": "EmployeePersistor",
@@ -658,27 +668,27 @@
             "default": [
               {
                 "icon": "users",
-                "label": "Employees",
-                "href": "/employees"
+                "href": "/employees",
+                "label": "Employees"
               },
               {
-                "icon": "clipboard",
                 "href": "/timesheets",
+                "icon": "clipboard",
                 "label": "Timesheets"
               },
               {
-                "label": "Time Entries",
                 "icon": "clock",
+                "label": "Time Entries",
                 "href": "/time-entries"
               },
               {
+                "label": "Billable Hours",
                 "href": "/billable",
-                "icon": "dollar-sign",
-                "label": "Billable Hours"
+                "icon": "dollar-sign"
               },
               {
-                "icon": "check-circle",
                 "href": "/approvals",
+                "icon": "check-circle",
                 "label": "Approvals"
               }
             ]
@@ -699,7 +709,8 @@
             "default": "TIMESHEET_SEARCH"
           }
         ],
-        "capabilities": []
+        "capabilities": [],
+        "ref": "AppShell.traits.AppLayout"
       },
       {
         "name": "TimesheetPanel",
@@ -719,7 +730,8 @@
             "default": "Timesheets"
           }
         ],
-        "capabilities": []
+        "capabilities": [],
+        "ref": "Timesheet.traits.TimesheetLedger"
       }
     ],
     "pages": [
@@ -822,28 +834,28 @@
             "default": [
               {
                 "href": "/employees",
-                "label": "Employees",
-                "icon": "users"
+                "icon": "users",
+                "label": "Employees"
               },
               {
-                "label": "Timesheets",
                 "href": "/timesheets",
-                "icon": "clipboard"
+                "icon": "clipboard",
+                "label": "Timesheets"
               },
               {
-                "label": "Time Entries",
                 "href": "/time-entries",
-                "icon": "clock"
+                "icon": "clock",
+                "label": "Time Entries"
               },
               {
                 "href": "/billable",
-                "icon": "dollar-sign",
-                "label": "Billable Hours"
+                "label": "Billable Hours",
+                "icon": "dollar-sign"
               },
               {
-                "label": "Approvals",
+                "icon": "check-circle",
                 "href": "/approvals",
-                "icon": "check-circle"
+                "label": "Approvals"
               }
             ]
           },
@@ -863,7 +875,8 @@
             "default": "TIME_ENTRY_SEARCH"
           }
         ],
-        "capabilities": []
+        "capabilities": [],
+        "ref": "AppShell.traits.AppLayout"
       },
       {
         "name": "TimeEntryPanel",
@@ -883,7 +896,8 @@
             "default": "Time Entries"
           }
         ],
-        "capabilities": []
+        "capabilities": [],
+        "ref": "TimeEntry.traits.TimeEntryLog"
       }
     ],
     "pages": [
@@ -980,19 +994,19 @@
             "type": "unknown",
             "default": [
               {
-                "icon": "users",
                 "label": "Employees",
+                "icon": "users",
                 "href": "/employees"
               },
               {
-                "icon": "clipboard",
+                "href": "/timesheets",
                 "label": "Timesheets",
-                "href": "/timesheets"
+                "icon": "clipboard"
               },
               {
+                "label": "Time Entries",
                 "href": "/time-entries",
-                "icon": "clock",
-                "label": "Time Entries"
+                "icon": "clock"
               },
               {
                 "href": "/billable",
@@ -1000,8 +1014,8 @@
                 "label": "Billable Hours"
               },
               {
-                "icon": "check-circle",
                 "href": "/approvals",
+                "icon": "check-circle",
                 "label": "Approvals"
               }
             ]
@@ -1022,7 +1036,8 @@
             "default": "BILLABLE_HOUR_SEARCH"
           }
         ],
-        "capabilities": []
+        "capabilities": [],
+        "ref": "AppShell.traits.AppLayout"
       },
       {
         "name": "BillableHourPanel",
@@ -1042,7 +1057,8 @@
             "default": "Billable Hours"
           }
         ],
-        "capabilities": []
+        "capabilities": [],
+        "ref": "BillableHour.traits.BillableHourTimesheet"
       }
     ],
     "pages": [
@@ -1144,29 +1160,29 @@
             "type": "unknown",
             "default": [
               {
-                "href": "/employees",
                 "label": "Employees",
-                "icon": "users"
+                "icon": "users",
+                "href": "/employees"
               },
               {
-                "label": "Timesheets",
                 "icon": "clipboard",
-                "href": "/timesheets"
+                "href": "/timesheets",
+                "label": "Timesheets"
               },
               {
+                "href": "/time-entries",
                 "icon": "clock",
-                "label": "Time Entries",
-                "href": "/time-entries"
+                "label": "Time Entries"
               },
               {
-                "label": "Billable Hours",
                 "href": "/billable",
-                "icon": "dollar-sign"
+                "icon": "dollar-sign",
+                "label": "Billable Hours"
               },
               {
+                "href": "/approvals",
                 "icon": "check-circle",
-                "label": "Approvals",
-                "href": "/approvals"
+                "label": "Approvals"
               }
             ]
           },
@@ -1186,7 +1202,8 @@
             "default": "APPROVAL_REQUEST_SEARCH"
           }
         ],
-        "capabilities": []
+        "capabilities": [],
+        "ref": "AppShell.traits.AppLayout"
       },
       {
         "name": "ApprovalRequestPanel",
@@ -1206,7 +1223,8 @@
             "default": "Approval Requests"
           }
         ],
-        "capabilities": []
+        "capabilities": [],
+        "ref": "ApprovalRequest.traits.ApprovalRequestPipeline"
       }
     ],
     "pages": [

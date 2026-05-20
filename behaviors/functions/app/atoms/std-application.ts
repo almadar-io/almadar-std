@@ -214,11 +214,11 @@ export interface StdApplicationApplicationRejectedPayload {
  * without modifying its state-machine topology.
  */
 export interface StdApplicationConfig {
+  /** Default: `[{"label":"Applicant","variant":"caption","name":"applicantName","icon":"user"},{"variant":"caption","name":"applicantEmail","label":"Email"},{"variant":"caption","name":"targetType","label":"Target"},{"name":"status","variant":"badge","label":"Status"},{"variant":"caption","name":"submittedAt","label":"Submitted"}]` */
+  fields?: TraitConfig[];
   /** Default: `"Applications"` */
   title?: string;
-  /** Default: `[{"icon":"user","variant":"caption","name":"applicantName","label":"Applicant"},{"name":"applicantEmail","label":"Email","variant":"caption"},{"label":"Target","variant":"caption","name":"targetType"},{"variant":"badge","label":"Status","name":"status"},{"variant":"caption","name":"submittedAt","label":"Submitted"}]` */
-  fields?: TraitConfig[];
-  /** Default: `[{"event":"EDIT","variant":"ghost","label":"Edit"},{"event":"SUBMIT","label":"Submit","variant":"primary"},{"event":"ACCEPT","variant":"primary","label":"Accept"},{"event":"REJECT","variant":"danger","label":"Reject"}]` */
+  /** Default: `[{"label":"Edit","event":"EDIT","variant":"ghost"},{"event":"SUBMIT","variant":"primary","label":"Submit"},{"event":"ACCEPT","variant":"primary","label":"Accept"},{"event":"REJECT","variant":"danger","label":"Reject"}]` */
   itemActions?: TraitConfig[];
 }
 

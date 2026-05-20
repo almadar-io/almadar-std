@@ -87,12 +87,12 @@ export interface StdLeaseLeaseLoadFailedPayload {
  * without modifying its state-machine topology.
  */
 export interface StdLeaseConfig {
-  /** Default: `[{"label":"Tenant","variant":"caption","name":"tenantName"},{"name":"unitLabel","label":"Unit","variant":"caption"},{"variant":"caption","label":"Start","name":"startDate"},{"label":"End","name":"endDate","variant":"caption"},{"label":"Monthly Rent","variant":"caption","name":"monthlyRent"},{"name":"status","label":"Status","variant":"badge"}]` */
-  fields?: TraitConfig[];
-  /** Default: `[{"event":"OPEN_LEASE","icon":"arrow-right","label":"Open","variant":"primary"},{"event":"TERMINATE_LEASE","variant":"danger","label":"Terminate"}]` */
-  itemActions?: TraitConfig[];
   /** Default: `"Leases"` */
   title?: string;
+  /** Default: `[{"event":"OPEN_LEASE","variant":"primary","label":"Open","icon":"arrow-right"},{"label":"Terminate","event":"TERMINATE_LEASE","variant":"danger"}]` */
+  itemActions?: TraitConfig[];
+  /** Default: `[{"variant":"caption","name":"tenantName","label":"Tenant"},{"label":"Unit","variant":"caption","name":"unitLabel"},{"variant":"caption","label":"Start","name":"startDate"},{"label":"End","name":"endDate","variant":"caption"},{"label":"Monthly Rent","variant":"caption","name":"monthlyRent"},{"name":"status","variant":"badge","label":"Status"}]` */
+  fields?: TraitConfig[];
 }
 
 /**

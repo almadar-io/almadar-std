@@ -89,10 +89,10 @@ export interface StdHealthScoreHealthScoreLoadFailedPayload {
  * without modifying its state-machine topology.
  */
 export interface StdHealthScoreConfig {
-  /** Default: `[{"label":"Customer","variant":"caption","name":"customerName"},{"label":"Score","name":"score","variant":"badge"},{"label":"Tier","name":"tier","variant":"badge"},{"variant":"caption","name":"usageScore","label":"Usage"},{"name":"supportScore","label":"Support","variant":"caption"},{"label":"Trend","variant":"badge","name":"trend"},{"variant":"caption","label":"CSM","name":"assignedCsm"}]` */
-  fields?: TraitConfig[];
-  /** Default: `[{"event":"OPEN_SCORE","variant":"primary","icon":"arrow-right","label":"Open"},{"label":"Recalculate","variant":"secondary","event":"RECALCULATE"}]` */
+  /** Default: `[{"icon":"arrow-right","variant":"primary","event":"OPEN_SCORE","label":"Open"},{"event":"RECALCULATE","variant":"secondary","label":"Recalculate"}]` */
   itemActions?: TraitConfig[];
+  /** Default: `[{"variant":"caption","label":"Customer","name":"customerName"},{"variant":"badge","name":"score","label":"Score"},{"name":"tier","label":"Tier","variant":"badge"},{"variant":"caption","label":"Usage","name":"usageScore"},{"variant":"caption","label":"Support","name":"supportScore"},{"variant":"badge","name":"trend","label":"Trend"},{"name":"assignedCsm","label":"CSM","variant":"caption"}]` */
+  fields?: TraitConfig[];
   /** Default: `"Customer Health Scores"` */
   title?: string;
 }

@@ -78,19 +78,19 @@
             "type": "unknown",
             "default": [
               {
-                "icon": "list-todo",
                 "label": "Tasks",
-                "href": "/tasks"
+                "href": "/tasks",
+                "icon": "list-todo"
               },
               {
-                "href": "/sprints",
                 "label": "Sprints",
+                "href": "/sprints",
                 "icon": "zap"
               },
               {
-                "icon": "trending-down",
                 "label": "Burndown",
-                "href": "/burndown"
+                "href": "/burndown",
+                "icon": "trending-down"
               }
             ]
           },
@@ -110,7 +110,8 @@
             "default": "TASK_SEARCH"
           }
         ],
-        "capabilities": []
+        "capabilities": [],
+        "ref": "AppShell.traits.AppLayout"
       },
       {
         "name": "TaskCatalog",
@@ -140,7 +141,8 @@
             "default": "Search tasks…"
           }
         ],
-        "capabilities": []
+        "capabilities": [],
+        "ref": "Search.traits.SearchResultSearch"
       },
       {
         "name": "TaskFilter",
@@ -157,9 +159,9 @@
             "type": "unknown",
             "default": [
               {
+                "field": "status",
                 "label": "Status",
                 "filterType": "select",
-                "field": "status",
                 "options": [
                   "todo",
                   "in-progress",
@@ -168,20 +170,20 @@
                 ]
               },
               {
-                "filterType": "text",
+                "label": "Assignee",
                 "field": "assignee",
-                "label": "Assignee"
+                "filterType": "text"
               },
               {
-                "filterType": "select",
                 "field": "priority",
+                "label": "Priority",
+                "filterType": "select",
                 "options": [
                   "low",
                   "medium",
                   "high",
                   "critical"
-                ],
-                "label": "Priority"
+                ]
               },
               {
                 "label": "Sprint",
@@ -191,7 +193,8 @@
             ]
           }
         ],
-        "capabilities": []
+        "capabilities": [],
+        "ref": "Filter.traits.FilterTargetFilter"
       },
       {
         "name": "TaskStats",
@@ -205,16 +208,15 @@
             "type": "unknown",
             "default": [
               {
+                "aggregation": "count",
                 "variant": "primary",
                 "icon": "list-todo",
-                "aggregation": "count",
-                "label": "Total",
-                "format": "number"
+                "format": "number",
+                "label": "Total"
               },
               {
-                "icon": "circle",
-                "label": "Todo",
-                "variant": "muted",
+                "format": "number",
+                "aggregation": "count",
                 "filter": [
                   "fn",
                   "row",
@@ -224,12 +226,15 @@
                     "todo"
                   ]
                 ],
-                "aggregation": "count",
-                "format": "number"
+                "label": "Todo",
+                "variant": "default",
+                "icon": "circle"
               },
               {
-                "aggregation": "count",
                 "variant": "warning",
+                "aggregation": "count",
+                "icon": "loader",
+                "format": "number",
                 "filter": [
                   "fn",
                   "row",
@@ -239,12 +244,10 @@
                     "in-progress"
                   ]
                 ],
-                "label": "In Progress",
-                "format": "number",
-                "icon": "loader"
+                "label": "In Progress"
               },
               {
-                "aggregation": "count",
+                "format": "number",
                 "filter": [
                   "fn",
                   "row",
@@ -254,15 +257,13 @@
                     "done"
                   ]
                 ],
-                "label": "Done",
                 "variant": "success",
+                "aggregation": "count",
                 "icon": "check-circle",
-                "format": "number"
+                "label": "Done"
               },
               {
-                "label": "Critical",
-                "aggregation": "count",
-                "variant": "danger",
+                "variant": "error",
                 "filter": [
                   "fn",
                   "row",
@@ -272,8 +273,10 @@
                     "critical"
                   ]
                 ],
-                "format": "number",
-                "icon": "alert-octagon"
+                "icon": "alert-octagon",
+                "aggregation": "count",
+                "label": "Critical",
+                "format": "number"
               }
             ]
           },
@@ -283,7 +286,8 @@
             "default": "Tasks"
           }
         ],
-        "capabilities": []
+        "capabilities": [],
+        "ref": "Stats.traits.StatsItemStats"
       },
       {
         "name": "TaskGraphs",
@@ -328,7 +332,8 @@
             "default": "Tasks by Status"
           }
         ],
-        "capabilities": []
+        "capabilities": [],
+        "ref": "Graphs.traits.GraphItemGraph"
       },
       {
         "name": "TaskCalendar",
@@ -351,7 +356,8 @@
             "default": "title"
           }
         ],
-        "capabilities": []
+        "capabilities": [],
+        "ref": "Calendar.traits.CalendarEventCalendar"
       },
       {
         "name": "TaskBrowseList",
@@ -374,26 +380,26 @@
             "type": "unknown",
             "default": [
               {
-                "icon": "list-todo",
                 "variant": "h3",
+                "icon": "list-todo",
                 "name": "title"
               },
               {
-                "name": "status",
+                "variant": "badge",
+                "name": "status"
+              },
+              {
+                "variant": "body",
+                "name": "assignee"
+              },
+              {
+                "name": "priority",
                 "variant": "badge"
               },
               {
-                "name": "assignee",
-                "variant": "body"
-              },
-              {
-                "variant": "badge",
-                "name": "priority"
-              },
-              {
-                "label": "Due",
                 "name": "dueDate",
                 "format": "date",
+                "label": "Due",
                 "variant": "caption"
               }
             ]
@@ -408,24 +414,25 @@
             "type": "unknown",
             "default": [
               {
-                "label": "View",
                 "event": "VIEW",
-                "variant": "ghost"
+                "variant": "ghost",
+                "label": "View"
               },
               {
                 "label": "Edit",
-                "event": "EDIT",
-                "variant": "ghost"
+                "variant": "ghost",
+                "event": "EDIT"
               },
               {
-                "event": "DELETE",
                 "label": "Delete",
+                "event": "DELETE",
                 "variant": "danger"
               }
             ]
           }
         ],
-        "capabilities": []
+        "capabilities": [],
+        "ref": "Browse.traits.BrowseItemBrowse"
       },
       {
         "name": "TaskCreate",
@@ -464,7 +471,8 @@
             "default": "New Task"
           }
         ],
-        "capabilities": []
+        "capabilities": [],
+        "ref": "Modal.traits.ModalRecordModal"
       },
       {
         "name": "TaskEdit",
@@ -503,7 +511,8 @@
             "default": "Edit Task"
           }
         ],
-        "capabilities": []
+        "capabilities": [],
+        "ref": "Modal.traits.ModalRecordModal"
       },
       {
         "name": "TaskView",
@@ -542,7 +551,8 @@
             "default": "View Task"
           }
         ],
-        "capabilities": []
+        "capabilities": [],
+        "ref": "Modal.traits.ModalRecordModal"
       },
       {
         "name": "TaskDelete",
@@ -572,7 +582,8 @@
             "default": "Delete Task"
           }
         ],
-        "capabilities": []
+        "capabilities": [],
+        "ref": "Confirmation.traits.ConfirmActionConfirmation"
       },
       {
         "name": "TaskPersistor",
@@ -689,19 +700,19 @@
             "type": "unknown",
             "default": [
               {
-                "icon": "list-todo",
                 "href": "/tasks",
-                "label": "Tasks"
+                "label": "Tasks",
+                "icon": "list-todo"
               },
               {
                 "href": "/sprints",
-                "icon": "zap",
-                "label": "Sprints"
+                "label": "Sprints",
+                "icon": "zap"
               },
               {
-                "label": "Burndown",
+                "icon": "trending-down",
                 "href": "/burndown",
-                "icon": "trending-down"
+                "label": "Burndown"
               }
             ]
           },
@@ -721,7 +732,8 @@
             "default": "SPRINT_SEARCH"
           }
         ],
-        "capabilities": []
+        "capabilities": [],
+        "ref": "AppShell.traits.AppLayout"
       },
       {
         "name": "SprintCatalog",
@@ -751,35 +763,35 @@
             "type": "unknown",
             "default": [
               {
+                "icon": "zap",
                 "name": "name",
-                "variant": "h3",
-                "icon": "zap"
+                "variant": "h3"
               },
               {
                 "variant": "badge",
                 "name": "status"
               },
               {
-                "variant": "body",
-                "name": "goal"
+                "name": "goal",
+                "variant": "body"
               },
               {
+                "name": "startDate",
                 "label": "Start",
                 "format": "date",
-                "name": "startDate",
                 "variant": "caption"
               },
               {
-                "label": "End",
-                "variant": "caption",
                 "name": "endDate",
-                "format": "date"
+                "variant": "caption",
+                "format": "date",
+                "label": "End"
               },
               {
                 "label": "Tasks",
+                "format": "number",
                 "variant": "body",
-                "name": "taskCount",
-                "format": "number"
+                "name": "taskCount"
               }
             ]
           },
@@ -798,19 +810,20 @@
                 "event": "VIEW"
               },
               {
+                "variant": "ghost",
                 "event": "EDIT",
-                "label": "Edit",
-                "variant": "ghost"
+                "label": "Edit"
               },
               {
                 "event": "DELETE",
-                "variant": "danger",
-                "label": "Delete"
+                "label": "Delete",
+                "variant": "danger"
               }
             ]
           }
         ],
-        "capabilities": []
+        "capabilities": [],
+        "ref": "Browse.traits.BrowseItemBrowse"
       },
       {
         "name": "SprintCreate",
@@ -847,7 +860,8 @@
             "default": "New Sprint"
           }
         ],
-        "capabilities": []
+        "capabilities": [],
+        "ref": "Modal.traits.ModalRecordModal"
       },
       {
         "name": "SprintEdit",
@@ -884,7 +898,8 @@
             "default": "Edit Sprint"
           }
         ],
-        "capabilities": []
+        "capabilities": [],
+        "ref": "Modal.traits.ModalRecordModal"
       },
       {
         "name": "SprintView",
@@ -921,7 +936,8 @@
             "default": "View Sprint"
           }
         ],
-        "capabilities": []
+        "capabilities": [],
+        "ref": "Modal.traits.ModalRecordModal"
       },
       {
         "name": "SprintDelete",
@@ -951,7 +967,8 @@
             "default": "Delete Sprint"
           }
         ],
-        "capabilities": []
+        "capabilities": [],
+        "ref": "Confirmation.traits.ConfirmActionConfirmation"
       },
       {
         "name": "SprintPersistor",
@@ -1054,18 +1071,18 @@
             "default": [
               {
                 "icon": "list-todo",
-                "href": "/tasks",
-                "label": "Tasks"
+                "label": "Tasks",
+                "href": "/tasks"
               },
               {
-                "label": "Sprints",
                 "icon": "zap",
+                "label": "Sprints",
                 "href": "/sprints"
               },
               {
-                "icon": "trending-down",
                 "href": "/burndown",
-                "label": "Burndown"
+                "label": "Burndown",
+                "icon": "trending-down"
               }
             ]
           },
@@ -1085,7 +1102,8 @@
             "default": "BURNDOWN_SEARCH"
           }
         ],
-        "capabilities": []
+        "capabilities": [],
+        "ref": "AppShell.traits.AppLayout"
       },
       {
         "name": "BurndownDisplay",

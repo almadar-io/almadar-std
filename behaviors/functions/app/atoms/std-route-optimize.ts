@@ -87,9 +87,9 @@ export interface StdRouteOptimizeRouteLoadFailedPayload {
 export interface StdRouteOptimizeConfig {
   /** Default: `"Routes"` */
   title?: string;
-  /** Default: `[{"variant":"caption","label":"Technician","name":"technicianId"},{"name":"totalDistanceKm","variant":"caption","label":"Distance (km)"},{"label":"Duration (min)","name":"totalDurationMinutes","variant":"caption"},{"name":"optimizedAt","variant":"caption","label":"Optimized"}]` */
+  /** Default: `[{"variant":"caption","name":"technicianId","label":"Technician"},{"variant":"caption","name":"totalDistanceKm","label":"Distance (km)"},{"variant":"caption","name":"totalDurationMinutes","label":"Duration (min)"},{"name":"optimizedAt","label":"Optimized","variant":"caption"}]` */
   fields?: TraitConfig[];
-  /** Default: `[{"event":"OPEN_ROUTE","variant":"primary","label":"Open","icon":"arrow-right"},{"label":"Optimize","event":"OPTIMIZE","variant":"danger"}]` */
+  /** Default: `[{"label":"Open","icon":"arrow-right","variant":"primary","event":"OPEN_ROUTE"},{"label":"Optimize","variant":"danger","event":"OPTIMIZE"}]` */
   itemActions?: TraitConfig[];
 }
 

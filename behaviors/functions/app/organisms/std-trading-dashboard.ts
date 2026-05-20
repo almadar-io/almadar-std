@@ -174,9 +174,6 @@ export function stdTradingDashboardPortfolioOrbital(params: StdTradingDashboardP
         'ref': 'AppShell.traits.AppLayout',
         'name': 'PortfolioAppLayout',
         'config': {
-          'contentTrait': '@trait.PortfolioCatalog',
-          'notificationClickEvent': 'PORTFOLIO_NOTIFICATIONS_OPEN',
-          'appName': 'Trading Dashboard',
           'navItems': [
             {
               'href': '/portfolio',
@@ -184,22 +181,25 @@ export function stdTradingDashboardPortfolioOrbital(params: StdTradingDashboardP
               'label': 'Portfolio',
             },
             {
-              'href': '/orders',
               'icon': 'clipboard-list',
+              'href': '/orders',
               'label': 'Orders',
             },
             {
-              'href': '/market',
               'icon': 'activity',
               'label': 'Market',
+              'href': '/market',
             },
           ],
-          'searchEvent': 'PORTFOLIO_SEARCH',
           'notifications': [],
+          'searchEvent': 'PORTFOLIO_SEARCH',
+          'notificationClickEvent': 'PORTFOLIO_NOTIFICATIONS_OPEN',
+          'contentTrait': '@trait.PortfolioCatalog',
+          'appName': 'Trading Dashboard',
         },
         'events': {
-          'NOTIFY_CLICK': 'PORTFOLIO_NOTIFICATIONS_OPEN',
           'SEARCH': 'PORTFOLIO_SEARCH',
+          'NOTIFY_CLICK': 'PORTFOLIO_NOTIFICATIONS_OPEN',
         },
       }),
       rebindInlineTraitEntity({
@@ -282,18 +282,16 @@ export function stdTradingDashboardPortfolioOrbital(params: StdTradingDashboardP
                   'render-ui',
                   'main',
                   {
-                    'type': 'stack',
                     'direction': 'vertical',
+                    'type': 'stack',
                     'gap': 'lg',
                     'children': [
                       {
-                        'align': 'center',
+                        'type': 'stack',
+                        'direction': 'horizontal',
                         'children': [
                           {
                             'gap': 'sm',
-                            'type': 'stack',
-                            'direction': 'horizontal',
-                            'align': 'center',
                             'children': [
                               {
                                 'name': 'trending-up',
@@ -305,39 +303,41 @@ export function stdTradingDashboardPortfolioOrbital(params: StdTradingDashboardP
                                 'variant': 'h2',
                               },
                             ],
+                            'type': 'stack',
+                            'align': 'center',
+                            'direction': 'horizontal',
                           },
                           {
-                            'type': 'stack',
-                            'direction': 'horizontal',
-                            'gap': 'sm',
                             'children': [
                               {
-                                'action': 'CREATE',
-                                'icon': 'plus',
-                                'variant': 'primary',
                                 'type': 'button',
+                                'action': 'CREATE',
+                                'variant': 'primary',
+                                'icon': 'plus',
                                 'label': 'Add Position',
                               },
                             ],
+                            'type': 'stack',
+                            'gap': 'sm',
+                            'direction': 'horizontal',
                           },
                         ],
-                        'justify': 'between',
-                        'type': 'stack',
-                        'direction': 'horizontal',
                         'gap': 'md',
+                        'justify': 'between',
+                        'align': 'center',
                       },
                       {
                         'type': 'divider',
                       },
                       {
+                        'gap': 'md',
+                        'align': 'center',
+                        'type': 'stack',
+                        'direction': 'horizontal',
                         'children': [
                           '@trait.PortfolioSearch',
                           '@trait.PortfolioFilter',
                         ],
-                        'align': 'center',
-                        'direction': 'horizontal',
-                        'gap': 'md',
-                        'type': 'stack',
                       },
                       '@trait.PortfolioStats',
                       '@trait.PortfolioGraphs',
@@ -371,27 +371,27 @@ export function stdTradingDashboardPortfolioOrbital(params: StdTradingDashboardP
                       },
                       {
                         'variant': 'h3',
-                        'content': 'No notifications',
                         'type': 'typography',
+                        'content': 'No notifications',
                       },
                       {
+                        'variant': 'caption',
                         'color': 'muted',
                         'content': 'You\'re all caught up.',
                         'type': 'typography',
-                        'variant': 'caption',
                       },
                       {
-                        'type': 'button',
-                        'action': 'INIT',
                         'label': 'Back to portfolio',
+                        'action': 'INIT',
+                        'type': 'button',
                         'variant': 'ghost',
                       },
                     ],
                     'align': 'center',
-                    'direction': 'vertical',
                     'className': 'py-8',
-                    'type': 'stack',
+                    'direction': 'vertical',
                     'gap': 'md',
+                    'type': 'stack',
                   },
                 ],
               ],
@@ -412,7 +412,6 @@ export function stdTradingDashboardPortfolioOrbital(params: StdTradingDashboardP
         'ref': 'Filter.traits.FilterTargetFilter',
         'name': 'PortfolioFilter',
         'config': {
-          'event': 'PORTFOLIO_FILTER',
           'filters': [
             {
               'filterType': 'text',
@@ -420,37 +419,42 @@ export function stdTradingDashboardPortfolioOrbital(params: StdTradingDashboardP
               'label': 'Symbol',
             },
           ],
+          'event': 'PORTFOLIO_FILTER',
         },
       }),
       makeTraitRef({
         'ref': 'Stats.traits.StatsItemStats',
         'name': 'PortfolioStats',
         'config': {
+          'title': 'Portfolio',
           'metrics': [
             {
-              'variant': 'primary',
-              'icon': 'dollar-sign',
-              'field': 'marketValue',
+              'label': 'Total Value',
               'format': 'currency',
               'aggregation': 'sum',
-              'label': 'Total Value',
+              'field': 'marketValue',
+              'icon': 'dollar-sign',
+              'variant': 'primary',
             },
             {
-              'field': 'dailyPnl',
               'aggregation': 'sum',
               'icon': 'trending-up',
-              'variant': 'success',
+              'field': 'dailyPnl',
               'label': 'Daily PnL',
+              'variant': 'success',
               'format': 'currency',
             },
             {
-              'format': 'number',
-              'variant': 'info',
               'aggregation': 'count',
+              'variant': 'info',
               'label': 'Positions',
               'icon': 'layout-list',
+              'format': 'number',
             },
             {
+              'label': 'Winners',
+              'aggregation': 'count',
+              'icon': 'check-circle',
               'filter': [
                 'fn',
                 'row',
@@ -460,14 +464,10 @@ export function stdTradingDashboardPortfolioOrbital(params: StdTradingDashboardP
                   0,
                 ],
               ],
-              'aggregation': 'count',
-              'label': 'Winners',
-              'icon': 'check-circle',
-              'variant': 'success',
               'format': 'number',
+              'variant': 'success',
             },
           ],
-          'title': 'Portfolio',
         },
         'listens': [
           {
@@ -485,13 +485,13 @@ export function stdTradingDashboardPortfolioOrbital(params: StdTradingDashboardP
         'name': 'PortfolioGraphs',
         'config': {
           'aggregation': 'sum',
-          'height': 240,
-          'valueField': 'dailyPnl',
-          'categoryField': 'symbol',
-          'showLegend': false,
           'title': 'Daily PnL',
+          'showLegend': false,
+          'height': 240,
           'subtitle': 'Profit and loss across positions',
           'chartType': 'line',
+          'valueField': 'dailyPnl',
+          'categoryField': 'symbol',
         },
         'listens': [
           {
@@ -509,43 +509,11 @@ export function stdTradingDashboardPortfolioOrbital(params: StdTradingDashboardP
         'name': 'PortfolioBrowseList',
         'linkedEntity': canonicalName,
         'config': {
-          'cols': 1,
           'gap': 'sm',
-          'fields': [
-            {
-              'name': 'symbol',
-              'icon': 'trending-up',
-              'variant': 'h3',
-            },
-            {
-              'format': 'number',
-              'name': 'qty',
-              'label': 'Qty',
-              'variant': 'body',
-            },
-            {
-              'label': 'Avg Cost',
-              'variant': 'body',
-              'name': 'avgCost',
-              'format': 'currency',
-            },
-            {
-              'name': 'marketValue',
-              'format': 'currency',
-              'label': 'Market Value',
-              'variant': 'h4',
-            },
-            {
-              'format': 'currency',
-              'variant': 'badge',
-              'name': 'dailyPnl',
-              'label': 'Daily PnL',
-            },
-          ],
           'itemActions': [
             {
-              'label': 'View',
               'event': 'VIEW',
+              'label': 'View',
               'variant': 'ghost',
             },
             {
@@ -554,11 +522,43 @@ export function stdTradingDashboardPortfolioOrbital(params: StdTradingDashboardP
               'label': 'Edit',
             },
             {
+              'label': 'Delete',
               'event': 'DELETE',
               'variant': 'danger',
-              'label': 'Delete',
             },
           ],
+          'fields': [
+            {
+              'name': 'symbol',
+              'variant': 'h3',
+              'icon': 'trending-up',
+            },
+            {
+              'name': 'qty',
+              'label': 'Qty',
+              'variant': 'body',
+              'format': 'number',
+            },
+            {
+              'name': 'avgCost',
+              'label': 'Avg Cost',
+              'format': 'currency',
+              'variant': 'body',
+            },
+            {
+              'label': 'Market Value',
+              'name': 'marketValue',
+              'format': 'currency',
+              'variant': 'h4',
+            },
+            {
+              'name': 'dailyPnl',
+              'label': 'Daily PnL',
+              'variant': 'badge',
+              'format': 'currency',
+            },
+          ],
+          'cols': 1,
         },
         'listens': [
           {
@@ -608,7 +608,6 @@ export function stdTradingDashboardPortfolioOrbital(params: StdTradingDashboardP
         'name': 'PortfolioCreate',
         'linkedEntity': canonicalName,
         'config': {
-          'title': 'Add Position',
           'fields': [
             'symbol',
             'qty',
@@ -616,8 +615,9 @@ export function stdTradingDashboardPortfolioOrbital(params: StdTradingDashboardP
             'marketValue',
             'dailyPnl',
           ],
-          'icon': 'plus-circle',
           'mode': 'create',
+          'icon': 'plus-circle',
+          'title': 'Add Position',
         },
         'events': {
           'OPEN': 'CREATE',
@@ -638,8 +638,9 @@ export function stdTradingDashboardPortfolioOrbital(params: StdTradingDashboardP
         'name': 'PortfolioEdit',
         'linkedEntity': canonicalName,
         'config': {
-          'title': 'Edit Position',
+          'icon': 'edit',
           'mode': 'edit',
+          'title': 'Edit Position',
           'fields': [
             'symbol',
             'qty',
@@ -647,7 +648,6 @@ export function stdTradingDashboardPortfolioOrbital(params: StdTradingDashboardP
             'marketValue',
             'dailyPnl',
           ],
-          'icon': 'edit',
         },
         'events': {
           'OPEN': 'EDIT',
@@ -668,9 +668,9 @@ export function stdTradingDashboardPortfolioOrbital(params: StdTradingDashboardP
         'name': 'PortfolioView',
         'linkedEntity': canonicalName,
         'config': {
-          'mode': 'edit',
-          'title': 'View Position',
           'icon': 'eye',
+          'title': 'View Position',
+          'mode': 'edit',
           'fields': [
             'symbol',
             'qty',
@@ -699,13 +699,13 @@ export function stdTradingDashboardPortfolioOrbital(params: StdTradingDashboardP
         'linkedEntity': canonicalName,
         'config': {
           'icon': 'alert-triangle',
-          'title': 'Close Position',
           'alertMessage': 'This action cannot be undone.',
           'confirmLabel': 'Close',
+          'title': 'Close Position',
         },
         'events': {
-          'CONFIRM': 'CONFIRM_DELETE',
           'REQUEST': 'DELETE',
+          'CONFIRM': 'CONFIRM_DELETE',
         },
         'listens': [
           {
@@ -1163,32 +1163,32 @@ export function stdTradingDashboardTradeOrderOrbital(params: StdTradingDashboard
         'name': 'TradeOrderAppLayout',
         'linkedEntity': canonicalName,
         'config': {
-          'contentTrait': '@trait.TradeOrderCatalog',
-          'appName': 'Trading Dashboard',
+          'notificationClickEvent': 'TRADE_ORDER_NOTIFICATIONS_OPEN',
           'searchEvent': 'TRADE_ORDER_SEARCH',
           'notifications': [],
+          'contentTrait': '@trait.TradeOrderCatalog',
+          'appName': 'Trading Dashboard',
           'navItems': [
             {
-              'href': '/portfolio',
               'icon': 'layout-list',
               'label': 'Portfolio',
+              'href': '/portfolio',
             },
             {
+              'href': '/orders',
               'icon': 'clipboard-list',
               'label': 'Orders',
-              'href': '/orders',
             },
             {
-              'label': 'Market',
               'href': '/market',
+              'label': 'Market',
               'icon': 'activity',
             },
           ],
-          'notificationClickEvent': 'TRADE_ORDER_NOTIFICATIONS_OPEN',
         },
         'events': {
-          'NOTIFY_CLICK': 'TRADE_ORDER_NOTIFICATIONS_OPEN',
           'SEARCH': 'TRADE_ORDER_SEARCH',
+          'NOTIFY_CLICK': 'TRADE_ORDER_NOTIFICATIONS_OPEN',
         },
       }),
       rebindInlineTraitEntity({
@@ -1233,46 +1233,47 @@ export function stdTradingDashboardTradeOrderOrbital(params: StdTradingDashboard
                   'render-ui',
                   'main',
                   {
+                    'type': 'stack',
                     'children': [
                       {
+                        'justify': 'between',
+                        'direction': 'horizontal',
                         'type': 'stack',
+                        'gap': 'md',
+                        'align': 'center',
                         'children': [
                           {
-                            'direction': 'horizontal',
-                            'type': 'stack',
                             'children': [
                               {
                                 'name': 'clipboard-list',
                                 'type': 'icon',
                               },
                               {
-                                'variant': 'h2',
-                                'type': 'typography',
                                 'content': 'Trade Orders',
+                                'type': 'typography',
+                                'variant': 'h2',
                               },
                             ],
-                            'align': 'center',
                             'gap': 'sm',
+                            'type': 'stack',
+                            'align': 'center',
+                            'direction': 'horizontal',
                           },
                           {
-                            'direction': 'horizontal',
-                            'gap': 'sm',
                             'children': [
                               {
-                                'type': 'button',
-                                'action': 'CREATE',
-                                'variant': 'primary',
                                 'label': 'New Order',
                                 'icon': 'plus',
+                                'variant': 'primary',
+                                'action': 'CREATE',
+                                'type': 'button',
                               },
                             ],
                             'type': 'stack',
+                            'gap': 'sm',
+                            'direction': 'horizontal',
                           },
                         ],
-                        'justify': 'between',
-                        'gap': 'md',
-                        'direction': 'horizontal',
-                        'align': 'center',
                       },
                       {
                         'type': 'divider',
@@ -1280,7 +1281,6 @@ export function stdTradingDashboardTradeOrderOrbital(params: StdTradingDashboard
                       '@trait.TradeOrderBrowseList',
                     ],
                     'gap': 'lg',
-                    'type': 'stack',
                     'direction': 'vertical',
                   },
                 ],
@@ -1295,6 +1295,7 @@ export function stdTradingDashboardTradeOrderOrbital(params: StdTradingDashboard
         'name': 'TradeOrderBrowseList',
         'linkedEntity': canonicalName,
         'config': {
+          'cols': 1,
           'fields': [
             {
               'variant': 'h3',
@@ -1306,39 +1307,38 @@ export function stdTradingDashboardTradeOrderOrbital(params: StdTradingDashboard
               'variant': 'badge',
             },
             {
-              'format': 'number',
-              'name': 'quantity',
               'variant': 'body',
+              'name': 'quantity',
+              'format': 'number',
             },
             {
-              'name': 'price',
               'format': 'currency',
               'variant': 'h4',
+              'name': 'price',
             },
             {
-              'name': 'status',
               'variant': 'badge',
+              'name': 'status',
             },
           ],
+          'gap': 'sm',
           'itemActions': [
             {
-              'variant': 'ghost',
               'event': 'VIEW',
               'label': 'View',
+              'variant': 'ghost',
             },
             {
               'variant': 'ghost',
-              'event': 'EDIT',
               'label': 'Edit',
+              'event': 'EDIT',
             },
             {
-              'label': 'Cancel',
               'event': 'DELETE',
+              'label': 'Cancel',
               'variant': 'danger',
             },
           ],
-          'cols': 1,
-          'gap': 'sm',
         },
         'listens': [
           {
@@ -1373,8 +1373,8 @@ export function stdTradingDashboardTradeOrderOrbital(params: StdTradingDashboard
         'linkedEntity': canonicalName,
         'config': {
           'title': 'New Order',
-          'icon': 'plus-circle',
           'mode': 'create',
+          'icon': 'plus-circle',
           'fields': [
             'symbol',
             'side',
@@ -1403,6 +1403,7 @@ export function stdTradingDashboardTradeOrderOrbital(params: StdTradingDashboard
         'linkedEntity': canonicalName,
         'config': {
           'icon': 'edit',
+          'title': 'Edit Order',
           'fields': [
             'symbol',
             'side',
@@ -1410,7 +1411,6 @@ export function stdTradingDashboardTradeOrderOrbital(params: StdTradingDashboard
             'price',
             'status',
           ],
-          'title': 'Edit Order',
           'mode': 'edit',
         },
         'events': {
@@ -1432,8 +1432,6 @@ export function stdTradingDashboardTradeOrderOrbital(params: StdTradingDashboard
         'name': 'TradeOrderView',
         'linkedEntity': canonicalName,
         'config': {
-          'icon': 'eye',
-          'mode': 'edit',
           'fields': [
             'symbol',
             'side',
@@ -1442,6 +1440,8 @@ export function stdTradingDashboardTradeOrderOrbital(params: StdTradingDashboard
             'status',
           ],
           'title': 'View Order',
+          'icon': 'eye',
+          'mode': 'edit',
         },
         'events': {
           'OPEN': 'VIEW',
@@ -1462,10 +1462,10 @@ export function stdTradingDashboardTradeOrderOrbital(params: StdTradingDashboard
         'name': 'TradeOrderDelete',
         'linkedEntity': canonicalName,
         'config': {
-          'alertMessage': 'Cancel this pending order?',
-          'title': 'Cancel Order',
           'confirmLabel': 'Cancel Order',
+          'title': 'Cancel Order',
           'icon': 'alert-triangle',
+          'alertMessage': 'Cancel this pending order?',
         },
         'events': {
           'REQUEST': 'DELETE',
@@ -1886,28 +1886,28 @@ export function stdTradingDashboardMarketFeedOrbital(params: StdTradingDashboard
         'name': 'MarketFeedAppLayout',
         'linkedEntity': canonicalName,
         'config': {
-          'contentTrait': '@trait.MarketFeedDisplay',
           'notificationClickEvent': 'MARKET_FEED_NOTIFICATIONS_OPEN',
+          'contentTrait': '@trait.MarketFeedDisplay',
           'appName': 'Trading Dashboard',
+          'notifications': [],
+          'searchEvent': 'MARKET_FEED_SEARCH',
           'navItems': [
             {
+              'label': 'Portfolio',
               'href': '/portfolio',
               'icon': 'layout-list',
-              'label': 'Portfolio',
             },
             {
               'label': 'Orders',
-              'href': '/orders',
               'icon': 'clipboard-list',
+              'href': '/orders',
             },
             {
+              'icon': 'activity',
               'label': 'Market',
               'href': '/market',
-              'icon': 'activity',
             },
           ],
-          'searchEvent': 'MARKET_FEED_SEARCH',
-          'notifications': [],
         },
         'events': {
           'SEARCH': 'MARKET_FEED_SEARCH',
@@ -1940,13 +1940,13 @@ export function stdTradingDashboardMarketFeedOrbital(params: StdTradingDashboard
                   'render-ui',
                   'main',
                   {
-                    'type': 'stack',
-                    'direction': 'vertical',
+                    'className': 'max-w-6xl mx-auto w-full p-4',
                     'children': [
                       '@trait.MarketFeedAsync',
                     ],
+                    'direction': 'vertical',
                     'gap': 'lg',
-                    'className': 'max-w-6xl mx-auto w-full p-4',
+                    'type': 'stack',
                   },
                 ],
               ],
@@ -2135,34 +2135,33 @@ export function stdTradingDashboardMarketFeedOrbital(params: StdTradingDashboard
                   'render-ui',
                   'main',
                   {
-                    'align': 'center',
                     'type': 'stack',
                     'children': [
                       {
                         'gap': 'md',
-                        'direction': 'horizontal',
                         'align': 'center',
                         'children': [
                           {
-                            'type': 'icon',
                             'name': 'activity',
+                            'type': 'icon',
                           },
                           {
+                            'type': 'typography',
                             'content': 'Market Feed',
                             'variant': 'h2',
-                            'type': 'typography',
                           },
                         ],
+                        'direction': 'horizontal',
                         'type': 'stack',
                       },
                       {
                         'type': 'divider',
                       },
                       {
-                        'variant': 'body',
-                        'type': 'typography',
                         'color': 'muted',
+                        'variant': 'body',
                         'content': 'Connect to live market data.',
+                        'type': 'typography',
                       },
                       {
                         'label': 'Start Stream',
@@ -2174,6 +2173,7 @@ export function stdTradingDashboardMarketFeedOrbital(params: StdTradingDashboard
                     ],
                     'direction': 'vertical',
                     'gap': 'lg',
+                    'align': 'center',
                   },
                 ],
               ],
@@ -2188,20 +2188,20 @@ export function stdTradingDashboardMarketFeedOrbital(params: StdTradingDashboard
                   'main',
                   {
                     'type': 'stack',
-                    'direction': 'vertical',
-                    'gap': 'lg',
                     'align': 'center',
+                    'gap': 'lg',
                     'children': [
                       {
-                        'message': 'Streaming ticks…',
                         'type': 'loading-state',
                         'title': 'Connecting to market feed…',
+                        'message': 'Streaming ticks…',
                       },
                       {
-                        'type': 'skeleton',
                         'variant': 'text',
+                        'type': 'skeleton',
                       },
                     ],
+                    'direction': 'vertical',
                   },
                 ],
               ],
@@ -2218,8 +2218,8 @@ export function stdTradingDashboardMarketFeedOrbital(params: StdTradingDashboard
                   '@payload.data',
                   {
                     'emit': {
-                      'success': 'MarketFeedSaved',
                       'failure': 'MarketFeedSaveFailed',
+                      'success': 'MarketFeedSaved',
                     },
                   },
                 ],
@@ -2227,30 +2227,34 @@ export function stdTradingDashboardMarketFeedOrbital(params: StdTradingDashboard
                   'render-ui',
                   'main',
                   {
-                    'gap': 'lg',
+                    'direction': 'vertical',
+                    'type': 'stack',
                     'children': [
                       {
+                        'type': 'stack',
+                        'justify': 'between',
                         'children': [
                           {
-                            'align': 'center',
+                            'direction': 'horizontal',
                             'gap': 'sm',
                             'type': 'stack',
+                            'align': 'center',
                             'children': [
                               {
                                 'name': 'activity',
                                 'type': 'icon',
                               },
                               {
-                                'variant': 'h2',
                                 'type': 'typography',
                                 'content': 'Live Market Feed',
+                                'variant': 'h2',
                               },
                             ],
-                            'direction': 'horizontal',
                           },
                           {
-                            'direction': 'horizontal',
                             'type': 'stack',
+                            'direction': 'horizontal',
+                            'gap': 'sm',
                             'children': [
                               {
                                 'type': 'alert',
@@ -2258,28 +2262,23 @@ export function stdTradingDashboardMarketFeedOrbital(params: StdTradingDashboard
                                 'message': 'Connected',
                               },
                               {
-                                'icon': 'rotate-ccw',
-                                'action': 'RESET',
                                 'type': 'button',
+                                'icon': 'rotate-ccw',
                                 'label': 'Reset',
+                                'action': 'RESET',
                                 'variant': 'ghost',
                               },
                             ],
-                            'gap': 'sm',
                           },
                         ],
-                        'type': 'stack',
-                        'direction': 'horizontal',
                         'gap': 'md',
+                        'direction': 'horizontal',
                         'align': 'center',
-                        'justify': 'between',
                       },
                       {
                         'type': 'divider',
                       },
                       {
-                        'gap': 'sm',
-                        'type': 'data-list',
                         'fields': [
                           {
                             'name': 'symbol',
@@ -2288,20 +2287,22 @@ export function stdTradingDashboardMarketFeedOrbital(params: StdTradingDashboard
                           },
                           {
                             'variant': 'h3',
-                            'format': 'currency',
                             'name': 'price',
+                            'format': 'currency',
                           },
                           {
-                            'name': 'change',
                             'format': 'currency',
+                            'name': 'change',
                             'variant': 'badge',
                           },
                           {
-                            'format': 'number',
-                            'variant': 'caption',
                             'name': 'volume',
+                            'variant': 'caption',
+                            'format': 'number',
                           },
                         ],
+                        'type': 'data-list',
+                        'gap': 'sm',
                         'entity': '@payload.data',
                         'variant': 'card',
                       },
@@ -2311,48 +2312,47 @@ export function stdTradingDashboardMarketFeedOrbital(params: StdTradingDashboard
                       {
                         'data': [
                           {
-                            'value': 100,
                             'date': '09:30',
+                            'value': 100,
                           },
                           {
-                            'value': 102,
                             'date': '10:00',
+                            'value': 102,
                           },
                           {
                             'date': '10:30',
                             'value': 99,
                           },
                           {
-                            'value': 105,
                             'date': '11:00',
+                            'value': 105,
                           },
                           {
-                            'value': 107,
                             'date': '11:30',
+                            'value': 107,
                           },
                           {
-                            'value': 104,
                             'date': '12:00',
+                            'value': 104,
                           },
                         ],
                         'type': 'line-chart',
                       },
                       {
-                        'type': 'chart-legend',
                         'items': [
                           {
-                            'label': 'Price',
                             'color': 'primary',
+                            'label': 'Price',
                           },
                           {
                             'label': 'Volume',
                             'color': 'muted',
                           },
                         ],
+                        'type': 'chart-legend',
                       },
                     ],
-                    'type': 'stack',
-                    'direction': 'vertical',
+                    'gap': 'lg',
                   },
                 ],
               ],
@@ -2367,39 +2367,39 @@ export function stdTradingDashboardMarketFeedOrbital(params: StdTradingDashboard
                   'main',
                   {
                     'type': 'stack',
-                    'direction': 'vertical',
-                    'gap': 'lg',
                     'align': 'center',
                     'children': [
                       {
-                        'message': 'Market feed disconnected.',
+                        'title': 'Stream Disconnected',
                         'onRetry': 'RETRY',
                         'type': 'error-state',
-                        'title': 'Stream Disconnected',
+                        'message': 'Market feed disconnected.',
                       },
                       {
-                        'direction': 'horizontal',
+                        'gap': 'sm',
+                        'justify': 'center',
                         'children': [
                           {
-                            'label': 'Retry',
-                            'variant': 'primary',
                             'icon': 'refresh-cw',
                             'type': 'button',
+                            'label': 'Retry',
                             'action': 'RETRY',
+                            'variant': 'primary',
                           },
                           {
-                            'type': 'button',
                             'action': 'RESET',
-                            'icon': 'rotate-ccw',
                             'label': 'Reset',
                             'variant': 'ghost',
+                            'icon': 'rotate-ccw',
+                            'type': 'button',
                           },
                         ],
-                        'justify': 'center',
                         'type': 'stack',
-                        'gap': 'sm',
+                        'direction': 'horizontal',
                       },
                     ],
+                    'direction': 'vertical',
+                    'gap': 'lg',
                   },
                 ],
               ],
@@ -2413,15 +2413,13 @@ export function stdTradingDashboardMarketFeedOrbital(params: StdTradingDashboard
                   'render-ui',
                   'main',
                   {
-                    'align': 'center',
-                    'type': 'stack',
-                    'direction': 'vertical',
                     'gap': 'lg',
                     'children': [
                       {
                         'direction': 'horizontal',
-                        'type': 'stack',
+                        'gap': 'md',
                         'align': 'center',
+                        'type': 'stack',
                         'children': [
                           {
                             'name': 'activity',
@@ -2429,29 +2427,31 @@ export function stdTradingDashboardMarketFeedOrbital(params: StdTradingDashboard
                           },
                           {
                             'type': 'typography',
-                            'variant': 'h2',
                             'content': 'Market Feed',
+                            'variant': 'h2',
                           },
                         ],
-                        'gap': 'md',
                       },
                       {
                         'type': 'divider',
                       },
                       {
                         'type': 'typography',
+                        'variant': 'body',
                         'color': 'muted',
                         'content': 'Connect to live market data.',
-                        'variant': 'body',
                       },
                       {
                         'action': 'START',
                         'icon': 'play',
-                        'variant': 'primary',
-                        'type': 'button',
                         'label': 'Start Stream',
+                        'type': 'button',
+                        'variant': 'primary',
                       },
                     ],
+                    'type': 'stack',
+                    'direction': 'vertical',
+                    'align': 'center',
                   },
                 ],
               ],
@@ -2465,45 +2465,45 @@ export function stdTradingDashboardMarketFeedOrbital(params: StdTradingDashboard
                   'render-ui',
                   'main',
                   {
-                    'direction': 'vertical',
-                    'gap': 'lg',
                     'children': [
                       {
-                        'type': 'stack',
-                        'gap': 'md',
-                        'align': 'center',
                         'direction': 'horizontal',
+                        'align': 'center',
                         'children': [
                           {
                             'type': 'icon',
                             'name': 'activity',
                           },
                           {
-                            'variant': 'h2',
                             'type': 'typography',
                             'content': 'Market Feed',
+                            'variant': 'h2',
                           },
                         ],
+                        'gap': 'md',
+                        'type': 'stack',
                       },
                       {
                         'type': 'divider',
                       },
                       {
-                        'content': 'Connect to live market data.',
                         'type': 'typography',
                         'color': 'muted',
+                        'content': 'Connect to live market data.',
                         'variant': 'body',
                       },
                       {
+                        'variant': 'primary',
                         'icon': 'play',
+                        'action': 'START',
                         'type': 'button',
                         'label': 'Start Stream',
-                        'action': 'START',
-                        'variant': 'primary',
                       },
                     ],
-                    'align': 'center',
                     'type': 'stack',
+                    'gap': 'lg',
+                    'direction': 'vertical',
+                    'align': 'center',
                   },
                 ],
               ],
@@ -2517,20 +2517,20 @@ export function stdTradingDashboardMarketFeedOrbital(params: StdTradingDashboard
                   'render-ui',
                   'main',
                   {
-                    'direction': 'vertical',
-                    'align': 'center',
                     'gap': 'lg',
+                    'align': 'center',
                     'children': [
                       {
+                        'message': 'Streaming ticks…',
                         'type': 'loading-state',
                         'title': 'Connecting to market feed…',
-                        'message': 'Streaming ticks…',
                       },
                       {
                         'type': 'skeleton',
                         'variant': 'text',
                       },
                     ],
+                    'direction': 'vertical',
                     'type': 'stack',
                   },
                 ],

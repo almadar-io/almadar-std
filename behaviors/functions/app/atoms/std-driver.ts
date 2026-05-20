@@ -105,9 +105,9 @@ export interface StdDriverDriverLoadFailedPayload {
 export interface StdDriverConfig {
   /** Default: `"Drivers"` */
   title?: string;
-  /** Default: `[{"label":"Name","name":"name","variant":"caption"},{"variant":"caption","name":"licenseNumber","label":"License"},{"name":"licenseClass","variant":"badge","label":"Class"},{"name":"licenseExpiresAt","variant":"caption","label":"Expires"},{"label":"Status","variant":"badge","name":"status"},{"variant":"caption","name":"assignedVehicleId","label":"Vehicle"}]` */
+  /** Default: `[{"variant":"caption","name":"name","label":"Name"},{"name":"licenseNumber","label":"License","variant":"caption"},{"name":"licenseClass","label":"Class","variant":"badge"},{"name":"licenseExpiresAt","label":"Expires","variant":"caption"},{"label":"Status","variant":"badge","name":"status"},{"name":"assignedVehicleId","label":"Vehicle","variant":"caption"}]` */
   fields?: TraitConfig[];
-  /** Default: `[{"event":"OPEN_DRIVER","variant":"primary","label":"Open","icon":"arrow-right"},{"label":"Suspend","event":"SUSPEND","variant":"danger"}]` */
+  /** Default: `[{"label":"Open","event":"OPEN_DRIVER","icon":"arrow-right","variant":"primary"},{"variant":"danger","label":"Suspend","event":"SUSPEND"}]` */
   itemActions?: TraitConfig[];
 }
 

@@ -222,18 +222,16 @@ export function stdLegalCaseMatterOrbital(params: StdLegalCaseMatterOrbitalParam
         'ref': 'AppShell.traits.AppLayout',
         'name': 'MatterAppLayout',
         'config': {
-          'appName': 'Legal Case',
-          'contentTrait': '@trait.MatterCatalog',
           'navItems': [
             {
-              'href': '/matters',
               'label': 'Matters',
               'icon': 'scale',
+              'href': '/matters',
             },
             {
-              'icon': 'folder',
-              'href': '/cases',
               'label': 'Cases',
+              'href': '/cases',
+              'icon': 'folder',
             },
             {
               'label': 'Time',
@@ -241,18 +239,20 @@ export function stdLegalCaseMatterOrbital(params: StdLegalCaseMatterOrbitalParam
               'href': '/timesheet',
             },
             {
+              'label': 'Deadlines',
               'href': '/deadlines',
               'icon': 'calendar',
-              'label': 'Deadlines',
             },
           ],
-          'searchEvent': 'MATTER_SEARCH',
-          'notificationClickEvent': 'MATTER_NOTIFICATIONS_OPEN',
           'notifications': [],
+          'searchEvent': 'MATTER_SEARCH',
+          'appName': 'Legal Case',
+          'notificationClickEvent': 'MATTER_NOTIFICATIONS_OPEN',
+          'contentTrait': '@trait.MatterCatalog',
         },
         'events': {
-          'SEARCH': 'MATTER_SEARCH',
           'NOTIFY_CLICK': 'MATTER_NOTIFICATIONS_OPEN',
+          'SEARCH': 'MATTER_SEARCH',
         },
       }),
       rebindInlineTraitEntity({
@@ -335,60 +335,61 @@ export function stdLegalCaseMatterOrbital(params: StdLegalCaseMatterOrbitalParam
                   'render-ui',
                   'main',
                   {
+                    'direction': 'vertical',
                     'gap': 'lg',
                     'children': [
                       {
-                        'align': 'center',
+                        'direction': 'horizontal',
                         'type': 'stack',
+                        'gap': 'md',
+                        'justify': 'between',
+                        'align': 'center',
                         'children': [
                           {
-                            'gap': 'sm',
-                            'align': 'center',
                             'children': [
                               {
                                 'type': 'icon',
                                 'name': 'scale',
                               },
                               {
+                                'content': 'Matters',
                                 'type': 'typography',
                                 'variant': 'h2',
-                                'content': 'Matters',
                               },
                             ],
-                            'type': 'stack',
-                            'direction': 'horizontal',
-                          },
-                          {
-                            'children': [
-                              {
-                                'action': 'CREATE',
-                                'type': 'button',
-                                'label': 'New Matter',
-                                'variant': 'primary',
-                                'icon': 'plus',
-                              },
-                            ],
+                            'align': 'center',
                             'gap': 'sm',
                             'type': 'stack',
                             'direction': 'horizontal',
                           },
+                          {
+                            'gap': 'sm',
+                            'type': 'stack',
+                            'children': [
+                              {
+                                'label': 'New Matter',
+                                'icon': 'plus',
+                                'action': 'CREATE',
+                                'type': 'button',
+                                'variant': 'primary',
+                              },
+                            ],
+                            'direction': 'horizontal',
+                          },
                         ],
-                        'direction': 'horizontal',
-                        'justify': 'between',
-                        'gap': 'md',
                       },
                       {
                         'type': 'divider',
                       },
                       {
+                        'align': 'center',
+                        'gap': 'md',
+                        'type': 'stack',
+                        'direction': 'horizontal',
                         'children': [
                           '@trait.MatterSearch',
                           '@trait.MatterFilter',
                         ],
-                        'align': 'center',
-                        'type': 'stack',
-                        'direction': 'horizontal',
-                        'gap': 'md',
                       },
                       '@trait.MatterStats',
                       '@trait.MatterGraphs',
@@ -397,7 +398,6 @@ export function stdLegalCaseMatterOrbital(params: StdLegalCaseMatterOrbitalParam
                       },
                       '@trait.MatterBrowseList',
                     ],
-                    'direction': 'vertical',
                     'type': 'stack',
                   },
                 ],
@@ -417,34 +417,34 @@ export function stdLegalCaseMatterOrbital(params: StdLegalCaseMatterOrbitalParam
                   'render-ui',
                   'main',
                   {
-                    'direction': 'vertical',
+                    'gap': 'md',
+                    'align': 'center',
                     'className': 'py-8',
                     'children': [
                       {
-                        'name': 'bell',
                         'type': 'icon',
+                        'name': 'bell',
                       },
                       {
+                        'type': 'typography',
                         'content': 'No notifications',
                         'variant': 'h3',
-                        'type': 'typography',
                       },
                       {
-                        'color': 'muted',
                         'variant': 'caption',
                         'content': 'You\'re all caught up.',
+                        'color': 'muted',
                         'type': 'typography',
                       },
                       {
+                        'label': 'Back to matters',
+                        'variant': 'ghost',
                         'type': 'button',
                         'action': 'INIT',
-                        'variant': 'ghost',
-                        'label': 'Back to matters',
                       },
                     ],
-                    'align': 'center',
                     'type': 'stack',
-                    'gap': 'md',
+                    'direction': 'vertical',
                   },
                 ],
               ],
@@ -457,17 +457,18 @@ export function stdLegalCaseMatterOrbital(params: StdLegalCaseMatterOrbitalParam
         'ref': 'Search.traits.SearchResultSearch',
         'name': 'MatterSearch',
         'config': {
-          'placeholder': 'Search matters…',
           'event': 'MATTER_SEARCH',
+          'placeholder': 'Search matters…',
         },
       }),
       makeTraitRef({
         'ref': 'Filter.traits.FilterTargetFilter',
         'name': 'MatterFilter',
         'config': {
+          'event': 'MATTER_FILTER',
           'filters': [
             {
-              'field': 'practiceArea',
+              'filterType': 'select',
               'options': [
                 'litigation',
                 'transactional',
@@ -477,12 +478,12 @@ export function stdLegalCaseMatterOrbital(params: StdLegalCaseMatterOrbitalParam
                 'family',
                 'other',
               ],
+              'field': 'practiceArea',
               'label': 'Practice',
-              'filterType': 'select',
             },
             {
-              'label': 'Status',
               'field': 'status',
+              'label': 'Status',
               'options': [
                 'open',
                 'active',
@@ -493,25 +494,24 @@ export function stdLegalCaseMatterOrbital(params: StdLegalCaseMatterOrbitalParam
               'filterType': 'select',
             },
           ],
-          'event': 'MATTER_FILTER',
         },
       }),
       makeTraitRef({
         'ref': 'Stats.traits.StatsItemStats',
         'name': 'MatterStats',
         'config': {
-          'title': 'Matters',
           'metrics': [
             {
-              'aggregation': 'count',
-              'format': 'number',
-              'icon': 'scale',
-              'label': 'Total',
               'variant': 'primary',
+              'label': 'Total',
+              'aggregation': 'count',
+              'icon': 'scale',
+              'format': 'number',
             },
             {
-              'variant': 'warning',
-              'aggregation': 'count',
+              'label': 'Open',
+              'icon': 'circle',
+              'format': 'number',
               'filter': [
                 'fn',
                 'row',
@@ -521,12 +521,12 @@ export function stdLegalCaseMatterOrbital(params: StdLegalCaseMatterOrbitalParam
                   'open',
                 ],
               ],
-              'label': 'Open',
-              'format': 'number',
-              'icon': 'circle',
+              'variant': 'warning',
+              'aggregation': 'count',
             },
             {
-              'variant': 'success',
+              'format': 'number',
+              'label': 'Active',
               'filter': [
                 'fn',
                 'row',
@@ -536,17 +536,15 @@ export function stdLegalCaseMatterOrbital(params: StdLegalCaseMatterOrbitalParam
                   'active',
                 ],
               ],
-              'aggregation': 'count',
               'icon': 'check-circle',
-              'format': 'number',
-              'label': 'Active',
+              'aggregation': 'count',
+              'variant': 'success',
             },
             {
-              'icon': 'archive',
-              'variant': 'info',
-              'label': 'Closed',
               'aggregation': 'count',
+              'icon': 'archive',
               'format': 'number',
+              'variant': 'info',
               'filter': [
                 'fn',
                 'row',
@@ -556,8 +554,10 @@ export function stdLegalCaseMatterOrbital(params: StdLegalCaseMatterOrbitalParam
                   'closed',
                 ],
               ],
+              'label': 'Closed',
             },
           ],
+          'title': 'Matters',
         },
         'listens': [
           {
@@ -574,13 +574,13 @@ export function stdLegalCaseMatterOrbital(params: StdLegalCaseMatterOrbitalParam
         'ref': 'Graphs.traits.GraphItemGraph',
         'name': 'MatterGraphs',
         'config': {
-          'categoryField': 'practiceArea',
           'aggregation': 'count',
-          'subtitle': 'Caseload composition across practice areas',
+          'categoryField': 'practiceArea',
           'height': 240,
-          'chartType': 'bar',
           'showLegend': false,
           'title': 'Matters by Practice Area',
+          'subtitle': 'Caseload composition across practice areas',
+          'chartType': 'bar',
         },
         'listens': [
           {
@@ -598,10 +598,29 @@ export function stdLegalCaseMatterOrbital(params: StdLegalCaseMatterOrbitalParam
         'name': 'MatterBrowseList',
         'linkedEntity': canonicalName,
         'config': {
+          'itemActions': [
+            {
+              'event': 'VIEW',
+              'variant': 'ghost',
+              'label': 'View',
+            },
+            {
+              'event': 'EDIT',
+              'label': 'Edit',
+              'variant': 'ghost',
+            },
+            {
+              'label': 'Delete',
+              'event': 'DELETE',
+              'variant': 'danger',
+            },
+          ],
+          'cols': 1,
+          'gap': 'sm',
           'fields': [
             {
-              'variant': 'caption',
               'name': 'matterNumber',
+              'variant': 'caption',
               'icon': 'hash',
             },
             {
@@ -609,12 +628,12 @@ export function stdLegalCaseMatterOrbital(params: StdLegalCaseMatterOrbitalParam
               'name': 'title',
             },
             {
-              'name': 'clientName',
               'variant': 'body',
+              'name': 'clientName',
             },
             {
-              'variant': 'badge',
               'name': 'practiceArea',
+              'variant': 'badge',
             },
             {
               'name': 'leadAttorney',
@@ -625,25 +644,6 @@ export function stdLegalCaseMatterOrbital(params: StdLegalCaseMatterOrbitalParam
               'variant': 'badge',
             },
           ],
-          'itemActions': [
-            {
-              'label': 'View',
-              'event': 'VIEW',
-              'variant': 'ghost',
-            },
-            {
-              'variant': 'ghost',
-              'label': 'Edit',
-              'event': 'EDIT',
-            },
-            {
-              'variant': 'danger',
-              'label': 'Delete',
-              'event': 'DELETE',
-            },
-          ],
-          'gap': 'sm',
-          'cols': 1,
         },
         'listens': [
           {
@@ -694,8 +694,6 @@ export function stdLegalCaseMatterOrbital(params: StdLegalCaseMatterOrbitalParam
         'linkedEntity': canonicalName,
         'config': {
           'mode': 'create',
-          'title': 'New Matter',
-          'icon': 'plus-circle',
           'fields': [
             'matterNumber',
             'title',
@@ -706,6 +704,8 @@ export function stdLegalCaseMatterOrbital(params: StdLegalCaseMatterOrbitalParam
             'openedAt',
             'notes',
           ],
+          'icon': 'plus-circle',
+          'title': 'New Matter',
         },
         'events': {
           'OPEN': 'CREATE',
@@ -726,8 +726,6 @@ export function stdLegalCaseMatterOrbital(params: StdLegalCaseMatterOrbitalParam
         'name': 'MatterEdit',
         'linkedEntity': canonicalName,
         'config': {
-          'icon': 'edit',
-          'title': 'Edit Matter',
           'mode': 'edit',
           'fields': [
             'matterNumber',
@@ -740,6 +738,8 @@ export function stdLegalCaseMatterOrbital(params: StdLegalCaseMatterOrbitalParam
             'closedAt',
             'notes',
           ],
+          'icon': 'edit',
+          'title': 'Edit Matter',
         },
         'events': {
           'OPEN': 'EDIT',
@@ -761,7 +761,6 @@ export function stdLegalCaseMatterOrbital(params: StdLegalCaseMatterOrbitalParam
         'linkedEntity': canonicalName,
         'config': {
           'mode': 'edit',
-          'title': 'View Matter',
           'fields': [
             'matterNumber',
             'title',
@@ -773,6 +772,7 @@ export function stdLegalCaseMatterOrbital(params: StdLegalCaseMatterOrbitalParam
             'closedAt',
             'notes',
           ],
+          'title': 'View Matter',
           'icon': 'eye',
         },
         'events': {
@@ -794,14 +794,14 @@ export function stdLegalCaseMatterOrbital(params: StdLegalCaseMatterOrbitalParam
         'name': 'MatterDelete',
         'linkedEntity': canonicalName,
         'config': {
-          'title': 'Delete Matter',
-          'alertMessage': 'This action cannot be undone.',
-          'confirmLabel': 'Delete',
           'icon': 'alert-triangle',
+          'alertMessage': 'This action cannot be undone.',
+          'title': 'Delete Matter',
+          'confirmLabel': 'Delete',
         },
         'events': {
-          'REQUEST': 'DELETE',
           'CONFIRM': 'CONFIRM_DELETE',
+          'REQUEST': 'DELETE',
         },
         'listens': [
           {
@@ -1267,33 +1267,33 @@ export function stdLegalCaseBillableHourPanelOrbital(params: StdLegalCaseBillabl
         'ref': 'AppShell.traits.AppLayout',
         'name': 'BillableHourAppLayout',
         'config': {
-          'notificationClickEvent': 'BILLABLE_HOUR_NOTIFICATIONS_OPEN',
-          'appName': 'Legal Case',
+          'searchEvent': 'BILLABLE_HOUR_SEARCH',
+          'notifications': [],
           'contentTrait': '@trait.BillableHourPanel',
           'navItems': [
             {
-              'href': '/matters',
-              'icon': 'scale',
               'label': 'Matters',
+              'icon': 'scale',
+              'href': '/matters',
             },
             {
+              'icon': 'folder',
               'href': '/cases',
               'label': 'Cases',
-              'icon': 'folder',
             },
             {
-              'href': '/timesheet',
-              'label': 'Time',
               'icon': 'clock',
+              'label': 'Time',
+              'href': '/timesheet',
             },
             {
-              'label': 'Deadlines',
               'href': '/deadlines',
+              'label': 'Deadlines',
               'icon': 'calendar',
             },
           ],
-          'notifications': [],
-          'searchEvent': 'BILLABLE_HOUR_SEARCH',
+          'notificationClickEvent': 'BILLABLE_HOUR_NOTIFICATIONS_OPEN',
+          'appName': 'Legal Case',
         },
         'events': {
           'SEARCH': 'BILLABLE_HOUR_SEARCH',
@@ -1326,16 +1326,15 @@ export function stdLegalCaseBillableHourPanelOrbital(params: StdLegalCaseBillabl
                   'render-ui',
                   'main',
                   {
+                    'gap': 'lg',
+                    'type': 'stack',
                     'children': [
                       {
-                        'type': 'stack',
-                        'gap': 'sm',
                         'direction': 'horizontal',
-                        'align': 'center',
                         'children': [
                           {
-                            'type': 'icon',
                             'name': 'clock',
+                            'type': 'icon',
                           },
                           {
                             'variant': 'h2',
@@ -1343,6 +1342,9 @@ export function stdLegalCaseBillableHourPanelOrbital(params: StdLegalCaseBillabl
                             'type': 'typography',
                           },
                         ],
+                        'gap': 'sm',
+                        'align': 'center',
+                        'type': 'stack',
                       },
                       {
                         'type': 'divider',
@@ -1350,9 +1352,7 @@ export function stdLegalCaseBillableHourPanelOrbital(params: StdLegalCaseBillabl
                       '@trait.BillableHourTimesheetView',
                     ],
                     'className': 'max-w-6xl mx-auto w-full p-4',
-                    'type': 'stack',
                     'direction': 'vertical',
-                    'gap': 'lg',
                   },
                 ],
               ],
@@ -1605,7 +1605,6 @@ export function stdLegalCaseCourtDeadlinePanelOrbital(params: StdLegalCaseCourtD
         'ref': 'AppShell.traits.AppLayout',
         'name': 'CourtDeadlineAppLayout',
         'config': {
-          'searchEvent': 'COURT_DEADLINE_SEARCH',
           'navItems': [
             {
               'label': 'Matters',
@@ -1623,11 +1622,12 @@ export function stdLegalCaseCourtDeadlinePanelOrbital(params: StdLegalCaseCourtD
               'icon': 'clock',
             },
             {
-              'label': 'Deadlines',
-              'href': '/deadlines',
               'icon': 'calendar',
+              'href': '/deadlines',
+              'label': 'Deadlines',
             },
           ],
+          'searchEvent': 'COURT_DEADLINE_SEARCH',
           'notificationClickEvent': 'COURT_DEADLINE_NOTIFICATIONS_OPEN',
           'notifications': [],
           'contentTrait': '@trait.CourtDeadlinePanel',
@@ -1664,33 +1664,33 @@ export function stdLegalCaseCourtDeadlinePanelOrbital(params: StdLegalCaseCourtD
                   'render-ui',
                   'main',
                   {
-                    'direction': 'vertical',
-                    'gap': 'lg',
-                    'type': 'stack',
-                    'className': 'max-w-6xl mx-auto w-full p-4',
                     'children': [
                       {
                         'align': 'center',
-                        'type': 'stack',
-                        'gap': 'sm',
                         'children': [
                           {
                             'name': 'calendar',
                             'type': 'icon',
                           },
                           {
-                            'type': 'typography',
                             'variant': 'h2',
                             'content': 'Court Deadlines',
+                            'type': 'typography',
                           },
                         ],
                         'direction': 'horizontal',
+                        'type': 'stack',
+                        'gap': 'sm',
                       },
                       {
                         'type': 'divider',
                       },
                       '@trait.CourtDeadlineDocketView',
                     ],
+                    'type': 'stack',
+                    'direction': 'vertical',
+                    'gap': 'lg',
+                    'className': 'max-w-6xl mx-auto w-full p-4',
                   },
                 ],
               ],
@@ -1945,37 +1945,37 @@ export function stdLegalCaseMatterPanelOrbital(params: StdLegalCaseMatterPanelOr
         'ref': 'AppShell.traits.AppLayout',
         'name': 'MatterCaseAppLayout',
         'config': {
+          'appName': 'Legal Case',
+          'contentTrait': '@trait.MatterCasePanel',
           'navItems': [
             {
-              'icon': 'scale',
               'href': '/matters',
+              'icon': 'scale',
               'label': 'Matters',
             },
             {
-              'label': 'Cases',
               'href': '/cases',
+              'label': 'Cases',
               'icon': 'folder',
             },
             {
-              'label': 'Time',
-              'href': '/timesheet',
               'icon': 'clock',
+              'href': '/timesheet',
+              'label': 'Time',
             },
             {
               'href': '/deadlines',
-              'icon': 'calendar',
               'label': 'Deadlines',
+              'icon': 'calendar',
             },
           ],
           'searchEvent': 'MATTER_CASE_SEARCH',
-          'notifications': [],
           'notificationClickEvent': 'MATTER_CASE_NOTIFICATIONS_OPEN',
-          'contentTrait': '@trait.MatterCasePanel',
-          'appName': 'Legal Case',
+          'notifications': [],
         },
         'events': {
-          'NOTIFY_CLICK': 'MATTER_CASE_NOTIFICATIONS_OPEN',
           'SEARCH': 'MATTER_CASE_SEARCH',
+          'NOTIFY_CLICK': 'MATTER_CASE_NOTIFICATIONS_OPEN',
         },
       }),
       rebindInlineTraitEntity({
@@ -2004,33 +2004,33 @@ export function stdLegalCaseMatterPanelOrbital(params: StdLegalCaseMatterPanelOr
                   'render-ui',
                   'main',
                   {
+                    'type': 'stack',
                     'gap': 'lg',
-                    'direction': 'vertical',
+                    'className': 'max-w-6xl mx-auto w-full p-4',
                     'children': [
                       {
-                        'direction': 'horizontal',
+                        'align': 'center',
                         'type': 'stack',
+                        'direction': 'horizontal',
+                        'gap': 'sm',
                         'children': [
                           {
                             'name': 'folder',
                             'type': 'icon',
                           },
                           {
+                            'type': 'typography',
                             'content': 'Cases',
                             'variant': 'h2',
-                            'type': 'typography',
                           },
                         ],
-                        'align': 'center',
-                        'gap': 'sm',
                       },
                       {
                         'type': 'divider',
                       },
                       '@trait.MatterCaseDocketView',
                     ],
-                    'type': 'stack',
-                    'className': 'max-w-6xl mx-auto w-full p-4',
+                    'direction': 'vertical',
                   },
                 ],
               ],

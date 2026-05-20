@@ -97,12 +97,12 @@ export interface StdEventEventLoadFailedPayload {
  * without modifying its state-machine topology.
  */
 export interface StdEventConfig {
+  /** Default: `[{"variant":"primary","event":"OPEN_EVENT","label":"Open","icon":"arrow-right"},{"label":"Cancel","icon":"x","event":"CANCEL","variant":"danger"}]` */
+  itemActions?: TraitConfig[];
   /** Default: `"Events"` */
   title?: string;
-  /** Default: `[{"name":"name","label":"Name","variant":"caption"},{"name":"venue","variant":"caption","label":"Venue"},{"variant":"caption","name":"startsAt","label":"Starts"},{"name":"endsAt","label":"Ends","variant":"caption"},{"variant":"caption","name":"capacity","label":"Capacity"},{"label":"Status","name":"status","variant":"badge"}]` */
+  /** Default: `[{"name":"name","label":"Name","variant":"caption"},{"variant":"caption","name":"venue","label":"Venue"},{"name":"startsAt","label":"Starts","variant":"caption"},{"name":"endsAt","label":"Ends","variant":"caption"},{"name":"capacity","variant":"caption","label":"Capacity"},{"name":"status","label":"Status","variant":"badge"}]` */
   fields?: TraitConfig[];
-  /** Default: `[{"label":"Open","event":"OPEN_EVENT","variant":"primary","icon":"arrow-right"},{"variant":"danger","icon":"x","label":"Cancel","event":"CANCEL"}]` */
-  itemActions?: TraitConfig[];
 }
 
 /**

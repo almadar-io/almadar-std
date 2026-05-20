@@ -31,8 +31,8 @@ const ALIAS = 'RealtimeChat';
  * without modifying its state-machine topology.
  */
 export interface StdRealtimeChatConfig {
-  navItems?: TraitConfig;
   notifications?: TraitConfig;
+  navItems?: TraitConfig;
 }
 
 /**
@@ -168,32 +168,32 @@ export function stdRealtimeChatChatMessageOrbital(params: StdRealtimeChatChatMes
         'ref': 'AppShell.traits.AppLayout',
         'name': 'ChatAppLayout',
         'config': {
+          'notifications': [],
+          'searchEvent': 'CHAT_SEARCH',
           'contentTrait': '@trait.ChatRoom',
-          'appName': 'Realtime Chat',
           'navItems': [
             {
-              'icon': 'message-circle',
               'label': 'Chat',
               'href': '/chat',
+              'icon': 'message-circle',
             },
             {
-              'label': 'Channels',
               'icon': 'hash',
               'href': '/channels',
+              'label': 'Channels',
             },
             {
-              'label': 'Online',
-              'href': '/online',
               'icon': 'users',
+              'href': '/online',
+              'label': 'Online',
             },
           ],
-          'searchEvent': 'CHAT_SEARCH',
-          'notifications': [],
+          'appName': 'Realtime Chat',
           'notificationClickEvent': 'CHAT_NOTIFICATIONS_OPEN',
         },
         'events': {
-          'NOTIFY_CLICK': 'CHAT_NOTIFICATIONS_OPEN',
           'SEARCH': 'CHAT_SEARCH',
+          'NOTIFY_CLICK': 'CHAT_NOTIFICATIONS_OPEN',
         },
       }),
       rebindInlineTraitEntity({
@@ -276,48 +276,48 @@ export function stdRealtimeChatChatMessageOrbital(params: StdRealtimeChatChatMes
                   'render-ui',
                   'main',
                   {
-                    'type': 'stack',
                     'gap': 'lg',
+                    'direction': 'vertical',
                     'children': [
                       {
                         'type': 'stack',
-                        'gap': 'md',
-                        'direction': 'horizontal',
-                        'justify': 'between',
                         'align': 'center',
+                        'direction': 'horizontal',
+                        'gap': 'md',
                         'children': [
                           {
-                            'type': 'stack',
                             'align': 'center',
+                            'type': 'stack',
                             'gap': 'sm',
+                            'direction': 'horizontal',
                             'children': [
                               {
-                                'type': 'icon',
                                 'name': 'message-circle',
+                                'type': 'icon',
                               },
                               {
                                 'content': 'Chat',
-                                'variant': 'h2',
                                 'type': 'typography',
+                                'variant': 'h2',
                               },
                             ],
-                            'direction': 'horizontal',
                           },
                           {
                             'type': 'stack',
-                            'direction': 'horizontal',
+                            'gap': 'sm',
                             'children': [
                               {
+                                'variant': 'primary',
                                 'icon': 'plus',
+                                'type': 'button',
                                 'label': 'New Channel',
                                 'action': 'CREATE_CHANNEL',
-                                'variant': 'primary',
-                                'type': 'button',
                               },
                             ],
-                            'gap': 'sm',
+                            'direction': 'horizontal',
                           },
                         ],
+                        'justify': 'between',
                       },
                       {
                         'type': 'divider',
@@ -329,7 +329,7 @@ export function stdRealtimeChatChatMessageOrbital(params: StdRealtimeChatChatMes
                       },
                       '@trait.ChatMessageBrowse',
                     ],
-                    'direction': 'vertical',
+                    'type': 'stack',
                   },
                 ],
               ],
@@ -348,15 +348,12 @@ export function stdRealtimeChatChatMessageOrbital(params: StdRealtimeChatChatMes
                   'render-ui',
                   'main',
                   {
-                    'type': 'stack',
-                    'direction': 'vertical',
                     'className': 'py-8',
-                    'align': 'center',
-                    'gap': 'md',
+                    'type': 'stack',
                     'children': [
                       {
-                        'type': 'icon',
                         'name': 'bell',
+                        'type': 'icon',
                       },
                       {
                         'type': 'typography',
@@ -364,18 +361,21 @@ export function stdRealtimeChatChatMessageOrbital(params: StdRealtimeChatChatMes
                         'variant': 'h3',
                       },
                       {
-                        'content': 'You\'re all caught up.',
                         'color': 'muted',
                         'type': 'typography',
+                        'content': 'You\'re all caught up.',
                         'variant': 'caption',
                       },
                       {
-                        'type': 'button',
+                        'action': 'INIT',
                         'label': 'Back to chat',
                         'variant': 'ghost',
-                        'action': 'INIT',
+                        'type': 'button',
                       },
                     ],
+                    'align': 'center',
+                    'direction': 'vertical',
+                    'gap': 'md',
                   },
                 ],
               ],
@@ -396,30 +396,30 @@ export function stdRealtimeChatChatMessageOrbital(params: StdRealtimeChatChatMes
         'ref': 'Stats.traits.StatsItemStats',
         'name': 'ChatStats',
         'config': {
-          'title': 'Chat Activity',
           'metrics': [
             {
-              'variant': 'primary',
               'label': 'Messages',
               'format': 'number',
-              'aggregation': 'count',
               'icon': 'message-circle',
+              'aggregation': 'count',
+              'variant': 'primary',
             },
             {
+              'format': 'number',
               'label': 'Active Channels',
-              'icon': 'hash',
-              'format': 'number',
-              'aggregation': 'count',
               'variant': 'info',
+              'icon': 'hash',
+              'aggregation': 'count',
             },
             {
-              'aggregation': 'count',
-              'variant': 'success',
-              'format': 'number',
-              'icon': 'user',
               'label': 'Top Author',
+              'aggregation': 'count',
+              'format': 'number',
+              'variant': 'success',
+              'icon': 'user',
             },
           ],
+          'title': 'Chat Activity',
         },
         'listens': [
           {
@@ -590,8 +590,8 @@ export function stdRealtimeChatChatMessageOrbital(params: StdRealtimeChatChatMes
                   'ChatMessage',
                   {
                     'emit': {
-                      'success': 'ChatMessageLoaded',
                       'failure': 'ChatMessageLoadFailed',
+                      'success': 'ChatMessageLoaded',
                     },
                   },
                 ],
@@ -599,22 +599,22 @@ export function stdRealtimeChatChatMessageOrbital(params: StdRealtimeChatChatMes
                   'render-ui',
                   'main',
                   {
+                    'type': 'stack',
                     'direction': 'vertical',
+                    'className': 'py-12',
                     'children': [
                       {
                         'type': 'spinner',
                       },
                       {
-                        'type': 'typography',
-                        'color': 'muted',
                         'content': 'Loading…',
                         'variant': 'caption',
+                        'color': 'muted',
+                        'type': 'typography',
                       },
                     ],
-                    'type': 'stack',
-                    'gap': 'md',
-                    'className': 'py-12',
                     'align': 'center',
+                    'gap': 'md',
                   },
                 ],
               ],
@@ -629,8 +629,8 @@ export function stdRealtimeChatChatMessageOrbital(params: StdRealtimeChatChatMes
                   'ChatMessage',
                   {
                     'emit': {
-                      'success': 'ChatMessageLoaded',
                       'failure': 'ChatMessageLoadFailed',
+                      'success': 'ChatMessageLoaded',
                     },
                   },
                 ],
@@ -645,10 +645,19 @@ export function stdRealtimeChatChatMessageOrbital(params: StdRealtimeChatChatMes
                   'render-ui',
                   'main',
                   {
-                    'type': 'stack',
                     'children': [
                       {
-                        'senderField': 'sender',
+                        'variant': 'message',
+                        'gap': 'sm',
+                        'entity': '@payload.data',
+                        'type': 'data-list',
+                        'itemActions': [
+                          {
+                            'event': 'VIEW',
+                            'label': 'View',
+                            'variant': 'ghost',
+                          },
+                        ],
                         'fields': [
                           {
                             'name': 'sender',
@@ -659,41 +668,32 @@ export function stdRealtimeChatChatMessageOrbital(params: StdRealtimeChatChatMes
                             'variant': 'body',
                           },
                           {
-                            'format': 'date',
                             'name': 'timestamp',
+                            'format': 'date',
                             'variant': 'caption',
                           },
                         ],
-                        'gap': 'sm',
-                        'type': 'data-list',
-                        'itemActions': [
-                          {
-                            'event': 'VIEW',
-                            'label': 'View',
-                            'variant': 'ghost',
-                          },
-                        ],
-                        'entity': '@payload.data',
-                        'variant': 'message',
+                        'senderField': 'sender',
                       },
                       {
-                        'children': [
-                          {
-                            'label': 'Compose',
-                            'icon': 'edit',
-                            'type': 'button',
-                            'variant': 'primary',
-                            'action': 'COMPOSE',
-                          },
-                        ],
-                        'direction': 'horizontal',
+                        'justify': 'end',
                         'gap': 'sm',
                         'type': 'stack',
-                        'justify': 'end',
+                        'direction': 'horizontal',
+                        'children': [
+                          {
+                            'icon': 'edit',
+                            'type': 'button',
+                            'action': 'COMPOSE',
+                            'label': 'Compose',
+                            'variant': 'primary',
+                          },
+                        ],
                       },
                     ],
-                    'gap': 'md',
                     'direction': 'vertical',
+                    'gap': 'md',
+                    'type': 'stack',
                   },
                 ],
               ],
@@ -707,14 +707,14 @@ export function stdRealtimeChatChatMessageOrbital(params: StdRealtimeChatChatMes
                   'render-ui',
                   'main',
                   {
-                    'type': 'stack',
                     'direction': 'vertical',
+                    'gap': 'md',
                     'className': 'py-12',
                     'children': [
                       {
-                        'type': 'icon',
-                        'name': 'alert-triangle',
                         'color': 'destructive',
+                        'name': 'alert-triangle',
+                        'type': 'icon',
                       },
                       {
                         'variant': 'h3',
@@ -722,21 +722,21 @@ export function stdRealtimeChatChatMessageOrbital(params: StdRealtimeChatChatMes
                         'type': 'typography',
                       },
                       {
-                        'type': 'typography',
-                        'content': '@payload.error',
-                        'variant': 'body',
                         'color': 'muted',
+                        'content': '@payload.error',
+                        'type': 'typography',
+                        'variant': 'body',
                       },
                       {
                         'type': 'button',
-                        'variant': 'primary',
                         'label': 'Retry',
+                        'variant': 'primary',
                         'icon': 'rotate-ccw',
                         'action': 'INIT',
                       },
                     ],
+                    'type': 'stack',
                     'align': 'center',
-                    'gap': 'md',
                   },
                 ],
               ],
@@ -750,7 +750,6 @@ export function stdRealtimeChatChatMessageOrbital(params: StdRealtimeChatChatMes
         'name': 'ChatMessageCompose',
         'linkedEntity': canonicalName,
         'config': {
-          'title': 'New Message',
           'fields': [
             'sender',
             'content',
@@ -759,6 +758,7 @@ export function stdRealtimeChatChatMessageOrbital(params: StdRealtimeChatChatMes
           ],
           'mode': 'create',
           'icon': 'edit',
+          'title': 'New Message',
         },
         'events': {
           'OPEN': 'COMPOSE',
@@ -779,15 +779,15 @@ export function stdRealtimeChatChatMessageOrbital(params: StdRealtimeChatChatMes
         'name': 'ChatMessageView',
         'linkedEntity': canonicalName,
         'config': {
-          'mode': 'edit',
+          'icon': 'eye',
           'fields': [
             'sender',
             'content',
             'channel',
             'timestamp',
           ],
-          'icon': 'eye',
           'title': 'View Message',
+          'mode': 'edit',
         },
         'events': {
           'OPEN': 'VIEW',
@@ -978,40 +978,40 @@ export function stdRealtimeChatChatMessageOrbital(params: StdRealtimeChatChatMes
                   'render-ui',
                   'main',
                   {
-                    'direction': 'vertical',
-                    'type': 'stack',
                     'gap': 'md',
                     'children': [
                       {
-                        'gap': 'sm',
-                        'direction': 'horizontal',
-                        'type': 'stack',
                         'align': 'center',
+                        'direction': 'horizontal',
+                        'gap': 'sm',
+                        'type': 'stack',
                         'children': [
                           {
-                            'name': 'paperclip',
                             'type': 'icon',
+                            'name': 'paperclip',
                           },
                           {
                             'type': 'typography',
-                            'content': 'Attach File',
                             'variant': 'h3',
+                            'content': 'Attach File',
                           },
                         ],
                       },
                       {
                         'type': 'input',
-                        'inputType': 'text',
                         'placeholder': 'Choose file…',
+                        'inputType': 'text',
                       },
                       {
+                        'variant': 'primary',
+                        'type': 'button',
                         'action': 'UPLOAD',
                         'icon': 'upload',
-                        'variant': 'primary',
                         'label': 'Upload',
-                        'type': 'button',
                       },
                     ],
+                    'type': 'stack',
+                    'direction': 'vertical',
                   },
                 ],
               ],
@@ -1026,15 +1026,15 @@ export function stdRealtimeChatChatMessageOrbital(params: StdRealtimeChatChatMes
                   'storage',
                   'upload',
                   {
+                    'file': '@payload.file',
                     'bucket': 'chat-attachments',
                     'acl': 'private',
                     'maxSize': 10485760,
-                    'file': '@payload.file',
                   },
                   {
                     'emit': {
-                      'success': 'AttachmentUploaded',
                       'failure': 'AttachmentUploadFailed',
+                      'success': 'AttachmentUploaded',
                     },
                   },
                 ],
@@ -1042,21 +1042,21 @@ export function stdRealtimeChatChatMessageOrbital(params: StdRealtimeChatChatMes
                   'render-ui',
                   'main',
                   {
-                    'gap': 'md',
                     'type': 'stack',
-                    'direction': 'vertical',
+                    'gap': 'md',
                     'align': 'center',
                     'children': [
                       {
                         'type': 'spinner',
                       },
                       {
-                        'type': 'typography',
-                        'variant': 'caption',
-                        'content': 'Uploading…',
                         'color': 'muted',
+                        'variant': 'caption',
+                        'type': 'typography',
+                        'content': 'Uploading…',
                       },
                     ],
+                    'direction': 'vertical',
                   },
                 ],
               ],
@@ -1176,35 +1176,35 @@ export function stdRealtimeChatChatMessageOrbital(params: StdRealtimeChatChatMes
                   'render-ui',
                   'main',
                   {
+                    'direction': 'vertical',
                     'type': 'stack',
-                    'gap': 'md',
                     'children': [
                       {
-                        'gap': 'sm',
-                        'align': 'center',
                         'type': 'stack',
                         'direction': 'horizontal',
+                        'gap': 'sm',
                         'children': [
                           {
                             'name': 'bell',
                             'type': 'icon',
                           },
                           {
-                            'type': 'typography',
                             'variant': 'h3',
+                            'type': 'typography',
                             'content': 'Send SMS Notify',
                           },
                         ],
+                        'align': 'center',
                       },
                       {
                         'icon': 'send',
                         'action': 'SMS_NOTIFY',
+                        'variant': 'primary',
                         'type': 'button',
                         'label': 'Send Notification',
-                        'variant': 'primary',
                       },
                     ],
-                    'direction': 'vertical',
+                    'gap': 'md',
                   },
                 ],
               ],
@@ -1219,14 +1219,14 @@ export function stdRealtimeChatChatMessageOrbital(params: StdRealtimeChatChatMes
                   'twilio',
                   'sendSMS',
                   {
+                    'recipient': '@payload.recipient',
                     'body': '@payload.body',
                     'sender': '+15551234567',
-                    'recipient': '@payload.recipient',
                   },
                   {
                     'emit': {
-                      'failure': 'ChatSmsFailed',
                       'success': 'ChatSmsSent',
+                      'failure': 'ChatSmsFailed',
                     },
                   },
                 ],
@@ -1234,19 +1234,19 @@ export function stdRealtimeChatChatMessageOrbital(params: StdRealtimeChatChatMes
                   'render-ui',
                   'main',
                   {
-                    'align': 'center',
-                    'gap': 'md',
-                    'direction': 'vertical',
                     'type': 'stack',
+                    'direction': 'vertical',
+                    'gap': 'md',
+                    'align': 'center',
                     'children': [
                       {
                         'type': 'spinner',
                       },
                       {
                         'variant': 'caption',
+                        'content': 'Sending notification…',
                         'color': 'muted',
                         'type': 'typography',
-                        'content': 'Sending notification…',
                       },
                     ],
                   },
@@ -1521,32 +1521,32 @@ export function stdRealtimeChatChannelOrbital(params: StdRealtimeChatChannelOrbi
         'name': 'ChannelAppLayout',
         'linkedEntity': canonicalName,
         'config': {
-          'searchEvent': 'CHANNEL_SEARCH',
-          'notifications': [],
-          'notificationClickEvent': 'CHANNEL_NOTIFICATIONS_OPEN',
-          'contentTrait': '@trait.ChannelCatalog',
           'appName': 'Realtime Chat',
           'navItems': [
             {
+              'icon': 'message-circle',
               'label': 'Chat',
               'href': '/chat',
-              'icon': 'message-circle',
             },
             {
+              'href': '/channels',
               'icon': 'hash',
               'label': 'Channels',
-              'href': '/channels',
             },
             {
-              'label': 'Online',
               'icon': 'users',
+              'label': 'Online',
               'href': '/online',
             },
           ],
+          'searchEvent': 'CHANNEL_SEARCH',
+          'contentTrait': '@trait.ChannelCatalog',
+          'notificationClickEvent': 'CHANNEL_NOTIFICATIONS_OPEN',
+          'notifications': [],
         },
         'events': {
-          'SEARCH': 'CHANNEL_SEARCH',
           'NOTIFY_CLICK': 'CHANNEL_NOTIFICATIONS_OPEN',
+          'SEARCH': 'CHANNEL_SEARCH',
         },
       }),
       rebindInlineTraitEntity({
@@ -1602,56 +1602,56 @@ export function stdRealtimeChatChannelOrbital(params: StdRealtimeChatChannelOrbi
                   'render-ui',
                   'main',
                   {
+                    'gap': 'lg',
+                    'type': 'stack',
+                    'className': 'max-w-5xl mx-auto w-full',
                     'children': [
                       {
-                        'gap': 'md',
-                        'direction': 'horizontal',
-                        'justify': 'between',
                         'children': [
                           {
+                            'gap': 'sm',
                             'children': [
                               {
                                 'type': 'icon',
                                 'name': 'hash',
                               },
                               {
+                                'variant': 'h2',
                                 'type': 'typography',
                                 'content': 'Channels',
-                                'variant': 'h2',
                               },
                             ],
-                            'type': 'stack',
-                            'gap': 'sm',
-                            'align': 'center',
                             'direction': 'horizontal',
+                            'type': 'stack',
+                            'align': 'center',
                           },
                           {
                             'children': [
                               {
-                                'variant': 'primary',
-                                'type': 'button',
-                                'icon': 'plus',
                                 'action': 'CREATE',
+                                'type': 'button',
                                 'label': 'Create Channel',
+                                'variant': 'primary',
+                                'icon': 'plus',
                               },
                             ],
-                            'direction': 'horizontal',
                             'gap': 'sm',
                             'type': 'stack',
+                            'direction': 'horizontal',
                           },
                         ],
-                        'align': 'center',
+                        'gap': 'md',
                         'type': 'stack',
+                        'direction': 'horizontal',
+                        'justify': 'between',
+                        'align': 'center',
                       },
                       {
                         'type': 'divider',
                       },
                       '@trait.ChannelBrowseList',
                     ],
-                    'type': 'stack',
                     'direction': 'vertical',
-                    'className': 'max-w-5xl mx-auto w-full',
-                    'gap': 'lg',
                   },
                 ],
               ],
@@ -1665,48 +1665,48 @@ export function stdRealtimeChatChannelOrbital(params: StdRealtimeChatChannelOrbi
         'name': 'ChannelBrowseList',
         'linkedEntity': canonicalName,
         'config': {
-          'cols': 1,
+          'gap': 'sm',
           'fields': [
             {
               'variant': 'h3',
-              'name': 'name',
               'icon': 'hash',
+              'name': 'name',
             },
             {
-              'label': 'Members',
-              'format': 'number',
-              'variant': 'badge',
               'name': 'memberCount',
+              'format': 'number',
+              'label': 'Members',
+              'variant': 'badge',
             },
             {
-              'name': 'description',
               'variant': 'body',
+              'name': 'description',
             },
             {
-              'format': 'boolean',
-              'label': 'Private',
               'variant': 'body',
               'name': 'isPrivate',
+              'label': 'Private',
+              'format': 'boolean',
             },
           ],
           'itemActions': [
             {
+              'label': 'View',
               'event': 'VIEW',
               'variant': 'ghost',
-              'label': 'View',
             },
             {
-              'label': 'Edit',
-              'variant': 'ghost',
               'event': 'EDIT',
+              'variant': 'ghost',
+              'label': 'Edit',
             },
             {
-              'variant': 'danger',
               'label': 'Delete',
               'event': 'DELETE',
+              'variant': 'danger',
             },
           ],
-          'gap': 'sm',
+          'cols': 1,
         },
         'listens': [
           {
@@ -1741,14 +1741,14 @@ export function stdRealtimeChatChannelOrbital(params: StdRealtimeChatChannelOrbi
         'linkedEntity': canonicalName,
         'config': {
           'icon': 'plus-circle',
-          'mode': 'create',
-          'title': 'Create Channel',
           'fields': [
             'name',
             'description',
             'memberCount',
             'isPrivate',
           ],
+          'title': 'Create Channel',
+          'mode': 'create',
         },
         'events': {
           'OPEN': 'CREATE',
@@ -1769,15 +1769,15 @@ export function stdRealtimeChatChannelOrbital(params: StdRealtimeChatChannelOrbi
         'name': 'ChannelEdit',
         'linkedEntity': canonicalName,
         'config': {
+          'icon': 'edit',
+          'mode': 'edit',
+          'title': 'Edit Channel',
           'fields': [
             'name',
             'description',
             'memberCount',
             'isPrivate',
           ],
-          'mode': 'edit',
-          'icon': 'edit',
-          'title': 'Edit Channel',
         },
         'events': {
           'OPEN': 'EDIT',
@@ -1827,10 +1827,10 @@ export function stdRealtimeChatChannelOrbital(params: StdRealtimeChatChannelOrbi
         'name': 'ChannelDelete',
         'linkedEntity': canonicalName,
         'config': {
-          'title': 'Delete Channel',
-          'icon': 'alert-triangle',
           'alertMessage': 'This action cannot be undone.',
           'confirmLabel': 'Delete',
+          'icon': 'alert-triangle',
+          'title': 'Delete Channel',
         },
         'events': {
           'REQUEST': 'DELETE',
@@ -2246,20 +2246,16 @@ export function stdRealtimeChatOnlineUserOrbital(params: StdRealtimeChatOnlineUs
         'name': 'OnlineUserAppLayout',
         'linkedEntity': canonicalName,
         'config': {
-          'contentTrait': '@trait.OnlineUserDisplay',
-          'appName': 'Realtime Chat',
-          'notifications': [],
-          'notificationClickEvent': 'ONLINE_USER_NOTIFICATIONS_OPEN',
           'navItems': [
             {
-              'href': '/chat',
               'icon': 'message-circle',
               'label': 'Chat',
+              'href': '/chat',
             },
             {
+              'href': '/channels',
               'icon': 'hash',
               'label': 'Channels',
-              'href': '/channels',
             },
             {
               'href': '/online',
@@ -2267,7 +2263,11 @@ export function stdRealtimeChatOnlineUserOrbital(params: StdRealtimeChatOnlineUs
               'icon': 'users',
             },
           ],
+          'contentTrait': '@trait.OnlineUserDisplay',
           'searchEvent': 'ONLINE_USER_SEARCH',
+          'notifications': [],
+          'appName': 'Realtime Chat',
+          'notificationClickEvent': 'ONLINE_USER_NOTIFICATIONS_OPEN',
         },
         'events': {
           'SEARCH': 'ONLINE_USER_SEARCH',
@@ -2370,37 +2370,38 @@ export function stdRealtimeChatOnlineUserOrbital(params: StdRealtimeChatOnlineUs
                   'render-ui',
                   'main',
                   {
+                    'gap': 'lg',
                     'children': [
                       {
+                        'align': 'center',
                         'type': 'stack',
                         'gap': 'md',
-                        'justify': 'between',
                         'direction': 'horizontal',
-                        'align': 'center',
+                        'justify': 'between',
                         'children': [
                           {
-                            'gap': 'sm',
-                            'direction': 'horizontal',
-                            'type': 'stack',
                             'align': 'center',
+                            'gap': 'sm',
+                            'type': 'stack',
                             'children': [
                               {
-                                'name': 'users',
                                 'type': 'icon',
+                                'name': 'users',
                               },
                               {
-                                'content': 'Online Users',
                                 'variant': 'h2',
                                 'type': 'typography',
+                                'content': 'Online Users',
                               },
                             ],
+                            'direction': 'horizontal',
                           },
                           {
-                            'label': 'Refresh',
-                            'icon': 'refresh-cw',
-                            'variant': 'secondary',
                             'action': 'REFRESH',
+                            'icon': 'refresh-cw',
                             'type': 'button',
+                            'variant': 'secondary',
+                            'label': 'Refresh',
                           },
                         ],
                       },
@@ -2408,25 +2409,24 @@ export function stdRealtimeChatOnlineUserOrbital(params: StdRealtimeChatOnlineUs
                         'type': 'divider',
                       },
                       {
-                        'className': 'py-12',
-                        'align': 'center',
                         'type': 'stack',
+                        'align': 'center',
+                        'gap': 'md',
+                        'direction': 'vertical',
                         'children': [
                           {
                             'type': 'spinner',
                           },
                           {
-                            'type': 'typography',
                             'content': 'Loading presence…',
-                            'color': 'muted',
+                            'type': 'typography',
                             'variant': 'caption',
+                            'color': 'muted',
                           },
                         ],
-                        'gap': 'md',
-                        'direction': 'vertical',
+                        'className': 'py-12',
                       },
                     ],
-                    'gap': 'lg',
                     'className': 'max-w-5xl mx-auto w-full',
                     'type': 'stack',
                     'direction': 'vertical',
@@ -2443,52 +2443,47 @@ export function stdRealtimeChatOnlineUserOrbital(params: StdRealtimeChatOnlineUs
                   'render-ui',
                   'main',
                   {
-                    'className': 'max-w-5xl mx-auto w-full',
-                    'type': 'stack',
-                    'gap': 'lg',
                     'direction': 'vertical',
+                    'gap': 'lg',
+                    'className': 'max-w-5xl mx-auto w-full',
                     'children': [
                       {
-                        'type': 'stack',
                         'direction': 'horizontal',
-                        'gap': 'md',
                         'justify': 'between',
-                        'align': 'center',
+                        'gap': 'md',
                         'children': [
                           {
                             'direction': 'horizontal',
-                            'align': 'center',
+                            'gap': 'sm',
+                            'type': 'stack',
                             'children': [
                               {
                                 'type': 'icon',
                                 'name': 'users',
                               },
                               {
-                                'variant': 'h2',
                                 'content': 'Online Users',
                                 'type': 'typography',
+                                'variant': 'h2',
                               },
                             ],
-                            'gap': 'sm',
-                            'type': 'stack',
+                            'align': 'center',
                           },
                           {
-                            'type': 'button',
+                            'variant': 'secondary',
                             'icon': 'refresh-cw',
+                            'type': 'button',
                             'label': 'Refresh',
                             'action': 'REFRESH',
-                            'variant': 'secondary',
                           },
                         ],
+                        'type': 'stack',
+                        'align': 'center',
                       },
                       {
                         'type': 'divider',
                       },
                       {
-                        'gap': 'sm',
-                        'type': 'data-list',
-                        'entity': '@payload.data',
-                        'variant': 'card',
                         'fields': [
                           {
                             'variant': 'h4',
@@ -2499,13 +2494,18 @@ export function stdRealtimeChatOnlineUserOrbital(params: StdRealtimeChatOnlineUs
                             'variant': 'badge',
                           },
                           {
+                            'format': 'date',
                             'name': 'lastActive',
                             'variant': 'caption',
-                            'format': 'date',
                           },
                         ],
+                        'entity': '@payload.data',
+                        'variant': 'card',
+                        'type': 'data-list',
+                        'gap': 'sm',
                       },
                     ],
+                    'type': 'stack',
                   },
                 ],
               ],
@@ -2530,21 +2530,21 @@ export function stdRealtimeChatOnlineUserOrbital(params: StdRealtimeChatOnlineUs
                   'main',
                   {
                     'gap': 'md',
-                    'className': 'py-12',
-                    'direction': 'vertical',
-                    'type': 'stack',
-                    'align': 'center',
                     'children': [
                       {
                         'type': 'spinner',
                       },
                       {
-                        'variant': 'caption',
-                        'content': 'Refreshing…',
                         'type': 'typography',
+                        'content': 'Refreshing…',
+                        'variant': 'caption',
                         'color': 'muted',
                       },
                     ],
+                    'type': 'stack',
+                    'className': 'py-12',
+                    'align': 'center',
+                    'direction': 'vertical',
                   },
                 ],
               ],
@@ -2558,36 +2558,36 @@ export function stdRealtimeChatOnlineUserOrbital(params: StdRealtimeChatOnlineUs
                   'render-ui',
                   'main',
                   {
+                    'gap': 'md',
+                    'type': 'stack',
                     'align': 'center',
                     'children': [
                       {
-                        'type': 'icon',
-                        'name': 'alert-triangle',
                         'color': 'destructive',
+                        'name': 'alert-triangle',
+                        'type': 'icon',
                       },
                       {
-                        'type': 'typography',
-                        'variant': 'h3',
                         'content': 'Failed to load presence',
-                      },
-                      {
-                        'content': '@payload.error',
-                        'color': 'muted',
+                        'variant': 'h3',
                         'type': 'typography',
-                        'variant': 'body',
                       },
                       {
-                        'label': 'Retry',
+                        'color': 'muted',
+                        'variant': 'body',
+                        'type': 'typography',
+                        'content': '@payload.error',
+                      },
+                      {
                         'action': 'REFRESH',
-                        'variant': 'primary',
-                        'icon': 'rotate-ccw',
                         'type': 'button',
+                        'icon': 'rotate-ccw',
+                        'label': 'Retry',
+                        'variant': 'primary',
                       },
                     ],
-                    'direction': 'vertical',
-                    'type': 'stack',
-                    'gap': 'md',
                     'className': 'py-12',
+                    'direction': 'vertical',
                   },
                 ],
               ],

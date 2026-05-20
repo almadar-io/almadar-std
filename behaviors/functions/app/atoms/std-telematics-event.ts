@@ -82,9 +82,9 @@ export interface StdTelematicsEventTelematicsEventLoadFailedPayload {
  * without modifying its state-machine topology.
  */
 export interface StdTelematicsEventConfig {
-  /** Default: `[{"label":"Vehicle","name":"vehicleId","variant":"caption"},{"name":"eventType","label":"Type","variant":"badge"},{"variant":"badge","label":"Severity","name":"severity"},{"label":"Speed","variant":"caption","name":"speed"},{"label":"Occurred","name":"occurredAt","variant":"caption"},{"label":"Ack","name":"acknowledged","variant":"badge"}]` */
+  /** Default: `[{"name":"vehicleId","label":"Vehicle","variant":"caption"},{"label":"Type","variant":"badge","name":"eventType"},{"label":"Severity","variant":"badge","name":"severity"},{"variant":"caption","label":"Speed","name":"speed"},{"name":"occurredAt","label":"Occurred","variant":"caption"},{"name":"acknowledged","variant":"badge","label":"Ack"}]` */
   fields?: TraitConfig[];
-  /** Default: `[{"label":"Open","icon":"arrow-right","event":"OPEN_EVENT","variant":"primary"},{"variant":"secondary","label":"Acknowledge","event":"ACKNOWLEDGE"}]` */
+  /** Default: `[{"variant":"primary","event":"OPEN_EVENT","icon":"arrow-right","label":"Open"},{"label":"Acknowledge","event":"ACKNOWLEDGE","variant":"secondary"}]` */
   itemActions?: TraitConfig[];
   /** Default: `"Telematics Events"` */
   title?: string;

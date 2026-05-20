@@ -31,8 +31,8 @@ const ALIAS = 'Crm';
  * without modifying its state-machine topology.
  */
 export interface StdCrmConfig {
-  navItems?: TraitConfig;
   notifications?: TraitConfig;
+  navItems?: TraitConfig;
 }
 
 /**
@@ -189,6 +189,10 @@ export function stdCrmContactOrbital(params: StdCrmContactOrbitalParams = {}): O
         'ref': 'AppShell.traits.AppLayout',
         'name': 'ContactAppLayout',
         'config': {
+          'notifications': [],
+          'notificationClickEvent': 'CONTACT_NOTIFICATIONS_OPEN',
+          'contentTrait': '@trait.ContactCatalog',
+          'appName': 'CRM',
           'navItems': [
             {
               'icon': 'users',
@@ -197,29 +201,25 @@ export function stdCrmContactOrbital(params: StdCrmContactOrbitalParams = {}): O
             },
             {
               'icon': 'briefcase',
-              'label': 'Deals',
               'href': '/deals',
+              'label': 'Deals',
             },
             {
+              'label': 'Pipeline',
               'href': '/pipeline',
               'icon': 'bar-chart-2',
-              'label': 'Pipeline',
             },
             {
+              'href': '/notes',
               'icon': 'file-text',
               'label': 'Notes',
-              'href': '/notes',
             },
           ],
-          'appName': 'CRM',
-          'notifications': [],
           'searchEvent': 'CONTACT_SEARCH',
-          'contentTrait': '@trait.ContactCatalog',
-          'notificationClickEvent': 'CONTACT_NOTIFICATIONS_OPEN',
         },
         'events': {
-          'NOTIFY_CLICK': 'CONTACT_NOTIFICATIONS_OPEN',
           'SEARCH': 'CONTACT_SEARCH',
+          'NOTIFY_CLICK': 'CONTACT_NOTIFICATIONS_OPEN',
         },
       }),
       rebindInlineTraitEntity({
@@ -318,60 +318,59 @@ export function stdCrmContactOrbital(params: StdCrmContactOrbitalParams = {}): O
                   'render-ui',
                   'main',
                   {
-                    'type': 'stack',
                     'children': [
                       {
-                        'gap': 'md',
                         'justify': 'between',
-                        'align': 'center',
+                        'direction': 'horizontal',
+                        'type': 'stack',
+                        'gap': 'md',
                         'children': [
                           {
                             'gap': 'sm',
-                            'direction': 'horizontal',
-                            'type': 'stack',
                             'children': [
                               {
-                                'type': 'icon',
                                 'name': 'user',
+                                'type': 'icon',
                               },
                               {
                                 'type': 'typography',
-                                'variant': 'h2',
                                 'content': 'Contacts',
+                                'variant': 'h2',
                               },
                             ],
+                            'type': 'stack',
+                            'direction': 'horizontal',
                             'align': 'center',
                           },
                           {
-                            'type': 'stack',
                             'direction': 'horizontal',
-                            'gap': 'sm',
+                            'type': 'stack',
                             'children': [
                               {
+                                'type': 'button',
+                                'icon': 'plus',
                                 'label': 'New Contact',
                                 'variant': 'primary',
-                                'icon': 'plus',
-                                'type': 'button',
                                 'action': 'CREATE',
                               },
                             ],
+                            'gap': 'sm',
                           },
                         ],
-                        'direction': 'horizontal',
-                        'type': 'stack',
+                        'align': 'center',
                       },
                       {
                         'type': 'divider',
                       },
                       {
-                        'align': 'center',
-                        'type': 'stack',
                         'direction': 'horizontal',
+                        'align': 'center',
+                        'gap': 'md',
                         'children': [
                           '@trait.ContactSearch',
                           '@trait.ContactFilter',
                         ],
-                        'gap': 'md',
+                        'type': 'stack',
                       },
                       '@trait.ContactStats',
                       '@trait.ContactGraphs',
@@ -382,6 +381,7 @@ export function stdCrmContactOrbital(params: StdCrmContactOrbitalParams = {}): O
                     ],
                     'direction': 'vertical',
                     'gap': 'lg',
+                    'type': 'stack',
                   },
                 ],
               ],
@@ -400,14 +400,15 @@ export function stdCrmContactOrbital(params: StdCrmContactOrbitalParams = {}): O
                   'render-ui',
                   'main',
                   {
-                    'direction': 'vertical',
                     'gap': 'md',
+                    'className': 'py-8',
+                    'direction': 'vertical',
                     'align': 'center',
                     'type': 'stack',
                     'children': [
                       {
-                        'type': 'icon',
                         'name': 'bell',
+                        'type': 'icon',
                       },
                       {
                         'type': 'typography',
@@ -415,19 +416,18 @@ export function stdCrmContactOrbital(params: StdCrmContactOrbitalParams = {}): O
                         'content': 'No notifications',
                       },
                       {
-                        'type': 'typography',
-                        'variant': 'caption',
-                        'color': 'muted',
                         'content': 'You\'re all caught up.',
+                        'variant': 'caption',
+                        'type': 'typography',
+                        'color': 'muted',
                       },
                       {
-                        'type': 'button',
                         'variant': 'ghost',
                         'label': 'Back to contacts',
+                        'type': 'button',
                         'action': 'INIT',
                       },
                     ],
-                    'className': 'py-8',
                   },
                 ],
               ],
@@ -440,8 +440,8 @@ export function stdCrmContactOrbital(params: StdCrmContactOrbitalParams = {}): O
         'ref': 'Search.traits.SearchResultSearch',
         'name': 'ContactSearch',
         'config': {
-          'placeholder': 'Search contacts…',
           'event': 'CONTACT_SEARCH',
+          'placeholder': 'Search contacts…',
         },
       }),
       makeTraitRef({
@@ -463,15 +463,15 @@ export function stdCrmContactOrbital(params: StdCrmContactOrbitalParams = {}): O
               ],
             },
             {
-              'filterType': 'select',
+              'field': 'lifecycleStage',
               'options': [
                 'lead',
                 'mql',
                 'sql',
                 'customer',
               ],
+              'filterType': 'select',
               'label': 'Lifecycle Stage',
-              'field': 'lifecycleStage',
             },
           ],
           'event': 'CONTACT_FILTER',
@@ -481,21 +481,18 @@ export function stdCrmContactOrbital(params: StdCrmContactOrbitalParams = {}): O
         'ref': 'Stats.traits.StatsItemStats',
         'name': 'ContactStats',
         'config': {
-          'title': 'Contacts',
           'metrics': [
             {
               'label': 'Total',
-              'variant': 'primary',
+              'aggregation': 'count',
               'icon': 'users',
               'format': 'number',
-              'aggregation': 'count',
+              'variant': 'primary',
             },
             {
+              'variant': 'warning',
               'format': 'number',
               'icon': 'flame',
-              'aggregation': 'count',
-              'label': 'Hot Leads',
-              'variant': 'warning',
               'filter': [
                 'fn',
                 'row',
@@ -505,10 +502,15 @@ export function stdCrmContactOrbital(params: StdCrmContactOrbitalParams = {}): O
                   'sql',
                 ],
               ],
+              'aggregation': 'count',
+              'label': 'Hot Leads',
             },
             {
-              'aggregation': 'count',
+              'icon': 'check-circle',
+              'variant': 'success',
               'label': 'Customers',
+              'aggregation': 'count',
+              'format': 'number',
               'filter': [
                 'fn',
                 'row',
@@ -518,11 +520,9 @@ export function stdCrmContactOrbital(params: StdCrmContactOrbitalParams = {}): O
                   'customer',
                 ],
               ],
-              'variant': 'success',
-              'icon': 'check-circle',
-              'format': 'number',
             },
           ],
+          'title': 'Contacts',
         },
         'listens': [
           {
@@ -539,13 +539,13 @@ export function stdCrmContactOrbital(params: StdCrmContactOrbitalParams = {}): O
         'ref': 'Graphs.traits.GraphItemGraph',
         'name': 'ContactGraphs',
         'config': {
-          'categoryField': 'lifecycleStage',
+          'showLegend': true,
           'subtitle': 'Funnel breakdown',
           'title': 'Contacts by Lifecycle Stage',
-          'chartType': 'pie',
-          'height': 240,
-          'showLegend': true,
+          'categoryField': 'lifecycleStage',
           'aggregation': 'count',
+          'height': 240,
+          'chartType': 'pie',
         },
         'listens': [
           {
@@ -565,28 +565,27 @@ export function stdCrmContactOrbital(params: StdCrmContactOrbitalParams = {}): O
         'config': {
           'itemActions': [
             {
-              'label': 'View',
               'variant': 'ghost',
+              'label': 'View',
               'event': 'VIEW',
             },
             {
+              'variant': 'ghost',
               'label': 'Edit',
               'event': 'EDIT',
-              'variant': 'ghost',
             },
             {
+              'variant': 'danger',
               'event': 'DELETE',
               'label': 'Delete',
-              'variant': 'danger',
             },
           ],
-          'cols': 1,
           'variant': 'card',
           'fields': [
             {
               'name': 'name',
-              'variant': 'h3',
               'icon': 'user',
+              'variant': 'h3',
             },
             {
               'name': 'industry',
@@ -605,6 +604,7 @@ export function stdCrmContactOrbital(params: StdCrmContactOrbitalParams = {}): O
               'variant': 'caption',
             },
           ],
+          'cols': 1,
           'gap': 'sm',
         },
         'listens': [
@@ -655,6 +655,8 @@ export function stdCrmContactOrbital(params: StdCrmContactOrbitalParams = {}): O
         'name': 'ContactCreate',
         'linkedEntity': canonicalName,
         'config': {
+          'title': 'New Contact',
+          'icon': 'plus-circle',
           'fields': [
             'name',
             'company',
@@ -663,9 +665,7 @@ export function stdCrmContactOrbital(params: StdCrmContactOrbitalParams = {}): O
             'email',
             'phone',
           ],
-          'icon': 'plus-circle',
           'mode': 'create',
-          'title': 'New Contact',
         },
         'events': {
           'OPEN': 'CREATE',
@@ -686,8 +686,9 @@ export function stdCrmContactOrbital(params: StdCrmContactOrbitalParams = {}): O
         'name': 'ContactEdit',
         'linkedEntity': canonicalName,
         'config': {
-          'icon': 'edit',
           'title': 'Edit Contact',
+          'icon': 'edit',
+          'mode': 'edit',
           'fields': [
             'name',
             'company',
@@ -696,7 +697,6 @@ export function stdCrmContactOrbital(params: StdCrmContactOrbitalParams = {}): O
             'email',
             'phone',
           ],
-          'mode': 'edit',
         },
         'events': {
           'OPEN': 'EDIT',
@@ -717,6 +717,7 @@ export function stdCrmContactOrbital(params: StdCrmContactOrbitalParams = {}): O
         'name': 'ContactView',
         'linkedEntity': canonicalName,
         'config': {
+          'title': 'View Contact',
           'fields': [
             'name',
             'company',
@@ -725,9 +726,8 @@ export function stdCrmContactOrbital(params: StdCrmContactOrbitalParams = {}): O
             'email',
             'phone',
           ],
-          'icon': 'eye',
           'mode': 'edit',
-          'title': 'View Contact',
+          'icon': 'eye',
         },
         'events': {
           'OPEN': 'VIEW',
@@ -748,14 +748,14 @@ export function stdCrmContactOrbital(params: StdCrmContactOrbitalParams = {}): O
         'name': 'ContactDelete',
         'linkedEntity': canonicalName,
         'config': {
-          'alertMessage': 'This action cannot be undone.',
-          'confirmLabel': 'Delete',
           'title': 'Delete Contact',
           'icon': 'alert-triangle',
+          'alertMessage': 'This action cannot be undone.',
+          'confirmLabel': 'Delete',
         },
         'events': {
-          'REQUEST': 'DELETE',
           'CONFIRM': 'CONFIRM_DELETE',
+          'REQUEST': 'DELETE',
         },
         'listens': [
           {
@@ -1035,18 +1035,18 @@ export function stdCrmContactOrbital(params: StdCrmContactOrbitalParams = {}): O
                   'render-ui',
                   'main',
                   {
-                    'direction': 'horizontal',
-                    'type': 'stack',
-                    'gap': 'sm',
                     'children': [
                       {
-                        'label': 'Email Contact',
-                        'action': 'SEND_EMAIL',
                         'variant': 'ghost',
                         'type': 'button',
+                        'label': 'Email Contact',
+                        'action': 'SEND_EMAIL',
                         'icon': 'mail',
                       },
                     ],
+                    'type': 'stack',
+                    'gap': 'sm',
+                    'direction': 'horizontal',
                   },
                 ],
               ],
@@ -1061,15 +1061,15 @@ export function stdCrmContactOrbital(params: StdCrmContactOrbitalParams = {}): O
                   'email',
                   'send',
                   {
-                    'recipient': 'contact@example.com',
-                    'subject': 'Hello from CRM',
                     'body': 'Reaching out from your account team.',
+                    'subject': 'Hello from CRM',
+                    'recipient': 'contact@example.com',
                     'sender': 'noreply@crm.example',
                   },
                   {
                     'emit': {
-                      'success': 'ContactEmailSent',
                       'failure': 'ContactEmailFailed',
+                      'success': 'ContactEmailSent',
                     },
                   },
                 ],
@@ -1349,15 +1349,13 @@ export function stdCrmDealOrbital(params: StdCrmDealOrbitalParams = {}): Orbital
         'name': 'DealAppLayout',
         'linkedEntity': canonicalName,
         'config': {
-          'searchEvent': 'DEAL_SEARCH',
-          'contentTrait': '@trait.DealCatalog',
-          'topBarActions': [],
           'notificationClickEvent': 'DEAL_NOTIFICATIONS_OPEN',
+          'contentTrait': '@trait.DealCatalog',
           'navItems': [
             {
-              'label': 'Contacts',
               'href': '/contacts',
               'icon': 'users',
+              'label': 'Contacts',
             },
             {
               'href': '/deals',
@@ -1365,18 +1363,20 @@ export function stdCrmDealOrbital(params: StdCrmDealOrbitalParams = {}): Orbital
               'label': 'Deals',
             },
             {
-              'icon': 'bar-chart-2',
               'label': 'Pipeline',
+              'icon': 'bar-chart-2',
               'href': '/pipeline',
             },
             {
               'label': 'Notes',
-              'icon': 'file-text',
               'href': '/notes',
+              'icon': 'file-text',
             },
           ],
-          'notifications': [],
           'appName': 'CRM',
+          'topBarActions': [],
+          'searchEvent': 'DEAL_SEARCH',
+          'notifications': [],
         },
         'events': {
           'SEARCH': 'DEAL_SEARCH',
@@ -1425,48 +1425,48 @@ export function stdCrmDealOrbital(params: StdCrmDealOrbitalParams = {}): Orbital
                   'render-ui',
                   'main',
                   {
-                    'type': 'stack',
                     'direction': 'vertical',
+                    'type': 'stack',
                     'children': [
                       {
-                        'justify': 'between',
                         'children': [
                           {
+                            'direction': 'horizontal',
                             'type': 'stack',
                             'gap': 'sm',
                             'align': 'center',
                             'children': [
                               {
-                                'name': 'briefcase',
                                 'type': 'icon',
+                                'name': 'briefcase',
                               },
                               {
-                                'type': 'typography',
-                                'variant': 'h2',
                                 'content': 'Deals',
+                                'variant': 'h2',
+                                'type': 'typography',
                               },
                             ],
-                            'direction': 'horizontal',
                           },
                           {
-                            'type': 'stack',
-                            'direction': 'horizontal',
                             'children': [
                               {
-                                'label': 'New Deal',
-                                'variant': 'primary',
-                                'icon': 'plus',
-                                'type': 'button',
                                 'action': 'CREATE',
+                                'label': 'New Deal',
+                                'type': 'button',
+                                'icon': 'plus',
+                                'variant': 'primary',
                               },
                             ],
+                            'type': 'stack',
+                            'direction': 'horizontal',
                             'gap': 'sm',
                           },
                         ],
-                        'align': 'center',
                         'direction': 'horizontal',
-                        'type': 'stack',
+                        'align': 'center',
+                        'justify': 'between',
                         'gap': 'md',
+                        'type': 'stack',
                       },
                       {
                         'type': 'divider',
@@ -1487,8 +1487,6 @@ export function stdCrmDealOrbital(params: StdCrmDealOrbitalParams = {}): Orbital
         'name': 'DealBrowseList',
         'linkedEntity': canonicalName,
         'config': {
-          'cols': 2,
-          'variant': 'card',
           'itemActions': [
             {
               'label': 'View',
@@ -1501,25 +1499,26 @@ export function stdCrmDealOrbital(params: StdCrmDealOrbitalParams = {}): Orbital
               'label': 'Edit',
             },
             {
-              'event': 'DELETE',
-              'variant': 'danger',
               'label': 'Delete',
+              'variant': 'danger',
+              'event': 'DELETE',
             },
           ],
+          'variant': 'card',
           'fields': [
             {
-              'variant': 'h3',
               'name': 'title',
               'icon': 'briefcase',
+              'variant': 'h3',
             },
             {
-              'variant': 'badge',
               'name': 'stage',
+              'variant': 'badge',
             },
             {
               'format': 'currency',
-              'name': 'amount',
               'variant': 'h4',
+              'name': 'amount',
             },
             {
               'name': 'contactId',
@@ -1527,13 +1526,14 @@ export function stdCrmDealOrbital(params: StdCrmDealOrbitalParams = {}): Orbital
               'variant': 'caption',
             },
             {
-              'variant': 'caption',
               'label': 'Closed At',
               'name': 'closedAt',
+              'variant': 'caption',
               'format': 'date',
             },
           ],
           'gap': 'md',
+          'cols': 2,
         },
         'listens': [
           {
@@ -1567,9 +1567,8 @@ export function stdCrmDealOrbital(params: StdCrmDealOrbitalParams = {}): Orbital
         'name': 'DealCreate',
         'linkedEntity': canonicalName,
         'config': {
-          'mode': 'create',
-          'icon': 'plus-circle',
           'title': 'New Deal',
+          'icon': 'plus-circle',
           'fields': [
             'title',
             'contactId',
@@ -1577,6 +1576,7 @@ export function stdCrmDealOrbital(params: StdCrmDealOrbitalParams = {}): Orbital
             'stage',
             'closedAt',
           ],
+          'mode': 'create',
         },
         'events': {
           'OPEN': 'CREATE',
@@ -1604,9 +1604,9 @@ export function stdCrmDealOrbital(params: StdCrmDealOrbitalParams = {}): Orbital
             'stage',
             'closedAt',
           ],
+          'mode': 'edit',
           'icon': 'edit',
           'title': 'Edit Deal',
-          'mode': 'edit',
         },
         'events': {
           'OPEN': 'EDIT',
@@ -1627,8 +1627,9 @@ export function stdCrmDealOrbital(params: StdCrmDealOrbitalParams = {}): Orbital
         'name': 'DealView',
         'linkedEntity': canonicalName,
         'config': {
-          'title': 'View Deal',
           'icon': 'eye',
+          'mode': 'edit',
+          'title': 'View Deal',
           'fields': [
             'title',
             'contactId',
@@ -1636,7 +1637,6 @@ export function stdCrmDealOrbital(params: StdCrmDealOrbitalParams = {}): Orbital
             'stage',
             'closedAt',
           ],
-          'mode': 'edit',
         },
         'events': {
           'OPEN': 'VIEW',
@@ -1657,10 +1657,10 @@ export function stdCrmDealOrbital(params: StdCrmDealOrbitalParams = {}): Orbital
         'name': 'DealDelete',
         'linkedEntity': canonicalName,
         'config': {
-          'confirmLabel': 'Delete',
           'icon': 'alert-triangle',
-          'alertMessage': 'This action cannot be undone.',
           'title': 'Delete Deal',
+          'alertMessage': 'This action cannot be undone.',
+          'confirmLabel': 'Delete',
         },
         'events': {
           'CONFIRM': 'CONFIRM_DELETE',
@@ -2077,38 +2077,38 @@ export function stdCrmPipelineOrbital(params: StdCrmPipelineOrbitalParams = {}):
         'name': 'PipelineAppLayout',
         'linkedEntity': canonicalName,
         'config': {
-          'notifications': [],
-          'notificationClickEvent': 'PIPELINE_NOTIFICATIONS_OPEN',
-          'appName': 'CRM',
           'searchEvent': 'PIPELINE_SEARCH',
+          'appName': 'CRM',
+          'topBarActions': [],
+          'notifications': [],
+          'contentTrait': '@trait.PipelineDisplay',
+          'notificationClickEvent': 'PIPELINE_NOTIFICATIONS_OPEN',
           'navItems': [
             {
-              'icon': 'users',
               'label': 'Contacts',
               'href': '/contacts',
+              'icon': 'users',
             },
             {
               'label': 'Deals',
-              'icon': 'briefcase',
               'href': '/deals',
+              'icon': 'briefcase',
             },
             {
-              'icon': 'bar-chart-2',
               'label': 'Pipeline',
               'href': '/pipeline',
+              'icon': 'bar-chart-2',
             },
             {
+              'label': 'Notes',
               'href': '/notes',
               'icon': 'file-text',
-              'label': 'Notes',
             },
           ],
-          'contentTrait': '@trait.PipelineDisplay',
-          'topBarActions': [],
         },
         'events': {
-          'NOTIFY_CLICK': 'PIPELINE_NOTIFICATIONS_OPEN',
           'SEARCH': 'PIPELINE_SEARCH',
+          'NOTIFY_CLICK': 'PIPELINE_NOTIFICATIONS_OPEN',
         },
       }),
       rebindInlineTraitEntity({
@@ -2233,74 +2233,74 @@ export function stdCrmPipelineOrbital(params: StdCrmPipelineOrbitalParams = {}):
                   'main',
                   {
                     'type': 'stack',
+                    'direction': 'vertical',
+                    'gap': 'lg',
                     'children': [
                       {
                         'type': 'stack',
                         'gap': 'md',
-                        'direction': 'horizontal',
-                        'justify': 'between',
                         'align': 'center',
+                        'direction': 'horizontal',
                         'children': [
                           {
                             'children': [
                               {
-                                'name': 'bar-chart-2',
                                 'type': 'icon',
+                                'name': 'bar-chart-2',
                               },
                               {
                                 'type': 'typography',
-                                'content': 'Pipeline',
                                 'variant': 'h2',
+                                'content': 'Pipeline',
                               },
                             ],
-                            'align': 'center',
-                            'type': 'stack',
-                            'direction': 'horizontal',
                             'gap': 'sm',
+                            'direction': 'horizontal',
+                            'type': 'stack',
+                            'align': 'center',
                           },
                           {
-                            'type': 'button',
-                            'variant': 'secondary',
-                            'label': 'Refresh',
                             'icon': 'rotate-ccw',
+                            'label': 'Refresh',
+                            'variant': 'secondary',
+                            'type': 'button',
                             'action': 'REFRESH',
                           },
                         ],
+                        'justify': 'between',
                       },
                       {
                         'type': 'divider',
                       },
                       {
-                        'type': 'simple-grid',
-                        'cols': 4,
                         'children': [
                           {
-                            'value': '@entity.totalDeals',
                             'type': 'stat-display',
+                            'value': '@entity.totalDeals',
                             'label': 'Total Deals',
                           },
                           {
-                            'format': 'currency',
                             'value': '@entity.totalValue',
                             'type': 'stat-display',
                             'label': 'Pipeline Value',
+                            'format': 'currency',
                           },
                           {
+                            'type': 'stat-display',
                             'label': 'Won',
                             'value': '@entity.wonDeals',
-                            'type': 'stat-display',
                           },
                           {
-                            'format': 'percent',
                             'type': 'stat-display',
+                            'format': 'percent',
                             'label': 'Conversion Rate',
                             'value': '@entity.conversionRate',
                           },
                         ],
+                        'type': 'simple-grid',
+                        'cols': 4,
                       },
                     ],
-                    'direction': 'vertical',
-                    'gap': 'lg',
                   },
                 ],
               ],
@@ -2315,8 +2315,8 @@ export function stdCrmPipelineOrbital(params: StdCrmPipelineOrbitalParams = {}):
                   'Pipeline',
                   {
                     'emit': {
-                      'failure': 'PipelineLoadFailed',
                       'success': 'PipelineLoaded',
+                      'failure': 'PipelineLoadFailed',
                     },
                   },
                 ],
@@ -2553,38 +2553,38 @@ export function stdCrmNoteOrbital(params: StdCrmNoteOrbitalParams = {}): Orbital
         'name': 'NoteAppLayout',
         'linkedEntity': canonicalName,
         'config': {
+          'appName': 'CRM',
           'navItems': [
             {
+              'href': '/contacts',
               'icon': 'users',
               'label': 'Contacts',
-              'href': '/contacts',
             },
             {
-              'href': '/deals',
               'label': 'Deals',
               'icon': 'briefcase',
+              'href': '/deals',
             },
             {
-              'label': 'Pipeline',
-              'icon': 'bar-chart-2',
               'href': '/pipeline',
+              'icon': 'bar-chart-2',
+              'label': 'Pipeline',
             },
             {
+              'href': '/notes',
               'icon': 'file-text',
               'label': 'Notes',
-              'href': '/notes',
             },
           ],
+          'searchEvent': 'NOTE_SEARCH',
           'topBarActions': [],
           'notifications': [],
-          'contentTrait': '@trait.NoteCatalog',
           'notificationClickEvent': 'NOTE_NOTIFICATIONS_OPEN',
-          'appName': 'CRM',
-          'searchEvent': 'NOTE_SEARCH',
+          'contentTrait': '@trait.NoteCatalog',
         },
         'events': {
-          'SEARCH': 'NOTE_SEARCH',
           'NOTIFY_CLICK': 'NOTE_NOTIFICATIONS_OPEN',
+          'SEARCH': 'NOTE_SEARCH',
         },
       }),
       rebindInlineTraitEntity({
@@ -2629,49 +2629,48 @@ export function stdCrmNoteOrbital(params: StdCrmNoteOrbitalParams = {}): Orbital
                   'render-ui',
                   'main',
                   {
-                    'direction': 'vertical',
                     'gap': 'lg',
                     'type': 'stack',
                     'children': [
                       {
                         'gap': 'md',
-                        'justify': 'between',
-                        'align': 'center',
                         'children': [
                           {
-                            'gap': 'sm',
+                            'type': 'stack',
                             'children': [
                               {
                                 'name': 'file-text',
                                 'type': 'icon',
                               },
                               {
-                                'variant': 'h2',
-                                'content': 'Notes',
                                 'type': 'typography',
+                                'content': 'Notes',
+                                'variant': 'h2',
                               },
                             ],
-                            'type': 'stack',
-                            'direction': 'horizontal',
                             'align': 'center',
+                            'gap': 'sm',
+                            'direction': 'horizontal',
                           },
                           {
                             'direction': 'horizontal',
+                            'gap': 'sm',
+                            'type': 'stack',
                             'children': [
                               {
-                                'icon': 'edit',
                                 'action': 'CREATE',
-                                'type': 'button',
-                                'label': 'New Note',
+                                'icon': 'edit',
                                 'variant': 'primary',
+                                'label': 'New Note',
+                                'type': 'button',
                               },
                             ],
-                            'type': 'stack',
-                            'gap': 'sm',
                           },
                         ],
                         'direction': 'horizontal',
+                        'justify': 'between',
                         'type': 'stack',
+                        'align': 'center',
                       },
                       {
                         'type': 'divider',
@@ -2687,6 +2686,7 @@ export function stdCrmNoteOrbital(params: StdCrmNoteOrbitalParams = {}): Orbital
                       },
                       '@trait.NoteBrowseList',
                     ],
+                    'direction': 'vertical',
                   },
                 ],
               ],
@@ -2702,14 +2702,14 @@ export function stdCrmNoteOrbital(params: StdCrmNoteOrbitalParams = {}): Orbital
         'config': {
           'itemActions': [
             {
-              'variant': 'ghost',
               'label': 'View',
               'event': 'VIEW',
+              'variant': 'ghost',
             },
             {
-              'variant': 'ghost',
-              'event': 'EDIT',
               'label': 'Edit',
+              'event': 'EDIT',
+              'variant': 'ghost',
             },
             {
               'variant': 'danger',
@@ -2718,13 +2718,11 @@ export function stdCrmNoteOrbital(params: StdCrmNoteOrbitalParams = {}): Orbital
             },
           ],
           'cols': 1,
-          'gap': 'sm',
-          'variant': 'card',
           'fields': [
             {
-              'variant': 'h4',
               'name': 'subject',
               'icon': 'file-text',
+              'variant': 'h4',
             },
             {
               'variant': 'badge',
@@ -2735,18 +2733,20 @@ export function stdCrmNoteOrbital(params: StdCrmNoteOrbitalParams = {}): Orbital
               'name': 'author',
             },
             {
-              'name': 'followUpAt',
               'format': 'date',
-              'variant': 'caption',
+              'name': 'followUpAt',
               'label': 'Follow-Up',
+              'variant': 'caption',
             },
             {
               'label': 'Created',
-              'name': 'createdAt',
               'variant': 'caption',
+              'name': 'createdAt',
               'format': 'date',
             },
           ],
+          'gap': 'sm',
+          'variant': 'card',
         },
         'listens': [
           {
@@ -2780,9 +2780,9 @@ export function stdCrmNoteOrbital(params: StdCrmNoteOrbitalParams = {}): Orbital
         'name': 'NoteCalendar',
         'linkedEntity': canonicalName,
         'config': {
-          'dateField': 'followUpAt',
           'titleField': 'subject',
           'colorField': 'priority',
+          'dateField': 'followUpAt',
         },
       }),
       makeTraitRef({
@@ -2790,9 +2790,6 @@ export function stdCrmNoteOrbital(params: StdCrmNoteOrbitalParams = {}): Orbital
         'name': 'NoteCreate',
         'linkedEntity': canonicalName,
         'config': {
-          'title': 'New Note',
-          'icon': 'plus-circle',
-          'mode': 'create',
           'fields': [
             'subject',
             'body',
@@ -2800,6 +2797,9 @@ export function stdCrmNoteOrbital(params: StdCrmNoteOrbitalParams = {}): Orbital
             'priority',
             'followUpAt',
           ],
+          'icon': 'plus-circle',
+          'title': 'New Note',
+          'mode': 'create',
         },
         'events': {
           'OPEN': 'CREATE',
@@ -2820,6 +2820,7 @@ export function stdCrmNoteOrbital(params: StdCrmNoteOrbitalParams = {}): Orbital
         'name': 'NoteEdit',
         'linkedEntity': canonicalName,
         'config': {
+          'icon': 'edit',
           'fields': [
             'subject',
             'body',
@@ -2827,7 +2828,6 @@ export function stdCrmNoteOrbital(params: StdCrmNoteOrbitalParams = {}): Orbital
             'priority',
             'followUpAt',
           ],
-          'icon': 'edit',
           'title': 'Edit Note',
           'mode': 'edit',
         },
@@ -2850,7 +2850,6 @@ export function stdCrmNoteOrbital(params: StdCrmNoteOrbitalParams = {}): Orbital
         'name': 'NoteView',
         'linkedEntity': canonicalName,
         'config': {
-          'mode': 'edit',
           'fields': [
             'subject',
             'body',
@@ -2860,6 +2859,7 @@ export function stdCrmNoteOrbital(params: StdCrmNoteOrbitalParams = {}): Orbital
           ],
           'title': 'View Note',
           'icon': 'eye',
+          'mode': 'edit',
         },
         'events': {
           'OPEN': 'VIEW',
@@ -2880,10 +2880,10 @@ export function stdCrmNoteOrbital(params: StdCrmNoteOrbitalParams = {}): Orbital
         'name': 'NoteDelete',
         'linkedEntity': canonicalName,
         'config': {
-          'alertMessage': 'This action cannot be undone.',
-          'icon': 'alert-triangle',
           'confirmLabel': 'Delete',
+          'icon': 'alert-triangle',
           'title': 'Delete Note',
+          'alertMessage': 'This action cannot be undone.',
         },
         'events': {
           'REQUEST': 'DELETE',

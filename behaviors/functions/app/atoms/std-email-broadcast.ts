@@ -86,12 +86,12 @@ export interface StdEmailBroadcastEmailBroadcastLoadFailedPayload {
  * without modifying its state-machine topology.
  */
 export interface StdEmailBroadcastConfig {
+  /** Default: `[{"label":"Open","variant":"primary","icon":"arrow-right","event":"OPEN_BROADCAST"},{"label":"Cancel","event":"CANCEL_BROADCAST","variant":"danger"}]` */
+  itemActions?: TraitConfig[];
+  /** Default: `[{"name":"name","variant":"caption","label":"Name"},{"name":"subject","label":"Subject","variant":"caption"},{"variant":"badge","name":"status","label":"Status"},{"label":"Recipients","variant":"caption","name":"recipientCount"},{"name":"sentCount","label":"Sent","variant":"caption"},{"variant":"caption","label":"Scheduled","name":"scheduledAt"}]` */
+  fields?: TraitConfig[];
   /** Default: `"Email Broadcasts"` */
   title?: string;
-  /** Default: `[{"event":"OPEN_BROADCAST","label":"Open","variant":"primary","icon":"arrow-right"},{"event":"CANCEL_BROADCAST","label":"Cancel","variant":"danger"}]` */
-  itemActions?: TraitConfig[];
-  /** Default: `[{"variant":"caption","name":"name","label":"Name"},{"name":"subject","label":"Subject","variant":"caption"},{"variant":"badge","label":"Status","name":"status"},{"name":"recipientCount","variant":"caption","label":"Recipients"},{"label":"Sent","variant":"caption","name":"sentCount"},{"name":"scheduledAt","label":"Scheduled","variant":"caption"}]` */
-  fields?: TraitConfig[];
 }
 
 /**

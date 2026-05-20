@@ -85,12 +85,12 @@ export interface StdStockLevelStockLevelLoadFailedPayload {
  * without modifying its state-machine topology.
  */
 export interface StdStockLevelConfig {
-  /** Default: `[{"label":"Open","icon":"arrow-right","event":"OPEN_STOCK","variant":"primary"},{"variant":"danger","label":"Adjust","event":"ADJUST_STOCK"}]` */
-  itemActions?: TraitConfig[];
   /** Default: `"Stock Levels"` */
   title?: string;
-  /** Default: `[{"label":"SKU","name":"sku","variant":"caption"},{"label":"Product","variant":"caption","name":"productName"},{"label":"Location","name":"locationId","variant":"caption"},{"variant":"caption","name":"onHand","label":"On Hand"},{"variant":"caption","label":"Reorder At","name":"reorderPoint"}]` */
+  /** Default: `[{"name":"sku","label":"SKU","variant":"caption"},{"variant":"caption","name":"productName","label":"Product"},{"label":"Location","name":"locationId","variant":"caption"},{"variant":"caption","name":"onHand","label":"On Hand"},{"variant":"caption","name":"reorderPoint","label":"Reorder At"}]` */
   fields?: TraitConfig[];
+  /** Default: `[{"label":"Open","variant":"primary","icon":"arrow-right","event":"OPEN_STOCK"},{"variant":"danger","event":"ADJUST_STOCK","label":"Adjust"}]` */
+  itemActions?: TraitConfig[];
 }
 
 /**

@@ -86,12 +86,12 @@ export interface StdInterviewSlotInterviewSlotLoadFailedPayload {
  * without modifying its state-machine topology.
  */
 export interface StdInterviewSlotConfig {
-  /** Default: `[{"label":"Applicant","variant":"caption","name":"applicantName"},{"name":"interviewerName","label":"Interviewer","variant":"caption"},{"name":"scheduledAt","variant":"caption","label":"Scheduled"},{"label":"Format","variant":"badge","name":"format"},{"label":"Status","name":"status","variant":"badge"}]` */
+  /** Default: `[{"label":"Applicant","name":"applicantName","variant":"caption"},{"name":"interviewerName","variant":"caption","label":"Interviewer"},{"label":"Scheduled","name":"scheduledAt","variant":"caption"},{"variant":"badge","name":"format","label":"Format"},{"name":"status","label":"Status","variant":"badge"}]` */
   fields?: TraitConfig[];
-  /** Default: `[{"variant":"primary","icon":"arrow-right","label":"Open","event":"OPEN_INTERVIEW"},{"label":"Cancel","variant":"danger","event":"CANCEL_INTERVIEW"}]` */
-  itemActions?: TraitConfig[];
   /** Default: `"Interviews"` */
   title?: string;
+  /** Default: `[{"label":"Open","icon":"arrow-right","variant":"primary","event":"OPEN_INTERVIEW"},{"event":"CANCEL_INTERVIEW","variant":"danger","label":"Cancel"}]` */
+  itemActions?: TraitConfig[];
 }
 
 /**

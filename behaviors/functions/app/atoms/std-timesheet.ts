@@ -172,9 +172,9 @@ export interface StdTimesheetTimesheetLoadFailedPayload {
  * without modifying its state-machine topology.
  */
 export interface StdTimesheetConfig {
-  /** Default: `[{"name":"employeeName","variant":"caption","label":"Employee"},{"variant":"caption","name":"periodStart","label":"Period Start"},{"name":"periodEnd","label":"Period End","variant":"caption"},{"variant":"caption","label":"Total Hours","name":"totalHours"},{"label":"Billable","variant":"caption","name":"billableHours"},{"label":"Status","variant":"badge","name":"status"},{"name":"approvedBy","label":"Approved By","variant":"caption"}]` */
+  /** Default: `[{"variant":"caption","name":"employeeName","label":"Employee"},{"variant":"caption","name":"periodStart","label":"Period Start"},{"name":"periodEnd","variant":"caption","label":"Period End"},{"name":"totalHours","label":"Total Hours","variant":"caption"},{"name":"billableHours","label":"Billable","variant":"caption"},{"label":"Status","name":"status","variant":"badge"},{"label":"Approved By","variant":"caption","name":"approvedBy"}]` */
   fields?: TraitConfig[];
-  /** Default: `[{"label":"Open","event":"OPEN_TIMESHEET","variant":"primary","icon":"arrow-right"},{"label":"Delete","event":"REQUEST_DELETE","variant":"danger"}]` */
+  /** Default: `[{"variant":"primary","event":"OPEN_TIMESHEET","label":"Open","icon":"arrow-right"},{"event":"REQUEST_DELETE","variant":"danger","label":"Delete"}]` */
   itemActions?: TraitConfig[];
   /** Default: `"Timesheets"` */
   title?: string;

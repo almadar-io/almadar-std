@@ -93,12 +93,12 @@ export interface StdRentChargeRentChargeLoadFailedPayload {
  * without modifying its state-machine topology.
  */
 export interface StdRentChargeConfig {
-  /** Default: `[{"name":"tenantId","label":"Tenant","variant":"caption"},{"variant":"caption","label":"Amount","name":"amount"},{"label":"Due","name":"dueDate","variant":"caption"},{"variant":"badge","name":"status","label":"Status"},{"variant":"caption","label":"Paid","name":"paidAt"},{"label":"Late Fee","variant":"caption","name":"lateFee"}]` */
+  /** Default: `[{"variant":"caption","label":"Tenant","name":"tenantId"},{"name":"amount","label":"Amount","variant":"caption"},{"label":"Due","variant":"caption","name":"dueDate"},{"label":"Status","variant":"badge","name":"status"},{"label":"Paid","name":"paidAt","variant":"caption"},{"label":"Late Fee","name":"lateFee","variant":"caption"}]` */
   fields?: TraitConfig[];
+  /** Default: `[{"variant":"primary","label":"Open","event":"OPEN_CHARGE","icon":"arrow-right"},{"event":"WAIVE_CHARGE","label":"Waive","variant":"danger"}]` */
+  itemActions?: TraitConfig[];
   /** Default: `"Rent Charges"` */
   title?: string;
-  /** Default: `[{"icon":"arrow-right","event":"OPEN_CHARGE","variant":"primary","label":"Open"},{"event":"WAIVE_CHARGE","variant":"danger","label":"Waive"}]` */
-  itemActions?: TraitConfig[];
 }
 
 /**

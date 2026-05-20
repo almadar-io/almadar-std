@@ -93,9 +93,9 @@ export interface StdTemplateEditorMessageTemplateLoadFailedPayload {
 export interface StdTemplateEditorConfig {
   /** Default: `"Templates"` */
   title?: string;
-  /** Default: `[{"name":"name","label":"Name","variant":"caption"},{"name":"channel","label":"Channel","variant":"badge"},{"label":"Subject","name":"subject","variant":"caption"},{"name":"lastEditedAt","label":"Updated","variant":"caption"}]` */
+  /** Default: `[{"name":"name","label":"Name","variant":"caption"},{"label":"Channel","name":"channel","variant":"badge"},{"label":"Subject","variant":"caption","name":"subject"},{"name":"lastEditedAt","variant":"caption","label":"Updated"}]` */
   fields?: TraitConfig[];
-  /** Default: `[{"label":"Open","variant":"primary","icon":"arrow-right","event":"OPEN_TEMPLATE"},{"variant":"danger","label":"Delete","event":"DELETE_TEMPLATE"}]` */
+  /** Default: `[{"event":"OPEN_TEMPLATE","variant":"primary","label":"Open","icon":"arrow-right"},{"event":"DELETE_TEMPLATE","variant":"danger","label":"Delete"}]` */
   itemActions?: TraitConfig[];
 }
 

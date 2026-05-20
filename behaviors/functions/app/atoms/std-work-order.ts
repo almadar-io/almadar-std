@@ -178,11 +178,11 @@ export interface StdWorkOrderWorkOrderLoadFailedPayload {
  * without modifying its state-machine topology.
  */
 export interface StdWorkOrderConfig {
+  /** Default: `[{"name":"customerName","variant":"caption","label":"Customer"},{"variant":"caption","name":"serviceType","label":"Service"},{"name":"address","label":"Address","variant":"caption"},{"label":"Priority","name":"priority","variant":"badge"},{"name":"status","label":"Status","variant":"badge"},{"label":"Assigned","variant":"caption","name":"assignedTo"},{"label":"ETA (min)","variant":"caption","name":"etaMinutes"}]` */
+  fields?: TraitConfig[];
   /** Default: `"Work Orders"` */
   title?: string;
-  /** Default: `[{"label":"Customer","variant":"caption","name":"customerName"},{"label":"Service","name":"serviceType","variant":"caption"},{"variant":"caption","name":"address","label":"Address"},{"label":"Priority","variant":"badge","name":"priority"},{"name":"status","label":"Status","variant":"badge"},{"label":"Assigned","variant":"caption","name":"assignedTo"},{"variant":"caption","name":"etaMinutes","label":"ETA (min)"}]` */
-  fields?: TraitConfig[];
-  /** Default: `[{"variant":"primary","label":"Open","event":"OPEN_ORDER","icon":"arrow-right"},{"label":"Cancel","event":"CANCEL","variant":"danger","icon":"x"}]` */
+  /** Default: `[{"label":"Open","icon":"arrow-right","variant":"primary","event":"OPEN_ORDER"},{"label":"Cancel","event":"CANCEL","variant":"danger","icon":"x"}]` */
   itemActions?: TraitConfig[];
 }
 

@@ -267,8 +267,8 @@
                     "PageNode",
                     {
                       "emit": {
-                        "success": "PageNodeLoaded",
-                        "failure": "PageNodeLoadFailed"
+                        "failure": "PageNodeLoadFailed",
+                        "success": "PageNodeLoaded"
                       }
                     }
                   ],
@@ -276,21 +276,21 @@
                     "render-ui",
                     "main",
                     {
-                      "gap": "md",
+                      "direction": "vertical",
+                      "type": "stack",
                       "children": [
                         {
                           "type": "spinner"
                         },
                         {
-                          "variant": "caption",
-                          "color": "muted",
                           "type": "typography",
+                          "color": "muted",
+                          "variant": "caption",
                           "content": "Loading pages…"
                         }
                       ],
-                      "type": "stack",
-                      "direction": "vertical",
                       "align": "center",
+                      "gap": "md",
                       "className": "py-12"
                     }
                   ]
@@ -309,57 +309,56 @@
                       "gap": "md",
                       "children": [
                         {
-                          "align": "center",
                           "type": "stack",
-                          "direction": "horizontal",
                           "gap": "sm",
+                          "align": "center",
                           "children": [
                             {
-                              "name": "list-tree",
-                              "type": "icon"
+                              "type": "icon",
+                              "name": "list-tree"
                             },
                             {
                               "type": "typography",
                               "variant": "h3",
                               "content": "@config.title"
                             }
-                          ]
+                          ],
+                          "direction": "horizontal"
                         },
                         {
-                          "type": "simple-grid",
-                          "cols": 4.0,
                           "children": [
                             {
-                              "icon": "file-text",
                               "label": "Total pages",
+                              "icon": "file-text",
                               "type": "stat-display",
                               "value": "@payload.data.length"
                             },
                             {
-                              "icon": "folder",
                               "type": "stat-display",
+                              "label": "Top-level",
                               "value": "12",
-                              "label": "Top-level"
+                              "icon": "folder"
                             },
                             {
-                              "type": "stat-display",
                               "value": "8",
                               "icon": "edit-3",
-                              "label": "Updated this week"
+                              "label": "Updated this week",
+                              "type": "stat-display"
                             },
                             {
-                              "type": "stat-display",
+                              "icon": "file",
                               "label": "Drafts",
-                              "value": "3",
-                              "icon": "file"
+                              "type": "stat-display",
+                              "value": "3"
                             }
-                          ]
+                          ],
+                          "cols": 4.0,
+                          "type": "simple-grid"
                         },
                         {
                           "type": "divider"
                         },
                         {
-                          "type": "file-tree",
                           "tree": [
                             {
                               "name": "Getting Started",
@@ -379,23 +378,25 @@
                               "path": "Getting Started"
                             },
                             {
-                              "path": "Architecture",
-                              "type": "dir",
                               "children": [
                                 {
                                   "path": "Architecture/Overview.md",
-                                  "name": "Overview.md",
-                                  "type": "file"
+                                  "type": "file",
+                                  "name": "Overview.md"
                                 },
                                 {
-                                  "name": "State Machine.md",
                                   "path": "Architecture/State Machine.md",
-                                  "type": "file"
+                                  "type": "file",
+                                  "name": "State Machine.md"
                                 }
                               ],
+                              "path": "Architecture",
+                              "type": "dir",
                               "name": "Architecture"
                             },
                             {
+                              "name": "Runbooks",
+                              "type": "dir",
                               "path": "Runbooks",
                               "children": [
                                 {
@@ -404,61 +405,60 @@
                                   "type": "file"
                                 },
                                 {
-                                  "type": "file",
                                   "name": "Deployment.md",
+                                  "type": "file",
                                   "path": "Runbooks/Deployment.md"
                                 }
-                              ],
-                              "type": "dir",
-                              "name": "Runbooks"
+                              ]
                             }
-                          ]
+                          ],
+                          "type": "file-tree"
                         },
                         {
                           "type": "divider"
                         },
                         {
+                          "entity": "@payload.data",
+                          "reorderEvent": "REORDER",
+                          "type": "data-list",
                           "reorderable": true,
-                          "itemActions": [
-                            {
-                              "variant": "primary",
-                              "event": "OPEN_PAGE",
-                              "label": "Open",
-                              "icon": "arrow-right"
-                            },
-                            {
-                              "icon": "trash",
-                              "event": "DELETE_PAGE",
-                              "variant": "danger",
-                              "label": "Delete"
-                            }
-                          ],
                           "fields": [
                             {
                               "name": "title",
-                              "label": "Title",
-                              "variant": "h4"
+                              "variant": "h4",
+                              "label": "Title"
                             },
                             {
-                              "label": "Slug",
                               "name": "slug",
+                              "label": "Slug",
                               "variant": "caption"
                             },
                             {
                               "label": "Parent",
-                              "variant": "caption",
-                              "name": "parentId"
+                              "name": "parentId",
+                              "variant": "caption"
                             },
                             {
-                              "name": "order",
                               "label": "Order",
-                              "variant": "badge"
+                              "variant": "badge",
+                              "name": "order"
                             }
                           ],
-                          "type": "data-list",
                           "gap": "sm",
-                          "entity": "@payload.data",
-                          "reorderEvent": "REORDER"
+                          "itemActions": [
+                            {
+                              "icon": "arrow-right",
+                              "event": "OPEN_PAGE",
+                              "label": "Open",
+                              "variant": "primary"
+                            },
+                            {
+                              "variant": "danger",
+                              "label": "Delete",
+                              "icon": "trash",
+                              "event": "DELETE_PAGE"
+                            }
+                          ]
                         }
                       ],
                       "type": "stack"
@@ -475,9 +475,9 @@
                     "render-ui",
                     "main",
                     {
+                      "type": "alert",
                       "variant": "error",
-                      "message": "@payload.error",
-                      "type": "alert"
+                      "message": "@payload.error"
                     }
                   ]
                 ]
@@ -526,6 +526,7 @@
                     "render-ui",
                     "main",
                     {
+                      "direction": "vertical",
                       "children": [
                         {
                           "children": [
@@ -540,122 +541,121 @@
                               "name": "file-text"
                             },
                             {
-                              "variant": "h3",
                               "content": "@entity.title",
-                              "type": "typography"
+                              "type": "typography",
+                              "variant": "h3"
                             }
                           ],
                           "type": "stack",
-                          "gap": "sm",
+                          "align": "center",
                           "direction": "horizontal",
-                          "align": "center"
+                          "gap": "sm"
                         },
                         {
                           "type": "divider"
                         },
                         {
                           "direction": "vertical",
+                          "gap": "sm",
+                          "type": "stack",
                           "children": [
                             {
-                              "type": "stack",
-                              "direction": "horizontal",
-                              "children": [
-                                {
-                                  "type": "typography",
-                                  "variant": "caption",
-                                  "color": "muted",
-                                  "content": "Slug"
-                                },
-                                {
-                                  "type": "typography",
-                                  "variant": "body",
-                                  "content": "@entity.slug"
-                                }
-                              ],
-                              "gap": "md"
-                            },
-                            {
-                              "type": "stack",
-                              "children": [
-                                {
-                                  "color": "muted",
-                                  "type": "typography",
-                                  "variant": "caption",
-                                  "content": "Parent"
-                                },
-                                {
-                                  "type": "typography",
-                                  "variant": "body",
-                                  "content": "@entity.parentId"
-                                }
-                              ],
                               "gap": "md",
-                              "direction": "horizontal"
-                            },
-                            {
                               "children": [
                                 {
-                                  "content": "Document",
+                                  "content": "Slug",
                                   "type": "typography",
                                   "variant": "caption",
                                   "color": "muted"
                                 },
                                 {
+                                  "variant": "body",
+                                  "content": "@entity.slug",
+                                  "type": "typography"
+                                }
+                              ],
+                              "type": "stack",
+                              "direction": "horizontal"
+                            },
+                            {
+                              "type": "stack",
+                              "children": [
+                                {
+                                  "variant": "caption",
+                                  "color": "muted",
                                   "type": "typography",
-                                  "content": "@entity.documentId",
+                                  "content": "Parent"
+                                },
+                                {
+                                  "type": "typography",
+                                  "content": "@entity.parentId",
                                   "variant": "body"
                                 }
                               ],
                               "direction": "horizontal",
+                              "gap": "md"
+                            },
+                            {
+                              "direction": "horizontal",
+                              "children": [
+                                {
+                                  "color": "muted",
+                                  "type": "typography",
+                                  "variant": "caption",
+                                  "content": "Document"
+                                },
+                                {
+                                  "type": "typography",
+                                  "variant": "body",
+                                  "content": "@entity.documentId"
+                                }
+                              ],
                               "gap": "md",
                               "type": "stack"
                             }
-                          ],
-                          "gap": "sm",
-                          "type": "stack"
+                          ]
                         },
                         {
                           "type": "divider"
                         },
                         {
+                          "cols": 2.0,
+                          "type": "simple-grid",
                           "children": [
                             {
                               "label": "Order",
+                              "value": "@entity.order",
                               "icon": "list",
-                              "type": "stat-display",
-                              "value": "@entity.order"
+                              "type": "stat-display"
                             },
                             {
-                              "label": "Slug",
                               "value": "@entity.slug",
-                              "icon": "link",
-                              "type": "stat-display"
+                              "type": "stat-display",
+                              "label": "Slug",
+                              "icon": "link"
                             }
-                          ],
-                          "type": "simple-grid",
-                          "cols": 2.0
+                          ]
                         },
                         {
-                          "align": "center",
-                          "gap": "sm",
-                          "type": "stack",
                           "children": [
                             {
                               "action": "DELETE_PAGE",
                               "actionPayload": {
                                 "id": "@entity.id"
                               },
-                              "variant": "danger",
                               "type": "button",
-                              "label": "Delete"
+                              "label": "Delete",
+                              "variant": "danger"
                             }
                           ],
-                          "direction": "horizontal"
+                          "direction": "horizontal",
+                          "gap": "sm",
+                          "type": "stack",
+                          "align": "center"
                         }
                       ],
                       "gap": "md",
-                      "type": "stack",
-                      "direction": "vertical"
+                      "type": "stack"
                     }
                   ]
                 ]
@@ -684,22 +684,22 @@
                     "render-ui",
                     "main",
                     {
-                      "gap": "md",
-                      "type": "stack",
-                      "className": "py-12",
                       "children": [
                         {
                           "type": "spinner"
                         },
                         {
-                          "content": "Reordering pages…",
                           "type": "typography",
                           "color": "muted",
+                          "content": "Reordering pages…",
                           "variant": "caption"
                         }
                       ],
                       "direction": "vertical",
-                      "align": "center"
+                      "gap": "md",
+                      "align": "center",
+                      "type": "stack",
+                      "className": "py-12"
                     }
                   ]
                 ]
@@ -728,22 +728,22 @@
                     "render-ui",
                     "main",
                     {
+                      "align": "center",
                       "direction": "vertical",
-                      "gap": "md",
                       "type": "stack",
                       "className": "py-12",
-                      "align": "center",
                       "children": [
                         {
                           "type": "spinner"
                         },
                         {
+                          "type": "typography",
                           "variant": "caption",
                           "color": "muted",
-                          "type": "typography",
                           "content": "Deleting page…"
                         }
-                      ]
+                      ],
+                      "gap": "md"
                     }
                   ]
                 ]
@@ -758,8 +758,8 @@
                     "PageNode",
                     {
                       "emit": {
-                        "failure": "PageNodeLoadFailed",
-                        "success": "PageNodeLoaded"
+                        "success": "PageNodeLoaded",
+                        "failure": "PageNodeLoadFailed"
                       }
                     }
                   ],
@@ -767,11 +767,10 @@
                     "render-ui",
                     "main",
                     {
+                      "align": "center",
+                      "direction": "vertical",
                       "type": "stack",
                       "gap": "md",
-                      "align": "center",
-                      "className": "py-12",
-                      "direction": "vertical",
                       "children": [
                         {
                           "type": "spinner"
@@ -782,7 +781,8 @@
                           "color": "muted",
                           "variant": "caption"
                         }
-                      ]
+                      ],
+                      "className": "py-12"
                     }
                   ]
                 ]
@@ -811,20 +811,20 @@
                     "render-ui",
                     "main",
                     {
-                      "gap": "md",
-                      "align": "center",
                       "className": "py-12",
                       "type": "stack",
+                      "gap": "md",
                       "direction": "vertical",
+                      "align": "center",
                       "children": [
                         {
                           "type": "spinner"
                         },
                         {
-                          "color": "muted",
-                          "content": "Deleting page…",
                           "type": "typography",
-                          "variant": "caption"
+                          "variant": "caption",
+                          "content": "Deleting page…",
+                          "color": "muted"
                         }
                       ]
                     }
@@ -841,8 +841,8 @@
                     "PageNode",
                     {
                       "emit": {
-                        "failure": "PageNodeLoadFailed",
-                        "success": "PageNodeLoaded"
+                        "success": "PageNodeLoaded",
+                        "failure": "PageNodeLoadFailed"
                       }
                     }
                   ],

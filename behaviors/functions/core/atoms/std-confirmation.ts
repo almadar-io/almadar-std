@@ -61,14 +61,14 @@ export interface StdConfirmationConfirmActionLoadedPayload {
  * without modifying its state-machine topology.
  */
 export interface StdConfirmationConfig {
-  /** Default: `"Confirm"` */
-  confirmLabel?: string;
+  /** Default: `"alert-triangle"` */
+  icon?: string;
   /** Default: `"Are you sure?"` */
   alertMessage?: string;
   /** Default: `"Confirm Action"` */
   title?: string;
-  /** Default: `"alert-triangle"` */
-  icon?: string;
+  /** Default: `"Confirm"` */
+  confirmLabel?: string;
 }
 
 /**

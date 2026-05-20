@@ -85,7 +85,7 @@ export interface StdWizardWizardSaveFailedPayload {
 export interface StdWizardConfig {
   /** Default: `"Wizard"` */
   title?: string;
-  /** Default: `[{"fields":["title","description"],"description":"Basic information","key":"details","icon":"file-text","label":"Details"},{"fields":["category","priority"],"label":"Options","key":"options","description":"Configure preferences","icon":"settings"},{"description":"Confirm and submit","fields":["notes"],"label":"Review","key":"review","icon":"check-circle"}]` */
+  /** Default: `[{"description":"Basic information","key":"details","label":"Details","icon":"file-text","fields":["title","description"]},{"key":"options","label":"Options","description":"Configure preferences","icon":"settings","fields":["category","priority"]},{"fields":["notes"],"label":"Review","icon":"check-circle","key":"review","description":"Confirm and submit"}]` */
   steps?: TraitConfig[];
 }
 

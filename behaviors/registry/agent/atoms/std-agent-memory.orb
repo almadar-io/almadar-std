@@ -442,8 +442,8 @@
                     "AgentMemory",
                     {
                       "emit": {
-                        "failure": "AgentMemoryLoadFailed",
-                        "success": "AgentMemoryLoaded"
+                        "success": "AgentMemoryLoaded",
+                        "failure": "AgentMemoryLoadFailed"
                       }
                     }
                   ],
@@ -451,22 +451,22 @@
                     "render-ui",
                     "main",
                     {
+                      "direction": "vertical",
+                      "align": "center",
+                      "className": "py-12",
                       "children": [
                         {
                           "type": "spinner"
                         },
                         {
                           "type": "typography",
+                          "content": "Loading memories…",
                           "variant": "caption",
-                          "color": "muted",
-                          "content": "Loading memories…"
+                          "color": "muted"
                         }
                       ],
-                      "direction": "vertical",
-                      "type": "stack",
                       "gap": "md",
-                      "align": "center",
-                      "className": "py-12"
+                      "type": "stack"
                     }
                   ]
                 ]
@@ -480,63 +480,61 @@
                     "render-ui",
                     "main",
                     {
-                      "gap": "lg",
                       "className": "max-w-5xl mx-auto w-full",
-                      "direction": "vertical",
                       "children": [
                         {
+                          "type": "stack",
+                          "justify": "between",
+                          "direction": "horizontal",
+                          "align": "center",
                           "children": [
                             {
                               "type": "stack",
+                              "gap": "sm",
+                              "direction": "horizontal",
+                              "align": "center",
                               "children": [
                                 {
-                                  "name": "brain",
-                                  "type": "icon"
+                                  "type": "icon",
+                                  "name": "brain"
                                 },
                                 {
                                   "content": "AgentMemory Manager",
-                                  "type": "typography",
-                                  "variant": "h2"
-                                }
-                              ],
-                              "direction": "horizontal",
-                              "gap": "sm",
-                              "align": "center"
-                            },
-                            {
-                              "type": "stack",
-                              "gap": "sm",
-                              "direction": "horizontal",
-                              "children": [
-                                {
-                                  "action": "MEMORIZE",
-                                  "variant": "primary",
-                                  "label": "Memorize",
-                                  "type": "button",
-                                  "icon": "plus"
-                                },
-                                {
-                                  "icon": "search",
-                                  "type": "button",
-                                  "label": "Recall",
-                                  "action": "RECALL",
-                                  "variant": "secondary"
-                                },
-                                {
-                                  "action": "DECAY",
-                                  "type": "button",
-                                  "label": "Decay All",
-                                  "icon": "clock",
-                                  "variant": "ghost"
+                                  "variant": "h2",
+                                  "type": "typography"
                                 }
                               ]
+                            },
+                            {
+                              "direction": "horizontal",
+                              "gap": "sm",
+                              "children": [
+                                {
+                                  "variant": "primary",
+                                  "label": "Memorize",
+                                  "icon": "plus",
+                                  "action": "MEMORIZE",
+                                  "type": "button"
+                                },
+                                {
+                                  "action": "RECALL",
+                                  "variant": "secondary",
+                                  "icon": "search",
+                                  "label": "Recall",
+                                  "type": "button"
+                                },
+                                {
+                                  "variant": "ghost",
+                                  "icon": "clock",
+                                  "action": "DECAY",
+                                  "type": "button",
+                                  "label": "Decay All"
+                                }
+                              ],
+                              "type": "stack"
                             }
                           ],
-                          "type": "stack",
-                          "gap": "md",
-                          "direction": "horizontal",
-                          "justify": "between",
-                          "align": "center"
+                          "gap": "md"
                         },
                         {
                           "type": "divider"
@@ -544,32 +542,32 @@
                         {
                           "itemActions": [
                             {
-                              "variant": "ghost",
                               "label": "Pin",
-                              "event": "PIN"
-                            },
-                            {
-                              "label": "Reinforce",
-                              "event": "REINFORCE",
+                              "event": "PIN",
                               "variant": "ghost"
                             },
                             {
-                              "label": "Forget",
+                              "label": "Reinforce",
+                              "variant": "ghost",
+                              "event": "REINFORCE"
+                            },
+                            {
                               "event": "FORGET",
-                              "variant": "danger"
+                              "variant": "danger",
+                              "label": "Forget"
                             }
                           ],
                           "fields": [
                             {
-                              "icon": "brain",
-                              "name": "content",
+                              "variant": "h4",
                               "label": "Content",
-                              "variant": "h4"
+                              "name": "content",
+                              "icon": "brain"
                             },
                             {
-                              "variant": "badge",
+                              "name": "category",
                               "label": "Category",
-                              "name": "category"
+                              "variant": "badge"
                             },
                             {
                               "variant": "caption",
@@ -577,11 +575,13 @@
                               "name": "strength"
                             }
                           ],
-                          "type": "data-grid",
-                          "entity": "@payload.data"
+                          "entity": "@payload.data",
+                          "type": "data-grid"
                         }
                       ],
-                      "type": "stack"
+                      "type": "stack",
+                      "direction": "vertical",
+                      "gap": "lg"
                     }
                   ]
                 ]
@@ -595,13 +595,15 @@
                     "render-ui",
                     "main",
                     {
+                      "align": "center",
+                      "gap": "md",
+                      "direction": "vertical",
                       "className": "py-12",
-                      "type": "stack",
                       "children": [
                         {
                           "name": "alert-triangle",
-                          "type": "icon",
-                          "color": "destructive"
+                          "color": "destructive",
+                          "type": "icon"
                         },
                         {
                           "content": "Failed to load memories",
@@ -609,22 +611,20 @@
                           "variant": "h3"
                         },
                         {
-                          "type": "typography",
                           "variant": "body",
-                          "content": "@payload.error",
-                          "color": "muted"
+                          "type": "typography",
+                          "color": "muted",
+                          "content": "@payload.error"
                         },
                         {
-                          "type": "button",
-                          "action": "INIT",
-                          "icon": "rotate-ccw",
                           "label": "Retry",
-                          "variant": "primary"
+                          "action": "INIT",
+                          "type": "button",
+                          "variant": "primary",
+                          "icon": "rotate-ccw"
                         }
                       ],
-                      "direction": "vertical",
-                      "gap": "md",
-                      "align": "center"
+                      "type": "stack"
                     }
                   ]
                 ]
@@ -639,8 +639,8 @@
                     "AgentMemory",
                     {
                       "emit": {
-                        "failure": "AgentMemoryLoadFailed",
-                        "success": "AgentMemoryLoaded"
+                        "success": "AgentMemoryLoaded",
+                        "failure": "AgentMemoryLoadFailed"
                       }
                     }
                   ],
@@ -873,11 +873,9 @@
                     "render-ui",
                     "modal",
                     {
+                      "gap": "md",
                       "children": [
                         {
-                          "type": "stack",
-                          "direction": "horizontal",
-                          "gap": "sm",
                           "children": [
                             {
                               "name": "plus-circle",
@@ -888,26 +886,28 @@
                               "content": "Memorize",
                               "variant": "h3"
                             }
-                          ]
+                          ],
+                          "type": "stack",
+                          "direction": "horizontal",
+                          "gap": "sm"
                         },
                         {
                           "type": "divider"
                         },
                         {
+                          "submitEvent": "SAVE",
+                          "type": "form-section",
                           "fields": [
                             "content",
                             "category",
                             "scope"
                           ],
-                          "type": "form-section",
-                          "mode": "create",
-                          "submitEvent": "SAVE",
-                          "cancelEvent": "CLOSE"
+                          "cancelEvent": "CLOSE",
+                          "mode": "create"
                         }
                       ],
                       "type": "stack",
-                      "direction": "vertical",
-                      "gap": "md"
+                      "direction": "vertical"
                     }
                   ]
                 ]
@@ -948,8 +948,8 @@
                     "@payload.data",
                     {
                       "emit": {
-                        "failure": "AgentMemorySaveFailed",
-                        "success": "AgentMemorySaved"
+                        "success": "AgentMemorySaved",
+                        "failure": "AgentMemorySaveFailed"
                       }
                     }
                   ],
@@ -1292,8 +1292,8 @@
                     "AgentMemory",
                     {
                       "emit": {
-                        "failure": "AgentMemoryLoadFailed",
-                        "success": "AgentMemoryLoaded"
+                        "success": "AgentMemoryLoaded",
+                        "failure": "AgentMemoryLoadFailed"
                       }
                     }
                   ],
@@ -1326,8 +1326,8 @@
                     "@payload.data",
                     {
                       "emit": {
-                        "success": "AgentMemorySaved",
-                        "failure": "AgentMemorySaveFailed"
+                        "failure": "AgentMemorySaveFailed",
+                        "success": "AgentMemorySaved"
                       }
                     }
                   ],
@@ -1367,8 +1367,8 @@
                     "AgentMemory",
                     {
                       "emit": {
-                        "success": "AgentMemoryLoaded",
-                        "failure": "AgentMemoryLoadFailed"
+                        "failure": "AgentMemoryLoadFailed",
+                        "success": "AgentMemoryLoaded"
                       }
                     }
                   ]

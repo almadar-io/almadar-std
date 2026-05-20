@@ -86,12 +86,12 @@ export interface StdCampaignGoalCampaignGoalLoadFailedPayload {
  * without modifying its state-machine topology.
  */
 export interface StdCampaignGoalConfig {
-  /** Default: `[{"label":"Open","event":"OPEN_CAMPAIGN","icon":"arrow-right","variant":"primary"},{"event":"END_CAMPAIGN","variant":"danger","label":"End"}]` */
-  itemActions?: TraitConfig[];
   /** Default: `"Campaigns"` */
   title?: string;
-  /** Default: `[{"label":"Name","variant":"caption","name":"name"},{"name":"targetAmount","label":"Target","variant":"caption"},{"name":"raisedAmount","label":"Raised","variant":"caption"},{"label":"Donors","variant":"caption","name":"donorCount"},{"label":"Status","variant":"badge","name":"status"}]` */
+  /** Default: `[{"variant":"caption","name":"name","label":"Name"},{"label":"Target","variant":"caption","name":"targetAmount"},{"variant":"caption","label":"Raised","name":"raisedAmount"},{"label":"Donors","name":"donorCount","variant":"caption"},{"variant":"badge","name":"status","label":"Status"}]` */
   fields?: TraitConfig[];
+  /** Default: `[{"label":"Open","event":"OPEN_CAMPAIGN","variant":"primary","icon":"arrow-right"},{"label":"End","event":"END_CAMPAIGN","variant":"danger"}]` */
+  itemActions?: TraitConfig[];
 }
 
 /**

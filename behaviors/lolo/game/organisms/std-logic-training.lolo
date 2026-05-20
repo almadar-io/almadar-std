@@ -17,6 +17,8 @@ orbital DebugChallengeOrbital {
     initial: menu
     state menu {
       INIT -> menu
+        (set @entity.level 1)
+        (set @entity.score 0)
         (fetch DebugChallenge { emit: { success: "DebugChallengeLoaded", failure: "DebugChallengeLoadFailed" } })
         (render-ui main { type: "game-shell", appName: "Logic Training", showTopBar: true, children: [{ type: "game-menu", title: "Debug Challenge", menuItems: [{ label: "Start", event: "START", variant: "primary" }] }] })
       START -> playing
@@ -58,6 +60,8 @@ orbital NegotiateChallengeOrbital {
     initial: menu
     state menu {
       INIT -> menu
+        (set @entity.level 1)
+        (set @entity.score 0)
         (fetch NegotiateChallenge { emit: { success: "NegotiateChallengeLoaded", failure: "NegotiateChallengeLoadFailed" } })
         (render-ui main { type: "game-shell", appName: "Logic Training", showTopBar: true, children: [{ type: "game-menu", title: "Negotiate Challenge", menuItems: [{ label: "Start", event: "START", variant: "primary" }] }] })
       START -> playing
@@ -101,6 +105,8 @@ orbital TrainingScoreOrbital {
   trait TrainingScoreScoreBoard -> TrainingScore [interaction, instance] {
     state idle {
       INIT -> idle
+        (set @entity.highScore 0)
+        (set @entity.level 1)
         (fetch TrainingScore { emit: { success: "TrainingScoreLoaded", failure: "TrainingScoreLoadFailed" } })
         (render-ui main { type: "game-shell", appName: "Logic Training", showTopBar: true, children: [{ type: "score-board", score: "@entity.score", highScore: "@entity.highScore", combo: "@entity.combo", multiplier: "@entity.multiplier", level: "@entity.level" }] })
       ADD_SCORE -> idle
@@ -123,8 +129,8 @@ emits {
 
         listens {
       TrainingScoreLoadFailed { message : string }
-      ADD_SCORE { points : string }
-      COMBO { multiplier : string }
+      ADD_SCORE { points : number }
+      COMBO { multiplier : number }
     }
   }
   page "/scores" -> TrainingScoreScoreBoard

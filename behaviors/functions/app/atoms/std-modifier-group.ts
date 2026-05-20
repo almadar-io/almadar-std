@@ -157,12 +157,12 @@ export interface StdModifierGroupModifierGroupWriteFailedPayload {
  * without modifying its state-machine topology.
  */
 export interface StdModifierGroupConfig {
-  /** Default: `[{"name":"name","label":"Group","variant":"caption"},{"variant":"badge","label":"Constraint","name":"constraintType"},{"variant":"badge","label":"Required","name":"required"},{"variant":"caption","name":"minSelect","label":"Min"},{"label":"Max","variant":"caption","name":"maxSelect"}]` */
-  fields?: TraitConfig[];
   /** Default: `"Modifier Groups"` */
   title?: string;
-  /** Default: `[{"event":"OPEN_GROUP","label":"Open","variant":"primary","icon":"arrow-right"},{"variant":"danger","event":"DELETE","label":"Delete","icon":"trash"}]` */
+  /** Default: `[{"label":"Open","variant":"primary","event":"OPEN_GROUP","icon":"arrow-right"},{"icon":"trash","variant":"danger","label":"Delete","event":"DELETE"}]` */
   itemActions?: TraitConfig[];
+  /** Default: `[{"name":"name","label":"Group","variant":"caption"},{"label":"Constraint","name":"constraintType","variant":"badge"},{"name":"required","label":"Required","variant":"badge"},{"label":"Min","name":"minSelect","variant":"caption"},{"label":"Max","variant":"caption","name":"maxSelect"}]` */
+  fields?: TraitConfig[];
 }
 
 /**

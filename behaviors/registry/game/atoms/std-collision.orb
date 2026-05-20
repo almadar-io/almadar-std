@@ -1,0 +1,615 @@
+{
+  "name": "std-collision",
+  "version": "1.0.0",
+  "description": "std-collision as a Function",
+  "orbitals": [
+    {
+      "name": "CollidableBodyOrbital",
+      "entity": {
+        "name": "CollidableBody",
+        "persistence": "runtime",
+        "fields": [
+          {
+            "name": "id",
+            "type": "string"
+          },
+          {
+            "name": "name",
+            "type": "string"
+          },
+          {
+            "name": "description",
+            "type": "string"
+          },
+          {
+            "name": "status",
+            "type": "string",
+            "default": "active",
+            "values": [
+              "active",
+              "inactive",
+              "pending"
+            ]
+          },
+          {
+            "name": "createdAt",
+            "type": "string"
+          },
+          {
+            "name": "x",
+            "type": "number",
+            "default": 0.0
+          },
+          {
+            "name": "y",
+            "type": "number",
+            "default": 0.0
+          },
+          {
+            "name": "collisionStatus",
+            "type": "string",
+            "default": "idle"
+          },
+          {
+            "name": "targetId",
+            "type": "string",
+            "default": ""
+          }
+        ]
+      },
+      "traits": [
+        {
+          "name": "CollidableBodyCollision",
+          "category": "interaction",
+          "linkedEntity": "CollidableBody",
+          "stateMachine": {
+            "states": [
+              {
+                "name": "idle",
+                "isInitial": true
+              },
+              {
+                "name": "detecting"
+              }
+            ],
+            "events": [
+              {
+                "key": "INIT",
+                "name": "Initialize"
+              },
+              {
+                "key": "CHECK",
+                "name": "Check"
+              },
+              {
+                "key": "COLLISION_DETECTED",
+                "name": "Collision Detected",
+                "payloadSchema": [
+                  {
+                    "name": "targetId",
+                    "type": "string",
+                    "required": true
+                  }
+                ]
+              },
+              {
+                "key": "CLEAR",
+                "name": "Clear"
+              }
+            ],
+            "transitions": [
+              {
+                "from": "idle",
+                "to": "idle",
+                "event": "INIT",
+                "effects": [
+                  [
+                    "set",
+                    "@entity.x",
+                    0.0
+                  ],
+                  [
+                    "set",
+                    "@entity.y",
+                    0.0
+                  ],
+                  [
+                    "set",
+                    "@entity.targetId",
+                    ""
+                  ],
+                  [
+                    "set",
+                    "@entity.collisionStatus",
+                    "idle"
+                  ],
+                  [
+                    "render-ui",
+                    "main",
+                    {
+                      "children": [
+                        {
+                          "children": [
+                            {
+                              "type": "stack",
+                              "gap": "md",
+                              "direction": "horizontal",
+                              "align": "center",
+                              "children": [
+                                {
+                                  "type": "icon",
+                                  "name": "crosshair"
+                                },
+                                {
+                                  "type": "typography",
+                                  "content": "CollidableBody Collision",
+                                  "variant": "h2"
+                                }
+                              ]
+                            },
+                            {
+                              "type": "status-dot",
+                              "status": "offline",
+                              "label": "Idle"
+                            }
+                          ],
+                          "align": "center",
+                          "gap": "md",
+                          "direction": "horizontal",
+                          "type": "stack",
+                          "justify": "between"
+                        },
+                        {
+                          "type": "divider"
+                        },
+                        {
+                          "cols": 2.0,
+                          "children": [
+                            {
+                              "type": "stat-display",
+                              "value": "@entity.x",
+                              "label": "X"
+                            },
+                            {
+                              "label": "Y",
+                              "type": "stat-display",
+                              "value": "@entity.y"
+                            }
+                          ],
+                          "type": "simple-grid"
+                        },
+                        {
+                          "type": "stack",
+                          "direction": "horizontal",
+                          "justify": "center",
+                          "children": [
+                            {
+                              "type": "button",
+                              "label": "Check",
+                              "icon": "scan",
+                              "variant": "primary",
+                              "action": "CHECK"
+                            }
+                          ],
+                          "gap": "sm"
+                        }
+                      ],
+                      "type": "stack",
+                      "direction": "vertical",
+                      "gap": "lg"
+                    }
+                  ]
+                ]
+              },
+              {
+                "from": "idle",
+                "to": "detecting",
+                "event": "CHECK",
+                "effects": [
+                  [
+                    "set",
+                    "@entity.collisionStatus",
+                    "detecting"
+                  ],
+                  [
+                    "render-ui",
+                    "main",
+                    {
+                      "direction": "vertical",
+                      "type": "stack",
+                      "gap": "lg",
+                      "children": [
+                        {
+                          "align": "center",
+                          "children": [
+                            {
+                              "align": "center",
+                              "children": [
+                                {
+                                  "type": "icon",
+                                  "name": "crosshair"
+                                },
+                                {
+                                  "content": "CollidableBody Collision",
+                                  "variant": "h2",
+                                  "type": "typography"
+                                }
+                              ],
+                              "gap": "md",
+                              "direction": "horizontal",
+                              "type": "stack"
+                            },
+                            {
+                              "pulse": true,
+                              "status": "warning",
+                              "type": "status-dot",
+                              "label": "Detecting"
+                            }
+                          ],
+                          "direction": "horizontal",
+                          "type": "stack",
+                          "gap": "md",
+                          "justify": "between"
+                        },
+                        {
+                          "type": "divider"
+                        },
+                        {
+                          "type": "alert",
+                          "message": "Collision detection in progress...",
+                          "variant": "warning"
+                        },
+                        {
+                          "children": [
+                            {
+                              "value": "@entity.x",
+                              "type": "stat-display",
+                              "label": "X"
+                            },
+                            {
+                              "type": "stat-display",
+                              "label": "Y",
+                              "value": "@entity.y"
+                            }
+                          ],
+                          "type": "simple-grid",
+                          "cols": 2.0
+                        },
+                        {
+                          "color": "muted",
+                          "content": "@entity.targetId",
+                          "variant": "caption",
+                          "type": "typography"
+                        },
+                        {
+                          "direction": "horizontal",
+                          "children": [
+                            {
+                              "variant": "ghost",
+                              "action": "CLEAR",
+                              "type": "button",
+                              "label": "Clear",
+                              "icon": "x"
+                            }
+                          ],
+                          "type": "stack",
+                          "justify": "center",
+                          "gap": "sm"
+                        }
+                      ]
+                    }
+                  ]
+                ]
+              },
+              {
+                "from": "detecting",
+                "to": "detecting",
+                "event": "COLLISION_DETECTED",
+                "effects": [
+                  [
+                    "set",
+                    "@entity.targetId",
+                    "@payload.targetId"
+                  ],
+                  [
+                    "set",
+                    "@entity.collisionStatus",
+                    "detected"
+                  ],
+                  [
+                    "render-ui",
+                    "main",
+                    {
+                      "type": "stack",
+                      "gap": "lg",
+                      "direction": "vertical",
+                      "children": [
+                        {
+                          "type": "stack",
+                          "direction": "horizontal",
+                          "align": "center",
+                          "justify": "between",
+                          "children": [
+                            {
+                              "type": "stack",
+                              "gap": "md",
+                              "align": "center",
+                              "direction": "horizontal",
+                              "children": [
+                                {
+                                  "type": "icon",
+                                  "name": "crosshair"
+                                },
+                                {
+                                  "type": "typography",
+                                  "content": "CollidableBody Collision",
+                                  "variant": "h2"
+                                }
+                              ]
+                            },
+                            {
+                              "status": "warning",
+                              "type": "status-dot",
+                              "pulse": true,
+                              "label": "Detecting"
+                            }
+                          ],
+                          "gap": "md"
+                        },
+                        {
+                          "type": "divider"
+                        },
+                        {
+                          "variant": "warning",
+                          "message": "Collision detection in progress...",
+                          "type": "alert"
+                        },
+                        {
+                          "children": [
+                            {
+                              "type": "stat-display",
+                              "label": "X",
+                              "value": "@entity.x"
+                            },
+                            {
+                              "type": "stat-display",
+                              "label": "Y",
+                              "value": "@entity.y"
+                            }
+                          ],
+                          "type": "simple-grid",
+                          "cols": 2.0
+                        },
+                        {
+                          "variant": "caption",
+                          "content": "@entity.targetId",
+                          "color": "muted",
+                          "type": "typography"
+                        },
+                        {
+                          "direction": "horizontal",
+                          "type": "stack",
+                          "justify": "center",
+                          "children": [
+                            {
+                              "variant": "ghost",
+                              "action": "CLEAR",
+                              "label": "Clear",
+                              "type": "button",
+                              "icon": "x"
+                            }
+                          ],
+                          "gap": "sm"
+                        }
+                      ]
+                    }
+                  ]
+                ]
+              },
+              {
+                "from": "detecting",
+                "to": "idle",
+                "event": "CLEAR",
+                "effects": [
+                  [
+                    "set",
+                    "@entity.collisionStatus",
+                    "idle"
+                  ],
+                  [
+                    "set",
+                    "@entity.targetId",
+                    ""
+                  ],
+                  [
+                    "render-ui",
+                    "main",
+                    {
+                      "children": [
+                        {
+                          "gap": "md",
+                          "type": "stack",
+                          "direction": "horizontal",
+                          "align": "center",
+                          "justify": "between",
+                          "children": [
+                            {
+                              "align": "center",
+                              "type": "stack",
+                              "direction": "horizontal",
+                              "children": [
+                                {
+                                  "name": "crosshair",
+                                  "type": "icon"
+                                },
+                                {
+                                  "variant": "h2",
+                                  "type": "typography",
+                                  "content": "CollidableBody Collision"
+                                }
+                              ],
+                              "gap": "md"
+                            },
+                            {
+                              "type": "status-dot",
+                              "label": "Idle",
+                              "status": "offline"
+                            }
+                          ]
+                        },
+                        {
+                          "type": "divider"
+                        },
+                        {
+                          "cols": 2.0,
+                          "type": "simple-grid",
+                          "children": [
+                            {
+                              "type": "stat-display",
+                              "value": "@entity.x",
+                              "label": "X"
+                            },
+                            {
+                              "type": "stat-display",
+                              "label": "Y",
+                              "value": "@entity.y"
+                            }
+                          ]
+                        },
+                        {
+                          "type": "stack",
+                          "gap": "sm",
+                          "children": [
+                            {
+                              "action": "CHECK",
+                              "variant": "primary",
+                              "label": "Check",
+                              "icon": "scan",
+                              "type": "button"
+                            }
+                          ],
+                          "direction": "horizontal",
+                          "justify": "center"
+                        }
+                      ],
+                      "direction": "vertical",
+                      "type": "stack",
+                      "gap": "lg"
+                    }
+                  ]
+                ]
+              },
+              {
+                "from": "detecting",
+                "to": "detecting",
+                "event": "INIT",
+                "effects": [
+                  [
+                    "render-ui",
+                    "main",
+                    {
+                      "gap": "lg",
+                      "children": [
+                        {
+                          "type": "stack",
+                          "gap": "md",
+                          "align": "center",
+                          "justify": "between",
+                          "children": [
+                            {
+                              "type": "stack",
+                              "align": "center",
+                              "direction": "horizontal",
+                              "gap": "md",
+                              "children": [
+                                {
+                                  "type": "icon",
+                                  "name": "crosshair"
+                                },
+                                {
+                                  "variant": "h2",
+                                  "type": "typography",
+                                  "content": "CollidableBody Collision"
+                                }
+                              ]
+                            },
+                            {
+                              "pulse": true,
+                              "status": "warning",
+                              "label": "Detecting",
+                              "type": "status-dot"
+                            }
+                          ],
+                          "direction": "horizontal"
+                        },
+                        {
+                          "type": "divider"
+                        },
+                        {
+                          "variant": "warning",
+                          "message": "Collision detection in progress...",
+                          "type": "alert"
+                        },
+                        {
+                          "children": [
+                            {
+                              "type": "stat-display",
+                              "value": "@entity.x",
+                              "label": "X"
+                            },
+                            {
+                              "label": "Y",
+                              "value": "@entity.y",
+                              "type": "stat-display"
+                            }
+                          ],
+                          "type": "simple-grid",
+                          "cols": 2.0
+                        },
+                        {
+                          "variant": "caption",
+                          "type": "typography",
+                          "content": "@entity.targetId",
+                          "color": "muted"
+                        },
+                        {
+                          "type": "stack",
+                          "justify": "center",
+                          "direction": "horizontal",
+                          "children": [
+                            {
+                              "label": "Clear",
+                              "variant": "ghost",
+                              "type": "button",
+                              "action": "CLEAR",
+                              "icon": "x"
+                            }
+                          ],
+                          "gap": "sm"
+                        }
+                      ],
+                      "direction": "vertical",
+                      "type": "stack"
+                    }
+                  ]
+                ]
+              }
+            ]
+          },
+          "scope": "collection"
+        }
+      ],
+      "pages": [
+        {
+          "name": "CollidableBodyCollisionPage",
+          "path": "/collidablebodys/collision",
+          "traits": [
+            {
+              "ref": "CollidableBodyCollision"
+            }
+          ]
+        }
+      ]
+    }
+  ]
+}

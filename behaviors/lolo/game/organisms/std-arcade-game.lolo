@@ -16,6 +16,8 @@ orbital ArcadeStateOrbital {
     initial: menu
     state menu {
       INIT -> menu
+        (set @entity.level 1)
+        (set @entity.score 0)
         (fetch ArcadeState { emit: { success: "ArcadeStateLoaded", failure: "ArcadeStateLoadFailed" } })
         (render-ui main { type: "game-shell", appName: "Arcade Game", showTopBar: true, children: [{ type: "game-menu", title: "Arcade", subtitle: "Main Menu", menuItems: [{ label: "Start Game", event: "START", variant: "primary" }] }] })
       START -> playing
@@ -108,6 +110,8 @@ orbital ArcadeScoreOrbital {
   trait ArcadeScoreScoreBoard -> ArcadeScore [interaction, instance] {
     state idle {
       INIT -> idle
+        (set @entity.highScore 0)
+        (set @entity.level 1)
         (fetch ArcadeScore { emit: { success: "ArcadeScoreLoaded", failure: "ArcadeScoreLoadFailed" } })
         (render-ui main { type: "game-shell", appName: "Arcade Game", showTopBar: true, children: [{ type: "score-board", score: "@entity.score", highScore: "@entity.highScore", combo: "@entity.combo", multiplier: "@entity.multiplier", level: "@entity.level" }] })
       ADD_SCORE -> idle
@@ -130,8 +134,8 @@ emits {
 
         listens {
       ArcadeScoreLoadFailed { message : string }
-      ADD_SCORE { points : string }
-      COMBO { multiplier : string }
+      ADD_SCORE { points : number }
+      COMBO { multiplier : number }
     }
   }
   page "/scores" -> ArcadeScoreScoreBoard
@@ -150,6 +154,10 @@ orbital ArcadeHudOrbital {
   trait ArcadeHudHud -> ArcadeHud [interaction, instance] {
     state idle {
       INIT -> idle
+        (set @entity.level 1)
+        (set @entity.lives 3)
+        (set @entity.score 0)
+        (set @entity.timer 0)
         (fetch ArcadeHud { emit: { success: "ArcadeHudLoaded", failure: "ArcadeHudLoadFailed" } })
         (render-ui main { type: "game-shell", appName: "Arcade Game", showTopBar: true, children: [{ type: "game-hud", position: "top-left", transparent: false, stats: [{ label: "Score", value: "@entity.score" }, { label: "Lives", value: "@entity.lives" }, { label: "Level", value: "@entity.level" }, { label: "Timer", value: "@entity.timer" }] }] })
       REFRESH -> idle

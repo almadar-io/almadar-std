@@ -75,30 +75,30 @@ export interface StdMultiPartyFlowFlowLoadFailedPayload {
  * without modifying its state-machine topology.
  */
 export interface StdMultiPartyFlowConfig {
-  /** Default: `"Sale of 2024 Honda CR-V"` */
-  transactionSubject?: string;
-  /** Default: `"$28,500"` */
-  transactionAmount?: string;
-  /** Default: `"Open dispute"` */
-  disputeLabel?: string;
-  /** Default: `"TXN-A8B2C-2024-001"` */
-  transactionReference?: string;
-  /** Default: `"Cancel transaction"` */
-  cancelLabel?: string;
   /** Default: `"x"` */
   cancelIcon?: string;
-  /** Default: `[{"actor":"Alice Chen","id":"buyer","description":"Funds the transaction and confirms receipt of the vehicle.","actionLabel":"Confirm payment","actionDescription":"Authorize $28,500 to be held in escrow until delivery is confirmed.","icon":"user","stepLabel":"Step 1 of 2","actionIcon":"credit-card","title":"Buyer"},{"actor":"Bob's Auto Sales LLC","description":"Ships the vehicle and uploads delivery proof.","id":"seller","icon":"user-check","title":"Seller","stepLabel":"Step 2 of 2","actionIcon":"package","actionLabel":"Confirm shipment","actionDescription":"Mark the vehicle as shipped. Funds will release after the buyer confirms receipt."}]` */
+  /** Default: `[{"description":"Funds the transaction and confirms receipt of the vehicle.","actionLabel":"Confirm payment","title":"Buyer","actionDescription":"Authorize $28,500 to be held in escrow until delivery is confirmed.","stepLabel":"Step 1 of 2","actor":"Alice Chen","icon":"user","actionIcon":"credit-card","id":"buyer"},{"description":"Ships the vehicle and uploads delivery proof.","stepLabel":"Step 2 of 2","actor":"Bob's Auto Sales LLC","actionLabel":"Confirm shipment","id":"seller","title":"Seller","icon":"user-check","actionDescription":"Mark the vehicle as shipped. Funds will release after the buyer confirms receipt.","actionIcon":"package"}]` */
   parties?: TraitConfig[];
-  /** Default: `"alert-triangle"` */
-  disputeIcon?: string;
-  /** Default: `"Release funds"` */
-  releaseLabel?: string;
   /** Default: `["reason"]` */
   reasonFields?: string[];
-  /** Default: `"unlock"` */
-  releaseIcon?: string;
+  /** Default: `"$28,500"` */
+  transactionAmount?: string;
+  /** Default: `"Release funds"` */
+  releaseLabel?: string;
+  /** Default: `"TXN-A8B2C-2024-001"` */
+  transactionReference?: string;
+  /** Default: `"alert-triangle"` */
+  disputeIcon?: string;
   /** Default: `"Escrow transaction"` */
   title?: string;
+  /** Default: `"Cancel transaction"` */
+  cancelLabel?: string;
+  /** Default: `"unlock"` */
+  releaseIcon?: string;
+  /** Default: `"Sale of 2024 Honda CR-V"` */
+  transactionSubject?: string;
+  /** Default: `"Open dispute"` */
+  disputeLabel?: string;
 }
 
 /**

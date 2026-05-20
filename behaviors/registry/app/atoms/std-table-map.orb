@@ -390,22 +390,22 @@
                     "render-ui",
                     "main",
                     {
+                      "className": "py-12",
                       "direction": "vertical",
-                      "gap": "md",
                       "align": "center",
+                      "type": "stack",
+                      "gap": "md",
                       "children": [
                         {
                           "type": "spinner"
                         },
                         {
-                          "type": "typography",
-                          "variant": "caption",
+                          "color": "muted",
                           "content": "Loading floor plan…",
-                          "color": "muted"
+                          "type": "typography",
+                          "variant": "caption"
                         }
-                      ],
-                      "type": "stack",
-                      "className": "py-12"
+                      ]
                     }
                   ]
                 ]
@@ -419,95 +419,95 @@
                     "render-ui",
                     "main",
                     {
-                      "type": "stack",
                       "direction": "vertical",
+                      "type": "stack",
                       "gap": "md",
                       "children": [
                         {
                           "type": "stack",
+                          "align": "center",
+                          "gap": "sm",
+                          "direction": "horizontal",
                           "children": [
                             {
-                              "type": "icon",
-                              "name": "layout-grid"
+                              "name": "layout-grid",
+                              "type": "icon"
                             },
                             {
                               "variant": "h3",
                               "type": "typography",
                               "content": "@config.title"
                             }
-                          ],
-                          "gap": "sm",
-                          "align": "center",
-                          "direction": "horizontal"
+                          ]
                         },
                         {
-                          "cols": 4.0,
                           "type": "simple-grid",
                           "children": [
                             {
-                              "type": "stat-display",
                               "value": "@payload.data.length",
-                              "icon": "grid",
-                              "label": "Tables"
+                              "type": "stat-display",
+                              "label": "Tables",
+                              "icon": "grid"
                             },
                             {
                               "type": "stat-display",
-                              "value": "18",
+                              "label": "Seated",
                               "icon": "users",
-                              "label": "Seated"
+                              "value": "18"
                             },
                             {
+                              "type": "stat-display",
                               "label": "Awaiting bill",
                               "icon": "receipt",
-                              "value": "4",
-                              "type": "stat-display"
+                              "value": "4"
                             },
                             {
                               "type": "stat-display",
-                              "label": "Avg party size",
                               "icon": "user-plus",
+                              "label": "Avg party size",
                               "value": "3.2"
                             }
-                          ]
+                          ],
+                          "cols": 4.0
                         },
                         {
                           "type": "divider"
                         },
                         {
+                          "editable": true,
+                          "width": "@config.canvasWidth",
                           "items": "@payload.data",
                           "onMove": "MOVE_TABLE",
-                          "onSelect": "SELECT_TABLE",
-                          "width": "@config.canvasWidth",
-                          "height": "@config.canvasHeight",
                           "selectedId": "@entity.id",
                           "type": "positioned-canvas",
-                          "editable": true
+                          "onSelect": "SELECT_TABLE",
+                          "height": "@config.canvasHeight"
                         },
                         {
-                          "direction": "horizontal",
-                          "gap": "sm",
                           "children": [
                             {
-                              "variant": "primary",
-                              "label": "Seat Party",
-                              "icon": "users",
                               "type": "button",
+                              "icon": "users",
+                              "action": "SEAT",
                               "actionPayload": {
                                 "id": "@entity.id"
                               },
-                              "action": "SEAT"
+                              "variant": "primary",
+                              "label": "Seat Party"
                             },
                             {
-                              "variant": "secondary",
                               "actionPayload": {
                                 "id": "@entity.id"
                               },
                               "type": "button",
-                              "icon": "eraser",
+                              "variant": "secondary",
+                              "label": "Clear Table",
                               "action": "CLEAR_TABLE",
-                              "label": "Clear Table"
+                              "icon": "eraser"
                             }
                           ],
+                          "direction": "horizontal",
+                          "gap": "sm",
                           "type": "stack",
                           "justify": "end"
                         }
@@ -525,8 +525,8 @@
                     "render-ui",
                     "main",
                     {
-                      "type": "alert",
                       "variant": "error",
+                      "type": "alert",
                       "message": "@payload.error"
                     }
                   ]
@@ -576,9 +576,9 @@
                     "update",
                     "TableNode",
                     {
-                      "id": "@payload.id",
+                      "x": "@payload.x",
                       "y": "@payload.y",
-                      "x": "@payload.x"
+                      "id": "@payload.id"
                     },
                     {
                       "emit": {
@@ -620,9 +620,9 @@
                     "TableNode",
                     {
                       "status": "seated",
+                      "serverName": "@payload.serverName",
                       "id": "@payload.id",
-                      "partySize": "@payload.partySize",
-                      "serverName": "@payload.serverName"
+                      "partySize": "@payload.partySize"
                     },
                     {
                       "emit": {
@@ -659,13 +659,13 @@
                     "TableNode",
                     {
                       "status": "empty",
-                      "id": "@payload.id",
-                      "partySize": 0.0
+                      "partySize": 0.0,
+                      "id": "@payload.id"
                     },
                     {
                       "emit": {
-                        "success": "TableUpdated",
-                        "failure": "TableWriteFailed"
+                        "failure": "TableWriteFailed",
+                        "success": "TableUpdated"
                       }
                     }
                   ]
@@ -726,8 +726,8 @@
                     "TableNode",
                     {
                       "emit": {
-                        "failure": "TableLoadFailed",
-                        "success": "TableLoaded"
+                        "success": "TableLoaded",
+                        "failure": "TableLoadFailed"
                       }
                     }
                   ],

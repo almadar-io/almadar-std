@@ -196,38 +196,38 @@ export function stdPropertyMgmtPropertyOrbital(params: StdPropertyMgmtPropertyOr
         'ref': 'AppShell.traits.AppLayout',
         'name': 'PropertyAppLayout',
         'config': {
-          'contentTrait': '@trait.PropertyCatalog',
-          'appName': 'Property Management',
-          'searchEvent': 'PROPERTY_SEARCH',
-          'notifications': [],
           'notificationClickEvent': 'PROPERTY_NOTIFICATIONS_OPEN',
+          'contentTrait': '@trait.PropertyCatalog',
+          'notifications': [],
+          'searchEvent': 'PROPERTY_SEARCH',
           'navItems': [
             {
               'icon': 'home',
-              'label': 'Properties',
               'href': '/properties',
+              'label': 'Properties',
             },
             {
               'icon': 'file-text',
-              'href': '/leases',
               'label': 'Leases',
+              'href': '/leases',
             },
             {
-              'href': '/tenants',
               'icon': 'users',
               'label': 'Tenants',
+              'href': '/tenants',
             },
             {
-              'href': '/rent-charges',
-              'icon': 'credit-card',
               'label': 'Rent Charges',
+              'icon': 'credit-card',
+              'href': '/rent-charges',
             },
             {
               'icon': 'wrench',
-              'label': 'Maintenance',
               'href': '/maintenance',
+              'label': 'Maintenance',
             },
           ],
+          'appName': 'Property Management',
         },
         'events': {
           'SEARCH': 'PROPERTY_SEARCH',
@@ -314,7 +314,6 @@ export function stdPropertyMgmtPropertyOrbital(params: StdPropertyMgmtPropertyOr
                   'render-ui',
                   'main',
                   {
-                    'direction': 'vertical',
                     'type': 'stack',
                     'gap': 'lg',
                     'children': [
@@ -322,51 +321,51 @@ export function stdPropertyMgmtPropertyOrbital(params: StdPropertyMgmtPropertyOr
                         'align': 'center',
                         'children': [
                           {
-                            'gap': 'sm',
-                            'direction': 'horizontal',
                             'align': 'center',
+                            'direction': 'horizontal',
+                            'gap': 'sm',
                             'children': [
                               {
-                                'name': 'home',
                                 'type': 'icon',
+                                'name': 'home',
                               },
                               {
                                 'type': 'typography',
-                                'variant': 'h2',
                                 'content': 'Properties',
+                                'variant': 'h2',
                               },
                             ],
                             'type': 'stack',
                           },
                           {
-                            'type': 'stack',
                             'direction': 'horizontal',
-                            'gap': 'sm',
                             'children': [
                               {
                                 'type': 'button',
-                                'label': 'New Property',
                                 'action': 'CREATE',
+                                'label': 'New Property',
                                 'variant': 'primary',
                                 'icon': 'plus',
                               },
                             ],
+                            'gap': 'sm',
+                            'type': 'stack',
                           },
                         ],
                         'justify': 'between',
                         'type': 'stack',
-                        'gap': 'md',
                         'direction': 'horizontal',
+                        'gap': 'md',
                       },
                       {
                         'type': 'divider',
                       },
                       {
+                        'gap': 'md',
                         'children': [
                           '@trait.PropertySearch',
                           '@trait.PropertyFilter',
                         ],
-                        'gap': 'md',
                         'type': 'stack',
                         'align': 'center',
                         'direction': 'horizontal',
@@ -378,6 +377,7 @@ export function stdPropertyMgmtPropertyOrbital(params: StdPropertyMgmtPropertyOr
                       },
                       '@trait.PropertyBrowseList',
                     ],
+                    'direction': 'vertical',
                   },
                 ],
               ],
@@ -396,34 +396,34 @@ export function stdPropertyMgmtPropertyOrbital(params: StdPropertyMgmtPropertyOr
                   'render-ui',
                   'main',
                   {
+                    'direction': 'vertical',
                     'type': 'stack',
-                    'align': 'center',
-                    'className': 'py-8',
                     'children': [
                       {
-                        'type': 'icon',
                         'name': 'bell',
+                        'type': 'icon',
                       },
                       {
+                        'content': 'No notifications',
                         'type': 'typography',
                         'variant': 'h3',
-                        'content': 'No notifications',
                       },
                       {
+                        'type': 'typography',
                         'variant': 'caption',
                         'content': 'You\'re all caught up.',
-                        'type': 'typography',
                         'color': 'muted',
                       },
                       {
-                        'variant': 'ghost',
-                        'type': 'button',
                         'label': 'Back to properties',
                         'action': 'INIT',
+                        'variant': 'ghost',
+                        'type': 'button',
                       },
                     ],
-                    'direction': 'vertical',
+                    'align': 'center',
                     'gap': 'md',
+                    'className': 'py-8',
                   },
                 ],
               ],
@@ -444,48 +444,48 @@ export function stdPropertyMgmtPropertyOrbital(params: StdPropertyMgmtPropertyOr
         'ref': 'Filter.traits.FilterTargetFilter',
         'name': 'PropertyFilter',
         'config': {
-          'event': 'PROPERTY_FILTER',
           'filters': [
             {
               'label': 'Type',
-              'filterType': 'select',
+              'field': 'propertyType',
               'options': [
                 'single-family',
                 'multi-family',
                 'commercial',
                 'mixed-use',
               ],
-              'field': 'propertyType',
+              'filterType': 'select',
             },
             {
-              'label': 'Status',
-              'filterType': 'select',
+              'field': 'status',
               'options': [
                 'active',
                 'vacant',
                 'under-renovation',
               ],
-              'field': 'status',
+              'filterType': 'select',
+              'label': 'Status',
             },
           ],
+          'event': 'PROPERTY_FILTER',
         },
       }),
       makeTraitRef({
         'ref': 'Stats.traits.StatsItemStats',
         'name': 'PropertyStats',
         'config': {
+          'title': 'Properties',
           'metrics': [
             {
-              'format': 'number',
-              'aggregation': 'count',
               'label': 'Total',
+              'aggregation': 'count',
               'icon': 'home',
+              'format': 'number',
               'variant': 'primary',
             },
             {
-              'aggregation': 'count',
-              'variant': 'success',
               'format': 'number',
+              'label': 'Active',
               'filter': [
                 'fn',
                 'row',
@@ -495,11 +495,12 @@ export function stdPropertyMgmtPropertyOrbital(params: StdPropertyMgmtPropertyOr
                   'active',
                 ],
               ],
-              'label': 'Active',
               'icon': 'check-circle',
+              'variant': 'success',
+              'aggregation': 'count',
             },
             {
-              'format': 'number',
+              'variant': 'warning',
               'filter': [
                 'fn',
                 'row',
@@ -510,20 +511,19 @@ export function stdPropertyMgmtPropertyOrbital(params: StdPropertyMgmtPropertyOr
                 ],
               ],
               'icon': 'circle',
-              'variant': 'warning',
-              'label': 'Vacant',
               'aggregation': 'count',
+              'format': 'number',
+              'label': 'Vacant',
             },
             {
-              'format': 'number',
               'field': 'unitCount',
+              'aggregation': 'sum',
+              'variant': 'info',
               'label': 'Total Units',
               'icon': 'layers',
-              'variant': 'info',
-              'aggregation': 'sum',
+              'format': 'number',
             },
           ],
-          'title': 'Properties',
         },
         'listens': [
           {
@@ -540,13 +540,13 @@ export function stdPropertyMgmtPropertyOrbital(params: StdPropertyMgmtPropertyOr
         'ref': 'Graphs.traits.GraphItemGraph',
         'name': 'PropertyGraphs',
         'config': {
-          'chartType': 'bar',
+          'height': 240,
+          'showLegend': false,
           'title': 'Properties by Type',
           'categoryField': 'propertyType',
-          'aggregation': 'count',
-          'height': 240,
           'subtitle': 'Portfolio composition across property types',
-          'showLegend': false,
+          'chartType': 'bar',
+          'aggregation': 'count',
         },
         'listens': [
           {
@@ -564,44 +564,44 @@ export function stdPropertyMgmtPropertyOrbital(params: StdPropertyMgmtPropertyOr
         'name': 'PropertyBrowseList',
         'linkedEntity': canonicalName,
         'config': {
+          'itemActions': [
+            {
+              'label': 'View',
+              'event': 'VIEW',
+              'variant': 'ghost',
+            },
+            {
+              'label': 'Edit',
+              'variant': 'ghost',
+              'event': 'EDIT',
+            },
+            {
+              'label': 'Delete',
+              'event': 'DELETE',
+              'variant': 'danger',
+            },
+          ],
           'fields': [
             {
-              'variant': 'h3',
               'icon': 'home',
+              'variant': 'h3',
               'name': 'address',
             },
             {
-              'name': 'propertyType',
               'variant': 'badge',
+              'name': 'propertyType',
             },
             {
-              'variant': 'badge',
               'name': 'status',
+              'variant': 'badge',
             },
             {
               'name': 'unitCount',
               'variant': 'caption',
             },
           ],
-          'itemActions': [
-            {
-              'event': 'VIEW',
-              'variant': 'ghost',
-              'label': 'View',
-            },
-            {
-              'event': 'EDIT',
-              'label': 'Edit',
-              'variant': 'ghost',
-            },
-            {
-              'event': 'DELETE',
-              'variant': 'danger',
-              'label': 'Delete',
-            },
-          ],
-          'cols': 1,
           'gap': 'sm',
+          'cols': 1,
         },
         'listens': [
           {
@@ -651,6 +651,8 @@ export function stdPropertyMgmtPropertyOrbital(params: StdPropertyMgmtPropertyOr
         'name': 'PropertyCreate',
         'linkedEntity': canonicalName,
         'config': {
+          'mode': 'create',
+          'title': 'New Property',
           'fields': [
             'address',
             'unitCount',
@@ -658,8 +660,6 @@ export function stdPropertyMgmtPropertyOrbital(params: StdPropertyMgmtPropertyOr
             'status',
           ],
           'icon': 'plus-circle',
-          'mode': 'create',
-          'title': 'New Property',
         },
         'events': {
           'OPEN': 'CREATE',
@@ -680,15 +680,15 @@ export function stdPropertyMgmtPropertyOrbital(params: StdPropertyMgmtPropertyOr
         'name': 'PropertyEdit',
         'linkedEntity': canonicalName,
         'config': {
-          'title': 'Edit Property',
-          'icon': 'edit',
-          'mode': 'edit',
           'fields': [
             'address',
             'unitCount',
             'propertyType',
             'status',
           ],
+          'icon': 'edit',
+          'mode': 'edit',
+          'title': 'Edit Property',
         },
         'events': {
           'OPEN': 'EDIT',
@@ -709,15 +709,15 @@ export function stdPropertyMgmtPropertyOrbital(params: StdPropertyMgmtPropertyOr
         'name': 'PropertyView',
         'linkedEntity': canonicalName,
         'config': {
+          'icon': 'eye',
+          'title': 'View Property',
+          'mode': 'edit',
           'fields': [
             'address',
             'unitCount',
             'propertyType',
             'status',
           ],
-          'title': 'View Property',
-          'mode': 'edit',
-          'icon': 'eye',
         },
         'events': {
           'OPEN': 'VIEW',
@@ -738,14 +738,14 @@ export function stdPropertyMgmtPropertyOrbital(params: StdPropertyMgmtPropertyOr
         'name': 'PropertyDelete',
         'linkedEntity': canonicalName,
         'config': {
-          'title': 'Delete Property',
           'alertMessage': 'This action cannot be undone.',
-          'confirmLabel': 'Delete',
           'icon': 'alert-triangle',
+          'confirmLabel': 'Delete',
+          'title': 'Delete Property',
         },
         'events': {
-          'REQUEST': 'DELETE',
           'CONFIRM': 'CONFIRM_DELETE',
+          'REQUEST': 'DELETE',
         },
         'listens': [
           {
@@ -1206,42 +1206,42 @@ export function stdPropertyMgmtLeasePanelOrbital(params: StdPropertyMgmtLeasePan
         'ref': 'AppShell.traits.AppLayout',
         'name': 'LeaseAppLayout',
         'config': {
-          'contentTrait': '@trait.LeasePanel',
+          'appName': 'Property Management',
           'navItems': [
             {
+              'icon': 'home',
               'label': 'Properties',
               'href': '/properties',
-              'icon': 'home',
             },
             {
+              'icon': 'file-text',
               'label': 'Leases',
               'href': '/leases',
-              'icon': 'file-text',
             },
             {
-              'href': '/tenants',
               'icon': 'users',
               'label': 'Tenants',
+              'href': '/tenants',
             },
             {
-              'label': 'Rent Charges',
               'icon': 'credit-card',
+              'label': 'Rent Charges',
               'href': '/rent-charges',
             },
             {
-              'icon': 'wrench',
               'href': '/maintenance',
+              'icon': 'wrench',
               'label': 'Maintenance',
             },
           ],
           'searchEvent': 'LEASE_SEARCH',
           'notifications': [],
+          'contentTrait': '@trait.LeasePanel',
           'notificationClickEvent': 'LEASE_NOTIFICATIONS_OPEN',
-          'appName': 'Property Management',
         },
         'events': {
-          'NOTIFY_CLICK': 'LEASE_NOTIFICATIONS_OPEN',
           'SEARCH': 'LEASE_SEARCH',
+          'NOTIFY_CLICK': 'LEASE_NOTIFICATIONS_OPEN',
         },
       }),
       rebindInlineTraitEntity({
@@ -1271,32 +1271,32 @@ export function stdPropertyMgmtLeasePanelOrbital(params: StdPropertyMgmtLeasePan
                   'main',
                   {
                     'gap': 'lg',
+                    'className': 'max-w-6xl mx-auto w-full p-4',
                     'type': 'stack',
-                    'direction': 'vertical',
                     'children': [
                       {
-                        'direction': 'horizontal',
-                        'gap': 'sm',
-                        'type': 'stack',
-                        'align': 'center',
                         'children': [
                           {
                             'name': 'file-text',
                             'type': 'icon',
                           },
                           {
-                            'type': 'typography',
                             'variant': 'h2',
                             'content': 'Leases',
+                            'type': 'typography',
                           },
                         ],
+                        'gap': 'sm',
+                        'align': 'center',
+                        'direction': 'horizontal',
+                        'type': 'stack',
                       },
                       {
                         'type': 'divider',
                       },
                       '@trait.LeaseView',
                     ],
-                    'className': 'max-w-6xl mx-auto w-full p-4',
+                    'direction': 'vertical',
                   },
                 ],
               ],
@@ -1535,15 +1535,13 @@ export function stdPropertyMgmtTenantPanelOrbital(params: StdPropertyMgmtTenantP
         'ref': 'AppShell.traits.AppLayout',
         'name': 'TenantAppLayout',
         'config': {
-          'searchEvent': 'TENANT_SEARCH',
           'notifications': [],
-          'appName': 'Property Management',
-          'notificationClickEvent': 'TENANT_NOTIFICATIONS_OPEN',
+          'contentTrait': '@trait.TenantPanel',
           'navItems': [
             {
-              'label': 'Properties',
               'href': '/properties',
               'icon': 'home',
+              'label': 'Properties',
             },
             {
               'label': 'Leases',
@@ -1556,17 +1554,19 @@ export function stdPropertyMgmtTenantPanelOrbital(params: StdPropertyMgmtTenantP
               'icon': 'users',
             },
             {
-              'href': '/rent-charges',
-              'label': 'Rent Charges',
               'icon': 'credit-card',
+              'label': 'Rent Charges',
+              'href': '/rent-charges',
             },
             {
+              'label': 'Maintenance',
               'href': '/maintenance',
               'icon': 'wrench',
-              'label': 'Maintenance',
             },
           ],
-          'contentTrait': '@trait.TenantPanel',
+          'appName': 'Property Management',
+          'notificationClickEvent': 'TENANT_NOTIFICATIONS_OPEN',
+          'searchEvent': 'TENANT_SEARCH',
         },
         'events': {
           'SEARCH': 'TENANT_SEARCH',
@@ -1599,33 +1599,33 @@ export function stdPropertyMgmtTenantPanelOrbital(params: StdPropertyMgmtTenantP
                   'render-ui',
                   'main',
                   {
+                    'className': 'max-w-6xl mx-auto w-full p-4',
                     'type': 'stack',
+                    'gap': 'lg',
+                    'direction': 'vertical',
                     'children': [
                       {
-                        'type': 'stack',
-                        'align': 'center',
                         'direction': 'horizontal',
+                        'gap': 'sm',
                         'children': [
                           {
                             'name': 'users',
                             'type': 'icon',
                           },
                           {
-                            'content': 'Tenants',
                             'type': 'typography',
                             'variant': 'h2',
+                            'content': 'Tenants',
                           },
                         ],
-                        'gap': 'sm',
+                        'align': 'center',
+                        'type': 'stack',
                       },
                       {
                         'type': 'divider',
                       },
                       '@trait.TenantView',
                     ],
-                    'className': 'max-w-6xl mx-auto w-full p-4',
-                    'gap': 'lg',
-                    'direction': 'vertical',
                   },
                 ],
               ],
@@ -1865,38 +1865,38 @@ export function stdPropertyMgmtRentChargePanelOrbital(params: StdPropertyMgmtRen
         'ref': 'AppShell.traits.AppLayout',
         'name': 'RentChargeAppLayout',
         'config': {
-          'appName': 'Property Management',
-          'contentTrait': '@trait.RentChargePanel',
           'navItems': [
             {
               'icon': 'home',
-              'label': 'Properties',
               'href': '/properties',
+              'label': 'Properties',
             },
             {
+              'label': 'Leases',
               'href': '/leases',
               'icon': 'file-text',
-              'label': 'Leases',
             },
             {
-              'label': 'Tenants',
-              'href': '/tenants',
               'icon': 'users',
+              'href': '/tenants',
+              'label': 'Tenants',
             },
             {
-              'label': 'Rent Charges',
               'href': '/rent-charges',
               'icon': 'credit-card',
+              'label': 'Rent Charges',
             },
             {
+              'label': 'Maintenance',
               'href': '/maintenance',
               'icon': 'wrench',
-              'label': 'Maintenance',
             },
           ],
-          'notificationClickEvent': 'RENT_CHARGE_NOTIFICATIONS_OPEN',
+          'contentTrait': '@trait.RentChargePanel',
+          'appName': 'Property Management',
           'notifications': [],
           'searchEvent': 'RENT_CHARGE_SEARCH',
+          'notificationClickEvent': 'RENT_CHARGE_NOTIFICATIONS_OPEN',
         },
         'events': {
           'SEARCH': 'RENT_CHARGE_SEARCH',
@@ -1929,24 +1929,25 @@ export function stdPropertyMgmtRentChargePanelOrbital(params: StdPropertyMgmtRen
                   'render-ui',
                   'main',
                   {
-                    'className': 'max-w-6xl mx-auto w-full p-4',
                     'direction': 'vertical',
                     'type': 'stack',
+                    'gap': 'lg',
+                    'className': 'max-w-6xl mx-auto w-full p-4',
                     'children': [
                       {
-                        'type': 'stack',
-                        'direction': 'horizontal',
                         'gap': 'sm',
                         'align': 'center',
+                        'type': 'stack',
+                        'direction': 'horizontal',
                         'children': [
                           {
                             'type': 'icon',
                             'name': 'credit-card',
                           },
                           {
-                            'type': 'typography',
-                            'variant': 'h2',
                             'content': 'Rent Charges',
+                            'variant': 'h2',
+                            'type': 'typography',
                           },
                         ],
                       },
@@ -1955,7 +1956,6 @@ export function stdPropertyMgmtRentChargePanelOrbital(params: StdPropertyMgmtRen
                       },
                       '@trait.RentChargeView',
                     ],
-                    'gap': 'lg',
                   },
                 ],
               ],
@@ -2218,11 +2218,13 @@ export function stdPropertyMgmtMaintenanceRequestPanelOrbital(params: StdPropert
         'name': 'MaintenanceRequestAppLayout',
         'config': {
           'appName': 'Property Management',
+          'contentTrait': '@trait.MaintenanceRequestPanel',
+          'notifications': [],
           'navItems': [
             {
-              'href': '/properties',
-              'label': 'Properties',
               'icon': 'home',
+              'label': 'Properties',
+              'href': '/properties',
             },
             {
               'href': '/leases',
@@ -2235,20 +2237,18 @@ export function stdPropertyMgmtMaintenanceRequestPanelOrbital(params: StdPropert
               'icon': 'users',
             },
             {
+              'icon': 'credit-card',
               'href': '/rent-charges',
               'label': 'Rent Charges',
-              'icon': 'credit-card',
             },
             {
-              'icon': 'wrench',
               'label': 'Maintenance',
+              'icon': 'wrench',
               'href': '/maintenance',
             },
           ],
-          'contentTrait': '@trait.MaintenanceRequestPanel',
-          'searchEvent': 'MAINTENANCE_REQUEST_SEARCH',
-          'notifications': [],
           'notificationClickEvent': 'MAINTENANCE_REQUEST_NOTIFICATIONS_OPEN',
+          'searchEvent': 'MAINTENANCE_REQUEST_SEARCH',
         },
         'events': {
           'SEARCH': 'MAINTENANCE_REQUEST_SEARCH',
@@ -2281,32 +2281,32 @@ export function stdPropertyMgmtMaintenanceRequestPanelOrbital(params: StdPropert
                   'render-ui',
                   'main',
                   {
+                    'direction': 'vertical',
                     'children': [
                       {
-                        'type': 'stack',
+                        'direction': 'horizontal',
                         'gap': 'sm',
+                        'type': 'stack',
                         'children': [
                           {
                             'name': 'tool',
                             'type': 'icon',
                           },
                           {
-                            'variant': 'h2',
                             'content': 'Maintenance Requests',
+                            'variant': 'h2',
                             'type': 'typography',
                           },
                         ],
                         'align': 'center',
-                        'direction': 'horizontal',
                       },
                       {
                         'type': 'divider',
                       },
                       '@trait.MaintenanceRequestView',
                     ],
-                    'type': 'stack',
-                    'direction': 'vertical',
                     'gap': 'lg',
+                    'type': 'stack',
                     'className': 'max-w-6xl mx-auto w-full p-4',
                   },
                 ],
