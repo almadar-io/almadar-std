@@ -39,44 +39,44 @@ export type StdGraphsEventKey = 'INIT' | 'ITEMS_LOADED';
  * without modifying its state-machine topology.
  */
 export interface StdGraphsConfig {
-  /** Default: `false` */
-  showValues?: boolean;
-  /** Default: `0` */
-  limit?: number;
-  /** Default: `"Distribution"` */
-  title?: string;
-  /** Default: `"bar"` */
-  chartType?: 'bar' | 'line' | 'pie' | 'area' | 'donut' | 'histogram' | 'scatter';
-  /** Default: `"desc"` */
-  sortDir?: 'asc' | 'desc';
-  /** Default: `280` */
-  height?: number;
-  /** Default: `"chart"` */
-  viewPattern?: unknown;
-  /** Default: `"count"` */
-  aggregation?: 'count' | 'sum' | 'avg' | 'min' | 'max';
   /** Default: `"date"` */
   timeField?: string;
-  /** Default: `""` */
-  valueField?: string;
-  /** Default: `false` */
-  timeAxis?: boolean;
-  /** Default: `"none"` */
-  stack?: 'none' | 'stack' | 'normalize';
-  /** Default: `"month"` */
-  period?: 'day' | 'week' | 'month' | 'quarter' | 'year';
-  /** Default: `"status"` */
-  categoryField?: string;
-  /** Default: `"none"` */
-  sortField?: 'value' | 'label' | 'none';
+  /** Default: `"Distribution"` */
+  title?: string;
   /** Default: `"Counts per category"` */
   subtitle?: string;
+  /** Default: `"none"` */
+  sortField?: 'value' | 'label' | 'none';
+  /** Default: `""` */
+  drillEvent?: string;
+  /** Default: `280` */
+  height?: number;
   /** Default: `[]` */
   series?: EntityRow[];
   /** Default: `true` */
   showLegend?: boolean;
+  /** Default: `0` */
+  limit?: number;
+  /** Default: `false` */
+  timeAxis?: boolean;
+  /** Default: `false` */
+  showValues?: boolean;
+  /** Default: `"chart"` */
+  viewPattern?: unknown;
+  /** Default: `"bar"` */
+  chartType?: 'bar' | 'line' | 'pie' | 'area' | 'donut' | 'histogram' | 'scatter';
+  /** Default: `"month"` */
+  period?: 'day' | 'week' | 'month' | 'quarter' | 'year';
+  /** Default: `"none"` */
+  stack?: 'none' | 'stack' | 'normalize';
+  /** Default: `"desc"` */
+  sortDir?: 'asc' | 'desc';
   /** Default: `""` */
-  drillEvent?: string;
+  valueField?: string;
+  /** Default: `"status"` */
+  categoryField?: string;
+  /** Default: `"count"` */
+  aggregation?: 'count' | 'sum' | 'avg' | 'min' | 'max';
 }
 
 /**
