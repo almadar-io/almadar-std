@@ -51,6 +51,7 @@ export * from './core/atoms/std-confirmation.js';
 export * from './app/atoms/std-court-deadline.js';
 export * from './core/atoms/std-cross-reference.js';
 export * from './app/atoms/std-customer-account.js';
+export * from './core/atoms/std-dashboard-grid-embedded.js';
 export * from './core/atoms/std-dashboard-grid-layout.js';
 export * from './core/atoms/std-date-range.js';
 export * from './game/atoms/std-dialogue-box.js';

@@ -1,0 +1,117 @@
+app std-dashboard-grid-embedded "1.0.0"
+"std-dashboard-grid-embedded — embeddable sibling of std-dashboard-grid-layout. Renders the same toolbar / filter / 12-tile grid contract WITHOUT wrapping it in dashboard-layout chrome (no sidebar, no appName, no nav). Use inside another app shell that already owns the surrounding chrome."
+
+orbital DashboardGridEmbeddedOrbital {
+  entity DashboardGridEmbeddedState [runtime] {
+    id : string!
+  }
+
+  trait EmptyTile -> DashboardGridEmbeddedState [interaction, instance] {
+    initial: idle
+    state idle {
+      INIT -> idle
+        (render-ui main { type: "box" })
+    }
+  }
+
+  trait DashboardGridEmbedded -> DashboardGridEmbeddedState [interaction, instance] {
+    initial: composing
+    config {
+      toolbar1Trait : trait = "@trait.EmptyTile"
+        @label "Toolbar slot 1"
+        @description "First top-right toolbar trait (typical use: export action)"
+      toolbar2Trait : trait = "@trait.EmptyTile"
+        @label "Toolbar slot 2"
+        @description "Second top-right toolbar trait (typical use: share action)"
+      toolbar3Trait : trait = "@trait.EmptyTile"
+        @label "Toolbar slot 3"
+        @description "Third top-right toolbar trait (typical use: settings action)"
+      filter1Trait : trait = "@trait.EmptyTile"
+        @label "Filter slot 1"
+        @description "First filter-row trait (typical use: date range picker)"
+      filter2Trait : trait = "@trait.EmptyTile"
+        @label "Filter slot 2"
+        @description "Second filter-row trait (typical use: search input)"
+      filter3Trait : trait = "@trait.EmptyTile"
+        @label "Filter slot 3"
+        @description "Third filter-row trait (typical use: dropdown filter)"
+      filter4Trait : trait = "@trait.EmptyTile"
+        @label "Filter slot 4"
+        @description "Fourth filter-row trait (typical use: secondary dropdown filter)"
+      tile1Trait  : trait = "@trait.EmptyTile"
+        @label "Tile slot 1"
+        @description "Trait rendered in the first dashboard grid tile"
+      tile2Trait  : trait = "@trait.EmptyTile"
+        @label "Tile slot 2"
+        @description "Trait rendered in the second dashboard grid tile"
+      tile3Trait  : trait = "@trait.EmptyTile"
+        @label "Tile slot 3"
+        @description "Trait rendered in the third dashboard grid tile"
+      tile4Trait  : trait = "@trait.EmptyTile"
+        @label "Tile slot 4"
+        @description "Trait rendered in the fourth dashboard grid tile"
+      tile5Trait  : trait = "@trait.EmptyTile"
+        @label "Tile slot 5"
+        @description "Trait rendered in the fifth dashboard grid tile"
+      tile6Trait  : trait = "@trait.EmptyTile"
+        @label "Tile slot 6"
+        @description "Trait rendered in the sixth dashboard grid tile"
+      tile7Trait  : trait = "@trait.EmptyTile"
+        @label "Tile slot 7"
+        @description "Trait rendered in the seventh dashboard grid tile"
+      tile8Trait  : trait = "@trait.EmptyTile"
+        @label "Tile slot 8"
+        @description "Trait rendered in the eighth dashboard grid tile"
+      tile9Trait  : trait = "@trait.EmptyTile"
+        @label "Tile slot 9"
+        @description "Trait rendered in the ninth dashboard grid tile"
+      tile10Trait : trait = "@trait.EmptyTile"
+        @label "Tile slot 10"
+        @description "Trait rendered in the tenth dashboard grid tile"
+      tile11Trait : trait = "@trait.EmptyTile"
+        @label "Tile slot 11"
+        @description "Trait rendered in the eleventh dashboard grid tile"
+      tile12Trait : trait = "@trait.EmptyTile"
+        @label "Tile slot 12"
+        @description "Trait rendered in the twelfth dashboard grid tile"
+      minTileWidth : number = 320
+        @label "Tile min width"
+        @description "Minimum pixel width per tile before the grid re-flows"
+    }
+    state composing {
+      INIT -> composing
+        (render-ui main { type: "stack", direction: "vertical", gap: "md", children: [
+          { type: "stack", direction: "horizontal", gap: "md", wrap: true, align: "center", justify: "between", children: [
+            { type: "stack", direction: "horizontal", gap: "md", wrap: true, align: "center", children: [
+              "@config.filter1Trait",
+              "@config.filter2Trait",
+              "@config.filter3Trait",
+              "@config.filter4Trait"
+            ]},
+            { type: "stack", direction: "horizontal", gap: "sm", align: "center", children: [
+              "@config.toolbar1Trait",
+              "@config.toolbar2Trait",
+              "@config.toolbar3Trait"
+            ]}
+          ]},
+          { type: "divider" },
+          { type: "simple-grid", minChildWidth: "@config.minTileWidth", children: [
+            "@config.tile1Trait",
+            "@config.tile2Trait",
+            "@config.tile3Trait",
+            "@config.tile4Trait",
+            "@config.tile5Trait",
+            "@config.tile6Trait",
+            "@config.tile7Trait",
+            "@config.tile8Trait",
+            "@config.tile9Trait",
+            "@config.tile10Trait",
+            "@config.tile11Trait",
+            "@config.tile12Trait"
+          ]}
+        ]})
+    }
+  }
+
+  page "/dashboard-embedded" as DashboardGridEmbeddedPage -> DashboardGridEmbedded
+}

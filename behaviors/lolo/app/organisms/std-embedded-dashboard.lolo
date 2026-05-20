@@ -1,8 +1,8 @@
-app std-embedded-dashboard "1.2.0"
-"Use for any analytics/BI dashboard (KPIs + charts + filters + export). Prefer over domain organisms (CRUD apps); this composes tiles only."
+app std-embedded-dashboard "1.3.0"
+"Use for any analytics/BI dashboard (KPIs + charts + filters + export). Every preset tile and every layout slot is config-driven; callers can swap chart types, fields, aggregations, sort, drill events, tile layout, nav, and toolbar/filter wiring without touching the .orb."
 
 orbital DashboardOrbital {
-  uses Layout    from "std/behaviors/std-dashboard-grid-layout"
+  uses Layout    from "std/behaviors/std-dashboard-grid-embedded"
   uses Stats     from "std/behaviors/std-stats"
   uses Graphs    from "std/behaviors/std-graphs"
   uses Scatter   from "std/behaviors/std-scatter"
@@ -24,6 +24,7 @@ orbital DashboardOrbital {
   trait DefaultKpiStats = Stats.traits.StatsItemStats -> Dashboard {
     config: {
       title: "Key Metrics",
+      viewPattern: "data-grid",
       metrics: [
         { label: "Revenue",    value: 142000, format: "currency", icon: "trending-up",   variant: "success", trend: 8,  trendPolarity: "higher-is-better", trendFormat: "percent" },
         { label: "MRR",        value: 11833,  format: "currency", icon: "repeat",        variant: "primary", trend: 5,  trendPolarity: "higher-is-better", trendFormat: "percent" },
@@ -35,60 +36,232 @@ orbital DashboardOrbital {
 
   trait DefaultRevenueChart = Graphs.traits.GraphItemGraph -> Dashboard {
     config: {
-      title: "Revenue by Quarter",
-      subtitle: "Last 4 quarters",
-      chartType: "bar",
-      height: 240,
-      showLegend: false
+      title:         "Revenue by Quarter",
+      subtitle:      "Last 4 quarters",
+      chartType:     "bar",
+      timeAxis:      false,
+      categoryField: "quarter",
+      timeField:     "date",
+      period:        "quarter",
+      valueField:    "revenue",
+      aggregation:   "sum",
+      series:        [],
+      stack:         "none",
+      sortField:     "none",
+      sortDir:       "desc",
+      limit:         0,
+      drillEvent:    "REVENUE_TILE_CLICKED",
+      height:        240,
+      showLegend:    false,
+      showValues:    false,
+      viewPattern:   "chart"
     }
   }
 
   trait DefaultDistributionChart = Graphs.traits.GraphItemGraph -> Dashboard {
     config: {
-      title: "Revenue Distribution",
-      subtitle: "By segment",
-      chartType: "pie",
-      height: 240,
-      showLegend: true
+      title:         "Revenue Distribution",
+      subtitle:      "By segment",
+      chartType:     "pie",
+      timeAxis:      false,
+      categoryField: "segment",
+      timeField:     "date",
+      period:        "month",
+      valueField:    "revenue",
+      aggregation:   "sum",
+      series:        [],
+      stack:         "none",
+      sortField:     "value",
+      sortDir:       "desc",
+      limit:         0,
+      drillEvent:    "DISTRIBUTION_TILE_CLICKED",
+      height:        240,
+      showLegend:    true,
+      showValues:    false,
+      viewPattern:   "chart"
+    }
+  }
+
+  trait DefaultGrowthChart = Graphs.traits.GraphItemGraph -> Dashboard {
+    config: {
+      title:         "Growth Over Time",
+      subtitle:      "Monthly trend",
+      chartType:     "line",
+      timeAxis:      true,
+      categoryField: "month",
+      timeField:     "date",
+      period:        "month",
+      valueField:    "value",
+      aggregation:   "sum",
+      series:        [],
+      stack:         "none",
+      sortField:     "label",
+      sortDir:       "desc",
+      limit:         0,
+      drillEvent:    "GROWTH_TILE_CLICKED",
+      height:        240,
+      showLegend:    false,
+      showValues:    false,
+      viewPattern:   "chart"
+    }
+  }
+
+  trait DefaultTopProductsChart = Graphs.traits.GraphItemGraph -> Dashboard {
+    config: {
+      title:         "Top Products",
+      subtitle:      "Top 5 by revenue",
+      chartType:     "bar",
+      timeAxis:      false,
+      categoryField: "product",
+      timeField:     "date",
+      period:        "month",
+      valueField:    "revenue",
+      aggregation:   "sum",
+      series:        [],
+      stack:         "none",
+      sortField:     "value",
+      sortDir:       "desc",
+      limit:         5,
+      drillEvent:    "PRODUCT_TILE_CLICKED",
+      height:        240,
+      showLegend:    false,
+      showValues:    true,
+      viewPattern:   "chart"
+    }
+  }
+
+  trait DefaultAreaChart = Graphs.traits.GraphItemGraph -> Dashboard {
+    config: {
+      title:         "Cumulative Sales",
+      subtitle:      "Year-to-date",
+      chartType:     "area",
+      timeAxis:      true,
+      categoryField: "month",
+      timeField:     "date",
+      period:        "month",
+      valueField:    "amount",
+      aggregation:   "sum",
+      series:        [],
+      stack:         "none",
+      sortField:     "label",
+      sortDir:       "desc",
+      limit:         0,
+      drillEvent:    "AREA_TILE_CLICKED",
+      height:        240,
+      showLegend:    false,
+      showValues:    false,
+      viewPattern:   "chart"
+    }
+  }
+
+  trait DefaultDonutChart = Graphs.traits.GraphItemGraph -> Dashboard {
+    config: {
+      title:         "Channel Mix",
+      subtitle:      "By marketing channel",
+      chartType:     "donut",
+      timeAxis:      false,
+      categoryField: "channel",
+      timeField:     "date",
+      period:        "month",
+      valueField:    "value",
+      aggregation:   "sum",
+      series:        [],
+      stack:         "none",
+      sortField:     "value",
+      sortDir:       "desc",
+      limit:         0,
+      drillEvent:    "DONUT_TILE_CLICKED",
+      height:        240,
+      showLegend:    true,
+      showValues:    false,
+      viewPattern:   "chart"
+    }
+  }
+
+  trait DefaultActivityHistogram = Graphs.traits.GraphItemGraph -> Dashboard {
+    config: {
+      title:         "Activity Distribution",
+      subtitle:      "Order count per bucket",
+      chartType:     "histogram",
+      timeAxis:      false,
+      categoryField: "bucket",
+      timeField:     "date",
+      period:        "day",
+      valueField:    "count",
+      aggregation:   "count",
+      series:        [],
+      stack:         "none",
+      sortField:     "label",
+      sortDir:       "desc",
+      limit:         0,
+      drillEvent:    "HISTOGRAM_TILE_CLICKED",
+      height:        240,
+      showLegend:    false,
+      showValues:    false,
+      viewPattern:   "chart"
     }
   }
 
   trait DefaultScatter = Scatter.traits.ScatterItemPlot -> Dashboard {
     config: {
-      title: "Spend vs Revenue",
-      subtitle: "Per customer",
-      height: 240
+      title:      "Spend vs Revenue",
+      subtitle:   "Per customer",
+      xField:     "spend",
+      yField:     "revenue",
+      labelField: "customer",
+      sizeField:  "ltv",
+      colorField: "segment",
+      height:     240,
+      drillEvent: "SCATTER_TILE_CLICKED"
     }
   }
 
   trait DefaultDateRange = DateRange.traits.DateRangeFilter -> Dashboard {
     config: {
-      event: "DATE_RANGE_CHANGED",
-      fromLabel: "From",
-      toLabel: "To"
+      event:       "DATE_RANGE_CHANGED",
+      fromLabel:   "From",
+      toLabel:     "To",
+      buttonLabel: "Date range"
     }
   }
 
   trait DefaultExport = Export.traits.ExportMenu -> Dashboard {
     config: {
-      event: "EXPORT_REQUESTED",
-      tileId: "dashboard"
+      event:   "EXPORT_REQUESTED",
+      tileId:  "dashboard",
+      formats: [
+        { id: "csv",  format: "csv",  label: "CSV" },
+        { id: "xlsx", format: "xlsx", label: "Excel" },
+        { id: "pdf",  format: "pdf",  label: "PDF" },
+        { id: "png",  format: "png",  label: "PNG" }
+      ]
     }
   }
 
-  trait DashboardLayout = Layout.traits.DashboardGridLayout -> Dashboard {
+  trait DashboardLayout = Layout.traits.DashboardGridEmbedded -> Dashboard {
     config: {
-      appName: "Dashboard",
-      navItems: [{ href: "/dashboard", label: "Dashboard", icon: "bar-chart-3" }],
       minTileWidth: 320,
-      filter1Trait: "@trait.DefaultDateRange",
-      filter2Trait: "@trait.DefaultExport",
-      tile1Trait: "@trait.DefaultKpiStats",
-      tile2Trait: "@trait.DefaultRevenueChart",
-      tile3Trait: "@trait.DefaultDistributionChart",
-      tile4Trait: "@trait.DefaultScatter"
+      toolbar1Trait: "@trait.DefaultExport",
+      toolbar2Trait: "@trait.EmptyTile",
+      toolbar3Trait: "@trait.EmptyTile",
+      filter1Trait:  "@trait.DefaultDateRange",
+      filter2Trait:  "@trait.EmptyTile",
+      filter3Trait:  "@trait.EmptyTile",
+      filter4Trait:  "@trait.EmptyTile",
+      tile1Trait:    "@trait.DefaultKpiStats",
+      tile2Trait:    "@trait.DefaultRevenueChart",
+      tile3Trait:    "@trait.DefaultDistributionChart",
+      tile4Trait:    "@trait.DefaultScatter",
+      tile5Trait:    "@trait.DefaultGrowthChart",
+      tile6Trait:    "@trait.DefaultTopProductsChart",
+      tile7Trait:    "@trait.DefaultDonutChart",
+      tile8Trait:    "@trait.DefaultAreaChart",
+      tile9Trait:    "@trait.DefaultActivityHistogram",
+      tile10Trait:   "@trait.EmptyTile",
+      tile11Trait:   "@trait.EmptyTile",
+      tile12Trait:   "@trait.EmptyTile"
     }
   }
 
-  page "/dashboard" as DashboardPage -> DashboardLayout, DefaultKpiStats, DefaultRevenueChart, DefaultDistributionChart, DefaultScatter, DefaultDateRange, DefaultExport, EmptyTile
+  page "/dashboard" as DashboardPage -> DashboardLayout, DefaultKpiStats, DefaultRevenueChart, DefaultDistributionChart, DefaultScatter, DefaultGrowthChart, DefaultTopProductsChart, DefaultAreaChart, DefaultDonutChart, DefaultActivityHistogram, DefaultDateRange, DefaultExport, EmptyTile
 }

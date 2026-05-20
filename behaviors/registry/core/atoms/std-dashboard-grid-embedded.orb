@@ -1,0 +1,287 @@
+{
+  "name": "std-dashboard-grid-embedded",
+  "version": "1.0.0",
+  "description": "std-dashboard-grid-embedded — embeddable sibling of std-dashboard-grid-layout. Renders the same toolbar / filter / 12-tile grid contract WITHOUT wrapping it in dashboard-layout chrome (no sidebar, no appName, no nav). Use inside another app shell that already owns the surrounding chrome.",
+  "orbitals": [
+    {
+      "name": "DashboardGridEmbeddedOrbital",
+      "entity": {
+        "name": "DashboardGridEmbeddedState",
+        "persistence": "runtime",
+        "fields": [
+          {
+            "name": "id",
+            "type": "string",
+            "required": true
+          }
+        ]
+      },
+      "traits": [
+        {
+          "name": "EmptyTile",
+          "category": "interaction",
+          "linkedEntity": "DashboardGridEmbeddedState",
+          "stateMachine": {
+            "states": [
+              {
+                "name": "idle",
+                "isInitial": true
+              }
+            ],
+            "events": [
+              {
+                "key": "INIT",
+                "name": "Initialize"
+              }
+            ],
+            "transitions": [
+              {
+                "from": "idle",
+                "to": "idle",
+                "event": "INIT",
+                "effects": [
+                  [
+                    "render-ui",
+                    "main",
+                    {
+                      "type": "box"
+                    }
+                  ]
+                ]
+              }
+            ]
+          },
+          "scope": "instance"
+        },
+        {
+          "name": "DashboardGridEmbedded",
+          "category": "interaction",
+          "linkedEntity": "DashboardGridEmbeddedState",
+          "stateMachine": {
+            "states": [
+              {
+                "name": "composing",
+                "isInitial": true
+              }
+            ],
+            "events": [
+              {
+                "key": "INIT",
+                "name": "Initialize"
+              }
+            ],
+            "transitions": [
+              {
+                "from": "composing",
+                "to": "composing",
+                "event": "INIT",
+                "effects": [
+                  [
+                    "render-ui",
+                    "main",
+                    {
+                      "gap": "md",
+                      "children": [
+                        {
+                          "gap": "md",
+                          "align": "center",
+                          "type": "stack",
+                          "justify": "between",
+                          "wrap": true,
+                          "children": [
+                            {
+                              "gap": "md",
+                              "wrap": true,
+                              "align": "center",
+                              "children": [
+                                "@config.filter1Trait",
+                                "@config.filter2Trait",
+                                "@config.filter3Trait",
+                                "@config.filter4Trait"
+                              ],
+                              "direction": "horizontal",
+                              "type": "stack"
+                            },
+                            {
+                              "direction": "horizontal",
+                              "type": "stack",
+                              "align": "center",
+                              "children": [
+                                "@config.toolbar1Trait",
+                                "@config.toolbar2Trait",
+                                "@config.toolbar3Trait"
+                              ],
+                              "gap": "sm"
+                            }
+                          ],
+                          "direction": "horizontal"
+                        },
+                        {
+                          "type": "divider"
+                        },
+                        {
+                          "children": [
+                            "@config.tile1Trait",
+                            "@config.tile2Trait",
+                            "@config.tile3Trait",
+                            "@config.tile4Trait",
+                            "@config.tile5Trait",
+                            "@config.tile6Trait",
+                            "@config.tile7Trait",
+                            "@config.tile8Trait",
+                            "@config.tile9Trait",
+                            "@config.tile10Trait",
+                            "@config.tile11Trait",
+                            "@config.tile12Trait"
+                          ],
+                          "minChildWidth": "@config.minTileWidth",
+                          "type": "simple-grid"
+                        }
+                      ],
+                      "direction": "vertical",
+                      "type": "stack"
+                    }
+                  ]
+                ]
+              }
+            ]
+          },
+          "config": {
+            "toolbar2Trait": {
+              "type": "trait",
+              "default": "@trait.EmptyTile",
+              "label": "Toolbar slot 2",
+              "description": "Second top-right toolbar trait (typical use: share action)"
+            },
+            "filter3Trait": {
+              "type": "trait",
+              "default": "@trait.EmptyTile",
+              "label": "Filter slot 3",
+              "description": "Third filter-row trait (typical use: dropdown filter)"
+            },
+            "tile9Trait": {
+              "type": "trait",
+              "default": "@trait.EmptyTile",
+              "label": "Tile slot 9",
+              "description": "Trait rendered in the ninth dashboard grid tile"
+            },
+            "filter1Trait": {
+              "type": "trait",
+              "default": "@trait.EmptyTile",
+              "label": "Filter slot 1",
+              "description": "First filter-row trait (typical use: date range picker)"
+            },
+            "tile1Trait": {
+              "type": "trait",
+              "default": "@trait.EmptyTile",
+              "label": "Tile slot 1",
+              "description": "Trait rendered in the first dashboard grid tile"
+            },
+            "tile10Trait": {
+              "type": "trait",
+              "default": "@trait.EmptyTile",
+              "label": "Tile slot 10",
+              "description": "Trait rendered in the tenth dashboard grid tile"
+            },
+            "toolbar3Trait": {
+              "type": "trait",
+              "default": "@trait.EmptyTile",
+              "label": "Toolbar slot 3",
+              "description": "Third top-right toolbar trait (typical use: settings action)"
+            },
+            "tile2Trait": {
+              "type": "trait",
+              "default": "@trait.EmptyTile",
+              "label": "Tile slot 2",
+              "description": "Trait rendered in the second dashboard grid tile"
+            },
+            "filter4Trait": {
+              "type": "trait",
+              "default": "@trait.EmptyTile",
+              "label": "Filter slot 4",
+              "description": "Fourth filter-row trait (typical use: secondary dropdown filter)"
+            },
+            "tile7Trait": {
+              "type": "trait",
+              "default": "@trait.EmptyTile",
+              "label": "Tile slot 7",
+              "description": "Trait rendered in the seventh dashboard grid tile"
+            },
+            "tile12Trait": {
+              "type": "trait",
+              "default": "@trait.EmptyTile",
+              "label": "Tile slot 12",
+              "description": "Trait rendered in the twelfth dashboard grid tile"
+            },
+            "tile4Trait": {
+              "type": "trait",
+              "default": "@trait.EmptyTile",
+              "label": "Tile slot 4",
+              "description": "Trait rendered in the fourth dashboard grid tile"
+            },
+            "tile6Trait": {
+              "type": "trait",
+              "default": "@trait.EmptyTile",
+              "label": "Tile slot 6",
+              "description": "Trait rendered in the sixth dashboard grid tile"
+            },
+            "filter2Trait": {
+              "type": "trait",
+              "default": "@trait.EmptyTile",
+              "label": "Filter slot 2",
+              "description": "Second filter-row trait (typical use: search input)"
+            },
+            "toolbar1Trait": {
+              "type": "trait",
+              "default": "@trait.EmptyTile",
+              "label": "Toolbar slot 1",
+              "description": "First top-right toolbar trait (typical use: export action)"
+            },
+            "tile11Trait": {
+              "type": "trait",
+              "default": "@trait.EmptyTile",
+              "label": "Tile slot 11",
+              "description": "Trait rendered in the eleventh dashboard grid tile"
+            },
+            "minTileWidth": {
+              "type": "number",
+              "default": 320.0,
+              "label": "Tile min width",
+              "description": "Minimum pixel width per tile before the grid re-flows"
+            },
+            "tile3Trait": {
+              "type": "trait",
+              "default": "@trait.EmptyTile",
+              "label": "Tile slot 3",
+              "description": "Trait rendered in the third dashboard grid tile"
+            },
+            "tile5Trait": {
+              "type": "trait",
+              "default": "@trait.EmptyTile",
+              "label": "Tile slot 5",
+              "description": "Trait rendered in the fifth dashboard grid tile"
+            },
+            "tile8Trait": {
+              "type": "trait",
+              "default": "@trait.EmptyTile",
+              "label": "Tile slot 8",
+              "description": "Trait rendered in the eighth dashboard grid tile"
+            }
+          },
+          "scope": "instance"
+        }
+      ],
+      "pages": [
+        {
+          "name": "DashboardGridEmbeddedPage",
+          "path": "/dashboard-embedded",
+          "traits": [
+            {
+              "ref": "DashboardGridEmbedded"
+            }
+          ]
+        }
+      ]
+    }
+  ]
+}

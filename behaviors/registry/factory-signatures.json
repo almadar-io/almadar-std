@@ -1,5 +1,5 @@
 {
-  "generatedFromStdVersion": "15.0.2",
+  "generatedFromStdVersion": "15.3.0",
   "signatures": [
     {
       "organism": "std-accounting",
@@ -7874,7 +7874,9 @@
             },
             {
               "key": "contentTrait",
-              "type": "trait"
+              "type": "trait",
+              "label": "Content trait",
+              "description": "Trait rendered inside the app layout content area"
             },
             {
               "key": "detailSlot",
@@ -7888,7 +7890,13 @@
               "type": "string",
               "default": "sidebar",
               "label": "Layout mode",
-              "description": "Where the primary navigation lives in the chrome"
+              "description": "Where the primary navigation lives in the chrome",
+              "enumValues": [
+                "sidebar",
+                "topnav",
+                "bottomnav",
+                "minimal"
+              ]
             },
             {
               "key": "layoutPattern",
@@ -16021,7 +16029,9 @@
             {
               "key": "videoId",
               "type": "string",
-              "default": ""
+              "default": "",
+              "label": "Video ID",
+              "description": "YouTube video ID shown in the inline lesson player card"
             }
           ],
           "capabilities": []
@@ -16164,8 +16174,8 @@
               "default": [
                 {
                   "label": "Sequencer",
-                  "icon": "list-ordered",
-                  "href": "/sequencer"
+                  "href": "/sequencer",
+                  "icon": "list-ordered"
                 },
                 {
                   "icon": "wrench",
@@ -16224,38 +16234,38 @@
               "type": "unknown",
               "default": [
                 {
-                  "label": "Lessons Completed",
-                  "aggregation": "sum",
-                  "format": "number",
-                  "variant": "success",
+                  "field": "lessonsCompleted",
                   "icon": "check-circle",
-                  "field": "lessonsCompleted"
+                  "variant": "success",
+                  "aggregation": "sum",
+                  "label": "Lessons Completed",
+                  "format": "number"
                 },
                 {
                   "label": "Average Score",
-                  "field": "avgScore",
                   "icon": "star",
-                  "variant": "primary",
                   "format": "number",
+                  "variant": "primary",
+                  "field": "avgScore",
                   "aggregation": "avg"
                 },
                 {
-                  "icon": "flame",
-                  "label": "Streak",
-                  "aggregation": "max",
-                  "field": "streak",
                   "format": "number",
+                  "label": "Streak",
+                  "field": "streak",
+                  "icon": "flame",
                   "variant": "warning",
-                  "suffix": "d"
+                  "suffix": "d",
+                  "aggregation": "max"
                 },
                 {
                   "icon": "clock",
                   "format": "number",
-                  "field": "totalTimeMinutes",
-                  "aggregation": "sum",
-                  "label": "Total Time",
                   "variant": "info",
-                  "suffix": "m"
+                  "suffix": "m",
+                  "label": "Total Time",
+                  "aggregation": "sum",
+                  "field": "totalTimeMinutes"
                 }
               ]
             },
@@ -16330,31 +16340,31 @@
               "type": "unknown",
               "default": [
                 {
-                  "name": "student",
-                  "variant": "h4",
+                  "label": "Student",
                   "icon": "user",
-                  "label": "Student"
+                  "name": "student",
+                  "variant": "h4"
                 },
                 {
                   "name": "lessonsCompleted",
-                  "variant": "body",
-                  "label": "Lessons Completed"
+                  "label": "Lessons Completed",
+                  "variant": "body"
                 },
                 {
-                  "name": "avgScore",
                   "variant": "badge",
+                  "name": "avgScore",
                   "label": "Avg Score"
                 },
                 {
-                  "variant": "body",
                   "name": "streak",
-                  "label": "Streak"
+                  "label": "Streak",
+                  "variant": "body"
                 },
                 {
-                  "variant": "caption",
                   "format": "date",
-                  "label": "Last Active",
-                  "name": "lastActiveAt"
+                  "name": "lastActiveAt",
+                  "variant": "caption",
+                  "label": "Last Active"
                 }
               ]
             },
@@ -16368,19 +16378,19 @@
               "type": "unknown",
               "default": [
                 {
-                  "event": "VIEW",
+                  "label": "View",
                   "variant": "ghost",
-                  "label": "View"
+                  "event": "VIEW"
                 },
                 {
-                  "event": "EDIT",
+                  "variant": "ghost",
                   "label": "Edit",
-                  "variant": "ghost"
+                  "event": "EDIT"
                 },
                 {
                   "label": "Delete",
-                  "variant": "danger",
-                  "event": "DELETE"
+                  "event": "DELETE",
+                  "variant": "danger"
                 }
               ]
             }
@@ -20405,6 +20415,185 @@
       ]
     },
     {
+      "organism": "std-dashboard-grid-embedded",
+      "orbital": "DashboardGridEmbeddedOrbital",
+      "tier": "atoms",
+      "factoryPath": "behaviors/functions/core/atoms/std-dashboard-grid-embedded.ts",
+      "entities": [
+        {
+          "name": "DashboardGridEmbeddedState",
+          "fields": [],
+          "persistence": "runtime"
+        }
+      ],
+      "traits": [
+        {
+          "name": "EmptyTile",
+          "emittedEvents": [],
+          "listenedEvents": [],
+          "overridableConfigKeys": [],
+          "capabilities": []
+        },
+        {
+          "name": "DashboardGridEmbedded",
+          "emittedEvents": [],
+          "listenedEvents": [],
+          "overridableConfigKeys": [
+            {
+              "key": "filter1Trait",
+              "type": "trait",
+              "default": "@trait.EmptyTile",
+              "label": "Filter slot 1",
+              "description": "First filter-row trait (typical use: date range picker)"
+            },
+            {
+              "key": "filter2Trait",
+              "type": "trait",
+              "default": "@trait.EmptyTile",
+              "label": "Filter slot 2",
+              "description": "Second filter-row trait (typical use: search input)"
+            },
+            {
+              "key": "filter3Trait",
+              "type": "trait",
+              "default": "@trait.EmptyTile",
+              "label": "Filter slot 3",
+              "description": "Third filter-row trait (typical use: dropdown filter)"
+            },
+            {
+              "key": "filter4Trait",
+              "type": "trait",
+              "default": "@trait.EmptyTile",
+              "label": "Filter slot 4",
+              "description": "Fourth filter-row trait (typical use: secondary dropdown filter)"
+            },
+            {
+              "key": "minTileWidth",
+              "type": "number",
+              "default": 320,
+              "label": "Tile min width",
+              "description": "Minimum pixel width per tile before the grid re-flows"
+            },
+            {
+              "key": "tile10Trait",
+              "type": "trait",
+              "default": "@trait.EmptyTile",
+              "label": "Tile slot 10",
+              "description": "Trait rendered in the tenth dashboard grid tile"
+            },
+            {
+              "key": "tile11Trait",
+              "type": "trait",
+              "default": "@trait.EmptyTile",
+              "label": "Tile slot 11",
+              "description": "Trait rendered in the eleventh dashboard grid tile"
+            },
+            {
+              "key": "tile12Trait",
+              "type": "trait",
+              "default": "@trait.EmptyTile",
+              "label": "Tile slot 12",
+              "description": "Trait rendered in the twelfth dashboard grid tile"
+            },
+            {
+              "key": "tile1Trait",
+              "type": "trait",
+              "default": "@trait.EmptyTile",
+              "label": "Tile slot 1",
+              "description": "Trait rendered in the first dashboard grid tile"
+            },
+            {
+              "key": "tile2Trait",
+              "type": "trait",
+              "default": "@trait.EmptyTile",
+              "label": "Tile slot 2",
+              "description": "Trait rendered in the second dashboard grid tile"
+            },
+            {
+              "key": "tile3Trait",
+              "type": "trait",
+              "default": "@trait.EmptyTile",
+              "label": "Tile slot 3",
+              "description": "Trait rendered in the third dashboard grid tile"
+            },
+            {
+              "key": "tile4Trait",
+              "type": "trait",
+              "default": "@trait.EmptyTile",
+              "label": "Tile slot 4",
+              "description": "Trait rendered in the fourth dashboard grid tile"
+            },
+            {
+              "key": "tile5Trait",
+              "type": "trait",
+              "default": "@trait.EmptyTile",
+              "label": "Tile slot 5",
+              "description": "Trait rendered in the fifth dashboard grid tile"
+            },
+            {
+              "key": "tile6Trait",
+              "type": "trait",
+              "default": "@trait.EmptyTile",
+              "label": "Tile slot 6",
+              "description": "Trait rendered in the sixth dashboard grid tile"
+            },
+            {
+              "key": "tile7Trait",
+              "type": "trait",
+              "default": "@trait.EmptyTile",
+              "label": "Tile slot 7",
+              "description": "Trait rendered in the seventh dashboard grid tile"
+            },
+            {
+              "key": "tile8Trait",
+              "type": "trait",
+              "default": "@trait.EmptyTile",
+              "label": "Tile slot 8",
+              "description": "Trait rendered in the eighth dashboard grid tile"
+            },
+            {
+              "key": "tile9Trait",
+              "type": "trait",
+              "default": "@trait.EmptyTile",
+              "label": "Tile slot 9",
+              "description": "Trait rendered in the ninth dashboard grid tile"
+            },
+            {
+              "key": "toolbar1Trait",
+              "type": "trait",
+              "default": "@trait.EmptyTile",
+              "label": "Toolbar slot 1",
+              "description": "First top-right toolbar trait (typical use: export action)"
+            },
+            {
+              "key": "toolbar2Trait",
+              "type": "trait",
+              "default": "@trait.EmptyTile",
+              "label": "Toolbar slot 2",
+              "description": "Second top-right toolbar trait (typical use: share action)"
+            },
+            {
+              "key": "toolbar3Trait",
+              "type": "trait",
+              "default": "@trait.EmptyTile",
+              "label": "Toolbar slot 3",
+              "description": "Third top-right toolbar trait (typical use: settings action)"
+            }
+          ],
+          "capabilities": []
+        }
+      ],
+      "pages": [
+        {
+          "name": "DashboardGridEmbeddedPage",
+          "defaultPath": "/dashboard-embedded",
+          "primaryEntity": "DashboardGridEmbeddedState"
+        }
+      ],
+      "emittedEvents": [],
+      "listenedEvents": []
+    },
+    {
       "organism": "std-dashboard-grid-layout",
       "orbital": "DashboardGridLayoutOrbital",
       "tier": "atoms",
@@ -20439,22 +20628,30 @@
             {
               "key": "filter1Trait",
               "type": "trait",
-              "default": "@trait.EmptyTile"
+              "default": "@trait.EmptyTile",
+              "label": "Filter slot 1",
+              "description": "First filter-row trait (typical use: date range picker)"
             },
             {
               "key": "filter2Trait",
               "type": "trait",
-              "default": "@trait.EmptyTile"
+              "default": "@trait.EmptyTile",
+              "label": "Filter slot 2",
+              "description": "Second filter-row trait (typical use: search input)"
             },
             {
               "key": "filter3Trait",
               "type": "trait",
-              "default": "@trait.EmptyTile"
+              "default": "@trait.EmptyTile",
+              "label": "Filter slot 3",
+              "description": "Third filter-row trait (typical use: dropdown filter)"
             },
             {
               "key": "filter4Trait",
               "type": "trait",
-              "default": "@trait.EmptyTile"
+              "default": "@trait.EmptyTile",
+              "label": "Filter slot 4",
+              "description": "Fourth filter-row trait (typical use: secondary dropdown filter)"
             },
             {
               "key": "minTileWidth",
@@ -20468,8 +20665,8 @@
               "type": "[object]",
               "default": [
                 {
-                  "label": "Dashboard",
                   "href": "/dashboard",
+                  "label": "Dashboard",
                   "icon": "bar-chart-3"
                 }
               ],
@@ -20479,77 +20676,107 @@
             {
               "key": "tile10Trait",
               "type": "trait",
-              "default": "@trait.EmptyTile"
+              "default": "@trait.EmptyTile",
+              "label": "Tile slot 10",
+              "description": "Trait rendered in the tenth dashboard grid tile"
             },
             {
               "key": "tile11Trait",
               "type": "trait",
-              "default": "@trait.EmptyTile"
+              "default": "@trait.EmptyTile",
+              "label": "Tile slot 11",
+              "description": "Trait rendered in the eleventh dashboard grid tile"
             },
             {
               "key": "tile12Trait",
               "type": "trait",
-              "default": "@trait.EmptyTile"
+              "default": "@trait.EmptyTile",
+              "label": "Tile slot 12",
+              "description": "Trait rendered in the twelfth dashboard grid tile"
             },
             {
               "key": "tile1Trait",
               "type": "trait",
-              "default": "@trait.EmptyTile"
+              "default": "@trait.EmptyTile",
+              "label": "Tile slot 1",
+              "description": "Trait rendered in the first dashboard grid tile"
             },
             {
               "key": "tile2Trait",
               "type": "trait",
-              "default": "@trait.EmptyTile"
+              "default": "@trait.EmptyTile",
+              "label": "Tile slot 2",
+              "description": "Trait rendered in the second dashboard grid tile"
             },
             {
               "key": "tile3Trait",
               "type": "trait",
-              "default": "@trait.EmptyTile"
+              "default": "@trait.EmptyTile",
+              "label": "Tile slot 3",
+              "description": "Trait rendered in the third dashboard grid tile"
             },
             {
               "key": "tile4Trait",
               "type": "trait",
-              "default": "@trait.EmptyTile"
+              "default": "@trait.EmptyTile",
+              "label": "Tile slot 4",
+              "description": "Trait rendered in the fourth dashboard grid tile"
             },
             {
               "key": "tile5Trait",
               "type": "trait",
-              "default": "@trait.EmptyTile"
+              "default": "@trait.EmptyTile",
+              "label": "Tile slot 5",
+              "description": "Trait rendered in the fifth dashboard grid tile"
             },
             {
               "key": "tile6Trait",
               "type": "trait",
-              "default": "@trait.EmptyTile"
+              "default": "@trait.EmptyTile",
+              "label": "Tile slot 6",
+              "description": "Trait rendered in the sixth dashboard grid tile"
             },
             {
               "key": "tile7Trait",
               "type": "trait",
-              "default": "@trait.EmptyTile"
+              "default": "@trait.EmptyTile",
+              "label": "Tile slot 7",
+              "description": "Trait rendered in the seventh dashboard grid tile"
             },
             {
               "key": "tile8Trait",
               "type": "trait",
-              "default": "@trait.EmptyTile"
+              "default": "@trait.EmptyTile",
+              "label": "Tile slot 8",
+              "description": "Trait rendered in the eighth dashboard grid tile"
             },
             {
               "key": "tile9Trait",
               "type": "trait",
-              "default": "@trait.EmptyTile"
+              "default": "@trait.EmptyTile",
+              "label": "Tile slot 9",
+              "description": "Trait rendered in the ninth dashboard grid tile"
             },
             {
               "key": "toolbar1Trait",
               "type": "trait",
-              "default": "@trait.EmptyTile"
+              "default": "@trait.EmptyTile",
+              "label": "Toolbar slot 1",
+              "description": "First top-right toolbar trait (typical use: export action)"
             },
             {
               "key": "toolbar2Trait",
               "type": "trait",
-              "default": "@trait.EmptyTile"
+              "default": "@trait.EmptyTile",
+              "label": "Toolbar slot 2",
+              "description": "Second top-right toolbar trait (typical use: share action)"
             },
             {
               "key": "toolbar3Trait",
               "type": "trait",
-              "default": "@trait.EmptyTile"
+              "default": "@trait.EmptyTile",
+              "label": "Toolbar slot 3",
+              "description": "Third top-right toolbar trait (typical use: settings action)"
             }
           ],
           "capabilities": []
@@ -21974,7 +22201,9 @@
             {
               "key": "message",
               "type": "string",
-              "default": "std-display is deprecated — use std-stats and std-graphs instead. See docs/Almadar_Std_Verification.md gap #25."
+              "default": "std-display is deprecated — use std-stats and std-graphs instead. See docs/Almadar_Std_Verification.md gap #25.",
+              "label": "Deprecation message",
+              "description": "Warning text shown in the deprecated std-display alert banner"
             }
           ],
           "capabilities": []
@@ -24345,30 +24574,27 @@
               "type": "unknown",
               "default": [
                 {
-                  "format": "currency",
-                  "icon": "trending-up",
                   "trendFormat": "percent",
-                  "value": 142000,
                   "label": "Revenue",
+                  "value": 142000,
+                  "icon": "trending-up",
+                  "trendPolarity": "higher-is-better",
                   "trend": 8,
-                  "variant": "success",
-                  "trendPolarity": "higher-is-better"
+                  "format": "currency",
+                  "variant": "success"
                 },
                 {
-                  "format": "currency",
                   "label": "MRR",
                   "icon": "repeat",
                   "trendFormat": "percent",
-                  "trendPolarity": "higher-is-better",
-                  "trend": 5,
+                  "format": "currency",
                   "variant": "primary",
-                  "value": 11833
+                  "value": 11833,
+                  "trendPolarity": "higher-is-better",
+                  "trend": 5
                 },
                 {
-                  "trendPolarity": "higher-is-better",
                   "icon": "users",
-                  "format": "number",
-                  "trendFormat": "percent",
                   "sparklineData": [
                     180,
                     195,
@@ -24378,20 +24604,23 @@
                     238,
                     248
                   ],
-                  "trend": 12,
-                  "variant": "info",
                   "label": "Customers",
-                  "value": 248
+                  "value": 248,
+                  "trend": 12,
+                  "trendFormat": "percent",
+                  "format": "number",
+                  "variant": "info",
+                  "trendPolarity": "higher-is-better"
                 },
                 {
-                  "label": "Churn",
-                  "icon": "trending-down",
                   "trend": 1,
                   "trendFormat": "percent",
-                  "trendPolarity": "lower-is-better",
                   "format": "percent",
+                  "variant": "warning",
+                  "trendPolarity": "lower-is-better",
+                  "label": "Churn",
                   "value": 2,
-                  "variant": "warning"
+                  "icon": "trending-down"
                 }
               ]
             },
@@ -24399,6 +24628,11 @@
               "key": "title",
               "type": "unknown",
               "default": "Key Metrics"
+            },
+            {
+              "key": "viewPattern",
+              "type": "unknown",
+              "default": "data-grid"
             }
           ],
           "capabilities": []
@@ -24409,9 +24643,24 @@
           "listenedEvents": [],
           "overridableConfigKeys": [
             {
+              "key": "aggregation",
+              "type": "unknown",
+              "default": "sum"
+            },
+            {
+              "key": "categoryField",
+              "type": "unknown",
+              "default": "quarter"
+            },
+            {
               "key": "chartType",
               "type": "unknown",
               "default": "bar"
+            },
+            {
+              "key": "drillEvent",
+              "type": "unknown",
+              "default": "REVENUE_TILE_CLICKED"
             },
             {
               "key": "height",
@@ -24419,9 +24668,44 @@
               "default": 240
             },
             {
+              "key": "limit",
+              "type": "unknown",
+              "default": 0
+            },
+            {
+              "key": "period",
+              "type": "unknown",
+              "default": "quarter"
+            },
+            {
+              "key": "series",
+              "type": "unknown",
+              "default": []
+            },
+            {
               "key": "showLegend",
               "type": "unknown",
               "default": false
+            },
+            {
+              "key": "showValues",
+              "type": "unknown",
+              "default": false
+            },
+            {
+              "key": "sortDir",
+              "type": "unknown",
+              "default": "desc"
+            },
+            {
+              "key": "sortField",
+              "type": "unknown",
+              "default": "none"
+            },
+            {
+              "key": "stack",
+              "type": "unknown",
+              "default": "none"
             },
             {
               "key": "subtitle",
@@ -24429,9 +24713,29 @@
               "default": "Last 4 quarters"
             },
             {
+              "key": "timeAxis",
+              "type": "unknown",
+              "default": false
+            },
+            {
+              "key": "timeField",
+              "type": "unknown",
+              "default": "date"
+            },
+            {
               "key": "title",
               "type": "unknown",
               "default": "Revenue by Quarter"
+            },
+            {
+              "key": "valueField",
+              "type": "unknown",
+              "default": "revenue"
+            },
+            {
+              "key": "viewPattern",
+              "type": "unknown",
+              "default": "chart"
             }
           ],
           "capabilities": []
@@ -24442,9 +24746,24 @@
           "listenedEvents": [],
           "overridableConfigKeys": [
             {
+              "key": "aggregation",
+              "type": "unknown",
+              "default": "sum"
+            },
+            {
+              "key": "categoryField",
+              "type": "unknown",
+              "default": "segment"
+            },
+            {
               "key": "chartType",
               "type": "unknown",
               "default": "pie"
+            },
+            {
+              "key": "drillEvent",
+              "type": "unknown",
+              "default": "DISTRIBUTION_TILE_CLICKED"
             },
             {
               "key": "height",
@@ -24452,9 +24771,44 @@
               "default": 240
             },
             {
+              "key": "limit",
+              "type": "unknown",
+              "default": 0
+            },
+            {
+              "key": "period",
+              "type": "unknown",
+              "default": "month"
+            },
+            {
+              "key": "series",
+              "type": "unknown",
+              "default": []
+            },
+            {
               "key": "showLegend",
               "type": "unknown",
               "default": true
+            },
+            {
+              "key": "showValues",
+              "type": "unknown",
+              "default": false
+            },
+            {
+              "key": "sortDir",
+              "type": "unknown",
+              "default": "desc"
+            },
+            {
+              "key": "sortField",
+              "type": "unknown",
+              "default": "value"
+            },
+            {
+              "key": "stack",
+              "type": "unknown",
+              "default": "none"
             },
             {
               "key": "subtitle",
@@ -24462,9 +24816,544 @@
               "default": "By segment"
             },
             {
+              "key": "timeAxis",
+              "type": "unknown",
+              "default": false
+            },
+            {
+              "key": "timeField",
+              "type": "unknown",
+              "default": "date"
+            },
+            {
               "key": "title",
               "type": "unknown",
               "default": "Revenue Distribution"
+            },
+            {
+              "key": "valueField",
+              "type": "unknown",
+              "default": "revenue"
+            },
+            {
+              "key": "viewPattern",
+              "type": "unknown",
+              "default": "chart"
+            }
+          ],
+          "capabilities": []
+        },
+        {
+          "name": "DefaultGrowthChart",
+          "emittedEvents": [],
+          "listenedEvents": [],
+          "overridableConfigKeys": [
+            {
+              "key": "aggregation",
+              "type": "unknown",
+              "default": "sum"
+            },
+            {
+              "key": "categoryField",
+              "type": "unknown",
+              "default": "month"
+            },
+            {
+              "key": "chartType",
+              "type": "unknown",
+              "default": "line"
+            },
+            {
+              "key": "drillEvent",
+              "type": "unknown",
+              "default": "GROWTH_TILE_CLICKED"
+            },
+            {
+              "key": "height",
+              "type": "unknown",
+              "default": 240
+            },
+            {
+              "key": "limit",
+              "type": "unknown",
+              "default": 0
+            },
+            {
+              "key": "period",
+              "type": "unknown",
+              "default": "month"
+            },
+            {
+              "key": "series",
+              "type": "unknown",
+              "default": []
+            },
+            {
+              "key": "showLegend",
+              "type": "unknown",
+              "default": false
+            },
+            {
+              "key": "showValues",
+              "type": "unknown",
+              "default": false
+            },
+            {
+              "key": "sortDir",
+              "type": "unknown",
+              "default": "desc"
+            },
+            {
+              "key": "sortField",
+              "type": "unknown",
+              "default": "label"
+            },
+            {
+              "key": "stack",
+              "type": "unknown",
+              "default": "none"
+            },
+            {
+              "key": "subtitle",
+              "type": "unknown",
+              "default": "Monthly trend"
+            },
+            {
+              "key": "timeAxis",
+              "type": "unknown",
+              "default": true
+            },
+            {
+              "key": "timeField",
+              "type": "unknown",
+              "default": "date"
+            },
+            {
+              "key": "title",
+              "type": "unknown",
+              "default": "Growth Over Time"
+            },
+            {
+              "key": "valueField",
+              "type": "unknown",
+              "default": "value"
+            },
+            {
+              "key": "viewPattern",
+              "type": "unknown",
+              "default": "chart"
+            }
+          ],
+          "capabilities": []
+        },
+        {
+          "name": "DefaultTopProductsChart",
+          "emittedEvents": [],
+          "listenedEvents": [],
+          "overridableConfigKeys": [
+            {
+              "key": "aggregation",
+              "type": "unknown",
+              "default": "sum"
+            },
+            {
+              "key": "categoryField",
+              "type": "unknown",
+              "default": "product"
+            },
+            {
+              "key": "chartType",
+              "type": "unknown",
+              "default": "bar"
+            },
+            {
+              "key": "drillEvent",
+              "type": "unknown",
+              "default": "PRODUCT_TILE_CLICKED"
+            },
+            {
+              "key": "height",
+              "type": "unknown",
+              "default": 240
+            },
+            {
+              "key": "limit",
+              "type": "unknown",
+              "default": 5
+            },
+            {
+              "key": "period",
+              "type": "unknown",
+              "default": "month"
+            },
+            {
+              "key": "series",
+              "type": "unknown",
+              "default": []
+            },
+            {
+              "key": "showLegend",
+              "type": "unknown",
+              "default": false
+            },
+            {
+              "key": "showValues",
+              "type": "unknown",
+              "default": true
+            },
+            {
+              "key": "sortDir",
+              "type": "unknown",
+              "default": "desc"
+            },
+            {
+              "key": "sortField",
+              "type": "unknown",
+              "default": "value"
+            },
+            {
+              "key": "stack",
+              "type": "unknown",
+              "default": "none"
+            },
+            {
+              "key": "subtitle",
+              "type": "unknown",
+              "default": "Top 5 by revenue"
+            },
+            {
+              "key": "timeAxis",
+              "type": "unknown",
+              "default": false
+            },
+            {
+              "key": "timeField",
+              "type": "unknown",
+              "default": "date"
+            },
+            {
+              "key": "title",
+              "type": "unknown",
+              "default": "Top Products"
+            },
+            {
+              "key": "valueField",
+              "type": "unknown",
+              "default": "revenue"
+            },
+            {
+              "key": "viewPattern",
+              "type": "unknown",
+              "default": "chart"
+            }
+          ],
+          "capabilities": []
+        },
+        {
+          "name": "DefaultAreaChart",
+          "emittedEvents": [],
+          "listenedEvents": [],
+          "overridableConfigKeys": [
+            {
+              "key": "aggregation",
+              "type": "unknown",
+              "default": "sum"
+            },
+            {
+              "key": "categoryField",
+              "type": "unknown",
+              "default": "month"
+            },
+            {
+              "key": "chartType",
+              "type": "unknown",
+              "default": "area"
+            },
+            {
+              "key": "drillEvent",
+              "type": "unknown",
+              "default": "AREA_TILE_CLICKED"
+            },
+            {
+              "key": "height",
+              "type": "unknown",
+              "default": 240
+            },
+            {
+              "key": "limit",
+              "type": "unknown",
+              "default": 0
+            },
+            {
+              "key": "period",
+              "type": "unknown",
+              "default": "month"
+            },
+            {
+              "key": "series",
+              "type": "unknown",
+              "default": []
+            },
+            {
+              "key": "showLegend",
+              "type": "unknown",
+              "default": false
+            },
+            {
+              "key": "showValues",
+              "type": "unknown",
+              "default": false
+            },
+            {
+              "key": "sortDir",
+              "type": "unknown",
+              "default": "desc"
+            },
+            {
+              "key": "sortField",
+              "type": "unknown",
+              "default": "label"
+            },
+            {
+              "key": "stack",
+              "type": "unknown",
+              "default": "none"
+            },
+            {
+              "key": "subtitle",
+              "type": "unknown",
+              "default": "Year-to-date"
+            },
+            {
+              "key": "timeAxis",
+              "type": "unknown",
+              "default": true
+            },
+            {
+              "key": "timeField",
+              "type": "unknown",
+              "default": "date"
+            },
+            {
+              "key": "title",
+              "type": "unknown",
+              "default": "Cumulative Sales"
+            },
+            {
+              "key": "valueField",
+              "type": "unknown",
+              "default": "amount"
+            },
+            {
+              "key": "viewPattern",
+              "type": "unknown",
+              "default": "chart"
+            }
+          ],
+          "capabilities": []
+        },
+        {
+          "name": "DefaultDonutChart",
+          "emittedEvents": [],
+          "listenedEvents": [],
+          "overridableConfigKeys": [
+            {
+              "key": "aggregation",
+              "type": "unknown",
+              "default": "sum"
+            },
+            {
+              "key": "categoryField",
+              "type": "unknown",
+              "default": "channel"
+            },
+            {
+              "key": "chartType",
+              "type": "unknown",
+              "default": "donut"
+            },
+            {
+              "key": "drillEvent",
+              "type": "unknown",
+              "default": "DONUT_TILE_CLICKED"
+            },
+            {
+              "key": "height",
+              "type": "unknown",
+              "default": 240
+            },
+            {
+              "key": "limit",
+              "type": "unknown",
+              "default": 0
+            },
+            {
+              "key": "period",
+              "type": "unknown",
+              "default": "month"
+            },
+            {
+              "key": "series",
+              "type": "unknown",
+              "default": []
+            },
+            {
+              "key": "showLegend",
+              "type": "unknown",
+              "default": true
+            },
+            {
+              "key": "showValues",
+              "type": "unknown",
+              "default": false
+            },
+            {
+              "key": "sortDir",
+              "type": "unknown",
+              "default": "desc"
+            },
+            {
+              "key": "sortField",
+              "type": "unknown",
+              "default": "value"
+            },
+            {
+              "key": "stack",
+              "type": "unknown",
+              "default": "none"
+            },
+            {
+              "key": "subtitle",
+              "type": "unknown",
+              "default": "By marketing channel"
+            },
+            {
+              "key": "timeAxis",
+              "type": "unknown",
+              "default": false
+            },
+            {
+              "key": "timeField",
+              "type": "unknown",
+              "default": "date"
+            },
+            {
+              "key": "title",
+              "type": "unknown",
+              "default": "Channel Mix"
+            },
+            {
+              "key": "valueField",
+              "type": "unknown",
+              "default": "value"
+            },
+            {
+              "key": "viewPattern",
+              "type": "unknown",
+              "default": "chart"
+            }
+          ],
+          "capabilities": []
+        },
+        {
+          "name": "DefaultActivityHistogram",
+          "emittedEvents": [],
+          "listenedEvents": [],
+          "overridableConfigKeys": [
+            {
+              "key": "aggregation",
+              "type": "unknown",
+              "default": "count"
+            },
+            {
+              "key": "categoryField",
+              "type": "unknown",
+              "default": "bucket"
+            },
+            {
+              "key": "chartType",
+              "type": "unknown",
+              "default": "histogram"
+            },
+            {
+              "key": "drillEvent",
+              "type": "unknown",
+              "default": "HISTOGRAM_TILE_CLICKED"
+            },
+            {
+              "key": "height",
+              "type": "unknown",
+              "default": 240
+            },
+            {
+              "key": "limit",
+              "type": "unknown",
+              "default": 0
+            },
+            {
+              "key": "period",
+              "type": "unknown",
+              "default": "day"
+            },
+            {
+              "key": "series",
+              "type": "unknown",
+              "default": []
+            },
+            {
+              "key": "showLegend",
+              "type": "unknown",
+              "default": false
+            },
+            {
+              "key": "showValues",
+              "type": "unknown",
+              "default": false
+            },
+            {
+              "key": "sortDir",
+              "type": "unknown",
+              "default": "desc"
+            },
+            {
+              "key": "sortField",
+              "type": "unknown",
+              "default": "label"
+            },
+            {
+              "key": "stack",
+              "type": "unknown",
+              "default": "none"
+            },
+            {
+              "key": "subtitle",
+              "type": "unknown",
+              "default": "Order count per bucket"
+            },
+            {
+              "key": "timeAxis",
+              "type": "unknown",
+              "default": false
+            },
+            {
+              "key": "timeField",
+              "type": "unknown",
+              "default": "date"
+            },
+            {
+              "key": "title",
+              "type": "unknown",
+              "default": "Activity Distribution"
+            },
+            {
+              "key": "valueField",
+              "type": "unknown",
+              "default": "count"
+            },
+            {
+              "key": "viewPattern",
+              "type": "unknown",
+              "default": "chart"
             }
           ],
           "capabilities": []
@@ -24475,9 +25364,29 @@
           "listenedEvents": [],
           "overridableConfigKeys": [
             {
+              "key": "colorField",
+              "type": "unknown",
+              "default": "segment"
+            },
+            {
+              "key": "drillEvent",
+              "type": "unknown",
+              "default": "SCATTER_TILE_CLICKED"
+            },
+            {
               "key": "height",
               "type": "unknown",
               "default": 240
+            },
+            {
+              "key": "labelField",
+              "type": "unknown",
+              "default": "customer"
+            },
+            {
+              "key": "sizeField",
+              "type": "unknown",
+              "default": "ltv"
             },
             {
               "key": "subtitle",
@@ -24488,6 +25397,16 @@
               "key": "title",
               "type": "unknown",
               "default": "Spend vs Revenue"
+            },
+            {
+              "key": "xField",
+              "type": "unknown",
+              "default": "spend"
+            },
+            {
+              "key": "yField",
+              "type": "unknown",
+              "default": "revenue"
             }
           ],
           "capabilities": []
@@ -24497,6 +25416,11 @@
           "emittedEvents": [],
           "listenedEvents": [],
           "overridableConfigKeys": [
+            {
+              "key": "buttonLabel",
+              "type": "unknown",
+              "default": "Date range"
+            },
             {
               "key": "event",
               "type": "unknown",
@@ -24526,6 +25450,32 @@
               "default": "EXPORT_REQUESTED"
             },
             {
+              "key": "formats",
+              "type": "unknown",
+              "default": [
+                {
+                  "id": "csv",
+                  "format": "csv",
+                  "label": "CSV"
+                },
+                {
+                  "format": "xlsx",
+                  "label": "Excel",
+                  "id": "xlsx"
+                },
+                {
+                  "format": "pdf",
+                  "label": "PDF",
+                  "id": "pdf"
+                },
+                {
+                  "label": "PNG",
+                  "id": "png",
+                  "format": "png"
+                }
+              ]
+            },
+            {
               "key": "tileId",
               "type": "unknown",
               "default": "dashboard"
@@ -24539,11 +25489,6 @@
           "listenedEvents": [],
           "overridableConfigKeys": [
             {
-              "key": "appName",
-              "type": "unknown",
-              "default": "Dashboard"
-            },
-            {
               "key": "filter1Trait",
               "type": "unknown",
               "default": "@trait.DefaultDateRange"
@@ -24551,7 +25496,17 @@
             {
               "key": "filter2Trait",
               "type": "unknown",
-              "default": "@trait.DefaultExport"
+              "default": "@trait.EmptyTile"
+            },
+            {
+              "key": "filter3Trait",
+              "type": "unknown",
+              "default": "@trait.EmptyTile"
+            },
+            {
+              "key": "filter4Trait",
+              "type": "unknown",
+              "default": "@trait.EmptyTile"
             },
             {
               "key": "minTileWidth",
@@ -24559,15 +25514,19 @@
               "default": 320
             },
             {
-              "key": "navItems",
+              "key": "tile10Trait",
               "type": "unknown",
-              "default": [
-                {
-                  "icon": "bar-chart-3",
-                  "label": "Dashboard",
-                  "href": "/dashboard"
-                }
-              ]
+              "default": "@trait.EmptyTile"
+            },
+            {
+              "key": "tile11Trait",
+              "type": "unknown",
+              "default": "@trait.EmptyTile"
+            },
+            {
+              "key": "tile12Trait",
+              "type": "unknown",
+              "default": "@trait.EmptyTile"
             },
             {
               "key": "tile1Trait",
@@ -24588,6 +25547,46 @@
               "key": "tile4Trait",
               "type": "unknown",
               "default": "@trait.DefaultScatter"
+            },
+            {
+              "key": "tile5Trait",
+              "type": "unknown",
+              "default": "@trait.DefaultGrowthChart"
+            },
+            {
+              "key": "tile6Trait",
+              "type": "unknown",
+              "default": "@trait.DefaultTopProductsChart"
+            },
+            {
+              "key": "tile7Trait",
+              "type": "unknown",
+              "default": "@trait.DefaultDonutChart"
+            },
+            {
+              "key": "tile8Trait",
+              "type": "unknown",
+              "default": "@trait.DefaultAreaChart"
+            },
+            {
+              "key": "tile9Trait",
+              "type": "unknown",
+              "default": "@trait.DefaultActivityHistogram"
+            },
+            {
+              "key": "toolbar1Trait",
+              "type": "unknown",
+              "default": "@trait.DefaultExport"
+            },
+            {
+              "key": "toolbar2Trait",
+              "type": "unknown",
+              "default": "@trait.EmptyTile"
+            },
+            {
+              "key": "toolbar3Trait",
+              "type": "unknown",
+              "default": "@trait.EmptyTile"
             }
           ],
           "capabilities": []
@@ -35467,7 +36466,14 @@
               "type": "string",
               "default": "count",
               "label": "Aggregation",
-              "description": "How values within a bucket combine into one number"
+              "description": "How values within a bucket combine into one number",
+              "enumValues": [
+                "count",
+                "sum",
+                "avg",
+                "min",
+                "max"
+              ]
             },
             {
               "key": "categoryField",
@@ -35481,7 +36487,16 @@
               "type": "string",
               "default": "bar",
               "label": "Chart type",
-              "description": "Visual format for the rendered chart"
+              "description": "Visual format for the rendered chart",
+              "enumValues": [
+                "bar",
+                "line",
+                "pie",
+                "area",
+                "donut",
+                "histogram",
+                "scatter"
+              ]
             },
             {
               "key": "drillEvent",
@@ -35509,7 +36524,14 @@
               "type": "string",
               "default": "month",
               "label": "Bucket period",
-              "description": "Calendar bucket size when grouping by time"
+              "description": "Calendar bucket size when grouping by time",
+              "enumValues": [
+                "day",
+                "week",
+                "month",
+                "quarter",
+                "year"
+              ]
             },
             {
               "key": "series",
@@ -35537,21 +36559,35 @@
               "type": "string",
               "default": "desc",
               "label": "Sort direction",
-              "description": "Ascending or descending order for the sort field"
+              "description": "Ascending or descending order for the sort field",
+              "enumValues": [
+                "asc",
+                "desc"
+              ]
             },
             {
               "key": "sortField",
               "type": "string",
               "default": "none",
               "label": "Sort by",
-              "description": "Order points by value, label, or leave unsorted"
+              "description": "Order points by value, label, or leave unsorted",
+              "enumValues": [
+                "value",
+                "label",
+                "none"
+              ]
             },
             {
               "key": "stack",
               "type": "string",
               "default": "none",
               "label": "Stacking",
-              "description": "Stack bars, normalize to 100%, or render side-by-side"
+              "description": "Stack bars, normalize to 100%, or render side-by-side",
+              "enumValues": [
+                "none",
+                "stack",
+                "normalize"
+              ]
             },
             {
               "key": "subtitle",
@@ -48468,16 +49504,22 @@
             {
               "key": "icon",
               "type": "string",
-              "default": "list"
+              "default": "list",
+              "label": "Header icon",
+              "description": "Icon name displayed next to the title"
             },
             {
               "key": "masterTrait",
-              "type": "trait"
+              "type": "trait",
+              "label": "Master trait",
+              "description": "Trait reference rendered as the master list on the left"
             },
             {
               "key": "title",
               "type": "string",
-              "default": "Master / Detail"
+              "default": "Master / Detail",
+              "label": "Page title",
+              "description": "Heading shown above the master/detail layout"
             }
           ],
           "capabilities": []
@@ -49458,12 +50500,16 @@
             {
               "key": "cancelIcon",
               "type": "string",
-              "default": "x"
+              "default": "x",
+              "label": "Cancel icon",
+              "description": "Icon next to the cancel button"
             },
             {
               "key": "cancelLabel",
               "type": "string",
-              "default": "Cancel transaction"
+              "default": "Cancel transaction",
+              "label": "Cancel button",
+              "description": "Label on the cancel-transaction escape-hatch button"
             },
             {
               "key": "disputeIcon",
@@ -49484,26 +50530,26 @@
               "type": "[object]",
               "default": [
                 {
-                  "icon": "user",
-                  "stepLabel": "Step 1 of 2",
                   "actor": "Alice Chen",
                   "id": "buyer",
+                  "description": "Funds the transaction and confirms receipt of the vehicle.",
                   "actionLabel": "Confirm payment",
                   "actionDescription": "Authorize $28,500 to be held in escrow until delivery is confirmed.",
-                  "title": "Buyer",
-                  "description": "Funds the transaction and confirms receipt of the vehicle.",
-                  "actionIcon": "credit-card"
+                  "icon": "user",
+                  "stepLabel": "Step 1 of 2",
+                  "actionIcon": "credit-card",
+                  "title": "Buyer"
                 },
                 {
-                  "description": "Ships the vehicle and uploads delivery proof.",
                   "actor": "Bob's Auto Sales LLC",
-                  "actionLabel": "Confirm shipment",
-                  "title": "Seller",
+                  "description": "Ships the vehicle and uploads delivery proof.",
                   "id": "seller",
-                  "actionDescription": "Mark the vehicle as shipped. Funds will release after the buyer confirms receipt.",
-                  "actionIcon": "package",
+                  "icon": "user-check",
+                  "title": "Seller",
                   "stepLabel": "Step 2 of 2",
-                  "icon": "user-check"
+                  "actionIcon": "package",
+                  "actionLabel": "Confirm shipment",
+                  "actionDescription": "Mark the vehicle as shipped. Funds will release after the buyer confirms receipt."
                 }
               ],
               "label": "Parties",
@@ -60711,7 +61757,13 @@
               "type": "string",
               "default": "GET",
               "label": "HTTP method",
-              "description": "HTTP verb used for the request (GET, POST, PUT, DELETE)"
+              "description": "HTTP verb used for the request (GET, POST, PUT, DELETE)",
+              "enumValues": [
+                "GET",
+                "POST",
+                "PUT",
+                "DELETE"
+              ]
             },
             {
               "key": "token",
@@ -61022,7 +62074,12 @@
               "type": "string",
               "default": "getFile",
               "label": "Operation",
-              "description": "Which GitHub action to perform: get file, list commits, or create issue"
+              "description": "Which GitHub action to perform: get file, list commits, or create issue",
+              "enumValues": [
+                "getFile",
+                "listCommits",
+                "createIssue"
+              ]
             },
             {
               "key": "owner",
@@ -61958,7 +63015,13 @@
               "type": "string",
               "default": "google",
               "label": "Identity provider",
-              "description": "Which OAuth vendor handles sign-in (Google, GitHub, Microsoft, Okta)"
+              "description": "Which OAuth vendor handles sign-in (Google, GitHub, Microsoft, Okta)",
+              "enumValues": [
+                "google",
+                "github",
+                "microsoft",
+                "okta"
+              ]
             },
             {
               "key": "redirectUri",
@@ -62227,7 +63290,12 @@
               "type": "string",
               "default": "get",
               "label": "Operation",
-              "description": "Which Redis command to run: get, set, or delete"
+              "description": "Which Redis command to run: get, set, or delete",
+              "enumValues": [
+                "get",
+                "set",
+                "del"
+              ]
             },
             {
               "key": "ttl",
@@ -62664,7 +63732,11 @@
               "type": "string",
               "default": "private",
               "label": "Access level",
-              "description": "Whether uploaded files are publicly readable or private"
+              "description": "Whether uploaded files are publicly readable or private",
+              "enumValues": [
+                "public",
+                "private"
+              ]
             },
             {
               "key": "allowedMimeTypes",
@@ -62952,7 +64024,12 @@
               "type": "string",
               "default": "sms",
               "label": "Channel",
-              "description": "Twilio delivery channel: SMS, voice call, or WhatsApp"
+              "description": "Twilio delivery channel: SMS, voice call, or WhatsApp",
+              "enumValues": [
+                "sms",
+                "voice",
+                "whatsapp"
+              ]
             },
             {
               "key": "recipient",
@@ -64183,7 +65260,9 @@
           "overridableConfigKeys": [
             {
               "key": "contentTrait",
-              "type": "trait"
+              "type": "trait",
+              "label": "Content trait",
+              "description": "Trait rendered inside the stack layout body"
             },
             {
               "key": "icon",
@@ -66902,7 +67981,11 @@
               "type": "string",
               "default": "horizontal",
               "label": "Orientation",
-              "description": "Horizontal strip or vertical rail layout"
+              "description": "Horizontal strip or vertical rail layout",
+              "enumValues": [
+                "horizontal",
+                "vertical"
+              ]
             },
             {
               "key": "tabs",
@@ -66932,7 +68015,12 @@
               "type": "string",
               "default": "default",
               "label": "Tab style",
-              "description": "Visual style of the tab strip"
+              "description": "Visual style of the tab strip",
+              "enumValues": [
+                "default",
+                "pills",
+                "underline"
+              ]
             }
           ],
           "capabilities": []
@@ -66978,12 +68066,16 @@
             {
               "key": "icon",
               "type": "string",
-              "default": "layout"
+              "default": "layout",
+              "label": "Header icon",
+              "description": "Icon name displayed next to the title"
             },
             {
               "key": "title",
               "type": "string",
-              "default": "Tabbed View"
+              "default": "Tabbed View",
+              "label": "Page title",
+              "description": "Heading shown above the tab strip"
             }
           ],
           "capabilities": []
