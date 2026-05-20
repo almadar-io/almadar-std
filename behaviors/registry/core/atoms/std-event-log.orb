@@ -47,40 +47,46 @@
             "items": {
               "type": "object",
               "properties": {
-                "kind": {
-                  "name": "kind",
-                  "type": "string",
-                  "values": [
-                    "created",
-                    "updated",
-                    "approved",
-                    "rejected"
-                  ]
-                },
                 "id": {
                   "name": "id",
-                  "type": "string"
+                  "type": "string",
+                  "required": true
                 },
                 "description": {
                   "name": "description",
-                  "type": "string"
-                },
-                "title": {
-                  "name": "title",
-                  "type": "string"
-                },
-                "date": {
-                  "name": "date",
-                  "type": "string"
+                  "type": "string",
+                  "required": false
                 },
                 "status": {
                   "name": "status",
                   "type": "string",
+                  "required": false,
                   "values": [
                     "complete",
                     "active",
                     "pending",
                     "error"
+                  ]
+                },
+                "date": {
+                  "name": "date",
+                  "type": "string",
+                  "required": false
+                },
+                "title": {
+                  "name": "title",
+                  "type": "string",
+                  "required": true
+                },
+                "kind": {
+                  "name": "kind",
+                  "type": "string",
+                  "required": false,
+                  "values": [
+                    "created",
+                    "updated",
+                    "approved",
+                    "rejected"
                   ]
                 }
               }
@@ -93,27 +99,10 @@
             "items": {
               "type": "object",
               "properties": {
-                "kind": {
-                  "name": "kind",
-                  "type": "string",
-                  "values": [
-                    "created",
-                    "updated",
-                    "approved",
-                    "rejected"
-                  ]
-                },
-                "description": {
-                  "name": "description",
-                  "type": "string"
-                },
-                "date": {
-                  "name": "date",
-                  "type": "string"
-                },
                 "status": {
                   "name": "status",
                   "type": "string",
+                  "required": false,
                   "values": [
                     "complete",
                     "active",
@@ -121,13 +110,36 @@
                     "error"
                   ]
                 },
-                "id": {
-                  "name": "id",
-                  "type": "string"
+                "kind": {
+                  "name": "kind",
+                  "type": "string",
+                  "required": false,
+                  "values": [
+                    "created",
+                    "updated",
+                    "approved",
+                    "rejected"
+                  ]
                 },
                 "title": {
                   "name": "title",
-                  "type": "string"
+                  "type": "string",
+                  "required": true
+                },
+                "description": {
+                  "name": "description",
+                  "type": "string",
+                  "required": false
+                },
+                "id": {
+                  "name": "id",
+                  "type": "string",
+                  "required": true
+                },
+                "date": {
+                  "name": "date",
+                  "type": "string",
+                  "required": false
                 }
               }
             }
@@ -139,17 +151,20 @@
             "items": {
               "type": "object",
               "properties": {
-                "id": {
-                  "name": "id",
-                  "type": "string"
-                },
                 "label": {
                   "name": "label",
-                  "type": "string"
+                  "type": "string",
+                  "required": true
                 },
                 "icon": {
                   "name": "icon",
-                  "type": "string"
+                  "type": "string",
+                  "required": false
+                },
+                "id": {
+                  "name": "id",
+                  "type": "string",
+                  "required": true
                 }
               }
             }
@@ -370,8 +385,8 @@
                     "EventLogView",
                     {
                       "emit": {
-                        "success": "EventLogLoaded",
-                        "failure": "EventLogLoadFailed"
+                        "failure": "EventLogLoadFailed",
+                        "success": "EventLogLoaded"
                       }
                     }
                   ],
@@ -422,9 +437,9 @@
                         ]
                       ],
                       {
-                        "icon": "list",
+                        "label": "All",
                         "id": "",
-                        "label": "All"
+                        "icon": "list"
                       }
                     ]
                   ],
@@ -440,10 +455,28 @@
                           "fn",
                           "row",
                           {
+                            "kind": [
+                              "object/get",
+                              "@row",
+                              "kind",
+                              ""
+                            ],
+                            "title": [
+                              "object/get",
+                              "@row",
+                              "title",
+                              ""
+                            ],
                             "id": [
                               "object/get",
                               "@row",
                               "id",
+                              ""
+                            ],
+                            "description": [
+                              "object/get",
+                              "@row",
+                              "description",
                               ""
                             ],
                             "date": [
@@ -456,18 +489,6 @@
                                 "date",
                                 ""
                               ]
-                            ],
-                            "kind": [
-                              "object/get",
-                              "@row",
-                              "kind",
-                              ""
-                            ],
-                            "description": [
-                              "object/get",
-                              "@row",
-                              "description",
-                              ""
                             ],
                             "status": [
                               "object/get",
@@ -499,12 +520,6 @@
                               ],
                               "status",
                               "pending"
-                            ],
-                            "title": [
-                              "object/get",
-                              "@row",
-                              "title",
-                              ""
                             ]
                           }
                         ]
@@ -525,10 +540,10 @@
                           "fn",
                           "row",
                           {
-                            "id": [
+                            "title": [
                               "object/get",
                               "@row",
-                              "id",
+                              "title",
                               ""
                             ],
                             "description": [
@@ -537,10 +552,27 @@
                               "description",
                               ""
                             ],
-                            "title": [
+                            "date": [
                               "object/get",
                               "@row",
-                              "title",
+                              "createdAt",
+                              [
+                                "object/get",
+                                "@row",
+                                "date",
+                                ""
+                              ]
+                            ],
+                            "kind": [
+                              "object/get",
+                              "@row",
+                              "kind",
+                              ""
+                            ],
+                            "id": [
+                              "object/get",
+                              "@row",
+                              "id",
                               ""
                             ],
                             "status": [
@@ -573,23 +605,6 @@
                               ],
                               "status",
                               "pending"
-                            ],
-                            "date": [
-                              "object/get",
-                              "@row",
-                              "createdAt",
-                              [
-                                "object/get",
-                                "@row",
-                                "date",
-                                ""
-                              ]
-                            ],
-                            "kind": [
-                              "object/get",
-                              "@row",
-                              "kind",
-                              ""
                             ]
                           }
                         ]
@@ -602,13 +617,15 @@
                     "render-ui",
                     "main",
                     {
+                      "gap": "md",
                       "direction": "vertical",
                       "type": "stack",
-                      "gap": "md",
                       "children": [
                         {
-                          "type": "stack",
+                          "align": "center",
                           "direction": "horizontal",
+                          "gap": "sm",
+                          "type": "stack",
                           "children": [
                             {
                               "type": "icon",
@@ -616,35 +633,33 @@
                             },
                             {
                               "variant": "h3",
-                              "type": "typography",
-                              "content": "@config.title"
+                              "content": "@config.title",
+                              "type": "typography"
                             },
                             {
                               "type": "button",
-                              "action": "OPEN_BACKFILL",
                               "variant": "primary",
-                              "label": "Log event",
-                              "icon": "plus"
+                              "icon": "plus",
+                              "action": "OPEN_BACKFILL",
+                              "label": "Log event"
                             }
-                          ],
-                          "gap": "sm",
-                          "align": "center"
+                          ]
                         },
                         {
+                          "tabChangeEvent": "APPLY_FILTER",
                           "tabs": "@entity.filterChips",
-                          "type": "tabs",
                           "activeTab": "@entity.filterKind",
-                          "tabChangeEvent": "APPLY_FILTER"
+                          "type": "tabs"
                         },
                         {
                           "entity": "@entity.entries",
-                          "type": "timeline",
                           "fields": [
                             "title",
                             "description",
                             "date",
                             "status"
-                          ]
+                          ],
+                          "type": "timeline"
                         }
                       ]
                     }
@@ -665,9 +680,9 @@
                     "render-ui",
                     "main",
                     {
-                      "type": "error-state",
                       "title": "Failed to load",
-                      "message": "@entity.errorMessage"
+                      "message": "@entity.errorMessage",
+                      "type": "error-state"
                     }
                   ]
                 ]
@@ -682,8 +697,8 @@
                     "EventLogView",
                     {
                       "emit": {
-                        "failure": "EventLogLoadFailed",
-                        "success": "EventLogLoaded"
+                        "success": "EventLogLoaded",
+                        "failure": "EventLogLoadFailed"
                       }
                     }
                   ],
@@ -711,9 +726,9 @@
                     "render-ui",
                     "main",
                     {
-                      "message": "@entity.errorMessage",
+                      "type": "error-state",
                       "title": "Save failed",
-                      "type": "error-state"
+                      "message": "@entity.errorMessage"
                     }
                   ]
                 ]
@@ -761,11 +776,14 @@
                     "render-ui",
                     "main",
                     {
+                      "gap": "md",
+                      "type": "stack",
+                      "direction": "vertical",
                       "children": [
                         {
-                          "gap": "sm",
                           "direction": "horizontal",
                           "type": "stack",
+                          "gap": "sm",
                           "align": "center",
                           "children": [
                             {
@@ -773,39 +791,36 @@
                               "name": "history"
                             },
                             {
+                              "variant": "h3",
                               "type": "typography",
-                              "content": "@config.title",
-                              "variant": "h3"
+                              "content": "@config.title"
                             },
                             {
-                              "icon": "plus",
                               "action": "OPEN_BACKFILL",
+                              "variant": "primary",
+                              "icon": "plus",
                               "type": "button",
-                              "label": "Log event",
-                              "variant": "primary"
+                              "label": "Log event"
                             }
                           ]
                         },
                         {
                           "tabs": "@entity.filterChips",
                           "tabChangeEvent": "APPLY_FILTER",
-                          "type": "tabs",
-                          "activeTab": "@entity.filterKind"
+                          "activeTab": "@entity.filterKind",
+                          "type": "tabs"
                         },
                         {
-                          "type": "timeline",
                           "fields": [
                             "title",
                             "description",
                             "date",
                             "status"
                           ],
+                          "type": "timeline",
                           "entity": "@entity.entries"
                         }
-                      ],
-                      "type": "stack",
-                      "direction": "vertical",
-                      "gap": "md"
+                      ]
                     }
                   ]
                 ]
@@ -840,50 +855,50 @@
                     "main",
                     {
                       "direction": "vertical",
-                      "type": "stack",
-                      "gap": "md",
                       "children": [
                         {
+                          "align": "center",
                           "children": [
                             {
                               "icon": "arrow-left",
-                              "type": "button",
                               "label": "Back",
                               "variant": "ghost",
+                              "type": "button",
                               "action": "CANCEL_BACKFILL"
                             },
                             {
-                              "name": "plus-circle",
-                              "type": "icon"
+                              "type": "icon",
+                              "name": "plus-circle"
                             },
                             {
-                              "variant": "h3",
+                              "content": "Log event",
                               "type": "typography",
-                              "content": "Log event"
+                              "variant": "h3"
                             }
                           ],
-                          "type": "stack",
-                          "align": "center",
                           "direction": "horizontal",
+                          "type": "stack",
                           "gap": "sm"
                         },
                         {
                           "type": "divider"
                         },
                         {
+                          "type": "card",
                           "children": [
                             {
-                              "fields": "@config.formFields",
                               "mode": "create",
                               "type": "form-section",
                               "submitEvent": "SAVE_BACKFILL",
+                              "entity": "@entity",
                               "cancelEvent": "CANCEL_BACKFILL",
-                              "entity": "@entity"
+                              "fields": "@config.formFields"
                             }
-                          ],
-                          "type": "card"
+                          ]
                         }
-                      ]
+                      ],
+                      "type": "stack",
+                      "gap": "md"
                     }
                   ]
                 ]
@@ -909,8 +924,8 @@
                     "render-ui",
                     "main",
                     {
-                      "type": "loading-state",
-                      "title": "Saving entry…"
+                      "title": "Saving entry…",
+                      "type": "loading-state"
                     }
                   ]
                 ]
@@ -924,51 +939,51 @@
                     "render-ui",
                     "main",
                     {
-                      "type": "stack",
                       "children": [
                         {
                           "children": [
                             {
-                              "name": "history",
-                              "type": "icon"
+                              "type": "icon",
+                              "name": "history"
                             },
                             {
-                              "content": "@config.title",
                               "type": "typography",
+                              "content": "@config.title",
                               "variant": "h3"
                             },
                             {
-                              "type": "button",
                               "icon": "plus",
                               "variant": "primary",
+                              "type": "button",
                               "label": "Log event",
                               "action": "OPEN_BACKFILL"
                             }
                           ],
-                          "direction": "horizontal",
                           "type": "stack",
                           "gap": "sm",
-                          "align": "center"
+                          "align": "center",
+                          "direction": "horizontal"
                         },
                         {
-                          "tabs": "@entity.filterChips",
-                          "activeTab": "@entity.filterKind",
                           "type": "tabs",
+                          "activeTab": "@entity.filterKind",
+                          "tabs": "@entity.filterChips",
                           "tabChangeEvent": "APPLY_FILTER"
                         },
                         {
-                          "type": "timeline",
-                          "entity": "@entity.entries",
                           "fields": [
                             "title",
                             "description",
                             "date",
                             "status"
-                          ]
+                          ],
+                          "entity": "@entity.entries",
+                          "type": "timeline"
                         }
                       ],
+                      "gap": "md",
                       "direction": "vertical",
-                      "gap": "md"
+                      "type": "stack"
                     }
                   ]
                 ]
@@ -991,39 +1006,11 @@
             ]
           },
           "config": {
-            "kindOptions": {
-              "type": "[object]",
-              "default": [
-                {
-                  "label": "Created",
-                  "status": "active",
-                  "key": "created",
-                  "icon": "plus-circle"
-                },
-                {
-                  "label": "Updated",
-                  "key": "updated",
-                  "status": "pending",
-                  "icon": "edit-3"
-                },
-                {
-                  "status": "complete",
-                  "icon": "check-circle",
-                  "label": "Approved",
-                  "key": "approved"
-                },
-                {
-                  "status": "error",
-                  "icon": "x-circle",
-                  "label": "Rejected",
-                  "key": "rejected"
-                }
-              ],
-              "label": "Event kinds",
-              "description": "Maps each event kind to its label, icon, and status color",
-              "items": {
-                "type": "object"
-              }
+            "title": {
+              "type": "string",
+              "default": "Activity",
+              "label": "Section title",
+              "description": "Heading shown above the activity timeline"
             },
             "formFields": {
               "type": "[string]",
@@ -1039,11 +1026,39 @@
                 "type": "string"
               }
             },
-            "title": {
-              "type": "string",
-              "default": "Activity",
-              "label": "Section title",
-              "description": "Heading shown above the activity timeline"
+            "kindOptions": {
+              "type": "[object]",
+              "default": [
+                {
+                  "label": "Created",
+                  "status": "active",
+                  "key": "created",
+                  "icon": "plus-circle"
+                },
+                {
+                  "icon": "edit-3",
+                  "status": "pending",
+                  "key": "updated",
+                  "label": "Updated"
+                },
+                {
+                  "label": "Approved",
+                  "icon": "check-circle",
+                  "key": "approved",
+                  "status": "complete"
+                },
+                {
+                  "key": "rejected",
+                  "label": "Rejected",
+                  "icon": "x-circle",
+                  "status": "error"
+                }
+              ],
+              "label": "Event kinds",
+              "description": "Maps each event kind to its label, icon, and status color",
+              "items": {
+                "type": "object"
+              }
             }
           },
           "scope": "instance"

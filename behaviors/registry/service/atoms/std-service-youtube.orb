@@ -120,47 +120,47 @@
                     "render-ui",
                     "main",
                     {
-                      "type": "card",
                       "children": [
                         {
-                          "type": "stack",
                           "align": "center",
+                          "type": "stack",
+                          "direction": "vertical",
+                          "gap": "md",
                           "children": [
                             {
-                              "type": "icon",
-                              "name": "video"
-                            },
-                            {
-                              "content": "YouTube Video",
-                              "type": "typography",
-                              "variant": "h2"
+                              "name": "video",
+                              "type": "icon"
                             },
                             {
                               "type": "typography",
-                              "content": "@config.videoId",
+                              "variant": "h2",
+                              "content": "YouTube Video"
+                            },
+                            {
                               "variant": "body",
-                              "color": "muted"
+                              "content": "@config.videoId",
+                              "color": "muted",
+                              "type": "typography"
                             },
                             {
+                              "direction": "horizontal",
+                              "type": "stack",
+                              "gap": "sm",
+                              "justify": "center",
                               "children": [
                                 {
-                                  "type": "button",
-                                  "action": "PLAY",
                                   "variant": "primary",
-                                  "icon": "play",
-                                  "label": "Play"
+                                  "type": "button",
+                                  "label": "Play",
+                                  "action": "PLAY",
+                                  "icon": "play"
                                 }
-                              ],
-                              "type": "stack",
-                              "direction": "horizontal",
-                              "gap": "sm",
-                              "justify": "center"
+                              ]
                             }
-                          ],
-                          "direction": "vertical",
-                          "gap": "md"
+                          ]
                         }
-                      ]
+                      ],
+                      "type": "card"
                     }
                   ]
                 ]
@@ -366,8 +366,8 @@
                     "ServiceYoutube",
                     {
                       "emit": {
-                        "success": "ServiceYoutubeLoaded",
-                        "failure": "ServiceYoutubeLoadFailed"
+                        "failure": "ServiceYoutubeLoadFailed",
+                        "success": "ServiceYoutubeLoaded"
                       }
                     }
                   ],
@@ -376,11 +376,11 @@
                     "main",
                     {
                       "gap": "md",
+                      "type": "stack",
+                      "direction": "vertical",
                       "children": [
                         "@config.uiTrait"
-                      ],
-                      "direction": "vertical",
-                      "type": "stack"
+                      ]
                     }
                   ]
                 ]
@@ -401,12 +401,12 @@
                     "render-ui",
                     "main",
                     {
-                      "direction": "vertical",
-                      "type": "stack",
                       "gap": "md",
+                      "direction": "vertical",
                       "children": [
                         "@config.uiTrait"
-                      ]
+                      ],
+                      "type": "stack"
                     }
                   ]
                 ]
@@ -425,8 +425,8 @@
                     "emit",
                     "ServiceYoutubeYoutubeFailed",
                     {
-                      "code": "youtube_embed_failed",
-                      "error": "@entity.error"
+                      "error": "@entity.error",
+                      "code": "youtube_embed_failed"
                     }
                   ],
                   [
@@ -434,9 +434,9 @@
                     "main",
                     {
                       "title": "Video Failed",
+                      "onRetry": "RETRY",
                       "type": "error-state",
-                      "message": "@entity.error",
-                      "onRetry": "RETRY"
+                      "message": "@entity.error"
                     }
                   ]
                 ]
@@ -470,18 +470,18 @@
                     "emit",
                     "ServiceYoutubeYoutubeFailed",
                     {
-                      "error": "@entity.error",
-                      "code": "youtube_playback_failed"
+                      "code": "youtube_playback_failed",
+                      "error": "@entity.error"
                     }
                   ],
                   [
                     "render-ui",
                     "main",
                     {
-                      "onRetry": "RETRY",
                       "title": "Video Failed",
+                      "message": "@entity.error",
                       "type": "error-state",
-                      "message": "@entity.error"
+                      "onRetry": "RETRY"
                     }
                   ]
                 ]
@@ -513,11 +513,11 @@
                     "main",
                     {
                       "gap": "md",
-                      "direction": "vertical",
+                      "type": "stack",
                       "children": [
                         "@config.uiTrait"
                       ],
-                      "type": "stack"
+                      "direction": "vertical"
                     }
                   ]
                 ]
@@ -525,24 +525,6 @@
             ]
           },
           "config": {
-            "uiTrait": {
-              "type": "trait",
-              "default": "@trait.ServiceYoutubeDefaultPlayer",
-              "label": "Player skin",
-              "description": "Trait that replaces the default YouTube embed surface"
-            },
-            "autoplay": {
-              "type": "boolean",
-              "default": false,
-              "label": "Autoplay",
-              "description": "Start playback automatically when the embed loads"
-            },
-            "videoId": {
-              "type": "string",
-              "default": "",
-              "label": "YouTube video ID",
-              "description": "Eleven-character YouTube ID from the share URL"
-            },
             "controls": {
               "type": "boolean",
               "default": true,
@@ -554,6 +536,24 @@
               "default": 0.0,
               "label": "Start at seconds",
               "description": "Number of seconds to skip in before playback begins"
+            },
+            "autoplay": {
+              "type": "boolean",
+              "default": false,
+              "label": "Autoplay",
+              "description": "Start playback automatically when the embed loads"
+            },
+            "uiTrait": {
+              "type": "trait",
+              "default": "@trait.ServiceYoutubeDefaultPlayer",
+              "label": "Player skin",
+              "description": "Trait that replaces the default YouTube embed surface"
+            },
+            "videoId": {
+              "type": "string",
+              "default": "",
+              "label": "YouTube video ID",
+              "description": "Eleven-character YouTube ID from the share URL"
             }
           },
           "scope": "instance"

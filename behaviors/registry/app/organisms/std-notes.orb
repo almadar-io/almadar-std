@@ -116,21 +116,22 @@
           "ref": "AppShell.traits.AppLayout",
           "name": "NoteAppLayout",
           "config": {
+            "appName": "Notes",
             "navItems": [
               {
-                "icon": "file-text",
                 "label": "Notes",
+                "icon": "file-text",
                 "href": "/notes"
               },
               {
+                "icon": "list-tree",
                 "href": "/notes/tree",
-                "label": "Tree",
-                "icon": "list-tree"
+                "label": "Tree"
               },
               {
+                "label": "Editor",
                 "href": "/notes/editor",
-                "icon": "edit",
-                "label": "Editor"
+                "icon": "edit"
               },
               {
                 "label": "Favorites",
@@ -138,11 +139,10 @@
                 "href": "/notes/favorites"
               }
             ],
-            "notificationClickEvent": "NOTE_NOTIFICATIONS_OPEN",
-            "contentTrait": "@trait.NoteCatalog",
-            "appName": "Notes",
+            "notifications": [],
             "searchEvent": "NOTE_SEARCH",
-            "notifications": []
+            "notificationClickEvent": "NOTE_NOTIFICATIONS_OPEN",
+            "contentTrait": "@trait.NoteCatalog"
           },
           "events": {
             "SEARCH": "NOTE_SEARCH",
@@ -232,11 +232,13 @@
                       "children": [
                         {
                           "type": "stack",
-                          "align": "center",
+                          "gap": "md",
+                          "direction": "horizontal",
+                          "justify": "between",
                           "children": [
                             {
+                              "type": "stack",
                               "gap": "sm",
-                              "direction": "horizontal",
                               "align": "center",
                               "children": [
                                 {
@@ -244,43 +246,41 @@
                                   "type": "icon"
                                 },
                                 {
-                                  "content": "Notes",
                                   "variant": "h2",
-                                  "type": "typography"
+                                  "type": "typography",
+                                  "content": "Notes"
+                                }
+                              ],
+                              "direction": "horizontal"
+                            },
+                            {
+                              "direction": "horizontal",
+                              "gap": "sm",
+                              "children": [
+                                {
+                                  "label": "New Note",
+                                  "variant": "primary",
+                                  "type": "button",
+                                  "icon": "plus",
+                                  "action": "CREATE"
                                 }
                               ],
                               "type": "stack"
-                            },
-                            {
-                              "children": [
-                                {
-                                  "action": "CREATE",
-                                  "variant": "primary",
-                                  "icon": "plus",
-                                  "type": "button",
-                                  "label": "New Note"
-                                }
-                              ],
-                              "direction": "horizontal",
-                              "type": "stack",
-                              "gap": "sm"
                             }
                           ],
-                          "justify": "between",
-                          "gap": "md",
-                          "direction": "horizontal"
+                          "align": "center"
                         },
                         {
                           "type": "divider"
                         },
                         {
-                          "direction": "horizontal",
-                          "gap": "md",
+                          "type": "stack",
                           "children": [
                             "@trait.NoteSearch",
                             "@trait.NoteFilter"
                           ],
-                          "type": "stack",
+                          "direction": "horizontal",
+                          "gap": "md",
                           "align": "center"
                         },
                         "@trait.NoteStats",
@@ -290,9 +290,9 @@
                         },
                         "@trait.NoteBrowseList"
                       ],
-                      "gap": "lg",
+                      "type": "stack",
                       "direction": "vertical",
-                      "type": "stack"
+                      "gap": "lg"
                     }
                   ]
                 ]
@@ -311,34 +311,34 @@
                     "render-ui",
                     "main",
                     {
+                      "className": "py-8",
+                      "direction": "vertical",
+                      "type": "stack",
+                      "gap": "md",
                       "children": [
                         {
                           "name": "bell",
                           "type": "icon"
                         },
                         {
-                          "type": "typography",
                           "content": "No notifications",
-                          "variant": "h3"
+                          "variant": "h3",
+                          "type": "typography"
                         },
                         {
                           "color": "muted",
-                          "content": "You're all caught up.",
                           "variant": "caption",
+                          "content": "You're all caught up.",
                           "type": "typography"
                         },
                         {
                           "variant": "ghost",
                           "label": "Back to notes",
-                          "type": "button",
-                          "action": "INIT"
+                          "action": "INIT",
+                          "type": "button"
                         }
                       ],
-                      "gap": "md",
-                      "type": "stack",
-                      "align": "center",
-                      "direction": "vertical",
-                      "className": "py-8"
+                      "align": "center"
                     }
                   ]
                 ]
@@ -351,8 +351,8 @@
           "ref": "Search.traits.SearchResultSearch",
           "name": "NoteSearch",
           "config": {
-            "placeholder": "Search notes…",
-            "event": "NOTE_FULLTEXT_SEARCH"
+            "event": "NOTE_FULLTEXT_SEARCH",
+            "placeholder": "Search notes…"
           }
         },
         {
@@ -361,13 +361,13 @@
           "config": {
             "filters": [
               {
-                "field": "isFavorite",
-                "filterType": "select",
-                "label": "Favorite",
                 "options": [
                   "true",
                   "false"
-                ]
+                ],
+                "field": "isFavorite",
+                "label": "Favorite",
+                "filterType": "select"
               }
             ],
             "event": "NOTE_FILTER"
@@ -379,18 +379,18 @@
           "config": {
             "metrics": [
               {
-                "aggregation": "count",
                 "label": "Total",
-                "icon": "file-text",
                 "variant": "primary",
-                "format": "number"
+                "aggregation": "count",
+                "format": "number",
+                "icon": "file-text"
               },
               {
-                "variant": "warning",
+                "label": "Favorites",
                 "icon": "star",
                 "format": "number",
                 "aggregation": "count",
-                "label": "Favorites",
+                "variant": "warning",
                 "filter": [
                   "fn",
                   "row",
@@ -402,6 +402,10 @@
                 ]
               },
               {
+                "label": "Top-level",
+                "icon": "folder",
+                "variant": "info",
+                "format": "number",
                 "filter": [
                   "fn",
                   "row",
@@ -411,11 +415,7 @@
                     ""
                   ]
                 ],
-                "variant": "info",
-                "aggregation": "count",
-                "icon": "folder",
-                "label": "Top-level",
-                "format": "number"
+                "aggregation": "count"
               }
             ],
             "title": "Notes"
@@ -435,13 +435,13 @@
           "ref": "Graphs.traits.GraphItemGraph",
           "name": "NoteGraphs",
           "config": {
-            "chartType": "bar",
-            "categoryField": "icon",
-            "title": "Notes by Icon",
             "subtitle": "Distribution of note icons across your tree",
+            "title": "Notes by Icon",
+            "categoryField": "icon",
+            "showLegend": false,
+            "chartType": "bar",
             "aggregation": "count",
-            "height": 240.0,
-            "showLegend": false
+            "height": 240.0
           },
           "listens": [
             {
@@ -459,15 +459,34 @@
           "name": "NoteBrowseList",
           "linkedEntity": "Note",
           "config": {
-            "fields": [
+            "cols": 1.0,
+            "itemActions": [
               {
-                "name": "title",
-                "variant": "h3",
-                "icon": "file-text"
+                "event": "VIEW",
+                "variant": "ghost",
+                "label": "View"
               },
               {
-                "variant": "badge",
-                "name": "icon"
+                "label": "Edit",
+                "variant": "ghost",
+                "event": "EDIT"
+              },
+              {
+                "label": "Delete",
+                "event": "DELETE",
+                "variant": "danger"
+              }
+            ],
+            "gap": "sm",
+            "fields": [
+              {
+                "variant": "h3",
+                "icon": "file-text",
+                "name": "title"
+              },
+              {
+                "name": "icon",
+                "variant": "badge"
               },
               {
                 "name": "isFavorite",
@@ -477,25 +496,6 @@
                 "label": "Edited",
                 "variant": "caption",
                 "name": "lastEditedAt"
-              }
-            ],
-            "cols": 1.0,
-            "gap": "sm",
-            "itemActions": [
-              {
-                "label": "View",
-                "event": "VIEW",
-                "variant": "ghost"
-              },
-              {
-                "variant": "ghost",
-                "event": "EDIT",
-                "label": "Edit"
-              },
-              {
-                "variant": "danger",
-                "label": "Delete",
-                "event": "DELETE"
               }
             ]
           },
@@ -554,9 +554,6 @@
           "name": "NoteCreate",
           "linkedEntity": "Note",
           "config": {
-            "title": "New Note",
-            "mode": "create",
-            "icon": "plus-circle",
             "fields": [
               "title",
               "content",
@@ -564,7 +561,10 @@
               "parentId",
               "icon",
               "isFavorite"
-            ]
+            ],
+            "mode": "create",
+            "title": "New Note",
+            "icon": "plus-circle"
           },
           "events": {
             "OPEN": "CREATE"
@@ -585,9 +585,7 @@
           "name": "NoteEdit",
           "linkedEntity": "Note",
           "config": {
-            "icon": "edit",
             "mode": "edit",
-            "title": "Edit Note",
             "fields": [
               "title",
               "content",
@@ -595,7 +593,9 @@
               "parentId",
               "icon",
               "isFavorite"
-            ]
+            ],
+            "title": "Edit Note",
+            "icon": "edit"
           },
           "events": {
             "OPEN": "EDIT"
@@ -616,6 +616,8 @@
           "name": "NoteView",
           "linkedEntity": "Note",
           "config": {
+            "mode": "edit",
+            "icon": "eye",
             "fields": [
               "title",
               "content",
@@ -624,8 +626,6 @@
               "isFavorite",
               "lastEditedAt"
             ],
-            "mode": "edit",
-            "icon": "eye",
             "title": "View Note"
           },
           "events": {
@@ -648,9 +648,9 @@
           "linkedEntity": "Note",
           "config": {
             "title": "Delete Note",
-            "icon": "alert-triangle",
+            "confirmLabel": "Delete",
             "alertMessage": "This action cannot be undone.",
-            "confirmLabel": "Delete"
+            "icon": "alert-triangle"
           },
           "events": {
             "REQUEST": "DELETE",
@@ -1079,24 +1079,21 @@
           "name": "RichEditorAppLayout",
           "config": {
             "notifications": [],
-            "notificationClickEvent": "RICH_EDITOR_NOTIFICATIONS_OPEN",
-            "appName": "Notes",
-            "contentTrait": "@trait.RichEditorPanel",
             "navItems": [
               {
+                "label": "Notes",
                 "icon": "file-text",
-                "href": "/notes",
-                "label": "Notes"
+                "href": "/notes"
               },
               {
-                "icon": "list-tree",
+                "href": "/notes/tree",
                 "label": "Tree",
-                "href": "/notes/tree"
+                "icon": "list-tree"
               },
               {
                 "label": "Editor",
-                "href": "/notes/editor",
-                "icon": "edit"
+                "icon": "edit",
+                "href": "/notes/editor"
               },
               {
                 "label": "Favorites",
@@ -1109,6 +1106,9 @@
                 "href": "/editor"
               }
             ],
+            "notificationClickEvent": "RICH_EDITOR_NOTIFICATIONS_OPEN",
+            "appName": "Notes",
+            "contentTrait": "@trait.RichEditorPanel",
             "searchEvent": "RICH_EDITOR_SEARCH"
           },
           "events": {
@@ -1142,15 +1142,12 @@
                     "render-ui",
                     "main",
                     {
-                      "gap": "lg",
                       "type": "stack",
-                      "className": "max-w-6xl mx-auto w-full p-4",
+                      "gap": "lg",
+                      "direction": "vertical",
                       "children": [
                         {
-                          "align": "center",
                           "direction": "horizontal",
-                          "type": "stack",
-                          "gap": "sm",
                           "children": [
                             {
                               "name": "edit",
@@ -1158,17 +1155,20 @@
                             },
                             {
                               "variant": "h2",
-                              "type": "typography",
-                              "content": "Rich Editor"
+                              "content": "Rich Editor",
+                              "type": "typography"
                             }
-                          ]
+                          ],
+                          "type": "stack",
+                          "align": "center",
+                          "gap": "sm"
                         },
                         {
                           "type": "divider"
                         },
                         "@trait.RichEditorDocumentEdit"
                       ],
-                      "direction": "vertical"
+                      "className": "max-w-6xl mx-auto w-full p-4"
                     }
                   ]
                 ]

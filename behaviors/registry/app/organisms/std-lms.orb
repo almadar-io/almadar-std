@@ -118,28 +118,28 @@
           "ref": "AppShell.traits.AppLayout",
           "name": "CourseAppLayout",
           "config": {
-            "appName": "LMS",
-            "notifications": [],
             "contentTrait": "@trait.CourseCatalog",
-            "notificationClickEvent": "COURSE_NOTIFICATIONS_OPEN",
+            "appName": "LMS",
             "navItems": [
               {
+                "label": "Courses",
                 "href": "/courses",
-                "icon": "graduation-cap",
-                "label": "Courses"
+                "icon": "graduation-cap"
               },
               {
-                "href": "/enroll",
+                "icon": "user-plus",
                 "label": "Enroll",
-                "icon": "user-plus"
+                "href": "/enroll"
               },
               {
-                "label": "Progress",
                 "href": "/progress",
+                "label": "Progress",
                 "icon": "trending-up"
               }
             ],
-            "searchEvent": "COURSE_SEARCH"
+            "searchEvent": "COURSE_SEARCH",
+            "notifications": [],
+            "notificationClickEvent": "COURSE_NOTIFICATIONS_OPEN"
           },
           "events": {
             "NOTIFY_CLICK": "COURSE_NOTIFICATIONS_OPEN",
@@ -344,15 +344,12 @@
                     "render-ui",
                     "main",
                     {
-                      "type": "stack",
-                      "gap": "lg",
+                      "direction": "vertical",
                       "children": [
                         {
-                          "type": "stack",
-                          "direction": "horizontal",
-                          "gap": "md",
                           "children": [
                             {
+                              "align": "center",
                               "type": "stack",
                               "direction": "horizontal",
                               "gap": "sm",
@@ -362,35 +359,34 @@
                                   "name": "graduation-cap"
                                 },
                                 {
-                                  "type": "typography",
+                                  "variant": "h2",
                                   "content": "Courses",
-                                  "variant": "h2"
+                                  "type": "typography"
                                 }
-                              ],
-                              "align": "center"
+                              ]
                             },
                             {
                               "children": [
                                 {
+                                  "label": "Create Course",
+                                  "type": "button",
                                   "variant": "primary",
-                                  "type": "button",
-                                  "action": "CREATE",
                                   "icon": "plus",
-                                  "label": "Create Course"
+                                  "action": "CREATE"
                                 },
                                 {
-                                  "variant": "ghost",
-                                  "type": "button",
-                                  "action": "EDIT_COURSE",
+                                  "icon": "edit",
                                   "label": "Edit Selected",
-                                  "icon": "edit"
+                                  "action": "EDIT_COURSE",
+                                  "type": "button",
+                                  "variant": "ghost"
                                 },
                                 {
-                                  "icon": "trash-2",
                                   "label": "Delete Selected",
+                                  "variant": "danger",
                                   "type": "button",
                                   "action": "DELETE_COURSE",
-                                  "variant": "danger"
+                                  "icon": "trash-2"
                                 }
                               ],
                               "gap": "sm",
@@ -398,21 +394,24 @@
                               "type": "stack"
                             }
                           ],
+                          "justify": "between",
+                          "gap": "md",
                           "align": "center",
-                          "justify": "between"
+                          "type": "stack",
+                          "direction": "horizontal"
                         },
                         {
                           "type": "divider"
                         },
                         {
-                          "direction": "horizontal",
                           "children": [
                             "@trait.CourseSearch",
                             "@trait.CourseFilter"
                           ],
+                          "direction": "horizontal",
                           "type": "stack",
-                          "align": "center",
-                          "gap": "md"
+                          "gap": "md",
+                          "align": "center"
                         },
                         "@trait.CourseStats",
                         "@trait.CourseGraphs",
@@ -421,7 +420,8 @@
                         },
                         "@trait.CourseGallery"
                       ],
-                      "direction": "vertical"
+                      "type": "stack",
+                      "gap": "lg"
                     }
                   ]
                 ]
@@ -445,11 +445,15 @@
                     "render-ui",
                     "main",
                     {
+                      "align": "center",
                       "gap": "md",
+                      "type": "stack",
+                      "direction": "vertical",
+                      "className": "py-8",
                       "children": [
                         {
-                          "name": "bell",
-                          "type": "icon"
+                          "type": "icon",
+                          "name": "bell"
                         },
                         {
                           "content": "No notifications",
@@ -457,22 +461,18 @@
                           "variant": "h3"
                         },
                         {
-                          "color": "muted",
                           "type": "typography",
-                          "variant": "caption",
-                          "content": "You're all caught up."
+                          "content": "You're all caught up.",
+                          "color": "muted",
+                          "variant": "caption"
                         },
                         {
-                          "action": "INIT",
                           "type": "button",
                           "label": "Back to courses",
+                          "action": "INIT",
                           "variant": "ghost"
                         }
-                      ],
-                      "direction": "vertical",
-                      "type": "stack",
-                      "className": "py-8",
-                      "align": "center"
+                      ]
                     }
                   ]
                 ]
@@ -485,8 +485,8 @@
           "ref": "Search.traits.SearchResultSearch",
           "name": "CourseSearch",
           "config": {
-            "placeholder": "Search courses...",
-            "event": "SEARCH"
+            "event": "SEARCH",
+            "placeholder": "Search courses..."
           },
           "listens": [
             {
@@ -503,8 +503,10 @@
           "ref": "Filter.traits.FilterTargetFilter",
           "name": "CourseFilter",
           "config": {
+            "event": "FILTER",
             "filters": [
               {
+                "label": "Category",
                 "field": "category",
                 "filterType": "select",
                 "options": [
@@ -512,62 +514,60 @@
                   "design",
                   "business",
                   "marketing"
-                ],
-                "label": "Category"
+                ]
               },
               {
+                "field": "level",
+                "filterType": "select",
                 "options": [
                   "beginner",
                   "intermediate",
                   "advanced"
                 ],
-                "field": "level",
-                "filterType": "select",
                 "label": "Level"
               }
-            ],
-            "event": "FILTER"
+            ]
           }
         },
         {
           "ref": "Stats.traits.StatsItemStats",
           "name": "CourseStats",
           "config": {
+            "title": "Course Stats",
             "metrics": [
               {
-                "label": "Total Courses",
                 "icon": "graduation-cap",
-                "variant": "primary",
+                "label": "Total Courses",
+                "aggregation": "count",
                 "format": "number",
-                "aggregation": "count"
+                "variant": "primary"
               },
               {
+                "variant": "info",
+                "icon": "users",
                 "format": "number",
                 "field": "enrolledCount",
-                "label": "Enrolled Students",
                 "aggregation": "sum",
-                "icon": "users",
-                "variant": "info"
+                "label": "Enrolled Students"
               },
               {
+                "aggregation": "avg",
                 "field": "completionPct",
-                "aggregation": "avg",
-                "format": "percent",
-                "label": "Completion Rate",
+                "icon": "check-circle",
                 "variant": "success",
-                "icon": "check-circle"
+                "label": "Completion Rate",
+                "format": "percent"
               },
               {
-                "suffix": "h",
                 "aggregation": "avg",
-                "field": "durationHours",
-                "icon": "clock",
                 "variant": "default",
                 "format": "number",
-                "label": "Avg Duration"
+                "suffix": "h",
+                "icon": "clock",
+                "label": "Avg Duration",
+                "field": "durationHours"
               }
-            ],
-            "title": "Course Stats"
+            ]
           },
           "listens": [
             {
@@ -584,12 +584,12 @@
           "ref": "Graphs.traits.GraphItemGraph",
           "name": "CourseGraphs",
           "config": {
-            "title": "Courses by Category",
-            "categoryField": "category",
             "showLegend": true,
+            "chartType": "bar",
             "aggregation": "count",
             "height": 280.0,
-            "chartType": "bar",
+            "categoryField": "category",
+            "title": "Courses by Category",
             "subtitle": "Catalog distribution"
           },
           "listens": [
@@ -608,11 +608,11 @@
           "name": "CourseGallery",
           "linkedEntity": "Course",
           "config": {
-            "gap": "md",
+            "cols": 4.0,
             "titleField": "title",
             "imageField": "thumbnail",
-            "subtitleField": "instructor",
-            "cols": 4.0
+            "gap": "md",
+            "subtitleField": "instructor"
           },
           "listens": [
             {
@@ -666,8 +666,8 @@
               "thumbnail",
               "videoId"
             ],
-            "icon": "plus-circle",
-            "mode": "create"
+            "mode": "create",
+            "icon": "plus-circle"
           },
           "events": {
             "OPEN": "CREATE"
@@ -688,6 +688,8 @@
           "name": "CourseEditModal",
           "linkedEntity": "Course",
           "config": {
+            "mode": "edit",
+            "icon": "edit",
             "fields": [
               "title",
               "description",
@@ -698,9 +700,7 @@
               "thumbnail",
               "videoId"
             ],
-            "title": "Edit Course",
-            "icon": "edit",
-            "mode": "edit"
+            "title": "Edit Course"
           },
           "events": {
             "OPEN": "EDIT"
@@ -970,40 +970,40 @@
                     "render-ui",
                     "main",
                     {
-                      "type": "stack",
-                      "direction": "vertical",
-                      "gap": "md",
                       "children": [
                         {
-                          "gap": "sm",
                           "align": "center",
-                          "type": "stack",
-                          "direction": "horizontal",
                           "children": [
                             {
-                              "name": "image",
-                              "type": "icon"
+                              "type": "icon",
+                              "name": "image"
                             },
                             {
+                              "variant": "h3",
                               "content": "Course Thumbnail",
-                              "type": "typography",
-                              "variant": "h3"
+                              "type": "typography"
                             }
-                          ]
+                          ],
+                          "type": "stack",
+                          "direction": "horizontal",
+                          "gap": "sm"
                         },
                         {
-                          "type": "input",
                           "inputType": "text",
-                          "placeholder": "Choose image..."
+                          "placeholder": "Choose image...",
+                          "type": "input"
                         },
                         {
                           "label": "Upload Thumbnail",
-                          "icon": "upload",
                           "action": "UPLOAD",
                           "type": "button",
+                          "icon": "upload",
                           "variant": "primary"
                         }
-                      ]
+                      ],
+                      "gap": "md",
+                      "direction": "vertical",
+                      "type": "stack"
                     }
                   ]
                 ]
@@ -1016,15 +1016,15 @@
           "ref": "Storage.traits.ServiceStorageStorage",
           "name": "CourseThumbnailUpload",
           "config": {
-            "maxSize": 5242880.0,
             "uiTrait": "@trait.CourseThumbnailForm",
             "bucket": "course-thumbnails",
-            "acl": "public",
             "allowedMimeTypes": [
               "image/png",
               "image/jpeg",
               "image/webp"
-            ]
+            ],
+            "acl": "public",
+            "maxSize": 5242880.0
           },
           "listens": [
             {
@@ -1041,15 +1041,16 @@
           "ref": "YouTube.traits.ServiceYoutubeYoutube",
           "name": "CourseLessonVideo",
           "config": {
-            "videoId": "",
+            "autoplay": false,
             "controls": true,
             "uiTrait": "@trait.CourseLessonPlayer",
-            "autoplay": false
+            "videoId": ""
           }
         },
         {
           "name": "CourseLessonPlayer",
           "category": "interaction",
+          "linkedEntity": "Course",
           "emits": [
             {
               "event": "LESSON_COMPLETE",
@@ -1070,6 +1071,70 @@
                   "type": "string"
                 }
               ]
+            },
+            {
+              "event": "CourseLessonPlayerLoaded",
+              "description": "Fired when CourseLessonPlayer finishes loading",
+              "scope": "internal",
+              "payloadSchema": [
+                {
+                  "name": "id",
+                  "type": "string",
+                  "required": true
+                },
+                {
+                  "name": "title",
+                  "type": "string",
+                  "required": true
+                },
+                {
+                  "name": "description",
+                  "type": "string"
+                },
+                {
+                  "name": "category",
+                  "type": "string"
+                },
+                {
+                  "name": "level",
+                  "type": "string"
+                },
+                {
+                  "name": "duration",
+                  "type": "string"
+                },
+                {
+                  "name": "instructor",
+                  "type": "string"
+                },
+                {
+                  "name": "thumbnail",
+                  "type": "string"
+                },
+                {
+                  "name": "videoId",
+                  "type": "string"
+                },
+                {
+                  "name": "pendingId",
+                  "type": "string"
+                }
+              ]
+            },
+            {
+              "event": "CourseLessonPlayerLoadFailed",
+              "description": "Fired when CourseLessonPlayer fails to load",
+              "scope": "internal",
+              "payloadSchema": [
+                {
+                  "name": "error",
+                  "type": "string"
+                },
+                {
+                  "name": "code",
+                  "type": "string"
+                }
+              ]
             }
           ],
           "stateMachine": {
@@ -1080,6 +1145,54 @@
               }
             ],
             "events": [
+              {
+                "key": "CourseLessonPlayerLoaded",
+                "name": "Course lesson player loaded",
+                "payloadSchema": [
+                  {
+                    "name": "id",
+                    "type": "string",
+                    "required": true
+                  },
+                  {
+                    "name": "title",
+                    "type": "string",
+                    "required": true
+                  },
+                  {
+                    "name": "description",
+                    "type": "string"
+                  },
+                  {
+                    "name": "category",
+                    "type": "string"
+                  },
+                  {
+                    "name": "level",
+                    "type": "string"
+                  },
+                  {
+                    "name": "duration",
+                    "type": "string"
+                  },
+                  {
+                    "name": "instructor",
+                    "type": "string"
+                  },
+                  {
+                    "name": "thumbnail",
+                    "type": "string"
+                  },
+                  {
+                    "name": "videoId",
+                    "type": "string"
+                  },
+                  {
+                    "name": "pendingId",
+                    "type": "string"
+                  }
+                ]
+              },
               {
                 "key": "INIT",
                 "name": "Initialize"
@@ -1107,31 +1220,72 @@
                     "type": "string"
                   }
                 ]
+              },
+              {
+                "key": "CourseLessonPlayerLoadFailed",
+                "name": "Course lesson player load failed",
+                "payloadSchema": [
+                  {
+                    "name": "error",
+                    "type": "string"
+                  },
+                  {
+                    "name": "code",
+                    "type": "string"
+                  }
+                ]
               }
             ],
             "transitions": [
               {
                 "from": "ready",
                 "to": "ready",
+                "event": "CourseLessonPlayerLoaded",
+                "effects": [
+                  [
+                    "set",
+                    "@entity.id",
+                    "@payload.id"
+                  ],
+                  [
+                    "set",
+                    "@entity.title",
+                    "@payload.title"
+                  ]
+                ]
+              },
+              {
+                "from": "ready",
+                "to": "ready",
                 "event": "INIT",
                 "effects": [
+                  [
+                    "fetch",
+                    "Course",
+                    {
+                      "emit": {
+                        "success": "CourseLessonPlayerLoaded",
+                        "failure": "CourseLessonPlayerLoadFailed"
+                      }
+                    }
+                  ],
                   [
                     "render-ui",
                     "main",
                     {
                       "gap": "md",
-                      "direction": "vertical",
+                      "type": "stack",
                       "className": "max-w-3xl mx-auto w-full",
                       "children": [
                         {
-                          "type": "stack",
+                          "align": "center",
                           "children": [
                             {
-                              "icon": "chevron-left",
-                              "action": "PREV_LESSON",
                               "label": "Previous",
+                              "type": "button",
+                              "action": "PREV_LESSON",
                               "variant": "ghost",
-                              "type": "button"
+                              "icon": "chevron-left"
                             },
                             {
                               "type": "typography",
@@ -1140,22 +1294,21 @@
                             },
                             {
                               "label": "Next",
-                              "action": "NEXT_LESSON",
                               "variant": "ghost",
                               "icon": "chevron-right",
-                              "type": "button"
+                              "type": "button",
+                              "action": "NEXT_LESSON"
                             }
                           ],
-                          "direction": "horizontal",
                           "gap": "sm",
-                          "align": "center",
-                          "justify": "between"
+                          "justify": "between",
+                          "direction": "horizontal",
+                          "type": "stack"
                         },
                         {
                           "type": "divider"
                         },
                         {
-                          "type": "card",
                           "children": [
                             {
                               "direction": "vertical",
@@ -1168,31 +1321,36 @@
                                   "name": "video"
                                 },
                                 {
-                                  "variant": "caption",
+                                  "color": "muted",
                                   "content": "Lesson video",
                                   "type": "typography",
-                                  "color": "muted"
+                                  "variant": "caption"
                                 },
                                 {
                                   "content": "@config.videoId",
-                                  "variant": "body",
-                                  "type": "typography"
+                                  "type": "typography",
+                                  "variant": "body"
                                 }
                               ]
                             }
-                          ]
+                          ],
+                          "type": "card"
                         },
                         {
                           "type": "divider"
                         },
                         {
+                          "direction": "horizontal",
+                          "align": "center",
                           "children": [
                             {
                               "align": "center",
+                              "gap": "sm",
+                              "direction": "horizontal",
                               "children": [
                                 {
-                                  "type": "input",
-                                  "inputType": "checkbox"
+                                  "inputType": "checkbox",
+                                  "type": "input"
                                 },
                                 {
                                   "variant": "body",
@@ -1200,26 +1358,22 @@
                                   "type": "typography"
                                 }
                               ],
-                              "type": "stack",
-                              "direction": "horizontal",
-                              "gap": "sm"
+                              "type": "stack"
                             },
                             {
-                              "action": "LESSON_COMPLETE",
-                              "type": "button",
                               "variant": "primary",
+                              "type": "button",
                               "icon": "check",
-                              "label": "Complete Lesson"
+                              "label": "Complete Lesson",
+                              "action": "LESSON_COMPLETE"
                             }
                           ],
-                          "align": "center",
-                          "direction": "horizontal",
                           "gap": "sm",
-                          "type": "stack",
-                          "justify": "between"
+                          "justify": "between",
+                          "type": "stack"
                         }
                       ],
-                      "type": "stack"
+                      "direction": "vertical"
                     }
                   ]
                 ]
@@ -1267,6 +1421,14 @@
                 ]
               }
             ]
+          },
+          "config": {
+            "videoId": {
+              "type": "string",
+              "default": "",
+              "label": "Video ID",
+              "description": "YouTube video identifier shown to the learner for the current lesson"
+            }
           },
           "scope": "instance"
         }
@@ -1381,33 +1543,33 @@
           "name": "EnrollmentAppLayout",
           "linkedEntity": "Enrollment",
           "config": {
-            "notificationClickEvent": "ENROLLMENT_NOTIFICATIONS_OPEN",
-            "contentTrait": "@trait.EnrollmentWizard",
+            "searchEvent": "ENROLLMENT_SEARCH",
+            "appName": "LMS",
             "navItems": [
               {
-                "href": "/courses",
                 "icon": "graduation-cap",
-                "label": "Courses"
+                "label": "Courses",
+                "href": "/courses"
               },
               {
                 "label": "Enroll",
-                "icon": "user-plus",
-                "href": "/enroll"
+                "href": "/enroll",
+                "icon": "user-plus"
               },
               {
+                "label": "Progress",
                 "icon": "trending-up",
-                "href": "/progress",
-                "label": "Progress"
+                "href": "/progress"
               }
             ],
-            "appName": "LMS",
+            "notifications": [],
             "topBarActions": [],
-            "searchEvent": "ENROLLMENT_SEARCH",
-            "notifications": []
+            "notificationClickEvent": "ENROLLMENT_NOTIFICATIONS_OPEN",
+            "contentTrait": "@trait.EnrollmentWizard"
           },
           "events": {
-            "SEARCH": "ENROLLMENT_SEARCH",
-            "NOTIFY_CLICK": "ENROLLMENT_NOTIFICATIONS_OPEN"
+            "NOTIFY_CLICK": "ENROLLMENT_NOTIFICATIONS_OPEN",
+            "SEARCH": "ENROLLMENT_SEARCH"
           }
         },
         {
@@ -1616,8 +1778,8 @@
                     "Enrollment",
                     {
                       "emit": {
-                        "failure": "EnrollmentLoadFailed",
-                        "success": "EnrollmentLoaded"
+                        "success": "EnrollmentLoaded",
+                        "failure": "EnrollmentLoadFailed"
                       }
                     }
                   ],
@@ -1627,64 +1789,64 @@
                     {
                       "children": [
                         {
-                          "type": "stack",
-                          "direction": "horizontal",
-                          "align": "center",
                           "children": [
                             {
-                              "type": "icon",
-                              "name": "user-plus"
+                              "name": "user-plus",
+                              "type": "icon"
                             },
                             {
                               "type": "typography",
-                              "content": "Course Enrollment",
-                              "variant": "h2"
+                              "variant": "h2",
+                              "content": "Course Enrollment"
                             }
                           ],
-                          "gap": "sm"
+                          "direction": "horizontal",
+                          "gap": "sm",
+                          "align": "center",
+                          "type": "stack"
                         },
                         {
-                          "currentStep": 0.0,
-                          "type": "wizard-progress",
                           "steps": [
                             "Student Info",
                             "Course Selection",
                             "Review",
                             "Confirm"
-                          ]
+                          ],
+                          "type": "wizard-progress",
+                          "currentStep": 0.0
                         },
                         {
                           "type": "divider"
                         },
                         {
-                          "type": "typography",
                           "variant": "h3",
+                          "type": "typography",
                           "content": "Student Info"
                         },
                         {
-                          "fields": [
-                            {
-                              "required": true,
-                              "name": "studentName",
-                              "min": 2.0
-                            },
-                            {
-                              "type": "email",
-                              "required": true,
-                              "name": "email"
-                            }
-                          ],
                           "showCancel": false,
                           "type": "form-section",
-                          "submitEvent": "NEXT",
                           "mode": "create",
-                          "submitLabel": "Continue"
+                          "submitLabel": "Continue",
+                          "submitEvent": "NEXT",
+                          "fields": [
+                            {
+                              "min": 2.0,
+                              "required": true,
+                              "name": "studentName"
+                            },
+                            {
+                              "name": "email",
+                              "type": "email",
+                              "required": true
+                            }
+                          ]
                         }
                       ],
                       "className": "max-w-xl mx-auto w-full",
+                      "type": "stack",
                       "direction": "vertical",
-                      "gap": "lg",
-                      "type": "stack"
+                      "gap": "lg"
                     }
                   ]
                 ]
@@ -1713,16 +1875,14 @@
                     "render-ui",
                     "main",
                     {
-                      "type": "stack",
-                      "gap": "lg",
                       "direction": "vertical",
-                      "className": "max-w-xl mx-auto w-full",
+                      "type": "stack",
                       "children": [
                         {
-                          "gap": "sm",
-                          "type": "stack",
-                          "align": "center",
                           "direction": "horizontal",
+                          "type": "stack",
+                          "gap": "sm",
+                          "align": "center",
                           "children": [
                             {
                               "type": "icon",
@@ -1754,21 +1914,23 @@
                           "content": "Course Selection"
                         },
                         {
-                          "cancelLabel": "Back",
-                          "submitLabel": "Continue",
-                          "mode": "edit",
-                          "entity": "@entity",
                           "type": "form-section",
-                          "submitEvent": "NEXT",
-                          "cancelEvent": "PREV",
+                          "entity": "@entity",
+                          "mode": "edit",
+                          "cancelLabel": "Back",
                           "fields": [
                             {
-                              "required": true,
-                              "name": "courseId"
+                              "name": "courseId",
+                              "required": true
                             }
-                          ]
+                          ],
+                          "cancelEvent": "PREV",
+                          "submitEvent": "NEXT",
+                          "submitLabel": "Continue"
                         }
-                      ]
+                      ],
+                      "gap": "lg",
+                      "className": "max-w-xl mx-auto w-full"
                     }
                   ]
                 ]
@@ -1793,19 +1955,16 @@
                     "render-ui",
                     "main",
                     {
-                      "type": "stack",
                       "direction": "vertical",
                       "gap": "lg",
-                      "className": "max-w-xl mx-auto w-full",
+                      "type": "stack",
                       "children": [
                         {
-                          "type": "stack",
-                          "direction": "horizontal",
                           "gap": "sm",
                           "children": [
                             {
-                              "name": "user-plus",
-                              "type": "icon"
+                              "type": "icon",
+                              "name": "user-plus"
                             },
                             {
                               "content": "Course Enrollment",
@@ -1813,33 +1972,34 @@
                               "variant": "h2"
                             }
                           ],
-                          "align": "center"
+                          "direction": "horizontal",
+                          "align": "center",
+                          "type": "stack"
                         },
                         {
-                          "currentStep": 2.0,
-                          "type": "wizard-progress",
                           "steps": [
                             "Student Info",
                             "Course Selection",
                             "Review",
                             "Confirm"
-                          ]
+                          ],
+                          "type": "wizard-progress",
+                          "currentStep": 2.0
                         },
                         {
                           "type": "divider"
                         },
                         {
-                          "content": "Review",
                           "variant": "h3",
-                          "type": "typography"
+                          "type": "typography",
+                          "content": "Review"
                         },
                         {
+                          "gap": "sm",
+                          "direction": "vertical",
+                          "type": "stack",
                           "children": [
                             {
-                              "type": "stack",
-                              "direction": "horizontal",
-                              "gap": "md",
-                              "justify": "between",
                               "children": [
                                 {
                                   "variant": "caption",
@@ -1847,14 +2007,17 @@
                                   "content": "Student"
                                 },
                                 {
-                                  "content": "@entity.studentName",
                                   "variant": "body",
-                                  "type": "typography"
+                                  "type": "typography",
+                                  "content": "@entity.studentName"
                                 }
-                              ]
+                              ],
+                              "gap": "md",
+                              "direction": "horizontal",
+                              "justify": "between",
+                              "type": "stack"
                             },
                             {
-                              "type": "stack",
                               "justify": "between",
                               "direction": "horizontal",
                               "gap": "md",
@@ -1865,14 +2028,16 @@
                                   "type": "typography"
                                 },
                                 {
-                                  "variant": "body",
+                                  "type": "typography",
                                   "content": "@entity.email",
-                                  "type": "typography"
+                                  "variant": "body"
                                 }
-                              ]
+                              ],
+                              "type": "stack"
                             },
                             {
-                              "justify": "between",
+                              "direction": "horizontal",
+                              "gap": "md",
                               "children": [
                                 {
                                   "type": "typography",
@@ -1880,43 +2045,40 @@
                                   "content": "Course"
                                 },
                                 {
-                                  "variant": "body",
+                                  "content": "@entity.courseId",
                                   "type": "typography",
-                                  "content": "@entity.courseId"
+                                  "variant": "body"
                                 }
                               ],
-                              "direction": "horizontal",
                               "type": "stack",
-                              "gap": "md"
+                              "justify": "between"
                             }
-                          ],
-                          "gap": "sm",
-                          "direction": "vertical",
-                          "type": "stack"
+                          ]
                         },
                         {
                           "justify": "between",
-                          "direction": "horizontal",
                           "type": "stack",
+                          "direction": "horizontal",
                           "gap": "sm",
                           "children": [
                             {
-                              "action": "PREV",
-                              "variant": "ghost",
-                              "label": "Back",
                               "type": "button",
-                              "icon": "arrow-left"
+                              "action": "PREV",
+                              "icon": "arrow-left",
+                              "label": "Back",
+                              "variant": "ghost"
                             },
                             {
                               "variant": "primary",
                               "icon": "arrow-right",
                               "label": "Continue",
-                              "type": "button",
-                              "action": "NEXT"
+                              "action": "NEXT",
+                              "type": "button"
                             }
                           ]
                         }
-                      ]
+                      ],
+                      "className": "max-w-xl mx-auto w-full"
                     }
                   ]
                 ]
@@ -1930,15 +2092,11 @@
                     "render-ui",
                     "main",
                     {
-                      "type": "stack",
-                      "gap": "lg",
-                      "direction": "vertical",
-                      "className": "max-w-xl mx-auto w-full",
                       "children": [
                         {
-                          "variant": "h2",
                           "type": "typography",
-                          "content": "Course Enrollment"
+                          "content": "Course Enrollment",
+                          "variant": "h2"
                         },
                         {
                           "type": "wizard-progress",
@@ -1954,13 +2112,16 @@
                           "type": "divider"
                         },
                         {
-                          "type": "typography",
                           "content": "Student Info",
-                          "variant": "h3"
+                          "variant": "h3",
+                          "type": "typography"
                         },
                         {
-                          "showCancel": false,
+                          "type": "form-section",
                           "submitLabel": "Continue",
+                          "entity": "@entity",
+                          "mode": "edit",
+                          "submitEvent": "NEXT",
                           "fields": [
                             {
                               "name": "studentName",
@@ -1968,17 +2129,18 @@
                               "min": 2.0
                             },
                             {
-                              "required": true,
+                              "type": "email",
                               "name": "email",
-                              "type": "email"
+                              "required": true
                             }
                           ],
-                          "mode": "edit",
-                          "submitEvent": "NEXT",
-                          "type": "form-section",
-                          "entity": "@entity"
+                          "showCancel": false
                         }
-                      ]
+                      ],
+                      "gap": "lg",
+                      "direction": "vertical",
+                      "type": "stack",
+                      "className": "max-w-xl mx-auto w-full"
                     }
                   ]
                 ]
@@ -1998,12 +2160,14 @@
                     "render-ui",
                     "main",
                     {
-                      "className": "max-w-xl mx-auto w-full",
                       "gap": "lg",
+                      "className": "max-w-xl mx-auto w-full",
+                      "type": "stack",
+                      "direction": "vertical",
                       "children": [
                         {
-                          "content": "Course Enrollment",
                           "variant": "h2",
+                          "content": "Course Enrollment",
                           "type": "typography"
                         },
                         {
@@ -2021,95 +2185,93 @@
                         },
                         {
                           "variant": "info",
-                          "message": "Please confirm your enrollment.",
-                          "type": "alert"
+                          "type": "alert",
+                          "message": "Please confirm your enrollment."
                         },
                         {
-                          "gap": "sm",
                           "type": "stack",
                           "children": [
                             {
                               "justify": "between",
-                              "children": [
-                                {
-                                  "type": "typography",
-                                  "variant": "caption",
-                                  "content": "Student"
-                                },
-                                {
-                                  "content": "@entity.studentName",
-                                  "type": "typography",
-                                  "variant": "body"
-                                }
-                              ],
-                              "type": "stack",
-                              "gap": "md",
-                              "direction": "horizontal"
-                            },
-                            {
-                              "type": "stack",
                               "direction": "horizontal",
                               "children": [
                                 {
                                   "variant": "caption",
-                                  "content": "Email",
+                                  "content": "Student",
                                   "type": "typography"
                                 },
                                 {
+                                  "type": "typography",
                                   "variant": "body",
-                                  "content": "@entity.email",
-                                  "type": "typography"
+                                  "content": "@entity.studentName"
                                 }
                               ],
                               "gap": "md",
-                              "justify": "between"
+                              "type": "stack"
                             },
                             {
-                              "type": "stack",
                               "gap": "md",
-                              "direction": "horizontal",
                               "justify": "between",
                               "children": [
                                 {
                                   "variant": "caption",
                                   "type": "typography",
+                                  "content": "Email"
+                                },
+                                {
+                                  "content": "@entity.email",
+                                  "variant": "body",
+                                  "type": "typography"
+                                }
+                              ],
+                              "type": "stack",
+                              "direction": "horizontal"
+                            },
+                            {
+                              "gap": "md",
+                              "justify": "between",
+                              "direction": "horizontal",
+                              "type": "stack",
+                              "children": [
+                                {
+                                  "type": "typography",
+                                  "variant": "caption",
                                   "content": "Course"
                                 },
                                 {
-                                  "content": "@entity.courseId",
+                                  "type": "typography",
                                   "variant": "body",
-                                  "type": "typography"
+                                  "content": "@entity.courseId"
                                 }
                               ]
                             }
                           ],
-                          "direction": "vertical"
+                          "direction": "vertical",
+                          "gap": "sm"
                         },
                         {
-                          "direction": "horizontal",
                           "type": "stack",
+                          "justify": "between",
+                          "direction": "horizontal",
                           "children": [
                             {
-                              "variant": "ghost",
-                              "label": "Back",
-                              "icon": "arrow-left",
                               "type": "button",
+                              "icon": "arrow-left",
+                              "label": "Back",
+                              "variant": "ghost",
                               "action": "PREV"
                             },
                             {
-                              "label": "Enroll",
-                              "icon": "check",
                               "type": "button",
                               "variant": "primary",
-                              "action": "COMPLETE"
+                              "icon": "check",
+                              "action": "COMPLETE",
+                              "label": "Enroll"
                             }
                           ],
-                          "justify": "between",
                           "gap": "sm"
                         }
-                      ],
-                      "direction": "vertical",
-                      "type": "stack"
+                      ]
                     }
                   ]
                 ]
@@ -2126,47 +2288,47 @@
                       "children": [
                         {
                           "type": "typography",
-                          "variant": "h2",
-                          "content": "Course Enrollment"
+                          "content": "Course Enrollment",
+                          "variant": "h2"
                         },
                         {
+                          "type": "wizard-progress",
+                          "currentStep": 1.0,
                           "steps": [
                             "Student Info",
                             "Course Selection",
                             "Review",
                             "Confirm"
-                          ],
-                          "currentStep": 1.0,
-                          "type": "wizard-progress"
+                          ]
                         },
                         {
                           "type": "divider"
                         },
                         {
-                          "type": "typography",
                           "variant": "h3",
+                          "type": "typography",
                           "content": "Course Selection"
                         },
                         {
-                          "submitEvent": "NEXT",
-                          "entity": "@entity",
-                          "type": "form-section",
-                          "submitLabel": "Continue",
-                          "cancelLabel": "Back",
-                          "mode": "edit",
-                          "cancelEvent": "PREV",
                           "fields": [
                             {
                               "name": "courseId",
                               "required": true
                             }
-                          ]
+                          ],
+                          "mode": "edit",
+                          "entity": "@entity",
+                          "submitLabel": "Continue",
+                          "submitEvent": "NEXT",
+                          "cancelEvent": "PREV",
+                          "cancelLabel": "Back",
+                          "type": "form-section"
                         }
                       ],
-                      "type": "stack",
                       "gap": "lg",
+                      "className": "max-w-xl mx-auto w-full",
                       "direction": "vertical",
-                      "className": "max-w-xl mx-auto w-full"
+                      "type": "stack"
                     }
                   ]
                 ]
@@ -2194,8 +2356,8 @@
                     "@entity",
                     {
                       "emit": {
-                        "success": "EnrollmentSaved",
-                        "failure": "EnrollmentSaveFailed"
+                        "failure": "EnrollmentSaveFailed",
+                        "success": "EnrollmentSaved"
                       }
                     }
                   ],
@@ -2203,8 +2365,8 @@
                     "emit",
                     "ENROLLED",
                     {
-                      "id": "@entity.id",
-                      "courseId": "@entity.courseId"
+                      "courseId": "@entity.courseId",
+                      "id": "@entity.id"
                     }
                   ],
                   [
@@ -2216,35 +2378,35 @@
                     "render-ui",
                     "main",
                     {
-                      "className": "max-w-xl mx-auto w-full py-12",
-                      "direction": "vertical",
                       "gap": "lg",
+                      "type": "stack",
+                      "direction": "vertical",
+                      "className": "max-w-xl mx-auto w-full py-12",
+                      "align": "center",
                       "children": [
                         {
-                          "name": "check-circle",
-                          "type": "icon"
+                          "type": "icon",
+                          "name": "check-circle"
                         },
                         {
-                          "variant": "h2",
                           "type": "typography",
-                          "content": "Enrolled!"
+                          "content": "Enrolled!",
+                          "variant": "h2"
                         },
                         {
+                          "color": "muted",
                           "variant": "body",
                           "content": "You have been enrolled in the course.",
-                          "color": "muted",
                           "type": "typography"
                         },
                         {
+                          "variant": "ghost",
                           "action": "RESTART",
                           "label": "Enroll another student",
-                          "variant": "ghost",
-                          "icon": "rotate-ccw",
-                          "type": "button"
+                          "type": "button",
+                          "icon": "rotate-ccw"
                         }
-                      ],
-                      "align": "center",
-                      "type": "stack"
+                      ]
                     }
                   ]
                 ]
@@ -2258,57 +2420,57 @@
                     "render-ui",
                     "main",
                     {
-                      "className": "max-w-xl mx-auto w-full",
                       "children": [
                         {
-                          "content": "Course Enrollment",
+                          "type": "typography",
                           "variant": "h2",
-                          "type": "typography"
+                          "content": "Course Enrollment"
                         },
                         {
-                          "type": "wizard-progress",
-                          "currentStep": 2.0,
                           "steps": [
                             "Student Info",
                             "Course Selection",
                             "Review",
                             "Confirm"
-                          ]
+                          ],
+                          "type": "wizard-progress",
+                          "currentStep": 2.0
                         },
                         {
                           "type": "divider"
                         },
                         {
-                          "content": "Review",
                           "variant": "h3",
+                          "content": "Review",
                           "type": "typography"
                         },
                         {
-                          "gap": "sm",
                           "children": [
                             {
+                              "action": "PREV",
                               "icon": "arrow-left",
-                              "type": "button",
-                              "variant": "ghost",
                               "label": "Back",
-                              "action": "PREV"
+                              "type": "button",
+                              "variant": "ghost"
                             },
                             {
-                              "icon": "arrow-right",
-                              "action": "NEXT",
                               "variant": "primary",
+                              "action": "NEXT",
                               "type": "button",
-                              "label": "Continue"
+                              "label": "Continue",
+                              "icon": "arrow-right"
                             }
                           ],
                           "justify": "between",
                           "type": "stack",
-                          "direction": "horizontal"
+                          "direction": "horizontal",
+                          "gap": "sm"
                         }
                       ],
-                      "direction": "vertical",
                       "type": "stack",
-                      "gap": "lg"
+                      "gap": "lg",
+                      "direction": "vertical",
+                      "className": "max-w-xl mx-auto w-full"
                     }
                   ]
                 ]
@@ -2347,54 +2509,54 @@
                     "render-ui",
                     "main",
                     {
-                      "direction": "vertical",
-                      "className": "max-w-xl mx-auto w-full",
+                      "gap": "lg",
                       "children": [
                         {
                           "type": "typography",
-                          "variant": "h2",
-                          "content": "Course Enrollment"
+                          "content": "Course Enrollment",
+                          "variant": "h2"
                         },
                         {
+                          "type": "wizard-progress",
                           "steps": [
                             "Student Info",
                             "Course Selection",
                             "Review",
                             "Confirm"
                           ],
-                          "currentStep": 0.0,
-                          "type": "wizard-progress"
+                          "currentStep": 0.0
                         },
                         {
                           "type": "divider"
                         },
                         {
-                          "content": "Student Info",
+                          "variant": "h3",
                           "type": "typography",
-                          "variant": "h3"
+                          "content": "Student Info"
                         },
                         {
-                          "mode": "create",
-                          "submitEvent": "NEXT",
-                          "showCancel": false,
                           "fields": [
                             {
-                              "required": true,
                               "name": "studentName",
-                              "min": 2.0
+                              "min": 2.0,
+                              "required": true
                             },
                             {
-                              "required": true,
                               "name": "email",
-                              "type": "email"
+                              "type": "email",
+                              "required": true
                             }
                           ],
+                          "mode": "create",
+                          "submitEvent": "NEXT",
                           "submitLabel": "Continue",
-                          "type": "form-section"
+                          "type": "form-section",
+                          "showCancel": false
                         }
                       ],
                       "type": "stack",
-                      "gap": "lg"
+                      "className": "max-w-xl mx-auto w-full",
+                      "direction": "vertical"
                     }
                   ]
                 ]
@@ -2489,33 +2651,33 @@
           "name": "ProgressAppLayout",
           "linkedEntity": "Progress",
           "config": {
-            "notifications": [],
-            "searchEvent": "PROGRESS_SEARCH",
-            "topBarActions": [],
-            "notificationClickEvent": "PROGRESS_NOTIFICATIONS_OPEN",
+            "appName": "LMS",
             "contentTrait": "@trait.ProgressDisplay",
+            "searchEvent": "PROGRESS_SEARCH",
+            "notificationClickEvent": "PROGRESS_NOTIFICATIONS_OPEN",
+            "topBarActions": [],
+            "notifications": [],
             "navItems": [
               {
-                "icon": "graduation-cap",
                 "href": "/courses",
-                "label": "Courses"
+                "label": "Courses",
+                "icon": "graduation-cap"
               },
               {
                 "href": "/enroll",
-                "icon": "user-plus",
-                "label": "Enroll"
+                "label": "Enroll",
+                "icon": "user-plus"
               },
               {
-                "icon": "trending-up",
+                "label": "Progress",
                 "href": "/progress",
-                "label": "Progress"
+                "icon": "trending-up"
               }
-            ],
-            "appName": "LMS"
+            ]
           },
           "events": {
-            "SEARCH": "PROGRESS_SEARCH",
-            "NOTIFY_CLICK": "PROGRESS_NOTIFICATIONS_OPEN"
+            "NOTIFY_CLICK": "PROGRESS_NOTIFICATIONS_OPEN",
+            "SEARCH": "PROGRESS_SEARCH"
           }
         },
         {
@@ -2544,12 +2706,10 @@
                     "render-ui",
                     "main",
                     {
+                      "type": "stack",
                       "children": [
                         {
-                          "direction": "horizontal",
-                          "type": "stack",
                           "align": "center",
-                          "gap": "sm",
                           "children": [
                             {
                               "type": "icon",
@@ -2557,10 +2717,13 @@
                             },
                             {
                               "variant": "h2",
-                              "type": "typography",
-                              "content": "Progress"
+                              "content": "Progress",
+                              "type": "typography"
                             }
-                          ]
+                          ],
+                          "gap": "sm",
+                          "direction": "horizontal",
+                          "type": "stack"
                         },
                         {
                           "type": "divider"
@@ -2572,10 +2735,9 @@
                         },
                         "@trait.ProgressBrowseList"
                       ],
-                      "type": "stack",
                       "direction": "vertical",
-                      "gap": "lg",
-                      "className": "max-w-5xl mx-auto w-full"
+                      "className": "max-w-5xl mx-auto w-full",
+                      "gap": "lg"
                     }
                   ]
                 ]
@@ -2673,44 +2835,44 @@
                     "render-ui",
                     "main",
                     {
-                      "gap": "md",
+                      "type": "simple-grid",
                       "children": [
                         {
-                          "value": 0.0,
-                          "label": "Completion %",
                           "icon": "check-circle",
                           "variant": "success",
                           "format": "percent",
-                          "type": "stat-display"
+                          "type": "stat-display",
+                          "value": 0.0,
+                          "label": "Completion %"
                         },
                         {
+                          "value": 0.0,
+                          "type": "stat-display",
                           "icon": "clock",
                           "variant": "info",
+                          "label": "Time Spent",
                           "format": "number",
-                          "type": "stat-display",
-                          "suffix": "h",
-                          "value": 0.0,
-                          "label": "Time Spent"
+                          "suffix": "h"
                         },
                         {
+                          "value": 0.0,
+                          "format": "number",
                           "type": "stat-display",
+                          "label": "Lessons Remaining",
                           "variant": "default",
-                          "value": 0.0,
-                          "icon": "list",
-                          "format": "number",
-                          "label": "Lessons Remaining"
+                          "icon": "list"
                         },
                         {
-                          "value": 0.0,
-                          "icon": "flame",
+                          "variant": "warning",
+                          "suffix": "d",
                           "label": "Streak",
                           "type": "stat-display",
-                          "variant": "warning",
+                          "icon": "flame",
                           "format": "number",
-                          "suffix": "d"
+                          "value": 0.0
                         }
                       ],
-                      "type": "simple-grid",
+                      "gap": "md",
                       "cols": 4.0
                     }
                   ]
@@ -2725,45 +2887,45 @@
                     "render-ui",
                     "main",
                     {
-                      "cols": 4.0,
-                      "type": "simple-grid",
-                      "gap": "md",
                       "children": [
                         {
+                          "icon": "check-circle",
                           "label": "Completion %",
                           "variant": "success",
-                          "type": "stat-display",
-                          "icon": "check-circle",
                           "format": "percent",
-                          "value": 0.0
-                        },
-                        {
-                          "format": "number",
-                          "label": "Time Spent",
-                          "suffix": "h",
-                          "type": "stat-display",
-                          "icon": "clock",
-                          "value": 0.0,
-                          "variant": "info"
-                        },
-                        {
-                          "variant": "default",
-                          "icon": "list",
-                          "label": "Lessons Remaining",
-                          "format": "number",
                           "value": 0.0,
                           "type": "stat-display"
                         },
                         {
-                          "label": "Streak",
-                          "icon": "flame",
+                          "suffix": "h",
                           "format": "number",
+                          "label": "Time Spent",
+                          "variant": "info",
                           "value": 0.0,
+                          "icon": "clock",
+                          "type": "stat-display"
+                        },
+                        {
+                          "variant": "default",
+                          "type": "stat-display",
+                          "icon": "list",
+                          "format": "number",
+                          "label": "Lessons Remaining",
+                          "value": 0.0
+                        },
+                        {
                           "type": "stat-display",
                           "variant": "warning",
-                          "suffix": "d"
+                          "format": "number",
+                          "value": 0.0,
+                          "icon": "flame",
+                          "suffix": "d",
+                          "label": "Streak"
                         }
-                      ]
+                      ],
+                      "type": "simple-grid",
+                      "cols": 4.0,
+                      "gap": "md"
                     }
                   ]
                 ]
@@ -2852,8 +3014,8 @@
                     "Progress",
                     {
                       "emit": {
-                        "success": "ProgressLoaded",
-                        "failure": "ProgressLoadFailed"
+                        "failure": "ProgressLoadFailed",
+                        "success": "ProgressLoaded"
                       }
                     }
                   ],
@@ -2861,13 +3023,13 @@
                     "render-ui",
                     "main",
                     {
-                      "showLegend": true,
-                      "subtitle": "Average completion % per week",
-                      "data": [],
-                      "title": "Progress over time",
-                      "height": 280.0,
                       "type": "chart",
-                      "chartType": "line"
+                      "title": "Progress over time",
+                      "data": [],
+                      "showLegend": true,
+                      "chartType": "line",
+                      "height": 280.0,
+                      "subtitle": "Average completion % per week"
                     }
                   ]
                 ]
@@ -2881,13 +3043,34 @@
                     "render-ui",
                     "main",
                     {
-                      "data": "@payload.data",
                       "showLegend": true,
-                      "subtitle": "Average completion % per week",
                       "type": "chart",
+                      "subtitle": "Average completion % per week",
                       "height": 280.0,
                       "title": "Progress over time",
-                      "chartType": "line"
+                      "chartType": "line",
+                      "data": [
+                        "array/map",
+                        "@payload.data",
+                        [
+                          "fn",
+                          "row",
+                          {
+                            "value": [
+                              "object/get",
+                              "@row",
+                              "completionPct",
+                              0.0
+                            ],
+                            "label": [
+                              "object/get",
+                              "@row",
+                              "courseName",
+                              ""
+                            ]
+                          }
+                        ]
+                      ]
                     }
                   ]
                 ]
@@ -2902,18 +3085,16 @@
           "linkedEntity": "Progress",
           "config": {
             "cols": 1.0,
-            "gap": "sm",
-            "itemActions": [],
             "fields": [
               {
-                "icon": "book-open",
                 "label": "Course",
                 "name": "courseName",
+                "icon": "book-open",
                 "variant": "h4"
               },
               {
-                "format": "percent",
                 "label": "Completion",
+                "format": "percent",
                 "variant": "badge",
                 "name": "completionPct"
               },
@@ -2924,16 +3105,18 @@
               },
               {
                 "name": "totalLessons",
-                "variant": "body",
-                "label": "Total Lessons"
+                "label": "Total Lessons",
+                "variant": "body"
               },
               {
+                "variant": "caption",
                 "label": "Last Activity",
-                "format": "date",
                 "name": "lastActivity",
-                "variant": "caption"
+                "format": "date"
               }
-            ]
+            ],
+            "gap": "sm",
+            "itemActions": []
           },
           "listens": [
             {

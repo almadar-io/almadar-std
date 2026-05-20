@@ -122,23 +122,21 @@
                     "render-ui",
                     "main",
                     {
-                      "gap": "lg",
-                      "align": "center",
                       "children": [
                         {
-                          "type": "stack",
-                          "direction": "horizontal",
-                          "align": "center",
                           "gap": "md",
+                          "align": "center",
+                          "direction": "horizontal",
+                          "type": "stack",
                           "children": [
                             {
                               "type": "icon",
                               "name": "calendar"
                             },
                             {
+                              "variant": "h2",
                               "type": "typography",
-                              "content": "Add to Calendar",
-                              "variant": "h2"
+                              "content": "Add to Calendar"
                             }
                           ]
                         },
@@ -146,8 +144,6 @@
                           "type": "divider"
                         },
                         {
-                          "direction": "vertical",
-                          "type": "stack",
                           "children": [
                             {
                               "inputType": "text",
@@ -156,8 +152,8 @@
                             },
                             {
                               "type": "input",
-                              "placeholder": "Starts at (ISO 8601)",
-                              "inputType": "text"
+                              "inputType": "text",
+                              "placeholder": "Starts at (ISO 8601)"
                             },
                             {
                               "type": "input",
@@ -165,18 +161,22 @@
                               "inputType": "text"
                             }
                           ],
+                          "type": "stack",
+                          "direction": "vertical",
                           "gap": "md"
                         },
                         {
-                          "variant": "primary",
-                          "icon": "calendar",
                           "action": "GENERATE",
+                          "icon": "calendar",
                           "label": "Generate .ics",
-                          "type": "button"
+                          "type": "button",
+                          "variant": "primary"
                         }
                       ],
-                      "type": "stack",
-                      "direction": "vertical"
+                      "direction": "vertical",
+                      "align": "center",
+                      "gap": "lg",
+                      "type": "stack"
                     }
                   ]
                 ]
@@ -416,8 +416,8 @@
                     "main",
                     {
                       "type": "stack",
-                      "gap": "md",
                       "direction": "vertical",
+                      "gap": "md",
                       "children": [
                         "@config.uiTrait"
                       ]
@@ -439,9 +439,9 @@
                     "render-ui",
                     "main",
                     {
-                      "message": "Creating your calendar file.",
                       "type": "loading-state",
-                      "title": "Generating .ics..."
+                      "title": "Generating .ics...",
+                      "message": "Creating your calendar file."
                     }
                   ],
                   [
@@ -449,11 +449,11 @@
                     "calendar-ical",
                     "generate",
                     {
-                      "endsAt": "@entity.endsAt",
                       "eventName": "@entity.eventName",
                       "description": "@entity.description",
+                      "startsAt": "@entity.startsAt",
                       "location": "@entity.location",
-                      "startsAt": "@entity.startsAt"
+                      "endsAt": "@entity.endsAt"
                     },
                     {
                       "emit": {
@@ -499,9 +499,6 @@
                     "main",
                     {
                       "direction": "vertical",
-                      "type": "stack",
-                      "gap": "lg",
-                      "align": "center",
                       "children": [
                         {
                           "type": "icon",
@@ -519,20 +516,23 @@
                           "type": "typography"
                         },
                         {
+                          "type": "button",
                           "action": "RESET",
                           "label": "Download .ics",
-                          "type": "button",
                           "variant": "primary",
                           "icon": "download"
                         },
                         {
                           "icon": "rotate-ccw",
                           "type": "button",
-                          "label": "New Event",
                           "action": "RESET",
-                          "variant": "ghost"
+                          "variant": "ghost",
+                          "label": "New Event"
                         }
-                      ]
+                      ],
+                      "gap": "lg",
+                      "align": "center",
+                      "type": "stack"
                     }
                   ]
                 ]
@@ -564,10 +564,10 @@
                     "render-ui",
                     "main",
                     {
-                      "onRetry": "RETRY",
-                      "title": "Generation Failed",
                       "type": "error-state",
-                      "message": "@entity.error"
+                      "title": "Generation Failed",
+                      "message": "@entity.error",
+                      "onRetry": "RETRY"
                     }
                   ]
                 ]
@@ -586,12 +586,12 @@
                     "render-ui",
                     "main",
                     {
-                      "type": "stack",
-                      "gap": "md",
                       "children": [
                         "@config.uiTrait"
                       ],
-                      "direction": "vertical"
+                      "direction": "vertical",
+                      "gap": "md",
+                      "type": "stack"
                     }
                   ]
                 ]
@@ -620,12 +620,12 @@
                     "render-ui",
                     "main",
                     {
-                      "gap": "md",
-                      "direction": "vertical",
-                      "type": "stack",
                       "children": [
                         "@config.uiTrait"
-                      ]
+                      ],
+                      "direction": "vertical",
+                      "type": "stack",
+                      "gap": "md"
                     }
                   ]
                 ]
@@ -644,12 +644,12 @@
                     "render-ui",
                     "main",
                     {
+                      "type": "stack",
+                      "gap": "md",
                       "direction": "vertical",
                       "children": [
                         "@config.uiTrait"
-                      ],
-                      "type": "stack",
-                      "gap": "md"
+                      ]
                     }
                   ]
                 ]
@@ -657,24 +657,6 @@
             ]
           },
           "config": {
-            "uiTrait": {
-              "type": "trait",
-              "default": "@trait.ServiceCalendarIcalDefaultForm",
-              "label": "Event form",
-              "description": "Trait that renders the calendar event editor UI"
-            },
-            "location": {
-              "type": "string",
-              "default": "",
-              "label": "Location",
-              "description": "Physical address or meeting URL for the event"
-            },
-            "startsAt": {
-              "type": "string",
-              "default": "",
-              "label": "Start time",
-              "description": "Event start in ISO 8601 format (e.g. 2026-06-01T09:00:00Z)"
-            },
             "eventName": {
               "type": "string",
               "default": "",
@@ -687,11 +669,29 @@
               "label": "Event details",
               "description": "Long-form notes attached to the calendar invite"
             },
+            "location": {
+              "type": "string",
+              "default": "",
+              "label": "Location",
+              "description": "Physical address or meeting URL for the event"
+            },
             "endsAt": {
               "type": "string",
               "default": "",
               "label": "End time",
               "description": "Event end in ISO 8601 format (e.g. 2026-06-01T10:00:00Z)"
+            },
+            "startsAt": {
+              "type": "string",
+              "default": "",
+              "label": "Start time",
+              "description": "Event start in ISO 8601 format (e.g. 2026-06-01T09:00:00Z)"
+            },
+            "uiTrait": {
+              "type": "trait",
+              "default": "@trait.ServiceCalendarIcalDefaultForm",
+              "label": "Event form",
+              "description": "Trait that renders the calendar event editor UI"
             }
           },
           "scope": "instance"
