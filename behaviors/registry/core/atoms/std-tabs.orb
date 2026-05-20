@@ -26,25 +26,30 @@
             "items": {
               "type": "object",
               "properties": {
-                "icon": {
-                  "name": "icon",
-                  "type": "string"
-                },
-                "label": {
-                  "name": "label",
-                  "type": "string"
-                },
                 "id": {
                   "name": "id",
-                  "type": "string"
+                  "type": "string",
+                  "required": true
                 },
                 "badge": {
                   "name": "badge",
-                  "type": "string"
+                  "type": "string",
+                  "required": false
                 },
                 "content": {
                   "name": "content",
-                  "type": "trait"
+                  "type": "trait",
+                  "required": false
+                },
+                "icon": {
+                  "name": "icon",
+                  "type": "string",
+                  "required": false
+                },
+                "label": {
+                  "name": "label",
+                  "type": "string",
+                  "required": true
                 }
               }
             }
@@ -113,12 +118,12 @@
                     "render-ui",
                     "main",
                     {
-                      "items": "@entity.items",
-                      "type": "tabs",
-                      "variant": "@config.variant",
                       "orientation": "@config.orientation",
+                      "type": "tabs",
+                      "activeTab": "@entity.activeTab",
+                      "variant": "@config.variant",
                       "tabChangeEvent": "TAB_CHANGED",
-                      "activeTab": "@entity.activeTab"
+                      "items": "@entity.items"
                     }
                   ]
                 ]
@@ -142,12 +147,12 @@
                     "render-ui",
                     "main",
                     {
-                      "variant": "@config.variant",
                       "orientation": "@config.orientation",
-                      "tabChangeEvent": "TAB_CHANGED",
+                      "items": "@entity.items",
                       "activeTab": "@entity.activeTab",
+                      "variant": "@config.variant",
                       "type": "tabs",
-                      "items": "@entity.items"
+                      "tabChangeEvent": "TAB_CHANGED"
                     }
                   ]
                 ]
@@ -155,6 +160,12 @@
             ]
           },
           "config": {
+            "defaultTab": {
+              "type": "string",
+              "default": "overview",
+              "label": "Default tab",
+              "description": "Tab id selected on first render"
+            },
             "orientation": {
               "type": "string",
               "default": "horizontal",
@@ -165,11 +176,30 @@
                 "vertical"
               ]
             },
-            "defaultTab": {
-              "type": "string",
-              "default": "overview",
-              "label": "Default tab",
-              "description": "Tab id selected on first render"
+            "tabs": {
+              "type": "[object]",
+              "default": [
+                {
+                  "label": "Overview",
+                  "icon": "info",
+                  "id": "overview"
+                },
+                {
+                  "icon": "list",
+                  "label": "Details",
+                  "id": "details"
+                },
+                {
+                  "icon": "settings",
+                  "id": "settings",
+                  "label": "Settings"
+                }
+              ],
+              "label": "Tabs",
+              "description": "Tab entries with id, label, icon, badge, and optional content trait",
+              "items": {
+                "type": "object"
+              }
             },
             "variant": {
               "type": "string",
@@ -181,31 +211,6 @@
                 "pills",
                 "underline"
               ]
-            },
-            "tabs": {
-              "type": "[object]",
-              "default": [
-                {
-                  "icon": "info",
-                  "id": "overview",
-                  "label": "Overview"
-                },
-                {
-                  "icon": "list",
-                  "id": "details",
-                  "label": "Details"
-                },
-                {
-                  "label": "Settings",
-                  "icon": "settings",
-                  "id": "settings"
-                }
-              ],
-              "label": "Tabs",
-              "description": "Tab entries with id, label, icon, badge, and optional content trait",
-              "items": {
-                "type": "object"
-              }
             }
           },
           "scope": "instance"

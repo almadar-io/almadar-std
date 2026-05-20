@@ -358,22 +358,22 @@
                     "render-ui",
                     "main",
                     {
-                      "className": "py-12",
-                      "align": "center",
-                      "type": "stack",
-                      "direction": "vertical",
-                      "gap": "md",
                       "children": [
                         {
                           "type": "spinner"
                         },
                         {
-                          "variant": "caption",
                           "color": "muted",
-                          "content": "Loading applications…",
-                          "type": "typography"
+                          "type": "typography",
+                          "variant": "caption",
+                          "content": "Loading applications…"
                         }
-                      ]
+                      ],
+                      "direction": "vertical",
+                      "gap": "md",
+                      "align": "center",
+                      "className": "py-12",
+                      "type": "stack"
                     }
                   ]
                 ]
@@ -387,122 +387,122 @@
                     "render-ui",
                     "main",
                     {
-                      "direction": "vertical",
+                      "gap": "md",
+                      "type": "stack",
                       "children": [
                         {
-                          "gap": "md",
                           "type": "stack",
-                          "direction": "horizontal",
+                          "justify": "between",
+                          "gap": "md",
                           "children": [
                             {
-                              "gap": "sm",
+                              "type": "stack",
                               "align": "center",
+                              "direction": "horizontal",
+                              "gap": "sm",
                               "children": [
                                 {
                                   "type": "icon",
                                   "name": "user-plus"
                                 },
                                 {
-                                  "content": "Applicant Intake",
                                   "type": "typography",
+                                  "content": "Applicant Intake",
                                   "variant": "h3"
                                 }
-                              ],
-                              "type": "stack",
-                              "direction": "horizontal"
+                              ]
                             },
                             {
-                              "icon": "plus",
-                              "label": "New Application",
                               "variant": "primary",
+                              "label": "New Application",
                               "type": "button",
+                              "icon": "plus",
                               "action": "CREATE"
                             }
                           ],
-                          "justify": "between"
+                          "direction": "horizontal"
                         },
                         {
+                          "type": "simple-grid",
+                          "cols": 4.0,
                           "children": [
                             {
-                              "type": "stat-display",
                               "icon": "user-plus",
+                              "type": "stat-display",
                               "label": "Total applications",
                               "value": "@payload.data.length"
                             },
                             {
                               "icon": "send",
-                              "label": "Submitted",
                               "value": "18",
+                              "label": "Submitted",
                               "type": "stat-display"
                             },
                             {
-                              "icon": "calendar",
                               "type": "stat-display",
                               "value": "7",
+                              "icon": "calendar",
                               "label": "Interviewing"
                             },
                             {
                               "icon": "check-circle",
-                              "value": "24",
                               "type": "stat-display",
-                              "label": "Completed"
+                              "label": "Completed",
+                              "value": "24"
                             }
-                          ],
-                          "type": "simple-grid",
-                          "cols": 4.0
+                          ]
                         },
                         {
                           "type": "divider"
                         },
                         {
-                          "gap": "sm",
-                          "entity": "@payload.data",
                           "type": "data-grid",
+                          "cols": 1.0,
+                          "itemActions": [
+                            {
+                              "label": "Edit",
+                              "variant": "ghost",
+                              "event": "REQUEST_EDIT"
+                            },
+                            {
+                              "variant": "danger",
+                              "event": "REQUEST_DELETE",
+                              "label": "Delete"
+                            }
+                          ],
                           "fields": [
                             {
-                              "label": "Applicant",
-                              "name": "applicantName",
                               "icon": "user",
+                              "name": "applicantName",
+                              "label": "Applicant",
                               "variant": "caption"
                             },
                             {
                               "name": "applicantEmail",
-                              "label": "Email",
-                              "variant": "caption"
+                              "variant": "caption",
+                              "label": "Email"
                             },
                             {
-                              "name": "jobId",
                               "label": "Job",
+                              "name": "jobId",
                               "variant": "caption"
                             },
                             {
-                              "label": "First Interview",
                               "name": "firstInterviewAt",
-                              "variant": "caption"
+                              "variant": "caption",
+                              "label": "First Interview"
                             },
                             {
+                              "label": "Status",
                               "variant": "badge",
-                              "name": "status",
-                              "label": "Status"
+                              "name": "status"
                             }
                           ],
-                          "itemActions": [
-                            {
-                              "event": "REQUEST_EDIT",
-                              "label": "Edit",
-                              "variant": "ghost"
-                            },
-                            {
-                              "variant": "danger",
-                              "label": "Delete",
-                              "event": "REQUEST_DELETE"
-                            }
-                          ],
-                          "cols": 1.0
+                          "gap": "sm",
+                          "entity": "@payload.data"
                         }
                       ],
-                      "type": "stack",
-                      "gap": "md"
+                      "direction": "vertical"
                     }
                   ]
                 ]
@@ -516,9 +516,9 @@
                     "render-ui",
                     "main",
                     {
+                      "message": "@payload.error",
                       "type": "alert",
-                      "variant": "error",
-                      "message": "@payload.error"
+                      "variant": "error"
                     }
                   ]
                 ]
@@ -533,8 +533,8 @@
                     "ApplicationIntake",
                     {
                       "emit": {
-                        "success": "ApplicationIntakeLoaded",
-                        "failure": "ApplicationIntakeLoadFailed"
+                        "failure": "ApplicationIntakeLoadFailed",
+                        "success": "ApplicationIntakeLoaded"
                       }
                     }
                   ],
@@ -591,8 +591,8 @@
               "interviewerName",
               "interviewFormat"
             ],
-            "title": "New Application",
-            "mode": "create"
+            "mode": "create",
+            "title": "New Application"
           },
           "events": {
             "OPEN": "CREATE"
@@ -614,8 +614,6 @@
           "linkedEntity": "ApplicationIntake",
           "config": {
             "mode": "edit",
-            "icon": "pencil",
-            "title": "Edit Application",
             "fields": [
               "applicantName",
               "applicantEmail",
@@ -625,7 +623,9 @@
               "firstInterviewAt",
               "interviewerName",
               "interviewFormat"
-            ]
+            ],
+            "icon": "pencil",
+            "title": "Edit Application"
           },
           "events": {
             "OPEN": "EDIT"
@@ -646,10 +646,10 @@
           "name": "ApplicationIntakeDelete",
           "linkedEntity": "ApplicationIntake",
           "config": {
+            "alertMessage": "Are you sure you want to delete this application?",
             "confirmLabel": "Delete",
             "icon": "alert-triangle",
-            "title": "Delete Application",
-            "alertMessage": "Are you sure you want to delete this application?"
+            "title": "Delete Application"
           },
           "events": {
             "CONFIRM": "CONFIRM_DELETE",

@@ -111,24 +111,24 @@
                     "main",
                     {
                       "gap": "lg",
-                      "direction": "vertical",
+                      "type": "stack",
                       "children": [
                         {
                           "gap": "md",
+                          "align": "center",
+                          "type": "stack",
+                          "direction": "horizontal",
                           "children": [
                             {
                               "name": "hard-drive",
                               "type": "icon"
                             },
                             {
-                              "variant": "h2",
                               "content": "Upload File",
+                              "variant": "h2",
                               "type": "typography"
                             }
-                          ],
-                          "direction": "horizontal",
-                          "align": "center",
-                          "type": "stack"
+                          ]
                         },
                         {
                           "type": "divider"
@@ -139,14 +139,14 @@
                           "inputType": "text"
                         },
                         {
-                          "variant": "primary",
                           "label": "Upload",
-                          "icon": "upload",
+                          "variant": "primary",
                           "action": "UPLOAD",
+                          "icon": "upload",
                           "type": "button"
                         }
                       ],
-                      "type": "stack",
+                      "direction": "vertical",
                       "align": "center"
                     }
                   ]
@@ -349,8 +349,8 @@
                     "ServiceStorage",
                     {
                       "emit": {
-                        "failure": "ServiceStorageLoadFailed",
-                        "success": "ServiceStorageLoaded"
+                        "success": "ServiceStorageLoaded",
+                        "failure": "ServiceStorageLoadFailed"
                       }
                     }
                   ],
@@ -358,12 +358,12 @@
                     "render-ui",
                     "main",
                     {
-                      "type": "stack",
                       "children": [
                         "@config.uiTrait"
                       ],
-                      "direction": "vertical",
-                      "gap": "md"
+                      "type": "stack",
+                      "gap": "md",
+                      "direction": "vertical"
                     }
                   ]
                 ]
@@ -377,8 +377,8 @@
                     "render-ui",
                     "main",
                     {
-                      "type": "loading-state",
                       "message": "Uploading file to storage.",
+                      "type": "loading-state",
                       "title": "Uploading..."
                     }
                   ],
@@ -388,8 +388,8 @@
                     "upload",
                     {
                       "bucket": "@config.bucket",
-                      "acl": "@config.acl",
-                      "file": "@payload.file"
+                      "file": "@payload.file",
+                      "acl": "@config.acl"
                     },
                     {
                       "emit": {
@@ -434,34 +434,34 @@
                     "render-ui",
                     "main",
                     {
+                      "gap": "lg",
+                      "direction": "vertical",
+                      "align": "center",
                       "children": [
                         {
-                          "name": "check-circle",
-                          "type": "icon"
+                          "type": "icon",
+                          "name": "check-circle"
                         },
                         {
-                          "message": "Upload successful!",
                           "type": "alert",
+                          "message": "Upload successful!",
                           "variant": "success"
                         },
                         {
-                          "variant": "body",
                           "color": "muted",
-                          "type": "typography",
-                          "content": "@entity.url"
+                          "variant": "body",
+                          "content": "@entity.url",
+                          "type": "typography"
                         },
                         {
-                          "type": "button",
-                          "action": "RESET",
-                          "label": "Upload Another",
                           "icon": "rotate-ccw",
-                          "variant": "ghost"
+                          "type": "button",
+                          "variant": "ghost",
+                          "label": "Upload Another",
+                          "action": "RESET"
                         }
                       ],
-                      "gap": "lg",
-                      "align": "center",
-                      "type": "stack",
-                      "direction": "vertical"
+                      "type": "stack"
                     }
                   ]
                 ]
@@ -480,8 +480,8 @@
                     "emit",
                     "ServiceStorageStorageFailed",
                     {
-                      "code": "upload_failed",
-                      "error": "@entity.error"
+                      "error": "@entity.error",
+                      "code": "upload_failed"
                     }
                   ],
                   [
@@ -490,8 +490,8 @@
                     {
                       "message": "@entity.error",
                       "type": "error-state",
-                      "onRetry": "RETRY",
-                      "title": "Upload Failed"
+                      "title": "Upload Failed",
+                      "onRetry": "RETRY"
                     }
                   ]
                 ]
@@ -505,12 +505,12 @@
                     "render-ui",
                     "main",
                     {
-                      "type": "stack",
-                      "direction": "vertical",
+                      "gap": "md",
                       "children": [
                         "@config.uiTrait"
                       ],
-                      "gap": "md"
+                      "direction": "vertical",
+                      "type": "stack"
                     }
                   ]
                 ]
@@ -553,12 +553,12 @@
                     "render-ui",
                     "main",
                     {
+                      "direction": "vertical",
                       "type": "stack",
-                      "gap": "md",
                       "children": [
                         "@config.uiTrait"
                       ],
-                      "direction": "vertical"
+                      "gap": "md"
                     }
                   ]
                 ]
@@ -566,12 +566,6 @@
             ]
           },
           "config": {
-            "uiTrait": {
-              "type": "trait",
-              "default": "@trait.ServiceStorageDefaultForm",
-              "label": "Upload form",
-              "description": "Trait that renders the file picker UI"
-            },
             "maxSize": {
               "type": "number",
               "default": 10485760.0,
@@ -584,15 +578,6 @@
               "label": "Bucket name",
               "description": "Object storage bucket files are uploaded into"
             },
-            "allowedMimeTypes": {
-              "type": "[string]",
-              "default": [],
-              "label": "Allowed types",
-              "description": "MIME types the upload accepts (empty list = allow all)",
-              "items": {
-                "type": "string"
-              }
-            },
             "acl": {
               "type": "string",
               "default": "private",
@@ -602,6 +587,21 @@
                 "public",
                 "private"
               ]
+            },
+            "allowedMimeTypes": {
+              "type": "[string]",
+              "default": [],
+              "label": "Allowed types",
+              "description": "MIME types the upload accepts (empty list = allow all)",
+              "items": {
+                "type": "string"
+              }
+            },
+            "uiTrait": {
+              "type": "trait",
+              "default": "@trait.ServiceStorageDefaultForm",
+              "label": "Upload form",
+              "description": "Trait that renders the file picker UI"
             }
           },
           "scope": "instance"

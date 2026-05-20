@@ -601,8 +601,8 @@
                     "MaintenanceRequest",
                     {
                       "emit": {
-                        "success": "MaintenanceRequestLoaded",
-                        "failure": "MaintenanceRequestLoadFailed"
+                        "failure": "MaintenanceRequestLoadFailed",
+                        "success": "MaintenanceRequestLoaded"
                       }
                     }
                   ],
@@ -610,22 +610,22 @@
                     "render-ui",
                     "main",
                     {
-                      "gap": "md",
-                      "type": "stack",
                       "direction": "vertical",
-                      "align": "center",
-                      "className": "py-12",
                       "children": [
                         {
                           "type": "spinner"
                         },
                         {
-                          "content": "Loading maintenance requests…",
                           "color": "muted",
                           "type": "typography",
-                          "variant": "caption"
+                          "variant": "caption",
+                          "content": "Loading maintenance requests…"
                         }
-                      ]
+                      ],
+                      "align": "center",
+                      "gap": "md",
+                      "type": "stack",
+                      "className": "py-12"
                     }
                   ]
                 ]
@@ -639,69 +639,69 @@
                     "render-ui",
                     "main",
                     {
+                      "type": "stack",
+                      "direction": "vertical",
+                      "gap": "md",
                       "children": [
                         {
-                          "align": "center",
-                          "type": "stack",
-                          "direction": "horizontal",
-                          "gap": "sm",
                           "children": [
                             {
                               "type": "icon",
                               "name": "wrench"
                             },
                             {
+                              "variant": "h3",
                               "content": "@config.title",
-                              "type": "typography",
-                              "variant": "h3"
+                              "type": "typography"
                             }
-                          ]
+                          ],
+                          "gap": "sm",
+                          "type": "stack",
+                          "direction": "horizontal",
+                          "align": "center"
                         },
                         {
-                          "cols": 4.0,
-                          "type": "simple-grid",
                           "children": [
                             {
-                              "type": "stat-display",
                               "label": "Open requests",
-                              "icon": "wrench",
-                              "value": "@payload.data.length"
-                            },
-                            {
-                              "icon": "alert-triangle",
-                              "label": "Urgent",
-                              "value": "5",
-                              "type": "stat-display"
+                              "value": "@payload.data.length",
+                              "type": "stat-display",
+                              "icon": "wrench"
                             },
                             {
                               "type": "stat-display",
+                              "value": "5",
+                              "label": "Urgent",
+                              "icon": "alert-triangle"
+                            },
+                            {
                               "value": "18",
+                              "type": "stat-display",
                               "label": "Scheduled",
                               "icon": "calendar"
                             },
                             {
-                              "value": "32",
-                              "type": "stat-display",
                               "label": "Avg resolve (hr)",
+                              "type": "stat-display",
+                              "value": "32",
                               "icon": "clock"
                             }
-                          ]
+                          ],
+                          "type": "simple-grid",
+                          "cols": 4.0
                         },
                         {
                           "type": "divider"
                         },
                         {
-                          "gap": "sm",
-                          "fields": "@config.fields",
-                          "type": "data-grid",
-                          "cols": 1.0,
+                          "entity": "@payload.data",
                           "itemActions": "@config.itemActions",
-                          "entity": "@payload.data"
+                          "type": "data-grid",
+                          "gap": "sm",
+                          "cols": 1.0,
+                          "fields": "@config.fields"
                         }
-                      ],
-                      "type": "stack",
-                      "direction": "vertical",
-                      "gap": "md"
+                      ]
                     }
                   ]
                 ]
@@ -715,8 +715,8 @@
                     "render-ui",
                     "main",
                     {
-                      "type": "alert",
                       "message": "@payload.error",
+                      "type": "alert",
                       "variant": "error"
                     }
                   ]
@@ -796,33 +796,33 @@
                       "type": "stack",
                       "children": [
                         {
-                          "gap": "sm",
                           "direction": "horizontal",
+                          "gap": "sm",
                           "type": "stack",
                           "children": [
                             {
                               "label": "Back",
+                              "variant": "ghost",
                               "action": "CLOSE_VIEW",
-                              "type": "button",
-                              "variant": "ghost"
+                              "type": "button"
                             },
                             {
                               "name": "wrench",
                               "type": "icon"
                             },
                             {
-                              "content": "@entity.unitId",
                               "type": "typography",
+                              "content": "@entity.unitId",
                               "variant": "h3"
                             },
                             {
                               "variant": "primary",
-                              "type": "badge",
-                              "label": "@entity.priority"
+                              "label": "@entity.priority",
+                              "type": "badge"
                             },
                             {
-                              "label": "@entity.status",
                               "type": "badge",
+                              "label": "@entity.status",
                               "variant": "default"
                             }
                           ],
@@ -832,53 +832,54 @@
                           "type": "divider"
                         },
                         {
-                          "gap": "sm",
                           "direction": "vertical",
+                          "gap": "sm",
                           "type": "stack",
                           "children": [
                             {
+                              "type": "stack",
+                              "direction": "horizontal",
+                              "gap": "md",
                               "children": [
                                 {
-                                  "variant": "caption",
                                   "color": "muted",
-                                  "content": "Requester",
+                                  "type": "typography",
+                                  "variant": "caption",
+                                  "content": "Requester"
+                                },
+                                {
+                                  "variant": "body",
+                                  "content": "@entity.requesterName",
+                                  "type": "typography"
+                                }
+                              ]
+                            },
+                            {
+                              "type": "stack",
+                              "gap": "md",
+                              "children": [
+                                {
+                                  "color": "muted",
+                                  "variant": "caption",
+                                  "content": "Description",
                                   "type": "typography"
                                 },
                                 {
+                                  "content": "@entity.description",
                                   "type": "typography",
-                                  "variant": "body",
-                                  "content": "@entity.requesterName"
+                                  "variant": "body"
                                 }
                               ],
-                              "direction": "horizontal",
-                              "type": "stack",
-                              "gap": "md"
+                              "direction": "horizontal"
                             },
                             {
                               "direction": "horizontal",
                               "gap": "md",
                               "children": [
                                 {
-                                  "variant": "caption",
-                                  "color": "muted",
-                                  "content": "Description",
-                                  "type": "typography"
-                                },
-                                {
-                                  "variant": "body",
-                                  "content": "@entity.description",
-                                  "type": "typography"
-                                }
-                              ],
-                              "type": "stack"
-                            },
-                            {
-                              "direction": "horizontal",
-                              "children": [
-                                {
                                   "content": "Assigned to",
-                                  "color": "muted",
                                   "variant": "caption",
+                                  "color": "muted",
                                   "type": "typography"
                                 },
                                 {
@@ -887,26 +888,25 @@
                                   "content": "@entity.assignedTo"
                                 }
                               ],
-                              "type": "stack",
-                              "gap": "md"
+                              "type": "stack"
                             },
                             {
+                              "direction": "horizontal",
+                              "type": "stack",
                               "children": [
                                 {
                                   "variant": "caption",
+                                  "type": "typography",
                                   "color": "muted",
-                                  "content": "Notes",
-                                  "type": "typography"
+                                  "content": "Notes"
                                 },
                                 {
                                   "content": "@entity.notes",
-                                  "type": "typography",
-                                  "variant": "body"
+                                  "variant": "body",
+                                  "type": "typography"
                                 }
                               ],
-                              "gap": "md",
-                              "direction": "horizontal",
-                              "type": "stack"
+                              "gap": "md"
                             }
                           ]
                         },
@@ -915,65 +915,65 @@
                         },
                         {
                           "type": "simple-grid",
-                          "cols": 3.0,
                           "children": [
                             {
-                              "label": "Requested",
-                              "value": "@entity.requestedAt",
                               "icon": "calendar",
-                              "type": "stat-display"
+                              "type": "stat-display",
+                              "value": "@entity.requestedAt",
+                              "label": "Requested"
                             },
                             {
+                              "label": "Scheduled",
+                              "type": "stat-display",
                               "value": "@entity.scheduledAt",
-                              "type": "stat-display",
-                              "icon": "calendar-clock",
-                              "label": "Scheduled"
+                              "icon": "calendar-clock"
                             },
                             {
-                              "label": "Completed",
+                              "icon": "calendar-check",
                               "type": "stat-display",
-                              "value": "@entity.completedAt",
-                              "icon": "calendar-check"
+                              "label": "Completed",
+                              "value": "@entity.completedAt"
                             }
-                          ]
+                          ],
+                          "cols": 3.0
                         },
                         {
-                          "direction": "horizontal",
                           "gap": "sm",
+                          "align": "center",
+                          "direction": "horizontal",
                           "type": "stack",
                           "children": [
                             {
-                              "type": "button",
                               "variant": "primary",
-                              "action": "SCHEDULE_REQUEST",
-                              "label": "Schedule",
                               "actionPayload": {
-                                "id": "@entity.id",
-                                "scheduledAt": "now"
-                              }
+                                "scheduledAt": "now",
+                                "id": "@entity.id"
+                              },
+                              "type": "button",
+                              "label": "Schedule",
+                              "action": "SCHEDULE_REQUEST"
                             },
                             {
-                              "type": "button",
+                              "action": "COMPLETE_REQUEST",
                               "variant": "primary",
                               "actionPayload": {
                                 "id": "@entity.id",
                                 "completedAt": "now"
                               },
-                              "label": "Complete",
-                              "action": "COMPLETE_REQUEST"
+                              "type": "button",
+                              "label": "Complete"
                             },
                             {
-                              "variant": "danger",
-                              "type": "button",
+                              "label": "Cancel",
+                              "action": "CANCEL_REQUEST",
                               "actionPayload": {
                                 "notes": "cancelled by user",
                                 "id": "@entity.id"
                               },
-                              "label": "Cancel",
-                              "action": "CANCEL_REQUEST"
+                              "type": "button",
+                              "variant": "danger"
                             }
-                          ],
-                          "align": "center"
+                          ]
                         }
                       ]
                     }
@@ -1016,22 +1016,22 @@
                     "render-ui",
                     "main",
                     {
-                      "className": "py-12",
                       "gap": "md",
+                      "direction": "vertical",
+                      "className": "py-12",
                       "align": "center",
+                      "type": "stack",
                       "children": [
                         {
                           "type": "spinner"
                         },
                         {
-                          "variant": "caption",
                           "type": "typography",
-                          "color": "muted",
-                          "content": "Cancelling request…"
+                          "variant": "caption",
+                          "content": "Cancelling request…",
+                          "color": "muted"
                         }
-                      ],
-                      "direction": "vertical",
-                      "type": "stack"
+                      ]
                     }
                   ]
                 ]
@@ -1046,8 +1046,8 @@
                     "MaintenanceRequest",
                     {
                       "emit": {
-                        "success": "MaintenanceRequestLoaded",
-                        "failure": "MaintenanceRequestLoadFailed"
+                        "failure": "MaintenanceRequestLoadFailed",
+                        "success": "MaintenanceRequestLoaded"
                       }
                     }
                   ]
@@ -1062,9 +1062,9 @@
                     "render-ui",
                     "main",
                     {
-                      "variant": "error",
+                      "message": "@payload.error",
                       "type": "alert",
-                      "message": "@payload.error"
+                      "variant": "error"
                     }
                   ]
                 ]
@@ -1079,8 +1079,8 @@
                     "MaintenanceRequest",
                     {
                       "emit": {
-                        "success": "MaintenanceRequestLoaded",
-                        "failure": "MaintenanceRequestLoadFailed"
+                        "failure": "MaintenanceRequestLoadFailed",
+                        "success": "MaintenanceRequestLoaded"
                       }
                     }
                   ],
@@ -1088,19 +1088,19 @@
                     "render-ui",
                     "main",
                     {
-                      "gap": "md",
+                      "align": "center",
                       "type": "stack",
                       "direction": "vertical",
-                      "align": "center",
+                      "gap": "md",
                       "children": [
                         {
                           "type": "spinner"
                         },
                         {
-                          "type": "typography",
+                          "variant": "caption",
                           "color": "muted",
-                          "content": "Loading maintenance requests…",
-                          "variant": "caption"
+                          "type": "typography",
+                          "content": "Loading maintenance requests…"
                         }
                       ],
                       "className": "py-12"
@@ -1135,8 +1135,8 @@
                     "@entity",
                     {
                       "emit": {
-                        "failure": "MaintenanceRequestUpdateFailed",
-                        "success": "MaintenanceRequestUpdated"
+                        "success": "MaintenanceRequestUpdated",
+                        "failure": "MaintenanceRequestUpdateFailed"
                       }
                     }
                   ],
@@ -1144,22 +1144,22 @@
                     "render-ui",
                     "main",
                     {
-                      "className": "py-12",
                       "direction": "vertical",
-                      "gap": "md",
                       "type": "stack",
                       "align": "center",
+                      "className": "py-12",
                       "children": [
                         {
                           "type": "spinner"
                         },
                         {
                           "type": "typography",
+                          "variant": "caption",
                           "color": "muted",
-                          "content": "Scheduling request…",
-                          "variant": "caption"
+                          "content": "Scheduling request…"
                         }
-                      ]
+                      ],
+                      "gap": "md"
                     }
                   ]
                 ]
@@ -1191,8 +1191,8 @@
                     "@entity",
                     {
                       "emit": {
-                        "failure": "MaintenanceRequestUpdateFailed",
-                        "success": "MaintenanceRequestUpdated"
+                        "success": "MaintenanceRequestUpdated",
+                        "failure": "MaintenanceRequestUpdateFailed"
                       }
                     }
                   ],
@@ -1200,22 +1200,22 @@
                     "render-ui",
                     "main",
                     {
-                      "align": "center",
                       "direction": "vertical",
-                      "className": "py-12",
                       "gap": "md",
+                      "align": "center",
                       "children": [
                         {
                           "type": "spinner"
                         },
                         {
+                          "content": "Completing request…",
                           "variant": "caption",
                           "color": "muted",
-                          "type": "typography",
-                          "content": "Completing request…"
+                          "type": "typography"
                         }
                       ],
-                      "type": "stack"
+                      "type": "stack",
+                      "className": "py-12"
                     }
                   ]
                 ]
@@ -1247,8 +1247,8 @@
                     "@entity",
                     {
                       "emit": {
-                        "success": "MaintenanceRequestUpdated",
-                        "failure": "MaintenanceRequestUpdateFailed"
+                        "failure": "MaintenanceRequestUpdateFailed",
+                        "success": "MaintenanceRequestUpdated"
                       }
                     }
                   ],
@@ -1256,22 +1256,22 @@
                     "render-ui",
                     "main",
                     {
-                      "direction": "vertical",
-                      "type": "stack",
-                      "gap": "md",
                       "className": "py-12",
+                      "direction": "vertical",
                       "children": [
                         {
                           "type": "spinner"
                         },
                         {
-                          "variant": "caption",
+                          "color": "muted",
                           "type": "typography",
-                          "content": "Cancelling request…",
-                          "color": "muted"
+                          "variant": "caption",
+                          "content": "Cancelling request…"
                         }
                       ],
-                      "align": "center"
+                      "align": "center",
+                      "type": "stack",
+                      "gap": "md"
                     }
                   ]
                 ]
@@ -1308,60 +1308,20 @@
               "type": "[object]",
               "default": [
                 {
-                  "event": "OPEN_REQUEST",
-                  "label": "Open",
                   "variant": "primary",
-                  "icon": "arrow-right"
+                  "event": "OPEN_REQUEST",
+                  "icon": "arrow-right",
+                  "label": "Open"
                 },
                 {
-                  "icon": "x",
-                  "label": "Cancel",
                   "event": "CANCEL_REQUEST",
-                  "variant": "danger"
+                  "variant": "danger",
+                  "icon": "x",
+                  "label": "Cancel"
                 }
               ],
               "label": "Row actions",
               "description": "Buttons users can click on each request row",
-              "items": {
-                "type": "object"
-              }
-            },
-            "fields": {
-              "type": "[object]",
-              "default": [
-                {
-                  "label": "Unit",
-                  "name": "unitId",
-                  "variant": "caption"
-                },
-                {
-                  "variant": "caption",
-                  "name": "requesterName",
-                  "label": "Requester"
-                },
-                {
-                  "name": "description",
-                  "label": "Description",
-                  "variant": "caption"
-                },
-                {
-                  "name": "priority",
-                  "label": "Priority",
-                  "variant": "badge"
-                },
-                {
-                  "name": "status",
-                  "label": "Status",
-                  "variant": "badge"
-                },
-                {
-                  "variant": "caption",
-                  "name": "requestedAt",
-                  "label": "Requested"
-                }
-              ],
-              "label": "Columns to show",
-              "description": "Each column maps to one field on the Maintenance Request entity",
               "items": {
                 "type": "object"
               }
@@ -1371,6 +1331,46 @@
               "default": "Maintenance Requests",
               "label": "Section title",
               "description": "Heading shown above the maintenance request queue"
+            },
+            "fields": {
+              "type": "[object]",
+              "default": [
+                {
+                  "name": "unitId",
+                  "label": "Unit",
+                  "variant": "caption"
+                },
+                {
+                  "name": "requesterName",
+                  "label": "Requester",
+                  "variant": "caption"
+                },
+                {
+                  "name": "description",
+                  "label": "Description",
+                  "variant": "caption"
+                },
+                {
+                  "label": "Priority",
+                  "variant": "badge",
+                  "name": "priority"
+                },
+                {
+                  "name": "status",
+                  "label": "Status",
+                  "variant": "badge"
+                },
+                {
+                  "label": "Requested",
+                  "name": "requestedAt",
+                  "variant": "caption"
+                }
+              ],
+              "label": "Columns to show",
+              "description": "Each column maps to one field on the Maintenance Request entity",
+              "items": {
+                "type": "object"
+              }
             }
           },
           "scope": "collection"

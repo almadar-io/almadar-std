@@ -164,22 +164,22 @@
                     "create",
                     "AuditEntry",
                     {
-                      "actor": "@user.id",
                       "action": "EntityMutated",
+                      "actor": "@user.id",
                       "entityId": "@payload.data.id",
-                      "entityType": "@config.captureEntity",
-                      "recordedAt": 0.0
+                      "recordedAt": 0.0,
+                      "entityType": "@config.captureEntity"
                     }
                   ],
                   [
                     "emit",
                     "AuditRecorded",
                     {
-                      "actor": "@user.id",
-                      "action": "EntityMutated",
                       "entityType": "@config.captureEntity",
                       "entityId": "@payload.data.id",
-                      "recordedAt": 0.0
+                      "recordedAt": 0.0,
+                      "action": "EntityMutated",
+                      "actor": "@user.id"
                     }
                   ]
                 ]
@@ -187,11 +187,14 @@
             ]
           },
           "config": {
-            "excludeFields": {
+            "captureEventTypes": {
               "type": "[string]",
-              "default": [],
-              "label": "Skip fields",
-              "description": "Entity fields to omit from the audit payload",
+              "default": [
+                "Saved",
+                "Deleted"
+              ],
+              "label": "Event suffixes",
+              "description": "Mutation suffixes (Saved, Deleted, etc.) that trigger an audit row",
               "items": {
                 "type": "string"
               }
@@ -202,14 +205,11 @@
               "label": "Entity to audit",
               "description": "Type name of the entity whose mutations get logged"
             },
-            "captureEventTypes": {
+            "excludeFields": {
               "type": "[string]",
-              "default": [
-                "Saved",
-                "Deleted"
-              ],
-              "label": "Event suffixes",
-              "description": "Mutation suffixes (Saved, Deleted, etc.) that trigger an audit row",
+              "default": [],
+              "label": "Skip fields",
+              "description": "Entity fields to omit from the audit payload",
               "items": {
                 "type": "string"
               }

@@ -312,8 +312,8 @@
                     "EventRecord",
                     {
                       "emit": {
-                        "success": "EventLoaded",
-                        "failure": "EventLoadFailed"
+                        "failure": "EventLoadFailed",
+                        "success": "EventLoaded"
                       }
                     }
                   ],
@@ -321,22 +321,22 @@
                     "render-ui",
                     "main",
                     {
-                      "gap": "md",
+                      "className": "py-12",
                       "children": [
                         {
                           "type": "spinner"
                         },
                         {
-                          "color": "muted",
                           "type": "typography",
                           "variant": "caption",
+                          "color": "muted",
                           "content": "Loading events…"
                         }
                       ],
-                      "align": "center",
                       "type": "stack",
-                      "direction": "vertical",
-                      "className": "py-12"
+                      "align": "center",
+                      "gap": "md",
+                      "direction": "vertical"
                     }
                   ]
                 ]
@@ -352,49 +352,49 @@
                     {
                       "children": [
                         {
-                          "gap": "sm",
-                          "type": "stack",
-                          "direction": "horizontal",
                           "align": "center",
                           "children": [
                             {
-                              "type": "icon",
-                              "name": "calendar"
+                              "name": "calendar",
+                              "type": "icon"
                             },
                             {
+                              "variant": "h3",
                               "type": "typography",
-                              "content": "@config.title",
-                              "variant": "h3"
+                              "content": "@config.title"
                             }
-                          ]
+                          ],
+                          "type": "stack",
+                          "gap": "sm",
+                          "direction": "horizontal"
                         },
                         {
                           "type": "simple-grid",
                           "cols": 4.0,
                           "children": [
                             {
-                              "type": "stat-display",
                               "label": "Total events",
+                              "value": "@payload.data.length",
                               "icon": "calendar",
-                              "value": "@payload.data.length"
+                              "type": "stat-display"
                             },
                             {
-                              "icon": "check-circle",
                               "value": "28",
+                              "label": "Published",
                               "type": "stat-display",
-                              "label": "Published"
+                              "icon": "check-circle"
                             },
                             {
+                              "type": "stat-display",
                               "label": "Tickets sold",
-                              "type": "stat-display",
-                              "value": "4,820",
-                              "icon": "ticket"
+                              "icon": "ticket",
+                              "value": "4,820"
                             },
                             {
-                              "type": "stat-display",
-                              "label": "Sold-out",
+                              "icon": "alert-circle",
                               "value": "6",
-                              "icon": "alert-circle"
+                              "type": "stat-display",
+                              "label": "Sold-out"
                             }
                           ]
                         },
@@ -402,17 +402,17 @@
                           "type": "divider"
                         },
                         {
-                          "type": "data-grid",
-                          "fields": "@config.fields",
                           "cols": 1.0,
-                          "itemActions": "@config.itemActions",
+                          "fields": "@config.fields",
+                          "entity": "@payload.data",
                           "gap": "sm",
-                          "entity": "@payload.data"
+                          "type": "data-grid",
+                          "itemActions": "@config.itemActions"
                         }
                       ],
+                      "gap": "md",
                       "type": "stack",
-                      "direction": "vertical",
-                      "gap": "md"
+                      "direction": "vertical"
                     }
                   ]
                 ]
@@ -426,8 +426,8 @@
                     "render-ui",
                     "main",
                     {
-                      "message": "@payload.error",
                       "variant": "error",
+                      "message": "@payload.error",
                       "type": "alert"
                     }
                   ]
@@ -508,114 +508,31 @@
                     "main",
                     {
                       "gap": "md",
-                      "direction": "vertical",
                       "children": [
                         {
                           "gap": "sm",
+                          "direction": "horizontal",
+                          "align": "center",
                           "children": [
                             {
-                              "variant": "ghost",
+                              "type": "button",
                               "label": "Back",
-                              "action": "CLOSE_VIEW",
-                              "type": "button"
+                              "variant": "ghost",
+                              "action": "CLOSE_VIEW"
                             },
                             {
                               "name": "calendar",
                               "type": "icon"
                             },
                             {
-                              "variant": "h3",
+                              "type": "typography",
                               "content": "@entity.name",
-                              "type": "typography"
+                              "variant": "h3"
                             },
                             {
                               "variant": "primary",
                               "type": "badge",
                               "label": "@entity.status"
-                            }
-                          ],
-                          "align": "center",
-                          "type": "stack",
-                          "direction": "horizontal"
-                        },
-                        {
-                          "type": "divider"
-                        },
-                        {
-                          "gap": "sm",
-                          "direction": "vertical",
-                          "children": [
-                            {
-                              "type": "stack",
-                              "direction": "horizontal",
-                              "gap": "md",
-                              "children": [
-                                {
-                                  "type": "typography",
-                                  "color": "muted",
-                                  "variant": "caption",
-                                  "content": "Venue"
-                                },
-                                {
-                                  "content": "@entity.venue",
-                                  "type": "typography",
-                                  "variant": "body"
-                                }
-                              ]
-                            },
-                            {
-                              "type": "stack",
-                              "direction": "horizontal",
-                              "children": [
-                                {
-                                  "content": "Description",
-                                  "color": "muted",
-                                  "type": "typography",
-                                  "variant": "caption"
-                                },
-                                {
-                                  "content": "@entity.description",
-                                  "type": "typography",
-                                  "variant": "body"
-                                }
-                              ],
-                              "gap": "md"
-                            },
-                            {
-                              "children": [
-                                {
-                                  "variant": "caption",
-                                  "content": "Organizer",
-                                  "type": "typography",
-                                  "color": "muted"
-                                },
-                                {
-                                  "type": "typography",
-                                  "variant": "body",
-                                  "content": "@entity.organizerId"
-                                }
-                              ],
-                              "type": "stack",
-                              "direction": "horizontal",
-                              "gap": "md"
-                            },
-                            {
-                              "direction": "horizontal",
-                              "children": [
-                                {
-                                  "variant": "caption",
-                                  "color": "muted",
-                                  "type": "typography",
-                                  "content": "Recurrence"
-                                },
-                                {
-                                  "variant": "body",
-                                  "content": "@entity.recurrenceRule",
-                                  "type": "typography"
-                                }
-                              ],
-                              "type": "stack",
-                              "gap": "md"
                             }
                           ],
                           "type": "stack"
@@ -624,26 +541,108 @@
                           "type": "divider"
                         },
                         {
-                          "cols": 4.0,
-                          "type": "simple-grid",
                           "children": [
                             {
-                              "label": "Starts",
+                              "type": "stack",
+                              "direction": "horizontal",
+                              "children": [
+                                {
+                                  "type": "typography",
+                                  "content": "Venue",
+                                  "variant": "caption",
+                                  "color": "muted"
+                                },
+                                {
+                                  "content": "@entity.venue",
+                                  "variant": "body",
+                                  "type": "typography"
+                                }
+                              ],
+                              "gap": "md"
+                            },
+                            {
+                              "type": "stack",
+                              "gap": "md",
+                              "children": [
+                                {
+                                  "variant": "caption",
+                                  "type": "typography",
+                                  "color": "muted",
+                                  "content": "Description"
+                                },
+                                {
+                                  "type": "typography",
+                                  "variant": "body",
+                                  "content": "@entity.description"
+                                }
+                              ],
+                              "direction": "horizontal"
+                            },
+                            {
+                              "direction": "horizontal",
+                              "children": [
+                                {
+                                  "type": "typography",
+                                  "variant": "caption",
+                                  "color": "muted",
+                                  "content": "Organizer"
+                                },
+                                {
+                                  "content": "@entity.organizerId",
+                                  "type": "typography",
+                                  "variant": "body"
+                                }
+                              ],
+                              "type": "stack",
+                              "gap": "md"
+                            },
+                            {
+                              "gap": "md",
+                              "type": "stack",
+                              "direction": "horizontal",
+                              "children": [
+                                {
+                                  "color": "muted",
+                                  "variant": "caption",
+                                  "type": "typography",
+                                  "content": "Recurrence"
+                                },
+                                {
+                                  "variant": "body",
+                                  "content": "@entity.recurrenceRule",
+                                  "type": "typography"
+                                }
+                              ]
+                            }
+                          ],
+                          "direction": "vertical",
+                          "type": "stack",
+                          "gap": "sm"
+                        },
+                        {
+                          "type": "divider"
+                        },
+                        {
+                          "type": "simple-grid",
+                          "cols": 4.0,
+                          "children": [
+                            {
                               "value": "@entity.startsAt",
+                              "type": "stat-display",
                               "icon": "calendar",
-                              "type": "stat-display"
+                              "label": "Starts"
                             },
                             {
                               "value": "@entity.endsAt",
                               "label": "Ends",
-                              "type": "stat-display",
-                              "icon": "calendar-check"
+                              "icon": "calendar-check",
+                              "type": "stat-display"
                             },
                             {
-                              "icon": "users",
                               "value": "@entity.capacity",
                               "type": "stat-display",
-                              "label": "Capacity"
+                              "label": "Capacity",
+                              "icon": "users"
                             },
                             {
                               "value": "@entity.createdAt",
@@ -654,44 +653,45 @@
                           ]
                         },
                         {
-                          "align": "center",
                           "gap": "sm",
-                          "direction": "horizontal",
                           "children": [
                             {
-                              "variant": "primary",
-                              "type": "button",
+                              "label": "Publish",
                               "action": "PUBLISH",
+                              "type": "button",
+                              "actionPayload": {
+                                "eventId": "@entity.id",
+                                "id": "@entity.id"
+                              },
+                              "variant": "primary"
+                            },
+                            {
                               "actionPayload": {
                                 "id": "@entity.id",
                                 "eventId": "@entity.id"
                               },
-                              "label": "Publish"
-                            },
-                            {
-                              "action": "UPDATE",
                               "label": "Update",
                               "type": "button",
-                              "variant": "secondary",
-                              "actionPayload": {
-                                "id": "@entity.id",
-                                "eventId": "@entity.id"
-                              }
+                              "action": "UPDATE",
+                              "variant": "secondary"
                             },
                             {
+                              "variant": "danger",
                               "label": "Cancel",
                               "type": "button",
-                              "action": "CANCEL",
-                              "variant": "danger",
                               "actionPayload": {
-                                "id": "@entity.id",
-                                "eventId": "@entity.id"
-                              }
+                                "eventId": "@entity.id",
+                                "id": "@entity.id"
+                              },
+                              "action": "CANCEL"
                             }
                           ],
-                          "type": "stack"
+                          "align": "center",
+                          "type": "stack",
+                          "direction": "horizontal"
                         }
                       ],
+                      "direction": "vertical",
                       "type": "stack"
                     }
                   ]
@@ -712,8 +712,8 @@
                     "EventRecord",
                     {
                       "emit": {
-                        "failure": "EventLoadFailed",
-                        "success": "EventLoaded"
+                        "success": "EventLoaded",
+                        "failure": "EventLoadFailed"
                       }
                     }
                   ],
@@ -721,22 +721,22 @@
                     "render-ui",
                     "main",
                     {
-                      "className": "py-12",
+                      "type": "stack",
+                      "align": "center",
+                      "gap": "md",
+                      "direction": "vertical",
                       "children": [
                         {
                           "type": "spinner"
                         },
                         {
-                          "color": "muted",
+                          "variant": "caption",
                           "content": "Cancelling event…",
-                          "type": "typography",
-                          "variant": "caption"
+                          "color": "muted",
+                          "type": "typography"
                         }
                       ],
-                      "direction": "vertical",
-                      "gap": "md",
-                      "type": "stack",
-                      "align": "center"
+                      "className": "py-12"
                     }
                   ]
                 ]
@@ -760,22 +760,22 @@
                     "render-ui",
                     "main",
                     {
-                      "className": "py-12",
-                      "gap": "md",
                       "type": "stack",
+                      "gap": "md",
+                      "direction": "vertical",
                       "align": "center",
+                      "className": "py-12",
                       "children": [
                         {
                           "type": "spinner"
                         },
                         {
                           "type": "typography",
+                          "color": "muted",
                           "content": "Loading events…",
-                          "variant": "caption",
-                          "color": "muted"
+                          "variant": "caption"
                         }
-                      ],
-                      "direction": "vertical"
+                      ]
                     }
                   ]
                 ]
@@ -795,8 +795,8 @@
                     "EventRecord",
                     {
                       "emit": {
-                        "failure": "EventLoadFailed",
-                        "success": "EventLoaded"
+                        "success": "EventLoaded",
+                        "failure": "EventLoadFailed"
                       }
                     }
                   ],
@@ -804,22 +804,22 @@
                     "render-ui",
                     "main",
                     {
+                      "className": "py-12",
+                      "direction": "vertical",
+                      "align": "center",
+                      "gap": "md",
+                      "type": "stack",
                       "children": [
                         {
                           "type": "spinner"
                         },
                         {
-                          "variant": "caption",
                           "content": "Publishing event…",
+                          "color": "muted",
                           "type": "typography",
-                          "color": "muted"
+                          "variant": "caption"
                         }
-                      ],
-                      "gap": "md",
-                      "align": "center",
-                      "direction": "vertical",
-                      "type": "stack",
-                      "className": "py-12"
+                      ]
                     }
                   ]
                 ]
@@ -849,21 +849,21 @@
                     "main",
                     {
                       "direction": "vertical",
-                      "className": "py-12",
-                      "align": "center",
+                      "gap": "md",
                       "type": "stack",
+                      "align": "center",
+                      "className": "py-12",
                       "children": [
                         {
                           "type": "spinner"
                         },
                         {
                           "type": "typography",
-                          "content": "Updating event…",
+                          "variant": "caption",
                           "color": "muted",
-                          "variant": "caption"
+                          "content": "Updating event…"
                         }
-                      ],
-                      "gap": "md"
+                      ]
                     }
                   ]
                 ]
@@ -883,8 +883,8 @@
                     "EventRecord",
                     {
                       "emit": {
-                        "success": "EventLoaded",
-                        "failure": "EventLoadFailed"
+                        "failure": "EventLoadFailed",
+                        "success": "EventLoaded"
                       }
                     }
                   ],
@@ -892,22 +892,22 @@
                     "render-ui",
                     "main",
                     {
-                      "gap": "md",
+                      "className": "py-12",
+                      "type": "stack",
+                      "direction": "vertical",
                       "align": "center",
+                      "gap": "md",
                       "children": [
                         {
                           "type": "spinner"
                         },
                         {
-                          "content": "Cancelling event…",
-                          "color": "muted",
                           "variant": "caption",
-                          "type": "typography"
+                          "type": "typography",
+                          "color": "muted",
+                          "content": "Cancelling event…"
                         }
-                      ],
-                      "direction": "vertical",
-                      "type": "stack",
-                      "className": "py-12"
+                      ]
                     }
                   ]
                 ]
@@ -922,8 +922,8 @@
                     "EventRecord",
                     {
                       "emit": {
-                        "success": "EventLoaded",
-                        "failure": "EventLoadFailed"
+                        "failure": "EventLoadFailed",
+                        "success": "EventLoaded"
                       }
                     }
                   ],
@@ -944,16 +944,16 @@
               "type": "[object]",
               "default": [
                 {
-                  "variant": "primary",
+                  "icon": "arrow-right",
                   "event": "OPEN_EVENT",
                   "label": "Open",
-                  "icon": "arrow-right"
+                  "variant": "primary"
                 },
                 {
-                  "label": "Cancel",
+                  "variant": "danger",
                   "icon": "x",
-                  "event": "CANCEL",
-                  "variant": "danger"
+                  "label": "Cancel",
+                  "event": "CANCEL"
                 }
               ],
               "label": "Row actions",
@@ -977,24 +977,24 @@
                   "variant": "caption"
                 },
                 {
-                  "variant": "caption",
                   "name": "venue",
-                  "label": "Venue"
+                  "label": "Venue",
+                  "variant": "caption"
                 },
                 {
-                  "name": "startsAt",
                   "label": "Starts",
-                  "variant": "caption"
-                },
-                {
-                  "name": "endsAt",
-                  "label": "Ends",
-                  "variant": "caption"
-                },
-                {
-                  "name": "capacity",
                   "variant": "caption",
-                  "label": "Capacity"
+                  "name": "startsAt"
+                },
+                {
+                  "variant": "caption",
+                  "name": "endsAt",
+                  "label": "Ends"
+                },
+                {
+                  "label": "Capacity",
+                  "variant": "caption",
+                  "name": "capacity"
                 },
                 {
                   "name": "status",

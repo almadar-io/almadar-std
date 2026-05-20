@@ -390,22 +390,22 @@
                     "render-ui",
                     "main",
                     {
-                      "className": "py-12",
+                      "gap": "md",
                       "direction": "vertical",
                       "align": "center",
-                      "type": "stack",
-                      "gap": "md",
                       "children": [
                         {
                           "type": "spinner"
                         },
                         {
-                          "color": "muted",
+                          "variant": "caption",
                           "content": "Loading floor plan…",
-                          "type": "typography",
-                          "variant": "caption"
+                          "color": "muted",
+                          "type": "typography"
                         }
-                      ]
+                      ],
+                      "className": "py-12",
+                      "type": "stack"
                     }
                   ]
                 ]
@@ -420,98 +420,98 @@
                     "main",
                     {
                       "direction": "vertical",
-                      "type": "stack",
-                      "gap": "md",
                       "children": [
                         {
-                          "type": "stack",
                           "align": "center",
-                          "gap": "sm",
                           "direction": "horizontal",
                           "children": [
                             {
-                              "name": "layout-grid",
-                              "type": "icon"
+                              "type": "icon",
+                              "name": "layout-grid"
                             },
                             {
-                              "variant": "h3",
+                              "content": "@config.title",
                               "type": "typography",
-                              "content": "@config.title"
+                              "variant": "h3"
                             }
-                          ]
+                          ],
+                          "gap": "sm",
+                          "type": "stack"
                         },
                         {
                           "type": "simple-grid",
+                          "cols": 4.0,
                           "children": [
                             {
-                              "value": "@payload.data.length",
-                              "type": "stat-display",
+                              "icon": "grid",
                               "label": "Tables",
-                              "icon": "grid"
+                              "type": "stat-display",
+                              "value": "@payload.data.length"
                             },
                             {
+                              "icon": "users",
                               "type": "stat-display",
                               "label": "Seated",
-                              "icon": "users",
                               "value": "18"
                             },
                             {
+                              "value": "4",
                               "type": "stat-display",
                               "label": "Awaiting bill",
-                              "icon": "receipt",
-                              "value": "4"
+                              "icon": "receipt"
                             },
                             {
                               "type": "stat-display",
+                              "value": "3.2",
                               "icon": "user-plus",
-                              "label": "Avg party size",
-                              "value": "3.2"
+                              "label": "Avg party size"
                             }
-                          ],
-                          "cols": 4.0
+                          ]
                         },
                         {
                           "type": "divider"
                         },
                         {
-                          "editable": true,
-                          "width": "@config.canvasWidth",
-                          "items": "@payload.data",
-                          "onMove": "MOVE_TABLE",
+                          "onSelect": "SELECT_TABLE",
+                          "height": "@config.canvasHeight",
                           "selectedId": "@entity.id",
                           "type": "positioned-canvas",
-                          "onSelect": "SELECT_TABLE",
-                          "height": "@config.canvasHeight"
+                          "items": "@payload.data",
+                          "onMove": "MOVE_TABLE",
+                          "width": "@config.canvasWidth",
+                          "editable": true
                         },
                         {
+                          "gap": "sm",
+                          "type": "stack",
+                          "direction": "horizontal",
+                          "justify": "end",
                           "children": [
                             {
                               "type": "button",
-                              "icon": "users",
+                              "variant": "primary",
                               "action": "SEAT",
+                              "label": "Seat Party",
+                              "icon": "users",
                               "actionPayload": {
                                 "id": "@entity.id"
-                              },
-                              "variant": "primary",
-                              "label": "Seat Party"
+                              }
                             },
                             {
+                              "action": "CLEAR_TABLE",
+                              "type": "button",
+                              "label": "Clear Table",
+                              "icon": "eraser",
                               "actionPayload": {
                                 "id": "@entity.id"
                               },
-                              "type": "button",
-                              "variant": "secondary",
-                              "label": "Clear Table",
-                              "action": "CLEAR_TABLE",
-                              "icon": "eraser"
+                              "variant": "secondary"
                             }
-                          ],
-                          "direction": "horizontal",
-                          "gap": "sm",
-                          "type": "stack",
-                          "justify": "end"
+                          ]
                         }
-                      ]
+                      ],
+                      "type": "stack",
+                      "gap": "md"
                     }
                   ]
                 ]
@@ -525,8 +525,8 @@
                     "render-ui",
                     "main",
                     {
-                      "variant": "error",
                       "type": "alert",
+                      "variant": "error",
                       "message": "@payload.error"
                     }
                   ]
@@ -576,8 +576,8 @@
                     "update",
                     "TableNode",
                     {
-                      "x": "@payload.x",
                       "y": "@payload.y",
+                      "x": "@payload.x",
                       "id": "@payload.id"
                     },
                     {
@@ -620,14 +620,14 @@
                     "TableNode",
                     {
                       "status": "seated",
-                      "serverName": "@payload.serverName",
+                      "partySize": "@payload.partySize",
                       "id": "@payload.id",
-                      "partySize": "@payload.partySize"
+                      "serverName": "@payload.serverName"
                     },
                     {
                       "emit": {
-                        "failure": "TableWriteFailed",
-                        "success": "TableUpdated"
+                        "success": "TableUpdated",
+                        "failure": "TableWriteFailed"
                       }
                     }
                   ]
@@ -658,14 +658,14 @@
                     "update",
                     "TableNode",
                     {
+                      "id": "@payload.id",
                       "status": "empty",
-                      "partySize": 0.0,
-                      "id": "@payload.id"
+                      "partySize": 0.0
                     },
                     {
                       "emit": {
-                        "failure": "TableWriteFailed",
-                        "success": "TableUpdated"
+                        "success": "TableUpdated",
+                        "failure": "TableWriteFailed"
                       }
                     }
                   ]
@@ -709,9 +709,9 @@
                     "render-ui",
                     "main",
                     {
+                      "message": "@payload.error",
                       "type": "alert",
-                      "variant": "error",
-                      "message": "@payload.error"
+                      "variant": "error"
                     }
                   ]
                 ]
@@ -744,11 +744,11 @@
             ]
           },
           "config": {
-            "canvasHeight": {
+            "canvasWidth": {
               "type": "number",
-              "default": 600.0,
-              "label": "Canvas height",
-              "description": "Floor plan canvas height in pixels"
+              "default": 800.0,
+              "label": "Canvas width",
+              "description": "Floor plan canvas width in pixels"
             },
             "title": {
               "type": "string",
@@ -756,11 +756,11 @@
               "label": "Section title",
               "description": "Heading shown above the restaurant floor plan"
             },
-            "canvasWidth": {
+            "canvasHeight": {
               "type": "number",
-              "default": 800.0,
-              "label": "Canvas width",
-              "description": "Floor plan canvas width in pixels"
+              "default": 600.0,
+              "label": "Canvas height",
+              "description": "Floor plan canvas height in pixels"
             }
           },
           "scope": "collection"

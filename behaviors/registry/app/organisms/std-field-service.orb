@@ -133,28 +133,28 @@
           "ref": "AppShell.traits.AppLayout",
           "name": "WorkOrderAppLayout",
           "config": {
+            "notifications": [],
+            "searchEvent": "WORK_ORDER_SEARCH",
+            "notificationClickEvent": "WORK_ORDER_NOTIFICATIONS_OPEN",
+            "contentTrait": "@trait.WorkOrderCatalog",
+            "appName": "Field Service",
             "navItems": [
               {
                 "icon": "clipboard-list",
-                "label": "Work Orders",
-                "href": "/workorders"
+                "href": "/workorders",
+                "label": "Work Orders"
               },
               {
-                "label": "Technicians",
                 "href": "/technicians",
-                "icon": "hard-hat"
+                "icon": "hard-hat",
+                "label": "Technicians"
               },
               {
-                "icon": "map-pin",
                 "label": "Check In",
-                "href": "/jobs/checkin"
+                "href": "/jobs/checkin",
+                "icon": "map-pin"
               }
-            ],
-            "contentTrait": "@trait.WorkOrderCatalog",
-            "notificationClickEvent": "WORK_ORDER_NOTIFICATIONS_OPEN",
-            "notifications": [],
-            "appName": "Field Service",
-            "searchEvent": "WORK_ORDER_SEARCH"
+            ]
           },
           "events": {
             "NOTIFY_CLICK": "WORK_ORDER_NOTIFICATIONS_OPEN",
@@ -241,58 +241,61 @@
                     "render-ui",
                     "main",
                     {
+                      "direction": "vertical",
+                      "gap": "lg",
+                      "type": "stack",
                       "children": [
                         {
                           "direction": "horizontal",
+                          "type": "stack",
                           "justify": "between",
+                          "gap": "md",
+                          "align": "center",
                           "children": [
                             {
                               "direction": "horizontal",
                               "gap": "sm",
+                              "align": "center",
+                              "type": "stack",
                               "children": [
                                 {
-                                  "name": "clipboard-list",
-                                  "type": "icon"
+                                  "type": "icon",
+                                  "name": "clipboard-list"
                                 },
                                 {
                                   "type": "typography",
-                                  "content": "Work Orders",
-                                  "variant": "h2"
+                                  "variant": "h2",
+                                  "content": "Work Orders"
                                 }
-                              ],
-                              "type": "stack",
-                              "align": "center"
+                              ]
                             },
                             {
-                              "type": "stack",
-                              "gap": "sm",
-                              "direction": "horizontal",
                               "children": [
                                 {
                                   "label": "New Work Order",
-                                  "action": "CREATE",
-                                  "icon": "plus",
+                                  "variant": "primary",
                                   "type": "button",
-                                  "variant": "primary"
+                                  "icon": "plus",
+                                  "action": "CREATE"
                                 }
-                              ]
+                              ],
+                              "gap": "sm",
+                              "type": "stack",
+                              "direction": "horizontal"
                             }
-                          ],
-                          "gap": "md",
-                          "type": "stack",
-                          "align": "center"
+                          ]
                         },
                         {
                           "type": "divider"
                         },
                         {
-                          "direction": "horizontal",
-                          "align": "center",
                           "type": "stack",
+                          "align": "center",
                           "children": [
                             "@trait.WorkOrderSearch",
                             "@trait.WorkOrderFilter"
                           ],
+                          "direction": "horizontal",
                           "gap": "md"
                         },
                         "@trait.WorkOrderStats",
@@ -313,15 +316,12 @@
                           "type": "divider"
                         },
                         {
-                          "content": "Routes",
+                          "variant": "h3",
                           "type": "typography",
-                          "variant": "h3"
+                          "content": "Routes"
                         },
                         "@trait.WorkOrderRoutes"
-                      ],
-                      "direction": "vertical",
-                      "type": "stack",
-                      "gap": "lg"
+                      ]
                     }
                   ]
                 ]
@@ -340,34 +340,34 @@
                     "render-ui",
                     "main",
                     {
+                      "align": "center",
                       "className": "py-8",
+                      "type": "stack",
+                      "direction": "vertical",
+                      "gap": "md",
                       "children": [
                         {
-                          "type": "icon",
-                          "name": "bell"
+                          "name": "bell",
+                          "type": "icon"
                         },
                         {
-                          "variant": "h3",
                           "content": "No notifications",
-                          "type": "typography"
+                          "type": "typography",
+                          "variant": "h3"
                         },
                         {
+                          "variant": "caption",
                           "content": "You're all caught up.",
-                          "color": "muted",
                           "type": "typography",
-                          "variant": "caption"
+                          "color": "muted"
                         },
                         {
                           "type": "button",
+                          "variant": "ghost",
                           "label": "Back to work orders",
-                          "action": "INIT",
-                          "variant": "ghost"
+                          "action": "INIT"
                         }
-                      ],
-                      "direction": "vertical",
-                      "gap": "md",
-                      "align": "center",
-                      "type": "stack"
+                      ]
                     }
                   ]
                 ]
@@ -392,17 +392,17 @@
             "filters": [
               {
                 "field": "priority",
-                "filterType": "select",
-                "label": "Priority",
                 "options": [
                   "low",
                   "normal",
                   "high",
                   "urgent"
-                ]
+                ],
+                "label": "Priority",
+                "filterType": "select"
               },
               {
-                "label": "Status",
+                "filterType": "select",
                 "options": [
                   "created",
                   "assigned",
@@ -411,7 +411,7 @@
                   "completed",
                   "cancelled"
                 ],
-                "filterType": "select",
+                "label": "Status",
                 "field": "status"
               }
             ]
@@ -421,19 +421,16 @@
           "ref": "Stats.traits.StatsItemStats",
           "name": "WorkOrderStats",
           "config": {
+            "title": "Work Orders",
             "metrics": [
               {
+                "format": "number",
                 "icon": "clipboard-list",
                 "label": "Total",
-                "variant": "primary",
                 "aggregation": "count",
-                "format": "number"
+                "variant": "primary"
               },
               {
-                "format": "number",
-                "aggregation": "count",
-                "icon": "circle",
-                "variant": "warning",
                 "filter": [
                   "fn",
                   "row",
@@ -443,11 +440,18 @@
                     "created"
                   ]
                 ],
-                "label": "Open"
+                "icon": "circle",
+                "aggregation": "count",
+                "variant": "warning",
+                "label": "Open",
+                "format": "number"
               },
               {
-                "aggregation": "count",
+                "variant": "info",
                 "label": "On Site",
+                "aggregation": "count",
+                "format": "number",
+                "icon": "map-pin",
                 "filter": [
                   "fn",
                   "row",
@@ -456,17 +460,10 @@
                     "@row.status",
                     "on-site"
                   ]
-                ],
-                "icon": "map-pin",
-                "format": "number",
-                "variant": "info"
+                ]
               },
               {
-                "label": "Completed",
-                "icon": "check-circle",
-                "variant": "success",
                 "format": "number",
-                "aggregation": "count",
                 "filter": [
                   "fn",
                   "row",
@@ -475,10 +472,13 @@
                     "@row.status",
                     "completed"
                   ]
-                ]
+                ],
+                "variant": "success",
+                "aggregation": "count",
+                "label": "Completed",
+                "icon": "check-circle"
               }
-            ],
-            "title": "Work Orders"
+            ]
           },
           "listens": [
             {
@@ -496,20 +496,20 @@
           "name": "WorkOrderBrowseList",
           "linkedEntity": "WorkOrderRow",
           "config": {
-            "cols": 1.0,
+            "gap": "sm",
             "fields": [
               {
+                "variant": "h4",
                 "name": "customerName",
-                "icon": "user",
-                "variant": "h4"
+                "icon": "user"
               },
               {
-                "variant": "body",
-                "name": "serviceType"
+                "name": "serviceType",
+                "variant": "body"
               },
               {
-                "variant": "caption",
-                "name": "address"
+                "name": "address",
+                "variant": "caption"
               },
               {
                 "name": "priority",
@@ -520,20 +520,20 @@
                 "name": "status"
               },
               {
-                "variant": "caption",
-                "name": "assignedTo"
+                "name": "assignedTo",
+                "variant": "caption"
               },
               {
-                "variant": "caption",
-                "name": "etaMinutes"
+                "name": "etaMinutes",
+                "variant": "caption"
               }
             ],
-            "gap": "sm",
+            "cols": 1.0,
             "itemActions": [
               {
-                "variant": "ghost",
                 "label": "View",
-                "event": "VIEW"
+                "event": "VIEW",
+                "variant": "ghost"
               },
               {
                 "label": "Edit",
@@ -541,9 +541,9 @@
                 "variant": "ghost"
               },
               {
-                "variant": "danger",
+                "label": "Delete",
                 "event": "DELETE",
-                "label": "Delete"
+                "variant": "danger"
               }
             ]
           },
@@ -610,8 +610,6 @@
           "linkedEntity": "WorkOrderRow",
           "config": {
             "mode": "create",
-            "icon": "plus-circle",
-            "title": "New Work Order",
             "fields": [
               "customerName",
               "serviceType",
@@ -622,7 +620,9 @@
               "scheduledAt",
               "etaMinutes",
               "notes"
-            ]
+            ],
+            "icon": "plus-circle",
+            "title": "New Work Order"
           },
           "events": {
             "OPEN": "CREATE"
@@ -643,6 +643,9 @@
           "name": "WorkOrderEdit",
           "linkedEntity": "WorkOrderRow",
           "config": {
+            "mode": "edit",
+            "title": "Edit Work Order",
+            "icon": "edit",
             "fields": [
               "customerName",
               "serviceType",
@@ -653,10 +656,7 @@
               "scheduledAt",
               "etaMinutes",
               "notes"
-            ],
-            "icon": "edit",
-            "title": "Edit Work Order",
-            "mode": "edit"
+            ]
           },
           "events": {
             "OPEN": "EDIT"
@@ -677,6 +677,8 @@
           "name": "WorkOrderView",
           "linkedEntity": "WorkOrderRow",
           "config": {
+            "icon": "eye",
+            "mode": "edit",
             "fields": [
               "customerName",
               "serviceType",
@@ -688,8 +690,6 @@
               "etaMinutes",
               "notes"
             ],
-            "mode": "edit",
-            "icon": "eye",
             "title": "View Work Order"
           },
           "events": {
@@ -1053,27 +1053,27 @@
           "name": "TechnicianAppLayout",
           "config": {
             "notifications": [],
-            "appName": "Field Service",
-            "contentTrait": "@trait.TechnicianCatalog",
             "navItems": [
               {
-                "label": "Work Orders",
+                "href": "/workorders",
                 "icon": "clipboard-list",
-                "href": "/workorders"
+                "label": "Work Orders"
               },
               {
-                "icon": "hard-hat",
                 "label": "Technicians",
-                "href": "/technicians"
+                "href": "/technicians",
+                "icon": "hard-hat"
               },
               {
                 "href": "/jobs/checkin",
-                "label": "Check In",
-                "icon": "map-pin"
+                "icon": "map-pin",
+                "label": "Check In"
               }
             ],
-            "searchEvent": "TECHNICIAN_SEARCH",
-            "notificationClickEvent": "TECHNICIAN_NOTIFICATIONS_OPEN"
+            "notificationClickEvent": "TECHNICIAN_NOTIFICATIONS_OPEN",
+            "contentTrait": "@trait.TechnicianCatalog",
+            "appName": "Field Service",
+            "searchEvent": "TECHNICIAN_SEARCH"
           },
           "events": {
             "SEARCH": "TECHNICIAN_SEARCH",
@@ -1164,14 +1164,14 @@
                       "type": "stack",
                       "children": [
                         {
+                          "align": "center",
                           "type": "stack",
-                          "direction": "horizontal",
+                          "justify": "between",
+                          "gap": "md",
                           "children": [
                             {
-                              "type": "stack",
-                              "gap": "sm",
-                              "align": "center",
                               "direction": "horizontal",
+                              "align": "center",
                               "children": [
                                 {
                                   "name": "hard-hat",
@@ -1182,26 +1182,26 @@
                                   "content": "Technicians",
                                   "type": "typography"
                                 }
-                              ]
+                              ],
+                              "type": "stack",
+                              "gap": "sm"
                             },
                             {
                               "type": "stack",
                               "gap": "sm",
-                              "direction": "horizontal",
                               "children": [
                                 {
-                                  "type": "button",
                                   "label": "Add Technician",
-                                  "action": "CREATE",
+                                  "variant": "primary",
                                   "icon": "user-plus",
-                                  "variant": "primary"
+                                  "type": "button",
+                                  "action": "CREATE"
                                 }
-                              ]
+                              ],
+                              "direction": "horizontal"
                             }
                           ],
-                          "align": "center",
-                          "justify": "between",
-                          "gap": "md"
+                          "direction": "horizontal"
                         },
                         {
                           "type": "divider"
@@ -1211,8 +1211,8 @@
                           "type": "divider"
                         },
                         {
-                          "type": "typography",
                           "variant": "h3",
+                          "type": "typography",
                           "content": "Dispatch Board"
                         },
                         "@trait.TechnicianDispatchBoard",
@@ -1245,32 +1245,32 @@
                     "render-ui",
                     "main",
                     {
-                      "direction": "vertical",
-                      "type": "stack",
-                      "align": "center",
                       "gap": "md",
+                      "type": "stack",
                       "className": "py-8",
+                      "direction": "vertical",
+                      "align": "center",
                       "children": [
                         {
-                          "name": "bell",
-                          "type": "icon"
+                          "type": "icon",
+                          "name": "bell"
                         },
                         {
                           "content": "No notifications",
-                          "type": "typography",
-                          "variant": "h3"
+                          "variant": "h3",
+                          "type": "typography"
                         },
                         {
-                          "content": "You're all caught up.",
                           "type": "typography",
                           "color": "muted",
+                          "content": "You're all caught up.",
                           "variant": "caption"
                         },
                         {
-                          "variant": "ghost",
                           "action": "INIT",
-                          "label": "Back to technicians",
-                          "type": "button"
+                          "type": "button",
+                          "variant": "ghost",
+                          "label": "Back to technicians"
                         }
                       ]
                     }
@@ -1286,42 +1286,23 @@
           "name": "TechnicianBrowseList",
           "linkedEntity": "TechnicianRow",
           "config": {
-            "cols": 1.0,
-            "gap": "sm",
-            "itemActions": [
-              {
-                "variant": "ghost",
-                "label": "View",
-                "event": "VIEW"
-              },
-              {
-                "label": "Edit",
-                "event": "EDIT",
-                "variant": "ghost"
-              },
-              {
-                "event": "DELETE",
-                "label": "Delete",
-                "variant": "danger"
-              }
-            ],
             "fields": [
               {
                 "variant": "h4",
-                "icon": "hard-hat",
-                "name": "name"
+                "name": "name",
+                "icon": "hard-hat"
               },
               {
-                "name": "phone",
-                "variant": "caption"
+                "variant": "caption",
+                "name": "phone"
               },
               {
-                "name": "skills",
-                "variant": "caption"
+                "variant": "caption",
+                "name": "skills"
               },
               {
-                "variant": "badge",
-                "name": "available"
+                "name": "available",
+                "variant": "badge"
               },
               {
                 "variant": "caption",
@@ -1331,7 +1312,26 @@
                 "name": "lastSeenAt",
                 "variant": "caption"
               }
-            ]
+            ],
+            "cols": 1.0,
+            "itemActions": [
+              {
+                "variant": "ghost",
+                "label": "View",
+                "event": "VIEW"
+              },
+              {
+                "variant": "ghost",
+                "event": "EDIT",
+                "label": "Edit"
+              },
+              {
+                "event": "DELETE",
+                "label": "Delete",
+                "variant": "danger"
+              }
+            ],
+            "gap": "sm"
           },
           "listens": [
             {
@@ -1380,9 +1380,6 @@
           "name": "TechnicianCreate",
           "linkedEntity": "TechnicianRow",
           "config": {
-            "title": "Add Technician",
-            "mode": "create",
-            "icon": "user-plus",
             "fields": [
               "name",
               "phone",
@@ -1391,7 +1388,10 @@
               "currentOrderId",
               "lat",
               "lng"
-            ]
+            ],
+            "icon": "user-plus",
+            "title": "Add Technician",
+            "mode": "create"
           },
           "events": {
             "OPEN": "CREATE"
@@ -1413,6 +1413,8 @@
           "linkedEntity": "TechnicianRow",
           "config": {
             "icon": "edit",
+            "mode": "edit",
+            "title": "Edit Technician",
             "fields": [
               "name",
               "phone",
@@ -1421,9 +1423,7 @@
               "currentOrderId",
               "lat",
               "lng"
-            ],
-            "mode": "edit",
-            "title": "Edit Technician"
+            ]
           },
           "events": {
             "OPEN": "EDIT"
@@ -1444,7 +1444,6 @@
           "name": "TechnicianView",
           "linkedEntity": "TechnicianRow",
           "config": {
-            "mode": "edit",
             "fields": [
               "name",
               "phone",
@@ -1455,6 +1454,7 @@
               "lng",
               "lastSeenAt"
             ],
+            "mode": "edit",
             "icon": "eye",
             "title": "View Technician"
           },
@@ -1716,32 +1716,32 @@
           "ref": "AppShell.traits.AppLayout",
           "name": "JobCheckinAppLayout",
           "config": {
-            "searchEvent": "JOB_CHECKIN_SEARCH",
-            "contentTrait": "@trait.JobCheckinComposer",
             "navItems": [
               {
                 "href": "/workorders",
-                "label": "Work Orders",
-                "icon": "clipboard-list"
+                "icon": "clipboard-list",
+                "label": "Work Orders"
               },
               {
-                "href": "/technicians",
                 "icon": "hard-hat",
-                "label": "Technicians"
+                "label": "Technicians",
+                "href": "/technicians"
               },
               {
-                "label": "Check In",
+                "icon": "map-pin",
                 "href": "/jobs/checkin",
-                "icon": "map-pin"
+                "label": "Check In"
               }
             ],
+            "searchEvent": "JOB_CHECKIN_SEARCH",
+            "contentTrait": "@trait.JobCheckinComposer",
+            "appName": "Field Service",
             "notifications": [],
-            "notificationClickEvent": "JOB_CHECKIN_NOTIFICATIONS_OPEN",
-            "appName": "Field Service"
+            "notificationClickEvent": "JOB_CHECKIN_NOTIFICATIONS_OPEN"
           },
           "events": {
-            "NOTIFY_CLICK": "JOB_CHECKIN_NOTIFICATIONS_OPEN",
-            "SEARCH": "JOB_CHECKIN_SEARCH"
+            "SEARCH": "JOB_CHECKIN_SEARCH",
+            "NOTIFY_CLICK": "JOB_CHECKIN_NOTIFICATIONS_OPEN"
           }
         },
         {
@@ -1770,53 +1770,53 @@
                     "render-ui",
                     "main",
                     {
-                      "direction": "vertical",
                       "gap": "lg",
+                      "className": "max-w-3xl mx-auto w-full",
                       "type": "stack",
                       "children": [
                         {
+                          "align": "center",
+                          "direction": "horizontal",
+                          "type": "stack",
                           "children": [
                             {
                               "type": "icon",
                               "name": "map-pin"
                             },
                             {
-                              "content": "Job Check-In",
+                              "variant": "h2",
                               "type": "typography",
-                              "variant": "h2"
+                              "content": "Job Check-In"
                             }
                           ],
-                          "type": "stack",
-                          "direction": "horizontal",
-                          "align": "center",
                           "gap": "sm"
                         },
                         {
+                          "color": "muted",
                           "type": "typography",
-                          "content": "Verify your arrival, complete the job, and capture the customer's signature.",
                           "variant": "caption",
-                          "color": "muted"
+                          "content": "Verify your arrival, complete the job, and capture the customer's signature."
                         },
                         {
                           "type": "divider"
                         },
                         {
+                          "content": "1. Arrival check-in",
                           "type": "typography",
-                          "variant": "h3",
-                          "content": "1. Arrival check-in"
+                          "variant": "h3"
                         },
                         "@trait.JobArrivalCheckin",
                         {
                           "type": "divider"
                         },
                         {
-                          "variant": "h3",
+                          "content": "2. Customer signature",
                           "type": "typography",
-                          "content": "2. Customer signature"
+                          "variant": "h3"
                         },
                         "@trait.JobCompletionSignature"
                       ],
-                      "className": "max-w-3xl mx-auto w-full"
+                      "direction": "vertical"
                     }
                   ]
                 ]
@@ -1829,16 +1829,16 @@
           "ref": "Checkin.traits.CheckinScan",
           "name": "JobArrivalCheckin",
           "config": {
-            "title": "Confirm arrival on site",
-            "mode": "geo"
+            "mode": "geo",
+            "title": "Confirm arrival on site"
           }
         },
         {
           "ref": "Signature.traits.SignatureCapture",
           "name": "JobCompletionSignature",
           "config": {
-            "title": "Customer signature",
-            "instructions": "Customer signs to confirm the job is complete."
+            "instructions": "Customer signs to confirm the job is complete.",
+            "title": "Customer signature"
           }
         }
       ],

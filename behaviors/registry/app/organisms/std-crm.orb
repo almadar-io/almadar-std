@@ -101,37 +101,37 @@
           "ref": "AppShell.traits.AppLayout",
           "name": "ContactAppLayout",
           "config": {
-            "notifications": [],
             "notificationClickEvent": "CONTACT_NOTIFICATIONS_OPEN",
-            "contentTrait": "@trait.ContactCatalog",
             "appName": "CRM",
+            "contentTrait": "@trait.ContactCatalog",
             "navItems": [
               {
-                "icon": "users",
                 "label": "Contacts",
+                "icon": "users",
                 "href": "/contacts"
               },
               {
+                "label": "Deals",
                 "icon": "briefcase",
-                "href": "/deals",
-                "label": "Deals"
+                "href": "/deals"
               },
               {
+                "icon": "bar-chart-2",
                 "label": "Pipeline",
-                "href": "/pipeline",
-                "icon": "bar-chart-2"
+                "href": "/pipeline"
               },
               {
-                "href": "/notes",
                 "icon": "file-text",
-                "label": "Notes"
+                "label": "Notes",
+                "href": "/notes"
               }
             ],
+            "notifications": [],
             "searchEvent": "CONTACT_SEARCH"
           },
           "events": {
-            "SEARCH": "CONTACT_SEARCH",
-            "NOTIFY_CLICK": "CONTACT_NOTIFICATIONS_OPEN"
+            "NOTIFY_CLICK": "CONTACT_NOTIFICATIONS_OPEN",
+            "SEARCH": "CONTACT_SEARCH"
           }
         },
         {
@@ -230,59 +230,61 @@
                     "render-ui",
                     "main",
                     {
+                      "direction": "vertical",
+                      "gap": "lg",
                       "children": [
                         {
-                          "justify": "between",
-                          "direction": "horizontal",
-                          "type": "stack",
                           "gap": "md",
+                          "type": "stack",
+                          "justify": "between",
+                          "align": "center",
                           "children": [
                             {
                               "gap": "sm",
                               "children": [
                                 {
-                                  "name": "user",
-                                  "type": "icon"
+                                  "type": "icon",
+                                  "name": "user"
                                 },
                                 {
-                                  "type": "typography",
+                                  "variant": "h2",
                                   "content": "Contacts",
-                                  "variant": "h2"
+                                  "type": "typography"
                                 }
                               ],
+                              "align": "center",
                               "type": "stack",
-                              "direction": "horizontal",
-                              "align": "center"
+                              "direction": "horizontal"
                             },
                             {
-                              "direction": "horizontal",
                               "type": "stack",
+                              "direction": "horizontal",
+                              "gap": "sm",
                               "children": [
                                 {
-                                  "type": "button",
                                   "icon": "plus",
+                                  "action": "CREATE",
+                                  "type": "button",
                                   "label": "New Contact",
-                                  "variant": "primary",
-                                  "action": "CREATE"
+                                  "variant": "primary"
                                 }
-                              ],
-                              "gap": "sm"
+                              ]
                             }
                           ],
-                          "align": "center"
+                          "direction": "horizontal"
                         },
                         {
                           "type": "divider"
                         },
                         {
+                          "gap": "md",
                           "direction": "horizontal",
                           "align": "center",
-                          "gap": "md",
+                          "type": "stack",
                           "children": [
                             "@trait.ContactSearch",
                             "@trait.ContactFilter"
-                          ],
-                          "type": "stack"
+                          ]
                         },
                         "@trait.ContactStats",
                         "@trait.ContactGraphs",
@@ -291,8 +293,6 @@
                         },
                         "@trait.ContactBrowseList"
                       ],
-                      "direction": "vertical",
-                      "gap": "lg",
                       "type": "stack"
                     }
                   ]
@@ -312,34 +312,34 @@
                     "render-ui",
                     "main",
                     {
-                      "gap": "md",
-                      "className": "py-8",
-                      "direction": "vertical",
-                      "align": "center",
-                      "type": "stack",
                       "children": [
                         {
-                          "name": "bell",
-                          "type": "icon"
+                          "type": "icon",
+                          "name": "bell"
                         },
                         {
+                          "content": "No notifications",
                           "type": "typography",
-                          "variant": "h3",
-                          "content": "No notifications"
+                          "variant": "h3"
                         },
                         {
-                          "content": "You're all caught up.",
                           "variant": "caption",
+                          "content": "You're all caught up.",
                           "type": "typography",
                           "color": "muted"
                         },
                         {
-                          "variant": "ghost",
                           "label": "Back to contacts",
+                          "action": "INIT",
                           "type": "button",
-                          "action": "INIT"
+                          "variant": "ghost"
                         }
-                      ]
+                      ],
+                      "direction": "vertical",
+                      "type": "stack",
+                      "align": "center",
+                      "className": "py-8",
+                      "gap": "md"
                     }
                   ]
                 ]
@@ -360,11 +360,9 @@
           "ref": "Filter.traits.FilterTargetFilter",
           "name": "ContactFilter",
           "config": {
+            "event": "CONTACT_FILTER",
             "filters": [
               {
-                "filterType": "select",
-                "label": "Industry",
-                "field": "industry",
                 "options": [
                   "technology",
                   "finance",
@@ -372,39 +370,42 @@
                   "retail",
                   "manufacturing",
                   "other"
-                ]
+                ],
+                "filterType": "select",
+                "field": "industry",
+                "label": "Industry"
               },
               {
-                "field": "lifecycleStage",
                 "options": [
                   "lead",
                   "mql",
                   "sql",
                   "customer"
                 ],
+                "field": "lifecycleStage",
                 "filterType": "select",
                 "label": "Lifecycle Stage"
               }
-            ],
-            "event": "CONTACT_FILTER"
+            ]
           }
         },
         {
           "ref": "Stats.traits.StatsItemStats",
           "name": "ContactStats",
           "config": {
+            "title": "Contacts",
             "metrics": [
               {
-                "label": "Total",
-                "aggregation": "count",
-                "icon": "users",
                 "format": "number",
+                "icon": "users",
+                "aggregation": "count",
+                "label": "Total",
                 "variant": "primary"
               },
               {
-                "variant": "warning",
-                "format": "number",
                 "icon": "flame",
+                "aggregation": "count",
+                "variant": "warning",
                 "filter": [
                   "fn",
                   "row",
@@ -414,14 +415,11 @@
                     "sql"
                   ]
                 ],
-                "aggregation": "count",
+                "format": "number",
                 "label": "Hot Leads"
               },
               {
-                "icon": "check-circle",
                 "variant": "success",
-                "label": "Customers",
-                "aggregation": "count",
                 "format": "number",
                 "filter": [
                   "fn",
@@ -431,10 +429,12 @@
                     "@row.lifecycleStage",
                     "customer"
                   ]
-                ]
+                ],
+                "aggregation": "count",
+                "label": "Customers",
+                "icon": "check-circle"
               }
-            ],
-            "title": "Contacts"
+            ]
           },
           "listens": [
             {
@@ -451,13 +451,13 @@
           "ref": "Graphs.traits.GraphItemGraph",
           "name": "ContactGraphs",
           "config": {
-            "showLegend": true,
+            "chartType": "pie",
             "subtitle": "Funnel breakdown",
             "title": "Contacts by Lifecycle Stage",
-            "categoryField": "lifecycleStage",
             "aggregation": "count",
             "height": 240.0,
-            "chartType": "pie"
+            "categoryField": "lifecycleStage",
+            "showLegend": true
           },
           "listens": [
             {
@@ -475,49 +475,49 @@
           "name": "ContactBrowseList",
           "linkedEntity": "Contact",
           "config": {
-            "itemActions": [
-              {
-                "variant": "ghost",
-                "label": "View",
-                "event": "VIEW"
-              },
-              {
-                "variant": "ghost",
-                "label": "Edit",
-                "event": "EDIT"
-              },
-              {
-                "variant": "danger",
-                "event": "DELETE",
-                "label": "Delete"
-              }
-            ],
-            "variant": "card",
             "fields": [
               {
-                "name": "name",
                 "icon": "user",
-                "variant": "h3"
-              },
-              {
-                "name": "industry",
-                "variant": "badge"
+                "variant": "h3",
+                "name": "name"
               },
               {
                 "variant": "badge",
-                "name": "lifecycleStage"
+                "name": "industry"
+              },
+              {
+                "name": "lifecycleStage",
+                "variant": "badge"
+              },
+              {
+                "name": "email",
+                "variant": "caption"
               },
               {
                 "variant": "caption",
-                "name": "email"
-              },
-              {
-                "name": "phone",
-                "variant": "caption"
+                "name": "phone"
               }
             ],
+            "gap": "sm",
+            "variant": "card",
             "cols": 1.0,
-            "gap": "sm"
+            "itemActions": [
+              {
+                "event": "VIEW",
+                "variant": "ghost",
+                "label": "View"
+              },
+              {
+                "label": "Edit",
+                "variant": "ghost",
+                "event": "EDIT"
+              },
+              {
+                "event": "DELETE",
+                "label": "Delete",
+                "variant": "danger"
+              }
+            ]
           },
           "listens": [
             {
@@ -567,8 +567,6 @@
           "name": "ContactCreate",
           "linkedEntity": "Contact",
           "config": {
-            "title": "New Contact",
-            "icon": "plus-circle",
             "fields": [
               "name",
               "company",
@@ -577,7 +575,9 @@
               "email",
               "phone"
             ],
-            "mode": "create"
+            "title": "New Contact",
+            "mode": "create",
+            "icon": "plus-circle"
           },
           "events": {
             "OPEN": "CREATE"
@@ -598,9 +598,9 @@
           "name": "ContactEdit",
           "linkedEntity": "Contact",
           "config": {
+            "mode": "edit",
             "title": "Edit Contact",
             "icon": "edit",
-            "mode": "edit",
             "fields": [
               "name",
               "company",
@@ -629,7 +629,9 @@
           "name": "ContactView",
           "linkedEntity": "Contact",
           "config": {
+            "icon": "eye",
             "title": "View Contact",
+            "mode": "edit",
             "fields": [
               "name",
               "company",
@@ -637,9 +639,7 @@
               "lifecycleStage",
               "email",
               "phone"
-            ],
-            "mode": "edit",
-            "icon": "eye"
+            ]
           },
           "events": {
             "OPEN": "VIEW"
@@ -660,14 +660,14 @@
           "name": "ContactDelete",
           "linkedEntity": "Contact",
           "config": {
-            "title": "Delete Contact",
             "icon": "alert-triangle",
             "alertMessage": "This action cannot be undone.",
-            "confirmLabel": "Delete"
+            "confirmLabel": "Delete",
+            "title": "Delete Contact"
           },
           "events": {
-            "CONFIRM": "CONFIRM_DELETE",
-            "REQUEST": "DELETE"
+            "REQUEST": "DELETE",
+            "CONFIRM": "CONFIRM_DELETE"
           },
           "listens": [
             {
@@ -947,17 +947,17 @@
                     "render-ui",
                     "main",
                     {
+                      "type": "stack",
+                      "gap": "sm",
                       "children": [
                         {
                           "variant": "ghost",
                           "type": "button",
-                          "label": "Email Contact",
+                          "icon": "mail",
                           "action": "SEND_EMAIL",
-                          "icon": "mail"
+                          "label": "Email Contact"
                         }
                       ],
-                      "type": "stack",
-                      "gap": "sm",
                       "direction": "horizontal"
                     }
                   ]
@@ -973,10 +973,10 @@
                     "email",
                     "send",
                     {
-                      "body": "Reaching out from your account team.",
-                      "subject": "Hello from CRM",
                       "recipient": "contact@example.com",
-                      "sender": "noreply@crm.example"
+                      "sender": "noreply@crm.example",
+                      "subject": "Hello from CRM",
+                      "body": "Reaching out from your account team."
                     },
                     {
                       "emit": {
@@ -1121,33 +1121,33 @@
           "name": "DealAppLayout",
           "linkedEntity": "Deal",
           "config": {
+            "topBarActions": [],
             "notificationClickEvent": "DEAL_NOTIFICATIONS_OPEN",
             "contentTrait": "@trait.DealCatalog",
+            "searchEvent": "DEAL_SEARCH",
+            "appName": "CRM",
             "navItems": [
               {
+                "label": "Contacts",
                 "href": "/contacts",
-                "icon": "users",
-                "label": "Contacts"
+                "icon": "users"
               },
               {
-                "href": "/deals",
                 "icon": "briefcase",
-                "label": "Deals"
+                "label": "Deals",
+                "href": "/deals"
               },
               {
                 "label": "Pipeline",
-                "icon": "bar-chart-2",
-                "href": "/pipeline"
+                "href": "/pipeline",
+                "icon": "bar-chart-2"
               },
               {
+                "icon": "file-text",
                 "label": "Notes",
-                "href": "/notes",
-                "icon": "file-text"
+                "href": "/notes"
               }
             ],
-            "appName": "CRM",
-            "topBarActions": [],
-            "searchEvent": "DEAL_SEARCH",
             "notifications": []
           },
           "events": {
@@ -1201,12 +1201,11 @@
                       "type": "stack",
                       "children": [
                         {
+                          "align": "center",
                           "children": [
                             {
-                              "direction": "horizontal",
                               "type": "stack",
-                              "gap": "sm",
-                              "align": "center",
+                              "direction": "horizontal",
                               "children": [
                                 {
                                   "type": "icon",
@@ -1217,28 +1216,29 @@
                                   "variant": "h2",
                                   "type": "typography"
                                 }
-                              ]
+                              ],
+                              "gap": "sm",
+                              "align": "center"
                             },
                             {
+                              "direction": "horizontal",
+                              "gap": "sm",
                               "children": [
                                 {
-                                  "action": "CREATE",
+                                  "variant": "primary",
                                   "label": "New Deal",
-                                  "type": "button",
+                                  "action": "CREATE",
                                   "icon": "plus",
-                                  "variant": "primary"
+                                  "type": "button"
                                 }
                               ],
-                              "type": "stack",
-                              "direction": "horizontal",
-                              "gap": "sm"
+                              "type": "stack"
                             }
                           ],
-                          "direction": "horizontal",
-                          "align": "center",
-                          "justify": "between",
+                          "type": "stack",
                           "gap": "md",
-                          "type": "stack"
+                          "direction": "horizontal",
+                          "justify": "between"
                         },
                         {
                           "type": "divider"
@@ -1262,35 +1262,36 @@
             "itemActions": [
               {
                 "label": "View",
-                "event": "VIEW",
+                "variant": "ghost",
+                "event": "VIEW"
+              },
+              {
+                "label": "Edit",
+                "event": "EDIT",
                 "variant": "ghost"
               },
               {
-                "variant": "ghost",
-                "event": "EDIT",
-                "label": "Edit"
-              },
-              {
+                "event": "DELETE",
                 "label": "Delete",
-                "variant": "danger",
-                "event": "DELETE"
+                "variant": "danger"
               }
             ],
-            "variant": "card",
+            "gap": "md",
+            "cols": 2.0,
             "fields": [
               {
-                "name": "title",
                 "icon": "briefcase",
+                "name": "title",
                 "variant": "h3"
               },
               {
-                "name": "stage",
-                "variant": "badge"
+                "variant": "badge",
+                "name": "stage"
               },
               {
                 "format": "currency",
-                "variant": "h4",
-                "name": "amount"
+                "name": "amount",
+                "variant": "h4"
               },
               {
                 "name": "contactId",
@@ -1298,14 +1299,13 @@
                 "variant": "caption"
               },
               {
+                "format": "date",
                 "label": "Closed At",
-                "name": "closedAt",
                 "variant": "caption",
-                "format": "date"
+                "name": "closedAt"
               }
             ],
-            "gap": "md",
-            "cols": 2.0
+            "variant": "card"
           },
           "listens": [
             {
@@ -1340,6 +1340,7 @@
           "linkedEntity": "Deal",
           "config": {
             "title": "New Deal",
+            "mode": "create",
             "icon": "plus-circle",
             "fields": [
               "title",
@@ -1347,8 +1348,7 @@
               "amount",
               "stage",
               "closedAt"
-            ],
-            "mode": "create"
+            ]
           },
           "events": {
             "OPEN": "CREATE"
@@ -1369,6 +1369,7 @@
           "name": "DealEdit",
           "linkedEntity": "Deal",
           "config": {
+            "title": "Edit Deal",
             "fields": [
               "title",
               "contactId",
@@ -1377,8 +1378,7 @@
               "closedAt"
             ],
             "mode": "edit",
-            "icon": "edit",
-            "title": "Edit Deal"
+            "icon": "edit"
           },
           "events": {
             "OPEN": "EDIT"
@@ -1399,7 +1399,6 @@
           "name": "DealView",
           "linkedEntity": "Deal",
           "config": {
-            "icon": "eye",
             "mode": "edit",
             "title": "View Deal",
             "fields": [
@@ -1408,7 +1407,8 @@
               "amount",
               "stage",
               "closedAt"
-            ]
+            ],
+            "icon": "eye"
           },
           "events": {
             "OPEN": "VIEW"
@@ -1429,14 +1429,14 @@
           "name": "DealDelete",
           "linkedEntity": "Deal",
           "config": {
+            "confirmLabel": "Delete",
             "icon": "alert-triangle",
             "title": "Delete Deal",
-            "alertMessage": "This action cannot be undone.",
-            "confirmLabel": "Delete"
+            "alertMessage": "This action cannot be undone."
           },
           "events": {
-            "CONFIRM": "CONFIRM_DELETE",
-            "REQUEST": "DELETE"
+            "REQUEST": "DELETE",
+            "CONFIRM": "CONFIRM_DELETE"
           },
           "listens": [
             {
@@ -1716,22 +1716,18 @@
           "name": "PipelineAppLayout",
           "linkedEntity": "Pipeline",
           "config": {
-            "searchEvent": "PIPELINE_SEARCH",
-            "appName": "CRM",
-            "topBarActions": [],
-            "notifications": [],
-            "contentTrait": "@trait.PipelineDisplay",
             "notificationClickEvent": "PIPELINE_NOTIFICATIONS_OPEN",
+            "appName": "CRM",
             "navItems": [
               {
                 "label": "Contacts",
-                "href": "/contacts",
-                "icon": "users"
+                "icon": "users",
+                "href": "/contacts"
               },
               {
+                "icon": "briefcase",
                 "label": "Deals",
-                "href": "/deals",
-                "icon": "briefcase"
+                "href": "/deals"
               },
               {
                 "label": "Pipeline",
@@ -1739,15 +1735,19 @@
                 "icon": "bar-chart-2"
               },
               {
-                "label": "Notes",
+                "icon": "file-text",
                 "href": "/notes",
-                "icon": "file-text"
+                "label": "Notes"
               }
-            ]
+            ],
+            "contentTrait": "@trait.PipelineDisplay",
+            "searchEvent": "PIPELINE_SEARCH",
+            "notifications": [],
+            "topBarActions": []
           },
           "events": {
-            "SEARCH": "PIPELINE_SEARCH",
-            "NOTIFY_CLICK": "PIPELINE_NOTIFICATIONS_OPEN"
+            "NOTIFY_CLICK": "PIPELINE_NOTIFICATIONS_OPEN",
+            "SEARCH": "PIPELINE_SEARCH"
           }
         },
         {
@@ -1862,8 +1862,8 @@
                     "Pipeline",
                     {
                       "emit": {
-                        "failure": "PipelineLoadFailed",
-                        "success": "PipelineLoaded"
+                        "success": "PipelineLoaded",
+                        "failure": "PipelineLoadFailed"
                       }
                     }
                   ],
@@ -1871,17 +1871,17 @@
                     "render-ui",
                     "main",
                     {
-                      "type": "stack",
-                      "direction": "vertical",
-                      "gap": "lg",
                       "children": [
                         {
                           "type": "stack",
                           "gap": "md",
-                          "align": "center",
+                          "justify": "between",
                           "direction": "horizontal",
+                          "align": "center",
                           "children": [
                             {
+                              "gap": "sm",
+                              "direction": "horizontal",
                               "children": [
                                 {
                                   "type": "icon",
@@ -1889,24 +1889,21 @@
                                 },
                                 {
                                   "type": "typography",
-                                  "variant": "h2",
-                                  "content": "Pipeline"
+                                  "content": "Pipeline",
+                                  "variant": "h2"
                                 }
                               ],
-                              "gap": "sm",
-                              "direction": "horizontal",
                               "type": "stack",
                               "align": "center"
                             },
                             {
+                              "variant": "secondary",
                               "icon": "rotate-ccw",
                               "label": "Refresh",
-                              "variant": "secondary",
-                              "type": "button",
-                              "action": "REFRESH"
+                              "action": "REFRESH",
+                              "type": "button"
                             }
-                          ],
-                          "justify": "between"
+                          ]
                         },
                         {
                           "type": "divider"
@@ -1914,32 +1911,35 @@
                         {
                           "children": [
                             {
-                              "type": "stat-display",
                               "value": "@entity.totalDeals",
-                              "label": "Total Deals"
+                              "label": "Total Deals",
+                              "type": "stat-display"
                             },
                             {
-                              "value": "@entity.totalValue",
                               "type": "stat-display",
+                              "format": "currency",
                               "label": "Pipeline Value",
-                              "format": "currency"
+                              "value": "@entity.totalValue"
                             },
                             {
-                              "type": "stat-display",
                               "label": "Won",
+                              "type": "stat-display",
                               "value": "@entity.wonDeals"
                             },
                             {
-                              "type": "stat-display",
-                              "format": "percent",
                               "label": "Conversion Rate",
+                              "format": "percent",
+                              "type": "stat-display",
                               "value": "@entity.conversionRate"
                             }
                           ],
                           "type": "simple-grid",
                           "cols": 4.0
                         }
-                      ]
+                      ],
+                      "gap": "lg",
+                      "type": "stack",
+                      "direction": "vertical"
                     }
                   ]
                 ]
@@ -2063,12 +2063,11 @@
           "name": "NoteAppLayout",
           "linkedEntity": "Note",
           "config": {
-            "appName": "CRM",
             "navItems": [
               {
-                "href": "/contacts",
                 "icon": "users",
-                "label": "Contacts"
+                "label": "Contacts",
+                "href": "/contacts"
               },
               {
                 "label": "Deals",
@@ -2077,24 +2076,25 @@
               },
               {
                 "href": "/pipeline",
-                "icon": "bar-chart-2",
-                "label": "Pipeline"
+                "label": "Pipeline",
+                "icon": "bar-chart-2"
               },
               {
                 "href": "/notes",
-                "icon": "file-text",
-                "label": "Notes"
+                "label": "Notes",
+                "icon": "file-text"
               }
             ],
-            "searchEvent": "NOTE_SEARCH",
+            "appName": "CRM",
             "topBarActions": [],
             "notifications": [],
+            "contentTrait": "@trait.NoteCatalog",
             "notificationClickEvent": "NOTE_NOTIFICATIONS_OPEN",
-            "contentTrait": "@trait.NoteCatalog"
+            "searchEvent": "NOTE_SEARCH"
           },
           "events": {
-            "NOTIFY_CLICK": "NOTE_NOTIFICATIONS_OPEN",
-            "SEARCH": "NOTE_SEARCH"
+            "SEARCH": "NOTE_SEARCH",
+            "NOTIFY_CLICK": "NOTE_NOTIFICATIONS_OPEN"
           }
         },
         {
@@ -2141,53 +2141,54 @@
                     {
                       "gap": "lg",
                       "type": "stack",
+                      "direction": "vertical",
                       "children": [
                         {
                           "gap": "md",
+                          "type": "stack",
+                          "justify": "between",
+                          "direction": "horizontal",
+                          "align": "center",
                           "children": [
                             {
+                              "direction": "horizontal",
                               "type": "stack",
+                              "align": "center",
                               "children": [
                                 {
                                   "name": "file-text",
                                   "type": "icon"
                                 },
                                 {
+                                  "variant": "h2",
                                   "type": "typography",
-                                  "content": "Notes",
-                                  "variant": "h2"
+                                  "content": "Notes"
                                 }
                               ],
-                              "align": "center",
-                              "gap": "sm",
-                              "direction": "horizontal"
+                              "gap": "sm"
                             },
                             {
-                              "direction": "horizontal",
-                              "gap": "sm",
-                              "type": "stack",
                               "children": [
                                 {
-                                  "action": "CREATE",
                                   "icon": "edit",
-                                  "variant": "primary",
+                                  "type": "button",
                                   "label": "New Note",
-                                  "type": "button"
+                                  "action": "CREATE",
+                                  "variant": "primary"
                                 }
-                              ]
+                              ],
+                              "direction": "horizontal",
+                              "type": "stack",
+                              "gap": "sm"
                             }
-                          ],
-                          "direction": "horizontal",
-                          "justify": "between",
-                          "type": "stack",
-                          "align": "center"
+                          ]
                         },
                         {
                           "type": "divider"
                         },
                         {
-                          "content": "Follow-Up Calendar",
                           "type": "typography",
+                          "content": "Follow-Up Calendar",
                           "variant": "h3"
                         },
                         "@trait.NoteCalendar",
@@ -2195,8 +2196,7 @@
                           "type": "divider"
                         },
                         "@trait.NoteBrowseList"
-                      ],
-                      "direction": "vertical"
+                      ]
                     }
                   ]
                 ]
@@ -2210,28 +2210,13 @@
           "name": "NoteBrowseList",
           "linkedEntity": "Note",
           "config": {
-            "itemActions": [
-              {
-                "label": "View",
-                "event": "VIEW",
-                "variant": "ghost"
-              },
-              {
-                "label": "Edit",
-                "event": "EDIT",
-                "variant": "ghost"
-              },
-              {
-                "variant": "danger",
-                "label": "Delete",
-                "event": "DELETE"
-              }
-            ],
+            "gap": "sm",
+            "variant": "card",
             "cols": 1.0,
             "fields": [
               {
-                "name": "subject",
                 "icon": "file-text",
+                "name": "subject",
                 "variant": "h4"
               },
               {
@@ -2243,20 +2228,35 @@
                 "name": "author"
               },
               {
-                "format": "date",
-                "name": "followUpAt",
                 "label": "Follow-Up",
-                "variant": "caption"
+                "variant": "caption",
+                "name": "followUpAt",
+                "format": "date"
               },
               {
                 "label": "Created",
                 "variant": "caption",
-                "name": "createdAt",
-                "format": "date"
+                "format": "date",
+                "name": "createdAt"
               }
             ],
-            "gap": "sm",
-            "variant": "card"
+            "itemActions": [
+              {
+                "variant": "ghost",
+                "label": "View",
+                "event": "VIEW"
+              },
+              {
+                "event": "EDIT",
+                "variant": "ghost",
+                "label": "Edit"
+              },
+              {
+                "event": "DELETE",
+                "label": "Delete",
+                "variant": "danger"
+              }
+            ]
           },
           "listens": [
             {
@@ -2300,6 +2300,7 @@
           "name": "NoteCreate",
           "linkedEntity": "Note",
           "config": {
+            "title": "New Note",
             "fields": [
               "subject",
               "body",
@@ -2307,9 +2308,8 @@
               "priority",
               "followUpAt"
             ],
-            "icon": "plus-circle",
-            "title": "New Note",
-            "mode": "create"
+            "mode": "create",
+            "icon": "plus-circle"
           },
           "events": {
             "OPEN": "CREATE"
@@ -2330,7 +2330,8 @@
           "name": "NoteEdit",
           "linkedEntity": "Note",
           "config": {
-            "icon": "edit",
+            "title": "Edit Note",
+            "mode": "edit",
             "fields": [
               "subject",
               "body",
@@ -2338,8 +2339,7 @@
               "priority",
               "followUpAt"
             ],
-            "title": "Edit Note",
-            "mode": "edit"
+            "icon": "edit"
           },
           "events": {
             "OPEN": "EDIT"
@@ -2368,8 +2368,8 @@
               "followUpAt"
             ],
             "title": "View Note",
-            "icon": "eye",
-            "mode": "edit"
+            "mode": "edit",
+            "icon": "eye"
           },
           "events": {
             "OPEN": "VIEW"
@@ -2390,14 +2390,14 @@
           "name": "NoteDelete",
           "linkedEntity": "Note",
           "config": {
-            "confirmLabel": "Delete",
             "icon": "alert-triangle",
             "title": "Delete Note",
-            "alertMessage": "This action cannot be undone."
+            "alertMessage": "This action cannot be undone.",
+            "confirmLabel": "Delete"
           },
           "events": {
-            "REQUEST": "DELETE",
-            "CONFIRM": "CONFIRM_DELETE"
+            "CONFIRM": "CONFIRM_DELETE",
+            "REQUEST": "DELETE"
           },
           "listens": [
             {

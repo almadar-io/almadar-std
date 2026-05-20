@@ -121,15 +121,16 @@
                     "render-ui",
                     "main",
                     {
+                      "direction": "vertical",
+                      "gap": "lg",
+                      "type": "stack",
+                      "align": "stretch",
                       "children": [
                         {
-                          "direction": "horizontal",
-                          "type": "stack",
-                          "gap": "md",
                           "children": [
                             {
-                              "name": "message-circle",
-                              "type": "icon"
+                              "type": "icon",
+                              "name": "message-circle"
                             },
                             {
                               "content": "Twilio Messaging",
@@ -137,15 +138,18 @@
                               "variant": "h2"
                             }
                           ],
-                          "align": "center"
+                          "gap": "md",
+                          "type": "stack",
+                          "align": "center",
+                          "direction": "horizontal"
                         },
                         {
                           "type": "divider"
                         },
                         {
-                          "placeholder": "+1234567890",
                           "type": "input",
-                          "inputType": "tel"
+                          "inputType": "tel",
+                          "placeholder": "+1234567890"
                         },
                         {
                           "type": "textarea",
@@ -169,17 +173,13 @@
                           ]
                         },
                         {
-                          "variant": "primary",
-                          "icon": "send",
+                          "label": "Send",
                           "type": "button",
-                          "action": "SEND",
-                          "label": "Send"
+                          "icon": "send",
+                          "variant": "primary",
+                          "action": "SEND"
                         }
-                      ],
-                      "type": "stack",
-                      "direction": "vertical",
-                      "align": "stretch",
-                      "gap": "lg"
+                      ]
                     }
                   ]
                 ]
@@ -421,9 +421,9 @@
                     "render-ui",
                     "main",
                     {
+                      "title": "Sending message...",
                       "type": "loading-state",
-                      "message": "Delivering your message.",
-                      "title": "Sending message..."
+                      "message": "Delivering your message."
                     }
                   ],
                   [
@@ -431,13 +431,13 @@
                     "twilio",
                     "sendSMS",
                     {
-                      "to": "@config.recipient",
-                      "body": "@config.body"
+                      "body": "@config.body",
+                      "to": "@config.recipient"
                     },
                     {
                       "emit": {
-                        "failure": "FAILED",
-                        "success": "TwilioSent"
+                        "success": "TwilioSent",
+                        "failure": "FAILED"
                       }
                     }
                   ]
@@ -479,13 +479,11 @@
                     "render-ui",
                     "main",
                     {
-                      "direction": "vertical",
-                      "align": "center",
-                      "gap": "lg",
+                      "type": "stack",
                       "children": [
                         {
-                          "name": "check-circle",
-                          "type": "icon"
+                          "type": "icon",
+                          "name": "check-circle"
                         },
                         {
                           "type": "alert",
@@ -493,20 +491,22 @@
                           "message": "Message sent successfully"
                         },
                         {
+                          "content": "@entity.messageSid",
                           "type": "typography",
                           "variant": "body",
-                          "color": "muted",
-                          "content": "@entity.messageSid"
+                          "color": "muted"
                         },
                         {
-                          "icon": "rotate-ccw",
-                          "action": "RESET",
                           "variant": "ghost",
+                          "label": "Send Another",
                           "type": "button",
-                          "label": "Send Another"
+                          "action": "RESET",
+                          "icon": "rotate-ccw"
                         }
                       ],
-                      "type": "stack"
+                      "align": "center",
+                      "gap": "lg",
+                      "direction": "vertical"
                     }
                   ]
                 ]
@@ -538,9 +538,9 @@
                     "render-ui",
                     "main",
                     {
-                      "onRetry": "RETRY",
-                      "message": "@entity.error",
                       "type": "error-state",
+                      "message": "@entity.error",
+                      "onRetry": "RETRY",
                       "title": "Send Failed"
                     }
                   ]
@@ -560,12 +560,12 @@
                     "render-ui",
                     "main",
                     {
-                      "type": "stack",
                       "gap": "md",
                       "children": [
                         "@config.uiTrait"
                       ],
-                      "direction": "vertical"
+                      "direction": "vertical",
+                      "type": "stack"
                     }
                   ]
                 ]
@@ -589,12 +589,12 @@
                     "render-ui",
                     "main",
                     {
-                      "type": "stack",
+                      "direction": "vertical",
                       "gap": "md",
                       "children": [
                         "@config.uiTrait"
                       ],
-                      "direction": "vertical"
+                      "type": "stack"
                     }
                   ]
                 ]
@@ -613,12 +613,12 @@
                     "render-ui",
                     "main",
                     {
-                      "gap": "md",
-                      "direction": "vertical",
+                      "type": "stack",
                       "children": [
                         "@config.uiTrait"
                       ],
-                      "type": "stack"
+                      "gap": "md",
+                      "direction": "vertical"
                     }
                   ]
                 ]
@@ -626,6 +626,24 @@
             ]
           },
           "config": {
+            "recipient": {
+              "type": "string",
+              "default": "",
+              "label": "Recipient phone",
+              "description": "Destination phone number in E.164 format (e.g. +14155551234)"
+            },
+            "body": {
+              "type": "string",
+              "default": "",
+              "label": "Message body",
+              "description": "Text content Twilio should deliver to the recipient"
+            },
+            "sender": {
+              "type": "string",
+              "default": "",
+              "label": "From number",
+              "description": "Twilio number or sender ID the message is sent from"
+            },
             "mode": {
               "type": "string",
               "default": "sms",
@@ -642,24 +660,6 @@
               "default": "@trait.ServiceTwilioDefaultForm",
               "label": "Composer form",
               "description": "Trait that renders the Twilio message composer UI"
-            },
-            "sender": {
-              "type": "string",
-              "default": "",
-              "label": "From number",
-              "description": "Twilio number or sender ID the message is sent from"
-            },
-            "recipient": {
-              "type": "string",
-              "default": "",
-              "label": "Recipient phone",
-              "description": "Destination phone number in E.164 format (e.g. +14155551234)"
-            },
-            "body": {
-              "type": "string",
-              "default": "",
-              "label": "Message body",
-              "description": "Text content Twilio should deliver to the recipient"
             }
           },
           "scope": "instance"

@@ -276,21 +276,21 @@
                     "render-ui",
                     "main",
                     {
-                      "direction": "vertical",
-                      "type": "stack",
                       "children": [
                         {
                           "type": "spinner"
                         },
                         {
-                          "type": "typography",
                           "color": "muted",
+                          "type": "typography",
                           "variant": "caption",
                           "content": "Loading pages…"
                         }
                       ],
-                      "align": "center",
+                      "type": "stack",
                       "gap": "md",
+                      "align": "center",
+                      "direction": "vertical",
                       "className": "py-12"
                     }
                   ]
@@ -305,55 +305,56 @@
                     "render-ui",
                     "main",
                     {
-                      "direction": "vertical",
                       "gap": "md",
+                      "type": "stack",
+                      "direction": "vertical",
                       "children": [
                         {
-                          "type": "stack",
                           "gap": "sm",
-                          "align": "center",
                           "children": [
                             {
                               "type": "icon",
                               "name": "list-tree"
                             },
                             {
+                              "content": "@config.title",
                               "type": "typography",
-                              "variant": "h3",
-                              "content": "@config.title"
+                              "variant": "h3"
                             }
                           ],
-                          "direction": "horizontal"
+                          "direction": "horizontal",
+                          "type": "stack",
+                          "align": "center"
                         },
                         {
+                          "type": "simple-grid",
+                          "cols": 4.0,
                           "children": [
                             {
-                              "label": "Total pages",
                               "icon": "file-text",
                               "type": "stat-display",
+                              "label": "Total pages",
                               "value": "@payload.data.length"
                             },
                             {
-                              "type": "stat-display",
+                              "icon": "folder",
                               "label": "Top-level",
-                              "value": "12",
-                              "icon": "folder"
-                            },
-                            {
-                              "value": "8",
-                              "icon": "edit-3",
-                              "label": "Updated this week",
-                              "type": "stat-display"
-                            },
-                            {
-                              "icon": "file",
-                              "label": "Drafts",
                               "type": "stat-display",
-                              "value": "3"
+                              "value": "12"
+                            },
+                            {
+                              "type": "stat-display",
+                              "label": "Updated this week",
+                              "value": "8",
+                              "icon": "edit-3"
+                            },
+                            {
+                              "value": "3",
+                              "label": "Drafts",
+                              "icon": "file",
+                              "type": "stat-display"
                             }
-                          ],
-                          "cols": 4.0,
-                          "type": "simple-grid"
+                          ]
                         },
                         {
                           "type": "divider"
@@ -361,55 +362,55 @@
                         {
                           "tree": [
                             {
-                              "name": "Getting Started",
                               "children": [
                                 {
                                   "path": "Overview.md",
-                                  "type": "file",
-                                  "name": "Overview.md"
+                                  "name": "Overview.md",
+                                  "type": "file"
                                 },
                                 {
-                                  "name": "Quickstart.md",
                                   "path": "Quickstart.md",
-                                  "type": "file"
+                                  "type": "file",
+                                  "name": "Quickstart.md"
                                 }
                               ],
+                              "path": "Getting Started",
                               "type": "dir",
-                              "path": "Getting Started"
+                              "name": "Getting Started"
                             },
                             {
+                              "type": "dir",
                               "children": [
                                 {
-                                  "path": "Architecture/Overview.md",
                                   "type": "file",
-                                  "name": "Overview.md"
+                                  "name": "Overview.md",
+                                  "path": "Architecture/Overview.md"
                                 },
                                 {
-                                  "path": "Architecture/State Machine.md",
+                                  "name": "State Machine.md",
                                   "type": "file",
-                                  "name": "State Machine.md"
+                                  "path": "Architecture/State Machine.md"
                                 }
                               ],
-                              "path": "Architecture",
-                              "type": "dir",
-                              "name": "Architecture"
+                              "name": "Architecture",
+                              "path": "Architecture"
                             },
                             {
                               "name": "Runbooks",
                               "type": "dir",
-                              "path": "Runbooks",
                               "children": [
                                 {
+                                  "type": "file",
                                   "name": "Incident.md",
-                                  "path": "Runbooks/Incident.md",
-                                  "type": "file"
+                                  "path": "Runbooks/Incident.md"
                                 },
                                 {
-                                  "name": "Deployment.md",
                                   "type": "file",
-                                  "path": "Runbooks/Deployment.md"
+                                  "path": "Runbooks/Deployment.md",
+                                  "name": "Deployment.md"
                                 }
-                              ]
+                              ],
+                              "path": "Runbooks"
                             }
                           ],
                           "type": "file-tree"
@@ -418,50 +419,49 @@
                           "type": "divider"
                         },
                         {
-                          "entity": "@payload.data",
+                          "gap": "sm",
                           "reorderEvent": "REORDER",
                           "type": "data-list",
+                          "itemActions": [
+                            {
+                              "icon": "arrow-right",
+                              "variant": "primary",
+                              "event": "OPEN_PAGE",
+                              "label": "Open"
+                            },
+                            {
+                              "icon": "trash",
+                              "variant": "danger",
+                              "label": "Delete",
+                              "event": "DELETE_PAGE"
+                            }
+                          ],
+                          "entity": "@payload.data",
                           "reorderable": true,
                           "fields": [
                             {
                               "name": "title",
-                              "variant": "h4",
-                              "label": "Title"
+                              "label": "Title",
+                              "variant": "h4"
                             },
                             {
-                              "name": "slug",
                               "label": "Slug",
-                              "variant": "caption"
+                              "variant": "caption",
+                              "name": "slug"
                             },
                             {
-                              "label": "Parent",
                               "name": "parentId",
-                              "variant": "caption"
+                              "variant": "caption",
+                              "label": "Parent"
                             },
                             {
                               "label": "Order",
                               "variant": "badge",
                               "name": "order"
                             }
-                          ],
-                          "gap": "sm",
-                          "itemActions": [
-                            {
-                              "icon": "arrow-right",
-                              "event": "OPEN_PAGE",
-                              "label": "Open",
-                              "variant": "primary"
-                            },
-                            {
-                              "variant": "danger",
-                              "label": "Delete",
-                              "icon": "trash",
-                              "event": "DELETE_PAGE"
-                            }
                           ]
                         }
-                      ],
-                      "type": "stack"
+                      ]
                     }
                   ]
                 ]
@@ -475,9 +475,9 @@
                     "render-ui",
                     "main",
                     {
-                      "type": "alert",
+                      "message": "@payload.error",
                       "variant": "error",
-                      "message": "@payload.error"
+                      "type": "alert"
                     }
                   ]
                 ]
@@ -526,15 +526,15 @@
                     "render-ui",
                     "main",
                     {
-                      "direction": "vertical",
                       "children": [
                         {
+                          "type": "stack",
                           "children": [
                             {
                               "label": "Back",
-                              "action": "CLOSE_VIEW",
                               "type": "button",
-                              "variant": "ghost"
+                              "variant": "ghost",
+                              "action": "CLOSE_VIEW"
                             },
                             {
                               "type": "icon",
@@ -546,7 +546,6 @@
                               "variant": "h3"
                             }
                           ],
-                          "type": "stack",
                           "align": "center",
                           "direction": "horizontal",
                           "gap": "sm"
@@ -555,48 +554,45 @@
                           "type": "divider"
                         },
                         {
-                          "direction": "vertical",
                           "gap": "sm",
-                          "type": "stack",
                           "children": [
                             {
+                              "direction": "horizontal",
                               "gap": "md",
                               "children": [
                                 {
-                                  "content": "Slug",
+                                  "color": "muted",
                                   "type": "typography",
+                                  "content": "Slug",
+                                  "variant": "caption"
+                                },
+                                {
+                                  "variant": "body",
+                                  "type": "typography",
+                                  "content": "@entity.slug"
+                                }
+                              ],
+                              "type": "stack"
+                            },
+                            {
+                              "gap": "md",
+                              "type": "stack",
+                              "direction": "horizontal",
+                              "children": [
+                                {
+                                  "type": "typography",
+                                  "content": "Parent",
                                   "variant": "caption",
                                   "color": "muted"
                                 },
                                 {
+                                  "type": "typography",
                                   "variant": "body",
-                                  "content": "@entity.slug",
-                                  "type": "typography"
+                                  "content": "@entity.parentId"
                                 }
-                              ],
-                              "type": "stack",
-                              "direction": "horizontal"
+                              ]
                             },
                             {
-                              "type": "stack",
-                              "children": [
-                                {
-                                  "variant": "caption",
-                                  "color": "muted",
-                                  "type": "typography",
-                                  "content": "Parent"
-                                },
-                                {
-                                  "type": "typography",
-                                  "content": "@entity.parentId",
-                                  "variant": "body"
-                                }
-                              ],
-                              "direction": "horizontal",
-                              "gap": "md"
-                            },
-                            {
-                              "direction": "horizontal",
                               "children": [
                                 {
                                   "color": "muted",
@@ -610,10 +606,13 @@
                                   "content": "@entity.documentId"
                                 }
                               ],
+                              "type": "stack",
                               "gap": "md",
-                              "type": "stack"
+                              "direction": "horizontal"
                             }
-                          ]
+                          ],
+                          "direction": "vertical",
+                          "type": "stack"
                         },
                         {
                           "type": "divider"
@@ -623,38 +622,39 @@
                           "type": "simple-grid",
                           "children": [
                             {
+                              "icon": "list",
                               "label": "Order",
                               "value": "@entity.order",
-                              "icon": "list",
                               "type": "stat-display"
                             },
                             {
-                              "value": "@entity.slug",
                               "type": "stat-display",
+                              "value": "@entity.slug",
                               "label": "Slug",
                               "icon": "link"
                             }
                           ]
                         },
                         {
+                          "gap": "sm",
+                          "align": "center",
+                          "type": "stack",
+                          "direction": "horizontal",
                           "children": [
                             {
-                              "action": "DELETE_PAGE",
                               "actionPayload": {
                                 "id": "@entity.id"
                               },
-                              "type": "button",
+                              "variant": "danger",
                               "label": "Delete",
-                              "variant": "danger"
+                              "type": "button",
+                              "action": "DELETE_PAGE"
                             }
-                          ],
-                          "direction": "horizontal",
-                          "gap": "sm",
-                          "type": "stack",
-                          "align": "center"
+                          ]
                         }
                       ],
                       "gap": "md",
+                      "direction": "vertical",
                       "type": "stack"
                     }
                   ]
@@ -675,8 +675,8 @@
                     "PageNode",
                     {
                       "emit": {
-                        "success": "PageNodeLoaded",
-                        "failure": "PageNodeLoadFailed"
+                        "failure": "PageNodeLoadFailed",
+                        "success": "PageNodeLoaded"
                       }
                     }
                   ],
@@ -689,16 +689,16 @@
                           "type": "spinner"
                         },
                         {
+                          "variant": "caption",
                           "type": "typography",
                           "color": "muted",
-                          "content": "Reordering pages…",
-                          "variant": "caption"
+                          "content": "Reordering pages…"
                         }
                       ],
-                      "direction": "vertical",
                       "gap": "md",
-                      "align": "center",
                       "type": "stack",
+                      "direction": "vertical",
+                      "align": "center",
                       "className": "py-12"
                     }
                   ]
@@ -728,22 +728,22 @@
                     "render-ui",
                     "main",
                     {
-                      "align": "center",
-                      "direction": "vertical",
-                      "type": "stack",
-                      "className": "py-12",
                       "children": [
                         {
                           "type": "spinner"
                         },
                         {
-                          "type": "typography",
                           "variant": "caption",
                           "color": "muted",
+                          "type": "typography",
                           "content": "Deleting page…"
                         }
                       ],
-                      "gap": "md"
+                      "type": "stack",
+                      "gap": "md",
+                      "className": "py-12",
+                      "align": "center",
+                      "direction": "vertical"
                     }
                   ]
                 ]
@@ -767,22 +767,22 @@
                     "render-ui",
                     "main",
                     {
-                      "align": "center",
-                      "direction": "vertical",
-                      "type": "stack",
                       "gap": "md",
+                      "direction": "vertical",
+                      "align": "center",
                       "children": [
                         {
                           "type": "spinner"
                         },
                         {
-                          "content": "Loading pages…",
                           "type": "typography",
+                          "content": "Loading pages…",
                           "color": "muted",
                           "variant": "caption"
                         }
                       ],
-                      "className": "py-12"
+                      "className": "py-12",
+                      "type": "stack"
                     }
                   ]
                 ]
@@ -811,22 +811,22 @@
                     "render-ui",
                     "main",
                     {
-                      "className": "py-12",
-                      "type": "stack",
                       "gap": "md",
                       "direction": "vertical",
                       "align": "center",
+                      "className": "py-12",
                       "children": [
                         {
                           "type": "spinner"
                         },
                         {
-                          "type": "typography",
-                          "variant": "caption",
                           "content": "Deleting page…",
+                          "variant": "caption",
+                          "type": "typography",
                           "color": "muted"
                         }
-                      ]
+                      ],
+                      "type": "stack"
                     }
                   ]
                 ]
@@ -841,8 +841,8 @@
                     "PageNode",
                     {
                       "emit": {
-                        "success": "PageNodeLoaded",
-                        "failure": "PageNodeLoadFailed"
+                        "failure": "PageNodeLoadFailed",
+                        "success": "PageNodeLoaded"
                       }
                     }
                   ],

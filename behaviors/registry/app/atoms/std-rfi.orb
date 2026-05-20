@@ -318,8 +318,8 @@
                     "Rfi",
                     {
                       "emit": {
-                        "failure": "RfiLoadFailed",
-                        "success": "RfiLoaded"
+                        "success": "RfiLoaded",
+                        "failure": "RfiLoadFailed"
                       }
                     }
                   ],
@@ -327,22 +327,22 @@
                     "render-ui",
                     "main",
                     {
-                      "className": "py-12",
                       "gap": "md",
+                      "type": "stack",
+                      "direction": "vertical",
+                      "className": "py-12",
                       "children": [
                         {
                           "type": "spinner"
                         },
                         {
-                          "content": "Loading RFIs…",
-                          "variant": "caption",
                           "type": "typography",
+                          "variant": "caption",
+                          "content": "Loading RFIs…",
                           "color": "muted"
                         }
                       ],
-                      "direction": "vertical",
-                      "align": "center",
-                      "type": "stack"
+                      "align": "center"
                     }
                   ]
                 ]
@@ -356,9 +356,6 @@
                     "render-ui",
                     "main",
                     {
-                      "type": "stack",
-                      "direction": "vertical",
-                      "gap": "md",
                       "children": [
                         {
                           "children": [
@@ -367,58 +364,61 @@
                               "name": "help-circle"
                             },
                             {
-                              "variant": "h3",
+                              "type": "typography",
                               "content": "@config.title",
-                              "type": "typography"
+                              "variant": "h3"
                             }
                           ],
                           "direction": "horizontal",
-                          "align": "center",
                           "type": "stack",
-                          "gap": "sm"
+                          "gap": "sm",
+                          "align": "center"
                         },
                         {
+                          "type": "simple-grid",
                           "children": [
                             {
-                              "type": "stat-display",
                               "label": "Total RFIs",
+                              "type": "stat-display",
                               "value": "@payload.data.length",
                               "icon": "help-circle"
                             },
                             {
-                              "icon": "mail",
+                              "type": "stat-display",
                               "label": "Open",
                               "value": "18",
-                              "type": "stat-display"
+                              "icon": "mail"
                             },
                             {
                               "label": "Overdue",
-                              "value": "5",
+                              "icon": "alert-triangle",
                               "type": "stat-display",
-                              "icon": "alert-triangle"
+                              "value": "5"
                             },
                             {
-                              "value": "3.2d",
                               "icon": "clock",
                               "type": "stat-display",
-                              "label": "Avg response"
+                              "label": "Avg response",
+                              "value": "3.2d"
                             }
                           ],
-                          "type": "simple-grid",
                           "cols": 4.0
                         },
                         {
                           "type": "divider"
                         },
                         {
+                          "type": "data-grid",
+                          "itemActions": "@config.itemActions",
                           "gap": "sm",
                           "fields": "@config.fields",
-                          "type": "data-grid",
-                          "entity": "@payload.data",
                           "cols": 1.0,
-                          "itemActions": "@config.itemActions"
+                          "entity": "@payload.data"
                         }
-                      ]
+                      ],
+                      "type": "stack",
+                      "direction": "vertical",
+                      "gap": "md"
                     }
                   ]
                 ]
@@ -503,18 +503,19 @@
                     "render-ui",
                     "main",
                     {
-                      "gap": "md",
+                      "direction": "vertical",
                       "children": [
                         {
                           "direction": "horizontal",
-                          "gap": "sm",
                           "type": "stack",
+                          "gap": "sm",
+                          "align": "center",
                           "children": [
                             {
-                              "action": "CLOSE_VIEW",
-                              "variant": "ghost",
+                              "type": "button",
                               "label": "Back",
-                              "type": "button"
+                              "variant": "ghost",
+                              "action": "CLOSE_VIEW"
                             },
                             {
                               "name": "help-circle",
@@ -522,78 +523,13 @@
                             },
                             {
                               "content": "@entity.subject",
-                              "variant": "h3",
-                              "type": "typography"
+                              "type": "typography",
+                              "variant": "h3"
                             },
                             {
+                              "type": "badge",
                               "label": "@entity.status",
-                              "variant": "default",
-                              "type": "badge"
-                            }
-                          ],
-                          "align": "center"
-                        },
-                        {
-                          "type": "divider"
-                        },
-                        {
-                          "direction": "vertical",
-                          "gap": "sm",
-                          "type": "stack",
-                          "children": [
-                            {
-                              "children": [
-                                {
-                                  "type": "typography",
-                                  "color": "muted",
-                                  "content": "RFI #",
-                                  "variant": "caption"
-                                },
-                                {
-                                  "variant": "body",
-                                  "content": "@entity.rfiNumber",
-                                  "type": "typography"
-                                }
-                              ],
-                              "type": "stack",
-                              "direction": "horizontal",
-                              "gap": "md"
-                            },
-                            {
-                              "direction": "horizontal",
-                              "type": "stack",
-                              "gap": "md",
-                              "children": [
-                                {
-                                  "type": "typography",
-                                  "color": "muted",
-                                  "content": "Question",
-                                  "variant": "caption"
-                                },
-                                {
-                                  "variant": "body",
-                                  "content": "@entity.question",
-                                  "type": "typography"
-                                }
-                              ]
-                            },
-                            {
-                              "type": "stack",
-                              "gap": "md",
-                              "direction": "horizontal",
-                              "children": [
-                                {
-                                  "color": "muted",
-                                  "variant": "caption",
-                                  "type": "typography",
-                                  "content": "Response"
-                                },
-                                {
-                                  "variant": "body",
-                                  "type": "typography",
-                                  "content": "@entity.response"
-                                }
-                              ]
+                              "variant": "default"
                             }
                           ]
                         },
@@ -601,73 +537,137 @@
                           "type": "divider"
                         },
                         {
-                          "type": "simple-grid",
-                          "cols": 4.0,
+                          "gap": "sm",
+                          "direction": "vertical",
+                          "type": "stack",
                           "children": [
                             {
-                              "type": "stat-display",
+                              "gap": "md",
+                              "children": [
+                                {
+                                  "type": "typography",
+                                  "color": "muted",
+                                  "variant": "caption",
+                                  "content": "RFI #"
+                                },
+                                {
+                                  "content": "@entity.rfiNumber",
+                                  "type": "typography",
+                                  "variant": "body"
+                                }
+                              ],
+                              "type": "stack",
+                              "direction": "horizontal"
+                            },
+                            {
+                              "children": [
+                                {
+                                  "variant": "caption",
+                                  "color": "muted",
+                                  "content": "Question",
+                                  "type": "typography"
+                                },
+                                {
+                                  "type": "typography",
+                                  "variant": "body",
+                                  "content": "@entity.question"
+                                }
+                              ],
+                              "direction": "horizontal",
+                              "type": "stack",
+                              "gap": "md"
+                            },
+                            {
+                              "children": [
+                                {
+                                  "color": "muted",
+                                  "content": "Response",
+                                  "type": "typography",
+                                  "variant": "caption"
+                                },
+                                {
+                                  "content": "@entity.response",
+                                  "variant": "body",
+                                  "type": "typography"
+                                }
+                              ],
+                              "gap": "md",
+                              "type": "stack",
+                              "direction": "horizontal"
+                            }
+                          ]
+                        },
+                        {
+                          "type": "divider"
+                        },
+                        {
+                          "cols": 4.0,
+                          "type": "simple-grid",
+                          "children": [
+                            {
                               "icon": "user",
                               "label": "Raised by",
+                              "type": "stat-display",
                               "value": "@entity.raisedBy"
                             },
                             {
                               "label": "Assigned",
-                              "type": "stat-display",
+                              "value": "@entity.assignedTo",
                               "icon": "user-check",
-                              "value": "@entity.assignedTo"
-                            },
-                            {
-                              "icon": "calendar",
-                              "value": "@entity.dueAt",
-                              "label": "Due",
                               "type": "stat-display"
                             },
                             {
                               "type": "stat-display",
-                              "value": "@entity.answeredAt",
+                              "icon": "calendar",
+                              "value": "@entity.dueAt",
+                              "label": "Due"
+                            },
+                            {
                               "label": "Answered",
-                              "icon": "check-circle"
+                              "icon": "check-circle",
+                              "value": "@entity.answeredAt",
+                              "type": "stat-display"
                             }
                           ]
                         },
                         {
+                          "type": "stack",
                           "direction": "horizontal",
                           "gap": "sm",
-                          "type": "stack",
                           "align": "center",
                           "children": [
                             {
                               "label": "Submit",
+                              "variant": "primary",
+                              "action": "SUBMIT",
                               "actionPayload": {
                                 "id": "@entity.id"
                               },
-                              "variant": "primary",
-                              "action": "SUBMIT",
                               "type": "button"
                             },
                             {
-                              "label": "Answer",
-                              "action": "ANSWER",
-                              "type": "button",
                               "variant": "secondary",
+                              "label": "Answer",
                               "actionPayload": {
                                 "id": "@entity.id"
-                              }
+                              },
+                              "action": "ANSWER",
+                              "type": "button"
                             },
                             {
                               "actionPayload": {
                                 "id": "@entity.id"
                               },
                               "type": "button",
+                              "label": "Close",
                               "variant": "danger",
-                              "action": "CLOSE",
-                              "label": "Close"
+                              "action": "CLOSE"
                             }
                           ]
                         }
                       ],
                       "type": "stack",
-                      "direction": "vertical"
+                      "gap": "md"
                     }
                   ]
                 ]
@@ -687,8 +687,8 @@
                     "Rfi",
                     {
                       "emit": {
-                        "success": "RfiLoaded",
-                        "failure": "RfiLoadFailed"
+                        "failure": "RfiLoadFailed",
+                        "success": "RfiLoaded"
                       }
                     }
                   ],
@@ -696,22 +696,22 @@
                     "render-ui",
                     "main",
                     {
-                      "direction": "vertical",
                       "type": "stack",
+                      "direction": "vertical",
                       "className": "py-12",
-                      "align": "center",
                       "gap": "md",
                       "children": [
                         {
                           "type": "spinner"
                         },
                         {
-                          "color": "muted",
-                          "variant": "caption",
+                          "type": "typography",
                           "content": "Submitting RFI…",
-                          "type": "typography"
+                          "color": "muted",
+                          "variant": "caption"
                         }
-                      ]
+                      ],
+                      "align": "center"
                     }
                   ]
                 ]
@@ -731,8 +731,8 @@
                     "Rfi",
                     {
                       "emit": {
-                        "success": "RfiLoaded",
-                        "failure": "RfiLoadFailed"
+                        "failure": "RfiLoadFailed",
+                        "success": "RfiLoaded"
                       }
                     }
                   ],
@@ -741,9 +741,9 @@
                     "main",
                     {
                       "type": "stack",
-                      "align": "center",
-                      "gap": "md",
                       "direction": "vertical",
+                      "gap": "md",
+                      "align": "center",
                       "className": "py-12",
                       "children": [
                         {
@@ -752,8 +752,8 @@
                         {
                           "type": "typography",
                           "content": "Answering RFI…",
-                          "variant": "caption",
-                          "color": "muted"
+                          "color": "muted",
+                          "variant": "caption"
                         }
                       ]
                     }
@@ -784,20 +784,20 @@
                     "render-ui",
                     "main",
                     {
-                      "gap": "md",
-                      "type": "stack",
                       "direction": "vertical",
-                      "align": "center",
                       "className": "py-12",
+                      "gap": "md",
+                      "align": "center",
+                      "type": "stack",
                       "children": [
                         {
                           "type": "spinner"
                         },
                         {
                           "variant": "caption",
-                          "content": "Closing RFI…",
                           "color": "muted",
-                          "type": "typography"
+                          "type": "typography",
+                          "content": "Closing RFI…"
                         }
                       ]
                     }
@@ -823,22 +823,22 @@
                     "render-ui",
                     "main",
                     {
+                      "className": "py-12",
                       "children": [
                         {
                           "type": "spinner"
                         },
                         {
-                          "color": "muted",
-                          "type": "typography",
                           "variant": "caption",
+                          "type": "typography",
+                          "color": "muted",
                           "content": "Loading RFIs…"
                         }
                       ],
+                      "type": "stack",
                       "direction": "vertical",
                       "gap": "md",
-                      "align": "center",
-                      "className": "py-12",
-                      "type": "stack"
+                      "align": "center"
                     }
                   ]
                 ]
@@ -867,20 +867,20 @@
                     "render-ui",
                     "main",
                     {
-                      "align": "center",
-                      "type": "stack",
-                      "direction": "vertical",
-                      "className": "py-12",
                       "gap": "md",
+                      "type": "stack",
+                      "className": "py-12",
+                      "direction": "vertical",
+                      "align": "center",
                       "children": [
                         {
                           "type": "spinner"
                         },
                         {
-                          "type": "typography",
-                          "variant": "caption",
                           "content": "Submitting RFI…",
-                          "color": "muted"
+                          "type": "typography",
+                          "color": "muted",
+                          "variant": "caption"
                         }
                       ]
                     }
@@ -911,6 +911,9 @@
                     "render-ui",
                     "main",
                     {
+                      "gap": "md",
+                      "direction": "vertical",
+                      "align": "center",
                       "type": "stack",
                       "className": "py-12",
                       "children": [
@@ -923,10 +926,7 @@
                           "type": "typography",
                           "content": "Answering RFI…"
                         }
-                      ],
-                      "gap": "md",
-                      "direction": "vertical",
-                      "align": "center"
+                      ]
                     }
                   ]
                 ]
@@ -946,8 +946,8 @@
                     "Rfi",
                     {
                       "emit": {
-                        "success": "RfiLoaded",
-                        "failure": "RfiLoadFailed"
+                        "failure": "RfiLoadFailed",
+                        "success": "RfiLoaded"
                       }
                     }
                   ],
@@ -955,22 +955,22 @@
                     "render-ui",
                     "main",
                     {
+                      "gap": "md",
                       "className": "py-12",
                       "children": [
                         {
                           "type": "spinner"
                         },
                         {
-                          "color": "muted",
                           "variant": "caption",
-                          "content": "Closing RFI…",
-                          "type": "typography"
+                          "type": "typography",
+                          "color": "muted",
+                          "content": "Closing RFI…"
                         }
                       ],
-                      "gap": "md",
-                      "type": "stack",
+                      "direction": "vertical",
                       "align": "center",
-                      "direction": "vertical"
+                      "type": "stack"
                     }
                   ]
                 ]
@@ -1009,63 +1009,63 @@
               "label": "Section title",
               "description": "Heading shown above the RFI pipeline"
             },
-            "fields": {
-              "type": "[object]",
-              "default": [
-                {
-                  "label": "RFI #",
-                  "variant": "caption",
-                  "name": "rfiNumber"
-                },
-                {
-                  "name": "subject",
-                  "variant": "caption",
-                  "label": "Subject"
-                },
-                {
-                  "name": "status",
-                  "variant": "badge",
-                  "label": "Status"
-                },
-                {
-                  "label": "Raised By",
-                  "variant": "caption",
-                  "name": "raisedBy"
-                },
-                {
-                  "name": "assignedTo",
-                  "label": "Assigned",
-                  "variant": "caption"
-                },
-                {
-                  "name": "dueAt",
-                  "variant": "caption",
-                  "label": "Due"
-                }
-              ],
-              "label": "Columns to show",
-              "description": "Each column maps to one field on the RFI entity",
-              "items": {
-                "type": "object"
-              }
-            },
             "itemActions": {
               "type": "[object]",
               "default": [
                 {
-                  "label": "Open",
+                  "event": "OPEN_RFI",
                   "variant": "primary",
                   "icon": "arrow-right",
-                  "event": "OPEN_RFI"
+                  "label": "Open"
                 },
                 {
-                  "event": "CLOSE",
                   "variant": "danger",
+                  "event": "CLOSE",
                   "label": "Close"
                 }
               ],
               "label": "Row actions",
               "description": "Buttons users can click on each RFI row",
+              "items": {
+                "type": "object"
+              }
+            },
+            "fields": {
+              "type": "[object]",
+              "default": [
+                {
+                  "variant": "caption",
+                  "label": "RFI #",
+                  "name": "rfiNumber"
+                },
+                {
+                  "label": "Subject",
+                  "variant": "caption",
+                  "name": "subject"
+                },
+                {
+                  "variant": "badge",
+                  "name": "status",
+                  "label": "Status"
+                },
+                {
+                  "name": "raisedBy",
+                  "variant": "caption",
+                  "label": "Raised By"
+                },
+                {
+                  "variant": "caption",
+                  "label": "Assigned",
+                  "name": "assignedTo"
+                },
+                {
+                  "label": "Due",
+                  "name": "dueAt",
+                  "variant": "caption"
+                }
+              ],
+              "label": "Columns to show",
+              "description": "Each column maps to one field on the RFI entity",
               "items": {
                 "type": "object"
               }
