@@ -75,30 +75,30 @@ export interface StdMultiPartyFlowFlowLoadFailedPayload {
  * without modifying its state-machine topology.
  */
 export interface StdMultiPartyFlowConfig {
-  /** Default: `"Cancel transaction"` */
-  cancelLabel?: string;
-  /** Default: `[{"icon":"user","stepLabel":"Step 1 of 2","actor":"Alice Chen","id":"buyer","actionLabel":"Confirm payment","actionDescription":"Authorize $28,500 to be held in escrow until delivery is confirmed.","title":"Buyer","description":"Funds the transaction and confirms receipt of the vehicle.","actionIcon":"credit-card"},{"description":"Ships the vehicle and uploads delivery proof.","actor":"Bob's Auto Sales LLC","actionLabel":"Confirm shipment","title":"Seller","id":"seller","actionDescription":"Mark the vehicle as shipped. Funds will release after the buyer confirms receipt.","actionIcon":"package","stepLabel":"Step 2 of 2","icon":"user-check"}]` */
-  parties?: TraitConfig[];
-  /** Default: `"x"` */
-  cancelIcon?: string;
-  /** Default: `"Release funds"` */
-  releaseLabel?: string;
+  /** Default: `"Sale of 2024 Honda CR-V"` */
+  transactionSubject?: string;
   /** Default: `"$28,500"` */
   transactionAmount?: string;
-  /** Default: `"Escrow transaction"` */
-  title?: string;
+  /** Default: `"Open dispute"` */
+  disputeLabel?: string;
+  /** Default: `"TXN-A8B2C-2024-001"` */
+  transactionReference?: string;
+  /** Default: `"Cancel transaction"` */
+  cancelLabel?: string;
+  /** Default: `"x"` */
+  cancelIcon?: string;
+  /** Default: `[{"actor":"Alice Chen","id":"buyer","description":"Funds the transaction and confirms receipt of the vehicle.","actionLabel":"Confirm payment","actionDescription":"Authorize $28,500 to be held in escrow until delivery is confirmed.","icon":"user","stepLabel":"Step 1 of 2","actionIcon":"credit-card","title":"Buyer"},{"actor":"Bob's Auto Sales LLC","description":"Ships the vehicle and uploads delivery proof.","id":"seller","icon":"user-check","title":"Seller","stepLabel":"Step 2 of 2","actionIcon":"package","actionLabel":"Confirm shipment","actionDescription":"Mark the vehicle as shipped. Funds will release after the buyer confirms receipt."}]` */
+  parties?: TraitConfig[];
   /** Default: `"alert-triangle"` */
   disputeIcon?: string;
+  /** Default: `"Release funds"` */
+  releaseLabel?: string;
   /** Default: `["reason"]` */
   reasonFields?: string[];
   /** Default: `"unlock"` */
   releaseIcon?: string;
-  /** Default: `"Sale of 2024 Honda CR-V"` */
-  transactionSubject?: string;
-  /** Default: `"TXN-A8B2C-2024-001"` */
-  transactionReference?: string;
-  /** Default: `"Open dispute"` */
-  disputeLabel?: string;
+  /** Default: `"Escrow transaction"` */
+  title?: string;
 }
 
 /**

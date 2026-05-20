@@ -122,6 +122,9 @@ export {
   getBehaviorEmbedding,
   // Factory signature catalog (sync-time)
   getFactorySignatureCatalog,
+  // Per-knob embeddings (publish-time bake)
+  type KnobEmbeddingsManifest,
+  getKnobEmbeddings,
 } from './behaviors/index.js';
 
 // All behavior functions

@@ -12,6 +12,7 @@ export default defineConfig({
     'behaviors/query.ts',
     'behaviors/embeddings.ts',
     'behaviors/factory-signatures.ts',
+    'behaviors/knob-embeddings.ts',
     'behaviors/functions/index.ts',
     'factory-runtime/index.ts',
   ],
@@ -44,6 +45,16 @@ export default defineConfig({
       cpSync('behaviors/behaviors-embeddings.json', 'dist/behaviors-embeddings.json');
     } catch {
       // Bake step skipped (no OPENAI_API_KEY) — that's OK, consumers fall back.
+    }
+    // Copy knob-embeddings.json (publish-time bake). Same dual-copy
+    // pattern: one next to `dist/behaviors/knob-embeddings.js` so the
+    // un-bundled ESM loader finds it, one at the dist root so the
+    // bundled entry's `import.meta.url` resolution also works.
+    try {
+      cpSync('behaviors/knob-embeddings.json', 'dist/behaviors/knob-embeddings.json');
+      cpSync('behaviors/knob-embeddings.json', 'dist/knob-embeddings.json');
+    } catch {
+      // Bake step skipped — consumers fall back to full per-knob render.
     }
   },
 });
