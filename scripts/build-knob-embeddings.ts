@@ -30,6 +30,7 @@ import { EmbeddingClient } from '@almadar/llm';
 const __dirname = dirname(fileURLToPath(import.meta.url));
 const STD_ROOT = resolve(__dirname, '..');
 const CATALOG_PATH = join(STD_ROOT, 'behaviors', 'registry', 'factory-signatures.json');
+const SYNONYMS_PATH = join(STD_ROOT, 'behaviors', 'knob-synonyms.json');
 const OUTPUT_PATH = join(STD_ROOT, 'behaviors', 'knob-embeddings.json');
 const PKG_PATH = join(STD_ROOT, 'package.json');
 
@@ -44,6 +45,10 @@ interface ConfigParam {
   label?: string;
   description?: string;
   enumValues?: string[];
+  /** Authored as `@synonyms "..."` in `.lolo`; lifted by the
+   *  pattern-sync extractor. Appended to the embedding text so cosine
+   *  narrowing recalls knobs voiced via user vocabulary. */
+  synonyms?: string;
 }
 interface TraitSig {
   name: string;
@@ -65,14 +70,21 @@ interface PackageJson {
 
 /** Compose embedding text for one knob. The shape pairs the trait
  *  + knob coordinate with the human-friendly label / description /
- *  enum so similarity against a user prompt resolves on the right
- *  signal (the knob, not just the trait). */
+ *  enum / user-vocabulary synonyms so cosine similarity against a
+ *  user prompt resolves on the right signal (the knob, not just the
+ *  trait). Synonyms widen recall — "taller" matches `height` because
+ *  the `.lolo` `@synonyms` annotation appends "taller / shorter /
+ *  pixel height" to the knob's embedding text.
+ */
 function buildKnobText(sig: Signature, trait: TraitSig, knob: ConfigParam): string {
   const parts: string[] = [`${sig.organism} ${sig.orbital} ${trait.name}.${knob.key}`];
   if (knob.label) parts.push(knob.label);
   if (knob.description) parts.push(knob.description);
   if (knob.enumValues && knob.enumValues.length > 0) {
     parts.push(`values: ${knob.enumValues.join(', ')}`);
+  }
+  if (knob.synonyms) {
+    parts.push(`synonyms: ${knob.synonyms}`);
   }
   return parts.join('\n');
 }

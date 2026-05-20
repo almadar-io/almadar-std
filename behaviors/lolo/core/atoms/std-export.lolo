@@ -19,9 +19,11 @@ orbital ExportOrbital {
       tileId  : string = ""
         @label "Tile id"
         @description "Identifier of the dashboard tile being exported"
+        @synonyms "internal identifier — host orbital wires this; users rarely set it directly"
       event   : string = "EXPORT_REQUESTED"
         @label "Export event"
         @description "Event emitted when the user picks a format"
+        @synonyms "bus event name. internal wiring; users rarely target directly"
       formats : [object] = [
         { id: "csv",  format: "csv",  label: "CSV" },
         { id: "xlsx", format: "xlsx", label: "XLSX" },
@@ -29,11 +31,16 @@ orbital ExportOrbital {
       ]
         @label "Available formats"
         @description "Export formats shown to the user in the popover"
+        @synonyms "list of export format entries (csv / xlsx / pdf / png / json). user phrases: 'only CSV' -> keep only csv entry; 'add JSON' -> append json entry; 'no PNG' -> remove png; 'allow X and Y' -> set the array to those two"
+      buttonLabel : string = "Export"
+        @label "Button label"
+        @description "Text shown on the toolbar button that opens the export popover"
+        @synonyms "the text on the export trigger button. user phrases: 'rename export button to X' / 'set the button label to X' / 'call the button X' / 'change export button text to X' -> X (e.g. 'Download CSV', 'Download', 'Export Data')"
     }
     state idle {
       INIT -> idle
         (set @entity.options @config.formats)
-        (render-ui main { type: "popover", position: "bottom", children: { type: "button", icon: "download", variant: "ghost", size: "sm", label: "Export", action: "OPEN_EXPORT" }, content: { type: "data-list", entity: "@entity.options", fields: [], renderItem: ["fn", "fmt", { type: "button", label: "@fmt.label", variant: "ghost", size: "sm", icon: "file-down", action: "@config.event", actionPayload: { format: "@fmt.format", tileId: "@config.tileId" } }] } })
+        (render-ui main { type: "popover", position: "bottom", children: { type: "button", icon: "download", variant: "ghost", size: "sm", label: "@config.buttonLabel", action: "OPEN_EXPORT" }, content: { type: "data-list", entity: "@entity.options", fields: [], renderItem: ["fn", "fmt", { type: "button", label: "@fmt.label", variant: "ghost", size: "sm", icon: "file-down", action: "@config.event", actionPayload: { format: "@fmt.format", tileId: "@config.tileId" } }] } })
       OPEN_EXPORT -> idle
         (set @entity.options @entity.options)
       EXPORT_REQUESTED -> idle
