@@ -31,8 +31,8 @@ const ALIAS = 'DocumentMgmt';
  * without modifying its state-machine topology.
  */
 export interface StdDocumentMgmtConfig {
-  notifications?: TraitConfig;
   navItems?: TraitConfig;
+  notifications?: TraitConfig;
 }
 
 /**
@@ -200,9 +200,6 @@ export function stdDocumentMgmtDocumentOrbital(params: StdDocumentMgmtDocumentOr
         'ref': 'AppShell.traits.AppLayout',
         'name': 'DocumentAppLayout',
         'config': {
-          'contentTrait': '@trait.DocumentCatalog',
-          'appName': 'Documents',
-          'notifications': [],
           'navItems': [
             {
               'label': 'Documents',
@@ -210,14 +207,14 @@ export function stdDocumentMgmtDocumentOrbital(params: StdDocumentMgmtDocumentOr
               'icon': 'file-text',
             },
             {
-              'label': 'E-Sign Flow',
               'icon': 'file-signature',
               'href': '/esign-flow',
+              'label': 'E-Sign Flow',
             },
             {
               'label': 'Files',
-              'icon': 'folder',
               'href': '/files',
+              'icon': 'folder',
             },
             {
               'label': 'Signatures',
@@ -225,13 +222,16 @@ export function stdDocumentMgmtDocumentOrbital(params: StdDocumentMgmtDocumentOr
               'icon': 'pen-tool',
             },
             {
-              'icon': 'history',
-              'href': '/revisions/manage',
               'label': 'Versions',
+              'href': '/revisions/manage',
+              'icon': 'history',
             },
           ],
-          'notificationClickEvent': 'DOCUMENT_NOTIFICATIONS_OPEN',
+          'appName': 'Documents',
           'searchEvent': 'DOCUMENT_SEARCH',
+          'notifications': [],
+          'contentTrait': '@trait.DocumentCatalog',
+          'notificationClickEvent': 'DOCUMENT_NOTIFICATIONS_OPEN',
         },
         'events': {
           'SEARCH': 'DOCUMENT_SEARCH',
@@ -318,11 +318,12 @@ export function stdDocumentMgmtDocumentOrbital(params: StdDocumentMgmtDocumentOr
                   'render-ui',
                   'main',
                   {
-                    'type': 'stack',
                     'direction': 'vertical',
-                    'gap': 'lg',
                     'children': [
                       {
+                        'gap': 'md',
+                        'direction': 'horizontal',
+                        'type': 'stack',
                         'justify': 'between',
                         'align': 'center',
                         'children': [
@@ -334,46 +335,43 @@ export function stdDocumentMgmtDocumentOrbital(params: StdDocumentMgmtDocumentOr
                               },
                               {
                                 'content': 'Documents',
-                                'type': 'typography',
                                 'variant': 'h2',
+                                'type': 'typography',
                               },
                             ],
-                            'type': 'stack',
                             'align': 'center',
+                            'type': 'stack',
                             'direction': 'horizontal',
                             'gap': 'sm',
                           },
                           {
-                            'gap': 'sm',
-                            'direction': 'horizontal',
-                            'type': 'stack',
                             'children': [
                               {
-                                'type': 'button',
-                                'variant': 'primary',
                                 'action': 'CREATE',
+                                'variant': 'primary',
                                 'icon': 'plus',
+                                'type': 'button',
                                 'label': 'New Document',
                               },
                             ],
+                            'type': 'stack',
+                            'gap': 'sm',
+                            'direction': 'horizontal',
                           },
                         ],
-                        'type': 'stack',
-                        'gap': 'md',
-                        'direction': 'horizontal',
                       },
                       {
                         'type': 'divider',
                       },
                       {
-                        'direction': 'horizontal',
                         'type': 'stack',
+                        'align': 'center',
                         'children': [
                           '@trait.DocumentSearch',
                           '@trait.DocumentFilter',
                         ],
-                        'align': 'center',
                         'gap': 'md',
+                        'direction': 'horizontal',
                       },
                       '@trait.DocumentStats',
                       '@trait.DocumentGraphs',
@@ -382,6 +380,8 @@ export function stdDocumentMgmtDocumentOrbital(params: StdDocumentMgmtDocumentOr
                       },
                       '@trait.DocumentBrowseList',
                     ],
+                    'type': 'stack',
+                    'gap': 'lg',
                   },
                 ],
               ],
@@ -400,34 +400,34 @@ export function stdDocumentMgmtDocumentOrbital(params: StdDocumentMgmtDocumentOr
                   'render-ui',
                   'main',
                   {
-                    'direction': 'vertical',
+                    'gap': 'md',
                     'type': 'stack',
+                    'direction': 'vertical',
                     'align': 'center',
                     'className': 'py-8',
                     'children': [
                       {
-                        'name': 'bell',
                         'type': 'icon',
+                        'name': 'bell',
                       },
                       {
-                        'content': 'No notifications',
+                        'type': 'typography',
                         'variant': 'h3',
-                        'type': 'typography',
+                        'content': 'No notifications',
                       },
                       {
-                        'content': 'You\'re all caught up.',
-                        'variant': 'caption',
                         'type': 'typography',
+                        'variant': 'caption',
                         'color': 'muted',
+                        'content': 'You\'re all caught up.',
                       },
                       {
                         'variant': 'ghost',
                         'type': 'button',
-                        'label': 'Back to documents',
                         'action': 'INIT',
+                        'label': 'Back to documents',
                       },
                     ],
-                    'gap': 'md',
                   },
                 ],
               ],
@@ -448,17 +448,16 @@ export function stdDocumentMgmtDocumentOrbital(params: StdDocumentMgmtDocumentOr
         'ref': 'Filter.traits.FilterTargetFilter',
         'name': 'DocumentFilter',
         'config': {
-          'event': 'DOCUMENT_FILTER',
           'filters': [
             {
-              'field': 'status',
               'filterType': 'select',
-              'label': 'Status',
               'options': [
                 'active',
                 'archived',
                 'pending-review',
               ],
+              'label': 'Status',
+              'field': 'status',
             },
             {
               'field': 'mimeType',
@@ -472,6 +471,7 @@ export function stdDocumentMgmtDocumentOrbital(params: StdDocumentMgmtDocumentOr
               'filterType': 'select',
             },
           ],
+          'event': 'DOCUMENT_FILTER',
         },
       }),
       makeTraitRef({
@@ -482,12 +482,16 @@ export function stdDocumentMgmtDocumentOrbital(params: StdDocumentMgmtDocumentOr
           'metrics': [
             {
               'variant': 'primary',
-              'label': 'Total',
-              'aggregation': 'count',
-              'format': 'number',
               'icon': 'file-text',
+              'format': 'number',
+              'aggregation': 'count',
+              'label': 'Total',
             },
             {
+              'aggregation': 'count',
+              'icon': 'check-circle',
+              'format': 'number',
+              'variant': 'success',
               'filter': [
                 'fn',
                 'row',
@@ -497,17 +501,12 @@ export function stdDocumentMgmtDocumentOrbital(params: StdDocumentMgmtDocumentOr
                   'active',
                 ],
               ],
-              'format': 'number',
               'label': 'Active',
-              'aggregation': 'count',
-              'icon': 'check-circle',
-              'variant': 'success',
             },
             {
               'aggregation': 'count',
-              'label': 'Pending Review',
               'icon': 'clock',
-              'format': 'number',
+              'label': 'Pending Review',
               'filter': [
                 'fn',
                 'row',
@@ -518,14 +517,15 @@ export function stdDocumentMgmtDocumentOrbital(params: StdDocumentMgmtDocumentOr
                 ],
               ],
               'variant': 'warning',
+              'format': 'number',
             },
             {
-              'variant': 'primary',
-              'format': 'number',
-              'field': 'sizeBytes',
               'aggregation': 'sum',
               'label': 'Total Size',
+              'format': 'number',
+              'field': 'sizeBytes',
               'icon': 'hard-drive',
+              'variant': 'primary',
             },
           ],
         },
@@ -544,12 +544,12 @@ export function stdDocumentMgmtDocumentOrbital(params: StdDocumentMgmtDocumentOr
         'ref': 'Graphs.traits.GraphItemGraph',
         'name': 'DocumentGraphs',
         'config': {
-          'aggregation': 'count',
           'height': 240,
+          'aggregation': 'count',
+          'title': 'Documents by Status',
           'showLegend': false,
           'subtitle': 'Volume across status buckets',
           'chartType': 'bar',
-          'title': 'Documents by Status',
           'categoryField': 'status',
         },
         'listens': [
@@ -568,16 +568,16 @@ export function stdDocumentMgmtDocumentOrbital(params: StdDocumentMgmtDocumentOr
         'name': 'DocumentBrowseList',
         'linkedEntity': canonicalName,
         'config': {
-          'cols': 1,
+          'gap': 'sm',
           'fields': [
             {
-              'name': 'name',
               'variant': 'h3',
+              'name': 'name',
               'icon': 'file-text',
             },
             {
-              'name': 'status',
               'variant': 'badge',
+              'name': 'status',
             },
             {
               'name': 'mimeType',
@@ -589,28 +589,28 @@ export function stdDocumentMgmtDocumentOrbital(params: StdDocumentMgmtDocumentOr
             },
             {
               'name': 'lastModified',
-              'variant': 'caption',
               'format': 'date',
+              'variant': 'caption',
             },
           ],
           'itemActions': [
             {
               'variant': 'ghost',
-              'label': 'View',
               'event': 'VIEW',
+              'label': 'View',
             },
             {
-              'label': 'Edit',
               'variant': 'ghost',
+              'label': 'Edit',
               'event': 'EDIT',
             },
             {
-              'label': 'Delete',
-              'event': 'DELETE',
               'variant': 'danger',
+              'event': 'DELETE',
+              'label': 'Delete',
             },
           ],
-          'gap': 'sm',
+          'cols': 1,
         },
         'listens': [
           {
@@ -660,6 +660,9 @@ export function stdDocumentMgmtDocumentOrbital(params: StdDocumentMgmtDocumentOr
         'name': 'DocumentCreate',
         'linkedEntity': canonicalName,
         'config': {
+          'title': 'New Document',
+          'mode': 'create',
+          'icon': 'plus-circle',
           'fields': [
             'name',
             'mimeType',
@@ -667,9 +670,6 @@ export function stdDocumentMgmtDocumentOrbital(params: StdDocumentMgmtDocumentOr
             'owner',
             'status',
           ],
-          'icon': 'plus-circle',
-          'title': 'New Document',
-          'mode': 'create',
         },
         'events': {
           'OPEN': 'CREATE',
@@ -691,6 +691,8 @@ export function stdDocumentMgmtDocumentOrbital(params: StdDocumentMgmtDocumentOr
         'linkedEntity': canonicalName,
         'config': {
           'mode': 'edit',
+          'icon': 'edit',
+          'title': 'Edit Document',
           'fields': [
             'name',
             'mimeType',
@@ -698,8 +700,6 @@ export function stdDocumentMgmtDocumentOrbital(params: StdDocumentMgmtDocumentOr
             'owner',
             'status',
           ],
-          'icon': 'edit',
-          'title': 'Edit Document',
         },
         'events': {
           'OPEN': 'EDIT',
@@ -720,6 +720,9 @@ export function stdDocumentMgmtDocumentOrbital(params: StdDocumentMgmtDocumentOr
         'name': 'DocumentView',
         'linkedEntity': canonicalName,
         'config': {
+          'mode': 'edit',
+          'icon': 'eye',
+          'title': 'View Document',
           'fields': [
             'name',
             'mimeType',
@@ -728,9 +731,6 @@ export function stdDocumentMgmtDocumentOrbital(params: StdDocumentMgmtDocumentOr
             'status',
             'lastModified',
           ],
-          'title': 'View Document',
-          'icon': 'eye',
-          'mode': 'edit',
         },
         'events': {
           'OPEN': 'VIEW',
@@ -752,9 +752,9 @@ export function stdDocumentMgmtDocumentOrbital(params: StdDocumentMgmtDocumentOr
         'linkedEntity': canonicalName,
         'config': {
           'icon': 'alert-triangle',
+          'alertMessage': 'This action cannot be undone.',
           'confirmLabel': 'Delete',
           'title': 'Delete Document',
-          'alertMessage': 'This action cannot be undone.',
         },
         'events': {
           'REQUEST': 'DELETE',

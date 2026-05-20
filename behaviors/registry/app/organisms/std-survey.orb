@@ -94,27 +94,27 @@
           "ref": "AppShell.traits.AppLayout",
           "name": "SurveyAppLayout",
           "config": {
-            "appName": "Surveys",
-            "notifications": [],
-            "searchEvent": "SURVEY_SEARCH",
-            "notificationClickEvent": "SURVEY_NOTIFICATIONS_OPEN",
-            "contentTrait": "@trait.SurveyCatalog",
             "navItems": [
               {
-                "icon": "list-checks",
                 "label": "Surveys",
+                "icon": "list-checks",
                 "href": "/surveys"
               },
               {
                 "icon": "inbox",
-                "href": "/responses",
-                "label": "Responses"
+                "label": "Responses",
+                "href": "/responses"
               }
-            ]
+            ],
+            "contentTrait": "@trait.SurveyCatalog",
+            "notifications": [],
+            "notificationClickEvent": "SURVEY_NOTIFICATIONS_OPEN",
+            "appName": "Surveys",
+            "searchEvent": "SURVEY_SEARCH"
           },
           "events": {
-            "NOTIFY_CLICK": "SURVEY_NOTIFICATIONS_OPEN",
-            "SEARCH": "SURVEY_SEARCH"
+            "SEARCH": "SURVEY_SEARCH",
+            "NOTIFY_CLICK": "SURVEY_NOTIFICATIONS_OPEN"
           }
         },
         {
@@ -197,48 +197,46 @@
                     "render-ui",
                     "main",
                     {
-                      "type": "stack",
-                      "direction": "vertical",
                       "children": [
                         {
                           "type": "stack",
                           "direction": "horizontal",
-                          "align": "center",
-                          "justify": "between",
-                          "gap": "md",
                           "children": [
                             {
-                              "gap": "sm",
-                              "type": "stack",
                               "direction": "horizontal",
                               "align": "center",
                               "children": [
                                 {
-                                  "name": "list-checks",
-                                  "type": "icon"
+                                  "type": "icon",
+                                  "name": "list-checks"
                                 },
                                 {
-                                  "type": "typography",
                                   "variant": "h2",
-                                  "content": "Surveys"
+                                  "content": "Surveys",
+                                  "type": "typography"
                                 }
-                              ]
+                              ],
+                              "gap": "sm",
+                              "type": "stack"
                             },
                             {
-                              "type": "stack",
                               "gap": "sm",
                               "direction": "horizontal",
+                              "type": "stack",
                               "children": [
                                 {
                                   "action": "CREATE",
-                                  "label": "New Survey",
+                                  "variant": "primary",
                                   "type": "button",
                                   "icon": "plus",
-                                  "variant": "primary"
+                                  "label": "New Survey"
                                 }
                               ]
                             }
-                          ]
+                          ],
+                          "gap": "md",
+                          "justify": "between",
+                          "align": "center"
                         },
                         {
                           "type": "divider"
@@ -254,8 +252,8 @@
                           "type": "divider"
                         },
                         {
-                          "content": "Question Bank",
                           "variant": "h3",
+                          "content": "Question Bank",
                           "type": "typography"
                         },
                         "@trait.SurveyQuestionBank",
@@ -263,22 +261,24 @@
                           "type": "divider"
                         },
                         {
-                          "content": "Skip Logic",
                           "type": "typography",
-                          "variant": "h3"
+                          "variant": "h3",
+                          "content": "Skip Logic"
                         },
                         "@trait.SurveyBranching",
                         {
                           "type": "divider"
                         },
                         {
+                          "content": "Survey Preview",
                           "variant": "h3",
-                          "type": "typography",
-                          "content": "Survey Preview"
+                          "type": "typography"
                         },
                         "@trait.SurveyPreviewForm"
                       ],
-                      "gap": "lg"
+                      "direction": "vertical",
+                      "gap": "lg",
+                      "type": "stack"
                     }
                   ]
                 ]
@@ -297,32 +297,32 @@
                     "render-ui",
                     "main",
                     {
+                      "gap": "md",
+                      "type": "stack",
                       "children": [
                         {
                           "type": "icon",
                           "name": "bell"
                         },
                         {
-                          "type": "typography",
                           "variant": "h3",
-                          "content": "No notifications"
-                        },
-                        {
-                          "content": "You're all caught up.",
-                          "color": "muted",
-                          "variant": "caption",
+                          "content": "No notifications",
                           "type": "typography"
                         },
                         {
-                          "type": "button",
-                          "variant": "ghost",
+                          "type": "typography",
+                          "content": "You're all caught up.",
+                          "variant": "caption",
+                          "color": "muted"
+                        },
+                        {
+                          "action": "INIT",
                           "label": "Back to surveys",
-                          "action": "INIT"
+                          "type": "button",
+                          "variant": "ghost"
                         }
                       ],
                       "direction": "vertical",
-                      "gap": "md",
-                      "type": "stack",
                       "align": "center",
                       "className": "py-8"
                     }
@@ -345,15 +345,18 @@
           "ref": "Stats.traits.StatsItemStats",
           "name": "SurveyStats",
           "config": {
+            "title": "Surveys",
             "metrics": [
               {
-                "aggregation": "count",
-                "format": "number",
                 "icon": "list-checks",
                 "variant": "primary",
-                "label": "Total"
+                "label": "Total",
+                "format": "number",
+                "aggregation": "count"
               },
               {
+                "format": "number",
+                "variant": "warning",
                 "filter": [
                   "fn",
                   "row",
@@ -363,18 +366,11 @@
                     "draft"
                   ]
                 ],
-                "aggregation": "count",
                 "label": "Draft",
-                "icon": "edit",
-                "variant": "warning",
-                "format": "number"
+                "aggregation": "count",
+                "icon": "edit"
               },
               {
-                "variant": "success",
-                "label": "Published",
-                "icon": "check-circle",
-                "format": "number",
-                "aggregation": "count",
                 "filter": [
                   "fn",
                   "row",
@@ -383,10 +379,14 @@
                     "@row.status",
                     "published"
                   ]
-                ]
+                ],
+                "aggregation": "count",
+                "icon": "check-circle",
+                "label": "Published",
+                "variant": "success",
+                "format": "number"
               }
-            ],
-            "title": "Surveys"
+            ]
           },
           "listens": [
             {
@@ -403,13 +403,13 @@
           "ref": "Graphs.traits.GraphItemGraph",
           "name": "SurveyGraphs",
           "config": {
-            "categoryField": "status",
-            "title": "Surveys by Status",
             "aggregation": "count",
-            "height": 240.0,
             "subtitle": "Distribution across lifecycle states",
-            "chartType": "bar",
-            "showLegend": false
+            "height": 240.0,
+            "title": "Surveys by Status",
+            "categoryField": "status",
+            "showLegend": false,
+            "chartType": "bar"
           },
           "listens": [
             {
@@ -430,42 +430,42 @@
             "itemActions": [
               {
                 "label": "View",
-                "event": "VIEW",
-                "variant": "ghost"
+                "variant": "ghost",
+                "event": "VIEW"
               },
               {
                 "label": "Edit",
-                "event": "EDIT",
-                "variant": "ghost"
+                "variant": "ghost",
+                "event": "EDIT"
               },
               {
+                "event": "DELETE",
                 "label": "Delete",
-                "variant": "danger",
-                "event": "DELETE"
+                "variant": "danger"
               }
             ],
-            "gap": "sm",
+            "cols": 1.0,
             "fields": [
               {
-                "name": "title",
                 "variant": "h3",
+                "name": "title",
                 "icon": "list-checks"
               },
               {
-                "variant": "badge",
-                "name": "status"
+                "name": "status",
+                "variant": "badge"
+              },
+              {
+                "name": "description",
+                "variant": "caption"
               },
               {
                 "variant": "caption",
-                "name": "description"
-              },
-              {
-                "format": "date",
                 "name": "createdAt",
-                "variant": "caption"
+                "format": "date"
               }
             ],
-            "cols": 1.0
+            "gap": "sm"
           },
           "listens": [
             {
@@ -525,14 +525,14 @@
           "name": "SurveyCreate",
           "linkedEntity": "Survey",
           "config": {
-            "icon": "plus-circle",
+            "mode": "create",
             "fields": [
               "title",
               "description",
               "status"
             ],
-            "title": "New Survey",
-            "mode": "create"
+            "icon": "plus-circle",
+            "title": "New Survey"
           },
           "events": {
             "OPEN": "CREATE"
@@ -559,8 +559,8 @@
               "description",
               "status"
             ],
-            "title": "Edit Survey",
-            "icon": "edit"
+            "icon": "edit",
+            "title": "Edit Survey"
           },
           "events": {
             "OPEN": "EDIT"
@@ -581,14 +581,14 @@
           "name": "SurveyView",
           "linkedEntity": "Survey",
           "config": {
+            "icon": "eye",
+            "title": "View Survey",
             "fields": [
               "title",
               "description",
               "status"
             ],
-            "title": "View Survey",
-            "mode": "edit",
-            "icon": "eye"
+            "mode": "edit"
           },
           "events": {
             "OPEN": "VIEW"
@@ -610,9 +610,9 @@
           "linkedEntity": "Survey",
           "config": {
             "alertMessage": "This action cannot be undone.",
-            "title": "Delete Survey",
             "icon": "alert-triangle",
-            "confirmLabel": "Delete"
+            "confirmLabel": "Delete",
+            "title": "Delete Survey"
           },
           "events": {
             "CONFIRM": "CONFIRM_DELETE",
@@ -932,20 +932,20 @@
           "name": "ResponseAppLayout",
           "config": {
             "appName": "Surveys",
+            "contentTrait": "@trait.ResponseDashboard",
+            "notifications": [],
             "notificationClickEvent": "RESPONSE_NOTIFICATIONS_OPEN",
             "searchEvent": "RESPONSE_SEARCH",
-            "notifications": [],
-            "contentTrait": "@trait.ResponseDashboard",
             "navItems": [
               {
                 "href": "/surveys",
-                "label": "Surveys",
-                "icon": "list-checks"
+                "icon": "list-checks",
+                "label": "Surveys"
               },
               {
+                "icon": "inbox",
                 "href": "/responses",
-                "label": "Responses",
-                "icon": "inbox"
+                "label": "Responses"
               }
             ]
           },
@@ -1018,25 +1018,27 @@
                     "render-ui",
                     "main",
                     {
-                      "className": "max-w-6xl mx-auto w-full p-4",
+                      "direction": "vertical",
+                      "type": "stack",
                       "gap": "lg",
+                      "className": "max-w-6xl mx-auto w-full p-4",
                       "children": [
                         {
-                          "align": "center",
-                          "direction": "horizontal",
                           "gap": "sm",
                           "children": [
                             {
-                              "type": "icon",
-                              "name": "inbox"
+                              "name": "inbox",
+                              "type": "icon"
                             },
                             {
+                              "type": "typography",
                               "variant": "h2",
-                              "content": "Responses",
-                              "type": "typography"
+                              "content": "Responses"
                             }
                           ],
-                          "type": "stack"
+                          "align": "center",
+                          "type": "stack",
+                          "direction": "horizontal"
                         },
                         {
                           "type": "divider"
@@ -1051,14 +1053,12 @@
                           "type": "divider"
                         },
                         {
-                          "variant": "h3",
+                          "content": "All responses",
                           "type": "typography",
-                          "content": "All responses"
+                          "variant": "h3"
                         },
                         "@trait.ResponseBrowseList"
-                      ],
-                      "type": "stack",
-                      "direction": "vertical"
+                      ]
                     }
                   ]
                 ]
@@ -1077,34 +1077,34 @@
                     "render-ui",
                     "main",
                     {
+                      "gap": "md",
+                      "className": "py-8",
                       "align": "center",
+                      "type": "stack",
                       "children": [
                         {
                           "name": "bell",
                           "type": "icon"
                         },
                         {
-                          "variant": "h3",
+                          "content": "No notifications",
                           "type": "typography",
-                          "content": "No notifications"
+                          "variant": "h3"
                         },
                         {
-                          "type": "typography",
+                          "color": "muted",
                           "content": "You're all caught up.",
-                          "variant": "caption",
-                          "color": "muted"
+                          "type": "typography",
+                          "variant": "caption"
                         },
                         {
                           "type": "button",
-                          "label": "Back to responses",
                           "action": "INIT",
-                          "variant": "ghost"
+                          "variant": "ghost",
+                          "label": "Back to responses"
                         }
                       ],
-                      "direction": "vertical",
-                      "type": "stack",
-                      "className": "py-8",
-                      "gap": "md"
+                      "direction": "vertical"
                     }
                   ]
                 ]
@@ -1125,63 +1125,53 @@
           "name": "ResponseBrowseList",
           "linkedEntity": "Response",
           "config": {
+            "displayPageSize": 10.0,
+            "cols": 1.0,
+            "pageSize": 100.0,
+            "gap": "sm",
             "fields": [
               {
+                "variant": "caption",
                 "name": "surveyId",
-                "label": "Survey",
-                "variant": "caption"
+                "label": "Survey"
               },
               {
                 "label": "Respondent",
-                "name": "respondentId",
+                "variant": "body",
+                "name": "respondentId"
+              },
+              {
+                "label": "Question",
+                "variant": "caption",
+                "name": "questionId"
+              },
+              {
+                "label": "Answer",
+                "name": "answerJson",
                 "variant": "body"
               },
               {
-                "variant": "caption",
-                "name": "questionId",
-                "label": "Question"
-              },
-              {
-                "variant": "body",
-                "name": "answerJson",
-                "label": "Answer"
-              },
-              {
-                "variant": "caption",
-                "name": "submittedAt",
                 "label": "Submitted",
+                "name": "submittedAt",
+                "variant": "caption",
                 "format": "date"
               }
             ],
-            "displayPageSize": 10.0,
-            "pageSize": 100.0,
             "itemActions": [
               {
-                "event": "VIEW",
+                "variant": "ghost",
                 "label": "View",
-                "variant": "ghost"
+                "event": "VIEW"
               }
-            ],
-            "cols": 1.0,
-            "gap": "sm"
-          },
-          "listens": [
-            {
-              "event": "ResponseSubmitted",
-              "triggers": "INIT",
-              "source": {
-                "kind": "trait",
-                "trait": "ResponseCollect"
-              }
-            }
-          ]
+            ]
+          }
         },
         {
           "ref": "Modal.traits.ModalRecordModal",
           "name": "ResponseView",
           "linkedEntity": "Response",
           "config": {
-            "icon": "eye",
+            "title": "View Response",
             "fields": [
               "surveyId",
               "respondentId",
@@ -1189,8 +1179,8 @@
               "answerJson",
               "submittedAt"
             ],
-            "title": "View Response",
-            "mode": "edit"
+            "mode": "edit",
+            "icon": "eye"
           },
           "events": {
             "OPEN": "VIEW"

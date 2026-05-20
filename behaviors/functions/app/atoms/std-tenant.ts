@@ -86,12 +86,12 @@ export interface StdTenantTenantLoadFailedPayload {
  * without modifying its state-machine topology.
  */
 export interface StdTenantConfig {
-  /** Default: `[{"label":"Name","variant":"h4","name":"name"},{"label":"Email","name":"email","variant":"body"},{"label":"Phone","variant":"caption","name":"phone"},{"name":"status","label":"Status","variant":"badge"},{"label":"Move-In","variant":"caption","name":"moveInDate"}]` */
-  fields?: TraitConfig[];
-  /** Default: `[{"label":"Open","icon":"arrow-right","variant":"primary","event":"OPEN_TENANT"},{"label":"Move Out","event":"MOVE_OUT","variant":"danger"}]` */
-  itemActions?: TraitConfig[];
   /** Default: `"Tenants"` */
   title?: string;
+  /** Default: `[{"name":"name","label":"Name","variant":"h4"},{"name":"email","label":"Email","variant":"body"},{"name":"phone","variant":"caption","label":"Phone"},{"name":"status","variant":"badge","label":"Status"},{"variant":"caption","label":"Move-In","name":"moveInDate"}]` */
+  fields?: TraitConfig[];
+  /** Default: `[{"icon":"arrow-right","label":"Open","event":"OPEN_TENANT","variant":"primary"},{"label":"Move Out","event":"MOVE_OUT","variant":"danger"}]` */
+  itemActions?: TraitConfig[];
 }
 
 /**

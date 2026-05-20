@@ -109,14 +109,14 @@ export interface StdImageUploadMultiUploadedImageDeleteFailedPayload {
  * without modifying its state-machine topology.
  */
 export interface StdImageUploadMultiConfig {
-  /** Default: `"image/*"` */
-  accept?: string;
   /** Default: `10` */
   maxImages?: number;
-  /** Default: `"Upload Images"` */
-  title?: string;
   /** Default: `10485760` */
   maxBytesPerImage?: number;
+  /** Default: `"image/*"` */
+  accept?: string;
+  /** Default: `"Upload Images"` */
+  title?: string;
 }
 
 /**

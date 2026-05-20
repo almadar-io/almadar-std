@@ -2,14 +2,32 @@ app std-platformer-app "1.0.0"
 "Platformer game: levels, score, and collectibles. Pick for side-scroller arcade games."
 
 orbital PlatLevelOrbital {
+  type Platform = {
+    x      : number
+    y      : number
+    width  : number
+    height : number
+    type   : string
+  }
+  type PlayerState = {
+    x           : number
+    y           : number
+    width       : number
+    height      : number
+    vx          : number
+    vy          : number
+    grounded    : boolean
+    facingRight : boolean
+  }
+
   entity PlatLevel [runtime] {
     id : string!
     level : number = 1
     score : number = 0
     lives : number = 3
     time : number = 0
-    player : string = ""
-    platforms : string = ""
+    player : PlayerState
+    platforms : [Platform] = []
   }
 
   type PlatLevelLoaded     = Event { data : [PlatLevel] }                  "Fired when PlatLevel finishes loading"
@@ -24,6 +42,8 @@ orbital PlatLevelOrbital {
     initial: menu
     state menu {
       INIT -> menu
+        (set @entity.lives 3)
+        (set @entity.score 0)
         (fetch PlatLevel { emit: { success: "PlatLevelLoaded", failure: "PlatLevelLoadFailed" } })
         (render-ui main { type: "game-shell", appName: "Platformer App", showTopBar: true, children: [{ type: "game-menu", title: "Platformer", subtitle: "Side-Scrolling Adventure", menuItems: [{ label: "Start Game", event: "START", variant: "primary" }] }] })
       START -> playing
@@ -79,6 +99,8 @@ emits {
     initial: idle
     state idle {
       INIT -> idle
+        (set @entity.platforms [])
+        (set @entity.player    { x: 0, y: 0, width: 32, height: 32, vx: 0, vy: 0, grounded: true, facingRight: true })
         (fetch PlatLevel { emit: { success: "PlatLevelLoaded", failure: "PlatLevelLoadFailed" } })
       START -> running
         (render-ui main { type: "game-shell", appName: "Platformer App", showTopBar: true, children: [{ type: "platformer-canvas", platforms: "@entity.platforms", player: "@entity.player", canvasWidth: 800, canvasHeight: 400, worldWidth: 2400, worldHeight: 400, followCamera: true, bgColor: "#1a1a2e", leftEvent: "LEFT", rightEvent: "RIGHT", jumpEvent: "JUMP", stopEvent: "STOP" }] })
@@ -118,6 +140,8 @@ orbital PlatScoreOrbital {
   trait PlatScoreScoreBoard -> PlatScore [interaction, collection] {
     state idle {
       INIT -> idle
+        (set @entity.highScore 0)
+        (set @entity.level 1)
         (fetch PlatScore { emit: { success: "PlatScoreLoaded", failure: "PlatScoreLoadFailed" } })
         (render-ui main { type: "game-shell", appName: "Platformer App", showTopBar: true, children: [{ type: "score-board", score: "@entity.score", highScore: "@entity.highScore", combo: "@entity.combo", multiplier: "@entity.multiplier", level: "@entity.level" }] })
       ADD_SCORE -> idle
@@ -140,8 +164,8 @@ emits {
 
         listens {
       PlatScoreLoadFailed { error : string, code : string }
-      ADD_SCORE { points : string }
-      COMBO { multiplier : string }
+      ADD_SCORE { points : number }
+      COMBO { multiplier : number }
     }
   }
   page "/scores" -> PlatScoreScoreBoard
@@ -225,6 +249,7 @@ orbital CollectibleOrbital {
     initial: closed
     state closed {
       INIT -> closed
+        (set @entity.name "")
         (fetch Collectible { emit: { success: "CollectibleLoaded", failure: "CollectibleLoadFailed" } })
       USE_ITEM -> open
         (fetch Collectible {id: "@payload.id" , emit: { success: "CollectibleLoaded", failure: "CollectibleLoadFailed" }, emit: { success: "CollectibleLoaded", failure: "CollectibleLoadFailed" } })

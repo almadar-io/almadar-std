@@ -19,6 +19,32 @@ orbital StatsItemOrbital {
     clickEvent     : string
   }
 
+  ;; Author-side metric definition. Superset of StatCard with the
+  ;; aggregation knobs (aggregation/field) the trait consumes on
+  ;; ITEMS_LOADED to compute `value` from @payload.data.
+  ;; `filter` / `baselineFilter` are author-only SExpr predicate slots
+  ;; the runtime reads via `(object/get @metric "filter" true)` — they're
+  ;; intentionally absent from the typed shape because lolo has no
+  ;; "predicate" type today; authors can still pass them inline.
+  type MetricSpec = {
+    label          : string!
+    value          : number
+    icon           : string
+    format         : "number" | "currency" | "percent"
+    variant        : "default" | "primary" | "success" | "warning" | "error" | "info"
+    prefix         : string
+    suffix         : string
+    max            : number
+    target         : number
+    trend          : number
+    trendPolarity  : "higher-is-better" | "lower-is-better"
+    trendFormat    : "absolute" | "percent"
+    sparklineData  : [number]
+    clickEvent     : string
+    aggregation    : "count" | "sum" | "avg" | "min" | "max" | "variance"
+    field          : string
+  }
+
   entity StatsItem [runtime] {
     id    : string!
     cards : [StatCard] = []
@@ -27,7 +53,7 @@ orbital StatsItemOrbital {
   trait StatsItemStats -> StatsItem [interaction, instance] {
     initial: idle
     config {
-      metrics : [object] = [
+      metrics : [MetricSpec] = [
         { label: "Total Items", aggregation: "count", icon: "list",         variant: "primary", format: "number" },
         { label: "Active",      aggregation: "count", icon: "check-circle", variant: "success", format: "number" },
         { label: "Avg Value",   aggregation: "avg",   icon: "trending-up",  variant: "info",    format: "number", field: "value" }

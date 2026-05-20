@@ -205,23 +205,23 @@ export function stdTimeTrackingEmployeeOrbital(params: StdTimeTrackingEmployeeOr
         'ref': 'AppShell.traits.AppLayout',
         'name': 'EmployeeAppLayout',
         'config': {
-          'notificationClickEvent': 'EMPLOYEE_NOTIFICATIONS_OPEN',
           'contentTrait': '@trait.EmployeeCatalog',
+          'searchEvent': 'EMPLOYEE_SEARCH',
           'navItems': [
             {
+              'href': '/employees',
               'icon': 'users',
               'label': 'Employees',
-              'href': '/employees',
             },
             {
-              'label': 'Timesheets',
-              'href': '/timesheets',
               'icon': 'clipboard',
+              'href': '/timesheets',
+              'label': 'Timesheets',
             },
             {
+              'icon': 'clock',
               'href': '/time-entries',
               'label': 'Time Entries',
-              'icon': 'clock',
             },
             {
               'href': '/billable',
@@ -229,18 +229,18 @@ export function stdTimeTrackingEmployeeOrbital(params: StdTimeTrackingEmployeeOr
               'label': 'Billable Hours',
             },
             {
-              'label': 'Approvals',
-              'icon': 'check-circle',
               'href': '/approvals',
+              'icon': 'check-circle',
+              'label': 'Approvals',
             },
           ],
-          'appName': 'Time Tracking',
-          'searchEvent': 'EMPLOYEE_SEARCH',
           'notifications': [],
+          'appName': 'Time Tracking',
+          'notificationClickEvent': 'EMPLOYEE_NOTIFICATIONS_OPEN',
         },
         'events': {
-          'SEARCH': 'EMPLOYEE_SEARCH',
           'NOTIFY_CLICK': 'EMPLOYEE_NOTIFICATIONS_OPEN',
+          'SEARCH': 'EMPLOYEE_SEARCH',
         },
       }),
       rebindInlineTraitEntity({
@@ -323,24 +323,18 @@ export function stdTimeTrackingEmployeeOrbital(params: StdTimeTrackingEmployeeOr
                   'render-ui',
                   'main',
                   {
-                    'type': 'stack',
-                    'gap': 'lg',
                     'children': [
                       {
-                        'direction': 'horizontal',
-                        'justify': 'between',
-                        'type': 'stack',
-                        'align': 'center',
-                        'gap': 'md',
                         'children': [
                           {
-                            'gap': 'sm',
                             'direction': 'horizontal',
+                            'gap': 'sm',
                             'align': 'center',
+                            'type': 'stack',
                             'children': [
                               {
-                                'name': 'users',
                                 'type': 'icon',
+                                'name': 'users',
                               },
                               {
                                 'variant': 'h2',
@@ -348,35 +342,39 @@ export function stdTimeTrackingEmployeeOrbital(params: StdTimeTrackingEmployeeOr
                                 'type': 'typography',
                               },
                             ],
-                            'type': 'stack',
                           },
                           {
-                            'type': 'stack',
-                            'gap': 'sm',
                             'direction': 'horizontal',
+                            'gap': 'sm',
                             'children': [
                               {
-                                'type': 'button',
-                                'variant': 'primary',
-                                'action': 'CREATE',
                                 'label': 'New Employee',
+                                'variant': 'primary',
                                 'icon': 'plus',
+                                'action': 'CREATE',
+                                'type': 'button',
                               },
                             ],
+                            'type': 'stack',
                           },
                         ],
+                        'direction': 'horizontal',
+                        'justify': 'between',
+                        'align': 'center',
+                        'type': 'stack',
+                        'gap': 'md',
                       },
                       {
                         'type': 'divider',
                       },
                       {
-                        'type': 'stack',
-                        'align': 'center',
-                        'gap': 'md',
                         'children': [
                           '@trait.EmployeeSearch',
                           '@trait.EmployeeFilter',
                         ],
+                        'gap': 'md',
+                        'type': 'stack',
+                        'align': 'center',
                         'direction': 'horizontal',
                       },
                       '@trait.EmployeeStats',
@@ -386,7 +384,9 @@ export function stdTimeTrackingEmployeeOrbital(params: StdTimeTrackingEmployeeOr
                       },
                       '@trait.EmployeeBrowseList',
                     ],
+                    'type': 'stack',
                     'direction': 'vertical',
+                    'gap': 'lg',
                   },
                 ],
               ],
@@ -406,33 +406,33 @@ export function stdTimeTrackingEmployeeOrbital(params: StdTimeTrackingEmployeeOr
                   'main',
                   {
                     'direction': 'vertical',
-                    'className': 'py-8',
-                    'type': 'stack',
+                    'gap': 'md',
                     'children': [
                       {
-                        'name': 'bell',
                         'type': 'icon',
+                        'name': 'bell',
                       },
                       {
-                        'content': 'No notifications',
-                        'type': 'typography',
                         'variant': 'h3',
+                        'type': 'typography',
+                        'content': 'No notifications',
                       },
                       {
-                        'content': 'You\'re all caught up.',
                         'type': 'typography',
                         'color': 'muted',
                         'variant': 'caption',
+                        'content': 'You\'re all caught up.',
                       },
                       {
-                        'type': 'button',
-                        'variant': 'ghost',
                         'label': 'Back to employees',
                         'action': 'INIT',
+                        'variant': 'ghost',
+                        'type': 'button',
                       },
                     ],
+                    'type': 'stack',
                     'align': 'center',
-                    'gap': 'md',
+                    'className': 'py-8',
                   },
                 ],
               ],
@@ -457,6 +457,7 @@ export function stdTimeTrackingEmployeeOrbital(params: StdTimeTrackingEmployeeOr
           'filters': [
             {
               'field': 'department',
+              'label': 'Department',
               'options': [
                 'engineering',
                 'sales',
@@ -464,16 +465,15 @@ export function stdTimeTrackingEmployeeOrbital(params: StdTimeTrackingEmployeeOr
                 'hr',
                 'finance',
               ],
-              'label': 'Department',
               'filterType': 'select',
             },
             {
+              'field': 'status',
               'options': [
                 'active',
                 'on-leave',
                 'terminated',
               ],
-              'field': 'status',
               'label': 'Status',
               'filterType': 'select',
             },
@@ -484,19 +484,16 @@ export function stdTimeTrackingEmployeeOrbital(params: StdTimeTrackingEmployeeOr
         'ref': 'Stats.traits.StatsItemStats',
         'name': 'EmployeeStats',
         'config': {
+          'title': 'Employees',
           'metrics': [
             {
-              'variant': 'primary',
-              'label': 'Total',
-              'aggregation': 'count',
               'format': 'number',
+              'aggregation': 'count',
+              'variant': 'primary',
               'icon': 'users',
+              'label': 'Total',
             },
             {
-              'aggregation': 'count',
-              'icon': 'check-circle',
-              'format': 'number',
-              'variant': 'success',
               'filter': [
                 'fn',
                 'row',
@@ -506,14 +503,15 @@ export function stdTimeTrackingEmployeeOrbital(params: StdTimeTrackingEmployeeOr
                   'active',
                 ],
               ],
+              'icon': 'check-circle',
+              'variant': 'success',
+              'format': 'number',
+              'aggregation': 'count',
               'label': 'Active',
             },
             {
-              'icon': 'pause-circle',
-              'label': 'On Leave',
-              'aggregation': 'count',
               'format': 'number',
-              'variant': 'warning',
+              'label': 'On Leave',
               'filter': [
                 'fn',
                 'row',
@@ -523,17 +521,19 @@ export function stdTimeTrackingEmployeeOrbital(params: StdTimeTrackingEmployeeOr
                   'on-leave',
                 ],
               ],
+              'icon': 'pause-circle',
+              'aggregation': 'count',
+              'variant': 'warning',
             },
             {
-              'format': 'currency',
-              'label': 'Avg Rate',
-              'icon': 'dollar-sign',
-              'aggregation': 'avg',
-              'field': 'defaultHourlyRate',
               'variant': 'info',
+              'field': 'defaultHourlyRate',
+              'aggregation': 'avg',
+              'format': 'currency',
+              'icon': 'dollar-sign',
+              'label': 'Avg Rate',
             },
           ],
-          'title': 'Employees',
         },
         'listens': [
           {
@@ -550,13 +550,13 @@ export function stdTimeTrackingEmployeeOrbital(params: StdTimeTrackingEmployeeOr
         'ref': 'Graphs.traits.GraphItemGraph',
         'name': 'EmployeeGraphs',
         'config': {
-          'aggregation': 'count',
           'title': 'Employees by Department',
+          'categoryField': 'department',
           'subtitle': 'Workforce distribution across departments',
+          'chartType': 'bar',
+          'aggregation': 'count',
           'showLegend': false,
           'height': 240,
-          'chartType': 'bar',
-          'categoryField': 'department',
         },
         'listens': [
           {
@@ -574,6 +574,25 @@ export function stdTimeTrackingEmployeeOrbital(params: StdTimeTrackingEmployeeOr
         'name': 'EmployeeBrowseList',
         'linkedEntity': canonicalName,
         'config': {
+          'itemActions': [
+            {
+              'variant': 'ghost',
+              'label': 'View',
+              'event': 'VIEW',
+            },
+            {
+              'event': 'EDIT',
+              'label': 'Edit',
+              'variant': 'ghost',
+            },
+            {
+              'event': 'DELETE',
+              'label': 'Delete',
+              'variant': 'danger',
+            },
+          ],
+          'cols': 1,
+          'gap': 'sm',
           'fields': [
             {
               'name': 'name',
@@ -585,37 +604,18 @@ export function stdTimeTrackingEmployeeOrbital(params: StdTimeTrackingEmployeeOr
               'name': 'role',
             },
             {
-              'name': 'department',
               'variant': 'badge',
+              'name': 'department',
             },
             {
-              'variant': 'badge',
               'name': 'status',
+              'variant': 'badge',
             },
             {
               'name': 'defaultHourlyRate',
               'variant': 'caption',
             },
           ],
-          'itemActions': [
-            {
-              'label': 'View',
-              'event': 'VIEW',
-              'variant': 'ghost',
-            },
-            {
-              'variant': 'ghost',
-              'event': 'EDIT',
-              'label': 'Edit',
-            },
-            {
-              'label': 'Delete',
-              'variant': 'danger',
-              'event': 'DELETE',
-            },
-          ],
-          'cols': 1,
-          'gap': 'sm',
         },
         'listens': [
           {
@@ -665,6 +665,8 @@ export function stdTimeTrackingEmployeeOrbital(params: StdTimeTrackingEmployeeOr
         'name': 'EmployeeCreate',
         'linkedEntity': canonicalName,
         'config': {
+          'icon': 'plus-circle',
+          'title': 'New Employee',
           'mode': 'create',
           'fields': [
             'name',
@@ -675,8 +677,6 @@ export function stdTimeTrackingEmployeeOrbital(params: StdTimeTrackingEmployeeOr
             'hireDate',
             'defaultHourlyRate',
           ],
-          'icon': 'plus-circle',
-          'title': 'New Employee',
         },
         'events': {
           'OPEN': 'CREATE',
@@ -697,8 +697,8 @@ export function stdTimeTrackingEmployeeOrbital(params: StdTimeTrackingEmployeeOr
         'name': 'EmployeeEdit',
         'linkedEntity': canonicalName,
         'config': {
-          'mode': 'edit',
           'icon': 'edit',
+          'mode': 'edit',
           'fields': [
             'name',
             'email',
@@ -729,8 +729,6 @@ export function stdTimeTrackingEmployeeOrbital(params: StdTimeTrackingEmployeeOr
         'name': 'EmployeeView',
         'linkedEntity': canonicalName,
         'config': {
-          'title': 'View Employee',
-          'mode': 'edit',
           'fields': [
             'name',
             'email',
@@ -740,6 +738,8 @@ export function stdTimeTrackingEmployeeOrbital(params: StdTimeTrackingEmployeeOr
             'hireDate',
             'defaultHourlyRate',
           ],
+          'title': 'View Employee',
+          'mode': 'edit',
           'icon': 'eye',
         },
         'events': {
@@ -761,14 +761,14 @@ export function stdTimeTrackingEmployeeOrbital(params: StdTimeTrackingEmployeeOr
         'name': 'EmployeeDelete',
         'linkedEntity': canonicalName,
         'config': {
+          'confirmLabel': 'Delete',
+          'alertMessage': 'This action cannot be undone.',
           'icon': 'alert-triangle',
           'title': 'Delete Employee',
-          'alertMessage': 'This action cannot be undone.',
-          'confirmLabel': 'Delete',
         },
         'events': {
-          'REQUEST': 'DELETE',
           'CONFIRM': 'CONFIRM_DELETE',
+          'REQUEST': 'DELETE',
         },
         'listens': [
           {
@@ -1245,42 +1245,42 @@ export function stdTimeTrackingTimesheetPanelOrbital(params: StdTimeTrackingTime
         'ref': 'AppShell.traits.AppLayout',
         'name': 'TimesheetAppLayout',
         'config': {
-          'notifications': [],
-          'notificationClickEvent': 'TIMESHEET_NOTIFICATIONS_OPEN',
           'appName': 'Time Tracking',
-          'contentTrait': '@trait.TimesheetPanel',
           'navItems': [
             {
               'icon': 'users',
-              'label': 'Employees',
               'href': '/employees',
+              'label': 'Employees',
             },
             {
-              'icon': 'clipboard',
               'href': '/timesheets',
+              'icon': 'clipboard',
               'label': 'Timesheets',
             },
             {
-              'label': 'Time Entries',
               'icon': 'clock',
+              'label': 'Time Entries',
               'href': '/time-entries',
             },
             {
+              'label': 'Billable Hours',
               'href': '/billable',
               'icon': 'dollar-sign',
-              'label': 'Billable Hours',
             },
             {
-              'icon': 'check-circle',
               'href': '/approvals',
+              'icon': 'check-circle',
               'label': 'Approvals',
             },
           ],
+          'contentTrait': '@trait.TimesheetPanel',
+          'notifications': [],
           'searchEvent': 'TIMESHEET_SEARCH',
+          'notificationClickEvent': 'TIMESHEET_NOTIFICATIONS_OPEN',
         },
         'events': {
-          'NOTIFY_CLICK': 'TIMESHEET_NOTIFICATIONS_OPEN',
           'SEARCH': 'TIMESHEET_SEARCH',
+          'NOTIFY_CLICK': 'TIMESHEET_NOTIFICATIONS_OPEN',
         },
       }),
       rebindInlineTraitEntity({
@@ -1313,11 +1313,13 @@ export function stdTimeTrackingTimesheetPanelOrbital(params: StdTimeTrackingTime
                     'className': 'max-w-6xl mx-auto w-full p-4',
                     'children': [
                       {
+                        'direction': 'horizontal',
+                        'type': 'stack',
                         'gap': 'sm',
                         'children': [
                           {
-                            'type': 'icon',
                             'name': 'clipboard',
+                            'type': 'icon',
                           },
                           {
                             'content': 'Timesheets',
@@ -1325,9 +1327,7 @@ export function stdTimeTrackingTimesheetPanelOrbital(params: StdTimeTrackingTime
                             'variant': 'h2',
                           },
                         ],
-                        'type': 'stack',
                         'align': 'center',
-                        'direction': 'horizontal',
                       },
                       {
                         'type': 'divider',
@@ -1591,41 +1591,41 @@ export function stdTimeTrackingTimeEntryPanelOrbital(params: StdTimeTrackingTime
         'name': 'TimeEntryAppLayout',
         'config': {
           'notificationClickEvent': 'TIME_ENTRY_NOTIFICATIONS_OPEN',
-          'contentTrait': '@trait.TimeEntryPanel',
           'notifications': [],
+          'searchEvent': 'TIME_ENTRY_SEARCH',
+          'appName': 'Time Tracking',
           'navItems': [
             {
               'href': '/employees',
-              'label': 'Employees',
               'icon': 'users',
+              'label': 'Employees',
             },
             {
-              'label': 'Timesheets',
               'href': '/timesheets',
               'icon': 'clipboard',
+              'label': 'Timesheets',
             },
             {
-              'label': 'Time Entries',
               'href': '/time-entries',
               'icon': 'clock',
+              'label': 'Time Entries',
             },
             {
               'href': '/billable',
-              'icon': 'dollar-sign',
               'label': 'Billable Hours',
+              'icon': 'dollar-sign',
             },
             {
-              'label': 'Approvals',
-              'href': '/approvals',
               'icon': 'check-circle',
+              'href': '/approvals',
+              'label': 'Approvals',
             },
           ],
-          'searchEvent': 'TIME_ENTRY_SEARCH',
-          'appName': 'Time Tracking',
+          'contentTrait': '@trait.TimeEntryPanel',
         },
         'events': {
-          'SEARCH': 'TIME_ENTRY_SEARCH',
           'NOTIFY_CLICK': 'TIME_ENTRY_NOTIFICATIONS_OPEN',
+          'SEARCH': 'TIME_ENTRY_SEARCH',
         },
       }),
       rebindInlineTraitEntity({
@@ -1654,33 +1654,33 @@ export function stdTimeTrackingTimeEntryPanelOrbital(params: StdTimeTrackingTime
                   'render-ui',
                   'main',
                   {
-                    'className': 'max-w-6xl mx-auto w-full p-4',
                     'type': 'stack',
-                    'gap': 'lg',
                     'direction': 'vertical',
+                    'className': 'max-w-6xl mx-auto w-full p-4',
                     'children': [
                       {
-                        'type': 'stack',
                         'align': 'center',
-                        'gap': 'sm',
-                        'direction': 'horizontal',
                         'children': [
                           {
                             'type': 'icon',
                             'name': 'clock',
                           },
                           {
-                            'variant': 'h2',
                             'content': 'Time Entries',
+                            'variant': 'h2',
                             'type': 'typography',
                           },
                         ],
+                        'type': 'stack',
+                        'direction': 'horizontal',
+                        'gap': 'sm',
                       },
                       {
                         'type': 'divider',
                       },
                       '@trait.TimeEntryLogView',
                     ],
+                    'gap': 'lg',
                   },
                 ],
               ],
@@ -1930,24 +1930,21 @@ export function stdTimeTrackingBillableHourTimeTrackingOrbital(params: StdTimeTr
         'ref': 'AppShell.traits.AppLayout',
         'name': 'BillableHourAppLayout',
         'config': {
-          'notificationClickEvent': 'BILLABLE_HOUR_NOTIFICATIONS_OPEN',
-          'notifications': [],
-          'contentTrait': '@trait.BillableHourPanel',
           'navItems': [
             {
-              'icon': 'users',
               'label': 'Employees',
+              'icon': 'users',
               'href': '/employees',
             },
             {
-              'icon': 'clipboard',
-              'label': 'Timesheets',
               'href': '/timesheets',
+              'label': 'Timesheets',
+              'icon': 'clipboard',
             },
             {
+              'label': 'Time Entries',
               'href': '/time-entries',
               'icon': 'clock',
-              'label': 'Time Entries',
             },
             {
               'href': '/billable',
@@ -1955,17 +1952,20 @@ export function stdTimeTrackingBillableHourTimeTrackingOrbital(params: StdTimeTr
               'label': 'Billable Hours',
             },
             {
-              'icon': 'check-circle',
               'href': '/approvals',
+              'icon': 'check-circle',
               'label': 'Approvals',
             },
           ],
+          'contentTrait': '@trait.BillableHourPanel',
           'appName': 'Time Tracking',
           'searchEvent': 'BILLABLE_HOUR_SEARCH',
+          'notifications': [],
+          'notificationClickEvent': 'BILLABLE_HOUR_NOTIFICATIONS_OPEN',
         },
         'events': {
-          'SEARCH': 'BILLABLE_HOUR_SEARCH',
           'NOTIFY_CLICK': 'BILLABLE_HOUR_NOTIFICATIONS_OPEN',
+          'SEARCH': 'BILLABLE_HOUR_SEARCH',
         },
       }),
       rebindInlineTraitEntity({
@@ -1994,24 +1994,26 @@ export function stdTimeTrackingBillableHourTimeTrackingOrbital(params: StdTimeTr
                   'render-ui',
                   'main',
                   {
-                    'type': 'stack',
+                    'gap': 'lg',
                     'className': 'max-w-6xl mx-auto w-full p-4',
+                    'type': 'stack',
+                    'direction': 'vertical',
                     'children': [
                       {
                         'align': 'center',
-                        'type': 'stack',
                         'gap': 'sm',
                         'children': [
                           {
-                            'name': 'dollar-sign',
                             'type': 'icon',
+                            'name': 'dollar-sign',
                           },
                           {
-                            'content': 'Billable Hours',
-                            'type': 'typography',
                             'variant': 'h2',
+                            'type': 'typography',
+                            'content': 'Billable Hours',
                           },
                         ],
+                        'type': 'stack',
                         'direction': 'horizontal',
                       },
                       {
@@ -2019,8 +2021,6 @@ export function stdTimeTrackingBillableHourTimeTrackingOrbital(params: StdTimeTr
                       },
                       '@trait.BillableHourTimesheetView',
                     ],
-                    'direction': 'vertical',
-                    'gap': 'lg',
                   },
                 ],
               ],
@@ -2290,42 +2290,42 @@ export function stdTimeTrackingApprovalRequestPanelOrbital(params: StdTimeTracki
         'ref': 'AppShell.traits.AppLayout',
         'name': 'ApprovalRequestAppLayout',
         'config': {
-          'searchEvent': 'APPROVAL_REQUEST_SEARCH',
           'contentTrait': '@trait.ApprovalRequestPanel',
-          'appName': 'Time Tracking',
           'navItems': [
             {
-              'href': '/employees',
               'label': 'Employees',
               'icon': 'users',
+              'href': '/employees',
             },
             {
-              'label': 'Timesheets',
               'icon': 'clipboard',
               'href': '/timesheets',
+              'label': 'Timesheets',
             },
             {
+              'href': '/time-entries',
               'icon': 'clock',
               'label': 'Time Entries',
-              'href': '/time-entries',
             },
             {
-              'label': 'Billable Hours',
               'href': '/billable',
               'icon': 'dollar-sign',
+              'label': 'Billable Hours',
             },
             {
+              'href': '/approvals',
               'icon': 'check-circle',
               'label': 'Approvals',
-              'href': '/approvals',
             },
           ],
-          'notificationClickEvent': 'APPROVAL_REQUEST_NOTIFICATIONS_OPEN',
           'notifications': [],
+          'notificationClickEvent': 'APPROVAL_REQUEST_NOTIFICATIONS_OPEN',
+          'searchEvent': 'APPROVAL_REQUEST_SEARCH',
+          'appName': 'Time Tracking',
         },
         'events': {
-          'SEARCH': 'APPROVAL_REQUEST_SEARCH',
           'NOTIFY_CLICK': 'APPROVAL_REQUEST_NOTIFICATIONS_OPEN',
+          'SEARCH': 'APPROVAL_REQUEST_SEARCH',
         },
       }),
       rebindInlineTraitEntity({
@@ -2354,17 +2354,20 @@ export function stdTimeTrackingApprovalRequestPanelOrbital(params: StdTimeTracki
                   'render-ui',
                   'main',
                   {
+                    'direction': 'vertical',
+                    'type': 'stack',
                     'gap': 'lg',
+                    'className': 'max-w-6xl mx-auto w-full p-4',
                     'children': [
                       {
-                        'type': 'stack',
                         'gap': 'sm',
+                        'type': 'stack',
                         'direction': 'horizontal',
                         'align': 'center',
                         'children': [
                           {
-                            'name': 'check-circle',
                             'type': 'icon',
+                            'name': 'check-circle',
                           },
                           {
                             'type': 'typography',
@@ -2378,9 +2381,6 @@ export function stdTimeTrackingApprovalRequestPanelOrbital(params: StdTimeTracki
                       },
                       '@trait.ApprovalRequestPipelineView',
                     ],
-                    'direction': 'vertical',
-                    'type': 'stack',
-                    'className': 'max-w-6xl mx-auto w-full p-4',
                   },
                 ],
               ],

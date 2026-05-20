@@ -263,8 +263,8 @@
                     "ApBill",
                     {
                       "emit": {
-                        "failure": "ApBillLoadFailed",
-                        "success": "ApBillLoaded"
+                        "success": "ApBillLoaded",
+                        "failure": "ApBillLoadFailed"
                       }
                     }
                   ],
@@ -273,21 +273,21 @@
                     "main",
                     {
                       "className": "py-12",
-                      "type": "stack",
-                      "direction": "vertical",
-                      "gap": "md",
                       "children": [
                         {
                           "type": "spinner"
                         },
                         {
                           "color": "muted",
-                          "content": "Loading bills…",
                           "type": "typography",
-                          "variant": "caption"
+                          "variant": "caption",
+                          "content": "Loading bills…"
                         }
                       ],
-                      "align": "center"
+                      "align": "center",
+                      "type": "stack",
+                      "gap": "md",
+                      "direction": "vertical"
                     }
                   ]
                 ]
@@ -301,17 +301,12 @@
                     "render-ui",
                     "main",
                     {
-                      "type": "stack",
-                      "direction": "vertical",
-                      "gap": "md",
                       "children": [
                         {
-                          "type": "stack",
-                          "align": "center",
                           "children": [
                             {
-                              "type": "icon",
-                              "name": "file-text"
+                              "name": "file-text",
+                              "type": "icon"
                             },
                             {
                               "content": "@config.title",
@@ -319,33 +314,35 @@
                               "type": "typography"
                             }
                           ],
-                          "gap": "sm",
-                          "direction": "horizontal"
+                          "type": "stack",
+                          "align": "center",
+                          "direction": "horizontal",
+                          "gap": "sm"
                         },
                         {
                           "children": [
                             {
                               "icon": "file-text",
-                              "label": "Open bills",
                               "value": "@payload.data.length",
+                              "label": "Open bills",
                               "type": "stat-display"
                             },
                             {
-                              "label": "Total payable",
+                              "icon": "dollar-sign",
                               "value": "$48,200",
                               "type": "stat-display",
-                              "icon": "dollar-sign"
+                              "label": "Total payable"
                             },
                             {
-                              "label": "Overdue",
+                              "icon": "alert-triangle",
                               "type": "stat-display",
                               "value": "6",
-                              "icon": "alert-triangle"
+                              "label": "Overdue"
                             },
                             {
-                              "value": "32",
                               "type": "stat-display",
                               "icon": "check-circle",
+                              "value": "32",
                               "label": "Paid this month"
                             }
                           ],
@@ -357,13 +354,16 @@
                         },
                         {
                           "type": "data-grid",
-                          "gap": "sm",
-                          "fields": "@config.fields",
                           "cols": 1.0,
                           "entity": "@payload.data",
-                          "itemActions": "@config.itemActions"
+                          "gap": "sm",
+                          "itemActions": "@config.itemActions",
+                          "fields": "@config.fields"
                         }
-                      ]
+                      ],
+                      "gap": "md",
+                      "type": "stack",
+                      "direction": "vertical"
                     }
                   ]
                 ]
@@ -377,9 +377,9 @@
                     "render-ui",
                     "main",
                     {
+                      "variant": "error",
                       "type": "alert",
-                      "message": "@payload.error",
-                      "variant": "error"
+                      "message": "@payload.error"
                     }
                   ]
                 ]
@@ -439,18 +439,14 @@
                     "main",
                     {
                       "direction": "vertical",
-                      "gap": "md",
-                      "type": "stack",
                       "children": [
                         {
-                          "gap": "sm",
                           "type": "stack",
-                          "align": "center",
                           "direction": "horizontal",
                           "children": [
                             {
-                              "label": "Back",
                               "action": "CLOSE_VIEW",
+                              "label": "Back",
                               "type": "button",
                               "variant": "ghost"
                             },
@@ -459,14 +455,62 @@
                               "name": "file-text"
                             },
                             {
+                              "type": "typography",
                               "variant": "h3",
-                              "content": "@entity.vendor",
-                              "type": "typography"
+                              "content": "@entity.vendor"
                             },
                             {
+                              "label": "@entity.status",
                               "variant": "default",
-                              "type": "badge",
-                              "label": "@entity.status"
+                              "type": "badge"
+                            }
+                          ],
+                          "align": "center",
+                          "gap": "sm"
+                        },
+                        {
+                          "type": "divider"
+                        },
+                        {
+                          "direction": "vertical",
+                          "gap": "sm",
+                          "type": "stack",
+                          "children": [
+                            {
+                              "type": "stack",
+                              "gap": "md",
+                              "direction": "horizontal",
+                              "children": [
+                                {
+                                  "variant": "caption",
+                                  "content": "Bill #",
+                                  "type": "typography",
+                                  "color": "muted"
+                                },
+                                {
+                                  "variant": "body",
+                                  "content": "@entity.billNumber",
+                                  "type": "typography"
+                                }
+                              ]
+                            },
+                            {
+                              "gap": "md",
+                              "direction": "horizontal",
+                              "children": [
+                                {
+                                  "type": "typography",
+                                  "variant": "caption",
+                                  "color": "muted",
+                                  "content": "Notes"
+                                },
+                                {
+                                  "content": "@entity.notes",
+                                  "type": "typography",
+                                  "variant": "body"
+                                }
+                              ],
+                              "type": "stack"
                             }
                           ]
                         },
@@ -476,58 +520,10 @@
                         {
                           "children": [
                             {
-                              "children": [
-                                {
-                                  "color": "muted",
-                                  "content": "Bill #",
-                                  "variant": "caption",
-                                  "type": "typography"
-                                },
-                                {
-                                  "variant": "body",
-                                  "content": "@entity.billNumber",
-                                  "type": "typography"
-                                }
-                              ],
-                              "direction": "horizontal",
-                              "type": "stack",
-                              "gap": "md"
-                            },
-                            {
-                              "type": "stack",
-                              "direction": "horizontal",
-                              "children": [
-                                {
-                                  "variant": "caption",
-                                  "type": "typography",
-                                  "content": "Notes",
-                                  "color": "muted"
-                                },
-                                {
-                                  "variant": "body",
-                                  "content": "@entity.notes",
-                                  "type": "typography"
-                                }
-                              ],
-                              "gap": "md"
-                            }
-                          ],
-                          "gap": "sm",
-                          "direction": "vertical",
-                          "type": "stack"
-                        },
-                        {
-                          "type": "divider"
-                        },
-                        {
-                          "type": "simple-grid",
-                          "cols": 4.0,
-                          "children": [
-                            {
                               "label": "Total",
                               "value": "@entity.amountTotal",
-                              "type": "stat-display",
-                              "icon": "dollar-sign"
+                              "icon": "dollar-sign",
+                              "type": "stat-display"
                             },
                             {
                               "value": "@entity.amountPaid",
@@ -542,40 +538,44 @@
                               "icon": "calendar"
                             },
                             {
-                              "label": "Due",
-                              "icon": "calendar-clock",
                               "type": "stat-display",
-                              "value": "@entity.dueDate"
+                              "label": "Due",
+                              "value": "@entity.dueDate",
+                              "icon": "calendar-clock"
                             }
-                          ]
+                          ],
+                          "type": "simple-grid",
+                          "cols": 4.0
                         },
                         {
-                          "align": "center",
                           "gap": "sm",
+                          "align": "center",
                           "type": "stack",
+                          "direction": "horizontal",
                           "children": [
                             {
-                              "action": "PAY_BILL",
+                              "label": "Pay Bill",
                               "type": "button",
                               "variant": "primary",
-                              "label": "Pay Bill",
+                              "action": "PAY_BILL",
                               "actionPayload": {
                                 "id": "@entity.id"
                               }
                             },
                             {
+                              "type": "button",
                               "label": "Void",
-                              "action": "VOID_BILL",
-                              "variant": "danger",
                               "actionPayload": {
                                 "id": "@entity.id"
                               },
-                              "type": "button"
+                              "variant": "danger",
+                              "action": "VOID_BILL"
                             }
-                          ],
-                          "direction": "horizontal"
+                          ]
                         }
-                      ]
+                      ],
+                      "type": "stack",
+                      "gap": "md"
                     }
                   ]
                 ]
@@ -609,17 +609,17 @@
                           "type": "spinner"
                         },
                         {
-                          "variant": "caption",
-                          "content": "Voiding bill…",
                           "type": "typography",
-                          "color": "muted"
+                          "color": "muted",
+                          "content": "Voiding bill…",
+                          "variant": "caption"
                         }
                       ],
-                      "direction": "vertical",
+                      "gap": "md",
                       "className": "py-12",
-                      "align": "center",
                       "type": "stack",
-                      "gap": "md"
+                      "direction": "vertical",
+                      "align": "center"
                     }
                   ]
                 ]
@@ -643,22 +643,22 @@
                     "render-ui",
                     "main",
                     {
-                      "type": "stack",
-                      "direction": "vertical",
+                      "className": "py-12",
                       "gap": "md",
+                      "direction": "vertical",
                       "align": "center",
                       "children": [
                         {
                           "type": "spinner"
                         },
                         {
-                          "variant": "caption",
+                          "type": "typography",
                           "content": "Loading bills…",
-                          "color": "muted",
-                          "type": "typography"
+                          "variant": "caption",
+                          "color": "muted"
                         }
                       ],
-                      "className": "py-12"
+                      "type": "stack"
                     }
                   ]
                 ]
@@ -678,8 +678,8 @@
                     "ApBill",
                     {
                       "emit": {
-                        "failure": "ApBillLoadFailed",
-                        "success": "ApBillLoaded"
+                        "success": "ApBillLoaded",
+                        "failure": "ApBillLoadFailed"
                       }
                     }
                   ],
@@ -687,19 +687,19 @@
                     "render-ui",
                     "main",
                     {
-                      "className": "py-12",
-                      "type": "stack",
                       "direction": "vertical",
-                      "gap": "md",
+                      "className": "py-12",
                       "align": "center",
+                      "gap": "md",
+                      "type": "stack",
                       "children": [
                         {
                           "type": "spinner"
                         },
                         {
                           "type": "typography",
-                          "color": "muted",
                           "variant": "caption",
+                          "color": "muted",
                           "content": "Paying bill…"
                         }
                       ]
@@ -731,22 +731,22 @@
                     "render-ui",
                     "main",
                     {
-                      "className": "py-12",
-                      "direction": "vertical",
-                      "type": "stack",
                       "align": "center",
+                      "className": "py-12",
                       "gap": "md",
+                      "direction": "vertical",
                       "children": [
                         {
                           "type": "spinner"
                         },
                         {
                           "type": "typography",
-                          "content": "Voiding bill…",
+                          "variant": "caption",
                           "color": "muted",
-                          "variant": "caption"
+                          "content": "Voiding bill…"
                         }
-                      ]
+                      ],
+                      "type": "stack"
                     }
                   ]
                 ]
@@ -770,8 +770,8 @@
                     "render-ui",
                     "main",
                     {
-                      "type": "spinner",
-                      "size": "sm"
+                      "size": "sm",
+                      "type": "spinner"
                     }
                   ]
                 ]
@@ -779,30 +779,6 @@
             ]
           },
           "config": {
-            "itemActions": {
-              "type": "[object]",
-              "default": [
-                {
-                  "variant": "primary",
-                  "icon": "arrow-right",
-                  "label": "Open",
-                  "event": "OPEN_BILL"
-                },
-                {
-                  "label": "Void",
-                  "variant": "danger",
-                  "event": "VOID_BILL"
-                }
-              ],
-              "label": "Row actions",
-              "description": "Buttons users can click on each bill row"
-            },
-            "title": {
-              "type": "string",
-              "default": "Bills Payable",
-              "label": "Section title",
-              "description": "Heading shown above the vendor bills list"
-            },
             "fields": {
               "type": "[object]",
               "default": [
@@ -812,33 +788,63 @@
                   "label": "Vendor"
                 },
                 {
-                  "label": "Bill #",
+                  "variant": "caption",
                   "name": "billNumber",
-                  "variant": "caption"
+                  "label": "Bill #"
                 },
                 {
                   "label": "Bill Date",
-                  "variant": "caption",
-                  "name": "billDate"
+                  "name": "billDate",
+                  "variant": "caption"
                 },
                 {
-                  "variant": "caption",
+                  "name": "dueDate",
                   "label": "Due",
-                  "name": "dueDate"
+                  "variant": "caption"
                 },
                 {
+                  "name": "amountTotal",
                   "label": "Total",
-                  "variant": "caption",
-                  "name": "amountTotal"
+                  "variant": "caption"
                 },
                 {
-                  "name": "status",
+                  "variant": "badge",
                   "label": "Status",
-                  "variant": "badge"
+                  "name": "status"
                 }
               ],
               "label": "Columns to show",
-              "description": "Each column maps to one field on the Bill entity"
+              "description": "Each column maps to one field on the Bill entity",
+              "items": {
+                "type": "object"
+              }
+            },
+            "title": {
+              "type": "string",
+              "default": "Bills Payable",
+              "label": "Section title",
+              "description": "Heading shown above the vendor bills list"
+            },
+            "itemActions": {
+              "type": "[object]",
+              "default": [
+                {
+                  "icon": "arrow-right",
+                  "label": "Open",
+                  "event": "OPEN_BILL",
+                  "variant": "primary"
+                },
+                {
+                  "event": "VOID_BILL",
+                  "variant": "danger",
+                  "label": "Void"
+                }
+              ],
+              "label": "Row actions",
+              "description": "Buttons users can click on each bill row",
+              "items": {
+                "type": "object"
+              }
             }
           },
           "scope": "collection"

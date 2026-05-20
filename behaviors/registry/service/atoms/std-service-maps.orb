@@ -100,44 +100,44 @@
                     "render-ui",
                     "main",
                     {
+                      "align": "stretch",
+                      "type": "stack",
                       "children": [
                         {
-                          "type": "stack",
                           "gap": "md",
-                          "direction": "horizontal",
-                          "align": "center",
                           "children": [
                             {
                               "type": "icon",
                               "name": "map-pin"
                             },
                             {
-                              "content": "Maps",
                               "type": "typography",
+                              "content": "Maps",
                               "variant": "h2"
                             }
-                          ]
+                          ],
+                          "type": "stack",
+                          "align": "center",
+                          "direction": "horizontal"
                         },
                         {
                           "type": "divider"
                         },
                         {
-                          "placeholder": "Enter an address...",
                           "inputType": "text",
+                          "placeholder": "Enter an address...",
                           "type": "input"
                         },
                         {
-                          "type": "button",
+                          "action": "GEOCODE",
                           "icon": "search",
                           "label": "Geocode",
-                          "action": "GEOCODE",
-                          "variant": "primary"
+                          "variant": "primary",
+                          "type": "button"
                         }
                       ],
-                      "gap": "lg",
                       "direction": "vertical",
-                      "type": "stack",
-                      "align": "stretch"
+                      "gap": "lg"
                     }
                   ]
                 ]
@@ -403,8 +403,8 @@
                     "ServiceMaps",
                     {
                       "emit": {
-                        "success": "ServiceMapsLoaded",
-                        "failure": "ServiceMapsLoadFailed"
+                        "failure": "ServiceMapsLoadFailed",
+                        "success": "ServiceMapsLoaded"
                       }
                     }
                   ],
@@ -412,12 +412,12 @@
                     "render-ui",
                     "main",
                     {
-                      "gap": "md",
                       "type": "stack",
-                      "direction": "vertical",
                       "children": [
                         "@config.uiTrait"
-                      ]
+                      ],
+                      "direction": "vertical",
+                      "gap": "md"
                     }
                   ]
                 ]
@@ -441,9 +441,9 @@
                     "render-ui",
                     "main",
                     {
+                      "message": "Resolving address to coordinates.",
                       "title": "Geocoding...",
-                      "type": "loading-state",
-                      "message": "Resolving address to coordinates."
+                      "type": "loading-state"
                     }
                   ],
                   [
@@ -451,14 +451,14 @@
                     "maps",
                     "geocode",
                     {
-                      "provider": "@config.provider",
                       "address": "@payload.address",
+                      "provider": "@config.provider",
                       "apiKey": "@config.apiKey"
                     },
                     {
                       "emit": {
-                        "failure": "FAILED",
-                        "success": "GEOCODED"
+                        "success": "GEOCODED",
+                        "failure": "FAILED"
                       }
                     }
                   ]
@@ -489,8 +489,8 @@
                     "main",
                     {
                       "type": "loading-state",
-                      "title": "Reverse geocoding...",
-                      "message": "Resolving coordinates to address."
+                      "message": "Resolving coordinates to address.",
+                      "title": "Reverse geocoding..."
                     }
                   ],
                   [
@@ -498,9 +498,9 @@
                     "maps",
                     "reverseGeocode",
                     {
-                      "lng": "@payload.lng",
                       "provider": "@config.provider",
                       "lat": "@payload.lat",
+                      "lng": "@payload.lng",
                       "apiKey": "@config.apiKey"
                     },
                     {
@@ -526,9 +526,9 @@
                     "render-ui",
                     "main",
                     {
-                      "type": "loading-state",
+                      "title": "Computing distance...",
                       "message": "Calculating distance between points.",
-                      "title": "Computing distance..."
+                      "type": "loading-state"
                     }
                   ],
                   [
@@ -537,16 +537,16 @@
                     "distance",
                     {
                       "fromLat": "@payload.fromLat",
+                      "provider": "@config.provider",
+                      "fromLng": "@payload.fromLng",
                       "toLat": "@payload.toLat",
                       "toLng": "@payload.toLng",
-                      "fromLng": "@payload.fromLng",
-                      "apiKey": "@config.apiKey",
-                      "provider": "@config.provider"
+                      "apiKey": "@config.apiKey"
                     },
                     {
                       "emit": {
-                        "failure": "FAILED",
-                        "success": "DISTANCE_COMPUTED"
+                        "success": "DISTANCE_COMPUTED",
+                        "failure": "FAILED"
                       }
                     }
                   ]
@@ -591,33 +591,33 @@
                     "render-ui",
                     "main",
                     {
-                      "direction": "vertical",
                       "children": [
                         {
-                          "type": "icon",
-                          "name": "check-circle"
+                          "name": "check-circle",
+                          "type": "icon"
                         },
                         {
-                          "message": "Address geocoded successfully",
                           "type": "alert",
-                          "variant": "success"
+                          "variant": "success",
+                          "message": "Address geocoded successfully"
                         },
                         {
-                          "color": "muted",
                           "type": "typography",
                           "variant": "body",
+                          "color": "muted",
                           "content": "@entity.formattedAddress"
                         },
                         {
-                          "type": "button",
                           "label": "New Lookup",
-                          "action": "RESET",
                           "variant": "ghost",
+                          "action": "RESET",
+                          "type": "button",
                           "icon": "rotate-ccw"
                         }
                       ],
-                      "gap": "lg",
+                      "direction": "vertical",
                       "type": "stack",
+                      "gap": "lg",
                       "align": "center"
                     }
                   ]
@@ -647,34 +647,34 @@
                     "render-ui",
                     "main",
                     {
-                      "gap": "lg",
-                      "align": "center",
-                      "type": "stack",
                       "children": [
                         {
-                          "type": "icon",
-                          "name": "check-circle"
+                          "name": "check-circle",
+                          "type": "icon"
                         },
                         {
-                          "type": "alert",
                           "variant": "success",
-                          "message": "Coordinates reverse-geocoded successfully"
+                          "message": "Coordinates reverse-geocoded successfully",
+                          "type": "alert"
                         },
                         {
-                          "content": "@entity.address",
-                          "color": "muted",
                           "variant": "body",
+                          "color": "muted",
+                          "content": "@entity.address",
                           "type": "typography"
                         },
                         {
-                          "type": "button",
                           "variant": "ghost",
                           "label": "New Lookup",
-                          "action": "RESET",
-                          "icon": "rotate-ccw"
+                          "icon": "rotate-ccw",
+                          "type": "button",
+                          "action": "RESET"
                         }
                       ],
-                      "direction": "vertical"
+                      "type": "stack",
+                      "gap": "lg",
+                      "direction": "vertical",
+                      "align": "center"
                     }
                   ]
                 ]
@@ -698,12 +698,14 @@
                     "render-ui",
                     "main",
                     {
+                      "gap": "lg",
                       "direction": "vertical",
                       "type": "stack",
+                      "align": "center",
                       "children": [
                         {
-                          "type": "icon",
-                          "name": "check-circle"
+                          "name": "check-circle",
+                          "type": "icon"
                         },
                         {
                           "message": "Distance computed successfully",
@@ -711,21 +713,19 @@
                           "variant": "success"
                         },
                         {
-                          "variant": "body",
-                          "color": "muted",
+                          "type": "typography",
                           "content": "@entity.distanceKm",
-                          "type": "typography"
+                          "color": "muted",
+                          "variant": "body"
                         },
                         {
-                          "icon": "rotate-ccw",
-                          "variant": "ghost",
-                          "action": "RESET",
+                          "type": "button",
                           "label": "New Lookup",
-                          "type": "button"
+                          "icon": "rotate-ccw",
+                          "action": "RESET",
+                          "variant": "ghost"
                         }
-                      ],
-                      "align": "center",
-                      "gap": "lg"
+                      ]
                     }
                   ]
                 ]
@@ -749,8 +749,8 @@
                     "render-ui",
                     "main",
                     {
-                      "type": "error-state",
                       "title": "Maps Request Failed",
+                      "type": "error-state",
                       "message": "@entity.error",
                       "onRetry": "RETRY"
                     }
@@ -771,12 +771,12 @@
                     "render-ui",
                     "main",
                     {
-                      "type": "stack",
                       "children": [
                         "@config.uiTrait"
                       ],
                       "gap": "md",
-                      "direction": "vertical"
+                      "direction": "vertical",
+                      "type": "stack"
                     }
                   ]
                 ]
@@ -798,9 +798,9 @@
                       "children": [
                         "@config.uiTrait"
                       ],
-                      "type": "stack",
+                      "gap": "md",
                       "direction": "vertical",
-                      "gap": "md"
+                      "type": "stack"
                     }
                   ]
                 ]
@@ -819,12 +819,12 @@
                     "render-ui",
                     "main",
                     {
+                      "gap": "md",
+                      "type": "stack",
+                      "direction": "vertical",
                       "children": [
                         "@config.uiTrait"
-                      ],
-                      "direction": "vertical",
-                      "type": "stack",
-                      "gap": "md"
+                      ]
                     }
                   ]
                 ]
@@ -832,11 +832,11 @@
             ]
           },
           "config": {
-            "uiTrait": {
-              "type": "trait",
-              "default": "@trait.ServiceMapsDefaultForm",
-              "label": "Geocode form",
-              "description": "Trait that renders the address lookup UI"
+            "apiKey": {
+              "type": "string",
+              "default": "",
+              "label": "Maps API key",
+              "description": "API key for the chosen maps provider (Mapbox or Google)"
             },
             "provider": {
               "type": "string",
@@ -844,11 +844,11 @@
               "label": "Maps provider",
               "description": "Which mapping vendor handles geocoding requests"
             },
-            "apiKey": {
-              "type": "string",
-              "default": "",
-              "label": "Maps API key",
-              "description": "API key for the chosen maps provider (Mapbox or Google)"
+            "uiTrait": {
+              "type": "trait",
+              "default": "@trait.ServiceMapsDefaultForm",
+              "label": "Geocode form",
+              "description": "Trait that renders the address lookup UI"
             }
           },
           "scope": "instance"

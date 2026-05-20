@@ -125,12 +125,12 @@ export interface StdChangeOrderChangeOrderLoadFailedPayload {
  * without modifying its state-machine topology.
  */
 export interface StdChangeOrderConfig {
+  /** Default: `[{"name":"coNumber","variant":"caption","label":"CO #"},{"name":"description","label":"Description","variant":"caption"},{"name":"costImpact","label":"Cost Impact","variant":"caption"},{"name":"scheduleImpactDays","variant":"caption","label":"Days"},{"label":"Status","variant":"badge","name":"status"},{"variant":"caption","name":"requestedBy","label":"Requested By"}]` */
+  fields?: TraitConfig[];
   /** Default: `"Change Orders"` */
   title?: string;
-  /** Default: `[{"variant":"primary","label":"Open","icon":"arrow-right","event":"OPEN_CHANGE_ORDER"},{"event":"REQUEST_DELETE","variant":"danger","label":"Delete"}]` */
+  /** Default: `[{"event":"OPEN_CHANGE_ORDER","label":"Open","variant":"primary","icon":"arrow-right"},{"variant":"danger","label":"Delete","event":"REQUEST_DELETE"}]` */
   itemActions?: TraitConfig[];
-  /** Default: `[{"name":"coNumber","label":"CO #","variant":"caption"},{"name":"description","variant":"caption","label":"Description"},{"label":"Cost Impact","variant":"caption","name":"costImpact"},{"variant":"caption","label":"Days","name":"scheduleImpactDays"},{"name":"status","label":"Status","variant":"badge"},{"name":"requestedBy","label":"Requested By","variant":"caption"}]` */
-  fields?: TraitConfig[];
 }
 
 /**

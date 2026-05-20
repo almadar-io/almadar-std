@@ -19,6 +19,8 @@ orbital ArmyBattleOrbital {
         (fetch ArmyBattle { emit: { success: "ArmyBattleLoaded", failure: "ArmyBattleLoadFailed" } })
         (render-ui main { type: "game-shell", appName: "Strategy Game", showTopBar: true, children: [{ type: "game-menu", title: "Army Battle", subtitle: "Turn-Based Strategy", menuItems: [{ label: "Start Battle", event: "START", variant: "primary" }] }] })
       START -> playing
+        (set @entity.score 0)
+        (set @entity.turn  0)
         (render-ui main { type: "game-shell", appName: "Strategy Game", showTopBar: true, children: [{ type: "game-hud", stats: [{ label: "Turn", value: "@entity.turn" }, { label: "Score", value: "@entity.score" }] }] })
       NAVIGATE -> menu
     }
@@ -145,6 +147,10 @@ orbital ResourceOrbital {
     initial: loading
     state loading {
       INIT -> displaying
+        (set @entity.food 0)
+        (set @entity.gold 0)
+        (set @entity.iron 0)
+        (set @entity.wood 0)
         (fetch Resource { emit: { success: "ResourceLoaded", failure: "ResourceLoadFailed" } })
         (render-ui main { type: "game-shell", appName: "Strategy Game", showTopBar: true, children: [{ type: "scaled-diagram", children: [{ type: "stack", direction: "vertical", gap: "lg", children: [{ type: "breadcrumb", items: [{ label: "Home", href: "/" }, { label: "Resources" }] }, { type: "stack", direction: "horizontal", gap: "md", justify: "between", children: [{ type: "stack", direction: "horizontal", gap: "md", children: [{ type: "icon", name: "database" }, { type: "typography", content: "Resources", variant: "h2" }] }, { type: "button", label: "Refresh", action: "REFRESH", variant: "secondary", icon: "refresh-cw" }] }, { type: "divider" }, { type: "stack", direction: "vertical", gap: "sm", children: [{ type: "simple-grid", cols: 3, children: [{ type: "stat-display", label: "Gold", value: "@entity.gold" }, { type: "stat-display", label: "Food", value: "@entity.food" }, { type: "stat-display", label: "Wood", value: "@entity.wood" }, { type: "stat-display", label: "Iron", value: "@entity.iron" }] }] }, { type: "divider" }, { type: "grid", cols: 2, gap: "md", children: [{ type: "card", children: [{ type: "typography", variant: "caption", content: "Chart View" }] }, { type: "card", children: [{ type: "typography", variant: "caption", content: "Graph View" }] }] }, { type: "line-chart", data: [{ date: "Jan", value: 12 }, { date: "Feb", value: 19 }, { date: "Mar", value: 15 }, { date: "Apr", value: 25 }, { date: "May", value: 22 }, { date: "Jun", value: 30 }] }, { type: "chart-legend", items: [{ label: "Current", color: "primary" }, { label: "Previous", color: "muted" }] }, { type: "graph-view", nodes: [{ id: "a", label: "Start" }, { id: "b", label: "Process" }, { id: "c", label: "End" }], edges: [{ source: "a", target: "b" }, { source: "b", target: "c" }], width: 400, height: 200 }] }] }] })
       LOADED -> displaying

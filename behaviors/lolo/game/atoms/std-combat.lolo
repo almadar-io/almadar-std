@@ -18,6 +18,15 @@ orbital CombatantOrbital {
   trait CombatantCombat -> Combatant [interaction, instance] {
     initial: ready
     state ready {
+      CombatantLoaded -> ready
+        (set @entity.id          @payload.id)
+        (set @entity.name        @payload.name)
+        (set @entity.description @payload.description)
+        (set @entity.status      @payload.status)
+        (set @entity.createdAt   @payload.createdAt)
+        (set @entity.hp          @payload.hp)
+        (set @entity.attack      @payload.attack)
+        (set @entity.defense     @payload.defense)
       INIT -> ready
         (fetch Combatant { emit: { success: "CombatantLoaded", failure: "CombatantLoadFailed" } })
         (render-ui main { type: "stack", direction: "vertical", gap: "lg", align: "center", children: [{ type: "game-hud", position: "top", stats: [{ label: "HP", value: "@entity.hp" }, { label: "Attack", value: "@entity.attack" }, { label: "Defense", value: "@entity.defense" }] }, { type: "button", label: "Attack", action: "ATTACK", variant: "primary", icon: "swords" }] })

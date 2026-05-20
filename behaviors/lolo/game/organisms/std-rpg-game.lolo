@@ -24,6 +24,7 @@ orbital BattleStateOrbital {
     initial: menu
     state menu {
       INIT -> menu
+        (set @entity.score 0)
         (fetch BattleState { emit: { success: "BattleStateLoaded", failure: "BattleStateLoadFailed" } })
         (render-ui main { type: "game-shell", appName: "RPG Game", showTopBar: true, children: [{ type: "game-menu", title: "Battle Arena", subtitle: "Turn-Based Strategy", menuItems: [{ label: "Start Battle", event: "START", variant: "primary" }] }] })
       START -> playing
@@ -222,6 +223,7 @@ orbital RpgItemOrbital {
     initial: closed
     state closed {
       INIT -> closed
+        (set @entity.name "")
         (fetch RpgItem { emit: { success: "RpgItemLoaded", failure: "RpgItemLoadFailed" } })
       USE_ITEM -> open
         (fetch RpgItem {id: "@payload.id" , emit: { success: "RpgItemLoaded", failure: "RpgItemLoadFailed" }, emit: { success: "RpgItemLoaded", failure: "RpgItemLoadFailed" } })

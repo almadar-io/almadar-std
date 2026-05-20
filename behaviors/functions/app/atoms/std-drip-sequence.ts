@@ -85,12 +85,12 @@ export interface StdDripSequenceDripSequenceLoadFailedPayload {
  * without modifying its state-machine topology.
  */
 export interface StdDripSequenceConfig {
-  /** Default: `[{"label":"Name","variant":"caption","name":"name"},{"label":"Description","variant":"caption","name":"description"},{"label":"Trigger","name":"triggerEvent","variant":"caption"},{"label":"Status","name":"status","variant":"badge"},{"name":"totalEnrolled","label":"Enrolled","variant":"caption"},{"label":"Completed","variant":"caption","name":"totalCompleted"}]` */
-  fields?: TraitConfig[];
-  /** Default: `[{"label":"Open","variant":"primary","icon":"arrow-right","event":"OPEN_SEQUENCE"},{"label":"Pause","variant":"danger","event":"PAUSE"}]` */
-  itemActions?: TraitConfig[];
   /** Default: `"Drip Sequences"` */
   title?: string;
+  /** Default: `[{"icon":"arrow-right","label":"Open","event":"OPEN_SEQUENCE","variant":"primary"},{"label":"Pause","event":"PAUSE","variant":"danger"}]` */
+  itemActions?: TraitConfig[];
+  /** Default: `[{"name":"name","label":"Name","variant":"caption"},{"name":"description","label":"Description","variant":"caption"},{"name":"triggerEvent","label":"Trigger","variant":"caption"},{"label":"Status","variant":"badge","name":"status"},{"label":"Enrolled","variant":"caption","name":"totalEnrolled"},{"label":"Completed","variant":"caption","name":"totalCompleted"}]` */
+  fields?: TraitConfig[];
 }
 
 /**

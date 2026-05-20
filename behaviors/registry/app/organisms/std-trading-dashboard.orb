@@ -86,9 +86,6 @@
           "ref": "AppShell.traits.AppLayout",
           "name": "PortfolioAppLayout",
           "config": {
-            "contentTrait": "@trait.PortfolioCatalog",
-            "notificationClickEvent": "PORTFOLIO_NOTIFICATIONS_OPEN",
-            "appName": "Trading Dashboard",
             "navItems": [
               {
                 "href": "/portfolio",
@@ -96,22 +93,25 @@
                 "label": "Portfolio"
               },
               {
-                "href": "/orders",
                 "icon": "clipboard-list",
+                "href": "/orders",
                 "label": "Orders"
               },
               {
-                "href": "/market",
                 "icon": "activity",
-                "label": "Market"
+                "label": "Market",
+                "href": "/market"
               }
             ],
+            "notifications": [],
             "searchEvent": "PORTFOLIO_SEARCH",
-            "notifications": []
+            "notificationClickEvent": "PORTFOLIO_NOTIFICATIONS_OPEN",
+            "contentTrait": "@trait.PortfolioCatalog",
+            "appName": "Trading Dashboard"
           },
           "events": {
-            "NOTIFY_CLICK": "PORTFOLIO_NOTIFICATIONS_OPEN",
-            "SEARCH": "PORTFOLIO_SEARCH"
+            "SEARCH": "PORTFOLIO_SEARCH",
+            "NOTIFY_CLICK": "PORTFOLIO_NOTIFICATIONS_OPEN"
           }
         },
         {
@@ -194,18 +194,16 @@
                     "render-ui",
                     "main",
                     {
-                      "type": "stack",
                       "direction": "vertical",
+                      "type": "stack",
                       "gap": "lg",
                       "children": [
                         {
-                          "align": "center",
+                          "type": "stack",
+                          "direction": "horizontal",
                           "children": [
                             {
                               "gap": "sm",
-                              "type": "stack",
-                              "direction": "horizontal",
-                              "align": "center",
                               "children": [
                                 {
                                   "name": "trending-up",
@@ -216,40 +214,42 @@
                                   "content": "Portfolio",
                                   "variant": "h2"
                                 }
-                              ]
+                              ],
+                              "type": "stack",
+                              "align": "center",
+                              "direction": "horizontal"
                             },
                             {
-                              "type": "stack",
-                              "direction": "horizontal",
-                              "gap": "sm",
                               "children": [
                                 {
-                                  "action": "CREATE",
-                                  "icon": "plus",
-                                  "variant": "primary",
                                   "type": "button",
+                                  "action": "CREATE",
+                                  "variant": "primary",
+                                  "icon": "plus",
                                   "label": "Add Position"
                                 }
-                              ]
+                              ],
+                              "type": "stack",
+                              "gap": "sm",
+                              "direction": "horizontal"
                             }
                           ],
+                          "gap": "md",
                           "justify": "between",
-                          "type": "stack",
-                          "direction": "horizontal",
-                          "gap": "md"
+                          "align": "center"
                         },
                         {
                           "type": "divider"
                         },
                         {
+                          "gap": "md",
+                          "align": "center",
+                          "type": "stack",
+                          "direction": "horizontal",
                           "children": [
                             "@trait.PortfolioSearch",
                             "@trait.PortfolioFilter"
-                          ],
-                          "align": "center",
-                          "direction": "horizontal",
-                          "gap": "md",
-                          "type": "stack"
+                          ]
                         },
                         "@trait.PortfolioStats",
                         "@trait.PortfolioGraphs",
@@ -283,27 +283,27 @@
                         },
                         {
                           "variant": "h3",
-                          "content": "No notifications",
+                          "type": "typography",
+                          "content": "No notifications"
+                        },
+                        {
+                          "variant": "caption",
+                          "color": "muted",
+                          "content": "You're all caught up.",
                           "type": "typography"
                         },
                         {
-                          "color": "muted",
-                          "content": "You're all caught up.",
-                          "type": "typography",
-                          "variant": "caption"
-                        },
-                        {
-                          "type": "button",
-                          "action": "INIT",
                           "label": "Back to portfolio",
+                          "action": "INIT",
+                          "type": "button",
                           "variant": "ghost"
                         }
                       ],
                       "align": "center",
-                      "direction": "vertical",
                       "className": "py-8",
-                      "type": "stack",
-                      "gap": "md"
+                      "direction": "vertical",
+                      "gap": "md",
+                      "type": "stack"
                     }
                   ]
                 ]
@@ -324,45 +324,49 @@
           "ref": "Filter.traits.FilterTargetFilter",
           "name": "PortfolioFilter",
           "config": {
-            "event": "PORTFOLIO_FILTER",
             "filters": [
               {
                 "filterType": "text",
                 "field": "symbol",
                 "label": "Symbol"
               }
-            ]
+            ],
+            "event": "PORTFOLIO_FILTER"
           }
         },
         {
           "ref": "Stats.traits.StatsItemStats",
           "name": "PortfolioStats",
           "config": {
+            "title": "Portfolio",
             "metrics": [
               {
-                "variant": "primary",
-                "icon": "dollar-sign",
-                "field": "marketValue",
+                "label": "Total Value",
                 "format": "currency",
                 "aggregation": "sum",
-                "label": "Total Value"
+                "field": "marketValue",
+                "icon": "dollar-sign",
+                "variant": "primary"
               },
               {
-                "field": "dailyPnl",
                 "aggregation": "sum",
                 "icon": "trending-up",
-                "variant": "success",
+                "field": "dailyPnl",
                 "label": "Daily PnL",
+                "variant": "success",
                 "format": "currency"
               },
               {
-                "format": "number",
-                "variant": "info",
                 "aggregation": "count",
+                "variant": "info",
                 "label": "Positions",
-                "icon": "layout-list"
+                "icon": "layout-list",
+                "format": "number"
               },
               {
+                "label": "Winners",
+                "aggregation": "count",
+                "icon": "check-circle",
                 "filter": [
                   "fn",
                   "row",
@@ -372,14 +376,10 @@
                     0.0
                   ]
                 ],
-                "aggregation": "count",
-                "label": "Winners",
-                "icon": "check-circle",
-                "variant": "success",
-                "format": "number"
+                "format": "number",
+                "variant": "success"
               }
-            ],
-            "title": "Portfolio"
+            ]
           },
           "listens": [
             {
@@ -397,13 +397,13 @@
           "name": "PortfolioGraphs",
           "config": {
             "aggregation": "sum",
-            "height": 240.0,
-            "valueField": "dailyPnl",
-            "categoryField": "symbol",
-            "showLegend": false,
             "title": "Daily PnL",
+            "showLegend": false,
+            "height": 240.0,
             "subtitle": "Profit and loss across positions",
-            "chartType": "line"
+            "chartType": "line",
+            "valueField": "dailyPnl",
+            "categoryField": "symbol"
           },
           "listens": [
             {
@@ -421,43 +421,11 @@
           "name": "PortfolioBrowseList",
           "linkedEntity": "Portfolio",
           "config": {
-            "cols": 1.0,
             "gap": "sm",
-            "fields": [
-              {
-                "name": "symbol",
-                "icon": "trending-up",
-                "variant": "h3"
-              },
-              {
-                "format": "number",
-                "name": "qty",
-                "label": "Qty",
-                "variant": "body"
-              },
-              {
-                "label": "Avg Cost",
-                "variant": "body",
-                "name": "avgCost",
-                "format": "currency"
-              },
-              {
-                "name": "marketValue",
-                "format": "currency",
-                "label": "Market Value",
-                "variant": "h4"
-              },
-              {
-                "format": "currency",
-                "variant": "badge",
-                "name": "dailyPnl",
-                "label": "Daily PnL"
-              }
-            ],
             "itemActions": [
               {
-                "label": "View",
                 "event": "VIEW",
+                "label": "View",
                 "variant": "ghost"
               },
               {
@@ -466,11 +434,43 @@
                 "label": "Edit"
               },
               {
+                "label": "Delete",
                 "event": "DELETE",
-                "variant": "danger",
-                "label": "Delete"
+                "variant": "danger"
               }
-            ]
+            ],
+            "fields": [
+              {
+                "name": "symbol",
+                "variant": "h3",
+                "icon": "trending-up"
+              },
+              {
+                "name": "qty",
+                "label": "Qty",
+                "variant": "body",
+                "format": "number"
+              },
+              {
+                "name": "avgCost",
+                "label": "Avg Cost",
+                "format": "currency",
+                "variant": "body"
+              },
+              {
+                "label": "Market Value",
+                "name": "marketValue",
+                "format": "currency",
+                "variant": "h4"
+              },
+              {
+                "name": "dailyPnl",
+                "label": "Daily PnL",
+                "variant": "badge",
+                "format": "currency"
+              }
+            ],
+            "cols": 1.0
           },
           "listens": [
             {
@@ -520,7 +520,6 @@
           "name": "PortfolioCreate",
           "linkedEntity": "Portfolio",
           "config": {
-            "title": "Add Position",
             "fields": [
               "symbol",
               "qty",
@@ -528,8 +527,9 @@
               "marketValue",
               "dailyPnl"
             ],
+            "mode": "create",
             "icon": "plus-circle",
-            "mode": "create"
+            "title": "Add Position"
           },
           "events": {
             "OPEN": "CREATE"
@@ -550,16 +550,16 @@
           "name": "PortfolioEdit",
           "linkedEntity": "Portfolio",
           "config": {
-            "title": "Edit Position",
+            "icon": "edit",
             "mode": "edit",
+            "title": "Edit Position",
             "fields": [
               "symbol",
               "qty",
               "avgCost",
               "marketValue",
               "dailyPnl"
-            ],
-            "icon": "edit"
+            ]
           },
           "events": {
             "OPEN": "EDIT"
@@ -580,9 +580,9 @@
           "name": "PortfolioView",
           "linkedEntity": "Portfolio",
           "config": {
-            "mode": "edit",
-            "title": "View Position",
             "icon": "eye",
+            "title": "View Position",
+            "mode": "edit",
             "fields": [
               "symbol",
               "qty",
@@ -611,13 +611,13 @@
           "linkedEntity": "Portfolio",
           "config": {
             "icon": "alert-triangle",
-            "title": "Close Position",
             "alertMessage": "This action cannot be undone.",
-            "confirmLabel": "Close"
+            "confirmLabel": "Close",
+            "title": "Close Position"
           },
           "events": {
-            "CONFIRM": "CONFIRM_DELETE",
-            "REQUEST": "DELETE"
+            "REQUEST": "DELETE",
+            "CONFIRM": "CONFIRM_DELETE"
           },
           "listens": [
             {
@@ -936,32 +936,32 @@
           "name": "TradeOrderAppLayout",
           "linkedEntity": "TradeOrder",
           "config": {
-            "contentTrait": "@trait.TradeOrderCatalog",
-            "appName": "Trading Dashboard",
+            "notificationClickEvent": "TRADE_ORDER_NOTIFICATIONS_OPEN",
             "searchEvent": "TRADE_ORDER_SEARCH",
             "notifications": [],
+            "contentTrait": "@trait.TradeOrderCatalog",
+            "appName": "Trading Dashboard",
             "navItems": [
               {
-                "href": "/portfolio",
                 "icon": "layout-list",
-                "label": "Portfolio"
+                "label": "Portfolio",
+                "href": "/portfolio"
               },
               {
+                "href": "/orders",
                 "icon": "clipboard-list",
-                "label": "Orders",
-                "href": "/orders"
+                "label": "Orders"
               },
               {
-                "label": "Market",
                 "href": "/market",
+                "label": "Market",
                 "icon": "activity"
               }
-            ],
-            "notificationClickEvent": "TRADE_ORDER_NOTIFICATIONS_OPEN"
+            ]
           },
           "events": {
-            "NOTIFY_CLICK": "TRADE_ORDER_NOTIFICATIONS_OPEN",
-            "SEARCH": "TRADE_ORDER_SEARCH"
+            "SEARCH": "TRADE_ORDER_SEARCH",
+            "NOTIFY_CLICK": "TRADE_ORDER_NOTIFICATIONS_OPEN"
           }
         },
         {
@@ -1006,46 +1006,47 @@
                     "render-ui",
                     "main",
                     {
+                      "type": "stack",
                       "children": [
                         {
+                          "justify": "between",
+                          "direction": "horizontal",
                           "type": "stack",
+                          "gap": "md",
+                          "align": "center",
                           "children": [
                             {
-                              "direction": "horizontal",
-                              "type": "stack",
                               "children": [
                                 {
                                   "name": "clipboard-list",
                                   "type": "icon"
                                 },
                                 {
-                                  "variant": "h2",
+                                  "content": "Trade Orders",
                                   "type": "typography",
-                                  "content": "Trade Orders"
+                                  "variant": "h2"
                                 }
                               ],
+                              "gap": "sm",
+                              "type": "stack",
                               "align": "center",
-                              "gap": "sm"
+                              "direction": "horizontal"
                             },
                             {
-                              "direction": "horizontal",
-                              "gap": "sm",
                               "children": [
                                 {
-                                  "type": "button",
-                                  "action": "CREATE",
-                                  "variant": "primary",
                                   "label": "New Order",
-                                  "icon": "plus"
+                                  "icon": "plus",
+                                  "variant": "primary",
+                                  "action": "CREATE",
+                                  "type": "button"
                                 }
                               ],
-                              "type": "stack"
+                              "type": "stack",
+                              "gap": "sm",
+                              "direction": "horizontal"
                             }
-                          ],
-                          "justify": "between",
-                          "gap": "md",
-                          "direction": "horizontal",
-                          "align": "center"
+                          ]
                         },
                         {
                           "type": "divider"
@@ -1053,7 +1054,6 @@
                         "@trait.TradeOrderBrowseList"
                       ],
                       "gap": "lg",
-                      "type": "stack",
                       "direction": "vertical"
                     }
                   ]
@@ -1068,6 +1068,7 @@
           "name": "TradeOrderBrowseList",
           "linkedEntity": "TradeOrder",
           "config": {
+            "cols": 1.0,
             "fields": [
               {
                 "variant": "h3",
@@ -1079,39 +1080,38 @@
                 "variant": "badge"
               },
               {
-                "format": "number",
+                "variant": "body",
                 "name": "quantity",
-                "variant": "body"
+                "format": "number"
               },
               {
-                "name": "price",
                 "format": "currency",
-                "variant": "h4"
+                "variant": "h4",
+                "name": "price"
               },
               {
-                "name": "status",
-                "variant": "badge"
+                "variant": "badge",
+                "name": "status"
               }
             ],
+            "gap": "sm",
             "itemActions": [
               {
-                "variant": "ghost",
                 "event": "VIEW",
-                "label": "View"
+                "label": "View",
+                "variant": "ghost"
               },
               {
                 "variant": "ghost",
-                "event": "EDIT",
-                "label": "Edit"
+                "label": "Edit",
+                "event": "EDIT"
               },
               {
-                "label": "Cancel",
                 "event": "DELETE",
+                "label": "Cancel",
                 "variant": "danger"
               }
-            ],
-            "cols": 1.0,
-            "gap": "sm"
+            ]
           },
           "listens": [
             {
@@ -1146,8 +1146,8 @@
           "linkedEntity": "TradeOrder",
           "config": {
             "title": "New Order",
-            "icon": "plus-circle",
             "mode": "create",
+            "icon": "plus-circle",
             "fields": [
               "symbol",
               "side",
@@ -1176,6 +1176,7 @@
           "linkedEntity": "TradeOrder",
           "config": {
             "icon": "edit",
+            "title": "Edit Order",
             "fields": [
               "symbol",
               "side",
@@ -1183,7 +1184,6 @@
               "price",
               "status"
             ],
-            "title": "Edit Order",
             "mode": "edit"
           },
           "events": {
@@ -1205,8 +1205,6 @@
           "name": "TradeOrderView",
           "linkedEntity": "TradeOrder",
           "config": {
-            "icon": "eye",
-            "mode": "edit",
             "fields": [
               "symbol",
               "side",
@@ -1214,7 +1212,9 @@
               "price",
               "status"
             ],
-            "title": "View Order"
+            "title": "View Order",
+            "icon": "eye",
+            "mode": "edit"
           },
           "events": {
             "OPEN": "VIEW"
@@ -1235,10 +1235,10 @@
           "name": "TradeOrderDelete",
           "linkedEntity": "TradeOrder",
           "config": {
-            "alertMessage": "Cancel this pending order?",
-            "title": "Cancel Order",
             "confirmLabel": "Cancel Order",
-            "icon": "alert-triangle"
+            "title": "Cancel Order",
+            "icon": "alert-triangle",
+            "alertMessage": "Cancel this pending order?"
           },
           "events": {
             "REQUEST": "DELETE",
@@ -1526,28 +1526,28 @@
           "name": "MarketFeedAppLayout",
           "linkedEntity": "MarketFeed",
           "config": {
-            "contentTrait": "@trait.MarketFeedDisplay",
             "notificationClickEvent": "MARKET_FEED_NOTIFICATIONS_OPEN",
+            "contentTrait": "@trait.MarketFeedDisplay",
             "appName": "Trading Dashboard",
+            "notifications": [],
+            "searchEvent": "MARKET_FEED_SEARCH",
             "navItems": [
               {
+                "label": "Portfolio",
                 "href": "/portfolio",
-                "icon": "layout-list",
-                "label": "Portfolio"
+                "icon": "layout-list"
               },
               {
                 "label": "Orders",
-                "href": "/orders",
-                "icon": "clipboard-list"
+                "icon": "clipboard-list",
+                "href": "/orders"
               },
               {
+                "icon": "activity",
                 "label": "Market",
-                "href": "/market",
-                "icon": "activity"
+                "href": "/market"
               }
-            ],
-            "searchEvent": "MARKET_FEED_SEARCH",
-            "notifications": []
+            ]
           },
           "events": {
             "SEARCH": "MARKET_FEED_SEARCH",
@@ -1580,13 +1580,13 @@
                     "render-ui",
                     "main",
                     {
-                      "type": "stack",
-                      "direction": "vertical",
+                      "className": "max-w-6xl mx-auto w-full p-4",
                       "children": [
                         "@trait.MarketFeedAsync"
                       ],
+                      "direction": "vertical",
                       "gap": "lg",
-                      "className": "max-w-6xl mx-auto w-full p-4"
+                      "type": "stack"
                     }
                   ]
                 ]
@@ -1775,34 +1775,33 @@
                     "render-ui",
                     "main",
                     {
-                      "align": "center",
                       "type": "stack",
                       "children": [
                         {
                           "gap": "md",
-                          "direction": "horizontal",
                           "align": "center",
                           "children": [
                             {
-                              "type": "icon",
-                              "name": "activity"
+                              "name": "activity",
+                              "type": "icon"
                             },
                             {
+                              "type": "typography",
                               "content": "Market Feed",
-                              "variant": "h2",
-                              "type": "typography"
+                              "variant": "h2"
                             }
                           ],
+                          "direction": "horizontal",
                           "type": "stack"
                         },
                         {
                           "type": "divider"
                         },
                         {
-                          "variant": "body",
-                          "type": "typography",
                           "color": "muted",
-                          "content": "Connect to live market data."
+                          "variant": "body",
+                          "content": "Connect to live market data.",
+                          "type": "typography"
                         },
                         {
                           "label": "Start Stream",
@@ -1813,7 +1812,8 @@
                         }
                       ],
                       "direction": "vertical",
-                      "gap": "lg"
+                      "gap": "lg",
+                      "align": "center"
                     }
                   ]
                 ]
@@ -1828,20 +1828,20 @@
                     "main",
                     {
                       "type": "stack",
-                      "direction": "vertical",
-                      "gap": "lg",
                       "align": "center",
+                      "gap": "lg",
                       "children": [
                         {
-                          "message": "Streaming ticks…",
                           "type": "loading-state",
-                          "title": "Connecting to market feed…"
+                          "title": "Connecting to market feed…",
+                          "message": "Streaming ticks…"
                         },
                         {
-                          "type": "skeleton",
-                          "variant": "text"
+                          "variant": "text",
+                          "type": "skeleton"
                         }
-                      ]
+                      ],
+                      "direction": "vertical"
                     }
                   ]
                 ]
@@ -1858,8 +1858,8 @@
                     "@payload.data",
                     {
                       "emit": {
-                        "success": "MarketFeedSaved",
-                        "failure": "MarketFeedSaveFailed"
+                        "failure": "MarketFeedSaveFailed",
+                        "success": "MarketFeedSaved"
                       }
                     }
                   ],
@@ -1867,30 +1867,34 @@
                     "render-ui",
                     "main",
                     {
-                      "gap": "lg",
+                      "direction": "vertical",
+                      "type": "stack",
                       "children": [
                         {
+                          "type": "stack",
+                          "justify": "between",
                           "children": [
                             {
-                              "align": "center",
+                              "direction": "horizontal",
                               "gap": "sm",
                               "type": "stack",
+                              "align": "center",
                               "children": [
                                 {
                                   "name": "activity",
                                   "type": "icon"
                                 },
                                 {
-                                  "variant": "h2",
                                   "type": "typography",
-                                  "content": "Live Market Feed"
+                                  "content": "Live Market Feed",
+                                  "variant": "h2"
                                 }
-                              ],
-                              "direction": "horizontal"
+                              ]
                             },
                             {
-                              "direction": "horizontal",
                               "type": "stack",
+                              "direction": "horizontal",
+                              "gap": "sm",
                               "children": [
                                 {
                                   "type": "alert",
@@ -1898,28 +1902,23 @@
                                   "message": "Connected"
                                 },
                                 {
-                                  "icon": "rotate-ccw",
-                                  "action": "RESET",
                                   "type": "button",
+                                  "icon": "rotate-ccw",
                                   "label": "Reset",
+                                  "action": "RESET",
                                   "variant": "ghost"
                                 }
-                              ],
-                              "gap": "sm"
+                              ]
                             }
                           ],
-                          "type": "stack",
-                          "direction": "horizontal",
                           "gap": "md",
-                          "align": "center",
-                          "justify": "between"
+                          "direction": "horizontal",
+                          "align": "center"
                         },
                         {
                           "type": "divider"
                         },
                         {
-                          "gap": "sm",
-                          "type": "data-list",
                           "fields": [
                             {
                               "name": "symbol",
@@ -1928,20 +1927,22 @@
                             },
                             {
                               "variant": "h3",
-                              "format": "currency",
-                              "name": "price"
+                              "name": "price",
+                              "format": "currency"
                             },
                             {
-                              "name": "change",
                               "format": "currency",
+                              "name": "change",
                               "variant": "badge"
                             },
                             {
-                              "format": "number",
+                              "name": "volume",
                               "variant": "caption",
-                              "name": "volume"
+                              "format": "number"
                             }
                           ],
+                          "type": "data-list",
+                          "gap": "sm",
                           "entity": "@payload.data",
                           "variant": "card"
                         },
@@ -1951,48 +1952,47 @@
                         {
                           "data": [
                             {
-                              "value": 100.0,
-                              "date": "09:30"
+                              "date": "09:30",
+                              "value": 100.0
                             },
                             {
-                              "value": 102.0,
-                              "date": "10:00"
+                              "date": "10:00",
+                              "value": 102.0
                             },
                             {
                               "date": "10:30",
                               "value": 99.0
                             },
                             {
-                              "value": 105.0,
-                              "date": "11:00"
+                              "date": "11:00",
+                              "value": 105.0
                             },
                             {
-                              "value": 107.0,
-                              "date": "11:30"
+                              "date": "11:30",
+                              "value": 107.0
                             },
                             {
-                              "value": 104.0,
-                              "date": "12:00"
+                              "date": "12:00",
+                              "value": 104.0
                             }
                           ],
                           "type": "line-chart"
                         },
                         {
-                          "type": "chart-legend",
                           "items": [
                             {
-                              "label": "Price",
-                              "color": "primary"
+                              "color": "primary",
+                              "label": "Price"
                             },
                             {
                               "label": "Volume",
                               "color": "muted"
                             }
-                          ]
+                          ],
+                          "type": "chart-legend"
                         }
                       ],
-                      "type": "stack",
-                      "direction": "vertical"
+                      "gap": "lg"
                     }
                   ]
                 ]
@@ -2007,39 +2007,39 @@
                     "main",
                     {
                       "type": "stack",
-                      "direction": "vertical",
-                      "gap": "lg",
                       "align": "center",
                       "children": [
                         {
-                          "message": "Market feed disconnected.",
+                          "title": "Stream Disconnected",
                           "onRetry": "RETRY",
                           "type": "error-state",
-                          "title": "Stream Disconnected"
+                          "message": "Market feed disconnected."
                         },
                         {
-                          "direction": "horizontal",
+                          "gap": "sm",
+                          "justify": "center",
                           "children": [
                             {
-                              "label": "Retry",
-                              "variant": "primary",
                               "icon": "refresh-cw",
                               "type": "button",
-                              "action": "RETRY"
+                              "label": "Retry",
+                              "action": "RETRY",
+                              "variant": "primary"
                             },
                             {
-                              "type": "button",
                               "action": "RESET",
-                              "icon": "rotate-ccw",
                               "label": "Reset",
-                              "variant": "ghost"
+                              "variant": "ghost",
+                              "icon": "rotate-ccw",
+                              "type": "button"
                             }
                           ],
-                          "justify": "center",
                           "type": "stack",
-                          "gap": "sm"
+                          "direction": "horizontal"
                         }
-                      ]
+                      ],
+                      "direction": "vertical",
+                      "gap": "lg"
                     }
                   ]
                 ]
@@ -2053,15 +2053,13 @@
                     "render-ui",
                     "main",
                     {
-                      "align": "center",
-                      "type": "stack",
-                      "direction": "vertical",
                       "gap": "lg",
                       "children": [
                         {
                           "direction": "horizontal",
-                          "type": "stack",
+                          "gap": "md",
                           "align": "center",
+                          "type": "stack",
                           "children": [
                             {
                               "name": "activity",
@@ -2069,29 +2067,31 @@
                             },
                             {
                               "type": "typography",
-                              "variant": "h2",
-                              "content": "Market Feed"
+                              "content": "Market Feed",
+                              "variant": "h2"
                             }
-                          ],
-                          "gap": "md"
+                          ]
                         },
                         {
                           "type": "divider"
                         },
                         {
                           "type": "typography",
+                          "variant": "body",
                           "color": "muted",
-                          "content": "Connect to live market data.",
-                          "variant": "body"
+                          "content": "Connect to live market data."
                         },
                         {
                           "action": "START",
                           "icon": "play",
-                          "variant": "primary",
+                          "label": "Start Stream",
                           "type": "button",
-                          "label": "Start Stream"
+                          "variant": "primary"
                         }
-                      ]
+                      ],
+                      "type": "stack",
+                      "direction": "vertical",
+                      "align": "center"
                     }
                   ]
                 ]
@@ -2105,45 +2105,45 @@
                     "render-ui",
                     "main",
                     {
-                      "direction": "vertical",
-                      "gap": "lg",
                       "children": [
                         {
-                          "type": "stack",
-                          "gap": "md",
-                          "align": "center",
                           "direction": "horizontal",
+                          "align": "center",
                           "children": [
                             {
                               "type": "icon",
                               "name": "activity"
                             },
                             {
-                              "variant": "h2",
                               "type": "typography",
-                              "content": "Market Feed"
+                              "content": "Market Feed",
+                              "variant": "h2"
                             }
-                          ]
+                          ],
+                          "gap": "md",
+                          "type": "stack"
                         },
                         {
                           "type": "divider"
                         },
                         {
-                          "content": "Connect to live market data.",
                           "type": "typography",
                           "color": "muted",
+                          "content": "Connect to live market data.",
                           "variant": "body"
                         },
                         {
+                          "variant": "primary",
                           "icon": "play",
-                          "type": "button",
-                          "label": "Start Stream",
                           "action": "START",
-                          "variant": "primary"
+                          "type": "button",
+                          "label": "Start Stream"
                         }
                       ],
-                      "align": "center",
-                      "type": "stack"
+                      "type": "stack",
+                      "gap": "lg",
+                      "direction": "vertical",
+                      "align": "center"
                     }
                   ]
                 ]
@@ -2157,20 +2157,20 @@
                     "render-ui",
                     "main",
                     {
-                      "direction": "vertical",
-                      "align": "center",
                       "gap": "lg",
+                      "align": "center",
                       "children": [
                         {
+                          "message": "Streaming ticks…",
                           "type": "loading-state",
-                          "title": "Connecting to market feed…",
-                          "message": "Streaming ticks…"
+                          "title": "Connecting to market feed…"
                         },
                         {
                           "type": "skeleton",
                           "variant": "text"
                         }
                       ],
+                      "direction": "vertical",
                       "type": "stack"
                     }
                   ]

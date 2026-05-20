@@ -83,12 +83,12 @@ export interface StdChartOfAccountsAccountLoadFailedPayload {
  * without modifying its state-machine topology.
  */
 export interface StdChartOfAccountsConfig {
-  /** Default: `[{"event":"OPEN_ACCOUNT","icon":"arrow-right","label":"Open","variant":"primary"},{"event":"DEACTIVATE_ACCOUNT","label":"Deactivate","variant":"danger"}]` */
-  itemActions?: TraitConfig[];
   /** Default: `"Chart of Accounts"` */
   title?: string;
-  /** Default: `[{"variant":"caption","name":"code","label":"Code"},{"variant":"caption","name":"name","label":"Name"},{"label":"Type","variant":"badge","name":"type"},{"variant":"caption","label":"Parent","name":"parentCode"},{"name":"balance","label":"Balance","variant":"caption"}]` */
+  /** Default: `[{"variant":"caption","name":"code","label":"Code"},{"label":"Name","name":"name","variant":"caption"},{"variant":"badge","name":"type","label":"Type"},{"label":"Parent","variant":"caption","name":"parentCode"},{"name":"balance","variant":"caption","label":"Balance"}]` */
   fields?: TraitConfig[];
+  /** Default: `[{"label":"Open","event":"OPEN_ACCOUNT","icon":"arrow-right","variant":"primary"},{"variant":"danger","label":"Deactivate","event":"DEACTIVATE_ACCOUNT"}]` */
+  itemActions?: TraitConfig[];
 }
 
 /**

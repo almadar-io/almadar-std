@@ -207,25 +207,25 @@ export function stdConstructionPmProjectOrbital(params: StdConstructionPmProject
         'ref': 'AppShell.traits.AppLayout',
         'name': 'ProjectAppLayout',
         'config': {
-          'contentTrait': '@trait.ProjectCatalog',
+          'notifications': [],
+          'notificationClickEvent': 'PROJECT_NOTIFICATIONS_OPEN',
           'appName': 'Construction PM',
           'searchEvent': 'PROJECT_SEARCH',
-          'notifications': [],
           'navItems': [
             {
               'label': 'Projects',
-              'icon': 'briefcase',
               'href': '/projects',
+              'icon': 'briefcase',
             },
             {
-              'label': 'RFIs',
               'href': '/rfis',
               'icon': 'message-circle',
+              'label': 'RFIs',
             },
             {
-              'label': 'Submittals',
-              'href': '/submittals',
               'icon': 'file-text',
+              'href': '/submittals',
+              'label': 'Submittals',
             },
             {
               'icon': 'edit',
@@ -233,11 +233,11 @@ export function stdConstructionPmProjectOrbital(params: StdConstructionPmProject
               'href': '/change-orders',
             },
           ],
-          'notificationClickEvent': 'PROJECT_NOTIFICATIONS_OPEN',
+          'contentTrait': '@trait.ProjectCatalog',
         },
         'events': {
-          'NOTIFY_CLICK': 'PROJECT_NOTIFICATIONS_OPEN',
           'SEARCH': 'PROJECT_SEARCH',
+          'NOTIFY_CLICK': 'PROJECT_NOTIFICATIONS_OPEN',
         },
       }),
       rebindInlineTraitEntity({
@@ -320,38 +320,38 @@ export function stdConstructionPmProjectOrbital(params: StdConstructionPmProject
                   'render-ui',
                   'main',
                   {
+                    'gap': 'lg',
+                    'direction': 'vertical',
                     'children': [
                       {
-                        'type': 'stack',
-                        'direction': 'horizontal',
-                        'gap': 'md',
                         'justify': 'between',
+                        'align': 'center',
                         'children': [
                           {
-                            'align': 'center',
                             'direction': 'horizontal',
-                            'gap': 'sm',
-                            'type': 'stack',
+                            'align': 'center',
                             'children': [
                               {
-                                'name': 'briefcase',
                                 'type': 'icon',
+                                'name': 'briefcase',
                               },
                               {
                                 'type': 'typography',
-                                'variant': 'h2',
                                 'content': 'Projects',
+                                'variant': 'h2',
                               },
                             ],
+                            'type': 'stack',
+                            'gap': 'sm',
                           },
                           {
                             'children': [
                               {
                                 'label': 'New Project',
-                                'type': 'button',
-                                'icon': 'plus',
-                                'variant': 'primary',
                                 'action': 'CREATE',
+                                'type': 'button',
+                                'variant': 'primary',
+                                'icon': 'plus',
                               },
                             ],
                             'direction': 'horizontal',
@@ -359,20 +359,22 @@ export function stdConstructionPmProjectOrbital(params: StdConstructionPmProject
                             'type': 'stack',
                           },
                         ],
-                        'align': 'center',
+                        'gap': 'md',
+                        'type': 'stack',
+                        'direction': 'horizontal',
                       },
                       {
                         'type': 'divider',
                       },
                       {
+                        'direction': 'horizontal',
+                        'align': 'center',
                         'children': [
                           '@trait.ProjectSearch',
                           '@trait.ProjectFilter',
                         ],
-                        'type': 'stack',
                         'gap': 'md',
-                        'direction': 'horizontal',
-                        'align': 'center',
+                        'type': 'stack',
                       },
                       '@trait.ProjectStats',
                       '@trait.ProjectGraphs',
@@ -381,9 +383,7 @@ export function stdConstructionPmProjectOrbital(params: StdConstructionPmProject
                       },
                       '@trait.ProjectBrowseList',
                     ],
-                    'direction': 'vertical',
                     'type': 'stack',
-                    'gap': 'lg',
                   },
                 ],
               ],
@@ -402,6 +402,10 @@ export function stdConstructionPmProjectOrbital(params: StdConstructionPmProject
                   'render-ui',
                   'main',
                   {
+                    'align': 'center',
+                    'direction': 'vertical',
+                    'gap': 'md',
+                    'type': 'stack',
                     'className': 'py-8',
                     'children': [
                       {
@@ -414,22 +418,18 @@ export function stdConstructionPmProjectOrbital(params: StdConstructionPmProject
                         'type': 'typography',
                       },
                       {
-                        'type': 'typography',
+                        'content': 'You\'re all caught up.',
                         'variant': 'caption',
                         'color': 'muted',
-                        'content': 'You\'re all caught up.',
+                        'type': 'typography',
                       },
                       {
-                        'action': 'INIT',
-                        'type': 'button',
                         'variant': 'ghost',
+                        'action': 'INIT',
                         'label': 'Back to projects',
+                        'type': 'button',
                       },
                     ],
-                    'gap': 'md',
-                    'align': 'center',
-                    'direction': 'vertical',
-                    'type': 'stack',
                   },
                 ],
               ],
@@ -452,8 +452,6 @@ export function stdConstructionPmProjectOrbital(params: StdConstructionPmProject
         'config': {
           'filters': [
             {
-              'label': 'Status',
-              'field': 'status',
               'options': [
                 'active',
                 'on-hold',
@@ -461,6 +459,8 @@ export function stdConstructionPmProjectOrbital(params: StdConstructionPmProject
                 'cancelled',
               ],
               'filterType': 'select',
+              'field': 'status',
+              'label': 'Status',
             },
           ],
           'event': 'PROJECT_FILTER',
@@ -473,14 +473,15 @@ export function stdConstructionPmProjectOrbital(params: StdConstructionPmProject
           'title': 'Projects',
           'metrics': [
             {
-              'icon': 'briefcase',
-              'format': 'number',
               'aggregation': 'count',
-              'variant': 'primary',
+              'format': 'number',
               'label': 'Total',
+              'variant': 'primary',
+              'icon': 'briefcase',
             },
             {
-              'variant': 'success',
+              'aggregation': 'count',
+              'label': 'Active',
               'filter': [
                 'fn',
                 'row',
@@ -490,12 +491,16 @@ export function stdConstructionPmProjectOrbital(params: StdConstructionPmProject
                   'active',
                 ],
               ],
-              'label': 'Active',
-              'format': 'number',
               'icon': 'check-circle',
-              'aggregation': 'count',
+              'variant': 'success',
+              'format': 'number',
             },
             {
+              'icon': 'pause-circle',
+              'label': 'On Hold',
+              'aggregation': 'count',
+              'variant': 'warning',
+              'format': 'number',
               'filter': [
                 'fn',
                 'row',
@@ -505,19 +510,14 @@ export function stdConstructionPmProjectOrbital(params: StdConstructionPmProject
                   'on-hold',
                 ],
               ],
-              'variant': 'warning',
-              'aggregation': 'count',
-              'format': 'number',
-              'icon': 'pause-circle',
-              'label': 'On Hold',
             },
             {
-              'label': 'Total Budget',
-              'format': 'number',
-              'aggregation': 'sum',
               'variant': 'info',
+              'format': 'number',
               'icon': 'dollar-sign',
+              'label': 'Total Budget',
               'field': 'budgetUsd',
+              'aggregation': 'sum',
             },
           ],
         },
@@ -536,13 +536,13 @@ export function stdConstructionPmProjectOrbital(params: StdConstructionPmProject
         'ref': 'Graphs.traits.GraphItemGraph',
         'name': 'ProjectGraphs',
         'config': {
-          'showLegend': false,
-          'subtitle': 'Portfolio composition across project statuses',
           'title': 'Projects by Status',
           'chartType': 'bar',
           'categoryField': 'status',
+          'subtitle': 'Portfolio composition across project statuses',
           'aggregation': 'count',
           'height': 240,
+          'showLegend': false,
         },
         'listens': [
           {
@@ -562,37 +562,37 @@ export function stdConstructionPmProjectOrbital(params: StdConstructionPmProject
         'config': {
           'fields': [
             {
-              'variant': 'h3',
-              'name': 'name',
               'icon': 'briefcase',
+              'name': 'name',
+              'variant': 'h3',
             },
             {
               'variant': 'caption',
               'name': 'jobNumber',
             },
             {
-              'variant': 'caption',
               'name': 'client',
-            },
-            {
-              'name': 'status',
-              'variant': 'badge',
-            },
-            {
               'variant': 'caption',
+            },
+            {
+              'variant': 'badge',
+              'name': 'status',
+            },
+            {
               'name': 'projectManager',
+              'variant': 'caption',
             },
           ],
           'gap': 'sm',
           'itemActions': [
             {
-              'event': 'VIEW',
-              'variant': 'ghost',
               'label': 'View',
+              'variant': 'ghost',
+              'event': 'VIEW',
             },
             {
-              'variant': 'ghost',
               'label': 'Edit',
+              'variant': 'ghost',
               'event': 'EDIT',
             },
             {
@@ -651,7 +651,7 @@ export function stdConstructionPmProjectOrbital(params: StdConstructionPmProject
         'name': 'ProjectCreate',
         'linkedEntity': canonicalName,
         'config': {
-          'mode': 'create',
+          'title': 'New Project',
           'fields': [
             'name',
             'jobNumber',
@@ -662,8 +662,8 @@ export function stdConstructionPmProjectOrbital(params: StdConstructionPmProject
             'budgetUsd',
             'projectManager',
           ],
+          'mode': 'create',
           'icon': 'plus-circle',
-          'title': 'New Project',
         },
         'events': {
           'OPEN': 'CREATE',
@@ -684,6 +684,7 @@ export function stdConstructionPmProjectOrbital(params: StdConstructionPmProject
         'name': 'ProjectEdit',
         'linkedEntity': canonicalName,
         'config': {
+          'title': 'Edit Project',
           'icon': 'edit',
           'mode': 'edit',
           'fields': [
@@ -696,7 +697,6 @@ export function stdConstructionPmProjectOrbital(params: StdConstructionPmProject
             'budgetUsd',
             'projectManager',
           ],
-          'title': 'Edit Project',
         },
         'events': {
           'OPEN': 'EDIT',
@@ -717,8 +717,8 @@ export function stdConstructionPmProjectOrbital(params: StdConstructionPmProject
         'name': 'ProjectView',
         'linkedEntity': canonicalName,
         'config': {
-          'title': 'View Project',
           'icon': 'eye',
+          'title': 'View Project',
           'mode': 'edit',
           'fields': [
             'name',
@@ -750,14 +750,14 @@ export function stdConstructionPmProjectOrbital(params: StdConstructionPmProject
         'name': 'ProjectDelete',
         'linkedEntity': canonicalName,
         'config': {
-          'icon': 'alert-triangle',
-          'confirmLabel': 'Delete',
           'title': 'Delete Project',
+          'icon': 'alert-triangle',
           'alertMessage': 'This action cannot be undone.',
+          'confirmLabel': 'Delete',
         },
         'events': {
-          'CONFIRM': 'CONFIRM_DELETE',
           'REQUEST': 'DELETE',
+          'CONFIRM': 'CONFIRM_DELETE',
         },
         'listens': [
           {
@@ -1228,6 +1228,11 @@ export function stdConstructionPmRfiPanelOrbital(params: StdConstructionPmRfiPan
         'ref': 'AppShell.traits.AppLayout',
         'name': 'RfiAppLayout',
         'config': {
+          'searchEvent': 'RFI_SEARCH',
+          'notificationClickEvent': 'RFI_NOTIFICATIONS_OPEN',
+          'notifications': [],
+          'contentTrait': '@trait.RfiPanel',
+          'appName': 'Construction PM',
           'navItems': [
             {
               'href': '/projects',
@@ -1235,26 +1240,21 @@ export function stdConstructionPmRfiPanelOrbital(params: StdConstructionPmRfiPan
               'label': 'Projects',
             },
             {
+              'label': 'RFIs',
               'href': '/rfis',
               'icon': 'message-circle',
-              'label': 'RFIs',
             },
             {
               'href': '/submittals',
-              'label': 'Submittals',
               'icon': 'file-text',
+              'label': 'Submittals',
             },
             {
-              'icon': 'edit',
               'label': 'Change Orders',
               'href': '/change-orders',
+              'icon': 'edit',
             },
           ],
-          'notifications': [],
-          'contentTrait': '@trait.RfiPanel',
-          'searchEvent': 'RFI_SEARCH',
-          'notificationClickEvent': 'RFI_NOTIFICATIONS_OPEN',
-          'appName': 'Construction PM',
         },
         'events': {
           'NOTIFY_CLICK': 'RFI_NOTIFICATIONS_OPEN',
@@ -1287,24 +1287,22 @@ export function stdConstructionPmRfiPanelOrbital(params: StdConstructionPmRfiPan
                   'render-ui',
                   'main',
                   {
-                    'type': 'stack',
-                    'direction': 'vertical',
                     'gap': 'lg',
-                    'className': 'max-w-6xl mx-auto w-full p-4',
+                    'type': 'stack',
                     'children': [
                       {
-                        'type': 'stack',
-                        'align': 'center',
                         'direction': 'horizontal',
                         'gap': 'sm',
+                        'type': 'stack',
+                        'align': 'center',
                         'children': [
                           {
                             'name': 'message-circle',
                             'type': 'icon',
                           },
                           {
-                            'content': 'RFIs',
                             'variant': 'h2',
+                            'content': 'RFIs',
                             'type': 'typography',
                           },
                         ],
@@ -1314,6 +1312,8 @@ export function stdConstructionPmRfiPanelOrbital(params: StdConstructionPmRfiPan
                       },
                       '@trait.RfiPipelineView',
                     ],
+                    'direction': 'vertical',
+                    'className': 'max-w-6xl mx-auto w-full p-4',
                   },
                 ],
               ],
@@ -1570,16 +1570,17 @@ export function stdConstructionPmSubmittalPanelOrbital(params: StdConstructionPm
         'ref': 'AppShell.traits.AppLayout',
         'name': 'SubmittalAppLayout',
         'config': {
+          'searchEvent': 'SUBMITTAL_SEARCH',
           'navItems': [
             {
               'label': 'Projects',
-              'icon': 'briefcase',
               'href': '/projects',
+              'icon': 'briefcase',
             },
             {
-              'label': 'RFIs',
               'href': '/rfis',
               'icon': 'message-circle',
+              'label': 'RFIs',
             },
             {
               'icon': 'file-text',
@@ -1592,15 +1593,14 @@ export function stdConstructionPmSubmittalPanelOrbital(params: StdConstructionPm
               'icon': 'edit',
             },
           ],
-          'searchEvent': 'SUBMITTAL_SEARCH',
-          'notificationClickEvent': 'SUBMITTAL_NOTIFICATIONS_OPEN',
-          'notifications': [],
-          'contentTrait': '@trait.SubmittalPanel',
           'appName': 'Construction PM',
+          'notificationClickEvent': 'SUBMITTAL_NOTIFICATIONS_OPEN',
+          'contentTrait': '@trait.SubmittalPanel',
+          'notifications': [],
         },
         'events': {
-          'NOTIFY_CLICK': 'SUBMITTAL_NOTIFICATIONS_OPEN',
           'SEARCH': 'SUBMITTAL_SEARCH',
+          'NOTIFY_CLICK': 'SUBMITTAL_NOTIFICATIONS_OPEN',
         },
       }),
       rebindInlineTraitEntity({
@@ -1629,33 +1629,33 @@ export function stdConstructionPmSubmittalPanelOrbital(params: StdConstructionPm
                   'render-ui',
                   'main',
                   {
-                    'type': 'stack',
                     'direction': 'vertical',
-                    'gap': 'lg',
                     'className': 'max-w-6xl mx-auto w-full p-4',
+                    'type': 'stack',
                     'children': [
                       {
-                        'children': [
-                          {
-                            'name': 'file-text',
-                            'type': 'icon',
-                          },
-                          {
-                            'variant': 'h2',
-                            'content': 'Submittals',
-                            'type': 'typography',
-                          },
-                        ],
-                        'type': 'stack',
+                        'direction': 'horizontal',
                         'gap': 'sm',
                         'align': 'center',
-                        'direction': 'horizontal',
+                        'type': 'stack',
+                        'children': [
+                          {
+                            'type': 'icon',
+                            'name': 'file-text',
+                          },
+                          {
+                            'content': 'Submittals',
+                            'type': 'typography',
+                            'variant': 'h2',
+                          },
+                        ],
                       },
                       {
                         'type': 'divider',
                       },
                       '@trait.SubmittalReviewView',
                     ],
+                    'gap': 'lg',
                   },
                 ],
               ],
@@ -1911,7 +1911,6 @@ export function stdConstructionPmChangeOrderPanelOrbital(params: StdConstruction
         'ref': 'AppShell.traits.AppLayout',
         'name': 'ChangeOrderAppLayout',
         'config': {
-          'searchEvent': 'CHANGE_ORDER_SEARCH',
           'navItems': [
             {
               'icon': 'briefcase',
@@ -1919,25 +1918,26 @@ export function stdConstructionPmChangeOrderPanelOrbital(params: StdConstruction
               'href': '/projects',
             },
             {
-              'label': 'RFIs',
               'href': '/rfis',
               'icon': 'message-circle',
+              'label': 'RFIs',
             },
             {
+              'icon': 'file-text',
               'label': 'Submittals',
               'href': '/submittals',
-              'icon': 'file-text',
             },
             {
-              'icon': 'edit',
-              'href': '/change-orders',
               'label': 'Change Orders',
+              'href': '/change-orders',
+              'icon': 'edit',
             },
           ],
-          'notifications': [],
-          'appName': 'Construction PM',
           'notificationClickEvent': 'CHANGE_ORDER_NOTIFICATIONS_OPEN',
+          'notifications': [],
+          'searchEvent': 'CHANGE_ORDER_SEARCH',
           'contentTrait': '@trait.ChangeOrderPanel',
+          'appName': 'Construction PM',
         },
         'events': {
           'SEARCH': 'CHANGE_ORDER_SEARCH',
@@ -1970,33 +1970,33 @@ export function stdConstructionPmChangeOrderPanelOrbital(params: StdConstruction
                   'render-ui',
                   'main',
                   {
-                    'className': 'max-w-6xl mx-auto w-full p-4',
                     'children': [
                       {
+                        'align': 'center',
                         'direction': 'horizontal',
+                        'gap': 'sm',
                         'children': [
                           {
                             'type': 'icon',
                             'name': 'edit',
                           },
                           {
-                            'content': 'Change Orders',
-                            'variant': 'h2',
                             'type': 'typography',
+                            'variant': 'h2',
+                            'content': 'Change Orders',
                           },
                         ],
-                        'gap': 'sm',
                         'type': 'stack',
-                        'align': 'center',
                       },
                       {
                         'type': 'divider',
                       },
                       '@trait.ChangeOrderLedgerView',
                     ],
-                    'direction': 'vertical',
-                    'gap': 'lg',
                     'type': 'stack',
+                    'gap': 'lg',
+                    'direction': 'vertical',
+                    'className': 'max-w-6xl mx-auto w-full p-4',
                   },
                 ],
               ],

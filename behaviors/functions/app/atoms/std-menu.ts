@@ -228,12 +228,12 @@ export interface StdMenuMenuItemWriteFailedPayload {
  * without modifying its state-machine topology.
  */
 export interface StdMenuConfig {
+  /** Default: `[{"label":"Item","name":"name","variant":"caption"},{"variant":"badge","label":"Category","name":"category"},{"name":"price","label":"Price","variant":"caption"},{"label":"Currency","name":"currency","variant":"badge"},{"variant":"caption","name":"prepTimeMinutes","label":"Prep (min)"},{"name":"available","variant":"badge","label":"Available"}]` */
+  fields?: TraitConfig[];
   /** Default: `"Menu"` */
   title?: string;
-  /** Default: `[{"label":"Open","event":"OPEN_ITEM","variant":"primary","icon":"arrow-right"},{"icon":"trash","label":"Delete","variant":"danger","event":"DELETE"}]` */
+  /** Default: `[{"label":"Open","event":"OPEN_ITEM","icon":"arrow-right","variant":"primary"},{"label":"Delete","event":"DELETE","variant":"danger","icon":"trash"}]` */
   itemActions?: TraitConfig[];
-  /** Default: `[{"label":"Item","name":"name","variant":"caption"},{"variant":"badge","label":"Category","name":"category"},{"variant":"caption","label":"Price","name":"price"},{"name":"currency","variant":"badge","label":"Currency"},{"variant":"caption","label":"Prep (min)","name":"prepTimeMinutes"},{"label":"Available","variant":"badge","name":"available"}]` */
-  fields?: TraitConfig[];
 }
 
 /**

@@ -118,14 +118,14 @@ export interface StdApprovalRequestApprovalRequestLoadFailedPayload {
  * without modifying its state-machine topology.
  */
 export interface StdApprovalRequestConfig {
-  /** Default: `"Approval Requests"` */
-  title?: string;
-  /** Default: `[{"name":"title","label":"Title","variant":"caption"},{"name":"targetType","label":"Target","variant":"badge"},{"name":"requestedBy","variant":"caption","label":"Requested By"},{"label":"Approver","variant":"caption","name":"assignedApprover"},{"label":"Decision","name":"approverDecision","variant":"badge"},{"name":"status","label":"Status","variant":"badge"},{"label":"Decided","variant":"caption","name":"decidedAt"}]` */
-  fields?: TraitConfig[];
+  /** Default: `[{"icon":"arrow-right","label":"Open","event":"OPEN_REQUEST","variant":"primary"},{"variant":"danger","label":"Withdraw","event":"WITHDRAW"}]` */
+  itemActions?: TraitConfig[];
   /** Default: `false` */
   requireCommentOnReject?: boolean;
-  /** Default: `[{"variant":"primary","label":"Open","event":"OPEN_REQUEST","icon":"arrow-right"},{"event":"WITHDRAW","variant":"danger","label":"Withdraw"}]` */
-  itemActions?: TraitConfig[];
+  /** Default: `[{"label":"Title","variant":"caption","name":"title"},{"name":"targetType","label":"Target","variant":"badge"},{"label":"Requested By","name":"requestedBy","variant":"caption"},{"name":"assignedApprover","variant":"caption","label":"Approver"},{"label":"Decision","variant":"badge","name":"approverDecision"},{"name":"status","label":"Status","variant":"badge"},{"variant":"caption","label":"Decided","name":"decidedAt"}]` */
+  fields?: TraitConfig[];
+  /** Default: `"Approval Requests"` */
+  title?: string;
 }
 
 /**

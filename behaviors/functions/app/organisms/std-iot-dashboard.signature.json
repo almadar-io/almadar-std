@@ -63,14 +63,14 @@
             "type": "unknown",
             "default": [
               {
-                "label": "Sensors",
                 "href": "/sensors",
+                "label": "Sensors",
                 "icon": "layout-list"
               },
               {
-                "icon": "cpu",
                 "href": "/devices",
-                "label": "Devices"
+                "label": "Devices",
+                "icon": "cpu"
               },
               {
                 "label": "Alerts",
@@ -95,7 +95,8 @@
             "default": "SENSOR_SEARCH"
           }
         ],
-        "capabilities": []
+        "capabilities": [],
+        "ref": "AppShell.traits.AppLayout"
       },
       {
         "name": "SensorCatalog",
@@ -116,6 +117,11 @@
             "type": "unknown",
             "default": [
               {
+                "aggregation": "count",
+                "variant": "primary",
+                "icon": "activity",
+                "label": "Active Sensors",
+                "format": "number",
                 "filter": [
                   "fn",
                   "row",
@@ -124,24 +130,19 @@
                     "@row.sensorId",
                     ""
                   ]
-                ],
-                "icon": "activity",
-                "variant": "primary",
-                "label": "Active Sensors",
-                "aggregation": "count",
+                ]
+              },
+              {
+                "label": "Avg Reading",
+                "aggregation": "avg",
+                "icon": "trending-up",
+                "variant": "success",
+                "field": "value",
                 "format": "number"
               },
               {
-                "variant": "success",
-                "icon": "trending-up",
-                "label": "Avg Reading",
-                "field": "value",
                 "format": "number",
-                "aggregation": "average"
-              },
-              {
-                "aggregation": "count",
-                "label": "Anomalies",
+                "icon": "alert-triangle",
                 "filter": [
                   "fn",
                   "row",
@@ -151,9 +152,9 @@
                     "@row.threshold"
                   ]
                 ],
-                "variant": "warning",
-                "format": "number",
-                "icon": "alert-triangle"
+                "aggregation": "count",
+                "label": "Anomalies",
+                "variant": "warning"
               }
             ]
           },
@@ -163,7 +164,8 @@
             "default": "Sensors"
           }
         ],
-        "capabilities": []
+        "capabilities": [],
+        "ref": "Stats.traits.StatsItemStats"
       },
       {
         "name": "SensorGraphs",
@@ -208,7 +210,8 @@
             "default": "value"
           }
         ],
-        "capabilities": []
+        "capabilities": [],
+        "ref": "Graphs.traits.GraphItemGraph"
       },
       {
         "name": "SensorBrowseList",
@@ -225,32 +228,32 @@
             "type": "unknown",
             "default": [
               {
-                "label": "Sensor",
                 "icon": "thermometer",
+                "label": "Sensor",
                 "variant": "h4",
                 "name": "sensorId"
               },
               {
-                "label": "Type",
+                "variant": "badge",
                 "name": "type",
-                "variant": "badge"
+                "label": "Type"
               },
               {
                 "variant": "h4",
-                "name": "value",
                 "label": "Value",
+                "name": "value",
                 "format": "number"
               },
               {
-                "label": "Unit",
                 "variant": "caption",
-                "name": "unit"
+                "name": "unit",
+                "label": "Unit"
               },
               {
-                "label": "Timestamp",
+                "variant": "caption",
                 "format": "date",
-                "name": "timestamp",
-                "variant": "caption"
+                "label": "Timestamp",
+                "name": "timestamp"
               }
             ]
           },
@@ -260,7 +263,8 @@
             "default": "sm"
           }
         ],
-        "capabilities": []
+        "capabilities": [],
+        "ref": "Browse.traits.BrowseItemBrowse"
       }
     ],
     "pages": [
@@ -334,19 +338,19 @@
             "type": "unknown",
             "default": [
               {
+                "icon": "layout-list",
                 "href": "/sensors",
-                "label": "Sensors",
-                "icon": "layout-list"
+                "label": "Sensors"
               },
               {
+                "icon": "cpu",
                 "label": "Devices",
-                "href": "/devices",
-                "icon": "cpu"
+                "href": "/devices"
               },
               {
+                "label": "Alerts",
                 "icon": "bell",
-                "href": "/alerts",
-                "label": "Alerts"
+                "href": "/alerts"
               }
             ]
           },
@@ -366,7 +370,8 @@
             "default": "DEVICE_SEARCH"
           }
         ],
-        "capabilities": []
+        "capabilities": [],
+        "ref": "AppShell.traits.AppLayout"
       },
       {
         "name": "DeviceCatalog",
@@ -396,7 +401,8 @@
             "default": "Search devices…"
           }
         ],
-        "capabilities": []
+        "capabilities": [],
+        "ref": "Search.traits.SearchResultSearch"
       },
       {
         "name": "DeviceFilter",
@@ -413,30 +419,31 @@
             "type": "unknown",
             "default": [
               {
-                "label": "Status",
-                "filterType": "select",
                 "options": [
                   "online",
                   "offline",
                   "maintenance"
                 ],
-                "field": "status"
+                "filterType": "select",
+                "field": "status",
+                "label": "Status"
               },
               {
-                "field": "type",
-                "label": "Type",
                 "options": [
                   "sensor",
                   "gateway",
                   "actuator",
                   "controller"
                 ],
+                "label": "Type",
+                "field": "type",
                 "filterType": "select"
               }
             ]
           }
         ],
-        "capabilities": []
+        "capabilities": [],
+        "ref": "Filter.traits.FilterTargetFilter"
       },
       {
         "name": "DeviceBrowseList",
@@ -472,10 +479,10 @@
                 "variant": "body"
               },
               {
-                "name": "lastSeen",
-                "label": "Last Seen",
                 "variant": "caption",
-                "format": "date"
+                "format": "date",
+                "name": "lastSeen",
+                "label": "Last Seen"
               }
             ]
           },
@@ -489,24 +496,25 @@
             "type": "unknown",
             "default": [
               {
-                "label": "View",
                 "event": "VIEW",
+                "label": "View",
                 "variant": "ghost"
               },
               {
-                "label": "Edit",
                 "variant": "ghost",
-                "event": "EDIT"
+                "event": "EDIT",
+                "label": "Edit"
               },
               {
                 "event": "DELETE",
-                "variant": "danger",
-                "label": "Delete"
+                "label": "Delete",
+                "variant": "danger"
               }
             ]
           }
         ],
-        "capabilities": []
+        "capabilities": [],
+        "ref": "Browse.traits.BrowseItemBrowse"
       },
       {
         "name": "DeviceCreate",
@@ -541,7 +549,8 @@
             "default": "Create Device"
           }
         ],
-        "capabilities": []
+        "capabilities": [],
+        "ref": "Modal.traits.ModalRecordModal"
       },
       {
         "name": "DeviceEdit",
@@ -576,7 +585,8 @@
             "default": "Edit Device"
           }
         ],
-        "capabilities": []
+        "capabilities": [],
+        "ref": "Modal.traits.ModalRecordModal"
       },
       {
         "name": "DeviceView",
@@ -611,7 +621,8 @@
             "default": "View Device"
           }
         ],
-        "capabilities": []
+        "capabilities": [],
+        "ref": "Modal.traits.ModalRecordModal"
       },
       {
         "name": "DeviceDelete",
@@ -641,7 +652,8 @@
             "default": "Delete Device"
           }
         ],
-        "capabilities": []
+        "capabilities": [],
+        "ref": "Confirmation.traits.ConfirmActionConfirmation"
       },
       {
         "name": "DevicePersistor",
@@ -762,14 +774,14 @@
             "type": "unknown",
             "default": [
               {
-                "label": "Sensors",
+                "icon": "layout-list",
                 "href": "/sensors",
-                "icon": "layout-list"
+                "label": "Sensors"
               },
               {
-                "label": "Devices",
+                "icon": "cpu",
                 "href": "/devices",
-                "icon": "cpu"
+                "label": "Devices"
               },
               {
                 "label": "Alerts",
@@ -794,7 +806,8 @@
             "default": "ALERT_SEARCH"
           }
         ],
-        "capabilities": []
+        "capabilities": [],
+        "ref": "AppShell.traits.AppLayout"
       },
       {
         "name": "AlertCatalog",
@@ -824,26 +837,26 @@
             "type": "unknown",
             "default": [
               {
-                "name": "deviceId",
-                "label": "Device",
+                "variant": "h4",
                 "icon": "cpu",
-                "variant": "h4"
+                "name": "deviceId",
+                "label": "Device"
               },
               {
-                "variant": "badge",
                 "name": "severity",
-                "label": "Severity"
+                "label": "Severity",
+                "variant": "badge"
               },
               {
                 "name": "message",
-                "label": "Message",
-                "variant": "body"
+                "variant": "body",
+                "label": "Message"
               },
               {
-                "label": "Acknowledged",
                 "format": "boolean",
-                "variant": "badge",
-                "name": "acknowledged"
+                "label": "Acknowledged",
+                "name": "acknowledged",
+                "variant": "badge"
               }
             ]
           },
@@ -862,8 +875,8 @@
                 "event": "VIEW"
               },
               {
-                "label": "Edit",
                 "variant": "ghost",
+                "label": "Edit",
                 "event": "EDIT"
               },
               {
@@ -874,7 +887,8 @@
             ]
           }
         ],
-        "capabilities": []
+        "capabilities": [],
+        "ref": "Browse.traits.BrowseItemBrowse"
       },
       {
         "name": "AlertCreate",
@@ -909,7 +923,8 @@
             "default": "New Alert"
           }
         ],
-        "capabilities": []
+        "capabilities": [],
+        "ref": "Modal.traits.ModalRecordModal"
       },
       {
         "name": "AlertEdit",
@@ -944,7 +959,8 @@
             "default": "Edit Alert"
           }
         ],
-        "capabilities": []
+        "capabilities": [],
+        "ref": "Modal.traits.ModalRecordModal"
       },
       {
         "name": "AlertView",
@@ -979,7 +995,8 @@
             "default": "View Alert"
           }
         ],
-        "capabilities": []
+        "capabilities": [],
+        "ref": "Modal.traits.ModalRecordModal"
       },
       {
         "name": "AlertDelete",
@@ -1009,7 +1026,8 @@
             "default": "Delete Alert"
           }
         ],
-        "capabilities": []
+        "capabilities": [],
+        "ref": "Confirmation.traits.ConfirmActionConfirmation"
       },
       {
         "name": "AlertPersistor",
@@ -1066,7 +1084,8 @@
             "default": "@trait.AlertEmailNotice"
           }
         ],
-        "capabilities": []
+        "capabilities": [],
+        "ref": "Email.traits.ServiceEmailEmail"
       },
       {
         "name": "DeviceAlertCircuitBreaker",

@@ -26,8 +26,8 @@
             "items": {
               "type": "object",
               "properties": {
-                "badge": {
-                  "name": "badge",
+                "icon": {
+                  "name": "icon",
                   "type": "string"
                 },
                 "label": {
@@ -38,8 +38,8 @@
                   "name": "id",
                   "type": "string"
                 },
-                "icon": {
-                  "name": "icon",
+                "badge": {
+                  "name": "badge",
                   "type": "string"
                 },
                 "content": {
@@ -113,12 +113,12 @@
                     "render-ui",
                     "main",
                     {
-                      "activeTab": "@entity.activeTab",
+                      "items": "@entity.items",
                       "type": "tabs",
                       "variant": "@config.variant",
                       "orientation": "@config.orientation",
-                      "items": "@entity.items",
-                      "tabChangeEvent": "TAB_CHANGED"
+                      "tabChangeEvent": "TAB_CHANGED",
+                      "activeTab": "@entity.activeTab"
                     }
                   ]
                 ]
@@ -142,12 +142,12 @@
                     "render-ui",
                     "main",
                     {
-                      "items": "@entity.items",
                       "variant": "@config.variant",
-                      "type": "tabs",
                       "orientation": "@config.orientation",
                       "tabChangeEvent": "TAB_CHANGED",
-                      "activeTab": "@entity.activeTab"
+                      "activeTab": "@entity.activeTab",
+                      "type": "tabs",
+                      "items": "@entity.items"
                     }
                   ]
                 ]
@@ -155,6 +155,16 @@
             ]
           },
           "config": {
+            "orientation": {
+              "type": "string",
+              "default": "horizontal",
+              "label": "Orientation",
+              "description": "Horizontal strip or vertical rail layout",
+              "values": [
+                "horizontal",
+                "vertical"
+              ]
+            },
             "defaultTab": {
               "type": "string",
               "default": "overview",
@@ -172,28 +182,18 @@
                 "underline"
               ]
             },
-            "orientation": {
-              "type": "string",
-              "default": "horizontal",
-              "label": "Orientation",
-              "description": "Horizontal strip or vertical rail layout",
-              "values": [
-                "horizontal",
-                "vertical"
-              ]
-            },
             "tabs": {
               "type": "[object]",
               "default": [
                 {
+                  "icon": "info",
                   "id": "overview",
-                  "label": "Overview",
-                  "icon": "info"
+                  "label": "Overview"
                 },
                 {
-                  "label": "Details",
                   "icon": "list",
-                  "id": "details"
+                  "id": "details",
+                  "label": "Details"
                 },
                 {
                   "label": "Settings",
@@ -202,7 +202,10 @@
                 }
               ],
               "label": "Tabs",
-              "description": "Tab entries with id, label, icon, badge, and optional content trait"
+              "description": "Tab entries with id, label, icon, badge, and optional content trait",
+              "items": {
+                "type": "object"
+              }
             }
           },
           "scope": "instance"

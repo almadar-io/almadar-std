@@ -94,33 +94,33 @@
           "ref": "AppShell.traits.AppLayout",
           "name": "MenuAppLayout",
           "config": {
-            "appName": "Restaurant POS",
             "notifications": [],
-            "searchEvent": "MENU_SEARCH",
             "notificationClickEvent": "MENU_NOTIFICATIONS_OPEN",
-            "contentTrait": "@trait.MenuCatalog",
+            "appName": "Restaurant POS",
             "navItems": [
               {
-                "href": "/menu",
+                "label": "Menu",
                 "icon": "utensils",
-                "label": "Menu"
+                "href": "/menu"
               },
               {
-                "href": "/floor",
                 "icon": "layout-grid",
-                "label": "Floor"
+                "label": "Floor",
+                "href": "/floor"
               },
               {
                 "href": "/orders",
-                "label": "Orders",
-                "icon": "receipt"
+                "icon": "receipt",
+                "label": "Orders"
               },
               {
                 "label": "Kitchen",
-                "href": "/kitchen",
-                "icon": "chef-hat"
+                "icon": "chef-hat",
+                "href": "/kitchen"
               }
-            ]
+            ],
+            "searchEvent": "MENU_SEARCH",
+            "contentTrait": "@trait.MenuCatalog"
           },
           "events": {
             "SEARCH": "MENU_SEARCH",
@@ -207,49 +207,47 @@
                     "render-ui",
                     "main",
                     {
-                      "type": "stack",
-                      "direction": "vertical",
                       "gap": "lg",
                       "children": [
                         {
-                          "justify": "between",
                           "type": "stack",
+                          "justify": "between",
+                          "direction": "horizontal",
                           "align": "center",
                           "children": [
                             {
                               "direction": "horizontal",
-                              "gap": "sm",
                               "align": "center",
-                              "type": "stack",
+                              "gap": "sm",
                               "children": [
                                 {
-                                  "name": "utensils",
-                                  "type": "icon"
+                                  "type": "icon",
+                                  "name": "utensils"
                                 },
                                 {
-                                  "type": "typography",
                                   "content": "Menu",
-                                  "variant": "h2"
+                                  "variant": "h2",
+                                  "type": "typography"
                                 }
-                              ]
+                              ],
+                              "type": "stack"
                             },
                             {
                               "gap": "sm",
+                              "type": "stack",
                               "children": [
                                 {
                                   "action": "CREATE",
-                                  "variant": "primary",
                                   "type": "button",
                                   "label": "New Item",
+                                  "variant": "primary",
                                   "icon": "plus"
                                 }
                               ],
-                              "type": "stack",
                               "direction": "horizontal"
                             }
                           ],
-                          "gap": "md",
-                          "direction": "horizontal"
+                          "gap": "md"
                         },
                         {
                           "type": "divider"
@@ -259,10 +257,10 @@
                             "@trait.MenuSearch",
                             "@trait.MenuFilter"
                           ],
-                          "align": "center",
                           "type": "stack",
                           "direction": "horizontal",
-                          "gap": "md"
+                          "gap": "md",
+                          "align": "center"
                         },
                         "@trait.MenuCategoryTree",
                         {
@@ -273,9 +271,9 @@
                           "type": "divider"
                         },
                         {
-                          "variant": "h3",
                           "content": "Modifier groups",
-                          "type": "typography"
+                          "type": "typography",
+                          "variant": "h3"
                         },
                         "@trait.MenuModifierGroups",
                         {
@@ -287,7 +285,9 @@
                           "type": "typography"
                         },
                         "@trait.MenuImageUpload"
-                      ]
+                      ],
+                      "type": "stack",
+                      "direction": "vertical"
                     }
                   ]
                 ]
@@ -306,17 +306,18 @@
                     "render-ui",
                     "main",
                     {
-                      "direction": "vertical",
-                      "gap": "md",
+                      "type": "stack",
+                      "className": "py-8",
+                      "align": "center",
                       "children": [
                         {
-                          "name": "bell",
-                          "type": "icon"
+                          "type": "icon",
+                          "name": "bell"
                         },
                         {
-                          "type": "typography",
                           "content": "No notifications",
-                          "variant": "h3"
+                          "variant": "h3",
+                          "type": "typography"
                         },
                         {
                           "label": "Back to menu",
@@ -325,9 +326,8 @@
                           "action": "INIT"
                         }
                       ],
-                      "type": "stack",
-                      "align": "center",
-                      "className": "py-8"
+                      "gap": "md",
+                      "direction": "vertical"
                     }
                   ]
                 ]
@@ -356,18 +356,18 @@
                   "dessert",
                   "drink"
                 ],
-                "label": "Category",
                 "filterType": "select",
-                "field": "category"
+                "field": "category",
+                "label": "Category"
               },
               {
-                "field": "available",
-                "label": "Available",
+                "filterType": "select",
                 "options": [
                   "true",
                   "false"
                 ],
-                "filterType": "select"
+                "field": "available",
+                "label": "Available"
               }
             ],
             "event": "MENU_FILTER"
@@ -377,8 +377,8 @@
           "ref": "TagTaxonomy.traits.TagBrowse",
           "name": "MenuCategoryTree",
           "config": {
-            "title": "Categories",
-            "allowEdit": false
+            "allowEdit": false,
+            "title": "Categories"
           }
         },
         {
@@ -386,41 +386,41 @@
           "name": "MenuBrowseList",
           "linkedEntity": "MenuRecord",
           "config": {
-            "gap": "sm",
             "cols": 1.0,
+            "gap": "sm",
+            "itemActions": [
+              {
+                "label": "Edit",
+                "event": "EDIT",
+                "variant": "ghost"
+              },
+              {
+                "label": "Delete",
+                "variant": "danger",
+                "event": "DELETE"
+              }
+            ],
             "fields": [
               {
+                "icon": "utensils",
                 "name": "name",
-                "variant": "h4",
-                "icon": "utensils"
+                "variant": "h4"
               },
               {
-                "name": "category",
-                "variant": "badge"
+                "variant": "badge",
+                "name": "category"
               },
               {
-                "name": "price",
-                "variant": "caption"
+                "variant": "caption",
+                "name": "price"
               },
               {
-                "name": "available",
-                "variant": "badge"
+                "variant": "badge",
+                "name": "available"
               },
               {
                 "variant": "caption",
                 "name": "description"
-              }
-            ],
-            "itemActions": [
-              {
-                "variant": "ghost",
-                "label": "Edit",
-                "event": "EDIT"
-              },
-              {
-                "label": "Delete",
-                "event": "DELETE",
-                "variant": "danger"
               }
             ]
           },
@@ -478,10 +478,10 @@
           "ref": "ImageUpload.traits.UploadedImageUpload",
           "name": "MenuImageUpload",
           "config": {
+            "accept": "image/*",
             "title": "Item Images",
             "maxBytesPerImage": 5242880.0,
-            "maxImages": 12.0,
-            "accept": "image/*"
+            "maxImages": 12.0
           }
         },
         {
@@ -489,6 +489,7 @@
           "name": "MenuCreate",
           "linkedEntity": "MenuRecord",
           "config": {
+            "mode": "create",
             "fields": [
               "name",
               "description",
@@ -497,8 +498,7 @@
               "available"
             ],
             "icon": "plus-circle",
-            "title": "New Menu Item",
-            "mode": "create"
+            "title": "New Menu Item"
           },
           "events": {
             "OPEN": "CREATE"
@@ -519,8 +519,8 @@
           "name": "MenuEdit",
           "linkedEntity": "MenuRecord",
           "config": {
-            "icon": "edit",
             "title": "Edit Menu Item",
+            "icon": "edit",
             "mode": "edit",
             "fields": [
               "name",
@@ -549,14 +549,14 @@
           "name": "MenuDelete",
           "linkedEntity": "MenuRecord",
           "config": {
-            "confirmLabel": "Delete",
-            "title": "Delete Menu Item",
             "icon": "alert-triangle",
-            "alertMessage": "This action cannot be undone."
+            "title": "Delete Menu Item",
+            "alertMessage": "This action cannot be undone.",
+            "confirmLabel": "Delete"
           },
           "events": {
-            "REQUEST": "DELETE",
-            "CONFIRM": "CONFIRM_DELETE"
+            "CONFIRM": "CONFIRM_DELETE",
+            "REQUEST": "DELETE"
           },
           "listens": [
             {
@@ -862,14 +862,6 @@
           "linkedEntity": "TableRecord",
           "config": {
             "gap": "sm",
-            "cols": 1.0,
-            "itemActions": [
-              {
-                "event": "EDIT",
-                "variant": "ghost",
-                "label": "Edit"
-              }
-            ],
             "fields": [
               {
                 "icon": "layout-grid",
@@ -877,12 +869,20 @@
                 "variant": "h4"
               },
               {
-                "name": "capacity",
-                "variant": "badge"
+                "variant": "badge",
+                "name": "capacity"
               },
               {
                 "name": "section",
                 "variant": "caption"
+              }
+            ],
+            "cols": 1.0,
+            "itemActions": [
+              {
+                "variant": "ghost",
+                "label": "Edit",
+                "event": "EDIT"
               }
             ]
           },
@@ -902,14 +902,14 @@
           "name": "TableEdit",
           "linkedEntity": "TableRecord",
           "config": {
+            "mode": "edit",
+            "title": "Edit Table",
+            "icon": "edit",
             "fields": [
               "label",
               "capacity",
               "section"
-            ],
-            "mode": "edit",
-            "title": "Edit Table",
-            "icon": "edit"
+            ]
           },
           "events": {
             "OPEN": "EDIT"
@@ -1114,25 +1114,25 @@
           "ref": "Cart.traits.CartItemAddItem",
           "name": "OrderCartAddItem",
           "config": {
-            "openButtonLabel": "Add Item",
             "fields": [
               "name",
               "description",
               "status"
             ],
-            "title": "Add to Order",
             "mode": "create",
-            "icon": "plus-circle"
+            "icon": "plus-circle",
+            "title": "Add to Order",
+            "openButtonLabel": "Add Item"
           }
         },
         {
           "ref": "Cart.traits.CartItemRemoveConfirm",
           "name": "OrderCartRemoveConfirm",
           "config": {
+            "title": "Remove From Order",
             "icon": "alert-triangle",
-            "alertMessage": "Remove this item from the order?",
             "confirmLabel": "Remove",
-            "title": "Remove From Order"
+            "alertMessage": "Remove this item from the order?"
           }
         },
         {
@@ -1329,21 +1329,21 @@
                     "render-ui",
                     "main",
                     {
-                      "type": "stack",
-                      "align": "center",
+                      "direction": "vertical",
                       "children": [
                         {
                           "type": "spinner"
                         },
                         {
                           "variant": "caption",
+                          "color": "muted",
                           "content": "Loading order…",
-                          "type": "typography",
-                          "color": "muted"
+                          "type": "typography"
                         }
                       ],
+                      "type": "stack",
                       "gap": "md",
-                      "direction": "vertical",
+                      "align": "center",
                       "className": "py-12"
                     }
                   ]
@@ -1358,10 +1358,13 @@
                     "render-ui",
                     "main",
                     {
-                      "direction": "vertical",
                       "type": "stack",
+                      "gap": "md",
+                      "direction": "vertical",
                       "children": [
                         {
+                          "direction": "horizontal",
+                          "gap": "sm",
                           "type": "stack",
                           "align": "center",
                           "children": [
@@ -1370,73 +1373,70 @@
                               "type": "icon"
                             },
                             {
-                              "type": "typography",
                               "content": "Close & Tip Split",
+                              "type": "typography",
                               "variant": "h3"
                             }
-                          ],
-                          "direction": "horizontal",
-                          "gap": "sm"
+                          ]
                         },
                         {
                           "type": "divider"
                         },
                         {
+                          "entity": "@payload.data",
                           "cols": 1.0,
                           "gap": "sm",
                           "type": "data-grid",
-                          "entity": "@payload.data",
                           "fields": [
                             {
-                              "variant": "caption",
-                              "name": "tableId"
+                              "name": "tableId",
+                              "variant": "caption"
                             },
                             {
-                              "name": "subtotal",
-                              "variant": "caption"
+                              "variant": "caption",
+                              "name": "subtotal"
                             },
                             {
                               "variant": "caption",
                               "name": "taxAmount"
                             },
                             {
-                              "name": "tipAmount",
-                              "variant": "caption"
+                              "variant": "caption",
+                              "name": "tipAmount"
                             },
                             {
-                              "variant": "h4",
-                              "name": "total"
+                              "name": "total",
+                              "variant": "h4"
                             },
                             {
-                              "name": "status",
-                              "variant": "badge"
+                              "variant": "badge",
+                              "name": "status"
                             }
                           ]
                         },
                         {
                           "gap": "sm",
-                          "type": "stack",
                           "justify": "end",
+                          "type": "stack",
                           "children": [
                             {
-                              "type": "button",
                               "icon": "send",
                               "variant": "secondary",
                               "label": "Submit to Kitchen",
-                              "action": "SUBMIT"
+                              "action": "SUBMIT",
+                              "type": "button"
                             },
                             {
-                              "action": "CLOSE_TICKET",
-                              "variant": "primary",
                               "type": "button",
+                              "variant": "primary",
                               "label": "Close & Split Tip",
+                              "action": "CLOSE_TICKET",
                               "icon": "split"
                             }
                           ],
                           "direction": "horizontal"
                         }
-                      ],
-                      "gap": "md"
+                      ]
                     }
                   ]
                 ]
@@ -1450,9 +1450,9 @@
                     "render-ui",
                     "main",
                     {
-                      "message": "@payload.error",
+                      "variant": "error",
                       "type": "alert",
-                      "variant": "error"
+                      "message": "@payload.error"
                     }
                   ]
                 ]
@@ -1476,8 +1476,8 @@
                     "render-ui",
                     "main",
                     {
-                      "size": "sm",
-                      "type": "spinner"
+                      "type": "spinner",
+                      "size": "sm"
                     }
                   ]
                 ]
@@ -1621,8 +1621,8 @@
           "ref": "Kitchen.traits.KitchenTicketManage",
           "name": "KitchenBoard",
           "config": {
-            "overdueMinutes": 18.0,
-            "title": "Kitchen Display"
+            "title": "Kitchen Display",
+            "overdueMinutes": 18.0
           }
         },
         {
@@ -1630,20 +1630,20 @@
           "name": "KitchenLogList",
           "linkedEntity": "KitchenLog",
           "config": {
-            "cols": 1.0,
             "gap": "sm",
+            "cols": 1.0,
             "fields": [
               {
-                "variant": "caption",
-                "name": "orderId"
+                "name": "orderId",
+                "variant": "caption"
               },
               {
                 "variant": "caption",
                 "name": "note"
               },
               {
-                "name": "createdAt",
-                "variant": "caption"
+                "variant": "caption",
+                "name": "createdAt"
               }
             ]
           }

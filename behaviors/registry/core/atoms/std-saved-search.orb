@@ -355,22 +355,22 @@
                     "render-ui",
                     "main",
                     {
-                      "type": "stack",
+                      "align": "center",
+                      "direction": "vertical",
                       "gap": "md",
                       "className": "py-12",
-                      "direction": "vertical",
-                      "align": "center",
                       "children": [
                         {
                           "type": "spinner"
                         },
                         {
-                          "color": "muted",
-                          "type": "typography",
                           "variant": "caption",
-                          "content": "Loading saved searches…"
+                          "color": "muted",
+                          "content": "Loading saved searches…",
+                          "type": "typography"
                         }
-                      ]
+                      ],
+                      "type": "stack"
                     }
                   ]
                 ]
@@ -384,22 +384,21 @@
                     "render-ui",
                     "main",
                     {
-                      "direction": "vertical",
-                      "gap": "md",
                       "type": "stack",
+                      "direction": "vertical",
                       "children": [
                         {
-                          "gap": "sm",
                           "type": "stack",
+                          "gap": "sm",
                           "children": [
                             {
                               "name": "bookmark",
                               "type": "icon"
                             },
                             {
+                              "type": "typography",
                               "content": "@config.title",
-                              "variant": "h3",
-                              "type": "typography"
+                              "variant": "h3"
                             }
                           ],
                           "direction": "horizontal"
@@ -408,29 +407,6 @@
                           "type": "divider"
                         },
                         {
-                          "entity": "@payload.data",
-                          "fields": [
-                            {
-                              "label": "Name",
-                              "name": "name",
-                              "variant": "h4"
-                            },
-                            {
-                              "name": "query",
-                              "variant": "caption",
-                              "label": "Query"
-                            },
-                            {
-                              "variant": "badge",
-                              "label": "Frequency",
-                              "name": "alertFrequency"
-                            },
-                            {
-                              "variant": "badge",
-                              "name": "alertEnabled",
-                              "label": "Alerts"
-                            }
-                          ],
                           "cols": 1.0,
                           "itemActions": [
                             {
@@ -440,22 +416,46 @@
                               "icon": "bell"
                             },
                             {
-                              "event": "EDIT",
-                              "label": "Edit",
                               "icon": "pencil",
-                              "variant": "secondary"
+                              "event": "EDIT",
+                              "variant": "secondary",
+                              "label": "Edit"
                             },
                             {
-                              "event": "DELETE",
                               "label": "Delete",
                               "variant": "danger",
-                              "icon": "trash-2"
+                              "icon": "trash-2",
+                              "event": "DELETE"
                             }
                           ],
                           "type": "data-grid",
-                          "gap": "sm"
+                          "fields": [
+                            {
+                              "label": "Name",
+                              "name": "name",
+                              "variant": "h4"
+                            },
+                            {
+                              "name": "query",
+                              "label": "Query",
+                              "variant": "caption"
+                            },
+                            {
+                              "name": "alertFrequency",
+                              "variant": "badge",
+                              "label": "Frequency"
+                            },
+                            {
+                              "variant": "badge",
+                              "name": "alertEnabled",
+                              "label": "Alerts"
+                            }
+                          ],
+                          "gap": "sm",
+                          "entity": "@payload.data"
                         }
-                      ]
+                      ],
+                      "gap": "md"
                     }
                   ]
                 ]
@@ -469,9 +469,9 @@
                     "render-ui",
                     "main",
                     {
+                      "type": "alert",
                       "variant": "error",
-                      "message": "@payload.error",
-                      "type": "alert"
+                      "message": "@payload.error"
                     }
                   ]
                 ]
@@ -543,9 +543,12 @@
                     "render-ui",
                     "main",
                     {
+                      "gap": "md",
                       "type": "stack",
                       "children": [
                         {
+                          "direction": "horizontal",
+                          "type": "stack",
                           "gap": "sm",
                           "children": [
                             {
@@ -557,68 +560,65 @@
                               "content": "Edit saved search",
                               "variant": "h3"
                             }
-                          ],
-                          "direction": "horizontal",
-                          "type": "stack"
+                          ]
                         },
                         {
                           "type": "divider"
                         },
                         {
                           "value": "@entity.name",
-                          "placeholder": "Name",
                           "type": "input",
+                          "placeholder": "Name",
                           "action": "RENAME"
                         },
                         {
-                          "placeholder": "Alert frequency",
-                          "type": "select",
+                          "value": "@entity.alertFrequency",
                           "options": [
                             {
-                              "label": "Instant",
-                              "value": "instant"
+                              "value": "instant",
+                              "label": "Instant"
                             },
                             {
-                              "value": "daily",
-                              "label": "Daily"
+                              "label": "Daily",
+                              "value": "daily"
                             },
                             {
-                              "label": "Weekly",
-                              "value": "weekly"
+                              "value": "weekly",
+                              "label": "Weekly"
                             }
                           ],
-                          "value": "@entity.alertFrequency",
-                          "action": "CHANGE_FREQUENCY"
+                          "action": "CHANGE_FREQUENCY",
+                          "type": "select",
+                          "placeholder": "Alert frequency"
                         },
                         {
-                          "checked": "@entity.alertEnabled",
                           "label": "Alerts enabled",
+                          "checked": "@entity.alertEnabled",
                           "type": "switch"
                         },
                         {
+                          "gap": "sm",
                           "children": [
                             {
-                              "type": "button",
                               "label": "Save",
-                              "variant": "primary",
+                              "action": "SAVE",
+                              "type": "button",
                               "icon": "check",
-                              "action": "SAVE"
+                              "variant": "primary"
                             },
                             {
-                              "label": "Cancel",
                               "type": "button",
-                              "action": "CANCEL",
                               "variant": "secondary",
+                              "label": "Cancel",
+                              "action": "CANCEL",
                               "icon": "x"
                             }
                           ],
-                          "type": "stack",
                           "direction": "horizontal",
-                          "gap": "sm"
+                          "type": "stack"
                         }
                       ],
-                      "direction": "vertical",
-                      "gap": "md"
+                      "direction": "vertical"
                     }
                   ]
                 ]
@@ -693,8 +693,8 @@
                     "@entity",
                     {
                       "emit": {
-                        "success": "SavedSearchUpdated",
-                        "failure": "SavedSearchLoadFailed"
+                        "failure": "SavedSearchLoadFailed",
+                        "success": "SavedSearchUpdated"
                       }
                     }
                   ]
@@ -727,8 +727,8 @@
                     "SavedSearch",
                     {
                       "emit": {
-                        "failure": "SavedSearchLoadFailed",
-                        "success": "SavedSearchLoaded"
+                        "success": "SavedSearchLoaded",
+                        "failure": "SavedSearchLoadFailed"
                       }
                     }
                   ],

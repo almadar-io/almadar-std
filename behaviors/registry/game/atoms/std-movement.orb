@@ -1,0 +1,1321 @@
+{
+  "name": "std-movement",
+  "version": "1.0.0",
+  "description": "std-movement as a Function",
+  "orbitals": [
+    {
+      "name": "MovableEntityOrbital",
+      "entity": {
+        "name": "MovableEntity",
+        "persistence": "runtime",
+        "fields": [
+          {
+            "name": "id",
+            "type": "string"
+          },
+          {
+            "name": "name",
+            "type": "string"
+          },
+          {
+            "name": "description",
+            "type": "string"
+          },
+          {
+            "name": "status",
+            "type": "string",
+            "default": "active",
+            "values": [
+              "active",
+              "inactive",
+              "pending"
+            ]
+          },
+          {
+            "name": "createdAt",
+            "type": "string"
+          },
+          {
+            "name": "x",
+            "type": "number",
+            "default": 0.0
+          },
+          {
+            "name": "y",
+            "type": "number",
+            "default": 0.0
+          }
+        ]
+      },
+      "traits": [
+        {
+          "name": "MovableEntityMovement",
+          "category": "interaction",
+          "linkedEntity": "MovableEntity",
+          "emits": [
+            {
+              "event": "MovableEntityLoaded",
+              "description": "Fired when MovableEntity finishes loading",
+              "scope": "internal",
+              "payloadSchema": [
+                {
+                  "name": "id",
+                  "type": "string"
+                },
+                {
+                  "name": "name",
+                  "type": "string"
+                },
+                {
+                  "name": "description",
+                  "type": "string"
+                },
+                {
+                  "name": "status",
+                  "type": "string"
+                },
+                {
+                  "name": "createdAt",
+                  "type": "string"
+                },
+                {
+                  "name": "x",
+                  "type": "number"
+                },
+                {
+                  "name": "y",
+                  "type": "number"
+                }
+              ]
+            },
+            {
+              "event": "MovableEntityLoadFailed",
+              "description": "Fired when MovableEntity fails to load",
+              "scope": "internal",
+              "payloadSchema": [
+                {
+                  "name": "message",
+                  "type": "string"
+                }
+              ]
+            }
+          ],
+          "stateMachine": {
+            "states": [
+              {
+                "name": "idle",
+                "isInitial": true
+              },
+              {
+                "name": "moving"
+              },
+              {
+                "name": "colliding"
+              }
+            ],
+            "events": [
+              {
+                "key": "MovableEntityLoaded",
+                "name": "MovableEntity loaded",
+                "payloadSchema": [
+                  {
+                    "name": "id",
+                    "type": "string"
+                  },
+                  {
+                    "name": "name",
+                    "type": "string"
+                  },
+                  {
+                    "name": "description",
+                    "type": "string"
+                  },
+                  {
+                    "name": "status",
+                    "type": "string"
+                  },
+                  {
+                    "name": "createdAt",
+                    "type": "string"
+                  },
+                  {
+                    "name": "x",
+                    "type": "number"
+                  },
+                  {
+                    "name": "y",
+                    "type": "number"
+                  }
+                ]
+              },
+              {
+                "key": "INIT",
+                "name": "Initialize"
+              },
+              {
+                "key": "MOVE",
+                "name": "Move",
+                "payloadSchema": [
+                  {
+                    "name": "x",
+                    "type": "number",
+                    "required": true
+                  },
+                  {
+                    "name": "y",
+                    "type": "number",
+                    "required": true
+                  }
+                ]
+              },
+              {
+                "key": "STOP",
+                "name": "Stop"
+              },
+              {
+                "key": "COLLISION",
+                "name": "Collision",
+                "payloadSchema": [
+                  {
+                    "name": "targetId",
+                    "type": "string",
+                    "required": true
+                  }
+                ]
+              },
+              {
+                "key": "RESOLVE",
+                "name": "Resolve"
+              },
+              {
+                "key": "CANCEL",
+                "name": "Cancel"
+              },
+              {
+                "key": "CLOSE",
+                "name": "Close"
+              },
+              {
+                "key": "MovableEntityLoadFailed",
+                "name": "MovableEntity load failed",
+                "payloadSchema": [
+                  {
+                    "name": "message",
+                    "type": "string"
+                  }
+                ]
+              }
+            ],
+            "transitions": [
+              {
+                "from": "idle",
+                "to": "idle",
+                "event": "MovableEntityLoaded",
+                "effects": [
+                  [
+                    "set",
+                    "@entity.id",
+                    "@payload.id"
+                  ],
+                  [
+                    "set",
+                    "@entity.name",
+                    "@payload.name"
+                  ],
+                  [
+                    "set",
+                    "@entity.description",
+                    "@payload.description"
+                  ],
+                  [
+                    "set",
+                    "@entity.status",
+                    "@payload.status"
+                  ],
+                  [
+                    "set",
+                    "@entity.createdAt",
+                    "@payload.createdAt"
+                  ],
+                  [
+                    "set",
+                    "@entity.x",
+                    "@payload.x"
+                  ],
+                  [
+                    "set",
+                    "@entity.y",
+                    "@payload.y"
+                  ]
+                ]
+              },
+              {
+                "from": "idle",
+                "to": "idle",
+                "event": "INIT",
+                "effects": [
+                  [
+                    "fetch",
+                    "MovableEntity",
+                    {
+                      "emit": {
+                        "success": "MovableEntityLoaded",
+                        "failure": "MovableEntityLoadFailed"
+                      }
+                    }
+                  ],
+                  [
+                    "render-ui",
+                    "main",
+                    {
+                      "type": "stack",
+                      "gap": "lg",
+                      "direction": "vertical",
+                      "children": [
+                        {
+                          "gap": "md",
+                          "type": "stack",
+                          "children": [
+                            {
+                              "children": [
+                                {
+                                  "name": "move",
+                                  "type": "icon"
+                                },
+                                {
+                                  "type": "typography",
+                                  "content": "MovableEntitys Movement",
+                                  "variant": "h2"
+                                }
+                              ],
+                              "type": "stack",
+                              "direction": "horizontal",
+                              "gap": "md"
+                            },
+                            {
+                              "status": "offline",
+                              "label": "Idle",
+                              "type": "status-dot"
+                            }
+                          ],
+                          "direction": "horizontal",
+                          "justify": "between"
+                        },
+                        {
+                          "type": "divider"
+                        },
+                        {
+                          "cols": 2.0,
+                          "children": [
+                            {
+                              "label": "X",
+                              "value": "@entity.x",
+                              "type": "stat-display"
+                            },
+                            {
+                              "label": "Y",
+                              "type": "stat-display",
+                              "value": "@entity.y"
+                            }
+                          ],
+                          "type": "simple-grid"
+                        },
+                        {
+                          "type": "stack",
+                          "direction": "horizontal",
+                          "gap": "md",
+                          "children": [
+                            {
+                              "type": "typography",
+                              "content": "Name",
+                              "variant": "caption"
+                            },
+                            {
+                              "type": "typography",
+                              "variant": "body",
+                              "content": "@entity.name"
+                            }
+                          ]
+                        },
+                        {
+                          "children": [
+                            {
+                              "content": "Description",
+                              "type": "typography",
+                              "variant": "caption"
+                            },
+                            {
+                              "content": "@entity.description",
+                              "variant": "body",
+                              "type": "typography"
+                            }
+                          ],
+                          "gap": "md",
+                          "direction": "horizontal",
+                          "type": "stack"
+                        },
+                        {
+                          "direction": "horizontal",
+                          "type": "stack",
+                          "children": [
+                            {
+                              "type": "typography",
+                              "variant": "caption",
+                              "content": "Status"
+                            },
+                            {
+                              "content": "@entity.status",
+                              "type": "typography",
+                              "variant": "body"
+                            }
+                          ],
+                          "gap": "md"
+                        },
+                        {
+                          "children": [
+                            {
+                              "variant": "caption",
+                              "content": "CreatedAt",
+                              "type": "typography"
+                            },
+                            {
+                              "type": "typography",
+                              "content": "@entity.createdAt",
+                              "variant": "body"
+                            }
+                          ],
+                          "direction": "horizontal",
+                          "gap": "md",
+                          "type": "stack"
+                        },
+                        {
+                          "type": "divider"
+                        },
+                        {
+                          "justify": "end",
+                          "direction": "horizontal",
+                          "type": "stack",
+                          "gap": "sm",
+                          "children": [
+                            {
+                              "icon": "navigation",
+                              "type": "button",
+                              "label": "Move",
+                              "action": "MOVE",
+                              "variant": "primary"
+                            }
+                          ]
+                        }
+                      ]
+                    }
+                  ]
+                ]
+              },
+              {
+                "from": "idle",
+                "to": "moving",
+                "event": "MOVE",
+                "effects": [
+                  [
+                    "fetch",
+                    "MovableEntity",
+                    {
+                      "emit": {
+                        "success": "MovableEntityLoaded",
+                        "failure": "MovableEntityLoadFailed"
+                      }
+                    }
+                  ],
+                  [
+                    "render-ui",
+                    "main",
+                    {
+                      "direction": "vertical",
+                      "type": "stack",
+                      "gap": "lg",
+                      "children": [
+                        {
+                          "children": [
+                            {
+                              "children": [
+                                {
+                                  "name": "move",
+                                  "type": "icon"
+                                },
+                                {
+                                  "variant": "h2",
+                                  "type": "typography",
+                                  "content": "MovableEntitys Movement"
+                                }
+                              ],
+                              "direction": "horizontal",
+                              "type": "stack",
+                              "gap": "md"
+                            },
+                            {
+                              "label": "Moving",
+                              "type": "status-dot",
+                              "pulse": true,
+                              "status": "online"
+                            }
+                          ],
+                          "gap": "md",
+                          "justify": "between",
+                          "type": "stack",
+                          "direction": "horizontal"
+                        },
+                        {
+                          "type": "divider"
+                        },
+                        {
+                          "type": "simple-grid",
+                          "cols": 2.0,
+                          "children": [
+                            {
+                              "type": "stat-display",
+                              "label": "X",
+                              "value": "@entity.x"
+                            },
+                            {
+                              "value": "@entity.y",
+                              "type": "stat-display",
+                              "label": "Y"
+                            }
+                          ]
+                        },
+                        {
+                          "gap": "md",
+                          "type": "stack",
+                          "direction": "horizontal",
+                          "children": [
+                            {
+                              "type": "typography",
+                              "variant": "caption",
+                              "content": "Name"
+                            },
+                            {
+                              "variant": "body",
+                              "content": "@entity.name",
+                              "type": "typography"
+                            }
+                          ]
+                        },
+                        {
+                          "type": "stack",
+                          "direction": "horizontal",
+                          "gap": "md",
+                          "children": [
+                            {
+                              "type": "typography",
+                              "variant": "caption",
+                              "content": "Description"
+                            },
+                            {
+                              "type": "typography",
+                              "variant": "body",
+                              "content": "@entity.description"
+                            }
+                          ]
+                        },
+                        {
+                          "gap": "md",
+                          "children": [
+                            {
+                              "variant": "caption",
+                              "content": "Status",
+                              "type": "typography"
+                            },
+                            {
+                              "type": "typography",
+                              "variant": "body",
+                              "content": "@entity.status"
+                            }
+                          ],
+                          "direction": "horizontal",
+                          "type": "stack"
+                        },
+                        {
+                          "direction": "horizontal",
+                          "type": "stack",
+                          "gap": "md",
+                          "children": [
+                            {
+                              "type": "typography",
+                              "variant": "caption",
+                              "content": "CreatedAt"
+                            },
+                            {
+                              "content": "@entity.createdAt",
+                              "type": "typography",
+                              "variant": "body"
+                            }
+                          ]
+                        },
+                        {
+                          "type": "divider"
+                        },
+                        {
+                          "type": "stack",
+                          "direction": "horizontal",
+                          "justify": "end",
+                          "gap": "sm",
+                          "children": [
+                            {
+                              "action": "STOP",
+                              "label": "Stop",
+                              "variant": "danger",
+                              "type": "button",
+                              "icon": "square"
+                            }
+                          ]
+                        }
+                      ]
+                    }
+                  ]
+                ]
+              },
+              {
+                "from": "moving",
+                "to": "idle",
+                "event": "STOP",
+                "effects": [
+                  [
+                    "fetch",
+                    "MovableEntity",
+                    {
+                      "emit": {
+                        "success": "MovableEntityLoaded",
+                        "failure": "MovableEntityLoadFailed"
+                      }
+                    }
+                  ],
+                  [
+                    "render-ui",
+                    "main",
+                    {
+                      "gap": "lg",
+                      "children": [
+                        {
+                          "gap": "md",
+                          "direction": "horizontal",
+                          "type": "stack",
+                          "children": [
+                            {
+                              "direction": "horizontal",
+                              "gap": "md",
+                              "type": "stack",
+                              "children": [
+                                {
+                                  "type": "icon",
+                                  "name": "move"
+                                },
+                                {
+                                  "type": "typography",
+                                  "content": "MovableEntitys Movement",
+                                  "variant": "h2"
+                                }
+                              ]
+                            },
+                            {
+                              "type": "status-dot",
+                              "status": "offline",
+                              "label": "Idle"
+                            }
+                          ],
+                          "justify": "between"
+                        },
+                        {
+                          "type": "divider"
+                        },
+                        {
+                          "cols": 2.0,
+                          "children": [
+                            {
+                              "value": "@entity.x",
+                              "label": "X",
+                              "type": "stat-display"
+                            },
+                            {
+                              "type": "stat-display",
+                              "label": "Y",
+                              "value": "@entity.y"
+                            }
+                          ],
+                          "type": "simple-grid"
+                        },
+                        {
+                          "gap": "md",
+                          "direction": "horizontal",
+                          "type": "stack",
+                          "children": [
+                            {
+                              "content": "Name",
+                              "type": "typography",
+                              "variant": "caption"
+                            },
+                            {
+                              "variant": "body",
+                              "content": "@entity.name",
+                              "type": "typography"
+                            }
+                          ]
+                        },
+                        {
+                          "gap": "md",
+                          "children": [
+                            {
+                              "content": "Description",
+                              "type": "typography",
+                              "variant": "caption"
+                            },
+                            {
+                              "variant": "body",
+                              "content": "@entity.description",
+                              "type": "typography"
+                            }
+                          ],
+                          "type": "stack",
+                          "direction": "horizontal"
+                        },
+                        {
+                          "children": [
+                            {
+                              "type": "typography",
+                              "variant": "caption",
+                              "content": "Status"
+                            },
+                            {
+                              "variant": "body",
+                              "type": "typography",
+                              "content": "@entity.status"
+                            }
+                          ],
+                          "gap": "md",
+                          "type": "stack",
+                          "direction": "horizontal"
+                        },
+                        {
+                          "direction": "horizontal",
+                          "children": [
+                            {
+                              "type": "typography",
+                              "variant": "caption",
+                              "content": "CreatedAt"
+                            },
+                            {
+                              "variant": "body",
+                              "content": "@entity.createdAt",
+                              "type": "typography"
+                            }
+                          ],
+                          "type": "stack",
+                          "gap": "md"
+                        },
+                        {
+                          "type": "divider"
+                        },
+                        {
+                          "gap": "sm",
+                          "type": "stack",
+                          "children": [
+                            {
+                              "type": "button",
+                              "action": "MOVE",
+                              "variant": "primary",
+                              "icon": "navigation",
+                              "label": "Move"
+                            }
+                          ],
+                          "justify": "end",
+                          "direction": "horizontal"
+                        }
+                      ],
+                      "type": "stack",
+                      "direction": "vertical"
+                    }
+                  ]
+                ]
+              },
+              {
+                "from": "moving",
+                "to": "colliding",
+                "event": "COLLISION",
+                "effects": [
+                  [
+                    "render-ui",
+                    "modal",
+                    {
+                      "children": [
+                        {
+                          "type": "stack",
+                          "children": [
+                            {
+                              "type": "icon",
+                              "name": "alert-triangle"
+                            },
+                            {
+                              "type": "typography",
+                              "variant": "h3",
+                              "content": "Collision Detected"
+                            }
+                          ],
+                          "gap": "sm",
+                          "direction": "horizontal"
+                        },
+                        {
+                          "type": "divider"
+                        },
+                        {
+                          "content": "A collision has been detected. Resolve to continue.",
+                          "variant": "body",
+                          "type": "typography"
+                        },
+                        {
+                          "justify": "end",
+                          "type": "stack",
+                          "gap": "sm",
+                          "children": [
+                            {
+                              "variant": "ghost",
+                              "action": "CANCEL",
+                              "label": "Cancel",
+                              "type": "button"
+                            },
+                            {
+                              "type": "button",
+                              "variant": "primary",
+                              "action": "RESOLVE",
+                              "label": "Resolve",
+                              "icon": "check"
+                            }
+                          ],
+                          "direction": "horizontal"
+                        }
+                      ],
+                      "direction": "vertical",
+                      "type": "stack",
+                      "gap": "md"
+                    }
+                  ]
+                ]
+              },
+              {
+                "from": "colliding",
+                "to": "idle",
+                "event": "RESOLVE",
+                "effects": [
+                  [
+                    "render-ui",
+                    "modal",
+                    null
+                  ],
+                  [
+                    "fetch",
+                    "MovableEntity",
+                    {
+                      "emit": {
+                        "failure": "MovableEntityLoadFailed",
+                        "success": "MovableEntityLoaded"
+                      }
+                    }
+                  ],
+                  [
+                    "render-ui",
+                    "main",
+                    {
+                      "gap": "lg",
+                      "children": [
+                        {
+                          "direction": "horizontal",
+                          "children": [
+                            {
+                              "direction": "horizontal",
+                              "gap": "md",
+                              "children": [
+                                {
+                                  "name": "move",
+                                  "type": "icon"
+                                },
+                                {
+                                  "variant": "h2",
+                                  "content": "MovableEntitys Movement",
+                                  "type": "typography"
+                                }
+                              ],
+                              "type": "stack"
+                            },
+                            {
+                              "status": "offline",
+                              "type": "status-dot",
+                              "label": "Idle"
+                            }
+                          ],
+                          "type": "stack",
+                          "gap": "md",
+                          "justify": "between"
+                        },
+                        {
+                          "type": "divider"
+                        },
+                        {
+                          "cols": 2.0,
+                          "type": "simple-grid",
+                          "children": [
+                            {
+                              "value": "@entity.x",
+                              "type": "stat-display",
+                              "label": "X"
+                            },
+                            {
+                              "label": "Y",
+                              "type": "stat-display",
+                              "value": "@entity.y"
+                            }
+                          ]
+                        },
+                        {
+                          "direction": "horizontal",
+                          "gap": "md",
+                          "type": "stack",
+                          "children": [
+                            {
+                              "type": "typography",
+                              "content": "Name",
+                              "variant": "caption"
+                            },
+                            {
+                              "type": "typography",
+                              "variant": "body",
+                              "content": "@entity.name"
+                            }
+                          ]
+                        },
+                        {
+                          "type": "stack",
+                          "gap": "md",
+                          "children": [
+                            {
+                              "content": "Description",
+                              "variant": "caption",
+                              "type": "typography"
+                            },
+                            {
+                              "type": "typography",
+                              "variant": "body",
+                              "content": "@entity.description"
+                            }
+                          ],
+                          "direction": "horizontal"
+                        },
+                        {
+                          "children": [
+                            {
+                              "variant": "caption",
+                              "content": "Status",
+                              "type": "typography"
+                            },
+                            {
+                              "content": "@entity.status",
+                              "variant": "body",
+                              "type": "typography"
+                            }
+                          ],
+                          "gap": "md",
+                          "direction": "horizontal",
+                          "type": "stack"
+                        },
+                        {
+                          "type": "stack",
+                          "children": [
+                            {
+                              "variant": "caption",
+                              "content": "CreatedAt",
+                              "type": "typography"
+                            },
+                            {
+                              "variant": "body",
+                              "type": "typography",
+                              "content": "@entity.createdAt"
+                            }
+                          ],
+                          "direction": "horizontal",
+                          "gap": "md"
+                        },
+                        {
+                          "type": "divider"
+                        },
+                        {
+                          "justify": "end",
+                          "type": "stack",
+                          "children": [
+                            {
+                              "type": "button",
+                              "icon": "navigation",
+                              "label": "Move",
+                              "action": "MOVE",
+                              "variant": "primary"
+                            }
+                          ],
+                          "gap": "sm",
+                          "direction": "horizontal"
+                        }
+                      ],
+                      "type": "stack",
+                      "direction": "vertical"
+                    }
+                  ]
+                ]
+              },
+              {
+                "from": "colliding",
+                "to": "idle",
+                "event": "CANCEL",
+                "effects": [
+                  [
+                    "render-ui",
+                    "modal",
+                    null
+                  ],
+                  [
+                    "fetch",
+                    "MovableEntity",
+                    {
+                      "emit": {
+                        "success": "MovableEntityLoaded",
+                        "failure": "MovableEntityLoadFailed"
+                      }
+                    }
+                  ],
+                  [
+                    "render-ui",
+                    "main",
+                    {
+                      "type": "stack",
+                      "direction": "vertical",
+                      "children": [
+                        {
+                          "type": "stack",
+                          "justify": "between",
+                          "direction": "horizontal",
+                          "gap": "md",
+                          "children": [
+                            {
+                              "children": [
+                                {
+                                  "type": "icon",
+                                  "name": "move"
+                                },
+                                {
+                                  "type": "typography",
+                                  "content": "MovableEntitys Movement",
+                                  "variant": "h2"
+                                }
+                              ],
+                              "type": "stack",
+                              "gap": "md",
+                              "direction": "horizontal"
+                            },
+                            {
+                              "status": "offline",
+                              "type": "status-dot",
+                              "label": "Idle"
+                            }
+                          ]
+                        },
+                        {
+                          "type": "divider"
+                        },
+                        {
+                          "cols": 2.0,
+                          "type": "simple-grid",
+                          "children": [
+                            {
+                              "value": "@entity.x",
+                              "label": "X",
+                              "type": "stat-display"
+                            },
+                            {
+                              "type": "stat-display",
+                              "label": "Y",
+                              "value": "@entity.y"
+                            }
+                          ]
+                        },
+                        {
+                          "type": "stack",
+                          "direction": "horizontal",
+                          "gap": "md",
+                          "children": [
+                            {
+                              "content": "Name",
+                              "type": "typography",
+                              "variant": "caption"
+                            },
+                            {
+                              "content": "@entity.name",
+                              "type": "typography",
+                              "variant": "body"
+                            }
+                          ]
+                        },
+                        {
+                          "children": [
+                            {
+                              "variant": "caption",
+                              "type": "typography",
+                              "content": "Description"
+                            },
+                            {
+                              "content": "@entity.description",
+                              "type": "typography",
+                              "variant": "body"
+                            }
+                          ],
+                          "type": "stack",
+                          "gap": "md",
+                          "direction": "horizontal"
+                        },
+                        {
+                          "type": "stack",
+                          "children": [
+                            {
+                              "type": "typography",
+                              "variant": "caption",
+                              "content": "Status"
+                            },
+                            {
+                              "type": "typography",
+                              "content": "@entity.status",
+                              "variant": "body"
+                            }
+                          ],
+                          "direction": "horizontal",
+                          "gap": "md"
+                        },
+                        {
+                          "children": [
+                            {
+                              "type": "typography",
+                              "content": "CreatedAt",
+                              "variant": "caption"
+                            },
+                            {
+                              "content": "@entity.createdAt",
+                              "type": "typography",
+                              "variant": "body"
+                            }
+                          ],
+                          "direction": "horizontal",
+                          "type": "stack",
+                          "gap": "md"
+                        },
+                        {
+                          "type": "divider"
+                        },
+                        {
+                          "children": [
+                            {
+                              "icon": "navigation",
+                              "type": "button",
+                              "label": "Move",
+                              "action": "MOVE",
+                              "variant": "primary"
+                            }
+                          ],
+                          "type": "stack",
+                          "gap": "sm",
+                          "direction": "horizontal",
+                          "justify": "end"
+                        }
+                      ],
+                      "gap": "lg"
+                    }
+                  ]
+                ]
+              },
+              {
+                "from": "colliding",
+                "to": "idle",
+                "event": "CLOSE",
+                "effects": [
+                  [
+                    "render-ui",
+                    "modal",
+                    null
+                  ],
+                  [
+                    "fetch",
+                    "MovableEntity",
+                    {
+                      "emit": {
+                        "failure": "MovableEntityLoadFailed",
+                        "success": "MovableEntityLoaded"
+                      }
+                    }
+                  ],
+                  [
+                    "render-ui",
+                    "main",
+                    {
+                      "type": "stack",
+                      "direction": "vertical",
+                      "gap": "lg",
+                      "children": [
+                        {
+                          "justify": "between",
+                          "gap": "md",
+                          "type": "stack",
+                          "children": [
+                            {
+                              "type": "stack",
+                              "children": [
+                                {
+                                  "type": "icon",
+                                  "name": "move"
+                                },
+                                {
+                                  "type": "typography",
+                                  "content": "MovableEntitys Movement",
+                                  "variant": "h2"
+                                }
+                              ],
+                              "gap": "md",
+                              "direction": "horizontal"
+                            },
+                            {
+                              "type": "status-dot",
+                              "status": "offline",
+                              "label": "Idle"
+                            }
+                          ],
+                          "direction": "horizontal"
+                        },
+                        {
+                          "type": "divider"
+                        },
+                        {
+                          "type": "simple-grid",
+                          "cols": 2.0,
+                          "children": [
+                            {
+                              "type": "stat-display",
+                              "label": "X",
+                              "value": "@entity.x"
+                            },
+                            {
+                              "value": "@entity.y",
+                              "label": "Y",
+                              "type": "stat-display"
+                            }
+                          ]
+                        },
+                        {
+                          "direction": "horizontal",
+                          "type": "stack",
+                          "children": [
+                            {
+                              "type": "typography",
+                              "variant": "caption",
+                              "content": "Name"
+                            },
+                            {
+                              "variant": "body",
+                              "type": "typography",
+                              "content": "@entity.name"
+                            }
+                          ],
+                          "gap": "md"
+                        },
+                        {
+                          "type": "stack",
+                          "gap": "md",
+                          "children": [
+                            {
+                              "content": "Description",
+                              "variant": "caption",
+                              "type": "typography"
+                            },
+                            {
+                              "type": "typography",
+                              "variant": "body",
+                              "content": "@entity.description"
+                            }
+                          ],
+                          "direction": "horizontal"
+                        },
+                        {
+                          "direction": "horizontal",
+                          "type": "stack",
+                          "gap": "md",
+                          "children": [
+                            {
+                              "type": "typography",
+                              "variant": "caption",
+                              "content": "Status"
+                            },
+                            {
+                              "variant": "body",
+                              "type": "typography",
+                              "content": "@entity.status"
+                            }
+                          ]
+                        },
+                        {
+                          "direction": "horizontal",
+                          "type": "stack",
+                          "gap": "md",
+                          "children": [
+                            {
+                              "type": "typography",
+                              "variant": "caption",
+                              "content": "CreatedAt"
+                            },
+                            {
+                              "type": "typography",
+                              "content": "@entity.createdAt",
+                              "variant": "body"
+                            }
+                          ]
+                        },
+                        {
+                          "type": "divider"
+                        },
+                        {
+                          "gap": "sm",
+                          "type": "stack",
+                          "justify": "end",
+                          "children": [
+                            {
+                              "action": "MOVE",
+                              "variant": "primary",
+                              "type": "button",
+                              "label": "Move",
+                              "icon": "navigation"
+                            }
+                          ],
+                          "direction": "horizontal"
+                        }
+                      ]
+                    }
+                  ]
+                ]
+              }
+            ]
+          },
+          "scope": "collection"
+        }
+      ],
+      "pages": [
+        {
+          "name": "MovableEntityPage",
+          "path": "/movableentitys",
+          "traits": [
+            {
+              "ref": "MovableEntityMovement"
+            }
+          ]
+        }
+      ]
+    }
+  ]
+}

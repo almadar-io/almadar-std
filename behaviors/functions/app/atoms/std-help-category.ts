@@ -87,10 +87,10 @@ export interface StdHelpCategoryHelpCategoryLoadFailedPayload {
  * without modifying its state-machine topology.
  */
 export interface StdHelpCategoryConfig {
-  /** Default: `[{"variant":"primary","event":"OPEN_CATEGORY","icon":"arrow-right","label":"Open"},{"label":"Archive","variant":"danger","event":"ARCHIVE"}]` */
-  itemActions?: TraitConfig[];
-  /** Default: `[{"variant":"caption","label":"Name","name":"name"},{"name":"slug","label":"Slug","variant":"caption"},{"variant":"caption","label":"Articles","name":"articleCount"},{"variant":"caption","name":"sortOrder","label":"Order"},{"label":"Status","variant":"badge","name":"status"},{"label":"Updated","name":"updatedAt","variant":"caption"}]` */
+  /** Default: `[{"name":"name","label":"Name","variant":"caption"},{"name":"slug","variant":"caption","label":"Slug"},{"label":"Articles","variant":"caption","name":"articleCount"},{"variant":"caption","label":"Order","name":"sortOrder"},{"name":"status","label":"Status","variant":"badge"},{"variant":"caption","label":"Updated","name":"updatedAt"}]` */
   fields?: TraitConfig[];
+  /** Default: `[{"label":"Open","icon":"arrow-right","variant":"primary","event":"OPEN_CATEGORY"},{"label":"Archive","event":"ARCHIVE","variant":"danger"}]` */
+  itemActions?: TraitConfig[];
   /** Default: `"Help Categories"` */
   title?: string;
 }

@@ -92,12 +92,12 @@ export interface StdHelpArticleHelpArticleLoadFailedPayload {
  * without modifying its state-machine topology.
  */
 export interface StdHelpArticleConfig {
-  /** Default: `[{"event":"OPEN_ARTICLE","variant":"primary","label":"Open","icon":"arrow-right"},{"label":"Archive","variant":"danger","event":"ARCHIVE"}]` */
-  itemActions?: TraitConfig[];
   /** Default: `"Help Articles"` */
   title?: string;
-  /** Default: `[{"name":"title","label":"Title","variant":"caption"},{"variant":"caption","label":"Slug","name":"slug"},{"name":"categoryName","label":"Category","variant":"caption"},{"label":"Author","name":"author","variant":"caption"},{"name":"status","variant":"badge","label":"Status"},{"variant":"caption","name":"viewCount","label":"Views"},{"label":"Published","name":"publishedAt","variant":"caption"}]` */
+  /** Default: `[{"label":"Title","variant":"caption","name":"title"},{"label":"Slug","variant":"caption","name":"slug"},{"label":"Category","variant":"caption","name":"categoryName"},{"variant":"caption","label":"Author","name":"author"},{"name":"status","label":"Status","variant":"badge"},{"variant":"caption","name":"viewCount","label":"Views"},{"variant":"caption","name":"publishedAt","label":"Published"}]` */
   fields?: TraitConfig[];
+  /** Default: `[{"label":"Open","variant":"primary","event":"OPEN_ARTICLE","icon":"arrow-right"},{"variant":"danger","event":"ARCHIVE","label":"Archive"}]` */
+  itemActions?: TraitConfig[];
 }
 
 /**

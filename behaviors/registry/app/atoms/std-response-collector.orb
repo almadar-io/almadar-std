@@ -237,22 +237,22 @@
                     "render-ui",
                     "main",
                     {
-                      "className": "py-12",
                       "align": "center",
                       "children": [
                         {
                           "type": "spinner"
                         },
                         {
+                          "type": "typography",
                           "content": "Loading responses…",
                           "variant": "caption",
-                          "color": "muted",
-                          "type": "typography"
+                          "color": "muted"
                         }
                       ],
+                      "className": "py-12",
+                      "direction": "vertical",
                       "type": "stack",
-                      "gap": "md",
-                      "direction": "vertical"
+                      "gap": "md"
                     }
                   ]
                 ]
@@ -266,14 +266,11 @@
                     "render-ui",
                     "main",
                     {
-                      "gap": "md",
-                      "type": "stack",
                       "direction": "vertical",
+                      "gap": "md",
                       "children": [
                         {
-                          "type": "stack",
                           "gap": "sm",
-                          "align": "center",
                           "children": [
                             {
                               "type": "icon",
@@ -285,50 +282,53 @@
                               "variant": "h3"
                             }
                           ],
-                          "direction": "horizontal"
+                          "direction": "horizontal",
+                          "type": "stack",
+                          "align": "center"
                         },
                         {
                           "type": "simple-grid",
+                          "cols": 4.0,
                           "children": [
                             {
-                              "type": "stat-display",
+                              "value": "@payload.data.length",
                               "icon": "clipboard-list",
-                              "label": "Total responses",
-                              "value": "@payload.data.length"
+                              "type": "stat-display",
+                              "label": "Total responses"
                             },
                             {
                               "type": "stat-display",
-                              "icon": "check-circle",
                               "label": "Completion",
+                              "icon": "check-circle",
                               "value": "84%"
                             },
                             {
-                              "label": "Respondents",
-                              "icon": "users",
+                              "value": "312",
                               "type": "stat-display",
-                              "value": "312"
+                              "label": "Respondents",
+                              "icon": "users"
                             },
                             {
-                              "label": "Surveys",
+                              "value": "6",
                               "icon": "file-text",
                               "type": "stat-display",
-                              "value": "6"
+                              "label": "Surveys"
                             }
-                          ],
-                          "cols": 4.0
+                          ]
                         },
                         {
                           "type": "divider"
                         },
                         {
+                          "entity": "@payload.data",
+                          "fields": "@config.fields",
                           "type": "data-grid",
                           "gap": "sm",
                           "itemActions": "@config.itemActions",
-                          "entity": "@payload.data",
-                          "fields": "@config.fields",
                           "cols": 1.0
                         }
-                      ]
+                      ],
+                      "type": "stack"
                     }
                   ]
                 ]
@@ -342,9 +342,9 @@
                     "render-ui",
                     "main",
                     {
-                      "variant": "error",
+                      "type": "alert",
                       "message": "@payload.error",
-                      "type": "alert"
+                      "variant": "error"
                     }
                   ]
                 ]
@@ -388,33 +388,99 @@
                     "render-ui",
                     "main",
                     {
+                      "direction": "vertical",
                       "type": "stack",
+                      "gap": "md",
                       "children": [
                         {
-                          "type": "stack",
-                          "direction": "horizontal",
-                          "align": "center",
                           "gap": "sm",
+                          "align": "center",
+                          "type": "stack",
                           "children": [
                             {
-                              "label": "Back",
                               "variant": "ghost",
                               "action": "CLOSE_VIEW",
-                              "type": "button"
+                              "type": "button",
+                              "label": "Back"
                             },
                             {
                               "name": "clipboard-list",
                               "type": "icon"
                             },
                             {
-                              "variant": "h3",
+                              "content": "@entity.respondentId",
                               "type": "typography",
-                              "content": "@entity.respondentId"
+                              "variant": "h3"
                             },
                             {
-                              "label": "Submitted",
                               "variant": "success",
-                              "type": "badge"
+                              "type": "badge",
+                              "label": "Submitted"
+                            }
+                          ],
+                          "direction": "horizontal"
+                        },
+                        {
+                          "type": "divider"
+                        },
+                        {
+                          "gap": "sm",
+                          "type": "stack",
+                          "direction": "vertical",
+                          "children": [
+                            {
+                              "type": "stack",
+                              "direction": "horizontal",
+                              "children": [
+                                {
+                                  "variant": "caption",
+                                  "content": "Survey",
+                                  "type": "typography",
+                                  "color": "muted"
+                                },
+                                {
+                                  "variant": "body",
+                                  "content": "@entity.surveyId",
+                                  "type": "typography"
+                                }
+                              ],
+                              "gap": "md"
+                            },
+                            {
+                              "type": "stack",
+                              "direction": "horizontal",
+                              "gap": "md",
+                              "children": [
+                                {
+                                  "content": "Question",
+                                  "color": "muted",
+                                  "variant": "caption",
+                                  "type": "typography"
+                                },
+                                {
+                                  "variant": "body",
+                                  "content": "@entity.questionId",
+                                  "type": "typography"
+                                }
+                              ]
+                            },
+                            {
+                              "type": "stack",
+                              "gap": "md",
+                              "direction": "horizontal",
+                              "children": [
+                                {
+                                  "variant": "caption",
+                                  "content": "Answer",
+                                  "type": "typography",
+                                  "color": "muted"
+                                },
+                                {
+                                  "type": "typography",
+                                  "variant": "body",
+                                  "content": "@entity.answerJson"
+                                }
+                              ]
                             }
                           ]
                         },
@@ -422,116 +488,50 @@
                           "type": "divider"
                         },
                         {
-                          "children": [
-                            {
-                              "type": "stack",
-                              "gap": "md",
-                              "children": [
-                                {
-                                  "color": "muted",
-                                  "variant": "caption",
-                                  "content": "Survey",
-                                  "type": "typography"
-                                },
-                                {
-                                  "type": "typography",
-                                  "variant": "body",
-                                  "content": "@entity.surveyId"
-                                }
-                              ],
-                              "direction": "horizontal"
-                            },
-                            {
-                              "direction": "horizontal",
-                              "gap": "md",
-                              "type": "stack",
-                              "children": [
-                                {
-                                  "content": "Question",
-                                  "color": "muted",
-                                  "type": "typography",
-                                  "variant": "caption"
-                                },
-                                {
-                                  "type": "typography",
-                                  "variant": "body",
-                                  "content": "@entity.questionId"
-                                }
-                              ]
-                            },
-                            {
-                              "type": "stack",
-                              "gap": "md",
-                              "direction": "horizontal",
-                              "children": [
-                                {
-                                  "variant": "caption",
-                                  "color": "muted",
-                                  "content": "Answer",
-                                  "type": "typography"
-                                },
-                                {
-                                  "content": "@entity.answerJson",
-                                  "variant": "body",
-                                  "type": "typography"
-                                }
-                              ]
-                            }
-                          ],
-                          "type": "stack",
-                          "direction": "vertical",
-                          "gap": "sm"
-                        },
-                        {
-                          "type": "divider"
-                        },
-                        {
+                          "cols": 2.0,
                           "children": [
                             {
                               "value": "@entity.respondentId",
-                              "type": "stat-display",
                               "label": "Respondent",
+                              "type": "stat-display",
                               "icon": "user"
                             },
                             {
-                              "label": "Submitted",
                               "icon": "calendar",
                               "type": "stat-display",
+                              "label": "Submitted",
                               "value": "@entity.submittedAt"
                             }
                           ],
-                          "cols": 2.0,
                           "type": "simple-grid"
                         },
                         {
+                          "type": "stack",
                           "align": "center",
+                          "gap": "sm",
+                          "direction": "horizontal",
                           "children": [
                             {
+                              "variant": "primary",
                               "type": "button",
-                              "label": "Resubmit",
-                              "action": "RESUBMIT",
                               "actionPayload": {
                                 "id": "@entity.id"
                               },
-                              "variant": "primary"
+                              "action": "RESUBMIT",
+                              "label": "Resubmit"
                             },
                             {
                               "actionPayload": {
                                 "id": "@entity.id"
                               },
-                              "type": "button",
-                              "variant": "danger",
+                              "action": "DELETE_RESPONSE",
                               "label": "Delete",
-                              "action": "DELETE_RESPONSE"
+                              "type": "button",
+                              "variant": "danger"
                             }
-                          ],
-                          "type": "stack",
-                          "direction": "horizontal",
-                          "gap": "sm"
+                          ]
                         }
-                      ],
-                      "gap": "md",
-                      "direction": "vertical"
+                      ]
                     }
                   ]
                 ]
@@ -560,22 +560,22 @@
                     "render-ui",
                     "main",
                     {
+                      "type": "stack",
+                      "direction": "vertical",
+                      "className": "py-12",
+                      "gap": "md",
+                      "align": "center",
                       "children": [
                         {
                           "type": "spinner"
                         },
                         {
-                          "variant": "caption",
                           "type": "typography",
                           "color": "muted",
-                          "content": "Resubmitting response…"
+                          "content": "Resubmitting response…",
+                          "variant": "caption"
                         }
-                      ],
-                      "align": "center",
-                      "type": "stack",
-                      "gap": "md",
-                      "className": "py-12",
-                      "direction": "vertical"
+                      ]
                     }
                   ]
                 ]
@@ -595,8 +595,8 @@
                     "Response",
                     {
                       "emit": {
-                        "failure": "ResponseLoadFailed",
-                        "success": "ResponseLoaded"
+                        "success": "ResponseLoaded",
+                        "failure": "ResponseLoadFailed"
                       }
                     }
                   ],
@@ -604,8 +604,9 @@
                     "render-ui",
                     "main",
                     {
-                      "direction": "vertical",
                       "gap": "md",
+                      "direction": "vertical",
+                      "type": "stack",
                       "className": "py-12",
                       "children": [
                         {
@@ -618,8 +619,7 @@
                           "content": "Deleting response…"
                         }
                       ],
-                      "align": "center",
-                      "type": "stack"
+                      "align": "center"
                     }
                   ]
                 ]
@@ -634,8 +634,8 @@
                     "Response",
                     {
                       "emit": {
-                        "success": "ResponseLoaded",
-                        "failure": "ResponseLoadFailed"
+                        "failure": "ResponseLoadFailed",
+                        "success": "ResponseLoaded"
                       }
                     }
                   ],
@@ -643,21 +643,21 @@
                     "render-ui",
                     "main",
                     {
+                      "direction": "vertical",
                       "children": [
                         {
                           "type": "spinner"
                         },
                         {
-                          "color": "muted",
-                          "variant": "caption",
                           "type": "typography",
+                          "variant": "caption",
+                          "color": "muted",
                           "content": "Loading responses…"
                         }
                       ],
                       "gap": "md",
-                      "className": "py-12",
                       "type": "stack",
-                      "direction": "vertical",
+                      "className": "py-12",
                       "align": "center"
                     }
                   ]
@@ -687,22 +687,22 @@
                     "render-ui",
                     "main",
                     {
-                      "direction": "vertical",
                       "align": "center",
-                      "className": "py-12",
-                      "type": "stack",
                       "gap": "md",
                       "children": [
                         {
                           "type": "spinner"
                         },
                         {
+                          "color": "muted",
                           "type": "typography",
                           "content": "Resubmitting response…",
-                          "variant": "caption",
-                          "color": "muted"
+                          "variant": "caption"
                         }
-                      ]
+                      ],
+                      "className": "py-12",
+                      "type": "stack",
+                      "direction": "vertical"
                     }
                   ]
                 ]
@@ -722,8 +722,8 @@
                     "Response",
                     {
                       "emit": {
-                        "success": "ResponseLoaded",
-                        "failure": "ResponseLoadFailed"
+                        "failure": "ResponseLoadFailed",
+                        "success": "ResponseLoaded"
                       }
                     }
                   ],
@@ -731,21 +731,21 @@
                     "render-ui",
                     "main",
                     {
-                      "gap": "md",
+                      "type": "stack",
                       "children": [
                         {
                           "type": "spinner"
                         },
                         {
-                          "color": "muted",
-                          "type": "typography",
                           "content": "Deleting response…",
-                          "variant": "caption"
+                          "color": "muted",
+                          "variant": "caption",
+                          "type": "typography"
                         }
                       ],
-                      "direction": "vertical",
-                      "type": "stack",
                       "className": "py-12",
+                      "direction": "vertical",
+                      "gap": "md",
                       "align": "center"
                     }
                   ]
@@ -779,19 +779,13 @@
             ]
           },
           "config": {
-            "title": {
-              "type": "string",
-              "default": "Responses",
-              "label": "Section title",
-              "description": "Heading shown above the survey response list"
-            },
             "fields": {
               "type": "[object]",
               "default": [
                 {
-                  "name": "questionId",
+                  "variant": "caption",
                   "label": "Question",
-                  "variant": "caption"
+                  "name": "questionId"
                 },
                 {
                   "name": "respondentId",
@@ -800,40 +794,52 @@
                 },
                 {
                   "variant": "caption",
-                  "label": "Survey",
-                  "name": "surveyId"
+                  "name": "surveyId",
+                  "label": "Survey"
                 },
                 {
                   "name": "answerJson",
-                  "variant": "caption",
-                  "label": "Answer"
+                  "label": "Answer",
+                  "variant": "caption"
                 },
                 {
-                  "name": "submittedAt",
                   "label": "Submitted",
+                  "name": "submittedAt",
                   "variant": "caption"
                 }
               ],
               "label": "Columns to show",
-              "description": "Each column maps to one field on the Response entity"
+              "description": "Each column maps to one field on the Response entity",
+              "items": {
+                "type": "object"
+              }
             },
             "itemActions": {
               "type": "[object]",
               "default": [
                 {
                   "variant": "primary",
-                  "label": "Open",
+                  "icon": "arrow-right",
                   "event": "OPEN_RESPONSE",
-                  "icon": "arrow-right"
+                  "label": "Open"
                 },
                 {
+                  "label": "Delete",
                   "event": "DELETE_RESPONSE",
-                  "variant": "danger",
-                  "label": "Delete"
+                  "variant": "danger"
                 }
               ],
               "label": "Row actions",
-              "description": "Buttons users can click on each response row"
+              "description": "Buttons users can click on each response row",
+              "items": {
+                "type": "object"
+              }
+            },
+            "title": {
+              "type": "string",
+              "default": "Responses",
+              "label": "Section title",
+              "description": "Heading shown above the survey response list"
             }
           },
           "scope": "collection"

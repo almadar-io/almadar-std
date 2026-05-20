@@ -87,12 +87,12 @@ export interface StdLedgerEntryLedgerEntryLoadFailedPayload {
  * without modifying its state-machine topology.
  */
 export interface StdLedgerEntryConfig {
-  /** Default: `[{"event":"OPEN_ENTRY","icon":"arrow-right","label":"Open","variant":"primary"},{"variant":"danger","label":"Reverse","event":"REVERSE_ENTRY"}]` */
-  itemActions?: TraitConfig[];
-  /** Default: `[{"label":"Date","variant":"caption","name":"entryDate"},{"variant":"caption","label":"Account","name":"accountName"},{"label":"Description","variant":"caption","name":"description"},{"name":"debit","label":"Debit","variant":"caption"},{"label":"Credit","variant":"caption","name":"credit"},{"name":"isReconciled","variant":"badge","label":"Reconciled"}]` */
-  fields?: TraitConfig[];
   /** Default: `"Journal Entries"` */
   title?: string;
+  /** Default: `[{"label":"Date","variant":"caption","name":"entryDate"},{"name":"accountName","label":"Account","variant":"caption"},{"label":"Description","name":"description","variant":"caption"},{"name":"debit","variant":"caption","label":"Debit"},{"label":"Credit","variant":"caption","name":"credit"},{"name":"isReconciled","label":"Reconciled","variant":"badge"}]` */
+  fields?: TraitConfig[];
+  /** Default: `[{"icon":"arrow-right","event":"OPEN_ENTRY","label":"Open","variant":"primary"},{"label":"Reverse","event":"REVERSE_ENTRY","variant":"danger"}]` */
+  itemActions?: TraitConfig[];
 }
 
 /**

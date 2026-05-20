@@ -114,10 +114,10 @@ export interface StdBoardConfig {
   gridCols?: number;
   /** Default: `["title","description","stage","notes"]` */
   formFields?: string[];
-  /** Default: `[{"icon":"circle","variant":"default","key":"todo","label":"To Do"},{"key":"doing","variant":"primary","icon":"circle-dot","label":"In Progress"},{"label":"Done","variant":"success","key":"done","icon":"check-circle"}]` */
-  columns?: TraitConfig[];
   /** Default: `"Board"` */
   title?: string;
+  /** Default: `[{"variant":"default","icon":"circle","label":"To Do","key":"todo"},{"key":"doing","icon":"circle-dot","variant":"primary","label":"In Progress"},{"label":"Done","variant":"success","key":"done","icon":"check-circle"}]` */
+  columns?: TraitConfig[];
 }
 
 /**

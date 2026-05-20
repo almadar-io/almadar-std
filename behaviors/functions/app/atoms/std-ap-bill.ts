@@ -86,12 +86,12 @@ export interface StdApBillApBillLoadFailedPayload {
  * without modifying its state-machine topology.
  */
 export interface StdApBillConfig {
-  /** Default: `[{"variant":"primary","icon":"arrow-right","label":"Open","event":"OPEN_BILL"},{"label":"Void","variant":"danger","event":"VOID_BILL"}]` */
-  itemActions?: TraitConfig[];
+  /** Default: `[{"name":"vendor","variant":"caption","label":"Vendor"},{"variant":"caption","name":"billNumber","label":"Bill #"},{"label":"Bill Date","name":"billDate","variant":"caption"},{"name":"dueDate","label":"Due","variant":"caption"},{"name":"amountTotal","label":"Total","variant":"caption"},{"variant":"badge","label":"Status","name":"status"}]` */
+  fields?: TraitConfig[];
   /** Default: `"Bills Payable"` */
   title?: string;
-  /** Default: `[{"name":"vendor","variant":"caption","label":"Vendor"},{"label":"Bill #","name":"billNumber","variant":"caption"},{"label":"Bill Date","variant":"caption","name":"billDate"},{"variant":"caption","label":"Due","name":"dueDate"},{"label":"Total","variant":"caption","name":"amountTotal"},{"name":"status","label":"Status","variant":"badge"}]` */
-  fields?: TraitConfig[];
+  /** Default: `[{"icon":"arrow-right","label":"Open","event":"OPEN_BILL","variant":"primary"},{"event":"VOID_BILL","variant":"danger","label":"Void"}]` */
+  itemActions?: TraitConfig[];
 }
 
 /**

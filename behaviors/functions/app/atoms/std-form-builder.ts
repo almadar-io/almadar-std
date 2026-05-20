@@ -140,10 +140,10 @@ export interface StdFormBuilderSurveyPublishedPayload {
 export interface StdFormBuilderConfig {
   /** Default: `"Survey Builder"` */
   title?: string;
-  /** Default: `[{"variant":"primary","icon":"arrow-right","label":"Open","event":"OPEN_SURVEY"},{"icon":"send","label":"Publish","event":"PUBLISH","variant":"secondary"}]` */
-  itemActions?: TraitConfig[];
-  /** Default: `[{"name":"title","variant":"caption","label":"Title"},{"name":"description","variant":"caption","label":"Description"},{"name":"status","label":"Status","variant":"badge"},{"label":"Created","variant":"caption","name":"createdAt"}]` */
+  /** Default: `[{"name":"title","variant":"caption","label":"Title"},{"label":"Description","name":"description","variant":"caption"},{"variant":"badge","name":"status","label":"Status"},{"name":"createdAt","variant":"caption","label":"Created"}]` */
   fields?: TraitConfig[];
+  /** Default: `[{"event":"OPEN_SURVEY","icon":"arrow-right","variant":"primary","label":"Open"},{"label":"Publish","event":"PUBLISH","icon":"send","variant":"secondary"}]` */
+  itemActions?: TraitConfig[];
 }
 
 /**

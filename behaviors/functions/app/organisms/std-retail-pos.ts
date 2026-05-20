@@ -191,12 +191,11 @@ export function stdRetailPosSaleOrbital(params: StdRetailPosSaleOrbitalParams = 
         'ref': 'AppShell.traits.AppLayout',
         'name': 'SaleAppLayout',
         'config': {
-          'searchEvent': 'SALE_SEARCH',
-          'notificationClickEvent': 'SALE_NOTIFICATIONS_OPEN',
+          'appName': 'Retail POS',
           'navItems': [
             {
-              'icon': 'shopping-bag',
               'href': '/sales',
+              'icon': 'shopping-bag',
               'label': 'Sales',
             },
             {
@@ -216,8 +215,9 @@ export function stdRetailPosSaleOrbital(params: StdRetailPosSaleOrbitalParams = 
             },
           ],
           'notifications': [],
+          'searchEvent': 'SALE_SEARCH',
+          'notificationClickEvent': 'SALE_NOTIFICATIONS_OPEN',
           'contentTrait': '@trait.SaleCatalog',
-          'appName': 'Retail POS',
         },
         'events': {
           'NOTIFY_CLICK': 'SALE_NOTIFICATIONS_OPEN',
@@ -304,19 +304,13 @@ export function stdRetailPosSaleOrbital(params: StdRetailPosSaleOrbitalParams = 
                   'render-ui',
                   'main',
                   {
-                    'gap': 'lg',
-                    'type': 'stack',
-                    'direction': 'vertical',
                     'children': [
                       {
                         'type': 'stack',
                         'align': 'center',
+                        'direction': 'horizontal',
                         'children': [
                           {
-                            'direction': 'horizontal',
-                            'gap': 'sm',
-                            'type': 'stack',
-                            'align': 'center',
                             'children': [
                               {
                                 'name': 'shopping-bag',
@@ -328,6 +322,10 @@ export function stdRetailPosSaleOrbital(params: StdRetailPosSaleOrbitalParams = 
                                 'variant': 'h2',
                               },
                             ],
+                            'direction': 'horizontal',
+                            'type': 'stack',
+                            'align': 'center',
+                            'gap': 'sm',
                           },
                           {
                             'type': 'stack',
@@ -335,30 +333,29 @@ export function stdRetailPosSaleOrbital(params: StdRetailPosSaleOrbitalParams = 
                             'gap': 'sm',
                             'children': [
                               {
-                                'variant': 'primary',
                                 'type': 'button',
-                                'action': 'CREATE',
-                                'icon': 'plus',
                                 'label': 'New Sale',
+                                'action': 'CREATE',
+                                'variant': 'primary',
+                                'icon': 'plus',
                               },
                             ],
                           },
                         ],
-                        'direction': 'horizontal',
-                        'justify': 'between',
                         'gap': 'md',
+                        'justify': 'between',
                       },
                       {
                         'type': 'divider',
                       },
                       {
-                        'type': 'stack',
                         'children': [
                           '@trait.SaleSearch',
                           '@trait.SaleFilter',
                         ],
-                        'gap': 'md',
+                        'type': 'stack',
                         'direction': 'horizontal',
+                        'gap': 'md',
                         'align': 'center',
                       },
                       '@trait.SaleStats',
@@ -368,6 +365,9 @@ export function stdRetailPosSaleOrbital(params: StdRetailPosSaleOrbitalParams = 
                       },
                       '@trait.SaleBrowseList',
                     ],
+                    'direction': 'vertical',
+                    'gap': 'lg',
+                    'type': 'stack',
                   },
                 ],
               ],
@@ -387,33 +387,33 @@ export function stdRetailPosSaleOrbital(params: StdRetailPosSaleOrbitalParams = 
                   'main',
                   {
                     'className': 'py-8',
-                    'gap': 'md',
+                    'type': 'stack',
                     'children': [
                       {
-                        'name': 'bell',
                         'type': 'icon',
+                        'name': 'bell',
                       },
                       {
-                        'content': 'No notifications',
                         'variant': 'h3',
                         'type': 'typography',
+                        'content': 'No notifications',
                       },
                       {
-                        'variant': 'caption',
                         'color': 'muted',
+                        'variant': 'caption',
                         'content': 'You\'re all caught up.',
                         'type': 'typography',
                       },
                       {
                         'label': 'Back to sales',
                         'type': 'button',
-                        'variant': 'ghost',
                         'action': 'INIT',
+                        'variant': 'ghost',
                       },
                     ],
-                    'type': 'stack',
                     'align': 'center',
                     'direction': 'vertical',
+                    'gap': 'md',
                   },
                 ],
               ],
@@ -454,9 +454,9 @@ export function stdRetailPosSaleOrbital(params: StdRetailPosSaleOrbitalParams = 
                 'check',
                 'digital',
               ],
-              'filterType': 'select',
               'label': 'Payment',
               'field': 'paymentMethod',
+              'filterType': 'select',
             },
           ],
         },
@@ -465,18 +465,19 @@ export function stdRetailPosSaleOrbital(params: StdRetailPosSaleOrbitalParams = 
         'ref': 'Stats.traits.StatsItemStats',
         'name': 'SaleStats',
         'config': {
-          'title': 'Sales',
           'metrics': [
             {
-              'aggregation': 'count',
-              'label': 'Total',
               'icon': 'shopping-bag',
+              'label': 'Total',
               'variant': 'primary',
+              'aggregation': 'count',
               'format': 'number',
             },
             {
+              'variant': 'success',
               'label': 'Completed',
               'icon': 'check-circle',
+              'format': 'number',
               'filter': [
                 'fn',
                 'row',
@@ -487,11 +488,13 @@ export function stdRetailPosSaleOrbital(params: StdRetailPosSaleOrbitalParams = 
                 ],
               ],
               'aggregation': 'count',
-              'variant': 'success',
-              'format': 'number',
             },
             {
-              'aggregation': 'sum',
+              'format': 'currency',
+              'variant': 'info',
+              'label': 'Revenue',
+              'icon': 'dollar-sign',
+              'field': 'total',
               'filter': [
                 'fn',
                 'row',
@@ -501,13 +504,10 @@ export function stdRetailPosSaleOrbital(params: StdRetailPosSaleOrbitalParams = 
                   'completed',
                 ],
               ],
-              'format': 'currency',
-              'icon': 'dollar-sign',
-              'field': 'total',
-              'variant': 'info',
-              'label': 'Revenue',
+              'aggregation': 'sum',
             },
           ],
+          'title': 'Sales',
         },
         'listens': [
           {
@@ -525,10 +525,10 @@ export function stdRetailPosSaleOrbital(params: StdRetailPosSaleOrbitalParams = 
         'name': 'SaleGraphs',
         'config': {
           'showLegend': false,
-          'height': 240,
           'subtitle': 'Volume across payment types',
           'chartType': 'bar',
           'aggregation': 'count',
+          'height': 240,
           'title': 'Sales by Payment Method',
           'categoryField': 'paymentMethod',
         },
@@ -548,34 +548,34 @@ export function stdRetailPosSaleOrbital(params: StdRetailPosSaleOrbitalParams = 
         'name': 'SaleBrowseList',
         'linkedEntity': canonicalName,
         'config': {
-          'gap': 'sm',
-          'cols': 1,
           'itemActions': [
             {
+              'variant': 'ghost',
               'event': 'VIEW',
               'label': 'View',
-              'variant': 'ghost',
             },
             {
-              'variant': 'ghost',
-              'event': 'EDIT',
               'label': 'Edit',
+              'event': 'EDIT',
+              'variant': 'ghost',
             },
             {
               'event': 'DELETE',
-              'label': 'Delete',
               'variant': 'danger',
+              'label': 'Delete',
             },
           ],
+          'gap': 'sm',
+          'cols': 1,
           'fields': [
             {
-              'variant': 'h4',
               'icon': 'shopping-bag',
               'name': 'id',
+              'variant': 'h4',
             },
             {
-              'name': 'status',
               'variant': 'badge',
+              'name': 'status',
             },
             {
               'name': 'paymentMethod',
@@ -586,8 +586,8 @@ export function stdRetailPosSaleOrbital(params: StdRetailPosSaleOrbitalParams = 
               'variant': 'caption',
             },
             {
-              'name': 'completedAt',
               'variant': 'caption',
+              'name': 'completedAt',
             },
           ],
         },
@@ -639,7 +639,9 @@ export function stdRetailPosSaleOrbital(params: StdRetailPosSaleOrbitalParams = 
         'name': 'SaleCreate',
         'linkedEntity': canonicalName,
         'config': {
+          'title': 'New Sale',
           'icon': 'plus-circle',
+          'mode': 'create',
           'fields': [
             'total',
             'status',
@@ -647,8 +649,6 @@ export function stdRetailPosSaleOrbital(params: StdRetailPosSaleOrbitalParams = 
             'customerId',
             'cashierId',
           ],
-          'title': 'New Sale',
-          'mode': 'create',
         },
         'events': {
           'OPEN': 'CREATE',
@@ -677,9 +677,9 @@ export function stdRetailPosSaleOrbital(params: StdRetailPosSaleOrbitalParams = 
             'cashierId',
             'completedAt',
           ],
+          'icon': 'edit',
           'title': 'Edit Sale',
           'mode': 'edit',
-          'icon': 'edit',
         },
         'events': {
           'OPEN': 'EDIT',
@@ -700,6 +700,7 @@ export function stdRetailPosSaleOrbital(params: StdRetailPosSaleOrbitalParams = 
         'name': 'SaleView',
         'linkedEntity': canonicalName,
         'config': {
+          'title': 'View Sale',
           'fields': [
             'total',
             'status',
@@ -708,9 +709,8 @@ export function stdRetailPosSaleOrbital(params: StdRetailPosSaleOrbitalParams = 
             'cashierId',
             'completedAt',
           ],
-          'title': 'View Sale',
-          'icon': 'eye',
           'mode': 'edit',
+          'icon': 'eye',
         },
         'events': {
           'OPEN': 'VIEW',
@@ -731,9 +731,9 @@ export function stdRetailPosSaleOrbital(params: StdRetailPosSaleOrbitalParams = 
         'name': 'SaleDelete',
         'linkedEntity': canonicalName,
         'config': {
-          'title': 'Delete Sale',
-          'alertMessage': 'This action cannot be undone.',
           'confirmLabel': 'Delete',
+          'alertMessage': 'This action cannot be undone.',
+          'title': 'Delete Sale',
           'icon': 'alert-triangle',
         },
         'events': {
@@ -1215,8 +1215,6 @@ export function stdRetailPosCheckoutOrbital(params: StdRetailPosCheckoutOrbitalP
         'ref': 'AppShell.traits.AppLayout',
         'name': 'CheckoutAppLayout',
         'config': {
-          'notifications': [],
-          'notificationClickEvent': 'CHECKOUT_NOTIFICATIONS_OPEN',
           'contentTrait': '@trait.CheckoutTerminalBoard',
           'navItems': [
             {
@@ -1230,17 +1228,19 @@ export function stdRetailPosCheckoutOrbital(params: StdRetailPosCheckoutOrbitalP
               'label': 'Checkout',
             },
             {
-              'href': '/receipts',
-              'icon': 'receipt',
               'label': 'Receipts',
+              'icon': 'receipt',
+              'href': '/receipts',
             },
             {
+              'icon': 'users',
               'label': 'Customers',
               'href': '/customers',
-              'icon': 'users',
             },
           ],
           'searchEvent': 'CHECKOUT_SEARCH',
+          'notifications': [],
+          'notificationClickEvent': 'CHECKOUT_NOTIFICATIONS_OPEN',
           'appName': 'Retail POS',
         },
         'events': {
@@ -1490,8 +1490,7 @@ export function stdRetailPosReceiptOrbital(params: StdRetailPosReceiptOrbitalPar
         'ref': 'AppShell.traits.AppLayout',
         'name': 'ReceiptAppLayout',
         'config': {
-          'contentTrait': '@trait.ReceiptLedger',
-          'notifications': [],
+          'notificationClickEvent': 'RECEIPT_NOTIFICATIONS_OPEN',
           'searchEvent': 'RECEIPT_SEARCH',
           'appName': 'Retail POS',
           'navItems': [
@@ -1501,9 +1500,9 @@ export function stdRetailPosReceiptOrbital(params: StdRetailPosReceiptOrbitalPar
               'icon': 'shopping-bag',
             },
             {
-              'icon': 'credit-card',
-              'label': 'Checkout',
               'href': '/checkout',
+              'label': 'Checkout',
+              'icon': 'credit-card',
             },
             {
               'icon': 'receipt',
@@ -1511,16 +1510,17 @@ export function stdRetailPosReceiptOrbital(params: StdRetailPosReceiptOrbitalPar
               'href': '/receipts',
             },
             {
-              'icon': 'users',
               'label': 'Customers',
               'href': '/customers',
+              'icon': 'users',
             },
           ],
-          'notificationClickEvent': 'RECEIPT_NOTIFICATIONS_OPEN',
+          'notifications': [],
+          'contentTrait': '@trait.ReceiptLedger',
         },
         'events': {
-          'SEARCH': 'RECEIPT_SEARCH',
           'NOTIFY_CLICK': 'RECEIPT_NOTIFICATIONS_OPEN',
+          'SEARCH': 'RECEIPT_SEARCH',
         },
       }),
       makeTraitRef({
@@ -1754,10 +1754,7 @@ export function stdRetailPosCustomerOrbital(params: StdRetailPosCustomerOrbitalP
         'ref': 'AppShell.traits.AppLayout',
         'name': 'CustomerAppLayout',
         'config': {
-          'notificationClickEvent': 'CUSTOMER_NOTIFICATIONS_OPEN',
           'contentTrait': '@trait.CustomerDirectory',
-          'appName': 'Retail POS',
-          'searchEvent': 'CUSTOMER_SEARCH',
           'navItems': [
             {
               'label': 'Sales',
@@ -1765,22 +1762,25 @@ export function stdRetailPosCustomerOrbital(params: StdRetailPosCustomerOrbitalP
               'icon': 'shopping-bag',
             },
             {
-              'icon': 'credit-card',
               'href': '/checkout',
+              'icon': 'credit-card',
               'label': 'Checkout',
             },
             {
+              'label': 'Receipts',
               'href': '/receipts',
               'icon': 'receipt',
-              'label': 'Receipts',
             },
             {
-              'icon': 'users',
-              'label': 'Customers',
               'href': '/customers',
+              'label': 'Customers',
+              'icon': 'users',
             },
           ],
           'notifications': [],
+          'notificationClickEvent': 'CUSTOMER_NOTIFICATIONS_OPEN',
+          'appName': 'Retail POS',
+          'searchEvent': 'CUSTOMER_SEARCH',
         },
         'events': {
           'SEARCH': 'CUSTOMER_SEARCH',

@@ -17,6 +17,14 @@ orbital GameSessionOrbital {
   trait GameSessionGameflow -> GameSession [interaction, instance] {
     initial: menu
     state menu {
+      GameSessionLoaded -> menu
+        (set @entity.id          @payload.id)
+        (set @entity.name        @payload.name)
+        (set @entity.description @payload.description)
+        (set @entity.status      @payload.status)
+        (set @entity.createdAt   @payload.createdAt)
+        (set @entity.score       @payload.score)
+        (set @entity.level       @payload.level)
       INIT -> menu
         (fetch GameSession { emit: { success: "GameSessionLoaded", failure: "GameSessionLoadFailed" } })
         (render-ui main { type: "game-menu", title: "GameSession", subtitle: "Main Menu", menuItems: [{ label: "Start Game", event: "START", variant: "primary" }] })

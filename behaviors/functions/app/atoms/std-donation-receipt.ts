@@ -88,10 +88,10 @@ export interface StdDonationReceiptDonationReceiptLoadFailedPayload {
  * without modifying its state-machine topology.
  */
 export interface StdDonationReceiptConfig {
-  /** Default: `[{"name":"receiptNumber","label":"Receipt #","variant":"caption"},{"variant":"caption","name":"donorName","label":"Donor"},{"name":"amount","variant":"caption","label":"Amount"},{"label":"Date","variant":"caption","name":"donationDate"},{"label":"Tax Year","name":"taxYear","variant":"caption"},{"name":"isEmailed","variant":"badge","label":"Emailed"}]` */
-  fields?: TraitConfig[];
-  /** Default: `[{"icon":"arrow-right","label":"Open","variant":"primary","event":"OPEN_RECEIPT"},{"event":"VOID_RECEIPT","label":"Void","variant":"danger"}]` */
+  /** Default: `[{"icon":"arrow-right","label":"Open","event":"OPEN_RECEIPT","variant":"primary"},{"label":"Void","variant":"danger","event":"VOID_RECEIPT"}]` */
   itemActions?: TraitConfig[];
+  /** Default: `[{"name":"receiptNumber","label":"Receipt #","variant":"caption"},{"variant":"caption","name":"donorName","label":"Donor"},{"label":"Amount","name":"amount","variant":"caption"},{"label":"Date","variant":"caption","name":"donationDate"},{"name":"taxYear","label":"Tax Year","variant":"caption"},{"label":"Emailed","name":"isEmailed","variant":"badge"}]` */
+  fields?: TraitConfig[];
   /** Default: `"Donation Receipts"` */
   title?: string;
 }
