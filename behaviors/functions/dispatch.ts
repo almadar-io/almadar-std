@@ -134,6 +134,20 @@ import {
   isStdApiGatewayAnalyticsOrbitalParams,
 } from './app/organisms/std-api-gateway.js';
 import {
+  stdArcadeGameArcadeStateOrbital,
+  StdArcadeGameArcadeStateOrbitalManifest,
+  isStdArcadeGameArcadeStateOrbitalParams,
+  stdArcadeGameArcadeCanvasOrbital,
+  StdArcadeGameArcadeCanvasOrbitalManifest,
+  isStdArcadeGameArcadeCanvasOrbitalParams,
+  stdArcadeGameArcadeScoreOrbital,
+  StdArcadeGameArcadeScoreOrbitalManifest,
+  isStdArcadeGameArcadeScoreOrbitalParams,
+  stdArcadeGameArcadeHudOrbital,
+  StdArcadeGameArcadeHudOrbitalManifest,
+  isStdArcadeGameArcadeHudOrbitalParams,
+} from './game/organisms/std-arcade-game.js';
+import {
   stdAtsRecruitingJobOpeningOrbital,
   StdAtsRecruitingJobOpeningOrbitalManifest,
   isStdAtsRecruitingJobOpeningOrbitalParams,
@@ -476,6 +490,17 @@ import {
   isStdLmsProgressOrbitalParams,
 } from './app/organisms/std-lms.js';
 import {
+  stdLogicTrainingDebugChallengeOrbital,
+  StdLogicTrainingDebugChallengeOrbitalManifest,
+  isStdLogicTrainingDebugChallengeOrbitalParams,
+  stdLogicTrainingNegotiateChallengeOrbital,
+  StdLogicTrainingNegotiateChallengeOrbitalManifest,
+  isStdLogicTrainingNegotiateChallengeOrbitalParams,
+  stdLogicTrainingTrainingScoreOrbital,
+  StdLogicTrainingTrainingScoreOrbitalManifest,
+  isStdLogicTrainingTrainingScoreOrbitalParams,
+} from './game/organisms/std-logic-training.js';
+import {
   stdMarketingCampaignCampaignOrbital,
   StdMarketingCampaignCampaignOrbitalManifest,
   isStdMarketingCampaignCampaignOrbitalParams,
@@ -504,6 +529,17 @@ import {
   StdNotesRichEditorPanelOrbitalManifest,
   isStdNotesRichEditorPanelOrbitalParams,
 } from './app/organisms/std-notes.js';
+import {
+  stdPlatformerAppPlatLevelOrbital,
+  StdPlatformerAppPlatLevelOrbitalManifest,
+  isStdPlatformerAppPlatLevelOrbitalParams,
+  stdPlatformerAppPlatScoreOrbital,
+  StdPlatformerAppPlatScoreOrbitalManifest,
+  isStdPlatformerAppPlatScoreOrbitalParams,
+  stdPlatformerAppCollectibleOrbital,
+  StdPlatformerAppCollectibleOrbitalManifest,
+  isStdPlatformerAppCollectibleOrbitalParams,
+} from './game/organisms/std-platformer-app.js';
 import {
   stdProjectManagerTaskOrbital,
   StdProjectManagerTaskOrbitalManifest,
@@ -544,6 +580,14 @@ import {
   isStdPublicHelpCenterHelpCategoryPanelOrbitalParams,
 } from './app/organisms/std-public-help-center.js';
 import {
+  stdPuzzleAppPuzzleLevelOrbital,
+  StdPuzzleAppPuzzleLevelOrbitalManifest,
+  isStdPuzzleAppPuzzleLevelOrbitalParams,
+  stdPuzzleAppPuzzleScoreOrbital,
+  StdPuzzleAppPuzzleScoreOrbitalManifest,
+  isStdPuzzleAppPuzzleScoreOrbitalParams,
+} from './game/organisms/std-puzzle-app.js';
+import {
   stdRealtimeChatChatMessageOrbital,
   StdRealtimeChatChatMessageOrbitalManifest,
   isStdRealtimeChatChatMessageOrbitalParams,
@@ -583,6 +627,20 @@ import {
   isStdRetailPosCustomerOrbitalParams,
 } from './app/organisms/std-retail-pos.js';
 import {
+  stdRpgGameBattleStateOrbital,
+  StdRpgGameBattleStateOrbitalManifest,
+  isStdRpgGameBattleStateOrbitalParams,
+  stdRpgGameWorldZoneOrbital,
+  StdRpgGameWorldZoneOrbitalManifest,
+  isStdRpgGameWorldZoneOrbitalParams,
+  stdRpgGameRpgItemOrbital,
+  StdRpgGameRpgItemOrbitalManifest,
+  isStdRpgGameRpgItemOrbitalParams,
+  stdRpgGameMissionOrbital,
+  StdRpgGameMissionOrbitalManifest,
+  isStdRpgGameMissionOrbitalParams,
+} from './game/organisms/std-rpg-game.js';
+import {
   stdServiceMarketplaceProductOrbital,
   StdServiceMarketplaceProductOrbitalManifest,
   isStdServiceMarketplaceProductOrbitalParams,
@@ -618,6 +676,28 @@ import {
   StdSocialFeedCommentOrbitalManifest,
   isStdSocialFeedCommentOrbitalParams,
 } from './app/organisms/std-social-feed.js';
+import {
+  stdStemLabExperimentOrbital,
+  StdStemLabExperimentOrbitalManifest,
+  isStdStemLabExperimentOrbitalParams,
+  stdStemLabClassificationOrbital,
+  StdStemLabClassificationOrbitalManifest,
+  isStdStemLabClassificationOrbitalParams,
+  stdStemLabLabResultOrbital,
+  StdStemLabLabResultOrbitalManifest,
+  isStdStemLabLabResultOrbitalParams,
+} from './game/organisms/std-stem-lab.js';
+import {
+  stdStrategyGameArmyBattleOrbital,
+  StdStrategyGameArmyBattleOrbitalManifest,
+  isStdStrategyGameArmyBattleOrbitalParams,
+  stdStrategyGameTerritoryOrbital,
+  StdStrategyGameTerritoryOrbitalManifest,
+  isStdStrategyGameTerritoryOrbitalParams,
+  stdStrategyGameResourceOrbital,
+  StdStrategyGameResourceOrbitalManifest,
+  isStdStrategyGameResourceOrbitalParams,
+} from './game/organisms/std-strategy-game.js';
 import {
   stdSubscriptionBillingSubscriptionOrbital,
   StdSubscriptionBillingSubscriptionOrbitalManifest,
@@ -1008,6 +1088,42 @@ const REGISTRY: ReadonlyMap<string, DispatchEntry> = new Map<string, DispatchEnt
       return stdApiGatewayAnalyticsOrbital(p);
     },
     manifest: StdApiGatewayAnalyticsOrbitalManifest,
+  }],
+  ['std-arcade-game::ArcadeStateOrbital', {
+    factory: (p: object): OrbitalDefinition => {
+      if (!isStdArcadeGameArcadeStateOrbitalParams(p)) {
+        throw new TypeError('Invalid params for std-arcade-game::ArcadeStateOrbital');
+      }
+      return stdArcadeGameArcadeStateOrbital(p);
+    },
+    manifest: StdArcadeGameArcadeStateOrbitalManifest,
+  }],
+  ['std-arcade-game::ArcadeCanvasOrbital', {
+    factory: (p: object): OrbitalDefinition => {
+      if (!isStdArcadeGameArcadeCanvasOrbitalParams(p)) {
+        throw new TypeError('Invalid params for std-arcade-game::ArcadeCanvasOrbital');
+      }
+      return stdArcadeGameArcadeCanvasOrbital(p);
+    },
+    manifest: StdArcadeGameArcadeCanvasOrbitalManifest,
+  }],
+  ['std-arcade-game::ArcadeScoreOrbital', {
+    factory: (p: object): OrbitalDefinition => {
+      if (!isStdArcadeGameArcadeScoreOrbitalParams(p)) {
+        throw new TypeError('Invalid params for std-arcade-game::ArcadeScoreOrbital');
+      }
+      return stdArcadeGameArcadeScoreOrbital(p);
+    },
+    manifest: StdArcadeGameArcadeScoreOrbitalManifest,
+  }],
+  ['std-arcade-game::ArcadeHudOrbital', {
+    factory: (p: object): OrbitalDefinition => {
+      if (!isStdArcadeGameArcadeHudOrbitalParams(p)) {
+        throw new TypeError('Invalid params for std-arcade-game::ArcadeHudOrbital');
+      }
+      return stdArcadeGameArcadeHudOrbital(p);
+    },
+    manifest: StdArcadeGameArcadeHudOrbitalManifest,
   }],
   ['std-ats-recruiting::JobOpeningOrbital', {
     factory: (p: object): OrbitalDefinition => {
@@ -1873,6 +1989,33 @@ const REGISTRY: ReadonlyMap<string, DispatchEntry> = new Map<string, DispatchEnt
     },
     manifest: StdLmsProgressOrbitalManifest,
   }],
+  ['std-logic-training::DebugChallengeOrbital', {
+    factory: (p: object): OrbitalDefinition => {
+      if (!isStdLogicTrainingDebugChallengeOrbitalParams(p)) {
+        throw new TypeError('Invalid params for std-logic-training::DebugChallengeOrbital');
+      }
+      return stdLogicTrainingDebugChallengeOrbital(p);
+    },
+    manifest: StdLogicTrainingDebugChallengeOrbitalManifest,
+  }],
+  ['std-logic-training::NegotiateChallengeOrbital', {
+    factory: (p: object): OrbitalDefinition => {
+      if (!isStdLogicTrainingNegotiateChallengeOrbitalParams(p)) {
+        throw new TypeError('Invalid params for std-logic-training::NegotiateChallengeOrbital');
+      }
+      return stdLogicTrainingNegotiateChallengeOrbital(p);
+    },
+    manifest: StdLogicTrainingNegotiateChallengeOrbitalManifest,
+  }],
+  ['std-logic-training::TrainingScoreOrbital', {
+    factory: (p: object): OrbitalDefinition => {
+      if (!isStdLogicTrainingTrainingScoreOrbitalParams(p)) {
+        throw new TypeError('Invalid params for std-logic-training::TrainingScoreOrbital');
+      }
+      return stdLogicTrainingTrainingScoreOrbital(p);
+    },
+    manifest: StdLogicTrainingTrainingScoreOrbitalManifest,
+  }],
   ['std-marketing-campaign::CampaignOrbital', {
     factory: (p: object): OrbitalDefinition => {
       if (!isStdMarketingCampaignCampaignOrbitalParams(p)) {
@@ -1935,6 +2078,33 @@ const REGISTRY: ReadonlyMap<string, DispatchEntry> = new Map<string, DispatchEnt
       return stdNotesRichEditorPanelOrbital(p);
     },
     manifest: StdNotesRichEditorPanelOrbitalManifest,
+  }],
+  ['std-platformer-app::PlatLevelOrbital', {
+    factory: (p: object): OrbitalDefinition => {
+      if (!isStdPlatformerAppPlatLevelOrbitalParams(p)) {
+        throw new TypeError('Invalid params for std-platformer-app::PlatLevelOrbital');
+      }
+      return stdPlatformerAppPlatLevelOrbital(p);
+    },
+    manifest: StdPlatformerAppPlatLevelOrbitalManifest,
+  }],
+  ['std-platformer-app::PlatScoreOrbital', {
+    factory: (p: object): OrbitalDefinition => {
+      if (!isStdPlatformerAppPlatScoreOrbitalParams(p)) {
+        throw new TypeError('Invalid params for std-platformer-app::PlatScoreOrbital');
+      }
+      return stdPlatformerAppPlatScoreOrbital(p);
+    },
+    manifest: StdPlatformerAppPlatScoreOrbitalManifest,
+  }],
+  ['std-platformer-app::CollectibleOrbital', {
+    factory: (p: object): OrbitalDefinition => {
+      if (!isStdPlatformerAppCollectibleOrbitalParams(p)) {
+        throw new TypeError('Invalid params for std-platformer-app::CollectibleOrbital');
+      }
+      return stdPlatformerAppCollectibleOrbital(p);
+    },
+    manifest: StdPlatformerAppCollectibleOrbitalManifest,
   }],
   ['std-project-manager::TaskOrbital', {
     factory: (p: object): OrbitalDefinition => {
@@ -2035,6 +2205,24 @@ const REGISTRY: ReadonlyMap<string, DispatchEntry> = new Map<string, DispatchEnt
     },
     manifest: StdPublicHelpCenterHelpCategoryPanelOrbitalManifest,
   }],
+  ['std-puzzle-app::PuzzleLevelOrbital', {
+    factory: (p: object): OrbitalDefinition => {
+      if (!isStdPuzzleAppPuzzleLevelOrbitalParams(p)) {
+        throw new TypeError('Invalid params for std-puzzle-app::PuzzleLevelOrbital');
+      }
+      return stdPuzzleAppPuzzleLevelOrbital(p);
+    },
+    manifest: StdPuzzleAppPuzzleLevelOrbitalManifest,
+  }],
+  ['std-puzzle-app::PuzzleScoreOrbital', {
+    factory: (p: object): OrbitalDefinition => {
+      if (!isStdPuzzleAppPuzzleScoreOrbitalParams(p)) {
+        throw new TypeError('Invalid params for std-puzzle-app::PuzzleScoreOrbital');
+      }
+      return stdPuzzleAppPuzzleScoreOrbital(p);
+    },
+    manifest: StdPuzzleAppPuzzleScoreOrbitalManifest,
+  }],
   ['std-realtime-chat::ChatMessageOrbital', {
     factory: (p: object): OrbitalDefinition => {
       if (!isStdRealtimeChatChatMessageOrbitalParams(p)) {
@@ -2134,6 +2322,42 @@ const REGISTRY: ReadonlyMap<string, DispatchEntry> = new Map<string, DispatchEnt
     },
     manifest: StdRetailPosCustomerOrbitalManifest,
   }],
+  ['std-rpg-game::BattleStateOrbital', {
+    factory: (p: object): OrbitalDefinition => {
+      if (!isStdRpgGameBattleStateOrbitalParams(p)) {
+        throw new TypeError('Invalid params for std-rpg-game::BattleStateOrbital');
+      }
+      return stdRpgGameBattleStateOrbital(p);
+    },
+    manifest: StdRpgGameBattleStateOrbitalManifest,
+  }],
+  ['std-rpg-game::WorldZoneOrbital', {
+    factory: (p: object): OrbitalDefinition => {
+      if (!isStdRpgGameWorldZoneOrbitalParams(p)) {
+        throw new TypeError('Invalid params for std-rpg-game::WorldZoneOrbital');
+      }
+      return stdRpgGameWorldZoneOrbital(p);
+    },
+    manifest: StdRpgGameWorldZoneOrbitalManifest,
+  }],
+  ['std-rpg-game::RpgItemOrbital', {
+    factory: (p: object): OrbitalDefinition => {
+      if (!isStdRpgGameRpgItemOrbitalParams(p)) {
+        throw new TypeError('Invalid params for std-rpg-game::RpgItemOrbital');
+      }
+      return stdRpgGameRpgItemOrbital(p);
+    },
+    manifest: StdRpgGameRpgItemOrbitalManifest,
+  }],
+  ['std-rpg-game::MissionOrbital', {
+    factory: (p: object): OrbitalDefinition => {
+      if (!isStdRpgGameMissionOrbitalParams(p)) {
+        throw new TypeError('Invalid params for std-rpg-game::MissionOrbital');
+      }
+      return stdRpgGameMissionOrbital(p);
+    },
+    manifest: StdRpgGameMissionOrbitalManifest,
+  }],
   ['std-service-marketplace::ProductOrbital', {
     factory: (p: object): OrbitalDefinition => {
       if (!isStdServiceMarketplaceProductOrbitalParams(p)) {
@@ -2223,6 +2447,60 @@ const REGISTRY: ReadonlyMap<string, DispatchEntry> = new Map<string, DispatchEnt
       return stdSocialFeedCommentOrbital(p);
     },
     manifest: StdSocialFeedCommentOrbitalManifest,
+  }],
+  ['std-stem-lab::ExperimentOrbital', {
+    factory: (p: object): OrbitalDefinition => {
+      if (!isStdStemLabExperimentOrbitalParams(p)) {
+        throw new TypeError('Invalid params for std-stem-lab::ExperimentOrbital');
+      }
+      return stdStemLabExperimentOrbital(p);
+    },
+    manifest: StdStemLabExperimentOrbitalManifest,
+  }],
+  ['std-stem-lab::ClassificationOrbital', {
+    factory: (p: object): OrbitalDefinition => {
+      if (!isStdStemLabClassificationOrbitalParams(p)) {
+        throw new TypeError('Invalid params for std-stem-lab::ClassificationOrbital');
+      }
+      return stdStemLabClassificationOrbital(p);
+    },
+    manifest: StdStemLabClassificationOrbitalManifest,
+  }],
+  ['std-stem-lab::LabResultOrbital', {
+    factory: (p: object): OrbitalDefinition => {
+      if (!isStdStemLabLabResultOrbitalParams(p)) {
+        throw new TypeError('Invalid params for std-stem-lab::LabResultOrbital');
+      }
+      return stdStemLabLabResultOrbital(p);
+    },
+    manifest: StdStemLabLabResultOrbitalManifest,
+  }],
+  ['std-strategy-game::ArmyBattleOrbital', {
+    factory: (p: object): OrbitalDefinition => {
+      if (!isStdStrategyGameArmyBattleOrbitalParams(p)) {
+        throw new TypeError('Invalid params for std-strategy-game::ArmyBattleOrbital');
+      }
+      return stdStrategyGameArmyBattleOrbital(p);
+    },
+    manifest: StdStrategyGameArmyBattleOrbitalManifest,
+  }],
+  ['std-strategy-game::TerritoryOrbital', {
+    factory: (p: object): OrbitalDefinition => {
+      if (!isStdStrategyGameTerritoryOrbitalParams(p)) {
+        throw new TypeError('Invalid params for std-strategy-game::TerritoryOrbital');
+      }
+      return stdStrategyGameTerritoryOrbital(p);
+    },
+    manifest: StdStrategyGameTerritoryOrbitalManifest,
+  }],
+  ['std-strategy-game::ResourceOrbital', {
+    factory: (p: object): OrbitalDefinition => {
+      if (!isStdStrategyGameResourceOrbitalParams(p)) {
+        throw new TypeError('Invalid params for std-strategy-game::ResourceOrbital');
+      }
+      return stdStrategyGameResourceOrbital(p);
+    },
+    manifest: StdStrategyGameResourceOrbitalManifest,
   }],
   ['std-subscription-billing::SubscriptionOrbital', {
     factory: (p: object): OrbitalDefinition => {
