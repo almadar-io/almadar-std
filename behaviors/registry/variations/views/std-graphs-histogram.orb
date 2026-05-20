@@ -1,0 +1,56 @@
+{
+  "name": "std-graphs-histogram",
+  "version": "1.0.0",
+  "description": "Histogram view. Embeds std-graphs with the histogram chartType — pre-binned bars passed through unchanged from @payload.data (the std-graphs atom skips its categorical bucketing for this type). Best for distributions of a continuous variable.",
+  "orbitals": [
+    {
+      "name": "HistogramGraphItemOrbital",
+      "uses": [
+        {
+          "from": "std/behaviors/std-graphs",
+          "as": "Graph"
+        }
+      ],
+      "entity": {
+        "name": "HistogramGraphItem",
+        "persistence": "runtime",
+        "fields": [
+          {
+            "name": "id",
+            "type": "string",
+            "required": true
+          },
+          {
+            "name": "chartData",
+            "type": "array",
+            "default": [],
+            "items": {
+              "type": "object"
+            }
+          }
+        ]
+      },
+      "traits": [
+        {
+          "ref": "Graph.traits.GraphItemGraph",
+          "name": "HistogramGraphItemGraph",
+          "linkedEntity": "HistogramGraphItem",
+          "config": {
+            "chartType": "histogram"
+          }
+        }
+      ],
+      "pages": [
+        {
+          "name": "HistogramGraphPage",
+          "path": "/histogram-graph",
+          "traits": [
+            {
+              "ref": "HistogramGraphItemGraph"
+            }
+          ]
+        }
+      ]
+    }
+  ]
+}

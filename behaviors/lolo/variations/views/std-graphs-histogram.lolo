@@ -1,0 +1,19 @@
+app std-graphs-histogram "1.0.0"
+"Histogram view. Embeds std-graphs with the histogram chartType — pre-binned bars passed through unchanged from @payload.data (the std-graphs atom skips its categorical bucketing for this type). Best for distributions of a continuous variable."
+
+orbital HistogramGraphItemOrbital {
+  uses Graph from "std/behaviors/std-graphs"
+
+  entity HistogramGraphItem [runtime] {
+    id        : string!
+    chartData : [object] = []
+  }
+
+  trait HistogramGraphItemGraph = Graph.traits.GraphItemGraph -> HistogramGraphItem {
+    config: {
+      chartType: "histogram"
+    }
+  }
+
+  page "/histogram-graph" as HistogramGraphPage -> HistogramGraphItemGraph
+}
