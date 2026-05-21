@@ -216,10 +216,10 @@ export interface StdApplicationApplicationRejectedPayload {
 export interface StdApplicationConfig {
   /** Default: `"Applications"` */
   title?: string;
-  /** Default: `[{"icon":"user","name":"applicantName","label":"Applicant","variant":"caption"},{"variant":"caption","name":"applicantEmail","label":"Email"},{"name":"targetType","label":"Target","variant":"caption"},{"name":"status","variant":"badge","label":"Status"},{"name":"submittedAt","label":"Submitted","variant":"caption"}]` */
-  fields?: EntityRow[];
-  /** Default: `[{"variant":"ghost","event":"EDIT","label":"Edit"},{"label":"Submit","event":"SUBMIT","variant":"primary"},{"label":"Accept","event":"ACCEPT","variant":"primary"},{"event":"REJECT","variant":"danger","label":"Reject"}]` */
+  /** Default: `[{"variant":"ghost","label":"Edit","event":"EDIT"},{"event":"SUBMIT","variant":"primary","label":"Submit"},{"label":"Accept","event":"ACCEPT","variant":"primary"},{"event":"REJECT","variant":"danger","label":"Reject"}]` */
   itemActions?: EntityRow[];
+  /** Default: `[{"name":"applicantName","icon":"user","label":"Applicant","variant":"caption"},{"label":"Email","variant":"caption","name":"applicantEmail"},{"name":"targetType","label":"Target","variant":"caption"},{"variant":"badge","name":"status","label":"Status"},{"label":"Submitted","name":"submittedAt","variant":"caption"}]` */
+  fields?: EntityRow[];
 }
 
 /**

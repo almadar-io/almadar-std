@@ -77,28 +77,28 @@ export interface StdMultiPartyFlowFlowLoadFailedPayload {
 export interface StdMultiPartyFlowConfig {
   /** Default: `"Open dispute"` */
   disputeLabel?: string;
-  /** Default: `[{"icon":"user","actor":"Alice Chen","description":"Funds the transaction and confirms receipt of the vehicle.","stepLabel":"Step 1 of 2","actionLabel":"Confirm payment","id":"buyer","actionDescription":"Authorize $28,500 to be held in escrow until delivery is confirmed.","title":"Buyer","actionIcon":"credit-card"},{"description":"Ships the vehicle and uploads delivery proof.","icon":"user-check","title":"Seller","id":"seller","actionLabel":"Confirm shipment","actionIcon":"package","actor":"Bob's Auto Sales LLC","actionDescription":"Mark the vehicle as shipped. Funds will release after the buyer confirms receipt.","stepLabel":"Step 2 of 2"}]` */
-  parties?: EntityRow[];
+  /** Default: `"Cancel transaction"` */
+  cancelLabel?: string;
+  /** Default: `"unlock"` */
+  releaseIcon?: string;
+  /** Default: `["reason"]` */
+  reasonFields?: string[];
+  /** Default: `"x"` */
+  cancelIcon?: string;
+  /** Default: `"$28,500"` */
+  transactionAmount?: string;
   /** Default: `"Release funds"` */
   releaseLabel?: string;
   /** Default: `"Escrow transaction"` */
   title?: string;
   /** Default: `"alert-triangle"` */
   disputeIcon?: string;
-  /** Default: `"unlock"` */
-  releaseIcon?: string;
-  /** Default: `"x"` */
-  cancelIcon?: string;
-  /** Default: `"$28,500"` */
-  transactionAmount?: string;
-  /** Default: `"Cancel transaction"` */
-  cancelLabel?: string;
-  /** Default: `"Sale of 2024 Honda CR-V"` */
-  transactionSubject?: string;
-  /** Default: `["reason"]` */
-  reasonFields?: string[];
   /** Default: `"TXN-A8B2C-2024-001"` */
   transactionReference?: string;
+  /** Default: `"Sale of 2024 Honda CR-V"` */
+  transactionSubject?: string;
+  /** Default: `[{"id":"buyer","title":"Buyer","actionIcon":"credit-card","actor":"Alice Chen","stepLabel":"Step 1 of 2","actionLabel":"Confirm payment","icon":"user","actionDescription":"Authorize $28,500 to be held in escrow until delivery is confirmed.","description":"Funds the transaction and confirms receipt of the vehicle."},{"icon":"user-check","stepLabel":"Step 2 of 2","id":"seller","actionDescription":"Mark the vehicle as shipped. Funds will release after the buyer confirms receipt.","title":"Seller","actionIcon":"package","description":"Ships the vehicle and uploads delivery proof.","actionLabel":"Confirm shipment","actor":"Bob's Auto Sales LLC"}]` */
+  parties?: EntityRow[];
 }
 
 /**

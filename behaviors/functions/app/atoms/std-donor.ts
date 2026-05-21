@@ -87,9 +87,9 @@ export interface StdDonorDonorLoadFailedPayload {
  * without modifying its state-machine topology.
  */
 export interface StdDonorConfig {
-  /** Default: `[{"label":"Name","name":"name","variant":"h4"},{"variant":"badge","name":"donorType","label":"Type"},{"label":"Email","name":"email","variant":"body"},{"label":"Lifetime","name":"lifetimeAmount","variant":"caption"},{"label":"Last gift","variant":"caption","name":"lastDonationAt"}]` */
+  /** Default: `[{"label":"Name","name":"name","variant":"h4"},{"label":"Type","variant":"badge","name":"donorType"},{"variant":"body","name":"email","label":"Email"},{"label":"Lifetime","variant":"caption","name":"lifetimeAmount"},{"variant":"caption","name":"lastDonationAt","label":"Last gift"}]` */
   fields?: EntityRow[];
-  /** Default: `[{"icon":"arrow-right","variant":"primary","label":"Open","event":"OPEN_DONOR"},{"label":"Thank","event":"THANK_DONOR","variant":"secondary"}]` */
+  /** Default: `[{"icon":"arrow-right","variant":"primary","label":"Open","event":"OPEN_DONOR"},{"variant":"secondary","label":"Thank","event":"THANK_DONOR"}]` */
   itemActions?: EntityRow[];
   /** Default: `"Donors"` */
   title?: string;

@@ -89,9 +89,9 @@ export interface StdCheckoutTerminalCheckoutSessionLoadFailedPayload {
  * without modifying its state-machine topology.
  */
 export interface StdCheckoutTerminalConfig {
-  /** Default: `[{"name":"terminalId","variant":"caption","label":"Terminal"},{"variant":"caption","name":"cashierName","label":"Cashier"},{"name":"status","variant":"badge","label":"Status"},{"variant":"caption","label":"Total","name":"total"},{"label":"Opened","name":"openedAt","variant":"caption"}]` */
+  /** Default: `[{"name":"terminalId","label":"Terminal","variant":"caption"},{"variant":"caption","name":"cashierName","label":"Cashier"},{"variant":"badge","label":"Status","name":"status"},{"name":"total","variant":"caption","label":"Total"},{"name":"openedAt","label":"Opened","variant":"caption"}]` */
   fields?: EntityRow[];
-  /** Default: `[{"event":"OPEN_TERMINAL","variant":"primary","label":"Open"},{"event":"VOID_SESSION","variant":"danger","label":"Void"}]` */
+  /** Default: `[{"variant":"primary","label":"Open","event":"OPEN_TERMINAL"},{"variant":"danger","label":"Void","event":"VOID_SESSION"}]` */
   itemActions?: EntityRow[];
   /** Default: `"Terminals"` */
   title?: string;

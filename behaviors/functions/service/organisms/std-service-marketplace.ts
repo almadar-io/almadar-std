@@ -1120,10 +1120,6 @@ export function stdServiceMarketplaceProductOrbital(params: StdServiceMarketplac
                   'render-ui',
                   'main',
                   {
-                    'gap': 'md',
-                    'type': 'stack',
-                    'direction': 'vertical',
-                    'align': 'center',
                     'className': 'py-12',
                     'children': [
                       {
@@ -1136,6 +1132,10 @@ export function stdServiceMarketplaceProductOrbital(params: StdServiceMarketplac
                         'color': 'muted',
                       },
                     ],
+                    'align': 'center',
+                    'gap': 'md',
+                    'type': 'stack',
+                    'direction': 'vertical',
                   },
                 ],
               ],
@@ -1150,127 +1150,82 @@ export function stdServiceMarketplaceProductOrbital(params: StdServiceMarketplac
                   'main',
                   {
                     'appName': 'ServiceMarketplace',
-                    'navItems': [
-                      {
-                        'icon': 'package',
-                        'href': '/products',
-                        'label': 'Products',
-                      },
-                      {
-                        'label': 'Login',
-                        'href': '/login',
-                        'icon': 'layout-list',
-                      },
-                      {
-                        'href': '/checkout',
-                        'icon': 'credit-card',
-                        'label': 'Checkout',
-                      },
-                      {
-                        'label': 'Orders',
-                        'icon': 'clipboard-list',
-                        'href': '/orders',
-                      },
-                    ],
+                    'type': 'dashboard-layout',
                     'children': [
                       {
                         'type': 'stack',
-                        'gap': 'lg',
                         'direction': 'vertical',
+                        'gap': 'lg',
                         'className': 'max-w-5xl mx-auto w-full',
                         'children': [
                           {
-                            'gap': 'md',
+                            'justify': 'between',
                             'children': [
                               {
+                                'type': 'stack',
+                                'gap': 'sm',
                                 'align': 'center',
                                 'direction': 'horizontal',
                                 'children': [
                                   {
-                                    'name': 'shopping-bag',
                                     'type': 'icon',
+                                    'name': 'shopping-bag',
                                   },
                                   {
-                                    'content': 'Products',
                                     'type': 'typography',
+                                    'content': 'Products',
                                     'variant': 'h2',
                                   },
                                 ],
-                                'type': 'stack',
-                                'gap': 'sm',
                               },
                               {
                                 'type': 'stack',
-                                'gap': 'sm',
                                 'direction': 'horizontal',
+                                'gap': 'sm',
                                 'children': [
                                   {
-                                    'variant': 'primary',
+                                    'type': 'button',
                                     'action': 'CREATE',
                                     'icon': 'plus',
-                                    'type': 'button',
                                     'label': 'Create Product',
+                                    'variant': 'primary',
                                   },
                                 ],
                               },
                             ],
-                            'justify': 'between',
+                            'direction': 'horizontal',
                             'align': 'center',
                             'type': 'stack',
-                            'direction': 'horizontal',
+                            'gap': 'md',
                           },
                           {
                             'type': 'divider',
                           },
                           {
-                            'itemActions': [
-                              {
-                                'label': 'View',
-                                'event': 'VIEW',
-                                'variant': 'ghost',
-                              },
-                              {
-                                'event': 'EDIT',
-                                'variant': 'ghost',
-                                'label': 'Edit',
-                              },
-                              {
-                                'event': 'CHECKOUT',
-                                'label': 'Checkout',
-                                'variant': 'primary',
-                              },
-                              {
-                                'variant': 'danger',
-                                'event': 'DELETE',
-                                'label': 'Delete',
-                              },
-                            ],
-                            'entity': '@payload.data',
-                            'type': 'data-grid',
                             'fields': [
                               {
-                                'name': 'name',
-                                'label': 'Name',
                                 'variant': 'h4',
+                                'name': 'name',
                                 'icon': 'shopping-bag',
+                                'label': 'Name',
                               },
                               {
+                                'name': 'description',
                                 'colorMap': {
-                                  'inactive': 'neutral',
-                                  'cancelled': 'destructive',
-                                  'draft': 'warning',
-                                  'done': 'success',
-                                  'archived': 'neutral',
-                                  'pending': 'warning',
-                                  'active': 'success',
                                   'completed': 'success',
-                                  'failed': 'destructive',
-                                  'scheduled': 'warning',
+                                  'inactive': 'neutral',
+                                  'archived': 'neutral',
                                   'error': 'destructive',
+                                  'pending': 'warning',
+                                  'done': 'success',
+                                  'failed': 'destructive',
+                                  'active': 'success',
                                   'disabled': 'neutral',
+                                  'cancelled': 'destructive',
+                                  'scheduled': 'warning',
+                                  'draft': 'warning',
                                 },
                                 'variant': 'badge',
-                                'name': 'description',
                                 'label': 'Description',
                               },
                               {
@@ -1279,11 +1234,56 @@ export function stdServiceMarketplaceProductOrbital(params: StdServiceMarketplac
                                 'label': 'Price',
                               },
                             ],
+                            'entity': '@payload.data',
+                            'type': 'data-grid',
+                            'itemActions': [
+                              {
+                                'label': 'View',
+                                'variant': 'ghost',
+                                'event': 'VIEW',
+                              },
+                              {
+                                'event': 'EDIT',
+                                'label': 'Edit',
+                                'variant': 'ghost',
+                              },
+                              {
+                                'label': 'Checkout',
+                                'event': 'CHECKOUT',
+                                'variant': 'primary',
+                              },
+                              {
+                                'variant': 'danger',
+                                'label': 'Delete',
+                                'event': 'DELETE',
+                              },
+                            ],
                           },
                         ],
                       },
                     ],
-                    'type': 'dashboard-layout',
+                    'navItems': [
+                      {
+                        'icon': 'package',
+                        'label': 'Products',
+                        'href': '/products',
+                      },
+                      {
+                        'label': 'Login',
+                        'href': '/login',
+                        'icon': 'layout-list',
+                      },
+                      {
+                        'icon': 'credit-card',
+                        'label': 'Checkout',
+                        'href': '/checkout',
+                      },
+                      {
+                        'href': '/orders',
+                        'icon': 'clipboard-list',
+                        'label': 'Orders',
+                      },
+                    ],
                   },
                 ],
               ],
@@ -1297,9 +1297,10 @@ export function stdServiceMarketplaceProductOrbital(params: StdServiceMarketplac
                   'render-ui',
                   'main',
                   {
+                    'align': 'center',
                     'direction': 'vertical',
-                    'className': 'py-12',
                     'type': 'stack',
+                    'gap': 'md',
                     'children': [
                       {
                         'name': 'alert-triangle',
@@ -1313,20 +1314,19 @@ export function stdServiceMarketplaceProductOrbital(params: StdServiceMarketplac
                       },
                       {
                         'variant': 'body',
-                        'content': '@payload.error',
                         'type': 'typography',
                         'color': 'muted',
+                        'content': '@payload.error',
                       },
                       {
                         'type': 'button',
+                        'icon': 'rotate-ccw',
+                        'action': 'INIT',
                         'label': 'Retry',
                         'variant': 'primary',
-                        'action': 'INIT',
-                        'icon': 'rotate-ccw',
                       },
                     ],
-                    'gap': 'md',
-                    'align': 'center',
+                    'className': 'py-12',
                   },
                 ],
               ],
@@ -1509,8 +1509,8 @@ export function stdServiceMarketplaceProductOrbital(params: StdServiceMarketplac
                   'Product',
                   {
                     'emit': {
-                      'failure': 'ProductLoadFailed',
                       'success': 'ProductLoaded',
+                      'failure': 'ProductLoadFailed',
                     },
                   },
                 ],
@@ -1526,8 +1526,8 @@ export function stdServiceMarketplaceProductOrbital(params: StdServiceMarketplac
                   'Product',
                   {
                     'emit': {
-                      'success': 'ProductLoaded',
                       'failure': 'ProductLoadFailed',
+                      'success': 'ProductLoaded',
                     },
                   },
                 ],
@@ -1535,14 +1535,11 @@ export function stdServiceMarketplaceProductOrbital(params: StdServiceMarketplac
                   'render-ui',
                   'modal',
                   {
-                    'direction': 'vertical',
-                    'type': 'stack',
-                    'gap': 'md',
                     'children': [
                       {
+                        'type': 'stack',
                         'direction': 'horizontal',
                         'gap': 'sm',
-                        'type': 'stack',
                         'children': [
                           {
                             'name': 'plus-circle',
@@ -1550,8 +1547,8 @@ export function stdServiceMarketplaceProductOrbital(params: StdServiceMarketplac
                           },
                           {
                             'variant': 'h3',
-                            'type': 'typography',
                             'content': 'Create Product',
+                            'type': 'typography',
                           },
                         ],
                       },
@@ -1559,9 +1556,8 @@ export function stdServiceMarketplaceProductOrbital(params: StdServiceMarketplac
                         'type': 'divider',
                       },
                       {
-                        'submitEvent': 'SAVE',
-                        'type': 'form-section',
                         'cancelEvent': 'CLOSE',
+                        'submitEvent': 'SAVE',
                         'fields': [
                           'name',
                           'description',
@@ -1569,9 +1565,13 @@ export function stdServiceMarketplaceProductOrbital(params: StdServiceMarketplac
                           'category',
                           'inStock',
                         ],
+                        'type': 'form-section',
                         'mode': 'create',
                       },
                     ],
+                    'type': 'stack',
+                    'direction': 'vertical',
+                    'gap': 'md',
                   },
                 ],
               ],
@@ -1832,8 +1832,8 @@ export function stdServiceMarketplaceProductOrbital(params: StdServiceMarketplac
                   'Product',
                   {
                     'emit': {
-                      'failure': 'ProductLoadFailed',
                       'success': 'ProductLoaded',
+                      'failure': 'ProductLoadFailed',
                     },
                   },
                 ],
@@ -1860,31 +1860,28 @@ export function stdServiceMarketplaceProductOrbital(params: StdServiceMarketplac
                   'modal',
                   {
                     'gap': 'md',
-                    'direction': 'vertical',
                     'children': [
                       {
+                        'children': [
+                          {
+                            'type': 'icon',
+                            'name': 'edit',
+                          },
+                          {
+                            'content': 'Edit Product',
+                            'type': 'typography',
+                            'variant': 'h3',
+                          },
+                        ],
                         'direction': 'horizontal',
                         'gap': 'sm',
                         'type': 'stack',
-                        'children': [
-                          {
-                            'name': 'edit',
-                            'type': 'icon',
-                          },
-                          {
-                            'variant': 'h3',
-                            'type': 'typography',
-                            'content': 'Edit Product',
-                          },
-                        ],
                       },
                       {
                         'type': 'divider',
                       },
                       {
-                        'cancelEvent': 'CLOSE',
-                        'entity': '@payload.row',
-                        'submitEvent': 'SAVE',
+                        'mode': 'edit',
                         'fields': [
                           'name',
                           'description',
@@ -1892,10 +1889,13 @@ export function stdServiceMarketplaceProductOrbital(params: StdServiceMarketplac
                           'category',
                           'inStock',
                         ],
+                        'cancelEvent': 'CLOSE',
                         'type': 'form-section',
-                        'mode': 'edit',
+                        'entity': '@payload.row',
+                        'submitEvent': 'SAVE',
                       },
                     ],
+                    'direction': 'vertical',
                     'type': 'stack',
                   },
                 ],
@@ -2148,13 +2148,11 @@ export function stdServiceMarketplaceProductOrbital(params: StdServiceMarketplac
                   'render-ui',
                   'modal',
                   {
-                    'type': 'stack',
                     'direction': 'vertical',
+                    'gap': 'md',
+                    'type': 'stack',
                     'children': [
                       {
-                        'gap': 'sm',
-                        'type': 'stack',
-                        'direction': 'horizontal',
                         'align': 'center',
                         'children': [
                           {
@@ -2162,126 +2160,128 @@ export function stdServiceMarketplaceProductOrbital(params: StdServiceMarketplac
                             'type': 'icon',
                           },
                           {
-                            'content': '@entity.name',
                             'type': 'typography',
+                            'content': '@entity.name',
                             'variant': 'h3',
                           },
                         ],
+                        'type': 'stack',
+                        'direction': 'horizontal',
+                        'gap': 'sm',
                       },
                       {
                         'type': 'divider',
                       },
                       {
-                        'direction': 'horizontal',
-                        'type': 'stack',
                         'children': [
                           {
-                            'type': 'typography',
                             'variant': 'caption',
                             'content': 'Name',
+                            'type': 'typography',
                           },
                           {
-                            'content': '@entity.name',
                             'variant': 'body',
+                            'content': '@entity.name',
                             'type': 'typography',
                           },
                         ],
+                        'direction': 'horizontal',
+                        'type': 'stack',
                         'gap': 'md',
                       },
                       {
+                        'direction': 'horizontal',
+                        'type': 'stack',
                         'gap': 'md',
                         'children': [
                           {
+                            'type': 'typography',
                             'content': 'Description',
                             'variant': 'caption',
-                            'type': 'typography',
                           },
                           {
-                            'type': 'typography',
                             'variant': 'body',
                             'content': '@entity.description',
+                            'type': 'typography',
                           },
                         ],
-                        'type': 'stack',
-                        'direction': 'horizontal',
                       },
                       {
-                        'direction': 'horizontal',
-                        'type': 'stack',
-                        'gap': 'md',
                         'children': [
                           {
+                            'type': 'typography',
                             'variant': 'caption',
                             'content': 'Price',
-                            'type': 'typography',
                           },
                           {
-                            'type': 'typography',
                             'content': '@entity.price',
+                            'type': 'typography',
                             'variant': 'body',
                           },
                         ],
-                      },
-                      {
-                        'gap': 'md',
                         'direction': 'horizontal',
                         'type': 'stack',
+                        'gap': 'md',
+                      },
+                      {
+                        'direction': 'horizontal',
                         'children': [
                           {
-                            'content': 'Category',
-                            'type': 'typography',
                             'variant': 'caption',
+                            'type': 'typography',
+                            'content': 'Category',
                           },
                           {
-                            'variant': 'body',
                             'type': 'typography',
+                            'variant': 'body',
                             'content': '@entity.category',
                           },
                         ],
+                        'type': 'stack',
+                        'gap': 'md',
                       },
                       {
+                        'children': [
+                          {
+                            'variant': 'caption',
+                            'content': 'In Stock',
+                            'type': 'typography',
+                          },
+                          {
+                            'variant': 'body',
+                            'content': '@entity.inStock',
+                            'type': 'typography',
+                          },
+                        ],
                         'type': 'stack',
                         'direction': 'horizontal',
                         'gap': 'md',
-                        'children': [
-                          {
-                            'type': 'typography',
-                            'variant': 'caption',
-                            'content': 'In Stock',
-                          },
-                          {
-                            'type': 'typography',
-                            'variant': 'body',
-                            'content': '@entity.inStock',
-                          },
-                        ],
                       },
                       {
                         'type': 'divider',
                       },
                       {
+                        'gap': 'sm',
                         'direction': 'horizontal',
                         'justify': 'end',
                         'type': 'stack',
-                        'gap': 'sm',
                         'children': [
                           {
-                            'label': 'Edit',
                             'action': 'EDIT',
                             'icon': 'edit',
                             'type': 'button',
                             'variant': 'primary',
+                            'label': 'Edit',
                           },
                           {
-                            'label': 'Close',
-                            'variant': 'ghost',
-                            'action': 'CLOSE',
                             'type': 'button',
+                            'label': 'Close',
+                            'action': 'CLOSE',
+                            'variant': 'ghost',
                           },
                         ],
                       },
                     ],
-                    'gap': 'md',
                   },
                 ],
               ],
@@ -2532,17 +2532,18 @@ export function stdServiceMarketplaceProductOrbital(params: StdServiceMarketplac
                   'fetch',
                   'Product',
                   {
-                    'id': '@payload.id',
                     'emit': {
-                      'failure': 'ProductLoadFailed',
                       'success': 'ProductLoaded',
+                      'failure': 'ProductLoadFailed',
                     },
+                    'id': '@payload.id',
                   },
                 ],
                 [
                   'render-ui',
                   'modal',
                   {
+                    'type': 'stack',
                     'children': [
                       {
                         'children': [
@@ -2551,49 +2552,48 @@ export function stdServiceMarketplaceProductOrbital(params: StdServiceMarketplac
                             'name': 'alert-triangle',
                           },
                           {
-                            'content': 'Delete Product',
                             'type': 'typography',
                             'variant': 'h3',
+                            'content': 'Delete Product',
                           },
                         ],
-                        'align': 'center',
-                        'gap': 'sm',
-                        'type': 'stack',
                         'direction': 'horizontal',
+                        'type': 'stack',
+                        'gap': 'sm',
+                        'align': 'center',
                       },
                       {
                         'type': 'divider',
                       },
                       {
-                        'type': 'alert',
-                        'message': 'This action cannot be undone.',
                         'variant': 'error',
+                        'message': 'This action cannot be undone.',
+                        'type': 'alert',
                       },
                       {
-                        'type': 'stack',
                         'direction': 'horizontal',
                         'gap': 'sm',
+                        'type': 'stack',
                         'justify': 'end',
                         'children': [
                           {
-                            'label': 'Cancel',
-                            'variant': 'ghost',
                             'type': 'button',
                             'action': 'CANCEL',
+                            'label': 'Cancel',
+                            'variant': 'ghost',
                           },
                           {
                             'label': 'Delete',
-                            'variant': 'danger',
-                            'icon': 'check',
-                            'type': 'button',
                             'action': 'CONFIRM_DELETE',
+                            'icon': 'check',
+                            'variant': 'danger',
+                            'type': 'button',
                           },
                         ],
                       },
                     ],
                     'direction': 'vertical',
                     'gap': 'md',
-                    'type': 'stack',
                   },
                 ],
               ],
@@ -2610,8 +2610,8 @@ export function stdServiceMarketplaceProductOrbital(params: StdServiceMarketplac
                   '@entity.pendingId',
                   {
                     'emit': {
-                      'failure': 'ProductDeleteFailed',
                       'success': 'ProductDeleted',
+                      'failure': 'ProductDeleteFailed',
                     },
                   },
                 ],
@@ -2665,8 +2665,8 @@ export function stdServiceMarketplaceProductOrbital(params: StdServiceMarketplac
                   'Product',
                   {
                     'emit': {
-                      'failure': 'ProductLoadFailed',
                       'success': 'ProductLoaded',
+                      'failure': 'ProductLoadFailed',
                     },
                   },
                 ],
@@ -2694,8 +2694,8 @@ export function stdServiceMarketplaceProductOrbital(params: StdServiceMarketplac
                   'Product',
                   {
                     'emit': {
-                      'failure': 'ProductLoadFailed',
                       'success': 'ProductLoaded',
+                      'failure': 'ProductLoadFailed',
                     },
                   },
                 ],
@@ -3114,8 +3114,8 @@ export function stdServiceMarketplaceAuthSessionOrbital(params: StdServiceMarket
                   'AuthSession',
                   {
                     'emit': {
-                      'failure': 'AuthSessionLoadFailed',
                       'success': 'AuthSessionLoaded',
+                      'failure': 'AuthSessionLoadFailed',
                     },
                   },
                 ],
@@ -3123,11 +3123,12 @@ export function stdServiceMarketplaceAuthSessionOrbital(params: StdServiceMarket
                   'render-ui',
                   'main',
                   {
+                    'type': 'dashboard-layout',
                     'navItems': [
                       {
+                        'label': 'Products',
                         'icon': 'package',
                         'href': '/products',
-                        'label': 'Products',
                       },
                       {
                         'label': 'Login',
@@ -3135,45 +3136,44 @@ export function stdServiceMarketplaceAuthSessionOrbital(params: StdServiceMarket
                         'icon': 'layout-list',
                       },
                       {
-                        'label': 'Checkout',
-                        'icon': 'credit-card',
                         'href': '/checkout',
+                        'icon': 'credit-card',
+                        'label': 'Checkout',
                       },
                       {
-                        'label': 'Orders',
-                        'icon': 'clipboard-list',
                         'href': '/orders',
+                        'icon': 'clipboard-list',
+                        'label': 'Orders',
                       },
                     ],
                     'children': [
                       {
-                        'gap': 'lg',
-                        'direction': 'vertical',
                         'align': 'center',
+                        'gap': 'lg',
                         'type': 'stack',
+                        'direction': 'vertical',
                         'children': [
                           {
-                            'type': 'stack',
-                            'gap': 'md',
+                            'align': 'center',
                             'children': [
                               {
-                                'name': 'lock',
                                 'type': 'icon',
+                                'name': 'lock',
                               },
                               {
+                                'content': 'Sign In',
                                 'variant': 'h2',
                                 'type': 'typography',
-                                'content': 'Sign In',
                               },
                             ],
+                            'type': 'stack',
                             'direction': 'horizontal',
-                            'align': 'center',
+                            'gap': 'md',
                           },
                           {
                             'type': 'divider',
                           },
                           {
-                            'type': 'select',
                             'options': [
                               {
                                 'label': 'Google',
@@ -3188,18 +3188,18 @@ export function stdServiceMarketplaceAuthSessionOrbital(params: StdServiceMarket
                                 'label': 'Microsoft',
                               },
                             ],
+                            'type': 'select',
                           },
                           {
+                            'icon': 'log-in',
+                            'type': 'button',
                             'action': 'LOGIN',
                             'label': 'Login',
-                            'type': 'button',
                             'variant': 'primary',
-                            'icon': 'log-in',
                           },
                         ],
                       },
                     ],
-                    'type': 'dashboard-layout',
                     'appName': 'ServiceMarketplace',
                   },
                 ],
@@ -3214,34 +3214,34 @@ export function stdServiceMarketplaceAuthSessionOrbital(params: StdServiceMarket
                   'render-ui',
                   'main',
                   {
+                    'children': [
+                      {
+                        'type': 'loading-state',
+                        'title': 'Authorizing...',
+                        'message': 'Redirecting to provider for authorization.',
+                      },
+                    ],
                     'appName': 'ServiceMarketplace',
                     'navItems': [
                       {
                         'href': '/products',
-                        'icon': 'package',
                         'label': 'Products',
+                        'icon': 'package',
                       },
                       {
-                        'label': 'Login',
                         'href': '/login',
+                        'label': 'Login',
                         'icon': 'layout-list',
                       },
                       {
-                        'label': 'Checkout',
                         'icon': 'credit-card',
+                        'label': 'Checkout',
                         'href': '/checkout',
                       },
                       {
                         'label': 'Orders',
                         'href': '/orders',
                         'icon': 'clipboard-list',
-                      },
-                    ],
-                    'children': [
-                      {
-                        'type': 'loading-state',
-                        'title': 'Authorizing...',
-                        'message': 'Redirecting to provider for authorization.',
                       },
                     ],
                     'type': 'dashboard-layout',
@@ -3281,48 +3281,11 @@ export function stdServiceMarketplaceAuthSessionOrbital(params: StdServiceMarket
                   'render-ui',
                   'main',
                   {
-                    'type': 'dashboard-layout',
-                    'children': [
-                      {
-                        'direction': 'vertical',
-                        'children': [
-                          {
-                            'name': 'external-link',
-                            'type': 'icon',
-                          },
-                          {
-                            'type': 'typography',
-                            'content': 'Authorization Required',
-                            'variant': 'h2',
-                          },
-                          {
-                            'content': '@entity.authUrl',
-                            'type': 'typography',
-                            'variant': 'body',
-                            'color': 'muted',
-                          },
-                          {
-                            'type': 'input',
-                            'placeholder': 'Paste authorization code here',
-                          },
-                          {
-                            'icon': 'check',
-                            'label': 'Submit',
-                            'action': 'CALLBACK',
-                            'variant': 'primary',
-                            'type': 'button',
-                          },
-                        ],
-                        'align': 'center',
-                        'type': 'stack',
-                        'gap': 'lg',
-                      },
-                    ],
                     'navItems': [
                       {
-                        'icon': 'package',
                         'label': 'Products',
                         'href': '/products',
+                        'icon': 'package',
                       },
                       {
                         'href': '/login',
@@ -3330,17 +3293,54 @@ export function stdServiceMarketplaceAuthSessionOrbital(params: StdServiceMarket
                         'label': 'Login',
                       },
                       {
-                        'href': '/checkout',
                         'label': 'Checkout',
+                        'href': '/checkout',
                         'icon': 'credit-card',
                       },
                       {
-                        'href': '/orders',
                         'icon': 'clipboard-list',
                         'label': 'Orders',
+                        'href': '/orders',
+                      },
+                    ],
+                    'children': [
+                      {
+                        'gap': 'lg',
+                        'children': [
+                          {
+                            'type': 'icon',
+                            'name': 'external-link',
+                          },
+                          {
+                            'variant': 'h2',
+                            'type': 'typography',
+                            'content': 'Authorization Required',
+                          },
+                          {
+                            'variant': 'body',
+                            'content': '@entity.authUrl',
+                            'color': 'muted',
+                            'type': 'typography',
+                          },
+                          {
+                            'placeholder': 'Paste authorization code here',
+                            'type': 'input',
+                          },
+                          {
+                            'type': 'button',
+                            'variant': 'primary',
+                            'action': 'CALLBACK',
+                            'icon': 'check',
+                            'label': 'Submit',
+                          },
+                        ],
+                        'align': 'center',
+                        'type': 'stack',
+                        'direction': 'vertical',
                       },
                     ],
                     'appName': 'ServiceMarketplace',
+                    'type': 'dashboard-layout',
                   },
                 ],
               ],
@@ -3359,8 +3359,8 @@ export function stdServiceMarketplaceAuthSessionOrbital(params: StdServiceMarket
                   },
                   {
                     'emit': {
-                      'failure': 'ProductOauthFailed',
                       'success': 'ProductOauthCompleted',
+                      'failure': 'ProductOauthFailed',
                     },
                   },
                 ],
@@ -3369,17 +3369,16 @@ export function stdServiceMarketplaceAuthSessionOrbital(params: StdServiceMarket
                   'main',
                   {
                     'appName': 'ServiceMarketplace',
-                    'type': 'dashboard-layout',
                     'navItems': [
                       {
-                        'href': '/products',
                         'label': 'Products',
                         'icon': 'package',
+                        'href': '/products',
                       },
                       {
                         'label': 'Login',
-                        'icon': 'layout-list',
                         'href': '/login',
+                        'icon': 'layout-list',
                       },
                       {
                         'label': 'Checkout',
@@ -3388,51 +3387,52 @@ export function stdServiceMarketplaceAuthSessionOrbital(params: StdServiceMarket
                       },
                       {
                         'icon': 'clipboard-list',
-                        'label': 'Orders',
                         'href': '/orders',
+                        'label': 'Orders',
                       },
                     ],
                     'children': [
                       {
-                        'gap': 'lg',
-                        'type': 'stack',
+                        'align': 'center',
                         'children': [
                           {
-                            'type': 'icon',
                             'name': 'check-circle',
+                            'type': 'icon',
                           },
                           {
-                            'type': 'alert',
-                            'variant': 'success',
                             'message': 'Authenticated successfully',
+                            'variant': 'success',
+                            'type': 'alert',
                           },
                           {
                             'justify': 'center',
-                            'direction': 'horizontal',
                             'children': [
                               {
-                                'action': 'REFRESH',
                                 'label': 'Refresh Token',
-                                'variant': 'ghost',
                                 'icon': 'refresh-cw',
                                 'type': 'button',
+                                'action': 'REFRESH',
+                                'variant': 'ghost',
                               },
                               {
-                                'label': 'Logout',
-                                'type': 'button',
-                                'variant': 'ghost',
-                                'action': 'LOGOUT',
                                 'icon': 'log-out',
+                                'type': 'button',
+                                'action': 'LOGOUT',
+                                'label': 'Logout',
+                                'variant': 'ghost',
                               },
                             ],
                             'type': 'stack',
+                            'direction': 'horizontal',
                             'gap': 'sm',
                           },
                         ],
+                        'type': 'stack',
+                        'gap': 'lg',
                         'direction': 'vertical',
-                        'align': 'center',
                       },
                     ],
+                    'type': 'dashboard-layout',
                   },
                 ],
               ],
@@ -3451,53 +3451,53 @@ export function stdServiceMarketplaceAuthSessionOrbital(params: StdServiceMarket
                   'render-ui',
                   'main',
                   {
+                    'appName': 'ServiceMarketplace',
+                    'navItems': [
+                      {
+                        'label': 'Products',
+                        'href': '/products',
+                        'icon': 'package',
+                      },
+                      {
+                        'icon': 'layout-list',
+                        'href': '/login',
+                        'label': 'Login',
+                      },
+                      {
+                        'label': 'Checkout',
+                        'icon': 'credit-card',
+                        'href': '/checkout',
+                      },
+                      {
+                        'label': 'Orders',
+                        'href': '/orders',
+                        'icon': 'clipboard-list',
+                      },
+                    ],
                     'type': 'dashboard-layout',
                     'children': [
                       {
+                        'type': 'stack',
+                        'gap': 'lg',
                         'align': 'center',
                         'direction': 'vertical',
-                        'gap': 'lg',
-                        'type': 'stack',
                         'children': [
                           {
-                            'type': 'error-state',
-                            'message': '@entity.error',
                             'onRetry': 'RETRY',
+                            'message': '@entity.error',
+                            'type': 'error-state',
                             'title': 'Authentication Failed',
                           },
                           {
-                            'variant': 'primary',
-                            'icon': 'rotate-ccw',
                             'label': 'Try Again',
-                            'action': 'RETRY',
+                            'variant': 'primary',
                             'type': 'button',
+                            'icon': 'rotate-ccw',
+                            'action': 'RETRY',
                           },
                         ],
                       },
                     ],
-                    'navItems': [
-                      {
-                        'href': '/products',
-                        'label': 'Products',
-                        'icon': 'package',
-                      },
-                      {
-                        'label': 'Login',
-                        'href': '/login',
-                        'icon': 'layout-list',
-                      },
-                      {
-                        'icon': 'credit-card',
-                        'href': '/checkout',
-                        'label': 'Checkout',
-                      },
-                      {
-                        'icon': 'clipboard-list',
-                        'href': '/orders',
-                        'label': 'Orders',
-                      },
-                    ],
-                    'appName': 'ServiceMarketplace',
                   },
                 ],
               ],
@@ -3526,6 +3526,7 @@ export function stdServiceMarketplaceAuthSessionOrbital(params: StdServiceMarket
                   'render-ui',
                   'main',
                   {
+                    'appName': 'ServiceMarketplace',
                     'navItems': [
                       {
                         'label': 'Products',
@@ -3533,64 +3534,63 @@ export function stdServiceMarketplaceAuthSessionOrbital(params: StdServiceMarket
                         'icon': 'package',
                       },
                       {
-                        'icon': 'layout-list',
                         'label': 'Login',
                         'href': '/login',
+                        'icon': 'layout-list',
                       },
                       {
-                        'label': 'Checkout',
-                        'href': '/checkout',
                         'icon': 'credit-card',
+                        'href': '/checkout',
+                        'label': 'Checkout',
                       },
                       {
+                        'href': '/orders',
                         'label': 'Orders',
                         'icon': 'clipboard-list',
-                        'href': '/orders',
                       },
                     ],
-                    'type': 'dashboard-layout',
                     'children': [
                       {
-                        'gap': 'lg',
+                        'direction': 'vertical',
                         'align': 'center',
-                        'type': 'stack',
                         'children': [
                           {
                             'type': 'icon',
                             'name': 'check-circle',
                           },
                           {
-                            'variant': 'success',
-                            'type': 'alert',
                             'message': 'Authenticated successfully',
+                            'type': 'alert',
+                            'variant': 'success',
                           },
                           {
-                            'gap': 'sm',
-                            'type': 'stack',
+                            'direction': 'horizontal',
                             'justify': 'center',
+                            'gap': 'sm',
                             'children': [
                               {
-                                'type': 'button',
-                                'label': 'Refresh Token',
-                                'action': 'REFRESH',
                                 'variant': 'ghost',
                                 'icon': 'refresh-cw',
+                                'action': 'REFRESH',
+                                'type': 'button',
+                                'label': 'Refresh Token',
                               },
                               {
-                                'action': 'LOGOUT',
-                                'icon': 'log-out',
                                 'label': 'Logout',
                                 'variant': 'ghost',
+                                'action': 'LOGOUT',
+                                'icon': 'log-out',
                                 'type': 'button',
                               },
                             ],
-                            'direction': 'horizontal',
+                            'type': 'stack',
                           },
                         ],
-                        'direction': 'vertical',
+                        'type': 'stack',
+                        'gap': 'lg',
                       },
                     ],
-                    'appName': 'ServiceMarketplace',
+                    'type': 'dashboard-layout',
                   },
                 ],
               ],
@@ -3604,37 +3604,37 @@ export function stdServiceMarketplaceAuthSessionOrbital(params: StdServiceMarket
                   'render-ui',
                   'main',
                   {
-                    'appName': 'ServiceMarketplace',
+                    'type': 'dashboard-layout',
                     'navItems': [
                       {
                         'label': 'Products',
-                        'icon': 'package',
                         'href': '/products',
+                        'icon': 'package',
                       },
                       {
+                        'href': '/login',
                         'icon': 'layout-list',
                         'label': 'Login',
-                        'href': '/login',
                       },
                       {
-                        'icon': 'credit-card',
                         'label': 'Checkout',
                         'href': '/checkout',
+                        'icon': 'credit-card',
                       },
                       {
-                        'label': 'Orders',
                         'icon': 'clipboard-list',
+                        'label': 'Orders',
                         'href': '/orders',
                       },
                     ],
-                    'type': 'dashboard-layout',
                     'children': [
                       {
-                        'type': 'loading-state',
                         'title': 'Refreshing token...',
                         'message': 'Obtaining a new access token.',
+                        'type': 'loading-state',
                       },
                     ],
+                    'appName': 'ServiceMarketplace',
                   },
                 ],
                 [
@@ -3646,8 +3646,8 @@ export function stdServiceMarketplaceAuthSessionOrbital(params: StdServiceMarket
                   },
                   {
                     'emit': {
-                      'failure': 'ProductOauthFailed',
                       'success': 'ProductOauthCompleted',
+                      'failure': 'ProductOauthFailed',
                     },
                   },
                 ],
@@ -3667,11 +3667,67 @@ export function stdServiceMarketplaceAuthSessionOrbital(params: StdServiceMarket
                   'render-ui',
                   'main',
                   {
+                    'type': 'dashboard-layout',
+                    'appName': 'ServiceMarketplace',
+                    'children': [
+                      {
+                        'gap': 'lg',
+                        'children': [
+                          {
+                            'children': [
+                              {
+                                'type': 'icon',
+                                'name': 'lock',
+                              },
+                              {
+                                'type': 'typography',
+                                'content': 'Sign In',
+                                'variant': 'h2',
+                              },
+                            ],
+                            'align': 'center',
+                            'direction': 'horizontal',
+                            'type': 'stack',
+                            'gap': 'md',
+                          },
+                          {
+                            'type': 'divider',
+                          },
+                          {
+                            'type': 'select',
+                            'options': [
+                              {
+                                'label': 'Google',
+                                'value': 'google',
+                              },
+                              {
+                                'value': 'github',
+                                'label': 'GitHub',
+                              },
+                              {
+                                'value': 'microsoft',
+                                'label': 'Microsoft',
+                              },
+                            ],
+                          },
+                          {
+                            'icon': 'log-in',
+                            'type': 'button',
+                            'label': 'Login',
+                            'action': 'LOGIN',
+                            'variant': 'primary',
+                          },
+                        ],
+                        'align': 'center',
+                        'direction': 'vertical',
+                        'type': 'stack',
+                      },
+                    ],
                     'navItems': [
                       {
-                        'label': 'Products',
                         'href': '/products',
                         'icon': 'package',
+                        'label': 'Products',
                       },
                       {
                         'label': 'Login',
@@ -3684,67 +3740,11 @@ export function stdServiceMarketplaceAuthSessionOrbital(params: StdServiceMarket
                         'icon': 'credit-card',
                       },
                       {
+                        'label': 'Orders',
                         'href': '/orders',
                         'icon': 'clipboard-list',
-                        'label': 'Orders',
                       },
                     ],
-                    'children': [
-                      {
-                        'direction': 'vertical',
-                        'align': 'center',
-                        'gap': 'lg',
-                        'children': [
-                          {
-                            'direction': 'horizontal',
-                            'type': 'stack',
-                            'children': [
-                              {
-                                'type': 'icon',
-                                'name': 'lock',
-                              },
-                              {
-                                'content': 'Sign In',
-                                'type': 'typography',
-                                'variant': 'h2',
-                              },
-                            ],
-                            'gap': 'md',
-                            'align': 'center',
-                          },
-                          {
-                            'type': 'divider',
-                          },
-                          {
-                            'options': [
-                              {
-                                'label': 'Google',
-                                'value': 'google',
-                              },
-                              {
-                                'value': 'github',
-                                'label': 'GitHub',
-                              },
-                              {
-                                'label': 'Microsoft',
-                                'value': 'microsoft',
-                              },
-                            ],
-                            'type': 'select',
-                          },
-                          {
-                            'label': 'Login',
-                            'variant': 'primary',
-                            'type': 'button',
-                            'icon': 'log-in',
-                            'action': 'LOGIN',
-                          },
-                        ],
-                        'type': 'stack',
-                      },
-                    ],
-                    'appName': 'ServiceMarketplace',
-                    'type': 'dashboard-layout',
                   },
                 ],
               ],
@@ -3763,71 +3763,71 @@ export function stdServiceMarketplaceAuthSessionOrbital(params: StdServiceMarket
                   'render-ui',
                   'main',
                   {
-                    'appName': 'ServiceMarketplace',
                     'type': 'dashboard-layout',
+                    'navItems': [
+                      {
+                        'href': '/products',
+                        'icon': 'package',
+                        'label': 'Products',
+                      },
+                      {
+                        'label': 'Login',
+                        'href': '/login',
+                        'icon': 'layout-list',
+                      },
+                      {
+                        'label': 'Checkout',
+                        'href': '/checkout',
+                        'icon': 'credit-card',
+                      },
+                      {
+                        'icon': 'clipboard-list',
+                        'label': 'Orders',
+                        'href': '/orders',
+                      },
+                    ],
                     'children': [
                       {
                         'type': 'stack',
-                        'direction': 'vertical',
                         'align': 'center',
+                        'gap': 'lg',
                         'children': [
                           {
                             'type': 'icon',
                             'name': 'check-circle',
                           },
                           {
-                            'message': 'Authenticated successfully',
                             'type': 'alert',
                             'variant': 'success',
+                            'message': 'Authenticated successfully',
                           },
                           {
-                            'type': 'stack',
+                            'direction': 'horizontal',
                             'children': [
                               {
+                                'label': 'Refresh Token',
                                 'action': 'REFRESH',
                                 'type': 'button',
-                                'icon': 'refresh-cw',
                                 'variant': 'ghost',
-                                'label': 'Refresh Token',
+                                'icon': 'refresh-cw',
                               },
                               {
                                 'type': 'button',
-                                'label': 'Logout',
-                                'variant': 'ghost',
                                 'icon': 'log-out',
                                 'action': 'LOGOUT',
+                                'label': 'Logout',
+                                'variant': 'ghost',
                               },
                             ],
-                            'direction': 'horizontal',
                             'gap': 'sm',
+                            'type': 'stack',
                             'justify': 'center',
                           },
                         ],
-                        'gap': 'lg',
+                        'direction': 'vertical',
                       },
                     ],
-                    'navItems': [
-                      {
-                        'icon': 'package',
-                        'label': 'Products',
-                        'href': '/products',
-                      },
-                      {
-                        'href': '/login',
-                        'icon': 'layout-list',
-                        'label': 'Login',
-                      },
-                      {
-                        'href': '/checkout',
-                        'label': 'Checkout',
-                        'icon': 'credit-card',
-                      },
-                      {
-                        'label': 'Orders',
-                        'href': '/orders',
-                        'icon': 'clipboard-list',
-                      },
-                    ],
+                    'appName': 'ServiceMarketplace',
                   },
                 ],
               ],
@@ -3846,7 +3846,30 @@ export function stdServiceMarketplaceAuthSessionOrbital(params: StdServiceMarket
                   'render-ui',
                   'main',
                   {
-                    'type': 'dashboard-layout',
+                    'children': [
+                      {
+                        'children': [
+                          {
+                            'title': 'Authentication Failed',
+                            'onRetry': 'RETRY',
+                            'type': 'error-state',
+                            'message': '@entity.error',
+                          },
+                          {
+                            'variant': 'primary',
+                            'icon': 'rotate-ccw',
+                            'type': 'button',
+                            'label': 'Try Again',
+                            'action': 'RETRY',
+                          },
+                        ],
+                        'type': 'stack',
+                        'direction': 'vertical',
+                        'gap': 'lg',
+                        'align': 'center',
+                      },
+                    ],
+                    'appName': 'ServiceMarketplace',
                     'navItems': [
                       {
                         'label': 'Products',
@@ -3854,9 +3877,9 @@ export function stdServiceMarketplaceAuthSessionOrbital(params: StdServiceMarket
                         'href': '/products',
                       },
                       {
+                        'label': 'Login',
                         'href': '/login',
                         'icon': 'layout-list',
-                        'label': 'Login',
                       },
                       {
                         'icon': 'credit-card',
@@ -3864,35 +3887,12 @@ export function stdServiceMarketplaceAuthSessionOrbital(params: StdServiceMarket
                         'href': '/checkout',
                       },
                       {
-                        'href': '/orders',
                         'label': 'Orders',
+                        'href': '/orders',
                         'icon': 'clipboard-list',
                       },
                     ],
-                    'children': [
-                      {
-                        'direction': 'vertical',
-                        'gap': 'lg',
-                        'align': 'center',
-                        'type': 'stack',
-                        'children': [
-                          {
-                            'onRetry': 'RETRY',
-                            'type': 'error-state',
-                            'message': '@entity.error',
-                            'title': 'Authentication Failed',
-                          },
-                          {
-                            'variant': 'primary',
-                            'icon': 'rotate-ccw',
-                            'action': 'RETRY',
-                            'label': 'Try Again',
-                            'type': 'button',
-                          },
-                        ],
-                      },
-                    ],
-                    'appName': 'ServiceMarketplace',
+                    'type': 'dashboard-layout',
                   },
                 ],
               ],
@@ -3906,17 +3906,16 @@ export function stdServiceMarketplaceAuthSessionOrbital(params: StdServiceMarket
                   'render-ui',
                   'main',
                   {
-                    'appName': 'ServiceMarketplace',
                     'navItems': [
                       {
-                        'icon': 'package',
-                        'label': 'Products',
                         'href': '/products',
+                        'label': 'Products',
+                        'icon': 'package',
                       },
                       {
+                        'label': 'Login',
                         'href': '/login',
                         'icon': 'layout-list',
-                        'label': 'Login',
                       },
                       {
                         'href': '/checkout',
@@ -3929,15 +3928,12 @@ export function stdServiceMarketplaceAuthSessionOrbital(params: StdServiceMarket
                         'href': '/orders',
                       },
                     ],
+                    'appName': 'ServiceMarketplace',
                     'children': [
                       {
-                        'gap': 'lg',
-                        'align': 'center',
+                        'direction': 'vertical',
                         'children': [
                           {
-                            'type': 'stack',
-                            'gap': 'md',
-                            'direction': 'horizontal',
                             'align': 'center',
                             'children': [
                               {
@@ -3945,11 +3941,14 @@ export function stdServiceMarketplaceAuthSessionOrbital(params: StdServiceMarket
                                 'type': 'icon',
                               },
                               {
-                                'content': 'Sign In',
                                 'type': 'typography',
+                                'content': 'Sign In',
                                 'variant': 'h2',
                               },
                             ],
+                            'direction': 'horizontal',
+                            'type': 'stack',
+                            'gap': 'md',
                           },
                           {
                             'type': 'divider',
@@ -3958,12 +3957,12 @@ export function stdServiceMarketplaceAuthSessionOrbital(params: StdServiceMarket
                             'type': 'select',
                             'options': [
                               {
-                                'value': 'google',
                                 'label': 'Google',
+                                'value': 'google',
                               },
                               {
-                                'value': 'github',
                                 'label': 'GitHub',
+                                'value': 'github',
                               },
                               {
                                 'label': 'Microsoft',
@@ -3972,15 +3971,16 @@ export function stdServiceMarketplaceAuthSessionOrbital(params: StdServiceMarket
                             ],
                           },
                           {
-                            'icon': 'log-in',
                             'type': 'button',
-                            'label': 'Login',
                             'variant': 'primary',
+                            'icon': 'log-in',
                             'action': 'LOGIN',
+                            'label': 'Login',
                           },
                         ],
+                        'align': 'center',
+                        'gap': 'lg',
                         'type': 'stack',
-                        'direction': 'vertical',
                       },
                     ],
                     'type': 'dashboard-layout',
@@ -3995,7 +3995,7 @@ export function stdServiceMarketplaceAuthSessionOrbital(params: StdServiceMarket
     ],
     pages: [
       {
-        'name': 'Login',
+        'name': 'LoginPage',
         'path': '/login',
         'traits': [
           {
@@ -4394,8 +4394,8 @@ export function stdServiceMarketplaceOrderPaymentOrbital(params: StdServiceMarke
                   'OrderPayment',
                   {
                     'emit': {
-                      'failure': 'OrderPaymentLoadFailed',
                       'success': 'OrderPaymentLoaded',
+                      'failure': 'OrderPaymentLoadFailed',
                     },
                   },
                 ],
@@ -4403,22 +4403,21 @@ export function stdServiceMarketplaceOrderPaymentOrbital(params: StdServiceMarke
                   'render-ui',
                   'main',
                   {
-                    'type': 'dashboard-layout',
                     'navItems': [
                       {
+                        'label': 'Products',
                         'href': '/products',
                         'icon': 'package',
-                        'label': 'Products',
                       },
                       {
-                        'label': 'Login',
-                        'icon': 'layout-list',
                         'href': '/login',
+                        'icon': 'layout-list',
+                        'label': 'Login',
                       },
                       {
-                        'href': '/checkout',
                         'icon': 'credit-card',
                         'label': 'Checkout',
+                        'href': '/checkout',
                       },
                       {
                         'href': '/orders',
@@ -4428,71 +4427,72 @@ export function stdServiceMarketplaceOrderPaymentOrbital(params: StdServiceMarke
                     ],
                     'children': [
                       {
+                        'type': 'stack',
+                        'direction': 'vertical',
+                        'align': 'center',
+                        'gap': 'lg',
                         'children': [
                           {
                             'gap': 'md',
-                            'direction': 'horizontal',
-                            'align': 'center',
-                            'type': 'stack',
                             'children': [
                               {
                                 'type': 'icon',
                                 'name': 'credit-card',
                               },
                               {
+                                'variant': 'h2',
                                 'type': 'typography',
                                 'content': 'Payment',
-                                'variant': 'h2',
                               },
                             ],
+                            'type': 'stack',
+                            'align': 'center',
+                            'direction': 'horizontal',
                           },
                           {
                             'type': 'divider',
                           },
                           {
+                            'direction': 'vertical',
                             'type': 'stack',
                             'gap': 'md',
-                            'direction': 'vertical',
                             'children': [
                               {
-                                'inputType': 'number',
                                 'type': 'input',
                                 'placeholder': '0.00',
+                                'inputType': 'number',
                               },
                               {
+                                'type': 'select',
                                 'options': [
                                   {
                                     'label': 'USD',
                                     'value': 'usd',
                                   },
                                   {
-                                    'value': 'eur',
                                     'label': 'EUR',
+                                    'value': 'eur',
                                   },
                                   {
-                                    'value': 'gbp',
                                     'label': 'GBP',
+                                    'value': 'gbp',
                                   },
                                 ],
-                                'type': 'select',
                               },
                             ],
                           },
                           {
-                            'action': 'CREATE_PAYMENT',
-                            'label': 'Pay',
-                            'variant': 'primary',
-                            'type': 'button',
                             'icon': 'credit-card',
+                            'label': 'Pay',
+                            'type': 'button',
+                            'action': 'CREATE_PAYMENT',
+                            'variant': 'primary',
                           },
                         ],
-                        'type': 'stack',
-                        'direction': 'vertical',
-                        'align': 'center',
-                        'gap': 'lg',
                       },
                     ],
                     'appName': 'ServiceMarketplace',
+                    'type': 'dashboard-layout',
                   },
                 ],
               ],
@@ -4506,15 +4506,6 @@ export function stdServiceMarketplaceOrderPaymentOrbital(params: StdServiceMarke
                   'render-ui',
                   'main',
                   {
-                    'children': [
-                      {
-                        'message': 'Setting up your payment intent.',
-                        'type': 'loading-state',
-                        'title': 'Creating payment...',
-                      },
-                    ],
-                    'type': 'dashboard-layout',
-                    'appName': 'ServiceMarketplace',
                     'navItems': [
                       {
                         'href': '/products',
@@ -4522,21 +4513,30 @@ export function stdServiceMarketplaceOrderPaymentOrbital(params: StdServiceMarke
                         'label': 'Products',
                       },
                       {
-                        'icon': 'layout-list',
-                        'href': '/login',
                         'label': 'Login',
+                        'href': '/login',
+                        'icon': 'layout-list',
                       },
                       {
-                        'href': '/checkout',
-                        'icon': 'credit-card',
                         'label': 'Checkout',
+                        'icon': 'credit-card',
+                        'href': '/checkout',
                       },
                       {
                         'icon': 'clipboard-list',
-                        'label': 'Orders',
                         'href': '/orders',
+                        'label': 'Orders',
                       },
                     ],
+                    'children': [
+                      {
+                        'title': 'Creating payment...',
+                        'message': 'Setting up your payment intent.',
+                        'type': 'loading-state',
+                      },
+                    ],
+                    'type': 'dashboard-layout',
+                    'appName': 'ServiceMarketplace',
                   },
                 ],
                 [
@@ -4544,13 +4544,13 @@ export function stdServiceMarketplaceOrderPaymentOrbital(params: StdServiceMarke
                   'stripe',
                   'createPaymentIntent',
                   {
-                    'currency': '@entity.currency',
                     'amount': '@entity.amount',
+                    'currency': '@entity.currency',
                   },
                   {
                     'emit': {
-                      'success': 'ProductStripeCompleted',
                       'failure': 'ProductStripeFailed',
+                      'success': 'ProductStripeCompleted',
                     },
                   },
                 ],
@@ -4575,34 +4575,34 @@ export function stdServiceMarketplaceOrderPaymentOrbital(params: StdServiceMarke
                   'render-ui',
                   'main',
                   {
-                    'children': [
-                      {
-                        'type': 'loading-state',
-                        'title': 'Confirming payment...',
-                        'message': 'Processing your payment.',
-                      },
-                    ],
                     'type': 'dashboard-layout',
                     'navItems': [
                       {
+                        'icon': 'package',
                         'href': '/products',
                         'label': 'Products',
-                        'icon': 'package',
                       },
                       {
-                        'label': 'Login',
                         'href': '/login',
                         'icon': 'layout-list',
+                        'label': 'Login',
                       },
                       {
-                        'label': 'Checkout',
-                        'icon': 'credit-card',
                         'href': '/checkout',
+                        'icon': 'credit-card',
+                        'label': 'Checkout',
                       },
                       {
+                        'label': 'Orders',
                         'href': '/orders',
                         'icon': 'clipboard-list',
-                        'label': 'Orders',
+                      },
+                    ],
+                    'children': [
+                      {
+                        'message': 'Processing your payment.',
+                        'type': 'loading-state',
+                        'title': 'Confirming payment...',
                       },
                     ],
                     'appName': 'ServiceMarketplace',
@@ -4617,8 +4617,8 @@ export function stdServiceMarketplaceOrderPaymentOrbital(params: StdServiceMarke
                   },
                   {
                     'emit': {
-                      'success': 'ProductStripeCompleted',
                       'failure': 'ProductStripeFailed',
+                      'success': 'ProductStripeCompleted',
                     },
                   },
                 ],
@@ -4638,36 +4638,36 @@ export function stdServiceMarketplaceOrderPaymentOrbital(params: StdServiceMarke
                   'render-ui',
                   'main',
                   {
-                    'type': 'dashboard-layout',
                     'navItems': [
                       {
+                        'href': '/products',
                         'icon': 'package',
                         'label': 'Products',
-                        'href': '/products',
                       },
                       {
-                        'icon': 'layout-list',
                         'label': 'Login',
+                        'icon': 'layout-list',
                         'href': '/login',
                       },
                       {
+                        'icon': 'credit-card',
                         'label': 'Checkout',
                         'href': '/checkout',
-                        'icon': 'credit-card',
                       },
                       {
-                        'icon': 'clipboard-list',
                         'label': 'Orders',
                         'href': '/orders',
+                        'icon': 'clipboard-list',
                       },
                     ],
+                    'type': 'dashboard-layout',
                     'appName': 'ServiceMarketplace',
                     'children': [
                       {
+                        'type': 'error-state',
                         'title': 'Payment Failed',
                         'message': '@entity.error',
                         'onRetry': 'RETRY',
-                        'type': 'error-state',
                       },
                     ],
                   },
@@ -4692,49 +4692,17 @@ export function stdServiceMarketplaceOrderPaymentOrbital(params: StdServiceMarke
                   'render-ui',
                   'main',
                   {
-                    'children': [
-                      {
-                        'direction': 'vertical',
-                        'align': 'center',
-                        'children': [
-                          {
-                            'type': 'icon',
-                            'name': 'check-circle',
-                          },
-                          {
-                            'message': 'Payment successful! Sending receipt...',
-                            'variant': 'success',
-                            'type': 'alert',
-                          },
-                          {
-                            'type': 'typography',
-                            'variant': 'body',
-                            'color': 'muted',
-                            'content': '@entity.paymentIntentId',
-                          },
-                          {
-                            'type': 'button',
-                            'icon': 'rotate-ccw',
-                            'action': 'RESET',
-                            'label': 'New Payment',
-                            'variant': 'ghost',
-                          },
-                        ],
-                        'gap': 'lg',
-                        'type': 'stack',
-                      },
-                    ],
-                    'appName': 'ServiceMarketplace',
+                    'type': 'dashboard-layout',
                     'navItems': [
                       {
-                        'href': '/products',
-                        'icon': 'package',
                         'label': 'Products',
+                        'icon': 'package',
+                        'href': '/products',
                       },
                       {
+                        'label': 'Login',
                         'icon': 'layout-list',
                         'href': '/login',
-                        'label': 'Login',
                       },
                       {
                         'label': 'Checkout',
@@ -4742,12 +4710,44 @@ export function stdServiceMarketplaceOrderPaymentOrbital(params: StdServiceMarke
                         'icon': 'credit-card',
                       },
                       {
+                        'label': 'Orders',
                         'href': '/orders',
                         'icon': 'clipboard-list',
-                        'label': 'Orders',
                       },
                     ],
-                    'type': 'dashboard-layout',
+                    'appName': 'ServiceMarketplace',
+                    'children': [
+                      {
+                        'children': [
+                          {
+                            'type': 'icon',
+                            'name': 'check-circle',
+                          },
+                          {
+                            'type': 'alert',
+                            'variant': 'success',
+                            'message': 'Payment successful! Sending receipt...',
+                          },
+                          {
+                            'content': '@entity.paymentIntentId',
+                            'type': 'typography',
+                            'variant': 'body',
+                            'color': 'muted',
+                          },
+                          {
+                            'icon': 'rotate-ccw',
+                            'type': 'button',
+                            'action': 'RESET',
+                            'variant': 'ghost',
+                            'label': 'New Payment',
+                          },
+                        ],
+                        'type': 'stack',
+                        'direction': 'vertical',
+                        'align': 'center',
+                        'gap': 'lg',
+                      },
+                    ],
                   },
                 ],
               ],
@@ -4766,6 +4766,8 @@ export function stdServiceMarketplaceOrderPaymentOrbital(params: StdServiceMarke
                   'render-ui',
                   'main',
                   {
+                    'type': 'dashboard-layout',
+                    'appName': 'ServiceMarketplace',
                     'navItems': [
                       {
                         'icon': 'package',
@@ -4773,9 +4775,9 @@ export function stdServiceMarketplaceOrderPaymentOrbital(params: StdServiceMarke
                         'href': '/products',
                       },
                       {
-                        'href': '/login',
-                        'icon': 'layout-list',
                         'label': 'Login',
+                        'icon': 'layout-list',
+                        'href': '/login',
                       },
                       {
                         'href': '/checkout',
@@ -4788,13 +4790,11 @@ export function stdServiceMarketplaceOrderPaymentOrbital(params: StdServiceMarke
                         'icon': 'clipboard-list',
                       },
                     ],
-                    'type': 'dashboard-layout',
-                    'appName': 'ServiceMarketplace',
                     'children': [
                       {
                         'type': 'error-state',
-                        'title': 'Payment Failed',
                         'message': '@entity.error',
+                        'title': 'Payment Failed',
                         'onRetry': 'RETRY',
                       },
                     ],
@@ -4813,63 +4813,40 @@ export function stdServiceMarketplaceOrderPaymentOrbital(params: StdServiceMarke
                   {
                     'type': 'dashboard-layout',
                     'appName': 'ServiceMarketplace',
-                    'navItems': [
-                      {
-                        'label': 'Products',
-                        'icon': 'package',
-                        'href': '/products',
-                      },
-                      {
-                        'label': 'Login',
-                        'icon': 'layout-list',
-                        'href': '/login',
-                      },
-                      {
-                        'href': '/checkout',
-                        'label': 'Checkout',
-                        'icon': 'credit-card',
-                      },
-                      {
-                        'label': 'Orders',
-                        'icon': 'clipboard-list',
-                        'href': '/orders',
-                      },
-                    ],
                     'children': [
                       {
                         'align': 'center',
                         'direction': 'vertical',
-                        'gap': 'lg',
                         'children': [
                           {
-                            'align': 'center',
                             'type': 'stack',
-                            'direction': 'horizontal',
                             'gap': 'md',
+                            'align': 'center',
                             'children': [
                               {
                                 'type': 'icon',
                                 'name': 'credit-card',
                               },
                               {
-                                'type': 'typography',
                                 'content': 'Payment',
                                 'variant': 'h2',
+                                'type': 'typography',
                               },
                             ],
+                            'direction': 'horizontal',
                           },
                           {
                             'type': 'divider',
                           },
                           {
-                            'type': 'stack',
                             'gap': 'md',
                             'direction': 'vertical',
+                            'type': 'stack',
                             'children': [
                               {
                                 'placeholder': '0.00',
-                                'type': 'input',
                                 'inputType': 'number',
+                                'type': 'input',
                               },
                               {
                                 'options': [
@@ -4878,8 +4855,8 @@ export function stdServiceMarketplaceOrderPaymentOrbital(params: StdServiceMarke
                                     'value': 'usd',
                                   },
                                   {
-                                    'value': 'eur',
                                     'label': 'EUR',
+                                    'value': 'eur',
                                   },
                                   {
                                     'value': 'gbp',
@@ -4891,14 +4868,37 @@ export function stdServiceMarketplaceOrderPaymentOrbital(params: StdServiceMarke
                             ],
                           },
                           {
-                            'icon': 'credit-card',
-                            'action': 'CREATE_PAYMENT',
-                            'label': 'Pay',
                             'type': 'button',
+                            'action': 'CREATE_PAYMENT',
                             'variant': 'primary',
+                            'label': 'Pay',
+                            'icon': 'credit-card',
                           },
                         ],
+                        'gap': 'lg',
                         'type': 'stack',
+                      },
+                    ],
+                    'navItems': [
+                      {
+                        'icon': 'package',
+                        'href': '/products',
+                        'label': 'Products',
+                      },
+                      {
+                        'label': 'Login',
+                        'icon': 'layout-list',
+                        'href': '/login',
+                      },
+                      {
+                        'icon': 'credit-card',
+                        'href': '/checkout',
+                        'label': 'Checkout',
+                      },
+                      {
+                        'href': '/orders',
+                        'icon': 'clipboard-list',
+                        'label': 'Orders',
                       },
                     ],
                   },
@@ -4914,36 +4914,61 @@ export function stdServiceMarketplaceOrderPaymentOrbital(params: StdServiceMarke
                   'render-ui',
                   'main',
                   {
+                    'navItems': [
+                      {
+                        'href': '/products',
+                        'label': 'Products',
+                        'icon': 'package',
+                      },
+                      {
+                        'label': 'Login',
+                        'href': '/login',
+                        'icon': 'layout-list',
+                      },
+                      {
+                        'href': '/checkout',
+                        'label': 'Checkout',
+                        'icon': 'credit-card',
+                      },
+                      {
+                        'label': 'Orders',
+                        'href': '/orders',
+                        'icon': 'clipboard-list',
+                      },
+                    ],
                     'type': 'dashboard-layout',
                     'children': [
                       {
                         'children': [
                           {
+                            'type': 'stack',
+                            'direction': 'horizontal',
+                            'align': 'center',
                             'children': [
                               {
                                 'type': 'icon',
                                 'name': 'credit-card',
                               },
                               {
-                                'variant': 'h2',
                                 'type': 'typography',
                                 'content': 'Payment',
+                                'variant': 'h2',
                               },
                             ],
-                            'type': 'stack',
-                            'direction': 'horizontal',
                             'gap': 'md',
-                            'align': 'center',
                           },
                           {
                             'type': 'divider',
                           },
                           {
+                            'gap': 'md',
+                            'direction': 'vertical',
+                            'type': 'stack',
                             'children': [
                               {
-                                'type': 'input',
                                 'inputType': 'number',
                                 'placeholder': '0.00',
+                                'type': 'input',
                               },
                               {
                                 'type': 'select',
@@ -4953,57 +4978,32 @@ export function stdServiceMarketplaceOrderPaymentOrbital(params: StdServiceMarke
                                     'value': 'usd',
                                   },
                                   {
-                                    'label': 'EUR',
                                     'value': 'eur',
+                                    'label': 'EUR',
                                   },
                                   {
-                                    'value': 'gbp',
                                     'label': 'GBP',
+                                    'value': 'gbp',
                                   },
                                 ],
                               },
                             ],
-                            'gap': 'md',
-                            'direction': 'vertical',
-                            'type': 'stack',
                           },
                           {
                             'action': 'CREATE_PAYMENT',
-                            'variant': 'primary',
+                            'label': 'Pay',
                             'type': 'button',
                             'icon': 'credit-card',
-                            'label': 'Pay',
+                            'variant': 'primary',
                           },
                         ],
-                        'gap': 'lg',
-                        'align': 'center',
                         'type': 'stack',
+                        'align': 'center',
                         'direction': 'vertical',
+                        'gap': 'lg',
                       },
                     ],
                     'appName': 'ServiceMarketplace',
-                    'navItems': [
-                      {
-                        'icon': 'package',
-                        'label': 'Products',
-                        'href': '/products',
-                      },
-                      {
-                        'label': 'Login',
-                        'href': '/login',
-                        'icon': 'layout-list',
-                      },
-                      {
-                        'label': 'Checkout',
-                        'href': '/checkout',
-                        'icon': 'credit-card',
-                      },
-                      {
-                        'href': '/orders',
-                        'icon': 'clipboard-list',
-                        'label': 'Orders',
-                      },
-                    ],
                   },
                 ],
               ],
@@ -5020,58 +5020,59 @@ export function stdServiceMarketplaceOrderPaymentOrbital(params: StdServiceMarke
                     'navItems': [
                       {
                         'href': '/products',
-                        'icon': 'package',
                         'label': 'Products',
+                        'icon': 'package',
                       },
                       {
-                        'label': 'Login',
                         'icon': 'layout-list',
+                        'label': 'Login',
                         'href': '/login',
                       },
                       {
                         'href': '/checkout',
-                        'icon': 'credit-card',
                         'label': 'Checkout',
+                        'icon': 'credit-card',
                       },
                       {
+                        'icon': 'clipboard-list',
                         'label': 'Orders',
                         'href': '/orders',
-                        'icon': 'clipboard-list',
                       },
                     ],
                     'type': 'dashboard-layout',
                     'children': [
                       {
                         'align': 'center',
+                        'type': 'stack',
                         'gap': 'lg',
+                        'direction': 'vertical',
                         'children': [
                           {
-                            'direction': 'horizontal',
                             'children': [
                               {
-                                'name': 'credit-card',
                                 'type': 'icon',
+                                'name': 'credit-card',
                               },
                               {
                                 'content': 'Payment',
-                                'type': 'typography',
                                 'variant': 'h2',
+                                'type': 'typography',
                               },
                             ],
-                            'gap': 'md',
-                            'type': 'stack',
                             'align': 'center',
+                            'type': 'stack',
+                            'gap': 'md',
+                            'direction': 'horizontal',
                           },
                           {
                             'type': 'divider',
                           },
                           {
-                            'type': 'stack',
                             'children': [
                               {
-                                'placeholder': '0.00',
-                                'type': 'input',
                                 'inputType': 'number',
+                                'type': 'input',
+                                'placeholder': '0.00',
                               },
                               {
                                 'type': 'select',
@@ -5081,29 +5082,28 @@ export function stdServiceMarketplaceOrderPaymentOrbital(params: StdServiceMarke
                                     'label': 'USD',
                                   },
                                   {
-                                    'label': 'EUR',
                                     'value': 'eur',
+                                    'label': 'EUR',
                                   },
                                   {
-                                    'label': 'GBP',
                                     'value': 'gbp',
+                                    'label': 'GBP',
                                   },
                                 ],
                               },
                             ],
-                            'gap': 'md',
                             'direction': 'vertical',
+                            'gap': 'md',
+                            'type': 'stack',
                           },
                           {
                             'label': 'Pay',
                             'type': 'button',
                             'action': 'CREATE_PAYMENT',
-                            'icon': 'credit-card',
                             'variant': 'primary',
+                            'icon': 'credit-card',
                           },
                         ],
-                        'type': 'stack',
-                        'direction': 'vertical',
                       },
                     ],
                     'appName': 'ServiceMarketplace',
@@ -5246,43 +5246,43 @@ export function stdServiceMarketplaceOrderPaymentOrbital(params: StdServiceMarke
                     'appName': 'ServiceMarketplace',
                     'children': [
                       {
-                        'type': 'stack',
                         'align': 'center',
                         'children': [
                           {
-                            'type': 'icon',
                             'name': 'mail',
+                            'type': 'icon',
                           },
                           {
                             'type': 'typography',
                             'variant': 'body',
-                            'color': 'muted',
                             'content': 'Receipt will be sent after payment.',
+                            'color': 'muted',
                           },
                         ],
-                        'direction': 'vertical',
+                        'type': 'stack',
                         'gap': 'md',
+                        'direction': 'vertical',
                       },
                     ],
                     'navItems': [
                       {
-                        'label': 'Products',
                         'href': '/products',
                         'icon': 'package',
+                        'label': 'Products',
                       },
                       {
-                        'href': '/login',
-                        'label': 'Login',
                         'icon': 'layout-list',
+                        'label': 'Login',
+                        'href': '/login',
                       },
                       {
                         'href': '/checkout',
-                        'label': 'Checkout',
                         'icon': 'credit-card',
+                        'label': 'Checkout',
                       },
                       {
-                        'icon': 'clipboard-list',
                         'href': '/orders',
+                        'icon': 'clipboard-list',
                         'label': 'Orders',
                       },
                     ],
@@ -5299,30 +5299,21 @@ export function stdServiceMarketplaceOrderPaymentOrbital(params: StdServiceMarke
                   'render-ui',
                   'main',
                   {
-                    'type': 'dashboard-layout',
-                    'appName': 'ServiceMarketplace',
-                    'children': [
-                      {
-                        'type': 'loading-state',
-                        'title': 'Sending receipt...',
-                        'message': 'Delivering your payment receipt.',
-                      },
-                    ],
                     'navItems': [
                       {
                         'icon': 'package',
-                        'label': 'Products',
                         'href': '/products',
+                        'label': 'Products',
                       },
                       {
-                        'icon': 'layout-list',
                         'href': '/login',
                         'label': 'Login',
+                        'icon': 'layout-list',
                       },
                       {
+                        'label': 'Checkout',
                         'icon': 'credit-card',
                         'href': '/checkout',
-                        'label': 'Checkout',
                       },
                       {
                         'label': 'Orders',
@@ -5330,6 +5321,15 @@ export function stdServiceMarketplaceOrderPaymentOrbital(params: StdServiceMarke
                         'icon': 'clipboard-list',
                       },
                     ],
+                    'type': 'dashboard-layout',
+                    'children': [
+                      {
+                        'type': 'loading-state',
+                        'message': 'Delivering your payment receipt.',
+                        'title': 'Sending receipt...',
+                      },
+                    ],
+                    'appName': 'ServiceMarketplace',
                   },
                 ],
                 [
@@ -5338,13 +5338,13 @@ export function stdServiceMarketplaceOrderPaymentOrbital(params: StdServiceMarke
                   'send',
                   {
                     'to': '@entity.to',
-                    'body': '@entity.body',
                     'subject': '@entity.subject',
+                    'body': '@entity.body',
                   },
                   {
                     'emit': {
-                      'success': 'ProductEmailCompleted',
                       'failure': 'ProductEmailFailed',
+                      'success': 'ProductEmailCompleted',
                     },
                   },
                 ],
@@ -5364,48 +5364,48 @@ export function stdServiceMarketplaceOrderPaymentOrbital(params: StdServiceMarke
                   'render-ui',
                   'main',
                   {
+                    'appName': 'ServiceMarketplace',
                     'navItems': [
                       {
-                        'href': '/products',
                         'label': 'Products',
+                        'href': '/products',
                         'icon': 'package',
                       },
                       {
+                        'href': '/login',
                         'icon': 'layout-list',
                         'label': 'Login',
-                        'href': '/login',
                       },
                       {
-                        'icon': 'credit-card',
-                        'href': '/checkout',
                         'label': 'Checkout',
+                        'href': '/checkout',
+                        'icon': 'credit-card',
                       },
                       {
+                        'label': 'Orders',
                         'href': '/orders',
                         'icon': 'clipboard-list',
-                        'label': 'Orders',
                       },
                     ],
                     'children': [
                       {
-                        'align': 'center',
+                        'gap': 'md',
                         'children': [
                           {
-                            'type': 'icon',
                             'name': 'check-circle',
+                            'type': 'icon',
                           },
                           {
-                            'message': 'Receipt sent successfully',
                             'variant': 'success',
                             'type': 'alert',
+                            'message': 'Receipt sent successfully',
                           },
                         ],
                         'direction': 'vertical',
-                        'gap': 'md',
                         'type': 'stack',
+                        'align': 'center',
                       },
                     ],
-                    'appName': 'ServiceMarketplace',
                     'type': 'dashboard-layout',
                   },
                 ],
@@ -5427,49 +5427,49 @@ export function stdServiceMarketplaceOrderPaymentOrbital(params: StdServiceMarke
                   {
                     'appName': 'ServiceMarketplace',
                     'type': 'dashboard-layout',
-                    'navItems': [
-                      {
-                        'label': 'Products',
-                        'href': '/products',
-                        'icon': 'package',
-                      },
-                      {
-                        'href': '/login',
-                        'label': 'Login',
-                        'icon': 'layout-list',
-                      },
-                      {
-                        'icon': 'credit-card',
-                        'href': '/checkout',
-                        'label': 'Checkout',
-                      },
-                      {
-                        'icon': 'clipboard-list',
-                        'href': '/orders',
-                        'label': 'Orders',
-                      },
-                    ],
                     'children': [
                       {
-                        'direction': 'vertical',
-                        'gap': 'md',
-                        'align': 'center',
                         'type': 'stack',
+                        'gap': 'md',
+                        'direction': 'vertical',
+                        'align': 'center',
                         'children': [
                           {
                             'onRetry': 'RETRY_RECEIPT',
+                            'title': 'Receipt Failed',
                             'message': 'Could not send receipt email.',
                             'type': 'error-state',
-                            'title': 'Receipt Failed',
                           },
                           {
-                            'icon': 'refresh-cw',
-                            'type': 'button',
-                            'action': 'RETRY_RECEIPT',
                             'label': 'Retry',
+                            'action': 'RETRY_RECEIPT',
+                            'type': 'button',
                             'variant': 'primary',
+                            'icon': 'refresh-cw',
                           },
                         ],
+                      },
+                    ],
+                    'navItems': [
+                      {
+                        'label': 'Products',
+                        'icon': 'package',
+                        'href': '/products',
+                      },
+                      {
+                        'icon': 'layout-list',
+                        'href': '/login',
+                        'label': 'Login',
+                      },
+                      {
+                        'icon': 'credit-card',
+                        'label': 'Checkout',
+                        'href': '/checkout',
+                      },
+                      {
+                        'label': 'Orders',
+                        'href': '/orders',
+                        'icon': 'clipboard-list',
                       },
                     ],
                   },
@@ -5520,31 +5520,31 @@ export function stdServiceMarketplaceOrderPaymentOrbital(params: StdServiceMarke
                     'appName': 'ServiceMarketplace',
                     'navItems': [
                       {
+                        'label': 'Products',
                         'icon': 'package',
                         'href': '/products',
-                        'label': 'Products',
                       },
                       {
-                        'label': 'Login',
                         'icon': 'layout-list',
                         'href': '/login',
+                        'label': 'Login',
                       },
                       {
-                        'label': 'Checkout',
                         'href': '/checkout',
                         'icon': 'credit-card',
+                        'label': 'Checkout',
                       },
                       {
-                        'label': 'Orders',
                         'icon': 'clipboard-list',
                         'href': '/orders',
+                        'label': 'Orders',
                       },
                     ],
                     'children': [
                       {
                         'title': 'Sending receipt...',
-                        'message': 'Delivering your payment receipt.',
                         'type': 'loading-state',
+                        'message': 'Delivering your payment receipt.',
                       },
                     ],
                   },
@@ -5555,13 +5555,13 @@ export function stdServiceMarketplaceOrderPaymentOrbital(params: StdServiceMarke
                   'send',
                   {
                     'to': '@entity.to',
-                    'body': '@entity.body',
                     'subject': '@entity.subject',
+                    'body': '@entity.body',
                   },
                   {
                     'emit': {
-                      'success': 'ProductEmailCompleted',
                       'failure': 'ProductEmailFailed',
+                      'success': 'ProductEmailCompleted',
                     },
                   },
                 ],
@@ -5991,8 +5991,8 @@ export function stdServiceMarketplaceOrderOrbital(params: StdServiceMarketplaceO
                   'Order',
                   {
                     'emit': {
-                      'failure': 'OrderLoadFailed',
                       'success': 'OrderLoaded',
+                      'failure': 'OrderLoadFailed',
                     },
                   },
                 ],
@@ -6000,22 +6000,22 @@ export function stdServiceMarketplaceOrderOrbital(params: StdServiceMarketplaceO
                   'render-ui',
                   'main',
                   {
-                    'type': 'stack',
-                    'direction': 'vertical',
-                    'align': 'center',
-                    'className': 'py-12',
                     'gap': 'md',
+                    'align': 'center',
                     'children': [
                       {
                         'type': 'spinner',
                       },
                       {
-                        'color': 'muted',
                         'variant': 'caption',
                         'type': 'typography',
+                        'color': 'muted',
                         'content': 'Loading…',
                       },
                     ],
+                    'direction': 'vertical',
+                    'className': 'py-12',
+                    'type': 'stack',
                   },
                 ],
               ],
@@ -6030,48 +6030,25 @@ export function stdServiceMarketplaceOrderOrbital(params: StdServiceMarketplaceO
                   'main',
                   {
                     'appName': 'ServiceMarketplace',
-                    'navItems': [
-                      {
-                        'href': '/products',
-                        'label': 'Products',
-                        'icon': 'package',
-                      },
-                      {
-                        'label': 'Login',
-                        'href': '/login',
-                        'icon': 'layout-list',
-                      },
-                      {
-                        'label': 'Checkout',
-                        'href': '/checkout',
-                        'icon': 'credit-card',
-                      },
-                      {
-                        'href': '/orders',
-                        'label': 'Orders',
-                        'icon': 'clipboard-list',
-                      },
-                    ],
                     'type': 'dashboard-layout',
                     'children': [
                       {
+                        'type': 'stack',
                         'className': 'max-w-5xl mx-auto w-full',
                         'direction': 'vertical',
                         'gap': 'lg',
                         'children': [
                           {
-                            'align': 'center',
-                            'type': 'stack',
-                            'direction': 'horizontal',
-                            'justify': 'between',
                             'children': [
                               {
-                                'direction': 'horizontal',
                                 'type': 'stack',
+                                'direction': 'horizontal',
+                                'gap': 'sm',
+                                'align': 'center',
                                 'children': [
                                   {
-                                    'type': 'icon',
                                     'name': 'list',
+                                    'type': 'icon',
                                   },
                                   {
                                     'content': 'Orders',
@@ -6079,84 +6056,107 @@ export function stdServiceMarketplaceOrderOrbital(params: StdServiceMarketplaceO
                                     'type': 'typography',
                                   },
                                 ],
-                                'align': 'center',
-                                'gap': 'sm',
                               },
                               {
-                                'type': 'stack',
+                                'direction': 'horizontal',
+                                'gap': 'sm',
                                 'children': [
                                   {
-                                    'label': 'Create Order',
                                     'type': 'button',
-                                    'action': 'CREATE',
+                                    'label': 'Create Order',
                                     'variant': 'primary',
+                                    'action': 'CREATE',
                                     'icon': 'plus',
                                   },
                                 ],
-                                'direction': 'horizontal',
-                                'gap': 'sm',
+                                'type': 'stack',
                               },
                             ],
+                            'type': 'stack',
+                            'direction': 'horizontal',
                             'gap': 'md',
+                            'justify': 'between',
+                            'align': 'center',
                           },
                           {
                             'type': 'divider',
                           },
                           {
                             'entity': '@payload.data',
-                            'itemActions': [
-                              {
-                                'variant': 'ghost',
-                                'label': 'View',
-                                'event': 'VIEW',
-                              },
-                              {
-                                'event': 'EDIT',
-                                'label': 'Edit',
-                                'variant': 'ghost',
-                              },
-                              {
-                                'label': 'Delete',
-                                'variant': 'danger',
-                                'event': 'DELETE',
-                              },
-                            ],
-                            'type': 'data-grid',
                             'fields': [
                               {
-                                'name': 'productName',
-                                'variant': 'h4',
                                 'icon': 'list',
+                                'name': 'productName',
                                 'label': 'Product Name',
+                                'variant': 'h4',
                               },
                               {
-                                'name': 'amount',
-                                'label': 'Amount',
                                 'colorMap': {
                                   'completed': 'success',
                                   'pending': 'warning',
-                                  'scheduled': 'warning',
-                                  'error': 'destructive',
-                                  'disabled': 'neutral',
-                                  'cancelled': 'destructive',
                                   'done': 'success',
-                                  'inactive': 'neutral',
-                                  'archived': 'neutral',
-                                  'active': 'success',
+                                  'scheduled': 'warning',
                                   'draft': 'warning',
+                                  'archived': 'neutral',
+                                  'error': 'destructive',
+                                  'active': 'success',
+                                  'cancelled': 'destructive',
                                   'failed': 'destructive',
+                                  'disabled': 'neutral',
+                                  'inactive': 'neutral',
                                 },
                                 'variant': 'badge',
+                                'label': 'Amount',
+                                'name': 'amount',
                               },
                               {
+                                'name': 'paymentStatus',
                                 'label': 'Payment Status',
                                 'variant': 'caption',
-                                'name': 'paymentStatus',
                               },
                             ],
+                            'itemActions': [
+                              {
+                                'variant': 'ghost',
+                                'event': 'VIEW',
+                                'label': 'View',
+                              },
+                              {
+                                'event': 'EDIT',
+                                'variant': 'ghost',
+                                'label': 'Edit',
+                              },
+                              {
+                                'event': 'DELETE',
+                                'variant': 'danger',
+                                'label': 'Delete',
+                              },
+                            ],
+                            'type': 'data-grid',
                           },
                         ],
-                        'type': 'stack',
+                      },
+                    ],
+                    'navItems': [
+                      {
+                        'icon': 'package',
+                        'label': 'Products',
+                        'href': '/products',
+                      },
+                      {
+                        'label': 'Login',
+                        'href': '/login',
+                        'icon': 'layout-list',
+                      },
+                      {
+                        'href': '/checkout',
+                        'label': 'Checkout',
+                        'icon': 'credit-card',
+                      },
+                      {
+                        'href': '/orders',
+                        'label': 'Orders',
+                        'icon': 'clipboard-list',
                       },
                     ],
                   },
@@ -6172,34 +6172,34 @@ export function stdServiceMarketplaceOrderOrbital(params: StdServiceMarketplaceO
                   'render-ui',
                   'main',
                   {
+                    'className': 'py-12',
                     'gap': 'md',
+                    'direction': 'vertical',
                     'type': 'stack',
                     'align': 'center',
-                    'className': 'py-12',
-                    'direction': 'vertical',
                     'children': [
                       {
-                        'color': 'destructive',
-                        'name': 'alert-triangle',
                         'type': 'icon',
+                        'name': 'alert-triangle',
+                        'color': 'destructive',
                       },
                       {
-                        'type': 'typography',
                         'variant': 'h3',
+                        'type': 'typography',
                         'content': 'Failed to load order',
                       },
                       {
+                        'variant': 'body',
                         'color': 'muted',
                         'content': '@payload.error',
                         'type': 'typography',
-                        'variant': 'body',
                       },
                       {
-                        'type': 'button',
-                        'icon': 'rotate-ccw',
-                        'action': 'INIT',
                         'variant': 'primary',
                         'label': 'Retry',
+                        'icon': 'rotate-ccw',
+                        'type': 'button',
+                        'action': 'INIT',
                       },
                     ],
                   },
@@ -6376,8 +6376,8 @@ export function stdServiceMarketplaceOrderOrbital(params: StdServiceMarketplaceO
                   'Order',
                   {
                     'emit': {
-                      'failure': 'OrderLoadFailed',
                       'success': 'OrderLoaded',
+                      'failure': 'OrderLoadFailed',
                     },
                   },
                 ],
@@ -6402,20 +6402,21 @@ export function stdServiceMarketplaceOrderOrbital(params: StdServiceMarketplaceO
                   'render-ui',
                   'modal',
                   {
+                    'gap': 'md',
                     'children': [
                       {
                         'gap': 'sm',
-                        'type': 'stack',
                         'direction': 'horizontal',
+                        'type': 'stack',
                         'children': [
                           {
                             'type': 'icon',
                             'name': 'plus-circle',
                           },
                           {
-                            'type': 'typography',
                             'content': 'Create Order',
                             'variant': 'h3',
+                            'type': 'typography',
                           },
                         ],
                       },
@@ -6423,21 +6424,20 @@ export function stdServiceMarketplaceOrderOrbital(params: StdServiceMarketplaceO
                         'type': 'divider',
                       },
                       {
-                        'cancelEvent': 'CLOSE',
-                        'type': 'form-section',
-                        'mode': 'create',
-                        'submitEvent': 'SAVE',
                         'fields': [
                           'productName',
                           'amount',
                           'paymentStatus',
                           'orderDate',
                         ],
+                        'type': 'form-section',
+                        'mode': 'create',
+                        'submitEvent': 'SAVE',
+                        'cancelEvent': 'CLOSE',
                       },
                     ],
-                    'gap': 'md',
-                    'direction': 'vertical',
                     'type': 'stack',
+                    'direction': 'vertical',
                   },
                 ],
               ],
@@ -6689,8 +6689,8 @@ export function stdServiceMarketplaceOrderOrbital(params: StdServiceMarketplaceO
                   'Order',
                   {
                     'emit': {
-                      'success': 'OrderLoaded',
                       'failure': 'OrderLoadFailed',
+                      'success': 'OrderLoaded',
                     },
                   },
                 ],
@@ -6705,24 +6705,26 @@ export function stdServiceMarketplaceOrderOrbital(params: StdServiceMarketplaceO
                   'fetch',
                   'Order',
                   {
-                    'id': '@payload.id',
                     'emit': {
-                      'success': 'OrderLoaded',
                       'failure': 'OrderLoadFailed',
+                      'success': 'OrderLoaded',
                     },
+                    'id': '@payload.id',
                   },
                 ],
                 [
                   'render-ui',
                   'modal',
                   {
+                    'type': 'stack',
+                    'gap': 'md',
+                    'direction': 'vertical',
                     'children': [
                       {
-                        'type': 'stack',
                         'children': [
                           {
-                            'type': 'icon',
                             'name': 'edit',
+                            'type': 'icon',
                           },
                           {
                             'type': 'typography',
@@ -6730,29 +6732,27 @@ export function stdServiceMarketplaceOrderOrbital(params: StdServiceMarketplaceO
                             'variant': 'h3',
                           },
                         ],
-                        'gap': 'sm',
                         'direction': 'horizontal',
+                        'type': 'stack',
+                        'gap': 'sm',
                       },
                       {
                         'type': 'divider',
                       },
                       {
-                        'cancelEvent': 'CLOSE',
-                        'entity': '@payload.row',
-                        'mode': 'edit',
-                        'submitEvent': 'SAVE',
                         'type': 'form-section',
+                        'entity': '@payload.row',
+                        'submitEvent': 'SAVE',
                         'fields': [
                           'productName',
                           'amount',
                           'paymentStatus',
                           'orderDate',
                         ],
+                        'cancelEvent': 'CLOSE',
+                        'mode': 'edit',
                       },
                     ],
-                    'type': 'stack',
-                    'direction': 'vertical',
-                    'gap': 'md',
                   },
                 ],
               ],
@@ -6991,26 +6991,24 @@ export function stdServiceMarketplaceOrderOrbital(params: StdServiceMarketplaceO
                   'render-ui',
                   'modal',
                   {
-                    'type': 'stack',
-                    'direction': 'vertical',
                     'gap': 'md',
                     'children': [
                       {
                         'align': 'center',
-                        'direction': 'horizontal',
                         'type': 'stack',
-                        'gap': 'sm',
                         'children': [
                           {
                             'name': 'eye',
                             'type': 'icon',
                           },
                           {
-                            'content': '@entity.productName',
                             'type': 'typography',
                             'variant': 'h3',
+                            'content': '@entity.productName',
                           },
                         ],
+                        'gap': 'sm',
+                        'direction': 'horizontal',
                       },
                       {
                         'type': 'divider',
@@ -7018,30 +7016,30 @@ export function stdServiceMarketplaceOrderOrbital(params: StdServiceMarketplaceO
                       {
                         'children': [
                           {
-                            'type': 'typography',
-                            'variant': 'caption',
                             'content': 'Product Name',
-                          },
-                          {
                             'type': 'typography',
-                            'content': '@entity.productName',
-                            'variant': 'body',
-                          },
-                        ],
-                        'gap': 'md',
-                        'direction': 'horizontal',
-                        'type': 'stack',
-                      },
-                      {
-                        'children': [
-                          {
-                            'content': 'Amount',
                             'variant': 'caption',
+                          },
+                          {
+                            'content': '@entity.productName',
+                            'type': 'typography',
+                            'variant': 'body',
+                          },
+                        ],
+                        'direction': 'horizontal',
+                        'gap': 'md',
+                        'type': 'stack',
+                      },
+                      {
+                        'children': [
+                          {
+                            'variant': 'caption',
+                            'content': 'Amount',
                             'type': 'typography',
                           },
                           {
-                            'content': '@entity.amount',
                             'variant': 'body',
+                            'content': '@entity.amount',
                             'type': 'typography',
                           },
                         ],
@@ -7050,13 +7048,11 @@ export function stdServiceMarketplaceOrderOrbital(params: StdServiceMarketplaceO
                         'gap': 'md',
                       },
                       {
-                        'type': 'stack',
-                        'direction': 'horizontal',
                         'children': [
                           {
+                            'variant': 'caption',
                             'type': 'typography',
                             'content': 'Payment Status',
-                            'variant': 'caption',
                           },
                           {
                             'variant': 'body',
@@ -7064,40 +7060,38 @@ export function stdServiceMarketplaceOrderOrbital(params: StdServiceMarketplaceO
                             'type': 'typography',
                           },
                         ],
-                        'gap': 'md',
-                      },
-                      {
                         'type': 'stack',
-                        'children': [
-                          {
-                            'content': 'Order Date',
-                            'type': 'typography',
-                            'variant': 'caption',
-                          },
-                          {
-                            'content': '@entity.orderDate',
-                            'type': 'typography',
-                            'variant': 'body',
-                          },
-                        ],
                         'gap': 'md',
                         'direction': 'horizontal',
+                      },
+                      {
+                        'children': [
+                          {
+                            'type': 'typography',
+                            'variant': 'caption',
+                            'content': 'Order Date',
+                          },
+                          {
+                            'type': 'typography',
+                            'variant': 'body',
+                            'content': '@entity.orderDate',
+                          },
+                        ],
+                        'direction': 'horizontal',
+                        'type': 'stack',
+                        'gap': 'md',
                       },
                       {
                         'type': 'divider',
                       },
                       {
-                        'justify': 'end',
-                        'direction': 'horizontal',
-                        'type': 'stack',
-                        'gap': 'sm',
                         'children': [
                           {
-                            'type': 'button',
                             'icon': 'edit',
-                            'action': 'EDIT',
                             'variant': 'primary',
+                            'type': 'button',
                             'label': 'Edit',
+                            'action': 'EDIT',
                           },
                           {
                             'label': 'Close',
@@ -7106,8 +7100,14 @@ export function stdServiceMarketplaceOrderOrbital(params: StdServiceMarketplaceO
                             'variant': 'ghost',
                           },
                         ],
+                        'direction': 'horizontal',
+                        'type': 'stack',
+                        'gap': 'sm',
+                        'justify': 'end',
                       },
                     ],
+                    'direction': 'vertical',
+                    'type': 'stack',
                   },
                 ],
               ],
@@ -7329,8 +7329,8 @@ export function stdServiceMarketplaceOrderOrbital(params: StdServiceMarketplaceO
                   'Order',
                   {
                     'emit': {
-                      'success': 'OrderLoaded',
                       'failure': 'OrderLoadFailed',
+                      'success': 'OrderLoaded',
                     },
                   },
                 ],
@@ -7362,56 +7362,56 @@ export function stdServiceMarketplaceOrderOrbital(params: StdServiceMarketplaceO
                   'modal',
                   {
                     'gap': 'md',
+                    'type': 'stack',
                     'direction': 'vertical',
                     'children': [
                       {
                         'type': 'stack',
-                        'gap': 'sm',
-                        'align': 'center',
                         'direction': 'horizontal',
                         'children': [
                           {
-                            'name': 'alert-triangle',
                             'type': 'icon',
+                            'name': 'alert-triangle',
                           },
                           {
-                            'content': 'Delete Order',
                             'variant': 'h3',
                             'type': 'typography',
+                            'content': 'Delete Order',
                           },
                         ],
+                        'align': 'center',
+                        'gap': 'sm',
                       },
                       {
                         'type': 'divider',
                       },
                       {
-                        'variant': 'error',
-                        'message': 'This action cannot be undone.',
                         'type': 'alert',
+                        'message': 'This action cannot be undone.',
+                        'variant': 'error',
                       },
                       {
                         'justify': 'end',
+                        'gap': 'sm',
+                        'direction': 'horizontal',
                         'children': [
                           {
                             'label': 'Cancel',
-                            'type': 'button',
-                            'action': 'CANCEL',
                             'variant': 'ghost',
+                            'action': 'CANCEL',
+                            'type': 'button',
                           },
                           {
-                            'icon': 'check',
-                            'type': 'button',
-                            'action': 'CONFIRM_DELETE',
                             'label': 'Delete',
+                            'action': 'CONFIRM_DELETE',
+                            'type': 'button',
+                            'icon': 'check',
                             'variant': 'danger',
                           },
                         ],
                         'type': 'stack',
-                        'direction': 'horizontal',
-                        'gap': 'sm',
                       },
                     ],
-                    'type': 'stack',
                   },
                 ],
               ],
@@ -7450,8 +7450,8 @@ export function stdServiceMarketplaceOrderOrbital(params: StdServiceMarketplaceO
                   'Order',
                   {
                     'emit': {
-                      'success': 'OrderLoaded',
                       'failure': 'OrderLoadFailed',
+                      'success': 'OrderLoaded',
                     },
                   },
                 ],
@@ -7512,8 +7512,8 @@ export function stdServiceMarketplaceOrderOrbital(params: StdServiceMarketplaceO
                   'Order',
                   {
                     'emit': {
-                      'success': 'OrderLoaded',
                       'failure': 'OrderLoadFailed',
+                      'success': 'OrderLoaded',
                     },
                   },
                 ],

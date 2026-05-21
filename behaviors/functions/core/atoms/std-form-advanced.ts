@@ -80,7 +80,7 @@ export interface StdFormAdvancedFormEntrySaveFailedPayload {
 export interface StdFormAdvancedConfig {
   /** Default: `[]` */
   fieldValidation?: EntityRow[];
-  /** Default: `[{"label":"Name","name":"name"},{"name":"description","label":"Description"},{"type":"enum","values":["active","inactive","pending"],"label":"Status","name":"status"},{"name":"notes","label":"Notes","type":"textarea"},{"type":"number","name":"age","label":"Age"},{"name":"isActive","type":"boolean","label":"Is Active"},{"label":"Birth Date","name":"birthDate","type":"date"},{"name":"priority","type":"enum","values":["low","medium","high","critical"],"label":"Priority"},{"relation":{"entity":"FormEntry","cardinality":"one"},"type":"relation","label":"Category ID","name":"categoryId"}]` */
+  /** Default: `[{"name":"name","label":"Name"},{"name":"description","label":"Description"},{"name":"status","label":"Status","type":"enum","values":["active","inactive","pending"]},{"name":"notes","label":"Notes","type":"textarea"},{"type":"number","label":"Age","name":"age"},{"label":"Is Active","name":"isActive","type":"boolean"},{"label":"Birth Date","name":"birthDate","type":"date"},{"label":"Priority","name":"priority","type":"enum","values":["low","medium","high","critical"]},{"label":"Category ID","type":"relation","relation":{"entity":"FormEntry","cardinality":"one"},"name":"categoryId"}]` */
   fields?: EntityRow[];
 }
 

@@ -97,12 +97,12 @@ export interface StdEventEventLoadFailedPayload {
  * without modifying its state-machine topology.
  */
 export interface StdEventConfig {
-  /** Default: `[{"label":"Open","event":"OPEN_EVENT","icon":"arrow-right","variant":"primary"},{"icon":"x","event":"CANCEL","label":"Cancel","variant":"danger"}]` */
-  itemActions?: EntityRow[];
-  /** Default: `[{"variant":"caption","label":"Name","name":"name"},{"name":"venue","label":"Venue","variant":"caption"},{"name":"startsAt","label":"Starts","variant":"caption"},{"name":"endsAt","variant":"caption","label":"Ends"},{"variant":"caption","name":"capacity","label":"Capacity"},{"name":"status","variant":"badge","label":"Status"}]` */
-  fields?: EntityRow[];
   /** Default: `"Events"` */
   title?: string;
+  /** Default: `[{"icon":"arrow-right","label":"Open","variant":"primary","event":"OPEN_EVENT"},{"event":"CANCEL","variant":"danger","icon":"x","label":"Cancel"}]` */
+  itemActions?: EntityRow[];
+  /** Default: `[{"variant":"caption","label":"Name","name":"name"},{"name":"venue","label":"Venue","variant":"caption"},{"variant":"caption","name":"startsAt","label":"Starts"},{"variant":"caption","name":"endsAt","label":"Ends"},{"label":"Capacity","name":"capacity","variant":"caption"},{"name":"status","variant":"badge","label":"Status"}]` */
+  fields?: EntityRow[];
 }
 
 /**

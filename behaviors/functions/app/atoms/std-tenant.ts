@@ -86,12 +86,12 @@ export interface StdTenantTenantLoadFailedPayload {
  * without modifying its state-machine topology.
  */
 export interface StdTenantConfig {
+  /** Default: `[{"variant":"h4","name":"name","label":"Name"},{"variant":"body","label":"Email","name":"email"},{"label":"Phone","variant":"caption","name":"phone"},{"label":"Status","name":"status","variant":"badge"},{"label":"Move-In","name":"moveInDate","variant":"caption"}]` */
+  fields?: EntityRow[];
+  /** Default: `[{"event":"OPEN_TENANT","variant":"primary","label":"Open","icon":"arrow-right"},{"variant":"danger","label":"Move Out","event":"MOVE_OUT"}]` */
+  itemActions?: EntityRow[];
   /** Default: `"Tenants"` */
   title?: string;
-  /** Default: `[{"label":"Open","variant":"primary","event":"OPEN_TENANT","icon":"arrow-right"},{"label":"Move Out","event":"MOVE_OUT","variant":"danger"}]` */
-  itemActions?: EntityRow[];
-  /** Default: `[{"label":"Name","variant":"h4","name":"name"},{"variant":"body","name":"email","label":"Email"},{"name":"phone","label":"Phone","variant":"caption"},{"name":"status","label":"Status","variant":"badge"},{"label":"Move-In","name":"moveInDate","variant":"caption"}]` */
-  fields?: EntityRow[];
 }
 
 /**

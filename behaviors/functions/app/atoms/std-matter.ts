@@ -96,9 +96,9 @@ export interface StdMatterMatterLoadFailedPayload {
 export interface StdMatterConfig {
   /** Default: `"Matters"` */
   title?: string;
-  /** Default: `[{"name":"matterNumber","variant":"caption","label":"Matter #"},{"name":"title","label":"Title","variant":"caption"},{"label":"Client","variant":"caption","name":"clientName"},{"name":"practiceArea","label":"Practice","variant":"badge"},{"label":"Lead","variant":"caption","name":"leadAttorney"},{"name":"status","variant":"badge","label":"Status"}]` */
+  /** Default: `[{"label":"Matter #","variant":"caption","name":"matterNumber"},{"label":"Title","variant":"caption","name":"title"},{"label":"Client","variant":"caption","name":"clientName"},{"name":"practiceArea","variant":"badge","label":"Practice"},{"name":"leadAttorney","label":"Lead","variant":"caption"},{"name":"status","label":"Status","variant":"badge"}]` */
   fields?: EntityRow[];
-  /** Default: `[{"icon":"arrow-right","event":"OPEN_MATTER","label":"Open","variant":"primary"},{"event":"CLOSE_MATTER","label":"Close","variant":"danger"}]` */
+  /** Default: `[{"event":"OPEN_MATTER","variant":"primary","icon":"arrow-right","label":"Open"},{"variant":"danger","event":"CLOSE_MATTER","label":"Close"}]` */
   itemActions?: EntityRow[];
 }
 

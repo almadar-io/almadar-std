@@ -87,12 +87,12 @@ export interface StdCourtDeadlineCourtDeadlineLoadFailedPayload {
  * without modifying its state-machine topology.
  */
 export interface StdCourtDeadlineConfig {
-  /** Default: `[{"variant":"primary","label":"Open","event":"OPEN_DEADLINE","icon":"arrow-right"},{"event":"MARK_COMPLETED","variant":"danger","label":"Complete"}]` */
-  itemActions?: EntityRow[];
+  /** Default: `[{"variant":"caption","label":"Title","name":"title"},{"variant":"badge","name":"deadlineType","label":"Type"},{"name":"dueAt","variant":"caption","label":"Due"},{"label":"Jurisdiction","variant":"caption","name":"jurisdiction"},{"variant":"caption","label":"Assigned","name":"assignedTo"},{"variant":"badge","name":"status","label":"Status"}]` */
+  fields?: EntityRow[];
   /** Default: `"Deadlines"` */
   title?: string;
-  /** Default: `[{"name":"title","label":"Title","variant":"caption"},{"label":"Type","variant":"badge","name":"deadlineType"},{"label":"Due","variant":"caption","name":"dueAt"},{"variant":"caption","label":"Jurisdiction","name":"jurisdiction"},{"label":"Assigned","variant":"caption","name":"assignedTo"},{"name":"status","label":"Status","variant":"badge"}]` */
-  fields?: EntityRow[];
+  /** Default: `[{"icon":"arrow-right","label":"Open","variant":"primary","event":"OPEN_DEADLINE"},{"event":"MARK_COMPLETED","variant":"danger","label":"Complete"}]` */
+  itemActions?: EntityRow[];
 }
 
 /**

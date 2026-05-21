@@ -91,12 +91,12 @@ export interface StdTemplateEditorMessageTemplateLoadFailedPayload {
  * without modifying its state-machine topology.
  */
 export interface StdTemplateEditorConfig {
-  /** Default: `[{"variant":"caption","label":"Name","name":"name"},{"label":"Channel","name":"channel","variant":"badge"},{"name":"subject","variant":"caption","label":"Subject"},{"name":"lastEditedAt","label":"Updated","variant":"caption"}]` */
+  /** Default: `[{"label":"Name","variant":"caption","name":"name"},{"variant":"badge","name":"channel","label":"Channel"},{"variant":"caption","label":"Subject","name":"subject"},{"variant":"caption","label":"Updated","name":"lastEditedAt"}]` */
   fields?: EntityRow[];
-  /** Default: `[{"variant":"primary","event":"OPEN_TEMPLATE","label":"Open","icon":"arrow-right"},{"event":"DELETE_TEMPLATE","variant":"danger","label":"Delete"}]` */
-  itemActions?: EntityRow[];
   /** Default: `"Templates"` */
   title?: string;
+  /** Default: `[{"variant":"primary","label":"Open","icon":"arrow-right","event":"OPEN_TEMPLATE"},{"label":"Delete","event":"DELETE_TEMPLATE","variant":"danger"}]` */
+  itemActions?: EntityRow[];
 }
 
 /**

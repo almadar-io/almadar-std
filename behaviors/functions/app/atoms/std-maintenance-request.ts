@@ -171,10 +171,10 @@ export interface StdMaintenanceRequestMaintenanceRequestUpdateFailedPayload {
 export interface StdMaintenanceRequestConfig {
   /** Default: `"Maintenance Requests"` */
   title?: string;
-  /** Default: `[{"variant":"caption","name":"unitId","label":"Unit"},{"label":"Requester","variant":"caption","name":"requesterName"},{"name":"description","variant":"caption","label":"Description"},{"name":"priority","label":"Priority","variant":"badge"},{"variant":"badge","name":"status","label":"Status"},{"label":"Requested","variant":"caption","name":"requestedAt"}]` */
-  fields?: EntityRow[];
-  /** Default: `[{"variant":"primary","icon":"arrow-right","label":"Open","event":"OPEN_REQUEST"},{"variant":"danger","event":"CANCEL_REQUEST","label":"Cancel","icon":"x"}]` */
+  /** Default: `[{"variant":"primary","label":"Open","event":"OPEN_REQUEST","icon":"arrow-right"},{"label":"Cancel","variant":"danger","icon":"x","event":"CANCEL_REQUEST"}]` */
   itemActions?: EntityRow[];
+  /** Default: `[{"name":"unitId","variant":"caption","label":"Unit"},{"label":"Requester","name":"requesterName","variant":"caption"},{"variant":"caption","label":"Description","name":"description"},{"name":"priority","variant":"badge","label":"Priority"},{"variant":"badge","name":"status","label":"Status"},{"variant":"caption","name":"requestedAt","label":"Requested"}]` */
+  fields?: EntityRow[];
 }
 
 /**

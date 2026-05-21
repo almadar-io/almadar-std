@@ -98,10 +98,10 @@ export interface StdRecurrenceRecurrenceSaveFailedPayload {
  * without modifying its state-machine topology.
  */
 export interface StdRecurrenceConfig {
-  /** Default: `"Schedule"` */
-  title?: string;
   /** Default: `["frequency","interval","startDate","endDate","endAfterCount"]` */
   formFields?: string[];
+  /** Default: `"Schedule"` */
+  title?: string;
 }
 
 /**

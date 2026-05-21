@@ -86,12 +86,12 @@ export interface StdCampaignGoalCampaignGoalLoadFailedPayload {
  * without modifying its state-machine topology.
  */
 export interface StdCampaignGoalConfig {
-  /** Default: `[{"name":"name","label":"Name","variant":"caption"},{"name":"targetAmount","variant":"caption","label":"Target"},{"label":"Raised","name":"raisedAmount","variant":"caption"},{"name":"donorCount","label":"Donors","variant":"caption"},{"name":"status","label":"Status","variant":"badge"}]` */
-  fields?: EntityRow[];
-  /** Default: `[{"variant":"primary","icon":"arrow-right","label":"Open","event":"OPEN_CAMPAIGN"},{"event":"END_CAMPAIGN","variant":"danger","label":"End"}]` */
+  /** Default: `[{"label":"Open","variant":"primary","icon":"arrow-right","event":"OPEN_CAMPAIGN"},{"variant":"danger","label":"End","event":"END_CAMPAIGN"}]` */
   itemActions?: EntityRow[];
   /** Default: `"Campaigns"` */
   title?: string;
+  /** Default: `[{"name":"name","label":"Name","variant":"caption"},{"label":"Target","name":"targetAmount","variant":"caption"},{"name":"raisedAmount","label":"Raised","variant":"caption"},{"label":"Donors","variant":"caption","name":"donorCount"},{"label":"Status","name":"status","variant":"badge"}]` */
+  fields?: EntityRow[];
 }
 
 /**

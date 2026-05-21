@@ -41,9 +41,9 @@ export type StdStackLayoutEventKey = 'INIT';
 export interface StdStackLayoutConfig {
   /** Default: `"List"` */
   title?: string;
-  contentTrait?: TraitFieldRef;
   /** Default: `"list"` */
   icon?: string;
+  contentTrait?: TraitFieldRef;
 }
 
 /**
