@@ -206,17 +206,16 @@ export function stdFleetMgmtFleetOrbital(params: StdFleetMgmtFleetOrbitalParams 
           'notifications': [],
           'notificationClickEvent': 'FLEET_NOTIFICATIONS_OPEN',
           'appName': 'Fleet Manager',
-          'contentTrait': '@trait.FleetCatalog',
           'navItems': [
             {
-              'label': 'Fleets',
               'icon': 'truck',
               'href': '/fleets',
+              'label': 'Fleets',
             },
             {
               'href': '/vehicles',
-              'icon': 'truck',
               'label': 'Vehicles',
+              'icon': 'truck',
             },
             {
               'href': '/drivers',
@@ -224,15 +223,16 @@ export function stdFleetMgmtFleetOrbital(params: StdFleetMgmtFleetOrbitalParams 
               'label': 'Drivers',
             },
             {
-              'label': 'Telematics',
               'icon': 'activity',
               'href': '/telematics',
+              'label': 'Telematics',
             },
           ],
+          'contentTrait': '@trait.FleetCatalog',
         },
         'events': {
-          'NOTIFY_CLICK': 'FLEET_NOTIFICATIONS_OPEN',
           'SEARCH': 'FLEET_SEARCH',
+          'NOTIFY_CLICK': 'FLEET_NOTIFICATIONS_OPEN',
         },
       }),
       rebindInlineTraitEntity({
@@ -316,60 +316,59 @@ export function stdFleetMgmtFleetOrbital(params: StdFleetMgmtFleetOrbitalParams 
                   'main',
                   {
                     'gap': 'lg',
-                    'direction': 'vertical',
                     'children': [
                       {
-                        'direction': 'horizontal',
-                        'justify': 'between',
+                        'gap': 'md',
                         'type': 'stack',
                         'children': [
                           {
                             'direction': 'horizontal',
-                            'gap': 'sm',
                             'align': 'center',
+                            'gap': 'sm',
+                            'type': 'stack',
                             'children': [
                               {
-                                'name': 'truck',
                                 'type': 'icon',
+                                'name': 'truck',
                               },
                               {
+                                'variant': 'h2',
                                 'content': 'Fleets',
                                 'type': 'typography',
-                                'variant': 'h2',
                               },
                             ],
-                            'type': 'stack',
                           },
                           {
+                            'direction': 'horizontal',
+                            'type': 'stack',
                             'children': [
                               {
+                                'icon': 'plus',
                                 'variant': 'primary',
+                                'type': 'button',
                                 'action': 'CREATE',
                                 'label': 'New Fleet',
-                                'icon': 'plus',
-                                'type': 'button',
                               },
                             ],
                             'gap': 'sm',
-                            'direction': 'horizontal',
-                            'type': 'stack',
                           },
                         ],
+                        'justify': 'between',
+                        'direction': 'horizontal',
                         'align': 'center',
-                        'gap': 'md',
                       },
                       {
                         'type': 'divider',
                       },
                       {
-                        'align': 'center',
                         'children': [
                           '@trait.FleetSearch',
                           '@trait.FleetFilter',
                         ],
-                        'type': 'stack',
                         'direction': 'horizontal',
                         'gap': 'md',
+                        'type': 'stack',
+                        'align': 'center',
                       },
                       '@trait.FleetStats',
                       '@trait.FleetGraphs',
@@ -379,6 +378,7 @@ export function stdFleetMgmtFleetOrbital(params: StdFleetMgmtFleetOrbitalParams 
                       '@trait.FleetBrowseList',
                     ],
                     'type': 'stack',
+                    'direction': 'vertical',
                   },
                 ],
               ],
@@ -397,34 +397,34 @@ export function stdFleetMgmtFleetOrbital(params: StdFleetMgmtFleetOrbitalParams 
                   'render-ui',
                   'main',
                   {
-                    'align': 'center',
-                    'direction': 'vertical',
-                    'className': 'py-8',
                     'children': [
                       {
-                        'type': 'icon',
                         'name': 'bell',
+                        'type': 'icon',
                       },
                       {
                         'variant': 'h3',
-                        'type': 'typography',
                         'content': 'No notifications',
-                      },
-                      {
-                        'content': 'You\'re all caught up.',
-                        'variant': 'caption',
-                        'color': 'muted',
                         'type': 'typography',
                       },
                       {
-                        'type': 'button',
+                        'color': 'muted',
+                        'content': 'You\'re all caught up.',
+                        'type': 'typography',
+                        'variant': 'caption',
+                      },
+                      {
                         'label': 'Back to fleets',
                         'action': 'INIT',
+                        'type': 'button',
                         'variant': 'ghost',
                       },
                     ],
                     'gap': 'md',
+                    'direction': 'vertical',
                     'type': 'stack',
+                    'align': 'center',
+                    'className': 'py-8',
                   },
                 ],
               ],
@@ -437,49 +437,47 @@ export function stdFleetMgmtFleetOrbital(params: StdFleetMgmtFleetOrbitalParams 
         'ref': 'Search.traits.SearchResultSearch',
         'name': 'FleetSearch',
         'config': {
-          'event': 'FLEET_SEARCH',
           'placeholder': 'Search fleets…',
+          'event': 'FLEET_SEARCH',
         },
       }),
       makeTraitRef({
         'ref': 'Filter.traits.FilterTargetFilter',
         'name': 'FleetFilter',
         'config': {
-          'event': 'FLEET_FILTER',
           'filters': [
             {
-              'filterType': 'select',
               'options': [
                 'active',
                 'inactive',
                 'merging',
                 'archived',
               ],
-              'field': 'status',
               'label': 'Status',
+              'filterType': 'select',
+              'field': 'status',
             },
           ],
+          'event': 'FLEET_FILTER',
         },
       }),
       makeTraitRef({
         'ref': 'Stats.traits.StatsItemStats',
         'name': 'FleetStats',
         'config': {
-          'title': 'Fleets',
           'metrics': [
             {
-              'variant': 'primary',
+              'aggregation': 'count',
               'icon': 'truck',
               'label': 'Total',
-              'aggregation': 'count',
               'format': 'number',
+              'variant': 'primary',
             },
             {
-              'variant': 'success',
-              'icon': 'check-circle',
-              'aggregation': 'count',
-              'label': 'Active',
               'format': 'number',
+              'aggregation': 'count',
+              'icon': 'check-circle',
+              'variant': 'success',
               'filter': [
                 'fn',
                 'row',
@@ -489,24 +487,26 @@ export function stdFleetMgmtFleetOrbital(params: StdFleetMgmtFleetOrbitalParams 
                   'active',
                 ],
               ],
+              'label': 'Active',
             },
             {
-              'icon': 'truck',
               'label': 'Vehicles',
-              'format': 'number',
+              'icon': 'truck',
               'variant': 'info',
               'field': 'vehicleCount',
               'aggregation': 'sum',
-            },
-            {
-              'variant': 'info',
-              'aggregation': 'sum',
-              'icon': 'users',
-              'label': 'Drivers',
-              'field': 'driverCount',
               'format': 'number',
             },
+            {
+              'label': 'Drivers',
+              'aggregation': 'sum',
+              'format': 'number',
+              'field': 'driverCount',
+              'icon': 'users',
+              'variant': 'info',
+            },
           ],
+          'title': 'Fleets',
         },
         'listens': [
           {
@@ -523,13 +523,13 @@ export function stdFleetMgmtFleetOrbital(params: StdFleetMgmtFleetOrbitalParams 
         'ref': 'Graphs.traits.GraphItemGraph',
         'name': 'FleetGraphs',
         'config': {
+          'subtitle': 'Operational composition across fleet statuses',
           'title': 'Fleets by Status',
+          'categoryField': 'status',
           'height': 240,
           'showLegend': false,
-          'aggregation': 'count',
-          'subtitle': 'Operational composition across fleet statuses',
           'chartType': 'bar',
-          'categoryField': 'status',
+          'aggregation': 'count',
         },
         'listens': [
           {
@@ -547,13 +547,30 @@ export function stdFleetMgmtFleetOrbital(params: StdFleetMgmtFleetOrbitalParams 
         'name': 'FleetBrowseList',
         'linkedEntity': canonicalName,
         'config': {
+          'itemActions': [
+            {
+              'variant': 'ghost',
+              'event': 'VIEW',
+              'label': 'View',
+            },
+            {
+              'label': 'Edit',
+              'event': 'EDIT',
+              'variant': 'ghost',
+            },
+            {
+              'label': 'Delete',
+              'variant': 'danger',
+              'event': 'DELETE',
+            },
+          ],
           'cols': 1,
           'gap': 'sm',
           'fields': [
             {
-              'name': 'name',
-              'icon': 'truck',
               'variant': 'h3',
+              'icon': 'truck',
+              'name': 'name',
             },
             {
               'variant': 'caption',
@@ -564,29 +581,12 @@ export function stdFleetMgmtFleetOrbital(params: StdFleetMgmtFleetOrbitalParams 
               'name': 'status',
             },
             {
-              'name': 'vehicleCount',
               'variant': 'caption',
+              'name': 'vehicleCount',
             },
             {
               'variant': 'caption',
               'name': 'driverCount',
-            },
-          ],
-          'itemActions': [
-            {
-              'label': 'View',
-              'event': 'VIEW',
-              'variant': 'ghost',
-            },
-            {
-              'variant': 'ghost',
-              'label': 'Edit',
-              'event': 'EDIT',
-            },
-            {
-              'label': 'Delete',
-              'event': 'DELETE',
-              'variant': 'danger',
             },
           ],
         },
@@ -638,6 +638,8 @@ export function stdFleetMgmtFleetOrbital(params: StdFleetMgmtFleetOrbitalParams 
         'name': 'FleetCreate',
         'linkedEntity': canonicalName,
         'config': {
+          'title': 'New Fleet',
+          'icon': 'plus-circle',
           'mode': 'create',
           'fields': [
             'name',
@@ -646,8 +648,6 @@ export function stdFleetMgmtFleetOrbital(params: StdFleetMgmtFleetOrbitalParams 
             'status',
             'managedBy',
           ],
-          'title': 'New Fleet',
-          'icon': 'plus-circle',
         },
         'events': {
           'OPEN': 'CREATE',
@@ -668,6 +668,7 @@ export function stdFleetMgmtFleetOrbital(params: StdFleetMgmtFleetOrbitalParams 
         'name': 'FleetEdit',
         'linkedEntity': canonicalName,
         'config': {
+          'icon': 'edit',
           'title': 'Edit Fleet',
           'mode': 'edit',
           'fields': [
@@ -677,7 +678,6 @@ export function stdFleetMgmtFleetOrbital(params: StdFleetMgmtFleetOrbitalParams 
             'status',
             'managedBy',
           ],
-          'icon': 'edit',
         },
         'events': {
           'OPEN': 'EDIT',
@@ -698,8 +698,7 @@ export function stdFleetMgmtFleetOrbital(params: StdFleetMgmtFleetOrbitalParams 
         'name': 'FleetView',
         'linkedEntity': canonicalName,
         'config': {
-          'mode': 'edit',
-          'title': 'View Fleet',
+          'icon': 'eye',
           'fields': [
             'name',
             'description',
@@ -709,7 +708,8 @@ export function stdFleetMgmtFleetOrbital(params: StdFleetMgmtFleetOrbitalParams 
             'vehicleCount',
             'driverCount',
           ],
-          'icon': 'eye',
+          'title': 'View Fleet',
+          'mode': 'edit',
         },
         'events': {
           'OPEN': 'VIEW',
@@ -730,14 +730,14 @@ export function stdFleetMgmtFleetOrbital(params: StdFleetMgmtFleetOrbitalParams 
         'name': 'FleetDelete',
         'linkedEntity': canonicalName,
         'config': {
-          'title': 'Delete Fleet',
-          'confirmLabel': 'Delete',
-          'alertMessage': 'This action cannot be undone.',
           'icon': 'alert-triangle',
+          'confirmLabel': 'Delete',
+          'title': 'Delete Fleet',
+          'alertMessage': 'This action cannot be undone.',
         },
         'events': {
-          'REQUEST': 'DELETE',
           'CONFIRM': 'CONFIRM_DELETE',
+          'REQUEST': 'DELETE',
         },
         'listens': [
           {
@@ -1221,16 +1221,17 @@ export function stdFleetMgmtVehiclePanelOrbital(params: StdFleetMgmtVehiclePanel
         'ref': 'AppShell.traits.AppLayout',
         'name': 'VehicleAppLayout',
         'config': {
+          'contentTrait': '@trait.VehiclePanel',
           'navItems': [
             {
-              'label': 'Fleets',
               'href': '/fleets',
+              'label': 'Fleets',
               'icon': 'truck',
             },
             {
-              'icon': 'truck',
               'label': 'Vehicles',
               'href': '/vehicles',
+              'icon': 'truck',
             },
             {
               'href': '/drivers',
@@ -1238,16 +1239,15 @@ export function stdFleetMgmtVehiclePanelOrbital(params: StdFleetMgmtVehiclePanel
               'icon': 'user',
             },
             {
-              'href': '/telematics',
               'label': 'Telematics',
               'icon': 'activity',
+              'href': '/telematics',
             },
           ],
-          'searchEvent': 'VEHICLE_SEARCH',
-          'contentTrait': '@trait.VehiclePanel',
+          'notifications': [],
           'appName': 'Fleet Management',
           'notificationClickEvent': 'VEHICLE_NOTIFICATIONS_OPEN',
-          'notifications': [],
+          'searchEvent': 'VEHICLE_SEARCH',
         },
         'events': {
           'SEARCH': 'VEHICLE_SEARCH',
@@ -1280,9 +1280,15 @@ export function stdFleetMgmtVehiclePanelOrbital(params: StdFleetMgmtVehiclePanel
                   'render-ui',
                   'main',
                   {
+                    'direction': 'vertical',
+                    'type': 'stack',
                     'gap': 'lg',
+                    'className': 'max-w-6xl mx-auto w-full p-4',
                     'children': [
                       {
+                        'direction': 'horizontal',
+                        'gap': 'sm',
+                        'type': 'stack',
                         'children': [
                           {
                             'type': 'icon',
@@ -1294,9 +1300,6 @@ export function stdFleetMgmtVehiclePanelOrbital(params: StdFleetMgmtVehiclePanel
                             'type': 'typography',
                           },
                         ],
-                        'type': 'stack',
-                        'gap': 'sm',
-                        'direction': 'horizontal',
                         'align': 'center',
                       },
                       {
@@ -1304,9 +1307,6 @@ export function stdFleetMgmtVehiclePanelOrbital(params: StdFleetMgmtVehiclePanel
                       },
                       '@trait.VehicleView',
                     ],
-                    'direction': 'vertical',
-                    'type': 'stack',
-                    'className': 'max-w-6xl mx-auto w-full p-4',
                   },
                 ],
               ],
@@ -1564,16 +1564,11 @@ export function stdFleetMgmtDriverPanelOrbital(params: StdFleetMgmtDriverPanelOr
         'ref': 'AppShell.traits.AppLayout',
         'name': 'DriverAppLayout',
         'config': {
-          'notifications': [],
-          'notificationClickEvent': 'DRIVER_NOTIFICATIONS_OPEN',
-          'searchEvent': 'DRIVER_SEARCH',
-          'contentTrait': '@trait.DriverPanel',
-          'appName': 'Fleet Management',
           'navItems': [
             {
               'href': '/fleets',
-              'label': 'Fleets',
               'icon': 'truck',
+              'label': 'Fleets',
             },
             {
               'icon': 'truck',
@@ -1582,15 +1577,20 @@ export function stdFleetMgmtDriverPanelOrbital(params: StdFleetMgmtDriverPanelOr
             },
             {
               'label': 'Drivers',
-              'href': '/drivers',
               'icon': 'user',
+              'href': '/drivers',
             },
             {
               'icon': 'activity',
-              'label': 'Telematics',
               'href': '/telematics',
+              'label': 'Telematics',
             },
           ],
+          'searchEvent': 'DRIVER_SEARCH',
+          'contentTrait': '@trait.DriverPanel',
+          'notifications': [],
+          'notificationClickEvent': 'DRIVER_NOTIFICATIONS_OPEN',
+          'appName': 'Fleet Management',
         },
         'events': {
           'NOTIFY_CLICK': 'DRIVER_NOTIFICATIONS_OPEN',
@@ -1624,32 +1624,32 @@ export function stdFleetMgmtDriverPanelOrbital(params: StdFleetMgmtDriverPanelOr
                   'main',
                   {
                     'className': 'max-w-6xl mx-auto w-full p-4',
-                    'type': 'stack',
-                    'gap': 'lg',
                     'direction': 'vertical',
+                    'gap': 'lg',
                     'children': [
                       {
-                        'align': 'center',
+                        'type': 'stack',
                         'children': [
                           {
-                            'name': 'user',
                             'type': 'icon',
+                            'name': 'user',
                           },
                           {
-                            'content': 'Drivers',
                             'type': 'typography',
                             'variant': 'h2',
+                            'content': 'Drivers',
                           },
                         ],
-                        'type': 'stack',
-                        'gap': 'sm',
                         'direction': 'horizontal',
+                        'gap': 'sm',
+                        'align': 'center',
                       },
                       {
                         'type': 'divider',
                       },
                       '@trait.DriverView',
                     ],
+                    'type': 'stack',
                   },
                 ],
               ],
@@ -1907,33 +1907,33 @@ export function stdFleetMgmtTelematicsEventPanelOrbital(params: StdFleetMgmtTele
         'ref': 'AppShell.traits.AppLayout',
         'name': 'TelematicsEventAppLayout',
         'config': {
-          'appName': 'Fleet Management',
-          'contentTrait': '@trait.TelematicsEventPanel',
           'notifications': [],
           'notificationClickEvent': 'TELEMATICS_EVENT_NOTIFICATIONS_OPEN',
+          'searchEvent': 'TELEMATICS_EVENT_SEARCH',
+          'contentTrait': '@trait.TelematicsEventPanel',
+          'appName': 'Fleet Management',
           'navItems': [
             {
-              'icon': 'truck',
               'label': 'Fleets',
               'href': '/fleets',
+              'icon': 'truck',
             },
             {
+              'href': '/vehicles',
               'label': 'Vehicles',
               'icon': 'truck',
-              'href': '/vehicles',
             },
             {
+              'label': 'Drivers',
               'href': '/drivers',
               'icon': 'user',
-              'label': 'Drivers',
             },
             {
-              'href': '/telematics',
               'label': 'Telematics',
+              'href': '/telematics',
               'icon': 'activity',
             },
           ],
-          'searchEvent': 'TELEMATICS_EVENT_SEARCH',
         },
         'events': {
           'NOTIFY_CLICK': 'TELEMATICS_EVENT_NOTIFICATIONS_OPEN',
@@ -1966,11 +1966,14 @@ export function stdFleetMgmtTelematicsEventPanelOrbital(params: StdFleetMgmtTele
                   'render-ui',
                   'main',
                   {
-                    'type': 'stack',
+                    'direction': 'vertical',
                     'gap': 'lg',
                     'className': 'max-w-6xl mx-auto w-full p-4',
                     'children': [
                       {
+                        'align': 'center',
+                        'type': 'stack',
+                        'gap': 'sm',
                         'direction': 'horizontal',
                         'children': [
                           {
@@ -1978,21 +1981,18 @@ export function stdFleetMgmtTelematicsEventPanelOrbital(params: StdFleetMgmtTele
                             'name': 'activity',
                           },
                           {
-                            'type': 'typography',
                             'content': 'Telematics Events',
                             'variant': 'h2',
+                            'type': 'typography',
                           },
                         ],
-                        'type': 'stack',
-                        'gap': 'sm',
-                        'align': 'center',
                       },
                       {
                         'type': 'divider',
                       },
                       '@trait.TelematicsEventView',
                     ],
-                    'direction': 'vertical',
+                    'type': 'stack',
                   },
                 ],
               ],

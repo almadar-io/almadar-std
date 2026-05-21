@@ -86,12 +86,12 @@ export interface StdApBillApBillLoadFailedPayload {
  * without modifying its state-machine topology.
  */
 export interface StdApBillConfig {
+  /** Default: `[{"icon":"arrow-right","event":"OPEN_BILL","variant":"primary","label":"Open"},{"variant":"danger","label":"Void","event":"VOID_BILL"}]` */
+  itemActions?: EntityRow[];
   /** Default: `"Bills Payable"` */
   title?: string;
-  /** Default: `[{"name":"vendor","label":"Vendor","variant":"caption"},{"name":"billNumber","label":"Bill #","variant":"caption"},{"label":"Bill Date","name":"billDate","variant":"caption"},{"label":"Due","variant":"caption","name":"dueDate"},{"label":"Total","name":"amountTotal","variant":"caption"},{"variant":"badge","label":"Status","name":"status"}]` */
+  /** Default: `[{"label":"Vendor","name":"vendor","variant":"caption"},{"label":"Bill #","variant":"caption","name":"billNumber"},{"name":"billDate","label":"Bill Date","variant":"caption"},{"label":"Due","variant":"caption","name":"dueDate"},{"variant":"caption","name":"amountTotal","label":"Total"},{"name":"status","variant":"badge","label":"Status"}]` */
   fields?: EntityRow[];
-  /** Default: `[{"event":"OPEN_BILL","variant":"primary","label":"Open","icon":"arrow-right"},{"event":"VOID_BILL","label":"Void","variant":"danger"}]` */
-  itemActions?: EntityRow[];
 }
 
 /**

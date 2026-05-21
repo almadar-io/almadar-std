@@ -39,12 +39,12 @@ export type StdStatsEventKey = 'INIT' | 'ITEMS_LOADED';
  * without modifying its state-machine topology.
  */
 export interface StdStatsConfig {
-  /** Default: `"data-grid"` */
-  viewPattern?: unknown;
-  /** Default: `[{"label":"Total Items","format":"number","aggregation":"count","variant":"primary","icon":"list"},{"variant":"success","format":"number","icon":"check-circle","aggregation":"count","label":"Active"},{"icon":"trending-up","variant":"info","format":"number","field":"value","label":"Avg Value","aggregation":"avg"}]` */
-  metrics?: EntityRow[];
   /** Default: `"Summary"` */
   title?: string;
+  /** Default: `"data-grid"` */
+  viewPattern?: unknown;
+  /** Default: `[{"label":"Total Items","variant":"primary","icon":"list","format":"number","aggregation":"count"},{"icon":"check-circle","aggregation":"count","label":"Active","format":"number","variant":"success"},{"format":"number","field":"value","icon":"trending-up","aggregation":"avg","label":"Avg Value","variant":"info"}]` */
+  metrics?: EntityRow[];
 }
 
 /**

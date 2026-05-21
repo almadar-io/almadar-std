@@ -103,12 +103,12 @@ export interface StdDriverDriverLoadFailedPayload {
  * without modifying its state-machine topology.
  */
 export interface StdDriverConfig {
-  /** Default: `[{"label":"Open","event":"OPEN_DRIVER","variant":"primary","icon":"arrow-right"},{"label":"Suspend","variant":"danger","event":"SUSPEND"}]` */
-  itemActions?: EntityRow[];
+  /** Default: `[{"variant":"caption","name":"name","label":"Name"},{"name":"licenseNumber","label":"License","variant":"caption"},{"name":"licenseClass","label":"Class","variant":"badge"},{"label":"Expires","name":"licenseExpiresAt","variant":"caption"},{"label":"Status","variant":"badge","name":"status"},{"label":"Vehicle","name":"assignedVehicleId","variant":"caption"}]` */
+  fields?: EntityRow[];
   /** Default: `"Drivers"` */
   title?: string;
-  /** Default: `[{"variant":"caption","name":"name","label":"Name"},{"variant":"caption","name":"licenseNumber","label":"License"},{"variant":"badge","name":"licenseClass","label":"Class"},{"name":"licenseExpiresAt","label":"Expires","variant":"caption"},{"label":"Status","variant":"badge","name":"status"},{"label":"Vehicle","name":"assignedVehicleId","variant":"caption"}]` */
-  fields?: EntityRow[];
+  /** Default: `[{"variant":"primary","icon":"arrow-right","event":"OPEN_DRIVER","label":"Open"},{"label":"Suspend","event":"SUSPEND","variant":"danger"}]` */
+  itemActions?: EntityRow[];
 }
 
 /**

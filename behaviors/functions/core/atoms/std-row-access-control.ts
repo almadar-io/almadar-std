@@ -47,10 +47,10 @@ export interface StdRowAccessControlRowsFilteredPayload {
  * without modifying its state-machine topology.
  */
 export interface StdRowAccessControlConfig {
-  /** Default: `[]` */
-  visibleRoles?: string[];
   /** Default: `""` */
   ownerField?: string;
+  /** Default: `[]` */
+  visibleRoles?: string[];
 }
 
 /**

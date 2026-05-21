@@ -91,14 +91,14 @@ export interface StdRecurringChargeSubscriptionLoadFailedPayload {
  * without modifying its state-machine topology.
  */
 export interface StdRecurringChargeConfig {
+  /** Default: `[{"label":"Customer","variant":"caption","name":"customerId"},{"variant":"caption","name":"planId","label":"Plan"},{"label":"Status","variant":"badge","name":"status"},{"label":"Amount","name":"amount","variant":"caption"},{"variant":"badge","label":"Interval","name":"interval"},{"variant":"caption","name":"nextBillingAt","label":"Next Bill"},{"variant":"caption","label":"Retries","name":"attemptCount"}]` */
+  fields?: EntityRow[];
   /** Default: `4` */
   maxRetries?: number;
-  /** Default: `[{"variant":"primary","label":"Open","icon":"arrow-right","event":"OPEN_SUBSCRIPTION"},{"event":"CANCEL","label":"Cancel","variant":"danger"}]` */
-  itemActions?: EntityRow[];
   /** Default: `"Subscriptions"` */
   title?: string;
-  /** Default: `[{"variant":"caption","name":"customerId","label":"Customer"},{"variant":"caption","label":"Plan","name":"planId"},{"name":"status","label":"Status","variant":"badge"},{"name":"amount","label":"Amount","variant":"caption"},{"name":"interval","label":"Interval","variant":"badge"},{"label":"Next Bill","variant":"caption","name":"nextBillingAt"},{"variant":"caption","label":"Retries","name":"attemptCount"}]` */
-  fields?: EntityRow[];
+  /** Default: `[{"variant":"primary","icon":"arrow-right","label":"Open","event":"OPEN_SUBSCRIPTION"},{"variant":"danger","label":"Cancel","event":"CANCEL"}]` */
+  itemActions?: EntityRow[];
 }
 
 /**

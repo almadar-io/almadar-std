@@ -97,18 +97,18 @@ export interface StdRatingReviewReviewSaveFailedPayload {
  * without modifying its state-machine topology.
  */
 export interface StdRatingReviewConfig {
-  /** Default: `"Bali Sunset Villa · 3 nights"` */
-  subjectTitle?: string;
-  /** Default: `"Submit review"` */
-  submitLabel?: string;
+  /** Default: `[{"icon":"clock","id":"recent","label":"Most recent"},{"id":"highest","label":"Top rated","icon":"star"},{"icon":"trending-down","id":"lowest","label":"Lowest"}]` */
+  sortOptions?: EntityRow[];
+  /** Default: `[{"label":"5 stars","percentage":74},{"percentage":18,"label":"4 stars"},{"percentage":5,"label":"3 stars"},{"percentage":2,"label":"2 stars"},{"percentage":1,"label":"1 star"}]` */
+  starDistribution?: EntityRow[];
   /** Default: `"Write a review"` */
   writeLabel?: string;
+  /** Default: `"Submit review"` */
+  submitLabel?: string;
+  /** Default: `"Bali Sunset Villa · 3 nights"` */
+  subjectTitle?: string;
   /** Default: `"Cancel"` */
   cancelLabel?: string;
-  /** Default: `[{"id":"recent","label":"Most recent","icon":"clock"},{"label":"Top rated","id":"highest","icon":"star"},{"label":"Lowest","id":"lowest","icon":"trending-down"}]` */
-  sortOptions?: EntityRow[];
-  /** Default: `[{"percentage":74,"label":"5 stars"},{"label":"4 stars","percentage":18},{"percentage":5,"label":"3 stars"},{"percentage":2,"label":"2 stars"},{"label":"1 star","percentage":1}]` */
-  starDistribution?: EntityRow[];
   /** Default: `["draftComment"]` */
   reviewFields?: string[];
 }

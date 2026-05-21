@@ -83,12 +83,12 @@ export interface StdTimeEntryTimeEntryLoadFailedPayload {
  * without modifying its state-machine topology.
  */
 export interface StdTimeEntryConfig {
-  /** Default: `[{"name":"projectName","label":"Project","variant":"caption"},{"variant":"caption","label":"Task","name":"taskDescription"},{"name":"workDate","label":"Date","variant":"caption"},{"label":"Hours","name":"hours","variant":"caption"},{"name":"billable","label":"Billable","variant":"badge"},{"name":"hourlyRate","label":"Rate","variant":"caption"},{"label":"Status","variant":"badge","name":"status"}]` */
-  fields?: EntityRow[];
-  /** Default: `[{"icon":"arrow-right","label":"Open","event":"OPEN_ENTRY","variant":"primary"},{"event":"REQUEST_DELETE","variant":"danger","label":"Delete"}]` */
-  itemActions?: EntityRow[];
   /** Default: `"Time Entries"` */
   title?: string;
+  /** Default: `[{"label":"Project","variant":"caption","name":"projectName"},{"name":"taskDescription","variant":"caption","label":"Task"},{"label":"Date","name":"workDate","variant":"caption"},{"variant":"caption","label":"Hours","name":"hours"},{"label":"Billable","name":"billable","variant":"badge"},{"name":"hourlyRate","label":"Rate","variant":"caption"},{"label":"Status","variant":"badge","name":"status"}]` */
+  fields?: EntityRow[];
+  /** Default: `[{"event":"OPEN_ENTRY","icon":"arrow-right","label":"Open","variant":"primary"},{"event":"REQUEST_DELETE","label":"Delete","variant":"danger"}]` */
+  itemActions?: EntityRow[];
 }
 
 /**

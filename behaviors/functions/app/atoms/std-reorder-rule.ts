@@ -87,9 +87,9 @@ export interface StdReorderRuleReorderRuleLoadFailedPayload {
 export interface StdReorderRuleConfig {
   /** Default: `"Reorder Rules"` */
   title?: string;
-  /** Default: `[{"variant":"caption","name":"sku","label":"SKU"},{"name":"locationId","variant":"caption","label":"Location"},{"name":"thresholdQty","label":"Threshold","variant":"caption"},{"variant":"caption","label":"Reorder Qty","name":"reorderQty"},{"name":"vendor","variant":"caption","label":"Vendor"},{"name":"leadTimeDays","label":"Lead (d)","variant":"caption"}]` */
+  /** Default: `[{"label":"SKU","variant":"caption","name":"sku"},{"label":"Location","name":"locationId","variant":"caption"},{"name":"thresholdQty","variant":"caption","label":"Threshold"},{"name":"reorderQty","label":"Reorder Qty","variant":"caption"},{"variant":"caption","name":"vendor","label":"Vendor"},{"name":"leadTimeDays","label":"Lead (d)","variant":"caption"}]` */
   fields?: EntityRow[];
-  /** Default: `[{"event":"OPEN_RULE","label":"Open","variant":"primary","icon":"arrow-right"},{"label":"Disable","event":"DISABLE_RULE","variant":"danger"}]` */
+  /** Default: `[{"label":"Open","event":"OPEN_RULE","icon":"arrow-right","variant":"primary"},{"label":"Disable","event":"DISABLE_RULE","variant":"danger"}]` */
   itemActions?: EntityRow[];
 }
 

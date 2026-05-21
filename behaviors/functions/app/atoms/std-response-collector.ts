@@ -83,12 +83,12 @@ export interface StdResponseCollectorResponseLoadFailedPayload {
  * without modifying its state-machine topology.
  */
 export interface StdResponseCollectorConfig {
-  /** Default: `[{"variant":"primary","event":"OPEN_RESPONSE","label":"Open","icon":"arrow-right"},{"label":"Delete","variant":"danger","event":"DELETE_RESPONSE"}]` */
-  itemActions?: EntityRow[];
-  /** Default: `[{"name":"questionId","label":"Question","variant":"caption"},{"name":"respondentId","label":"Respondent","variant":"caption"},{"name":"surveyId","label":"Survey","variant":"caption"},{"name":"answerJson","label":"Answer","variant":"caption"},{"name":"submittedAt","label":"Submitted","variant":"caption"}]` */
-  fields?: EntityRow[];
   /** Default: `"Responses"` */
   title?: string;
+  /** Default: `[{"name":"questionId","label":"Question","variant":"caption"},{"name":"respondentId","variant":"caption","label":"Respondent"},{"label":"Survey","variant":"caption","name":"surveyId"},{"name":"answerJson","variant":"caption","label":"Answer"},{"variant":"caption","label":"Submitted","name":"submittedAt"}]` */
+  fields?: EntityRow[];
+  /** Default: `[{"label":"Open","event":"OPEN_RESPONSE","variant":"primary","icon":"arrow-right"},{"event":"DELETE_RESPONSE","label":"Delete","variant":"danger"}]` */
+  itemActions?: EntityRow[];
 }
 
 /**

@@ -87,12 +87,12 @@ export interface StdClassSessionClassSessionLoadFailedPayload {
  * without modifying its state-machine topology.
  */
 export interface StdClassSessionConfig {
-  /** Default: `[{"event":"OPEN_SESSION","label":"Open","variant":"primary","icon":"arrow-right"},{"label":"Cancel","event":"CANCEL_CLASS","variant":"danger"}]` */
-  itemActions?: EntityRow[];
-  /** Default: `[{"label":"Class","name":"className","variant":"caption"},{"name":"instructorName","label":"Instructor","variant":"caption"},{"name":"startTime","label":"Start","variant":"caption"},{"label":"Capacity","variant":"badge","name":"capacity"},{"name":"bookedCount","variant":"badge","label":"Booked"},{"label":"Status","variant":"badge","name":"status"}]` */
-  fields?: EntityRow[];
   /** Default: `"Class Sessions"` */
   title?: string;
+  /** Default: `[{"variant":"caption","name":"className","label":"Class"},{"label":"Instructor","name":"instructorName","variant":"caption"},{"name":"startTime","label":"Start","variant":"caption"},{"name":"capacity","label":"Capacity","variant":"badge"},{"label":"Booked","variant":"badge","name":"bookedCount"},{"label":"Status","variant":"badge","name":"status"}]` */
+  fields?: EntityRow[];
+  /** Default: `[{"event":"OPEN_SESSION","variant":"primary","label":"Open","icon":"arrow-right"},{"event":"CANCEL_CLASS","variant":"danger","label":"Cancel"}]` */
+  itemActions?: EntityRow[];
 }
 
 /**

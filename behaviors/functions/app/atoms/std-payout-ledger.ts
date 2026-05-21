@@ -86,13 +86,13 @@ export interface StdPayoutLedgerPayoutLoadFailedPayload {
  * without modifying its state-machine topology.
  */
 export interface StdPayoutLedgerConfig {
-  /** Default: `"Payouts"` */
-  title?: string;
-  /** Default: `[{"name":"vendorId","label":"Vendor","variant":"caption"},{"name":"amount","label":"Amount","variant":"caption"},{"name":"currency","label":"Currency","variant":"badge"},{"variant":"badge","name":"status","label":"Status"},{"label":"Bank","variant":"caption","name":"bankAccountMasked"},{"name":"requestedAt","label":"Requested","variant":"caption"}]` */
-  fields?: EntityRow[];
   /** Default: `50` */
   minimumWithdrawal?: number;
-  /** Default: `[{"event":"OPEN_PAYOUT","variant":"primary","label":"Open","icon":"arrow-right"},{"event":"REQUEST_WITHDRAW","variant":"danger","label":"Withdraw"}]` */
+  /** Default: `[{"name":"vendorId","label":"Vendor","variant":"caption"},{"label":"Amount","name":"amount","variant":"caption"},{"name":"currency","label":"Currency","variant":"badge"},{"variant":"badge","label":"Status","name":"status"},{"name":"bankAccountMasked","variant":"caption","label":"Bank"},{"name":"requestedAt","variant":"caption","label":"Requested"}]` */
+  fields?: EntityRow[];
+  /** Default: `"Payouts"` */
+  title?: string;
+  /** Default: `[{"event":"OPEN_PAYOUT","variant":"primary","icon":"arrow-right","label":"Open"},{"label":"Withdraw","event":"REQUEST_WITHDRAW","variant":"danger"}]` */
   itemActions?: EntityRow[];
 }
 

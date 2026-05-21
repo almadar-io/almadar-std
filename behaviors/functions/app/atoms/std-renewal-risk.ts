@@ -89,11 +89,11 @@ export interface StdRenewalRiskRenewalRiskLoadFailedPayload {
  * without modifying its state-machine topology.
  */
 export interface StdRenewalRiskConfig {
-  /** Default: `[{"name":"customerName","variant":"caption","label":"Customer"},{"name":"renewalDate","variant":"caption","label":"Renewal"},{"variant":"caption","label":"ARR","name":"arrAmount"},{"label":"Risk","variant":"badge","name":"riskLevel"},{"name":"status","variant":"badge","label":"Status"},{"name":"assignedCsm","variant":"caption","label":"CSM"}]` */
+  /** Default: `[{"label":"Customer","name":"customerName","variant":"caption"},{"label":"Renewal","variant":"caption","name":"renewalDate"},{"name":"arrAmount","variant":"caption","label":"ARR"},{"label":"Risk","variant":"badge","name":"riskLevel"},{"label":"Status","name":"status","variant":"badge"},{"name":"assignedCsm","label":"CSM","variant":"caption"}]` */
   fields?: EntityRow[];
   /** Default: `"Renewal Risk"` */
   title?: string;
-  /** Default: `[{"event":"OPEN_RISK","variant":"primary","icon":"arrow-right","label":"Open"},{"variant":"danger","label":"Mark Churned","event":"MARK_CHURNED"}]` */
+  /** Default: `[{"icon":"arrow-right","event":"OPEN_RISK","label":"Open","variant":"primary"},{"label":"Mark Churned","event":"MARK_CHURNED","variant":"danger"}]` */
   itemActions?: EntityRow[];
 }
 

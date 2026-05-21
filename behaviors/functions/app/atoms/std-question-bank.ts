@@ -84,12 +84,12 @@ export interface StdQuestionBankQuestionLoadFailedPayload {
  * without modifying its state-machine topology.
  */
 export interface StdQuestionBankConfig {
-  /** Default: `[{"event":"OPEN_QUESTION","label":"Open","icon":"arrow-right","variant":"primary"},{"event":"DELETE_QUESTION","label":"Delete","variant":"danger"}]` */
+  /** Default: `[{"label":"Open","icon":"arrow-right","variant":"primary","event":"OPEN_QUESTION"},{"variant":"danger","event":"DELETE_QUESTION","label":"Delete"}]` */
   itemActions?: EntityRow[];
+  /** Default: `[{"name":"label","label":"Question","variant":"caption"},{"label":"Type","name":"kind","variant":"badge"},{"name":"category","label":"Category","variant":"caption"},{"label":"Survey","name":"surveyId","variant":"caption"},{"label":"Order","name":"order","variant":"caption"}]` */
+  fields?: EntityRow[];
   /** Default: `"Question Bank"` */
   title?: string;
-  /** Default: `[{"name":"label","variant":"caption","label":"Question"},{"variant":"badge","label":"Type","name":"kind"},{"label":"Category","variant":"caption","name":"category"},{"variant":"caption","name":"surveyId","label":"Survey"},{"variant":"caption","name":"order","label":"Order"}]` */
-  fields?: EntityRow[];
 }
 
 /**

@@ -108,12 +108,12 @@ export interface StdApplicantApplicantLoadFailedPayload {
  * without modifying its state-machine topology.
  */
 export interface StdApplicantConfig {
-  /** Default: `[{"name":"name","variant":"caption","label":"Name"},{"label":"Email","variant":"caption","name":"email"},{"variant":"caption","name":"jobId","label":"Job"},{"label":"Stage","name":"stage","variant":"badge"},{"label":"Applied","name":"appliedAt","variant":"caption"}]` */
-  fields?: EntityRow[];
-  /** Default: `[{"label":"Open","event":"OPEN_APPLICANT","variant":"primary","icon":"arrow-right"},{"variant":"danger","event":"REJECT_APPLICANT","label":"Reject"}]` */
+  /** Default: `[{"icon":"arrow-right","variant":"primary","label":"Open","event":"OPEN_APPLICANT"},{"event":"REJECT_APPLICANT","label":"Reject","variant":"danger"}]` */
   itemActions?: EntityRow[];
   /** Default: `"Applicants"` */
   title?: string;
+  /** Default: `[{"name":"name","label":"Name","variant":"caption"},{"name":"email","variant":"caption","label":"Email"},{"name":"jobId","variant":"caption","label":"Job"},{"name":"stage","variant":"badge","label":"Stage"},{"variant":"caption","name":"appliedAt","label":"Applied"}]` */
+  fields?: EntityRow[];
 }
 
 /**

@@ -31,8 +31,8 @@ const ALIAS = 'CustomerSuccess';
  * without modifying its state-machine topology.
  */
 export interface StdCustomerSuccessConfig {
-  notifications?: TraitConfig;
   navItems?: TraitConfig;
+  notifications?: TraitConfig;
 }
 
 /**
@@ -209,37 +209,37 @@ export function stdCustomerSuccessCustomerAccountOrbital(params: StdCustomerSucc
         'ref': 'AppShell.traits.AppLayout',
         'name': 'CsAccountAppLayout',
         'config': {
-          'notifications': [],
           'navItems': [
             {
+              'icon': 'users',
               'href': '/cs-accounts',
               'label': 'Accounts',
-              'icon': 'users',
             },
             {
-              'label': 'Health Scores',
               'href': '/health-scores',
               'icon': 'activity',
+              'label': 'Health Scores',
             },
             {
               'label': 'NPS',
-              'href': '/nps-surveys',
               'icon': 'message-square',
+              'href': '/nps-surveys',
             },
             {
+              'icon': 'alert-triangle',
               'label': 'Renewal Risks',
               'href': '/renewal-risks',
-              'icon': 'alert-triangle',
             },
           ],
           'contentTrait': '@trait.CsAccountCatalog',
+          'appName': 'Customer Success',
+          'notifications': [],
           'searchEvent': 'CS_ACCOUNT_SEARCH',
           'notificationClickEvent': 'CS_ACCOUNT_NOTIFICATIONS_OPEN',
-          'appName': 'Customer Success',
         },
         'events': {
-          'NOTIFY_CLICK': 'CS_ACCOUNT_NOTIFICATIONS_OPEN',
           'SEARCH': 'CS_ACCOUNT_SEARCH',
+          'NOTIFY_CLICK': 'CS_ACCOUNT_NOTIFICATIONS_OPEN',
         },
       }),
       rebindInlineTraitEntity({
@@ -322,15 +322,18 @@ export function stdCustomerSuccessCustomerAccountOrbital(params: StdCustomerSucc
                   'render-ui',
                   'main',
                   {
+                    'gap': 'lg',
+                    'type': 'stack',
+                    'direction': 'vertical',
                     'children': [
                       {
+                        'gap': 'md',
+                        'align': 'center',
                         'direction': 'horizontal',
+                        'type': 'stack',
+                        'justify': 'between',
                         'children': [
                           {
-                            'gap': 'sm',
-                            'type': 'stack',
-                            'direction': 'horizontal',
-                            'align': 'center',
                             'children': [
                               {
                                 'name': 'users',
@@ -338,43 +341,43 @@ export function stdCustomerSuccessCustomerAccountOrbital(params: StdCustomerSucc
                               },
                               {
                                 'content': 'Accounts',
-                                'type': 'typography',
                                 'variant': 'h2',
+                                'type': 'typography',
                               },
                             ],
+                            'gap': 'sm',
+                            'type': 'stack',
+                            'direction': 'horizontal',
+                            'align': 'center',
                           },
                           {
-                            'type': 'stack',
                             'children': [
                               {
                                 'action': 'CREATE',
                                 'variant': 'primary',
-                                'label': 'New Account',
-                                'type': 'button',
                                 'icon': 'plus',
+                                'type': 'button',
+                                'label': 'New Account',
                               },
                             ],
                             'direction': 'horizontal',
                             'gap': 'sm',
+                            'type': 'stack',
                           },
                         ],
-                        'gap': 'md',
-                        'type': 'stack',
-                        'justify': 'between',
-                        'align': 'center',
                       },
                       {
                         'type': 'divider',
                       },
                       {
-                        'direction': 'horizontal',
+                        'align': 'center',
                         'children': [
                           '@trait.CsAccountSearch',
                           '@trait.CsAccountFilter',
                         ],
                         'type': 'stack',
                         'gap': 'md',
-                        'align': 'center',
+                        'direction': 'horizontal',
                       },
                       '@trait.CsAccountStats',
                       '@trait.CsAccountGraphs',
@@ -383,9 +386,6 @@ export function stdCustomerSuccessCustomerAccountOrbital(params: StdCustomerSucc
                       },
                       '@trait.CsAccountBrowseList',
                     ],
-                    'type': 'stack',
-                    'gap': 'lg',
-                    'direction': 'vertical',
                   },
                 ],
               ],
@@ -404,9 +404,9 @@ export function stdCustomerSuccessCustomerAccountOrbital(params: StdCustomerSucc
                   'render-ui',
                   'main',
                   {
+                    'type': 'stack',
                     'gap': 'md',
                     'direction': 'vertical',
-                    'type': 'stack',
                     'align': 'center',
                     'className': 'py-8',
                     'children': [
@@ -415,21 +415,21 @@ export function stdCustomerSuccessCustomerAccountOrbital(params: StdCustomerSucc
                         'name': 'bell',
                       },
                       {
-                        'type': 'typography',
-                        'content': 'No notifications',
                         'variant': 'h3',
+                        'content': 'No notifications',
+                        'type': 'typography',
                       },
                       {
-                        'content': 'You\'re all caught up.',
-                        'color': 'muted',
                         'type': 'typography',
                         'variant': 'caption',
+                        'color': 'muted',
+                        'content': 'You\'re all caught up.',
                       },
                       {
-                        'action': 'INIT',
                         'label': 'Back to accounts',
-                        'variant': 'ghost',
                         'type': 'button',
+                        'action': 'INIT',
+                        'variant': 'ghost',
                       },
                     ],
                   },
@@ -444,8 +444,8 @@ export function stdCustomerSuccessCustomerAccountOrbital(params: StdCustomerSucc
         'ref': 'Search.traits.SearchResultSearch',
         'name': 'CsAccountSearch',
         'config': {
-          'event': 'CS_ACCOUNT_SEARCH',
           'placeholder': 'Search accounts…',
+          'event': 'CS_ACCOUNT_SEARCH',
         },
       }),
       makeTraitRef({
@@ -455,17 +455,18 @@ export function stdCustomerSuccessCustomerAccountOrbital(params: StdCustomerSucc
           'event': 'CS_ACCOUNT_FILTER',
           'filters': [
             {
-              'filterType': 'select',
-              'field': 'plan',
+              'label': 'Plan',
               'options': [
                 'trial',
                 'starter',
                 'growth',
                 'enterprise',
               ],
-              'label': 'Plan',
+              'field': 'plan',
+              'filterType': 'select',
             },
             {
+              'label': 'Status',
               'options': [
                 'onboarding',
                 'healthy',
@@ -473,9 +474,8 @@ export function stdCustomerSuccessCustomerAccountOrbital(params: StdCustomerSucc
                 'churned',
                 'renewed',
               ],
-              'field': 'status',
               'filterType': 'select',
-              'label': 'Status',
+              'field': 'status',
             },
           ],
         },
@@ -484,17 +484,21 @@ export function stdCustomerSuccessCustomerAccountOrbital(params: StdCustomerSucc
         'ref': 'Stats.traits.StatsItemStats',
         'name': 'CsAccountStats',
         'config': {
+          'title': 'Customer Success',
           'metrics': [
             {
-              'format': 'number',
+              'label': 'Total',
               'icon': 'users',
               'variant': 'primary',
+              'format': 'number',
               'aggregation': 'count',
-              'label': 'Total',
             },
             {
               'aggregation': 'count',
+              'label': 'Healthy',
               'icon': 'check-circle',
+              'format': 'number',
+              'variant': 'success',
               'filter': [
                 'fn',
                 'row',
@@ -504,13 +508,11 @@ export function stdCustomerSuccessCustomerAccountOrbital(params: StdCustomerSucc
                   'healthy',
                 ],
               ],
-              'label': 'Healthy',
-              'variant': 'success',
-              'format': 'number',
             },
             {
-              'variant': 'warning',
+              'format': 'number',
               'label': 'At Risk',
+              'icon': 'alert-triangle',
               'filter': [
                 'fn',
                 'row',
@@ -521,19 +523,17 @@ export function stdCustomerSuccessCustomerAccountOrbital(params: StdCustomerSucc
                 ],
               ],
               'aggregation': 'count',
-              'icon': 'alert-triangle',
-              'format': 'number',
+              'variant': 'warning',
             },
             {
-              'label': 'Total ARR',
-              'icon': 'dollar-sign',
               'aggregation': 'sum',
-              'field': 'arrAmount',
+              'label': 'Total ARR',
               'format': 'number',
+              'field': 'arrAmount',
+              'icon': 'dollar-sign',
               'variant': 'info',
             },
           ],
-          'title': 'Customer Success',
         },
         'listens': [
           {
@@ -551,11 +551,11 @@ export function stdCustomerSuccessCustomerAccountOrbital(params: StdCustomerSucc
         'name': 'CsAccountGraphs',
         'config': {
           'title': 'Accounts by Plan',
-          'subtitle': 'Portfolio composition across subscription plans',
           'categoryField': 'plan',
+          'chartType': 'bar',
           'aggregation': 'count',
           'height': 240,
-          'chartType': 'bar',
+          'subtitle': 'Portfolio composition across subscription plans',
           'showLegend': false,
         },
         'listens': [
@@ -574,11 +574,29 @@ export function stdCustomerSuccessCustomerAccountOrbital(params: StdCustomerSucc
         'name': 'CsAccountBrowseList',
         'linkedEntity': canonicalName,
         'config': {
+          'itemActions': [
+            {
+              'variant': 'ghost',
+              'label': 'View',
+              'event': 'VIEW',
+            },
+            {
+              'event': 'EDIT',
+              'variant': 'ghost',
+              'label': 'Edit',
+            },
+            {
+              'event': 'DELETE',
+              'variant': 'danger',
+              'label': 'Delete',
+            },
+          ],
+          'cols': 1,
           'fields': [
             {
               'icon': 'users',
-              'name': 'name',
               'variant': 'h3',
+              'name': 'name',
             },
             {
               'name': 'plan',
@@ -589,37 +607,19 @@ export function stdCustomerSuccessCustomerAccountOrbital(params: StdCustomerSucc
               'name': 'status',
             },
             {
-              'variant': 'caption',
               'name': 'csm',
+              'variant': 'caption',
             },
             {
-              'variant': 'caption',
               'name': 'arrAmount',
-            },
-            {
-              'name': 'renewalDate',
               'variant': 'caption',
             },
-          ],
-          'itemActions': [
             {
-              'label': 'View',
-              'event': 'VIEW',
-              'variant': 'ghost',
-            },
-            {
-              'variant': 'ghost',
-              'label': 'Edit',
-              'event': 'EDIT',
-            },
-            {
-              'label': 'Delete',
-              'event': 'DELETE',
-              'variant': 'danger',
+              'variant': 'caption',
+              'name': 'renewalDate',
             },
           ],
           'gap': 'sm',
-          'cols': 1,
         },
         'listens': [
           {
@@ -669,6 +669,7 @@ export function stdCustomerSuccessCustomerAccountOrbital(params: StdCustomerSucc
         'name': 'CsAccountCreate',
         'linkedEntity': canonicalName,
         'config': {
+          'icon': 'plus-circle',
           'fields': [
             'name',
             'plan',
@@ -678,9 +679,8 @@ export function stdCustomerSuccessCustomerAccountOrbital(params: StdCustomerSucc
             'renewalDate',
             'signedAt',
           ],
-          'title': 'New Account',
-          'icon': 'plus-circle',
           'mode': 'create',
+          'title': 'New Account',
         },
         'events': {
           'OPEN': 'CREATE',
@@ -701,6 +701,7 @@ export function stdCustomerSuccessCustomerAccountOrbital(params: StdCustomerSucc
         'name': 'CsAccountEdit',
         'linkedEntity': canonicalName,
         'config': {
+          'mode': 'edit',
           'icon': 'edit',
           'fields': [
             'name',
@@ -711,7 +712,6 @@ export function stdCustomerSuccessCustomerAccountOrbital(params: StdCustomerSucc
             'renewalDate',
             'signedAt',
           ],
-          'mode': 'edit',
           'title': 'Edit Account',
         },
         'events': {
@@ -733,8 +733,6 @@ export function stdCustomerSuccessCustomerAccountOrbital(params: StdCustomerSucc
         'name': 'CsAccountView',
         'linkedEntity': canonicalName,
         'config': {
-          'mode': 'edit',
-          'icon': 'eye',
           'fields': [
             'name',
             'plan',
@@ -744,7 +742,9 @@ export function stdCustomerSuccessCustomerAccountOrbital(params: StdCustomerSucc
             'renewalDate',
             'signedAt',
           ],
+          'mode': 'edit',
           'title': 'View Account',
+          'icon': 'eye',
         },
         'events': {
           'OPEN': 'VIEW',
@@ -766,13 +766,13 @@ export function stdCustomerSuccessCustomerAccountOrbital(params: StdCustomerSucc
         'linkedEntity': canonicalName,
         'config': {
           'title': 'Delete Account',
-          'alertMessage': 'This action cannot be undone.',
-          'confirmLabel': 'Delete',
           'icon': 'alert-triangle',
+          'confirmLabel': 'Delete',
+          'alertMessage': 'This action cannot be undone.',
         },
         'events': {
-          'CONFIRM': 'CONFIRM_DELETE',
           'REQUEST': 'DELETE',
+          'CONFIRM': 'CONFIRM_DELETE',
         },
         'listens': [
           {

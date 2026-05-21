@@ -86,12 +86,12 @@ export interface StdOfferLetterOfferLetterLoadFailedPayload {
  * without modifying its state-machine topology.
  */
 export interface StdOfferLetterConfig {
-  /** Default: `[{"label":"Open","variant":"primary","event":"OPEN_OFFER","icon":"arrow-right"},{"label":"Revoke","event":"REVOKE_OFFER","variant":"danger"}]` */
+  /** Default: `[{"icon":"arrow-right","event":"OPEN_OFFER","label":"Open","variant":"primary"},{"label":"Revoke","event":"REVOKE_OFFER","variant":"danger"}]` */
   itemActions?: EntityRow[];
+  /** Default: `[{"name":"applicantName","variant":"caption","label":"Applicant"},{"variant":"caption","name":"position","label":"Position"},{"label":"Salary","name":"salary","variant":"caption"},{"name":"startDate","label":"Start Date","variant":"caption"},{"name":"status","variant":"badge","label":"Status"}]` */
+  fields?: EntityRow[];
   /** Default: `"Offer Letters"` */
   title?: string;
-  /** Default: `[{"name":"applicantName","variant":"caption","label":"Applicant"},{"variant":"caption","name":"position","label":"Position"},{"label":"Salary","variant":"caption","name":"salary"},{"label":"Start Date","variant":"caption","name":"startDate"},{"name":"status","label":"Status","variant":"badge"}]` */
-  fields?: EntityRow[];
 }
 
 /**
