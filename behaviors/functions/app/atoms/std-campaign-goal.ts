@@ -86,12 +86,12 @@ export interface StdCampaignGoalCampaignGoalLoadFailedPayload {
  * without modifying its state-machine topology.
  */
 export interface StdCampaignGoalConfig {
-  /** Default: `[{"label":"Open","variant":"primary","icon":"arrow-right","event":"OPEN_CAMPAIGN"},{"variant":"danger","label":"End","event":"END_CAMPAIGN"}]` */
-  itemActions?: EntityRow[];
+  /** Default: `[{"variant":"caption","name":"name","label":"Name"},{"variant":"caption","name":"targetAmount","label":"Target"},{"label":"Raised","name":"raisedAmount","variant":"caption"},{"variant":"caption","name":"donorCount","label":"Donors"},{"variant":"badge","name":"status","label":"Status"}]` */
+  fields?: EntityRow[];
   /** Default: `"Campaigns"` */
   title?: string;
-  /** Default: `[{"name":"name","label":"Name","variant":"caption"},{"label":"Target","name":"targetAmount","variant":"caption"},{"name":"raisedAmount","label":"Raised","variant":"caption"},{"label":"Donors","variant":"caption","name":"donorCount"},{"label":"Status","name":"status","variant":"badge"}]` */
-  fields?: EntityRow[];
+  /** Default: `[{"label":"Open","icon":"arrow-right","variant":"primary","event":"OPEN_CAMPAIGN"},{"event":"END_CAMPAIGN","label":"End","variant":"danger"}]` */
+  itemActions?: EntityRow[];
 }
 
 /**

@@ -174,12 +174,12 @@
                       "create",
                       "NotificationRecord",
                       {
-                        "dispatched": false,
-                        "severity": "@config.severity",
-                        "recordedAt": 0.0,
-                        "channel": "@config.notifyChannel",
+                        "recipient": "@user.id",
                         "message": "@config.template",
-                        "recipient": "@user.id"
+                        "dispatched": false,
+                        "channel": "@config.notifyChannel",
+                        "severity": "@config.severity",
+                        "recordedAt": 0.0
                       }
                     ]
                   ],
@@ -187,9 +187,9 @@
                     "emit",
                     "NotificationDispatched",
                     {
-                      "recipient": "@user.id",
                       "channel": "@config.notifyChannel",
                       "message": "@config.template",
+                      "recipient": "@user.id",
                       "severity": "@config.severity"
                     }
                   ]
@@ -198,11 +198,26 @@
             ]
           },
           "config": {
+            "notifyChannel": {
+              "type": "string",
+              "default": "in-app",
+              "label": "Channel",
+              "description": "Delivery channel: in-app, email, or sms",
+              "tier": "customization"
+            },
+            "severity": {
+              "type": "string",
+              "default": "info",
+              "label": "Severity",
+              "description": "info, success, warning, or error — controls styling",
+              "tier": "customization"
+            },
             "listensFor": {
               "type": "[string]",
               "default": [],
               "label": "Trigger events",
               "description": "Event names that should fire a notification",
+              "tier": "essential",
               "items": {
                 "type": "string"
               }
@@ -211,19 +226,8 @@
               "type": "string",
               "default": "",
               "label": "Message template",
-              "description": "Text shown to the recipient; supports payload interpolation"
-            },
-            "notifyChannel": {
-              "type": "string",
-              "default": "in-app",
-              "label": "Channel",
-              "description": "Delivery channel: in-app, email, or sms"
-            },
-            "severity": {
-              "type": "string",
-              "default": "info",
-              "label": "Severity",
-              "description": "info, success, warning, or error — controls styling"
+              "description": "Text shown to the recipient; supports payload interpolation",
+              "tier": "essential"
             }
           },
           "scope": "instance"

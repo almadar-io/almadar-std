@@ -88,12 +88,12 @@ export interface StdDonationReceiptDonationReceiptLoadFailedPayload {
  * without modifying its state-machine topology.
  */
 export interface StdDonationReceiptConfig {
-  /** Default: `[{"label":"Receipt #","variant":"caption","name":"receiptNumber"},{"label":"Donor","variant":"caption","name":"donorName"},{"variant":"caption","name":"amount","label":"Amount"},{"variant":"caption","name":"donationDate","label":"Date"},{"name":"taxYear","label":"Tax Year","variant":"caption"},{"variant":"badge","name":"isEmailed","label":"Emailed"}]` */
-  fields?: EntityRow[];
+  /** Default: `[{"variant":"primary","label":"Open","event":"OPEN_RECEIPT","icon":"arrow-right"},{"event":"VOID_RECEIPT","label":"Void","variant":"danger"}]` */
+  itemActions?: EntityRow[];
   /** Default: `"Donation Receipts"` */
   title?: string;
-  /** Default: `[{"label":"Open","icon":"arrow-right","event":"OPEN_RECEIPT","variant":"primary"},{"event":"VOID_RECEIPT","variant":"danger","label":"Void"}]` */
-  itemActions?: EntityRow[];
+  /** Default: `[{"label":"Receipt #","variant":"caption","name":"receiptNumber"},{"name":"donorName","label":"Donor","variant":"caption"},{"name":"amount","label":"Amount","variant":"caption"},{"variant":"caption","name":"donationDate","label":"Date"},{"label":"Tax Year","variant":"caption","name":"taxYear"},{"variant":"badge","name":"isEmailed","label":"Emailed"}]` */
+  fields?: EntityRow[];
 }
 
 /**

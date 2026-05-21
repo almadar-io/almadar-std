@@ -157,12 +157,12 @@ export interface StdModifierGroupModifierGroupWriteFailedPayload {
  * without modifying its state-machine topology.
  */
 export interface StdModifierGroupConfig {
-  /** Default: `[{"label":"Open","variant":"primary","event":"OPEN_GROUP","icon":"arrow-right"},{"icon":"trash","variant":"danger","event":"DELETE","label":"Delete"}]` */
-  itemActions?: EntityRow[];
+  /** Default: `[{"variant":"caption","name":"name","label":"Group"},{"variant":"badge","label":"Constraint","name":"constraintType"},{"variant":"badge","name":"required","label":"Required"},{"label":"Min","variant":"caption","name":"minSelect"},{"name":"maxSelect","label":"Max","variant":"caption"}]` */
+  fields?: EntityRow[];
   /** Default: `"Modifier Groups"` */
   title?: string;
-  /** Default: `[{"name":"name","label":"Group","variant":"caption"},{"variant":"badge","label":"Constraint","name":"constraintType"},{"name":"required","label":"Required","variant":"badge"},{"label":"Min","variant":"caption","name":"minSelect"},{"label":"Max","variant":"caption","name":"maxSelect"}]` */
-  fields?: EntityRow[];
+  /** Default: `[{"event":"OPEN_GROUP","icon":"arrow-right","variant":"primary","label":"Open"},{"event":"DELETE","label":"Delete","icon":"trash","variant":"danger"}]` */
+  itemActions?: EntityRow[];
 }
 
 /**

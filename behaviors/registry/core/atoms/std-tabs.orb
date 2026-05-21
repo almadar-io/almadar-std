@@ -26,28 +26,28 @@
             "items": {
               "type": "object",
               "properties": {
-                "content": {
-                  "name": "content",
-                  "type": "trait",
-                  "required": false
+                "id": {
+                  "name": "id",
+                  "type": "string",
+                  "required": true
                 },
                 "label": {
                   "name": "label",
                   "type": "string",
                   "required": true
                 },
-                "icon": {
-                  "name": "icon",
+                "badge": {
+                  "name": "badge",
                   "type": "string",
                   "required": false
                 },
-                "id": {
-                  "name": "id",
-                  "type": "string",
-                  "required": true
+                "content": {
+                  "name": "content",
+                  "type": "trait",
+                  "required": false
                 },
-                "badge": {
-                  "name": "badge",
+                "icon": {
+                  "name": "icon",
                   "type": "string",
                   "required": false
                 }
@@ -118,12 +118,12 @@
                     "render-ui",
                     "main",
                     {
-                      "items": "@entity.items",
-                      "orientation": "@config.orientation",
                       "type": "tabs",
+                      "activeTab": "@entity.activeTab",
                       "variant": "@config.variant",
-                      "tabChangeEvent": "TAB_CHANGED",
-                      "activeTab": "@entity.activeTab"
+                      "orientation": "@config.orientation",
+                      "items": "@entity.items",
+                      "tabChangeEvent": "TAB_CHANGED"
                     }
                   ]
                 ]
@@ -147,12 +147,12 @@
                     "render-ui",
                     "main",
                     {
+                      "items": "@entity.items",
                       "activeTab": "@entity.activeTab",
-                      "variant": "@config.variant",
+                      "orientation": "@config.orientation",
                       "tabChangeEvent": "TAB_CHANGED",
                       "type": "tabs",
-                      "orientation": "@config.orientation",
-                      "items": "@entity.items"
+                      "variant": "@config.variant"
                     }
                   ]
                 ]
@@ -160,84 +160,88 @@
             ]
           },
           "config": {
-            "defaultTab": {
-              "type": "string",
-              "default": "overview",
-              "label": "Default tab",
-              "description": "Tab id selected on first render"
-            },
-            "orientation": {
-              "type": "string",
-              "default": "horizontal",
-              "label": "Orientation",
-              "description": "Horizontal strip or vertical rail layout",
-              "values": [
-                "horizontal",
-                "vertical"
-              ]
-            },
-            "variant": {
-              "type": "string",
-              "default": "default",
-              "label": "Tab style",
-              "description": "Visual style of the tab strip",
-              "values": [
-                "default",
-                "pills",
-                "underline"
-              ]
-            },
             "tabs": {
               "type": "[TabSpec]",
               "default": [
                 {
+                  "icon": "info",
                   "id": "overview",
-                  "label": "Overview",
-                  "icon": "info"
+                  "label": "Overview"
                 },
                 {
-                  "id": "details",
                   "label": "Details",
+                  "id": "details",
                   "icon": "list"
                 },
                 {
                   "label": "Settings",
-                  "id": "settings",
-                  "icon": "settings"
+                  "icon": "settings",
+                  "id": "settings"
                 }
               ],
               "label": "Tabs",
               "description": "Tab entries with id, label, icon, badge, and optional content trait",
+              "tier": "essential",
               "items": {
                 "type": "object",
                 "properties": {
-                  "label": {
-                    "name": "label",
+                  "id": {
+                    "name": "id",
                     "type": "string",
                     "required": true
-                  },
-                  "icon": {
-                    "name": "icon",
-                    "type": "string",
-                    "required": false
                   },
                   "content": {
                     "name": "content",
                     "type": "trait",
                     "required": false
                   },
-                  "id": {
-                    "name": "id",
+                  "icon": {
+                    "name": "icon",
                     "type": "string",
-                    "required": true
+                    "required": false
                   },
                   "badge": {
                     "name": "badge",
                     "type": "string",
                     "required": false
+                  },
+                  "label": {
+                    "name": "label",
+                    "type": "string",
+                    "required": true
                   }
                 }
               }
+            },
+            "orientation": {
+              "type": "string",
+              "default": "horizontal",
+              "label": "Orientation",
+              "description": "Horizontal strip or vertical rail layout",
+              "tier": "customization",
+              "values": [
+                "horizontal",
+                "vertical"
+              ]
+            },
+            "defaultTab": {
+              "type": "string",
+              "default": "overview",
+              "label": "Default tab",
+              "description": "Tab id selected on first render",
+              "tier": "customization"
+            },
+            "variant": {
+              "type": "string",
+              "default": "default",
+              "label": "Tab style",
+              "description": "Visual style of the tab strip",
+              "tier": "customization",
+              "values": [
+                "default",
+                "pills",
+                "underline"
+              ]
             }
           },
           "scope": "instance"

@@ -89,12 +89,12 @@ export interface StdRenewalRiskRenewalRiskLoadFailedPayload {
  * without modifying its state-machine topology.
  */
 export interface StdRenewalRiskConfig {
-  /** Default: `[{"label":"Customer","name":"customerName","variant":"caption"},{"label":"Renewal","variant":"caption","name":"renewalDate"},{"name":"arrAmount","variant":"caption","label":"ARR"},{"label":"Risk","variant":"badge","name":"riskLevel"},{"label":"Status","name":"status","variant":"badge"},{"name":"assignedCsm","label":"CSM","variant":"caption"}]` */
+  /** Default: `[{"label":"Customer","variant":"caption","name":"customerName"},{"name":"renewalDate","label":"Renewal","variant":"caption"},{"variant":"caption","label":"ARR","name":"arrAmount"},{"label":"Risk","name":"riskLevel","variant":"badge"},{"name":"status","label":"Status","variant":"badge"},{"name":"assignedCsm","label":"CSM","variant":"caption"}]` */
   fields?: EntityRow[];
+  /** Default: `[{"variant":"primary","event":"OPEN_RISK","label":"Open","icon":"arrow-right"},{"label":"Mark Churned","event":"MARK_CHURNED","variant":"danger"}]` */
+  itemActions?: EntityRow[];
   /** Default: `"Renewal Risk"` */
   title?: string;
-  /** Default: `[{"icon":"arrow-right","event":"OPEN_RISK","label":"Open","variant":"primary"},{"label":"Mark Churned","event":"MARK_CHURNED","variant":"danger"}]` */
-  itemActions?: EntityRow[];
 }
 
 /**

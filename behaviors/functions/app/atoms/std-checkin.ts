@@ -89,12 +89,12 @@ export interface StdCheckinCheckinLoadFailedPayload {
 export interface StdCheckinConfig {
   /** Default: `"Check-ins"` */
   title?: string;
-  /** Default: `[{"label":"Type","variant":"badge","name":"targetType"},{"name":"targetId","variant":"caption","label":"Target"},{"variant":"caption","name":"userId","label":"User"},{"label":"Mode","name":"mode","variant":"badge"},{"variant":"caption","label":"When","name":"checkedInAt"}]` */
-  fields?: EntityRow[];
   /** Default: `"geo"` */
   mode?: string;
-  /** Default: `[{"event":"OPEN_CHECKIN","icon":"arrow-right","label":"Open","variant":"primary"},{"variant":"danger","label":"Revoke","event":"REVOKE_CHECKIN"}]` */
+  /** Default: `[{"label":"Open","event":"OPEN_CHECKIN","variant":"primary","icon":"arrow-right"},{"label":"Revoke","variant":"danger","event":"REVOKE_CHECKIN"}]` */
   itemActions?: EntityRow[];
+  /** Default: `[{"label":"Type","variant":"badge","name":"targetType"},{"variant":"caption","label":"Target","name":"targetId"},{"name":"userId","label":"User","variant":"caption"},{"variant":"badge","name":"mode","label":"Mode"},{"label":"When","name":"checkedInAt","variant":"caption"}]` */
+  fields?: EntityRow[];
 }
 
 /**

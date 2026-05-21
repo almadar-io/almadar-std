@@ -76,12 +76,12 @@ export interface StdSegmentSegmentLoadFailedPayload {
  * without modifying its state-machine topology.
  */
 export interface StdSegmentConfig {
+  /** Default: `[{"icon":"arrow-right","label":"Open","event":"OPEN_SEGMENT","variant":"primary"},{"event":"RECALCULATE","variant":"danger","label":"Recalculate"}]` */
+  itemActions?: EntityRow[];
   /** Default: `"Segments"` */
   title?: string;
-  /** Default: `[{"name":"name","variant":"caption","label":"Name"},{"label":"Description","variant":"caption","name":"description"},{"variant":"badge","name":"memberCount","label":"Members"},{"variant":"caption","name":"lastUpdated","label":"Updated"}]` */
+  /** Default: `[{"variant":"caption","name":"name","label":"Name"},{"variant":"caption","label":"Description","name":"description"},{"name":"memberCount","label":"Members","variant":"badge"},{"name":"lastUpdated","label":"Updated","variant":"caption"}]` */
   fields?: EntityRow[];
-  /** Default: `[{"label":"Open","icon":"arrow-right","event":"OPEN_SEGMENT","variant":"primary"},{"event":"RECALCULATE","label":"Recalculate","variant":"danger"}]` */
-  itemActions?: EntityRow[];
 }
 
 /**

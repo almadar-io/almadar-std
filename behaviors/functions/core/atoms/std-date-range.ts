@@ -47,14 +47,14 @@ export interface StdDateRangeDateRangeChangedPayload {
  * without modifying its state-machine topology.
  */
 export interface StdDateRangeConfig {
-  /** Default: `"From"` */
-  fromLabel?: string;
   /** Default: `"DATE_RANGE_CHANGED"` */
   event?: string;
-  /** Default: `"Date range"` */
-  buttonLabel?: string;
+  /** Default: `"From"` */
+  fromLabel?: string;
   /** Default: `"To"` */
   toLabel?: string;
+  /** Default: `"Date range"` */
+  buttonLabel?: string;
 }
 
 /**

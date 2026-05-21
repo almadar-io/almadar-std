@@ -53,7 +53,7 @@ export interface StdExportConfig {
   event?: string;
   /** Default: `"Export"` */
   buttonLabel?: string;
-  /** Default: `[{"label":"CSV","format":"csv","id":"csv"},{"format":"xlsx","id":"xlsx","label":"XLSX"},{"label":"PDF","id":"pdf","format":"pdf"}]` */
+  /** Default: `[{"label":"CSV","id":"csv","format":"csv"},{"label":"XLSX","id":"xlsx","format":"xlsx"},{"id":"pdf","format":"pdf","label":"PDF"}]` */
   formats?: EntityRow[];
 }
 

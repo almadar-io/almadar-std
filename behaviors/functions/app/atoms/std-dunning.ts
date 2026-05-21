@@ -96,12 +96,12 @@ export interface StdDunningDunningCaseLoadFailedPayload {
  * without modifying its state-machine topology.
  */
 export interface StdDunningConfig {
-  /** Default: `[{"label":"Subscription","name":"subscriptionId","variant":"caption"},{"label":"Customer","name":"customerId","variant":"caption"},{"name":"severity","variant":"badge","label":"Severity"},{"name":"attemptNumber","label":"Attempt","variant":"caption"},{"name":"amountDue","label":"Amount Due","variant":"caption"},{"label":"Status","variant":"badge","name":"status"}]` */
-  fields?: EntityRow[];
-  /** Default: `[{"icon":"arrow-right","variant":"primary","label":"Open","event":"OPEN_CASE"},{"event":"SUSPEND","variant":"danger","icon":"ban","label":"Suspend"}]` */
-  itemActions?: EntityRow[];
   /** Default: `"Dunning Cases"` */
   title?: string;
+  /** Default: `[{"label":"Subscription","name":"subscriptionId","variant":"caption"},{"name":"customerId","label":"Customer","variant":"caption"},{"label":"Severity","variant":"badge","name":"severity"},{"label":"Attempt","name":"attemptNumber","variant":"caption"},{"name":"amountDue","label":"Amount Due","variant":"caption"},{"name":"status","label":"Status","variant":"badge"}]` */
+  fields?: EntityRow[];
+  /** Default: `[{"icon":"arrow-right","label":"Open","variant":"primary","event":"OPEN_CASE"},{"event":"SUSPEND","variant":"danger","icon":"ban","label":"Suspend"}]` */
+  itemActions?: EntityRow[];
 }
 
 /**

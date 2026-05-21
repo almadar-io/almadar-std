@@ -40,23 +40,23 @@ export type StdScatterEventKey = 'INIT' | 'ITEMS_LOADED';
  */
 export interface StdScatterConfig {
   /** Default: `""` */
-  drillEvent?: string;
-  /** Default: `"y"` */
-  yField?: string;
+  colorField?: string;
   /** Default: `280` */
   height?: number;
+  /** Default: `""` */
+  drillEvent?: string;
   /** Default: `"x"` */
   xField?: string;
-  /** Default: `""` */
-  sizeField?: string;
-  /** Default: `""` */
-  colorField?: string;
   /** Default: `"Correlation"` */
   title?: string;
-  /** Default: `""` */
-  labelField?: string;
   /** Default: `"x vs y"` */
   subtitle?: string;
+  /** Default: `"y"` */
+  yField?: string;
+  /** Default: `""` */
+  labelField?: string;
+  /** Default: `""` */
+  sizeField?: string;
 }
 
 /**

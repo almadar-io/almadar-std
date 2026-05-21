@@ -141,11 +141,11 @@ export interface StdTechnicianDispatchAssignmentRejectedPayload {
  * without modifying its state-machine topology.
  */
 export interface StdTechnicianDispatchConfig {
-  /** Default: `[{"variant":"primary","label":"Open","event":"OPEN_TECHNICIAN","icon":"arrow-right"},{"label":"Assign","event":"ASSIGN","variant":"danger"}]` */
+  /** Default: `[{"icon":"arrow-right","label":"Open","event":"OPEN_TECHNICIAN","variant":"primary"},{"variant":"danger","event":"ASSIGN","label":"Assign"}]` */
   itemActions?: EntityRow[];
   /** Default: `"Dispatch Board"` */
   title?: string;
-  /** Default: `[{"variant":"body","name":"name","label":"Technician"},{"label":"Skills","variant":"caption","name":"skills"},{"name":"available","variant":"badge","label":"Available"},{"label":"Current Order","variant":"caption","name":"currentOrderId"},{"name":"lastSeenAt","label":"Last Seen","variant":"caption"}]` */
+  /** Default: `[{"name":"name","label":"Technician","variant":"body"},{"name":"skills","variant":"caption","label":"Skills"},{"label":"Available","variant":"badge","name":"available"},{"variant":"caption","name":"currentOrderId","label":"Current Order"},{"name":"lastSeenAt","variant":"caption","label":"Last Seen"}]` */
   fields?: EntityRow[];
 }
 

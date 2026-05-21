@@ -75,30 +75,30 @@ export interface StdMultiPartyFlowFlowLoadFailedPayload {
  * without modifying its state-machine topology.
  */
 export interface StdMultiPartyFlowConfig {
-  /** Default: `"Open dispute"` */
-  disputeLabel?: string;
-  /** Default: `"Cancel transaction"` */
-  cancelLabel?: string;
   /** Default: `"unlock"` */
   releaseIcon?: string;
-  /** Default: `["reason"]` */
-  reasonFields?: string[];
-  /** Default: `"x"` */
-  cancelIcon?: string;
-  /** Default: `"$28,500"` */
-  transactionAmount?: string;
+  /** Default: `"Sale of 2024 Honda CR-V"` */
+  transactionSubject?: string;
   /** Default: `"Release funds"` */
   releaseLabel?: string;
   /** Default: `"Escrow transaction"` */
   title?: string;
-  /** Default: `"alert-triangle"` */
-  disputeIcon?: string;
+  /** Default: `"Cancel transaction"` */
+  cancelLabel?: string;
+  /** Default: `"x"` */
+  cancelIcon?: string;
   /** Default: `"TXN-A8B2C-2024-001"` */
   transactionReference?: string;
-  /** Default: `"Sale of 2024 Honda CR-V"` */
-  transactionSubject?: string;
-  /** Default: `[{"id":"buyer","title":"Buyer","actionIcon":"credit-card","actor":"Alice Chen","stepLabel":"Step 1 of 2","actionLabel":"Confirm payment","icon":"user","actionDescription":"Authorize $28,500 to be held in escrow until delivery is confirmed.","description":"Funds the transaction and confirms receipt of the vehicle."},{"icon":"user-check","stepLabel":"Step 2 of 2","id":"seller","actionDescription":"Mark the vehicle as shipped. Funds will release after the buyer confirms receipt.","title":"Seller","actionIcon":"package","description":"Ships the vehicle and uploads delivery proof.","actionLabel":"Confirm shipment","actor":"Bob's Auto Sales LLC"}]` */
+  /** Default: `[{"description":"Funds the transaction and confirms receipt of the vehicle.","icon":"user","actionDescription":"Authorize $28,500 to be held in escrow until delivery is confirmed.","title":"Buyer","id":"buyer","stepLabel":"Step 1 of 2","actionLabel":"Confirm payment","actor":"Alice Chen","actionIcon":"credit-card"},{"actionDescription":"Mark the vehicle as shipped. Funds will release after the buyer confirms receipt.","stepLabel":"Step 2 of 2","actionLabel":"Confirm shipment","id":"seller","description":"Ships the vehicle and uploads delivery proof.","title":"Seller","actor":"Bob's Auto Sales LLC","actionIcon":"package","icon":"user-check"}]` */
   parties?: EntityRow[];
+  /** Default: `["reason"]` */
+  reasonFields?: string[];
+  /** Default: `"$28,500"` */
+  transactionAmount?: string;
+  /** Default: `"Open dispute"` */
+  disputeLabel?: string;
+  /** Default: `"alert-triangle"` */
+  disputeIcon?: string;
 }
 
 /**

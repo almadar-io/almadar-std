@@ -97,12 +97,12 @@ export interface StdVehicleVehicleLoadFailedPayload {
  * without modifying its state-machine topology.
  */
 export interface StdVehicleConfig {
-  /** Default: `[{"variant":"caption","name":"licensePlate","label":"Plate"},{"name":"make","label":"Make","variant":"caption"},{"label":"Model","variant":"caption","name":"model"},{"variant":"caption","name":"year","label":"Year"},{"name":"vehicleType","label":"Type","variant":"badge"},{"variant":"caption","name":"odometer","label":"Odometer"},{"label":"Status","variant":"badge","name":"status"}]` */
-  fields?: EntityRow[];
-  /** Default: `[{"variant":"primary","label":"Open","event":"OPEN_VEHICLE","icon":"arrow-right"},{"event":"RETIRE","label":"Retire","variant":"danger"}]` */
+  /** Default: `[{"event":"OPEN_VEHICLE","variant":"primary","icon":"arrow-right","label":"Open"},{"variant":"danger","event":"RETIRE","label":"Retire"}]` */
   itemActions?: EntityRow[];
   /** Default: `"Fleet"` */
   title?: string;
+  /** Default: `[{"label":"Plate","name":"licensePlate","variant":"caption"},{"name":"make","label":"Make","variant":"caption"},{"name":"model","variant":"caption","label":"Model"},{"name":"year","label":"Year","variant":"caption"},{"label":"Type","variant":"badge","name":"vehicleType"},{"variant":"caption","label":"Odometer","name":"odometer"},{"variant":"badge","name":"status","label":"Status"}]` */
+  fields?: EntityRow[];
 }
 
 /**

@@ -134,9 +134,9 @@ export interface StdTicketTierTicketTierLoadFailedPayload {
 export interface StdTicketTierConfig {
   /** Default: `"Ticket Tiers"` */
   title?: string;
-  /** Default: `[{"label":"Tier","name":"name","variant":"badge"},{"label":"Price","name":"price","variant":"caption"},{"name":"currency","variant":"badge","label":"Currency"},{"variant":"caption","name":"quantityTotal","label":"Total"},{"variant":"caption","name":"quantitySold","label":"Sold"},{"label":"Status","name":"status","variant":"badge"}]` */
+  /** Default: `[{"name":"name","label":"Tier","variant":"badge"},{"name":"price","variant":"caption","label":"Price"},{"name":"currency","label":"Currency","variant":"badge"},{"variant":"caption","name":"quantityTotal","label":"Total"},{"label":"Sold","variant":"caption","name":"quantitySold"},{"name":"status","label":"Status","variant":"badge"}]` */
   fields?: EntityRow[];
-  /** Default: `[{"icon":"arrow-right","variant":"primary","label":"Open","event":"OPEN_TIER"},{"variant":"danger","event":"CLOSE","label":"Close","icon":"x"}]` */
+  /** Default: `[{"variant":"primary","event":"OPEN_TIER","icon":"arrow-right","label":"Open"},{"variant":"danger","icon":"x","event":"CLOSE","label":"Close"}]` */
   itemActions?: EntityRow[];
 }
 

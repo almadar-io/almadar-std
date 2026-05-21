@@ -43,7 +43,7 @@ export interface StdStatsConfig {
   title?: string;
   /** Default: `"data-grid"` */
   viewPattern?: unknown;
-  /** Default: `[{"label":"Total Items","variant":"primary","icon":"list","format":"number","aggregation":"count"},{"icon":"check-circle","aggregation":"count","label":"Active","format":"number","variant":"success"},{"format":"number","field":"value","icon":"trending-up","aggregation":"avg","label":"Avg Value","variant":"info"}]` */
+  /** Default: `[{"aggregation":"count","label":"Total Items","variant":"primary","icon":"list","format":"number"},{"label":"Active","format":"number","icon":"check-circle","variant":"success","aggregation":"count"},{"icon":"trending-up","label":"Avg Value","format":"number","field":"value","variant":"info","aggregation":"avg"}]` */
   metrics?: EntityRow[];
 }
 

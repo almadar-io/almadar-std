@@ -168,12 +168,12 @@ export interface StdInvoiceInvoiceRefundFailedPayload {
 export interface StdInvoiceConfig {
   /** Default: `"[]"` */
   refundTiersJson?: string;
-  /** Default: `[{"name":"invoiceNumber","variant":"caption","label":"Invoice #"},{"name":"customerId","label":"Customer","variant":"caption"},{"label":"Status","name":"status","variant":"badge"},{"name":"total","label":"Total","variant":"caption"},{"name":"currency","variant":"badge","label":"Currency"},{"name":"dueAt","variant":"caption","label":"Due"}]` */
-  fields?: EntityRow[];
-  /** Default: `[{"label":"Open","event":"OPEN_INVOICE","variant":"primary","icon":"arrow-right"},{"label":"Void","event":"VOID","variant":"danger","icon":"x"}]` */
-  itemActions?: EntityRow[];
   /** Default: `"Invoices"` */
   title?: string;
+  /** Default: `[{"event":"OPEN_INVOICE","label":"Open","variant":"primary","icon":"arrow-right"},{"event":"VOID","label":"Void","icon":"x","variant":"danger"}]` */
+  itemActions?: EntityRow[];
+  /** Default: `[{"variant":"caption","name":"invoiceNumber","label":"Invoice #"},{"name":"customerId","label":"Customer","variant":"caption"},{"label":"Status","name":"status","variant":"badge"},{"variant":"caption","label":"Total","name":"total"},{"label":"Currency","name":"currency","variant":"badge"},{"name":"dueAt","variant":"caption","label":"Due"}]` */
+  fields?: EntityRow[];
 }
 
 /**

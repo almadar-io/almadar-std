@@ -200,8 +200,8 @@
                     "Warehouse",
                     {
                       "emit": {
-                        "success": "WarehouseLoaded",
-                        "failure": "WarehouseLoadFailed"
+                        "failure": "WarehouseLoadFailed",
+                        "success": "WarehouseLoaded"
                       }
                     }
                   ],
@@ -209,22 +209,22 @@
                     "render-ui",
                     "main",
                     {
-                      "direction": "vertical",
-                      "gap": "md",
-                      "className": "py-12",
                       "children": [
                         {
                           "size": "md",
                           "type": "spinner"
                         },
                         {
+                          "color": "muted",
                           "type": "typography",
                           "content": "Loading locations…",
-                          "color": "muted",
                           "variant": "caption"
                         }
                       ],
+                      "className": "py-12",
+                      "direction": "vertical",
                       "type": "stack",
+                      "gap": "md",
                       "align": "center"
                     }
                   ]
@@ -239,52 +239,51 @@
                     "render-ui",
                     "main",
                     {
-                      "direction": "vertical",
                       "type": "stack",
-                      "gap": "md",
+                      "direction": "vertical",
                       "children": [
                         {
-                          "align": "center",
-                          "gap": "sm",
-                          "type": "stack",
                           "direction": "horizontal",
+                          "align": "center",
                           "children": [
                             {
                               "type": "icon",
                               "name": "warehouse"
                             },
                             {
+                              "content": "@config.title",
                               "variant": "h3",
-                              "type": "typography",
-                              "content": "@config.title"
+                              "type": "typography"
                             }
-                          ]
+                          ],
+                          "type": "stack",
+                          "gap": "sm"
                         },
                         {
                           "children": [
                             {
-                              "type": "stat-display",
+                              "icon": "warehouse",
                               "label": "Total locations",
-                              "value": "@payload.data.length",
-                              "icon": "warehouse"
+                              "type": "stat-display",
+                              "value": "@payload.data.length"
                             },
                             {
+                              "type": "stat-display",
                               "value": "12",
                               "icon": "check-circle",
-                              "type": "stat-display",
                               "label": "Active"
                             },
                             {
-                              "value": "48,392",
                               "type": "stat-display",
-                              "label": "Total SKUs",
-                              "icon": "package"
+                              "icon": "package",
+                              "value": "48,392",
+                              "label": "Total SKUs"
                             },
                             {
+                              "value": "73%",
                               "icon": "bar-chart",
                               "type": "stat-display",
-                              "label": "Avg utilization",
-                              "value": "73%"
+                              "label": "Avg utilization"
                             }
                           ],
                           "cols": 4.0,
@@ -294,14 +293,15 @@
                           "type": "divider"
                         },
                         {
-                          "cols": 1.0,
-                          "gap": "sm",
+                          "entity": "@payload.data",
                           "type": "data-grid",
+                          "cols": 1.0,
                           "fields": "@config.fields",
                           "itemActions": "@config.itemActions",
-                          "entity": "@payload.data"
+                          "gap": "sm"
                         }
-                      ]
+                      ],
+                      "gap": "md"
                     }
                   ]
                 ]
@@ -315,9 +315,9 @@
                     "render-ui",
                     "main",
                     {
-                      "variant": "error",
                       "message": "@payload.error",
-                      "type": "alert"
+                      "type": "alert",
+                      "variant": "error"
                     }
                   ]
                 ]
@@ -366,29 +366,26 @@
                     "render-ui",
                     "main",
                     {
-                      "gap": "md",
-                      "direction": "vertical",
-                      "type": "stack",
                       "children": [
                         {
-                          "align": "center",
+                          "type": "stack",
                           "gap": "sm",
                           "direction": "horizontal",
                           "children": [
                             {
-                              "type": "button",
-                              "label": "Back",
+                              "action": "CLOSE_WAREHOUSE",
                               "variant": "ghost",
-                              "action": "CLOSE_WAREHOUSE"
+                              "type": "button",
+                              "label": "Back"
                             },
                             {
                               "type": "icon",
                               "name": "warehouse"
                             },
                             {
-                              "variant": "h3",
+                              "content": "@entity.name",
                               "type": "typography",
-                              "content": "@entity.name"
+                              "variant": "h3"
                             },
                             {
                               "type": "badge",
@@ -396,76 +393,79 @@
                               "variant": "default"
                             }
                           ],
-                          "type": "stack"
+                          "align": "center"
                         },
                         {
                           "type": "divider"
                         },
                         {
-                          "type": "stack",
                           "gap": "sm",
-                          "direction": "vertical",
+                          "type": "stack",
                           "children": [
                             {
-                              "direction": "horizontal",
-                              "type": "stack",
-                              "gap": "md",
                               "children": [
                                 {
                                   "variant": "caption",
-                                  "content": "Code",
                                   "type": "typography",
-                                  "color": "muted"
-                                },
-                                {
-                                  "content": "@entity.code",
-                                  "variant": "body",
-                                  "type": "typography"
-                                }
-                              ]
-                            },
-                            {
-                              "children": [
-                                {
                                   "color": "muted",
-                                  "type": "typography",
-                                  "content": "Address",
-                                  "variant": "caption"
+                                  "content": "Code"
                                 },
                                 {
                                   "type": "typography",
                                   "variant": "body",
-                                  "content": "@entity.address"
+                                  "content": "@entity.code"
                                 }
                               ],
                               "gap": "md",
+                              "type": "stack",
+                              "direction": "horizontal"
+                            },
+                            {
+                              "gap": "md",
+                              "type": "stack",
                               "direction": "horizontal",
-                              "type": "stack"
+                              "children": [
+                                {
+                                  "color": "muted",
+                                  "content": "Address",
+                                  "variant": "caption",
+                                  "type": "typography"
+                                },
+                                {
+                                  "variant": "body",
+                                  "type": "typography",
+                                  "content": "@entity.address"
+                                }
+                              ]
                             }
-                          ]
+                          ],
+                          "direction": "vertical"
                         },
                         {
                           "type": "divider"
                         },
                         {
-                          "type": "simple-grid",
                           "children": [
                             {
-                              "type": "stat-display",
                               "icon": "package",
+                              "label": "Total SKUs",
                               "value": "@entity.totalSkus",
-                              "label": "Total SKUs"
+                              "type": "stat-display"
                             },
                             {
+                              "type": "stat-display",
                               "icon": "tag",
                               "value": "@entity.type",
-                              "label": "Type",
-                              "type": "stat-display"
+                              "label": "Type"
                             }
                           ],
+                          "type": "simple-grid",
                           "cols": 2.0
                         }
-                      ]
+                      ],
+                      "direction": "vertical",
+                      "type": "stack",
+                      "gap": "md"
                     }
                   ]
                 ]
@@ -489,23 +489,23 @@
                     "render-ui",
                     "main",
                     {
-                      "gap": "md",
-                      "type": "stack",
                       "direction": "vertical",
+                      "align": "center",
                       "className": "py-12",
+                      "type": "stack",
+                      "gap": "md",
                       "children": [
                         {
                           "type": "spinner",
                           "size": "md"
                         },
                         {
-                          "color": "muted",
-                          "content": "Loading locations…",
                           "type": "typography",
-                          "variant": "caption"
+                          "color": "muted",
+                          "variant": "caption",
+                          "content": "Loading locations…"
                         }
-                      ],
-                      "align": "center"
+                      ]
                     }
                   ]
                 ]
@@ -538,69 +538,36 @@
             ]
           },
           "config": {
-            "fields": {
-              "type": "[FieldSpec]",
+            "itemActions": {
+              "type": "[ItemAction]",
               "default": [
                 {
-                  "label": "Code",
-                  "name": "code",
-                  "variant": "caption"
-                },
-                {
-                  "variant": "caption",
-                  "name": "name",
-                  "label": "Name"
-                },
-                {
-                  "name": "type",
-                  "variant": "badge",
-                  "label": "Type"
-                },
-                {
-                  "variant": "caption",
-                  "name": "totalSkus",
-                  "label": "SKUs"
-                },
-                {
-                  "name": "isActive",
-                  "label": "Active",
-                  "variant": "badge"
+                  "label": "Open",
+                  "variant": "primary",
+                  "icon": "arrow-right",
+                  "event": "OPEN_WAREHOUSE"
                 }
               ],
-              "label": "Columns to show",
-              "description": "Each column maps to one field on the Warehouse entity",
+              "label": "Row actions",
+              "description": "Buttons users can click on each location row",
+              "tier": "customization",
               "items": {
                 "type": "object",
                 "properties": {
-                  "name": {
-                    "name": "name",
-                    "type": "string",
-                    "required": true
-                  },
                   "variant": {
                     "name": "variant",
-                    "type": "string",
-                    "required": false
-                  },
-                  "format": {
-                    "name": "format",
-                    "type": "string",
-                    "required": false
-                  },
-                  "key": {
-                    "name": "key",
                     "type": "string",
                     "required": false
                   },
                   "label": {
                     "name": "label",
                     "type": "string",
-                    "required": false
+                    "required": true
                   },
-                  "header": {
-                    "name": "header",
+                  "event": {
+                    "name": "event",
                     "type": "string",
-                    "required": false
+                    "required": true
                   },
                   "icon": {
                     "name": "icon",
@@ -614,40 +581,76 @@
               "type": "string",
               "default": "Locations",
               "label": "Section title",
-              "description": "Heading shown above the storage locations list"
+              "description": "Heading shown above the storage locations list",
+              "tier": "customization"
             },
-            "itemActions": {
-              "type": "[ItemAction]",
+            "fields": {
+              "type": "[FieldSpec]",
               "default": [
                 {
-                  "icon": "arrow-right",
-                  "event": "OPEN_WAREHOUSE",
-                  "variant": "primary",
-                  "label": "Open"
+                  "name": "code",
+                  "label": "Code",
+                  "variant": "caption"
+                },
+                {
+                  "label": "Name",
+                  "variant": "caption",
+                  "name": "name"
+                },
+                {
+                  "label": "Type",
+                  "variant": "badge",
+                  "name": "type"
+                },
+                {
+                  "name": "totalSkus",
+                  "variant": "caption",
+                  "label": "SKUs"
+                },
+                {
+                  "name": "isActive",
+                  "label": "Active",
+                  "variant": "badge"
                 }
               ],
-              "label": "Row actions",
-              "description": "Buttons users can click on each location row",
+              "label": "Columns to show",
+              "description": "Each column maps to one field on the Warehouse entity",
+              "tier": "advanced",
               "items": {
                 "type": "object",
                 "properties": {
-                  "event": {
-                    "name": "event",
+                  "key": {
+                    "name": "key",
+                    "type": "string",
+                    "required": false
+                  },
+                  "name": {
+                    "name": "name",
                     "type": "string",
                     "required": true
                   },
-                  "icon": {
-                    "name": "icon",
+                  "header": {
+                    "name": "header",
                     "type": "string",
                     "required": false
                   },
                   "label": {
                     "name": "label",
                     "type": "string",
-                    "required": true
+                    "required": false
                   },
                   "variant": {
                     "name": "variant",
+                    "type": "string",
+                    "required": false
+                  },
+                  "icon": {
+                    "name": "icon",
+                    "type": "string",
+                    "required": false
+                  },
+                  "format": {
+                    "name": "format",
                     "type": "string",
                     "required": false
                   }

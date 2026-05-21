@@ -97,22 +97,22 @@ export interface StdBrowseDeletePayload {
  * without modifying its state-machine topology.
  */
 export interface StdBrowseConfig {
-  /** Default: `"md"` */
-  gap?: string;
-  /** Default: `1` */
-  cols?: number;
-  /** Default: `10` */
-  displayPageSize?: number;
+  /** Default: `[{"name":"name","variant":"h4","label":"Name"},{"label":"Description","variant":"caption","name":"description"},{"variant":"badge","label":"Status","name":"status"}]` */
+  fields?: EntityRow[];
   /** Default: `[]` */
   itemActions?: EntityRow[];
+  /** Default: `1` */
+  cols?: number;
+  /** Default: `"md"` */
+  gap?: string;
+  /** Default: `10` */
+  pageSize?: number;
+  /** Default: `"data-grid"` */
+  viewPattern?: unknown;
   /** Default: `""` */
   imageField?: string;
   /** Default: `10` */
-  pageSize?: number;
-  /** Default: `[{"label":"Name","name":"name","variant":"h4"},{"name":"description","label":"Description","variant":"caption"},{"variant":"badge","name":"status","label":"Status"}]` */
-  fields?: EntityRow[];
-  /** Default: `"data-grid"` */
-  viewPattern?: unknown;
+  displayPageSize?: number;
 }
 
 /**

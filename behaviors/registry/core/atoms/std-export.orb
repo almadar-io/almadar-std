@@ -21,13 +21,13 @@
             "items": {
               "type": "object",
               "properties": {
-                "id": {
-                  "name": "id",
+                "label": {
+                  "name": "label",
                   "type": "string",
                   "required": true
                 },
-                "label": {
-                  "name": "label",
+                "id": {
+                  "name": "id",
                   "type": "string",
                   "required": true
                 },
@@ -110,36 +110,36 @@
                     "render-ui",
                     "main",
                     {
-                      "position": "bottom",
-                      "children": {
-                        "size": "sm",
-                        "action": "OPEN_EXPORT",
-                        "icon": "download",
-                        "type": "button",
-                        "variant": "ghost",
-                        "label": "@config.buttonLabel"
-                      },
                       "type": "popover",
+                      "position": "bottom",
                       "content": {
-                        "fields": [],
                         "entity": "@entity.options",
+                        "type": "data-list",
+                        "fields": [],
                         "renderItem": [
                           "fn",
                           "fmt",
                           {
+                            "action": "@config.event",
+                            "size": "sm",
+                            "variant": "ghost",
+                            "type": "button",
                             "actionPayload": {
                               "format": "@fmt.format",
                               "tileId": "@config.tileId"
                             },
                             "label": "@fmt.label",
-                            "variant": "ghost",
-                            "size": "sm",
-                            "type": "button",
-                            "icon": "file-down",
-                            "action": "@config.event"
+                            "icon": "file-down"
                           }
-                        ],
-                        "type": "data-list"
+                        ]
+                      },
+                      "children": {
+                        "icon": "download",
+                        "action": "OPEN_EXPORT",
+                        "label": "@config.buttonLabel",
+                        "type": "button",
+                        "variant": "ghost",
+                        "size": "sm"
                       }
                     }
                   ]
@@ -177,49 +177,53 @@
               "default": "",
               "label": "Tile id",
               "description": "Identifier of the dashboard tile being exported",
-              "synonyms": "internal identifier — host orbital wires this; users rarely set it directly"
+              "synonyms": "internal identifier — host orbital wires this; users rarely set it directly",
+              "tier": "internal"
             },
             "event": {
               "type": "string",
               "default": "EXPORT_REQUESTED",
               "label": "Export event",
               "description": "Event emitted when the user picks a format",
-              "synonyms": "bus event name. internal wiring; users rarely target directly"
+              "synonyms": "bus event name. internal wiring; users rarely target directly",
+              "tier": "internal"
             },
             "buttonLabel": {
               "type": "string",
               "default": "Export",
               "label": "Button label",
               "description": "Text shown on the toolbar button that opens the export popover",
-              "synonyms": "the text on the export trigger button. user phrases: 'rename export button to X' / 'set the button label to X' / 'call the button X' / 'change export button text to X' -> X (e.g. 'Download CSV', 'Download', 'Export Data')"
+              "synonyms": "the text on the export trigger button. user phrases: 'rename export button to X' / 'set the button label to X' / 'call the button X' / 'change export button text to X' -> X (e.g. 'Download CSV', 'Download', 'Export Data')",
+              "tier": "customization"
             },
             "formats": {
               "type": "[FormatOption]",
               "default": [
                 {
                   "label": "CSV",
-                  "format": "csv",
-                  "id": "csv"
+                  "id": "csv",
+                  "format": "csv"
                 },
                 {
-                  "format": "xlsx",
+                  "label": "XLSX",
                   "id": "xlsx",
-                  "label": "XLSX"
+                  "format": "xlsx"
                 },
                 {
-                  "label": "PDF",
                   "id": "pdf",
-                  "format": "pdf"
+                  "format": "pdf",
+                  "label": "PDF"
                 }
               ],
               "label": "Available formats",
               "description": "Export formats shown to the user in the popover",
               "synonyms": "list of export format entries (csv / xlsx / pdf / png / json). user phrases: 'only CSV' -> keep only csv entry; 'add JSON' -> append json entry; 'no PNG' -> remove png; 'allow X and Y' -> set the array to those two",
+              "tier": "customization",
               "items": {
                 "type": "object",
                 "properties": {
-                  "format": {
-                    "name": "format",
+                  "label": {
+                    "name": "label",
                     "type": "string",
                     "required": true
                   },
@@ -228,8 +232,8 @@
                     "type": "string",
                     "required": true
                   },
-                  "label": {
-                    "name": "label",
+                  "format": {
+                    "name": "format",
                     "type": "string",
                     "required": true
                   }

@@ -47,10 +47,10 @@ export interface StdFilterFilterPayload {
  * without modifying its state-machine topology.
  */
 export interface StdFilterConfig {
-  /** Default: `[{"field":"status","filterType":"select","label":"Status","options":["active","inactive","pending"]}]` */
-  filters?: EntityRow[];
   /** Default: `"FILTER"` */
   event?: string;
+  /** Default: `[{"field":"status","options":["active","inactive","pending"],"filterType":"select","label":"Status"}]` */
+  filters?: EntityRow[];
 }
 
 /**

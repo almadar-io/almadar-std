@@ -68,25 +68,25 @@ export interface StdAppLayoutAppLayoutStateLoadFailedPayload {
  * without modifying its state-machine topology.
  */
 export interface StdAppLayoutConfig {
+  /** Default: `"NOTIFY_CLICK"` */
+  notificationClickEvent?: string;
   /** Default: `[]` */
-  topBarActions?: EntityRow[];
+  navItems?: EntityRow[];
   contentTrait?: TraitFieldRef;
+  /** Default: `"App"` */
+  appName?: string;
+  /** Default: `"SEARCH"` */
+  searchEvent?: string;
   /** Default: `[]` */
   notifications?: EntityRow[];
   /** Default: `"sidebar"` */
   layoutMode?: 'sidebar' | 'topnav' | 'bottomnav' | 'minimal';
-  /** Default: `"App"` */
-  appName?: string;
-  /** Default: `"NOTIFY_CLICK"` */
-  notificationClickEvent?: string;
-  /** Default: `"modal"` */
-  detailSlot?: unknown;
   /** Default: `[]` */
-  navItems?: EntityRow[];
+  topBarActions?: EntityRow[];
   /** Default: `"dashboard-layout"` */
   layoutPattern?: unknown;
-  /** Default: `"SEARCH"` */
-  searchEvent?: string;
+  /** Default: `"modal"` */
+  detailSlot?: unknown;
 }
 
 /**

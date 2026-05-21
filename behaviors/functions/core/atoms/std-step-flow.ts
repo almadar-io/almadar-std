@@ -92,10 +92,10 @@ export interface StdStepFlowStepItemsLoadFailedPayload {
  * without modifying its state-machine topology.
  */
 export interface StdStepFlowConfig {
+  /** Default: `[{"icon":"user","key":"manager","label":"Manager Review","description":"Initial review by direct manager"},{"icon":"users","key":"director","description":"Department director sign-off","label":"Director Approval"},{"icon":"shield","description":"Final executive approval","key":"executive","label":"Executive Sign-off"}]` */
+  steps?: EntityRow[];
   /** Default: `"Review"` */
   title?: string;
-  /** Default: `[{"description":"Initial review by direct manager","label":"Manager Review","key":"manager","icon":"user"},{"key":"director","icon":"users","label":"Director Approval","description":"Department director sign-off"},{"label":"Executive Sign-off","key":"executive","description":"Final executive approval","icon":"shield"}]` */
-  steps?: EntityRow[];
 }
 
 /**

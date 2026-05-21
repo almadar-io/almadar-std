@@ -28,51 +28,54 @@
             "type": "[MetricSpec]",
             "default": [
               {
+                "aggregation": "count",
                 "label": "Total Items",
                 "variant": "primary",
                 "icon": "list",
+                "format": "number"
+              },
+              {
+                "label": "Active",
                 "format": "number",
+                "icon": "check-circle",
+                "variant": "success",
                 "aggregation": "count"
               },
               {
-                "icon": "check-circle",
-                "aggregation": "count",
-                "label": "Active",
-                "format": "number",
-                "variant": "success"
-              },
-              {
+                "icon": "trending-up",
+                "label": "Avg Value",
                 "format": "number",
                 "field": "value",
-                "icon": "trending-up",
-                "aggregation": "avg",
-                "label": "Avg Value",
-                "variant": "info"
+                "variant": "info",
+                "aggregation": "avg"
               }
             ],
             "label": "Metrics",
             "description": "One stat card per entry; declares aggregation, format, and styling",
             "synonyms": "list of KPI cards / stat tiles / metric cards. each entry has label / value / format / icon / variant / aggregation. user phrases: 'replace metrics with X, Y, Z' -> rewrite array; 'add Revenue tile' -> append entry; 'change KPIs to X' -> rewrite array",
+            "tier": "essential",
             "items": {
               "type": "object",
               "properties": {
-                "field": {
+                "prefix": {
                   "type": "string",
-                  "name": "field",
+                  "name": "prefix",
                   "required": false
                 },
-                "trend": {
+                "clickEvent": {
+                  "type": "string",
+                  "name": "clickEvent",
+                  "required": false
+                },
+                "label": {
+                  "type": "string",
+                  "name": "label",
+                  "required": true
+                },
+                "target": {
                   "type": "number",
-                  "name": "trend",
+                  "name": "target",
                   "required": false
-                },
-                "sparklineData": {
-                  "type": "array",
-                  "name": "sparklineData",
-                  "required": false,
-                  "items": {
-                    "type": "number"
-                  }
                 },
                 "aggregation": {
                   "type": "string",
@@ -87,24 +90,10 @@
                     "variance"
                   ]
                 },
-                "clickEvent": {
+                "icon": {
                   "type": "string",
-                  "name": "clickEvent",
+                  "name": "icon",
                   "required": false
-                },
-                "value": {
-                  "type": "number",
-                  "name": "value",
-                  "required": false
-                },
-                "trendPolarity": {
-                  "type": "string",
-                  "name": "trendPolarity",
-                  "required": false,
-                  "values": [
-                    "higher-is-better",
-                    "lower-is-better"
-                  ]
                 },
                 "format": {
                   "type": "string",
@@ -116,6 +105,38 @@
                     "percent"
                   ]
                 },
+                "trend": {
+                  "type": "number",
+                  "name": "trend",
+                  "required": false
+                },
+                "trendPolarity": {
+                  "type": "string",
+                  "name": "trendPolarity",
+                  "required": false,
+                  "values": [
+                    "higher-is-better",
+                    "lower-is-better"
+                  ]
+                },
+                "field": {
+                  "type": "string",
+                  "name": "field",
+                  "required": false
+                },
+                "max": {
+                  "type": "number",
+                  "name": "max",
+                  "required": false
+                },
+                "sparklineData": {
+                  "type": "array",
+                  "name": "sparklineData",
+                  "required": false,
+                  "items": {
+                    "type": "number"
+                  }
+                },
                 "trendFormat": {
                   "type": "string",
                   "name": "trendFormat",
@@ -125,30 +146,15 @@
                     "percent"
                   ]
                 },
-                "prefix": {
-                  "type": "string",
-                  "name": "prefix",
-                  "required": false
-                },
-                "icon": {
-                  "type": "string",
-                  "name": "icon",
-                  "required": false
-                },
                 "suffix": {
                   "type": "string",
                   "name": "suffix",
                   "required": false
                 },
-                "target": {
+                "value": {
                   "type": "number",
-                  "name": "target",
+                  "name": "value",
                   "required": false
-                },
-                "label": {
-                  "type": "string",
-                  "name": "label",
-                  "required": true
                 },
                 "variant": {
                   "type": "string",
@@ -162,11 +168,6 @@
                     "error",
                     "info"
                   ]
-                },
-                "max": {
-                  "type": "number",
-                  "name": "max",
-                  "required": false
                 }
               }
             }
@@ -177,7 +178,8 @@
             "default": "Summary",
             "label": "Section title",
             "description": "Heading shown above the stat-card grid",
-            "synonyms": "the section header text. user phrases: 'rename section to X' / 'title the KPIs X' / 'change section title to X' -> X"
+            "synonyms": "the section header text. user phrases: 'rename section to X' / 'title the KPIs X' / 'change section title to X' -> X",
+            "tier": "customization"
           },
           {
             "key": "viewPattern",
@@ -185,7 +187,8 @@
             "default": "data-grid",
             "label": "Render pattern",
             "description": "UI pattern used to arrange the stat cards",
-            "synonyms": "internal pattern selector. user prompts rarely target this directly"
+            "synonyms": "internal pattern selector. user prompts rarely target this directly",
+            "tier": "advanced"
           }
         ],
         "capabilities": []

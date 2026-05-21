@@ -86,12 +86,12 @@ export interface StdInterviewSlotInterviewSlotLoadFailedPayload {
  * without modifying its state-machine topology.
  */
 export interface StdInterviewSlotConfig {
-  /** Default: `[{"variant":"caption","label":"Applicant","name":"applicantName"},{"label":"Interviewer","name":"interviewerName","variant":"caption"},{"label":"Scheduled","name":"scheduledAt","variant":"caption"},{"label":"Format","name":"format","variant":"badge"},{"name":"status","variant":"badge","label":"Status"}]` */
+  /** Default: `[{"name":"applicantName","variant":"caption","label":"Applicant"},{"name":"interviewerName","variant":"caption","label":"Interviewer"},{"name":"scheduledAt","variant":"caption","label":"Scheduled"},{"label":"Format","variant":"badge","name":"format"},{"label":"Status","variant":"badge","name":"status"}]` */
   fields?: EntityRow[];
-  /** Default: `[{"event":"OPEN_INTERVIEW","variant":"primary","label":"Open","icon":"arrow-right"},{"event":"CANCEL_INTERVIEW","variant":"danger","label":"Cancel"}]` */
-  itemActions?: EntityRow[];
   /** Default: `"Interviews"` */
   title?: string;
+  /** Default: `[{"event":"OPEN_INTERVIEW","icon":"arrow-right","label":"Open","variant":"primary"},{"label":"Cancel","variant":"danger","event":"CANCEL_INTERVIEW"}]` */
+  itemActions?: EntityRow[];
 }
 
 /**
