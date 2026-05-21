@@ -222,22 +222,22 @@
                     "render-ui",
                     "main",
                     {
-                      "appName": "Coding Academy",
-                      "showTopBar": true,
-                      "type": "game-shell",
                       "children": [
                         {
-                          "title": "Sequencer Challenge",
                           "menuItems": [
                             {
-                              "event": "START",
+                              "label": "Start",
                               "variant": "primary",
-                              "label": "Start"
+                              "event": "START"
                             }
                           ],
-                          "type": "game-menu"
+                          "type": "game-menu",
+                          "title": "Sequencer Challenge"
                         }
-                      ]
+                      ],
+                      "type": "game-shell",
+                      "appName": "Coding Academy",
+                      "showTopBar": true
                     }
                   ]
                 ]
@@ -251,29 +251,31 @@
                     "render-ui",
                     "main",
                     {
+                      "type": "game-shell",
+                      "showTopBar": true,
+                      "appName": "Coding Academy",
                       "children": [
                         {
-                          "gap": "md",
-                          "type": "stack",
+                          "direction": "vertical",
                           "children": [
                             {
+                              "type": "game-hud",
                               "stats": [
                                 {
                                   "value": "@entity.score",
                                   "label": "Score"
                                 },
                                 {
-                                  "value": "@entity.level",
-                                  "label": "Level"
+                                  "label": "Level",
+                                  "value": "@entity.level"
                                 }
-                              ],
-                              "type": "game-hud"
+                              ]
                             },
                             "@trait.SeqLessonVideo",
                             {
+                              "type": "card",
                               "children": [
                                 {
-                                  "gap": "md",
                                   "direction": "vertical",
                                   "align": "center",
                                   "children": [
@@ -283,31 +285,29 @@
                                       "variant": "h3"
                                     },
                                     {
-                                      "variant": "body",
-                                      "color": "muted",
                                       "content": "Arrange the action blocks in the correct order.",
-                                      "type": "typography"
+                                      "type": "typography",
+                                      "variant": "body",
+                                      "color": "muted"
                                     },
                                     {
-                                      "action": "COMPLETE",
-                                      "variant": "primary",
-                                      "icon": "check",
                                       "type": "button",
-                                      "label": "Complete"
+                                      "label": "Complete",
+                                      "action": "COMPLETE",
+                                      "icon": "check",
+                                      "variant": "primary"
                                     }
                                   ],
+                                  "gap": "md",
                                   "type": "stack"
                                 }
-                              ],
-                              "type": "card"
+                              ]
                             }
                           ],
-                          "direction": "vertical"
+                          "type": "stack",
+                          "gap": "md"
                         }
-                      ],
-                      "appName": "Coding Academy",
-                      "type": "game-shell",
-                      "showTopBar": true
+                      ]
                     }
                   ]
                 ]
@@ -326,12 +326,9 @@
                     "render-ui",
                     "main",
                     {
-                      "showTopBar": true,
-                      "type": "game-shell",
                       "appName": "Coding Academy",
                       "children": [
                         {
-                          "title": "Well Done!",
                           "menuItems": [
                             {
                               "label": "Play Again",
@@ -339,9 +336,12 @@
                               "variant": "primary"
                             }
                           ],
-                          "type": "game-over-screen"
+                          "type": "game-over-screen",
+                          "title": "Well Done!"
                         }
-                      ]
+                      ],
+                      "showTopBar": true,
+                      "type": "game-shell"
                     }
                   ]
                 ]
@@ -355,11 +355,8 @@
                     "render-ui",
                     "main",
                     {
-                      "showTopBar": true,
-                      "appName": "Coding Academy",
                       "children": [
                         {
-                          "title": "Sequencer Challenge",
                           "menuItems": [
                             {
                               "label": "Start",
@@ -367,10 +364,13 @@
                               "variant": "primary"
                             }
                           ],
-                          "type": "game-menu"
+                          "type": "game-menu",
+                          "title": "Sequencer Challenge"
                         }
                       ],
-                      "type": "game-shell"
+                      "type": "game-shell",
+                      "showTopBar": true,
+                      "appName": "Coding Academy"
                     }
                   ]
                 ]
@@ -383,10 +383,10 @@
           "ref": "YouTube.traits.ServiceYoutubeYoutube",
           "name": "SeqLessonVideo",
           "config": {
-            "uiTrait": "@trait.SeqLessonPlayer",
-            "autoplay": false,
             "videoId": "@entity.videoId",
-            "controls": true
+            "controls": true,
+            "uiTrait": "@trait.SeqLessonPlayer",
+            "autoplay": false
           }
         },
         {
@@ -415,32 +415,32 @@
                     "render-ui",
                     "main",
                     {
+                      "type": "card",
                       "children": [
                         {
                           "type": "stack",
                           "gap": "sm",
+                          "direction": "vertical",
                           "children": [
                             {
                               "name": "video",
                               "type": "icon"
                             },
                             {
+                              "variant": "caption",
                               "color": "muted",
-                              "type": "typography",
                               "content": "Lesson video",
-                              "variant": "caption"
+                              "type": "typography"
                             },
                             {
                               "content": "@config.videoId",
-                              "type": "typography",
-                              "variant": "body"
+                              "variant": "body",
+                              "type": "typography"
                             }
                           ],
-                          "align": "center",
-                          "direction": "vertical"
+                          "align": "center"
                         }
-                      ],
-                      "type": "card"
+                      ]
                     }
                   ]
                 ]
@@ -452,7 +452,8 @@
               "type": "string",
               "default": "",
               "label": "Video ID",
-              "description": "YouTube video ID shown in the inline lesson player card"
+              "description": "YouTube video ID shown in the inline lesson player card",
+              "tier": "essential"
             }
           },
           "scope": "instance"
@@ -462,12 +463,12 @@
           "name": "SeqProgressStorage",
           "config": {
             "bucket": "coding-academy-progress",
-            "acl": "private",
+            "uiTrait": "@trait.SeqProgressForm",
             "maxSize": 102400.0,
             "allowedMimeTypes": [
               "application/json"
             ],
-            "uiTrait": "@trait.SeqProgressForm"
+            "acl": "private"
           },
           "listens": [
             {
@@ -526,23 +527,23 @@
                     "render-ui",
                     "main",
                     {
-                      "direction": "horizontal",
                       "gap": "sm",
-                      "align": "center",
                       "type": "stack",
                       "children": [
                         {
-                          "type": "icon",
-                          "name": "save"
+                          "name": "save",
+                          "type": "icon"
                         },
                         {
                           "type": "button",
-                          "action": "UPLOAD",
                           "variant": "ghost",
-                          "label": "Save Progress",
-                          "icon": "save"
+                          "icon": "save",
+                          "action": "UPLOAD",
+                          "label": "Save Progress"
                         }
-                      ]
+                      ],
+                      "align": "center",
+                      "direction": "horizontal"
                     }
                   ]
                 ]
@@ -772,22 +773,22 @@
                     "render-ui",
                     "main",
                     {
+                      "type": "game-shell",
                       "children": [
                         {
                           "type": "game-menu",
+                          "title": "Builder Challenge",
                           "menuItems": [
                             {
-                              "variant": "primary",
                               "event": "START",
+                              "variant": "primary",
                               "label": "Start"
                             }
-                          ],
-                          "title": "Builder Challenge"
+                          ]
                         }
                       ],
-                      "type": "game-shell",
-                      "showTopBar": true,
-                      "appName": "Coding Academy"
+                      "appName": "Coding Academy",
+                      "showTopBar": true
                     }
                   ]
                 ]
@@ -803,10 +804,9 @@
                     {
                       "children": [
                         {
-                          "gap": "md",
-                          "direction": "vertical",
                           "children": [
                             {
+                              "type": "game-hud",
                               "stats": [
                                 {
                                   "label": "Score",
@@ -816,46 +816,47 @@
                                   "label": "Level",
                                   "value": "@entity.level"
                                 }
-                              ],
-                              "type": "game-hud"
+                              ]
                             },
                             {
-                              "type": "card",
                               "children": [
                                 {
+                                  "type": "stack",
+                                  "direction": "vertical",
+                                  "gap": "md",
+                                  "align": "center",
                                   "children": [
                                     {
                                       "type": "typography",
-                                      "content": "Builder Challenge",
-                                      "variant": "h3"
+                                      "variant": "h3",
+                                      "content": "Builder Challenge"
                                     },
                                     {
-                                      "type": "typography",
-                                      "color": "muted",
                                       "variant": "body",
-                                      "content": "Drag components into the slots to build the solution."
+                                      "content": "Drag components into the slots to build the solution.",
+                                      "color": "muted",
+                                      "type": "typography"
                                     },
                                     {
+                                      "label": "Complete",
                                       "variant": "primary",
-                                      "action": "COMPLETE",
-                                      "type": "button",
                                       "icon": "check",
-                                      "label": "Complete"
+                                      "type": "button",
+                                      "action": "COMPLETE"
                                     }
-                                  ],
-                                  "type": "stack",
-                                  "align": "center",
-                                  "gap": "md",
-                                  "direction": "vertical"
+                                  ]
                                 }
-                              ]
+                              ],
+                              "type": "card"
                             }
                           ],
-                          "type": "stack"
+                          "type": "stack",
+                          "direction": "vertical",
+                          "gap": "md"
                         }
                       ],
-                      "showTopBar": true,
                       "type": "game-shell",
+                      "showTopBar": true,
                       "appName": "Coding Academy"
                     }
                   ]
@@ -876,8 +877,8 @@
                     "main",
                     {
                       "appName": "Coding Academy",
-                      "type": "game-shell",
                       "showTopBar": true,
+                      "type": "game-shell",
                       "children": [
                         {
                           "title": "Well Done!",
@@ -904,22 +905,22 @@
                     "render-ui",
                     "main",
                     {
-                      "appName": "Coding Academy",
-                      "showTopBar": true,
                       "children": [
                         {
-                          "type": "game-menu",
                           "menuItems": [
                             {
                               "event": "START",
-                              "label": "Start",
-                              "variant": "primary"
+                              "variant": "primary",
+                              "label": "Start"
                             }
                           ],
-                          "title": "Builder Challenge"
+                          "title": "Builder Challenge",
+                          "type": "game-menu"
                         }
                       ],
-                      "type": "game-shell"
+                      "showTopBar": true,
+                      "type": "game-shell",
+                      "appName": "Coding Academy"
                     }
                   ]
                 ]
@@ -1137,22 +1138,22 @@
                     "render-ui",
                     "main",
                     {
-                      "appName": "Coding Academy",
-                      "type": "game-shell",
                       "children": [
                         {
+                          "title": "Event Handler Challenge",
                           "menuItems": [
                             {
+                              "event": "START",
                               "label": "Start",
-                              "variant": "primary",
-                              "event": "START"
+                              "variant": "primary"
                             }
                           ],
-                          "title": "Event Handler Challenge",
                           "type": "game-menu"
                         }
                       ],
-                      "showTopBar": true
+                      "showTopBar": true,
+                      "type": "game-shell",
+                      "appName": "Coding Academy"
                     }
                   ]
                 ]
@@ -1166,62 +1167,62 @@
                     "render-ui",
                     "main",
                     {
-                      "showTopBar": true,
-                      "appName": "Coding Academy",
                       "type": "game-shell",
+                      "appName": "Coding Academy",
                       "children": [
                         {
                           "gap": "md",
+                          "type": "stack",
                           "direction": "vertical",
                           "children": [
                             {
-                              "type": "game-hud",
                               "stats": [
                                 {
-                                  "label": "Score",
-                                  "value": "@entity.score"
+                                  "value": "@entity.score",
+                                  "label": "Score"
                                 },
                                 {
                                   "label": "Level",
                                   "value": "@entity.level"
                                 }
-                              ]
+                              ],
+                              "type": "game-hud"
                             },
                             {
+                              "type": "card",
                               "children": [
                                 {
-                                  "type": "stack",
                                   "gap": "md",
+                                  "align": "center",
+                                  "direction": "vertical",
+                                  "type": "stack",
                                   "children": [
                                     {
+                                      "variant": "h3",
                                       "type": "typography",
-                                      "content": "Event Handler Challenge",
-                                      "variant": "h3"
+                                      "content": "Event Handler Challenge"
                                     },
                                     {
-                                      "variant": "body",
-                                      "type": "typography",
                                       "color": "muted",
-                                      "content": "Wire the event handlers to fire on the right triggers."
+                                      "content": "Wire the event handlers to fire on the right triggers.",
+                                      "type": "typography",
+                                      "variant": "body"
                                     },
                                     {
-                                      "type": "button",
-                                      "variant": "primary",
-                                      "label": "Complete",
                                       "action": "COMPLETE",
-                                      "icon": "check"
+                                      "type": "button",
+                                      "icon": "check",
+                                      "variant": "primary",
+                                      "label": "Complete"
                                     }
-                                  ],
-                                  "align": "center",
-                                  "direction": "vertical"
+                                  ]
                                 }
-                              ],
-                              "type": "card"
+                              ]
                             }
-                          ],
-                          "type": "stack"
+                          ]
                         }
-                      ]
+                      ],
+                      "showTopBar": true
                     }
                   ]
                 ]
@@ -1240,19 +1241,19 @@
                     "render-ui",
                     "main",
                     {
-                      "appName": "Coding Academy",
                       "showTopBar": true,
+                      "appName": "Coding Academy",
                       "children": [
                         {
-                          "type": "game-over-screen",
-                          "title": "Well Done!",
                           "menuItems": [
                             {
+                              "label": "Play Again",
                               "event": "RESTART",
-                              "variant": "primary",
-                              "label": "Play Again"
+                              "variant": "primary"
                             }
-                          ]
+                          ],
+                          "type": "game-over-screen",
+                          "title": "Well Done!"
                         }
                       ],
                       "type": "game-shell"
@@ -1269,22 +1270,22 @@
                     "render-ui",
                     "main",
                     {
-                      "type": "game-shell",
                       "appName": "Coding Academy",
-                      "showTopBar": true,
                       "children": [
                         {
+                          "type": "game-menu",
                           "menuItems": [
                             {
-                              "variant": "primary",
                               "label": "Start",
-                              "event": "START"
+                              "event": "START",
+                              "variant": "primary"
                             }
                           ],
-                          "type": "game-menu",
                           "title": "Event Handler Challenge"
                         }
-                      ]
+                      ],
+                      "showTopBar": true,
+                      "type": "game-shell"
                     }
                   ]
                 ]
@@ -1391,13 +1392,16 @@
           "ref": "AppShell.traits.AppLayout",
           "name": "StudentProgressAppLayout",
           "config": {
+            "searchEvent": "STUDENT_PROGRESS_SEARCH",
+            "notifications": [],
             "contentTrait": "@trait.StudentProgressCatalog",
             "appName": "Coding Academy",
+            "notificationClickEvent": "STUDENT_PROGRESS_NOTIFICATIONS_OPEN",
             "navItems": [
               {
+                "href": "/sequencer",
                 "icon": "list-ordered",
-                "label": "Sequencer",
-                "href": "/sequencer"
+                "label": "Sequencer"
               },
               {
                 "href": "/builder",
@@ -1405,23 +1409,20 @@
                 "label": "Builder"
               },
               {
-                "icon": "zap",
                 "href": "/events",
-                "label": "Events"
+                "label": "Events",
+                "icon": "zap"
               },
               {
-                "icon": "trending-up",
                 "label": "Progress",
+                "icon": "trending-up",
                 "href": "/progress"
               }
-            ],
-            "searchEvent": "STUDENT_PROGRESS_SEARCH",
-            "notifications": [],
-            "notificationClickEvent": "STUDENT_PROGRESS_NOTIFICATIONS_OPEN"
+            ]
           },
           "events": {
-            "NOTIFY_CLICK": "STUDENT_PROGRESS_NOTIFICATIONS_OPEN",
-            "SEARCH": "STUDENT_PROGRESS_SEARCH"
+            "SEARCH": "STUDENT_PROGRESS_SEARCH",
+            "NOTIFY_CLICK": "STUDENT_PROGRESS_NOTIFICATIONS_OPEN"
           }
         },
         {
@@ -1488,17 +1489,20 @@
                     "render-ui",
                     "main",
                     {
+                      "direction": "vertical",
+                      "type": "stack",
+                      "gap": "lg",
                       "children": [
                         {
                           "justify": "between",
-                          "type": "stack",
                           "align": "center",
-                          "gap": "md",
                           "direction": "horizontal",
                           "children": [
                             {
                               "align": "center",
                               "gap": "sm",
+                              "type": "stack",
+                              "direction": "horizontal",
                               "children": [
                                 {
                                   "name": "trending-up",
@@ -1506,14 +1510,14 @@
                                 },
                                 {
                                   "content": "Progress",
-                                  "type": "typography",
-                                  "variant": "h2"
+                                  "variant": "h2",
+                                  "type": "typography"
                                 }
-                              ],
-                              "direction": "horizontal",
-                              "type": "stack"
+                              ]
                             }
-                          ]
+                          ],
+                          "gap": "md",
+                          "type": "stack"
                         },
                         {
                           "type": "divider"
@@ -1524,10 +1528,7 @@
                           "type": "divider"
                         },
                         "@trait.StudentProgressBrowseList"
-                      ],
-                      "direction": "vertical",
-                      "gap": "lg",
-                      "type": "stack"
+                      ]
                     }
                   ]
                 ]
@@ -1546,33 +1547,33 @@
                     "render-ui",
                     "main",
                     {
-                      "type": "stack",
-                      "gap": "md",
-                      "align": "center",
-                      "direction": "vertical",
                       "children": [
                         {
                           "name": "bell",
                           "type": "icon"
                         },
                         {
-                          "content": "No notifications",
+                          "variant": "h3",
                           "type": "typography",
-                          "variant": "h3"
+                          "content": "No notifications"
                         },
                         {
-                          "variant": "caption",
                           "type": "typography",
+                          "variant": "caption",
                           "color": "muted",
                           "content": "You're all caught up."
                         },
                         {
                           "type": "button",
-                          "action": "INIT",
                           "label": "Back to progress",
+                          "action": "INIT",
                           "variant": "ghost"
                         }
                       ],
+                      "gap": "md",
+                      "direction": "vertical",
+                      "type": "stack",
+                      "align": "center",
                       "className": "py-8"
                     }
                   ]
@@ -1589,38 +1590,38 @@
             "title": "Student Progress",
             "metrics": [
               {
-                "field": "lessonsCompleted",
+                "format": "number",
                 "aggregation": "sum",
-                "icon": "check-circle",
                 "variant": "success",
                 "label": "Lessons Completed",
+                "field": "lessonsCompleted",
+                "icon": "check-circle"
+              },
+              {
+                "field": "avgScore",
+                "label": "Average Score",
+                "aggregation": "avg",
+                "icon": "star",
+                "variant": "primary",
                 "format": "number"
               },
               {
-                "variant": "primary",
-                "field": "avgScore",
-                "format": "number",
-                "label": "Average Score",
-                "icon": "star",
-                "aggregation": "avg"
-              },
-              {
-                "format": "number",
-                "aggregation": "max",
-                "field": "streak",
-                "label": "Streak",
                 "icon": "flame",
+                "format": "number",
+                "field": "streak",
                 "variant": "warning",
-                "suffix": "d"
+                "suffix": "d",
+                "label": "Streak",
+                "aggregation": "max"
               },
               {
-                "icon": "clock",
-                "variant": "info",
+                "format": "number",
                 "suffix": "m",
+                "variant": "info",
                 "label": "Total Time",
                 "aggregation": "sum",
-                "format": "number",
-                "field": "totalTimeMinutes"
+                "field": "totalTimeMinutes",
+                "icon": "clock"
               }
             ]
           },
@@ -1639,13 +1640,13 @@
           "ref": "Graphs.traits.GraphItemGraph",
           "name": "StudentProgressGraphs",
           "config": {
-            "valueField": "progressPct",
+            "height": 280.0,
+            "chartType": "line",
             "showLegend": true,
+            "subtitle": "Daily progress %",
             "title": "Progress over time",
             "dateField": "day",
-            "chartType": "line",
-            "subtitle": "Daily progress %",
-            "height": 280.0
+            "valueField": "progressPct"
           },
           "listens": [
             {
@@ -1663,54 +1664,54 @@
           "name": "StudentProgressBrowseList",
           "linkedEntity": "StudentProgress",
           "config": {
-            "gap": "sm",
             "fields": [
               {
+                "icon": "user",
                 "label": "Student",
-                "variant": "h4",
                 "name": "student",
-                "icon": "user"
+                "variant": "h4"
               },
               {
-                "label": "Lessons Completed",
+                "variant": "body",
                 "name": "lessonsCompleted",
-                "variant": "body"
+                "label": "Lessons Completed"
               },
               {
-                "variant": "badge",
                 "label": "Avg Score",
-                "name": "avgScore"
+                "name": "avgScore",
+                "variant": "badge"
               },
               {
+                "variant": "body",
                 "name": "streak",
-                "label": "Streak",
-                "variant": "body"
+                "label": "Streak"
               },
               {
-                "label": "Last Active",
                 "format": "date",
                 "name": "lastActiveAt",
+                "label": "Last Active",
                 "variant": "caption"
               }
             ],
-            "cols": 1.0,
             "itemActions": [
               {
-                "event": "VIEW",
+                "variant": "ghost",
                 "label": "View",
+                "event": "VIEW"
+              },
+              {
+                "event": "EDIT",
+                "label": "Edit",
                 "variant": "ghost"
               },
               {
-                "variant": "ghost",
-                "event": "EDIT",
-                "label": "Edit"
-              },
-              {
                 "variant": "danger",
-                "label": "Delete",
-                "event": "DELETE"
+                "event": "DELETE",
+                "label": "Delete"
               }
-            ]
+            ],
+            "cols": 1.0,
+            "gap": "sm"
           },
           "listens": [
             {
@@ -1736,9 +1737,8 @@
           "name": "StudentProgressView",
           "linkedEntity": "StudentProgress",
           "config": {
-            "title": "View Progress",
             "icon": "eye",
-            "mode": "edit",
+            "title": "View Progress",
             "fields": [
               "student",
               "lessonsCompleted",
@@ -1747,7 +1747,8 @@
               "totalTimeMinutes",
               "progressPct",
               "lastActiveAt"
-            ]
+            ],
+            "mode": "edit"
           },
           "events": {
             "OPEN": "VIEW"
@@ -1768,9 +1769,9 @@
           "name": "StudentProgressEdit",
           "linkedEntity": "StudentProgress",
           "config": {
-            "title": "Edit Progress",
-            "mode": "edit",
             "icon": "edit",
+            "mode": "edit",
+            "title": "Edit Progress",
             "fields": [
               "student",
               "lessonsCompleted",
@@ -1800,14 +1801,14 @@
           "name": "StudentProgressDelete",
           "linkedEntity": "StudentProgress",
           "config": {
-            "icon": "alert-triangle",
-            "title": "Delete Progress",
             "alertMessage": "This action cannot be undone.",
-            "confirmLabel": "Delete"
+            "title": "Delete Progress",
+            "confirmLabel": "Delete",
+            "icon": "alert-triangle"
           },
           "events": {
-            "REQUEST": "DELETE",
-            "CONFIRM": "CONFIRM_DELETE"
+            "CONFIRM": "CONFIRM_DELETE",
+            "REQUEST": "DELETE"
           },
           "listens": [
             {

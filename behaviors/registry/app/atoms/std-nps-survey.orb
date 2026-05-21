@@ -278,8 +278,8 @@
                     "NpsSurvey",
                     {
                       "emit": {
-                        "success": "NpsSurveyLoaded",
-                        "failure": "NpsSurveyLoadFailed"
+                        "failure": "NpsSurveyLoadFailed",
+                        "success": "NpsSurveyLoaded"
                       }
                     }
                   ],
@@ -287,22 +287,22 @@
                     "render-ui",
                     "main",
                     {
-                      "className": "py-12",
                       "direction": "vertical",
-                      "align": "center",
-                      "type": "stack",
                       "children": [
                         {
                           "type": "spinner"
                         },
                         {
-                          "color": "muted",
+                          "type": "typography",
                           "variant": "caption",
-                          "content": "Loading NPS surveys…",
-                          "type": "typography"
+                          "color": "muted",
+                          "content": "Loading NPS surveys…"
                         }
                       ],
-                      "gap": "md"
+                      "align": "center",
+                      "gap": "md",
+                      "type": "stack",
+                      "className": "py-12"
                     }
                   ]
                 ]
@@ -316,24 +316,23 @@
                     "render-ui",
                     "main",
                     {
-                      "type": "stack",
-                      "direction": "vertical",
                       "gap": "md",
+                      "direction": "vertical",
                       "children": [
                         {
                           "direction": "horizontal",
-                          "align": "center",
-                          "type": "stack",
                           "gap": "sm",
+                          "type": "stack",
+                          "align": "center",
                           "children": [
                             {
-                              "type": "icon",
-                              "name": "message-square"
+                              "name": "message-square",
+                              "type": "icon"
                             },
                             {
-                              "variant": "h3",
                               "content": "@config.title",
-                              "type": "typography"
+                              "type": "typography",
+                              "variant": "h3"
                             }
                           ]
                         },
@@ -343,26 +342,26 @@
                           "children": [
                             {
                               "icon": "message-square",
-                              "type": "stat-display",
+                              "value": "@payload.data.length",
                               "label": "Total surveys",
-                              "value": "@payload.data.length"
+                              "type": "stat-display"
                             },
                             {
-                              "label": "Promoters",
                               "icon": "thumbs-up",
+                              "label": "Promoters",
                               "value": "412",
                               "type": "stat-display"
                             },
                             {
-                              "type": "stat-display",
                               "value": "84",
+                              "icon": "thumbs-down",
                               "label": "Detractors",
-                              "icon": "thumbs-down"
+                              "type": "stat-display"
                             },
                             {
-                              "icon": "trending-up",
-                              "value": "47",
                               "type": "stat-display",
+                              "value": "47",
+                              "icon": "trending-up",
                               "label": "Avg NPS"
                             }
                           ]
@@ -371,14 +370,15 @@
                           "type": "divider"
                         },
                         {
-                          "fields": "@config.fields",
-                          "type": "data-grid",
+                          "gap": "sm",
                           "itemActions": "@config.itemActions",
+                          "type": "data-grid",
                           "cols": 1.0,
-                          "entity": "@payload.data",
-                          "gap": "sm"
+                          "fields": "@config.fields",
+                          "entity": "@payload.data"
                         }
-                      ]
+                      ],
+                      "type": "stack"
                     }
                   ]
                 ]
@@ -392,8 +392,8 @@
                     "render-ui",
                     "main",
                     {
-                      "type": "alert",
                       "variant": "error",
+                      "type": "alert",
                       "message": "@payload.error"
                     }
                   ]
@@ -461,16 +461,20 @@
                       "direction": "vertical",
                       "children": [
                         {
+                          "direction": "horizontal",
+                          "gap": "sm",
+                          "type": "stack",
+                          "align": "center",
                           "children": [
                             {
-                              "label": "Back",
-                              "action": "CLOSE_VIEW",
+                              "variant": "ghost",
                               "type": "button",
-                              "variant": "ghost"
+                              "action": "CLOSE_VIEW",
+                              "label": "Back"
                             },
                             {
-                              "type": "icon",
-                              "name": "message-square"
+                              "name": "message-square",
+                              "type": "icon"
                             },
                             {
                               "type": "typography",
@@ -478,110 +482,106 @@
                               "content": "@entity.customerName"
                             },
                             {
-                              "label": "@entity.category",
                               "variant": "primary",
+                              "label": "@entity.category",
                               "type": "badge"
                             },
                             {
-                              "variant": "default",
+                              "label": "@entity.status",
                               "type": "badge",
-                              "label": "@entity.status"
+                              "variant": "default"
                             }
-                          ],
-                          "type": "stack",
-                          "gap": "sm",
-                          "align": "center",
-                          "direction": "horizontal"
+                          ]
                         },
                         {
                           "type": "divider"
                         },
                         {
                           "type": "stack",
+                          "gap": "sm",
                           "children": [
                             {
+                              "type": "stack",
                               "children": [
                                 {
-                                  "content": "Customer ID",
                                   "type": "typography",
-                                  "variant": "caption",
-                                  "color": "muted"
+                                  "color": "muted",
+                                  "content": "Customer ID",
+                                  "variant": "caption"
                                 },
                                 {
-                                  "type": "typography",
                                   "variant": "body",
+                                  "type": "typography",
                                   "content": "@entity.customerId"
                                 }
                               ],
                               "direction": "horizontal",
-                              "type": "stack",
                               "gap": "md"
                             },
                             {
                               "children": [
                                 {
+                                  "content": "Comment",
                                   "color": "muted",
                                   "type": "typography",
-                                  "variant": "caption",
-                                  "content": "Comment"
+                                  "variant": "caption"
                                 },
                                 {
-                                  "variant": "body",
                                   "type": "typography",
-                                  "content": "@entity.comment"
+                                  "content": "@entity.comment",
+                                  "variant": "body"
                                 }
                               ],
+                              "type": "stack",
                               "direction": "horizontal",
-                              "gap": "md",
-                              "type": "stack"
+                              "gap": "md"
                             }
                           ],
-                          "direction": "vertical",
-                          "gap": "sm"
+                          "direction": "vertical"
                         },
                         {
                           "type": "divider"
                         },
                         {
+                          "type": "simple-grid",
+                          "cols": 3.0,
                           "children": [
                             {
-                              "icon": "star",
+                              "label": "Score",
                               "type": "stat-display",
                               "value": "@entity.score",
-                              "label": "Score"
+                              "icon": "star"
                             },
                             {
                               "type": "stat-display",
                               "icon": "calendar",
-                              "label": "Surveyed",
-                              "value": "@entity.surveyedAt"
+                              "value": "@entity.surveyedAt",
+                              "label": "Surveyed"
                             },
                             {
-                              "type": "stat-display",
                               "value": "@entity.channel",
                               "icon": "send",
+                              "type": "stat-display",
                               "label": "Channel"
                             }
-                          ],
-                          "cols": 3.0,
-                          "type": "simple-grid"
+                          ]
                         },
                         {
-                          "type": "stack",
                           "direction": "horizontal",
                           "children": [
                             {
-                              "type": "button",
-                              "label": "Mark Followed Up",
-                              "action": "MARK_FOLLOWED_UP",
-                              "variant": "primary",
                               "actionPayload": {
                                 "id": "@entity.id"
-                              }
+                              },
+                              "type": "button",
+                              "variant": "primary",
+                              "label": "Mark Followed Up",
+                              "action": "MARK_FOLLOWED_UP"
                             }
                           ],
-                          "align": "center",
-                          "gap": "sm"
+                          "gap": "sm",
+                          "type": "stack",
+                          "align": "center"
                         }
                       ],
                       "gap": "md",
@@ -605,8 +605,8 @@
                     "NpsSurvey",
                     {
                       "emit": {
-                        "failure": "NpsSurveyLoadFailed",
-                        "success": "NpsSurveyLoaded"
+                        "success": "NpsSurveyLoaded",
+                        "failure": "NpsSurveyLoadFailed"
                       }
                     }
                   ],
@@ -614,9 +614,9 @@
                     "render-ui",
                     "main",
                     {
-                      "direction": "vertical",
                       "align": "center",
                       "gap": "md",
+                      "type": "stack",
                       "className": "py-12",
                       "children": [
                         {
@@ -624,12 +624,12 @@
                         },
                         {
                           "variant": "caption",
+                          "content": "Marking survey followed up…",
                           "type": "typography",
-                          "color": "muted",
-                          "content": "Marking survey followed up…"
+                          "color": "muted"
                         }
                       ],
-                      "type": "stack"
+                      "direction": "vertical"
                     }
                   ]
                 ]
@@ -653,22 +653,22 @@
                     "render-ui",
                     "main",
                     {
-                      "className": "py-12",
-                      "direction": "vertical",
-                      "type": "stack",
-                      "align": "center",
                       "children": [
                         {
                           "type": "spinner"
                         },
                         {
-                          "content": "Loading NPS surveys…",
-                          "variant": "caption",
                           "type": "typography",
-                          "color": "muted"
+                          "color": "muted",
+                          "variant": "caption",
+                          "content": "Loading NPS surveys…"
                         }
                       ],
-                      "gap": "md"
+                      "align": "center",
+                      "direction": "vertical",
+                      "type": "stack",
+                      "gap": "md",
+                      "className": "py-12"
                     }
                   ]
                 ]
@@ -697,22 +697,22 @@
                     "render-ui",
                     "main",
                     {
-                      "className": "py-12",
+                      "type": "stack",
+                      "align": "center",
                       "children": [
                         {
                           "type": "spinner"
                         },
                         {
+                          "variant": "caption",
                           "color": "muted",
                           "type": "typography",
-                          "content": "Marking survey followed up…",
-                          "variant": "caption"
+                          "content": "Marking survey followed up…"
                         }
                       ],
-                      "type": "stack",
-                      "align": "center",
+                      "direction": "vertical",
                       "gap": "md",
-                      "direction": "vertical"
+                      "className": "py-12"
                     }
                   ]
                 ]
@@ -727,8 +727,8 @@
                     "NpsSurvey",
                     {
                       "emit": {
-                        "failure": "NpsSurveyLoadFailed",
-                        "success": "NpsSurveyLoaded"
+                        "success": "NpsSurveyLoaded",
+                        "failure": "NpsSurveyLoadFailed"
                       }
                     }
                   ],
@@ -749,22 +749,28 @@
               "type": "[ItemAction]",
               "default": [
                 {
+                  "label": "Open",
                   "event": "OPEN_SURVEY",
                   "icon": "arrow-right",
-                  "variant": "primary",
-                  "label": "Open"
+                  "variant": "primary"
                 },
                 {
+                  "label": "Mark Followed Up",
                   "event": "MARK_FOLLOWED_UP",
-                  "variant": "danger",
-                  "label": "Mark Followed Up"
+                  "variant": "danger"
                 }
               ],
               "label": "Row actions",
               "description": "Buttons users can click on each survey response",
+              "tier": "customization",
               "items": {
                 "type": "object",
                 "properties": {
+                  "variant": {
+                    "name": "variant",
+                    "type": "string",
+                    "required": false
+                  },
                   "icon": {
                     "name": "icon",
                     "type": "string",
@@ -779,48 +785,37 @@
                     "name": "event",
                     "type": "string",
                     "required": true
-                  },
-                  "variant": {
-                    "name": "variant",
-                    "type": "string",
-                    "required": false
                   }
                 }
               }
-            },
-            "title": {
-              "type": "string",
-              "default": "NPS Surveys",
-              "label": "Section title",
-              "description": "Heading shown above the NPS response tracker"
             },
             "fields": {
               "type": "[FieldSpec]",
               "default": [
                 {
-                  "variant": "caption",
+                  "name": "customerName",
                   "label": "Customer",
-                  "name": "customerName"
-                },
-                {
-                  "variant": "caption",
-                  "name": "score",
-                  "label": "Score"
-                },
-                {
-                  "variant": "badge",
-                  "label": "Category",
-                  "name": "category"
-                },
-                {
-                  "label": "Surveyed",
-                  "name": "surveyedAt",
                   "variant": "caption"
                 },
                 {
                   "variant": "caption",
-                  "name": "channel",
-                  "label": "Channel"
+                  "label": "Score",
+                  "name": "score"
+                },
+                {
+                  "label": "Category",
+                  "name": "category",
+                  "variant": "badge"
+                },
+                {
+                  "label": "Surveyed",
+                  "variant": "caption",
+                  "name": "surveyedAt"
+                },
+                {
+                  "label": "Channel",
+                  "variant": "caption",
+                  "name": "channel"
                 },
                 {
                   "variant": "badge",
@@ -830,21 +825,17 @@
               ],
               "label": "Columns to show",
               "description": "Each column maps to one field on the NPS Survey entity",
+              "tier": "advanced",
               "items": {
                 "type": "object",
                 "properties": {
-                  "variant": {
-                    "name": "variant",
-                    "type": "string",
-                    "required": false
-                  },
-                  "icon": {
-                    "name": "icon",
-                    "type": "string",
-                    "required": false
-                  },
                   "format": {
                     "name": "format",
+                    "type": "string",
+                    "required": false
+                  },
+                  "variant": {
+                    "name": "variant",
                     "type": "string",
                     "required": false
                   },
@@ -858,18 +849,30 @@
                     "type": "string",
                     "required": false
                   },
+                  "label": {
+                    "name": "label",
+                    "type": "string",
+                    "required": false
+                  },
                   "name": {
                     "name": "name",
                     "type": "string",
                     "required": true
                   },
-                  "label": {
-                    "name": "label",
+                  "icon": {
+                    "name": "icon",
                     "type": "string",
                     "required": false
                   }
                 }
               }
+            },
+            "title": {
+              "type": "string",
+              "default": "NPS Surveys",
+              "label": "Section title",
+              "description": "Heading shown above the NPS response tracker",
+              "tier": "customization"
             }
           },
           "scope": "collection"

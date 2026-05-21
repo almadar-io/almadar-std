@@ -89,10 +89,10 @@ export interface StdHelpCategoryHelpCategoryLoadFailedPayload {
 export interface StdHelpCategoryConfig {
   /** Default: `"Help Categories"` */
   title?: string;
-  /** Default: `[{"label":"Name","variant":"caption","name":"name"},{"name":"slug","label":"Slug","variant":"caption"},{"label":"Articles","name":"articleCount","variant":"caption"},{"variant":"caption","label":"Order","name":"sortOrder"},{"name":"status","label":"Status","variant":"badge"},{"name":"updatedAt","label":"Updated","variant":"caption"}]` */
-  fields?: EntityRow[];
-  /** Default: `[{"variant":"primary","event":"OPEN_CATEGORY","icon":"arrow-right","label":"Open"},{"event":"ARCHIVE","label":"Archive","variant":"danger"}]` */
+  /** Default: `[{"event":"OPEN_CATEGORY","icon":"arrow-right","label":"Open","variant":"primary"},{"event":"ARCHIVE","variant":"danger","label":"Archive"}]` */
   itemActions?: EntityRow[];
+  /** Default: `[{"name":"name","label":"Name","variant":"caption"},{"variant":"caption","name":"slug","label":"Slug"},{"label":"Articles","name":"articleCount","variant":"caption"},{"label":"Order","variant":"caption","name":"sortOrder"},{"name":"status","label":"Status","variant":"badge"},{"variant":"caption","name":"updatedAt","label":"Updated"}]` */
+  fields?: EntityRow[];
 }
 
 /**

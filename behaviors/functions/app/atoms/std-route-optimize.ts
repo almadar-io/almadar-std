@@ -85,12 +85,12 @@ export interface StdRouteOptimizeRouteLoadFailedPayload {
  * without modifying its state-machine topology.
  */
 export interface StdRouteOptimizeConfig {
+  /** Default: `[{"label":"Technician","variant":"caption","name":"technicianId"},{"name":"totalDistanceKm","label":"Distance (km)","variant":"caption"},{"label":"Duration (min)","variant":"caption","name":"totalDurationMinutes"},{"variant":"caption","name":"optimizedAt","label":"Optimized"}]` */
+  fields?: EntityRow[];
+  /** Default: `[{"variant":"primary","label":"Open","event":"OPEN_ROUTE","icon":"arrow-right"},{"event":"OPTIMIZE","label":"Optimize","variant":"danger"}]` */
+  itemActions?: EntityRow[];
   /** Default: `"Routes"` */
   title?: string;
-  /** Default: `[{"label":"Open","event":"OPEN_ROUTE","variant":"primary","icon":"arrow-right"},{"event":"OPTIMIZE","variant":"danger","label":"Optimize"}]` */
-  itemActions?: EntityRow[];
-  /** Default: `[{"variant":"caption","name":"technicianId","label":"Technician"},{"name":"totalDistanceKm","label":"Distance (km)","variant":"caption"},{"name":"totalDurationMinutes","label":"Duration (min)","variant":"caption"},{"name":"optimizedAt","label":"Optimized","variant":"caption"}]` */
-  fields?: EntityRow[];
 }
 
 /**

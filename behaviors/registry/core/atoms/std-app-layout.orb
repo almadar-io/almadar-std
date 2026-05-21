@@ -132,25 +132,25 @@
                     "render-ui",
                     "main",
                     {
-                      "appName": "@config.appName",
+                      "navItems": "@config.navItems",
+                      "type": "@config.layoutPattern",
+                      "searchEvent": "@config.searchEvent",
+                      "layoutMode": "@config.layoutMode",
+                      "topBarActions": "@config.topBarActions",
                       "notifications": "@config.notifications",
+                      "appName": "@config.appName",
+                      "notificationClickEvent": "@config.notificationClickEvent",
                       "children": [
                         {
-                          "className": "max-w-5xl mx-auto w-full",
-                          "type": "stack",
-                          "direction": "vertical",
-                          "gap": "lg",
                           "children": [
                             "@config.contentTrait"
-                          ]
+                          ],
+                          "gap": "lg",
+                          "className": "max-w-5xl mx-auto w-full",
+                          "type": "stack",
+                          "direction": "vertical"
                         }
-                      ],
-                      "type": "@config.layoutPattern",
-                      "notificationClickEvent": "@config.notificationClickEvent",
-                      "layoutMode": "@config.layoutMode",
-                      "navItems": "@config.navItems",
-                      "topBarActions": "@config.topBarActions",
-                      "searchEvent": "@config.searchEvent"
+                      ]
                     }
                   ]
                 ]
@@ -178,27 +178,24 @@
             ]
           },
           "config": {
-            "topBarActions": {
-              "type": "[ItemAction]",
+            "notificationClickEvent": {
+              "type": "string",
+              "default": "NOTIFY_CLICK",
+              "label": "Notification click event",
+              "description": "Event emitted when the user picks a notification",
+              "tier": "advanced"
+            },
+            "navItems": {
+              "type": "[NavItem]",
               "default": [],
-              "label": "Top-bar actions",
-              "description": "Icon buttons shown on the right side of the top bar",
-              "tier": "customization",
+              "label": "Sidebar links",
+              "description": "Top-level nav entries on the left rail",
+              "tier": "essential",
               "items": {
                 "type": "object",
                 "properties": {
-                  "event": {
-                    "name": "event",
-                    "type": "string",
-                    "required": true
-                  },
-                  "variant": {
-                    "name": "variant",
-                    "type": "string",
-                    "required": false
-                  },
-                  "icon": {
-                    "name": "icon",
+                  "badge": {
+                    "name": "badge",
                     "type": "string",
                     "required": false
                   },
@@ -206,6 +203,16 @@
                     "name": "label",
                     "type": "string",
                     "required": true
+                  },
+                  "href": {
+                    "name": "href",
+                    "type": "string",
+                    "required": true
+                  },
+                  "icon": {
+                    "name": "icon",
+                    "type": "string",
+                    "required": false
                   }
                 }
               }
@@ -216,6 +223,20 @@
               "description": "Trait rendered inside the app layout content area",
               "tier": "essential"
             },
+            "appName": {
+              "type": "string",
+              "default": "App",
+              "label": "App name",
+              "description": "Product name shown in the chrome header",
+              "tier": "essential"
+            },
+            "searchEvent": {
+              "type": "string",
+              "default": "SEARCH",
+              "label": "Search event",
+              "description": "Event emitted when the user runs a global search",
+              "tier": "advanced"
+            },
             "notifications": {
               "type": "[NotificationSpec]",
               "default": [],
@@ -225,8 +246,8 @@
               "items": {
                 "type": "object",
                 "properties": {
-                  "id": {
-                    "name": "id",
+                  "message": {
+                    "name": "message",
                     "type": "string",
                     "required": false
                   },
@@ -235,8 +256,8 @@
                     "type": "string",
                     "required": false
                   },
-                  "message": {
-                    "name": "message",
+                  "id": {
+                    "name": "id",
                     "type": "string",
                     "required": false
                   }
@@ -256,43 +277,22 @@
                 "minimal"
               ]
             },
-            "appName": {
-              "type": "string",
-              "default": "App",
-              "label": "App name",
-              "description": "Product name shown in the chrome header",
-              "tier": "essential"
-            },
-            "notificationClickEvent": {
-              "type": "string",
-              "default": "NOTIFY_CLICK",
-              "label": "Notification click event",
-              "description": "Event emitted when the user picks a notification",
-              "tier": "advanced"
-            },
-            "detailSlot": {
-              "type": "slot",
-              "default": "modal",
-              "label": "Detail slot",
-              "description": "Slot where detail/edit views render",
-              "tier": "advanced"
-            },
-            "navItems": {
-              "type": "[NavItem]",
+            "topBarActions": {
+              "type": "[ItemAction]",
               "default": [],
-              "label": "Sidebar links",
-              "description": "Top-level nav entries on the left rail",
-              "tier": "essential",
+              "label": "Top-bar actions",
+              "description": "Icon buttons shown on the right side of the top bar",
+              "tier": "customization",
               "items": {
                 "type": "object",
                 "properties": {
+                  "variant": {
+                    "name": "variant",
+                    "type": "string",
+                    "required": false
+                  },
                   "label": {
                     "name": "label",
-                    "type": "string",
-                    "required": true
-                  },
-                  "href": {
-                    "name": "href",
                     "type": "string",
                     "required": true
                   },
@@ -301,10 +301,10 @@
                     "type": "string",
                     "required": false
                   },
-                  "badge": {
-                    "name": "badge",
+                  "event": {
+                    "name": "event",
                     "type": "string",
-                    "required": false
+                    "required": true
                   }
                 }
               }
@@ -316,11 +316,11 @@
               "description": "UI pattern used to render the application chrome",
               "tier": "advanced"
             },
-            "searchEvent": {
-              "type": "string",
-              "default": "SEARCH",
-              "label": "Search event",
-              "description": "Event emitted when the user runs a global search",
+            "detailSlot": {
+              "type": "slot",
+              "default": "modal",
+              "label": "Detail slot",
+              "description": "Slot where detail/edit views render",
               "tier": "advanced"
             }
           },

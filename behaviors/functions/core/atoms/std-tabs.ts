@@ -46,14 +46,14 @@ export interface StdTabsTabChangedPayload {
  * without modifying its state-machine topology.
  */
 export interface StdTabsConfig {
-  /** Default: `"overview"` */
-  defaultTab?: string;
+  /** Default: `[{"icon":"info","id":"overview","label":"Overview"},{"label":"Details","id":"details","icon":"list"},{"label":"Settings","icon":"settings","id":"settings"}]` */
+  tabs?: EntityRow[];
   /** Default: `"horizontal"` */
   orientation?: 'horizontal' | 'vertical';
+  /** Default: `"overview"` */
+  defaultTab?: string;
   /** Default: `"default"` */
   variant?: 'default' | 'pills' | 'underline';
-  /** Default: `[{"id":"overview","label":"Overview","icon":"info"},{"id":"details","label":"Details","icon":"list"},{"label":"Settings","id":"settings","icon":"settings"}]` */
-  tabs?: EntityRow[];
 }
 
 /**

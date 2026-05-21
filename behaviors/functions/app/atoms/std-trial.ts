@@ -127,12 +127,12 @@ export interface StdTrialTrialLoadFailedPayload {
  * without modifying its state-machine topology.
  */
 export interface StdTrialConfig {
-  /** Default: `[{"label":"Customer","variant":"caption","name":"customerId"},{"label":"Plan","name":"planId","variant":"caption"},{"name":"status","label":"Status","variant":"badge"},{"variant":"caption","name":"startedAt","label":"Started"},{"label":"Expires","variant":"caption","name":"expiresAt"},{"label":"Converted","name":"convertedAt","variant":"caption"},{"name":"notifiedAt","variant":"caption","label":"Notified"}]` */
-  fields?: EntityRow[];
-  /** Default: `[{"event":"OPEN_TRIAL","icon":"arrow-right","variant":"primary","label":"Open"},{"label":"Cancel","event":"CANCEL","icon":"x","variant":"danger"}]` */
-  itemActions?: EntityRow[];
   /** Default: `"Trials"` */
   title?: string;
+  /** Default: `[{"name":"customerId","variant":"caption","label":"Customer"},{"label":"Plan","variant":"caption","name":"planId"},{"name":"status","label":"Status","variant":"badge"},{"name":"startedAt","label":"Started","variant":"caption"},{"name":"expiresAt","label":"Expires","variant":"caption"},{"name":"convertedAt","label":"Converted","variant":"caption"},{"label":"Notified","variant":"caption","name":"notifiedAt"}]` */
+  fields?: EntityRow[];
+  /** Default: `[{"label":"Open","event":"OPEN_TRIAL","icon":"arrow-right","variant":"primary"},{"variant":"danger","icon":"x","event":"CANCEL","label":"Cancel"}]` */
+  itemActions?: EntityRow[];
 }
 
 /**

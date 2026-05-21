@@ -158,11 +158,11 @@ export interface StdKitchenDisplayKitchenTicketUpdateFailedPayload {
  * without modifying its state-machine topology.
  */
 export interface StdKitchenDisplayConfig {
-  /** Default: `[{"label":"Open","event":"OPEN_TICKET","icon":"arrow-right","variant":"primary"},{"label":"Mark Served","icon":"utensils","variant":"danger","event":"MARK_SERVED"}]` */
-  itemActions?: EntityRow[];
   /** Default: `20` */
   overdueMinutes?: number;
-  /** Default: `[{"label":"Order","name":"orderId","variant":"caption"},{"name":"tableLabel","label":"Table","variant":"caption"},{"name":"serverName","label":"Server","variant":"caption"},{"name":"status","label":"Status","variant":"badge"},{"name":"aging","label":"Aging","variant":"badge"},{"name":"receivedAt","variant":"caption","label":"Received"}]` */
+  /** Default: `[{"variant":"primary","event":"OPEN_TICKET","label":"Open","icon":"arrow-right"},{"event":"MARK_SERVED","icon":"utensils","label":"Mark Served","variant":"danger"}]` */
+  itemActions?: EntityRow[];
+  /** Default: `[{"name":"orderId","label":"Order","variant":"caption"},{"name":"tableLabel","label":"Table","variant":"caption"},{"name":"serverName","variant":"caption","label":"Server"},{"name":"status","label":"Status","variant":"badge"},{"name":"aging","label":"Aging","variant":"badge"},{"name":"receivedAt","label":"Received","variant":"caption"}]` */
   fields?: EntityRow[];
   /** Default: `"Kitchen Display"` */
   title?: string;

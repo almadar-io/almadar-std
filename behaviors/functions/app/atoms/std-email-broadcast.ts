@@ -88,9 +88,9 @@ export interface StdEmailBroadcastEmailBroadcastLoadFailedPayload {
 export interface StdEmailBroadcastConfig {
   /** Default: `"Email Broadcasts"` */
   title?: string;
-  /** Default: `[{"name":"name","variant":"caption","label":"Name"},{"name":"subject","label":"Subject","variant":"caption"},{"variant":"badge","name":"status","label":"Status"},{"label":"Recipients","variant":"caption","name":"recipientCount"},{"label":"Sent","variant":"caption","name":"sentCount"},{"name":"scheduledAt","label":"Scheduled","variant":"caption"}]` */
+  /** Default: `[{"variant":"caption","label":"Name","name":"name"},{"label":"Subject","variant":"caption","name":"subject"},{"name":"status","label":"Status","variant":"badge"},{"variant":"caption","name":"recipientCount","label":"Recipients"},{"name":"sentCount","variant":"caption","label":"Sent"},{"name":"scheduledAt","label":"Scheduled","variant":"caption"}]` */
   fields?: EntityRow[];
-  /** Default: `[{"event":"OPEN_BROADCAST","label":"Open","icon":"arrow-right","variant":"primary"},{"variant":"danger","label":"Cancel","event":"CANCEL_BROADCAST"}]` */
+  /** Default: `[{"event":"OPEN_BROADCAST","icon":"arrow-right","label":"Open","variant":"primary"},{"label":"Cancel","event":"CANCEL_BROADCAST","variant":"danger"}]` */
   itemActions?: EntityRow[];
 }
 

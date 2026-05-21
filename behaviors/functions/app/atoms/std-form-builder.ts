@@ -138,9 +138,9 @@ export interface StdFormBuilderSurveyPublishedPayload {
  * without modifying its state-machine topology.
  */
 export interface StdFormBuilderConfig {
-  /** Default: `[{"label":"Title","name":"title","variant":"caption"},{"variant":"caption","label":"Description","name":"description"},{"label":"Status","variant":"badge","name":"status"},{"variant":"caption","name":"createdAt","label":"Created"}]` */
+  /** Default: `[{"label":"Title","name":"title","variant":"caption"},{"name":"description","variant":"caption","label":"Description"},{"name":"status","variant":"badge","label":"Status"},{"name":"createdAt","label":"Created","variant":"caption"}]` */
   fields?: EntityRow[];
-  /** Default: `[{"label":"Open","icon":"arrow-right","variant":"primary","event":"OPEN_SURVEY"},{"variant":"secondary","label":"Publish","event":"PUBLISH","icon":"send"}]` */
+  /** Default: `[{"icon":"arrow-right","variant":"primary","label":"Open","event":"OPEN_SURVEY"},{"label":"Publish","icon":"send","event":"PUBLISH","variant":"secondary"}]` */
   itemActions?: EntityRow[];
   /** Default: `"Survey Builder"` */
   title?: string;

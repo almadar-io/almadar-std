@@ -172,12 +172,12 @@ export interface StdTimesheetTimesheetLoadFailedPayload {
  * without modifying its state-machine topology.
  */
 export interface StdTimesheetConfig {
-  /** Default: `[{"event":"OPEN_TIMESHEET","icon":"arrow-right","variant":"primary","label":"Open"},{"label":"Delete","event":"REQUEST_DELETE","variant":"danger"}]` */
-  itemActions?: EntityRow[];
   /** Default: `"Timesheets"` */
   title?: string;
-  /** Default: `[{"name":"employeeName","label":"Employee","variant":"caption"},{"label":"Period Start","variant":"caption","name":"periodStart"},{"name":"periodEnd","variant":"caption","label":"Period End"},{"name":"totalHours","label":"Total Hours","variant":"caption"},{"variant":"caption","name":"billableHours","label":"Billable"},{"name":"status","variant":"badge","label":"Status"},{"variant":"caption","name":"approvedBy","label":"Approved By"}]` */
+  /** Default: `[{"variant":"caption","name":"employeeName","label":"Employee"},{"label":"Period Start","variant":"caption","name":"periodStart"},{"name":"periodEnd","variant":"caption","label":"Period End"},{"name":"totalHours","label":"Total Hours","variant":"caption"},{"variant":"caption","name":"billableHours","label":"Billable"},{"name":"status","variant":"badge","label":"Status"},{"name":"approvedBy","label":"Approved By","variant":"caption"}]` */
   fields?: EntityRow[];
+  /** Default: `[{"variant":"primary","event":"OPEN_TIMESHEET","label":"Open","icon":"arrow-right"},{"label":"Delete","variant":"danger","event":"REQUEST_DELETE"}]` */
+  itemActions?: EntityRow[];
 }
 
 /**

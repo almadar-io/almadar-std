@@ -85,10 +85,10 @@ export interface StdTimeEntryTimeEntryLoadFailedPayload {
 export interface StdTimeEntryConfig {
   /** Default: `"Time Entries"` */
   title?: string;
-  /** Default: `[{"label":"Project","variant":"caption","name":"projectName"},{"name":"taskDescription","variant":"caption","label":"Task"},{"label":"Date","name":"workDate","variant":"caption"},{"variant":"caption","label":"Hours","name":"hours"},{"label":"Billable","name":"billable","variant":"badge"},{"name":"hourlyRate","label":"Rate","variant":"caption"},{"label":"Status","variant":"badge","name":"status"}]` */
-  fields?: EntityRow[];
-  /** Default: `[{"event":"OPEN_ENTRY","icon":"arrow-right","label":"Open","variant":"primary"},{"event":"REQUEST_DELETE","label":"Delete","variant":"danger"}]` */
+  /** Default: `[{"variant":"primary","icon":"arrow-right","event":"OPEN_ENTRY","label":"Open"},{"event":"REQUEST_DELETE","label":"Delete","variant":"danger"}]` */
   itemActions?: EntityRow[];
+  /** Default: `[{"label":"Project","name":"projectName","variant":"caption"},{"name":"taskDescription","label":"Task","variant":"caption"},{"variant":"caption","name":"workDate","label":"Date"},{"label":"Hours","variant":"caption","name":"hours"},{"name":"billable","variant":"badge","label":"Billable"},{"variant":"caption","label":"Rate","name":"hourlyRate"},{"label":"Status","name":"status","variant":"badge"}]` */
+  fields?: EntityRow[];
 }
 
 /**

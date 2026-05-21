@@ -125,12 +125,12 @@ export interface StdChangeOrderChangeOrderLoadFailedPayload {
  * without modifying its state-machine topology.
  */
 export interface StdChangeOrderConfig {
-  /** Default: `[{"label":"Open","event":"OPEN_CHANGE_ORDER","variant":"primary","icon":"arrow-right"},{"event":"REQUEST_DELETE","variant":"danger","label":"Delete"}]` */
+  /** Default: `[{"variant":"primary","label":"Open","event":"OPEN_CHANGE_ORDER","icon":"arrow-right"},{"label":"Delete","variant":"danger","event":"REQUEST_DELETE"}]` */
   itemActions?: EntityRow[];
+  /** Default: `[{"label":"CO #","name":"coNumber","variant":"caption"},{"name":"description","label":"Description","variant":"caption"},{"variant":"caption","label":"Cost Impact","name":"costImpact"},{"variant":"caption","name":"scheduleImpactDays","label":"Days"},{"name":"status","label":"Status","variant":"badge"},{"name":"requestedBy","label":"Requested By","variant":"caption"}]` */
+  fields?: EntityRow[];
   /** Default: `"Change Orders"` */
   title?: string;
-  /** Default: `[{"variant":"caption","label":"CO #","name":"coNumber"},{"label":"Description","variant":"caption","name":"description"},{"label":"Cost Impact","variant":"caption","name":"costImpact"},{"name":"scheduleImpactDays","label":"Days","variant":"caption"},{"name":"status","variant":"badge","label":"Status"},{"name":"requestedBy","variant":"caption","label":"Requested By"}]` */
-  fields?: EntityRow[];
 }
 
 /**

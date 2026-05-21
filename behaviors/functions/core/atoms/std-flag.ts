@@ -98,10 +98,10 @@ export interface StdFlagFlagSubmitFailedPayload {
  * without modifying its state-machine topology.
  */
 export interface StdFlagConfig {
-  /** Default: `["spam","abuse","off-topic","misinformation","nsfw","other"]` */
-  reasons?: string[];
   /** Default: `"Report content"` */
   title?: string;
+  /** Default: `["spam","abuse","off-topic","misinformation","nsfw","other"]` */
+  reasons?: string[];
 }
 
 /**

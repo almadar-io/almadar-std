@@ -93,12 +93,12 @@ export interface StdRentChargeRentChargeLoadFailedPayload {
  * without modifying its state-machine topology.
  */
 export interface StdRentChargeConfig {
-  /** Default: `[{"icon":"arrow-right","variant":"primary","label":"Open","event":"OPEN_CHARGE"},{"event":"WAIVE_CHARGE","variant":"danger","label":"Waive"}]` */
+  /** Default: `[{"name":"tenantId","variant":"caption","label":"Tenant"},{"name":"amount","label":"Amount","variant":"caption"},{"label":"Due","variant":"caption","name":"dueDate"},{"label":"Status","variant":"badge","name":"status"},{"name":"paidAt","label":"Paid","variant":"caption"},{"variant":"caption","name":"lateFee","label":"Late Fee"}]` */
+  fields?: EntityRow[];
+  /** Default: `[{"icon":"arrow-right","event":"OPEN_CHARGE","label":"Open","variant":"primary"},{"event":"WAIVE_CHARGE","label":"Waive","variant":"danger"}]` */
   itemActions?: EntityRow[];
   /** Default: `"Rent Charges"` */
   title?: string;
-  /** Default: `[{"label":"Tenant","variant":"caption","name":"tenantId"},{"label":"Amount","name":"amount","variant":"caption"},{"label":"Due","variant":"caption","name":"dueDate"},{"name":"status","label":"Status","variant":"badge"},{"label":"Paid","variant":"caption","name":"paidAt"},{"variant":"caption","label":"Late Fee","name":"lateFee"}]` */
-  fields?: EntityRow[];
 }
 
 /**

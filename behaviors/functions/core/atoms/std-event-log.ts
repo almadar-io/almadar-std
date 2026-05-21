@@ -85,7 +85,7 @@ export interface StdEventLogEventLogSaveFailedPayload {
 export interface StdEventLogConfig {
   /** Default: `"Activity"` */
   title?: string;
-  /** Default: `[{"label":"Created","icon":"plus-circle","key":"created","status":"active"},{"key":"updated","status":"pending","icon":"edit-3","label":"Updated"},{"label":"Approved","icon":"check-circle","key":"approved","status":"complete"},{"key":"rejected","icon":"x-circle","status":"error","label":"Rejected"}]` */
+  /** Default: `[{"key":"created","label":"Created","status":"active","icon":"plus-circle"},{"key":"updated","icon":"edit-3","status":"pending","label":"Updated"},{"icon":"check-circle","status":"complete","label":"Approved","key":"approved"},{"label":"Rejected","status":"error","key":"rejected","icon":"x-circle"}]` */
   kindOptions?: EntityRow[];
   /** Default: `["backfillTitle","backfillDescription","backfillKind","backfillDate"]` */
   formFields?: string[];

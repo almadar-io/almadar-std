@@ -113,10 +113,10 @@ export interface StdImageUploadMultiConfig {
   accept?: string;
   /** Default: `"Upload Images"` */
   title?: string;
-  /** Default: `10` */
-  maxImages?: number;
   /** Default: `10485760` */
   maxBytesPerImage?: number;
+  /** Default: `10` */
+  maxImages?: number;
 }
 
 /**

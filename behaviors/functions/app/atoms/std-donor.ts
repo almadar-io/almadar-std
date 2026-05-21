@@ -87,12 +87,12 @@ export interface StdDonorDonorLoadFailedPayload {
  * without modifying its state-machine topology.
  */
 export interface StdDonorConfig {
-  /** Default: `[{"label":"Name","name":"name","variant":"h4"},{"label":"Type","variant":"badge","name":"donorType"},{"variant":"body","name":"email","label":"Email"},{"label":"Lifetime","variant":"caption","name":"lifetimeAmount"},{"variant":"caption","name":"lastDonationAt","label":"Last gift"}]` */
-  fields?: EntityRow[];
-  /** Default: `[{"icon":"arrow-right","variant":"primary","label":"Open","event":"OPEN_DONOR"},{"variant":"secondary","label":"Thank","event":"THANK_DONOR"}]` */
+  /** Default: `[{"icon":"arrow-right","variant":"primary","event":"OPEN_DONOR","label":"Open"},{"event":"THANK_DONOR","label":"Thank","variant":"secondary"}]` */
   itemActions?: EntityRow[];
   /** Default: `"Donors"` */
   title?: string;
+  /** Default: `[{"label":"Name","name":"name","variant":"h4"},{"label":"Type","variant":"badge","name":"donorType"},{"label":"Email","name":"email","variant":"body"},{"name":"lifetimeAmount","variant":"caption","label":"Lifetime"},{"variant":"caption","name":"lastDonationAt","label":"Last gift"}]` */
+  fields?: EntityRow[];
 }
 
 /**

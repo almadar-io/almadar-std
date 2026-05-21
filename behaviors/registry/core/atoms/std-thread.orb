@@ -302,8 +302,8 @@
                     "ThreadPost",
                     {
                       "emit": {
-                        "failure": "ThreadPostLoadFailed",
-                        "success": "ThreadPostLoaded"
+                        "success": "ThreadPostLoaded",
+                        "failure": "ThreadPostLoadFailed"
                       }
                     }
                   ],
@@ -311,8 +311,8 @@
                     "render-ui",
                     "main",
                     {
-                      "size": "sm",
-                      "type": "spinner"
+                      "type": "spinner",
+                      "size": "sm"
                     }
                   ]
                 ]
@@ -326,16 +326,23 @@
                     "render-ui",
                     "main",
                     {
-                      "type": "stack",
-                      "gap": "md",
-                      "direction": "vertical",
                       "children": [
                         {
+                          "gap": "sm",
+                          "entity": "@payload.data",
+                          "type": "data-list",
+                          "itemActions": [
+                            {
+                              "icon": "message-square",
+                              "label": "Reply",
+                              "event": "REPLY"
+                            }
+                          ],
                           "fields": [
                             {
                               "label": "Author",
-                              "variant": "h4",
-                              "name": "authorName"
+                              "name": "authorName",
+                              "variant": "h4"
                             },
                             {
                               "variant": "body",
@@ -343,24 +350,17 @@
                               "name": "content"
                             },
                             {
+                              "name": "voteCount",
                               "label": "Votes",
-                              "variant": "caption",
-                              "name": "voteCount"
+                              "variant": "caption"
                             }
                           ],
-                          "entity": "@payload.data",
-                          "gap": "sm",
-                          "itemActions": [
-                            {
-                              "event": "REPLY",
-                              "icon": "message-square",
-                              "label": "Reply"
-                            }
-                          ],
-                          "variant": "card",
-                          "type": "data-list"
+                          "variant": "card"
                         }
-                      ]
+                      ],
+                      "direction": "vertical",
+                      "gap": "md",
+                      "type": "stack"
                     }
                   ]
                 ]
@@ -374,9 +374,9 @@
                     "render-ui",
                     "main",
                     {
-                      "type": "alert",
+                      "message": "@payload.error",
                       "variant": "error",
-                      "message": "@payload.error"
+                      "type": "alert"
                     }
                   ]
                 ]
@@ -400,8 +400,8 @@
                     "render-ui",
                     "main",
                     {
-                      "type": "spinner",
-                      "size": "sm"
+                      "size": "sm",
+                      "type": "spinner"
                     }
                   ]
                 ]
@@ -415,40 +415,40 @@
                     "render-ui",
                     "main",
                     {
+                      "type": "stack",
+                      "direction": "vertical",
                       "children": [
                         {
-                          "type": "data-list",
-                          "entity": "@payload.data",
-                          "variant": "card",
                           "gap": "sm",
+                          "entity": "@payload.data",
                           "fields": [
                             {
-                              "label": "Author",
                               "name": "authorName",
+                              "label": "Author",
                               "variant": "h4"
                             },
                             {
-                              "variant": "body",
+                              "label": "",
                               "name": "content",
-                              "label": ""
+                              "variant": "body"
                             },
                             {
-                              "name": "voteCount",
                               "label": "Votes",
-                              "variant": "caption"
+                              "variant": "caption",
+                              "name": "voteCount"
                             }
                           ],
                           "itemActions": [
                             {
-                              "event": "REPLY",
                               "label": "Reply",
+                              "event": "REPLY",
                               "icon": "message-square"
                             }
-                          ]
+                          ],
+                          "variant": "card",
+                          "type": "data-list"
                         }
                       ],
-                      "type": "stack",
-                      "direction": "vertical",
                       "gap": "md"
                     }
                   ]
@@ -469,40 +469,40 @@
                     "main",
                     {
                       "direction": "vertical",
-                      "type": "stack",
                       "children": [
                         {
-                          "variant": "h4",
                           "type": "typography",
+                          "variant": "h4",
                           "content": "Write a reply"
                         },
                         {
-                          "placeholder": "Your reply…",
                           "action": "EDIT_REPLY",
+                          "placeholder": "Your reply…",
                           "type": "textarea"
                         },
                         {
+                          "direction": "horizontal",
+                          "gap": "sm",
+                          "type": "stack",
                           "children": [
                             {
-                              "icon": "send",
-                              "action": "SUBMIT_REPLY",
-                              "variant": "primary",
                               "type": "button",
-                              "label": "Submit"
+                              "variant": "primary",
+                              "label": "Submit",
+                              "action": "SUBMIT_REPLY",
+                              "icon": "send"
                             },
                             {
                               "label": "Cancel",
-                              "variant": "secondary",
+                              "action": "CANCEL_REPLY",
                               "type": "button",
-                              "action": "CANCEL_REPLY"
+                              "variant": "secondary"
                             }
-                          ],
-                          "type": "stack",
-                          "gap": "sm",
-                          "direction": "horizontal"
+                          ]
                         }
                       ],
-                      "gap": "md"
+                      "gap": "md",
+                      "type": "stack"
                     }
                   ]
                 ]
@@ -575,8 +575,8 @@
                     "ThreadPost",
                     {
                       "emit": {
-                        "success": "ThreadPostLoaded",
-                        "failure": "ThreadPostLoadFailed"
+                        "failure": "ThreadPostLoadFailed",
+                        "success": "ThreadPostLoaded"
                       }
                     }
                   ]
@@ -591,8 +591,8 @@
                     "render-ui",
                     "main",
                     {
-                      "type": "alert",
                       "message": "@payload.error",
+                      "type": "alert",
                       "variant": "error"
                     }
                   ]
@@ -626,17 +626,19 @@
             ]
           },
           "config": {
-            "threadRootId": {
-              "type": "string",
-              "default": "",
-              "label": "Root post id",
-              "description": "Top-level post whose descendants are loaded (blank = all roots)"
-            },
             "flat": {
               "type": "boolean",
               "default": false,
               "label": "Flat thread",
-              "description": "Render replies as a linear list instead of nested tree"
+              "description": "Render replies as a linear list instead of nested tree",
+              "tier": "customization"
+            },
+            "threadRootId": {
+              "type": "string",
+              "default": "",
+              "label": "Root post id",
+              "description": "Top-level post whose descendants are loaded (blank = all roots)",
+              "tier": "advanced"
             }
           },
           "scope": "collection"
