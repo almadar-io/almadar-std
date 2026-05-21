@@ -31,8 +31,8 @@ const ALIAS = 'MarketingCampaign';
  * without modifying its state-machine topology.
  */
 export interface StdMarketingCampaignConfig {
-  notifications?: TraitConfig;
   navItems?: TraitConfig;
+  notifications?: TraitConfig;
 }
 
 /**
@@ -219,16 +219,13 @@ export function stdMarketingCampaignCampaignOrbital(params: StdMarketingCampaign
         'ref': 'AppShell.traits.AppLayout',
         'name': 'CampaignAppLayout',
         'config': {
-          'searchEvent': 'CAMPAIGN_SEARCH',
-          'contentTrait': '@trait.CampaignCatalog',
-          'appName': 'Marketing',
-          'notifications': [],
           'notificationClickEvent': 'CAMPAIGN_NOTIFICATIONS_OPEN',
+          'appName': 'Marketing',
           'navItems': [
             {
-              'label': 'Campaigns',
-              'icon': 'megaphone',
               'href': '/campaigns',
+              'icon': 'megaphone',
+              'label': 'Campaigns',
             },
             {
               'icon': 'send',
@@ -236,9 +233,9 @@ export function stdMarketingCampaignCampaignOrbital(params: StdMarketingCampaign
               'href': '/broadcasts',
             },
             {
-              'icon': 'users',
               'label': 'Segments',
               'href': '/segments',
+              'icon': 'users',
             },
             {
               'label': 'Sequences',
@@ -246,15 +243,18 @@ export function stdMarketingCampaignCampaignOrbital(params: StdMarketingCampaign
               'icon': 'mail',
             },
             {
-              'href': '/templates',
               'icon': 'file-text',
               'label': 'Templates',
+              'href': '/templates',
             },
           ],
+          'searchEvent': 'CAMPAIGN_SEARCH',
+          'notifications': [],
+          'contentTrait': '@trait.CampaignCatalog',
         },
         'events': {
-          'NOTIFY_CLICK': 'CAMPAIGN_NOTIFICATIONS_OPEN',
           'SEARCH': 'CAMPAIGN_SEARCH',
+          'NOTIFY_CLICK': 'CAMPAIGN_NOTIFICATIONS_OPEN',
         },
       }),
       rebindInlineTraitEntity({
@@ -340,16 +340,12 @@ export function stdMarketingCampaignCampaignOrbital(params: StdMarketingCampaign
                     'type': 'stack',
                     'children': [
                       {
-                        'type': 'stack',
-                        'align': 'center',
-                        'gap': 'md',
-                        'justify': 'between',
-                        'direction': 'horizontal',
                         'children': [
                           {
-                            'type': 'stack',
-                            'align': 'center',
                             'gap': 'sm',
+                            'align': 'center',
+                            'direction': 'horizontal',
+                            'type': 'stack',
                             'children': [
                               {
                                 'type': 'icon',
@@ -357,40 +353,44 @@ export function stdMarketingCampaignCampaignOrbital(params: StdMarketingCampaign
                               },
                               {
                                 'variant': 'h2',
-                                'type': 'typography',
                                 'content': 'Campaigns',
+                                'type': 'typography',
                               },
                             ],
-                            'direction': 'horizontal',
                           },
                           {
-                            'direction': 'horizontal',
                             'gap': 'sm',
+                            'type': 'stack',
                             'children': [
                               {
                                 'label': 'New Campaign',
-                                'type': 'button',
-                                'action': 'CREATE',
-                                'variant': 'primary',
                                 'icon': 'plus',
+                                'type': 'button',
+                                'variant': 'primary',
+                                'action': 'CREATE',
                               },
                             ],
-                            'type': 'stack',
+                            'direction': 'horizontal',
                           },
                         ],
+                        'gap': 'md',
+                        'justify': 'between',
+                        'align': 'center',
+                        'type': 'stack',
+                        'direction': 'horizontal',
                       },
                       {
                         'type': 'divider',
                       },
                       {
-                        'type': 'stack',
                         'gap': 'md',
+                        'direction': 'horizontal',
+                        'align': 'center',
+                        'type': 'stack',
                         'children': [
                           '@trait.CampaignSearch',
                           '@trait.CampaignFilter',
                         ],
-                        'direction': 'horizontal',
-                        'align': 'center',
                       },
                       '@trait.CampaignStats',
                       '@trait.CampaignGraphs',
@@ -419,34 +419,34 @@ export function stdMarketingCampaignCampaignOrbital(params: StdMarketingCampaign
                   'render-ui',
                   'main',
                   {
-                    'gap': 'md',
+                    'type': 'stack',
+                    'align': 'center',
+                    'className': 'py-8',
                     'children': [
                       {
                         'type': 'icon',
                         'name': 'bell',
                       },
                       {
-                        'type': 'typography',
                         'content': 'No notifications',
+                        'type': 'typography',
                         'variant': 'h3',
                       },
                       {
                         'variant': 'caption',
-                        'type': 'typography',
                         'color': 'muted',
+                        'type': 'typography',
                         'content': 'You\'re all caught up.',
                       },
                       {
-                        'variant': 'ghost',
                         'action': 'INIT',
+                        'variant': 'ghost',
                         'type': 'button',
                         'label': 'Back to campaigns',
                       },
                     ],
-                    'align': 'center',
-                    'type': 'stack',
+                    'gap': 'md',
                     'direction': 'vertical',
-                    'className': 'py-8',
                   },
                 ],
               ],
@@ -470,8 +470,8 @@ export function stdMarketingCampaignCampaignOrbital(params: StdMarketingCampaign
           'filters': [
             {
               'filterType': 'select',
-              'field': 'channel',
               'label': 'Channel',
+              'field': 'channel',
               'options': [
                 'email',
                 'sms',
@@ -480,9 +480,6 @@ export function stdMarketingCampaignCampaignOrbital(params: StdMarketingCampaign
               ],
             },
             {
-              'label': 'Status',
-              'field': 'status',
-              'filterType': 'select',
               'options': [
                 'draft',
                 'scheduled',
@@ -490,6 +487,9 @@ export function stdMarketingCampaignCampaignOrbital(params: StdMarketingCampaign
                 'sent',
                 'paused',
               ],
+              'label': 'Status',
+              'field': 'status',
+              'filterType': 'select',
             },
           ],
           'event': 'CAMPAIGN_FILTER',
@@ -499,17 +499,18 @@ export function stdMarketingCampaignCampaignOrbital(params: StdMarketingCampaign
         'ref': 'Stats.traits.StatsItemStats',
         'name': 'CampaignStats',
         'config': {
-          'title': 'Campaigns',
           'metrics': [
             {
-              'format': 'number',
+              'variant': 'primary',
               'aggregation': 'count',
               'icon': 'megaphone',
+              'format': 'number',
               'label': 'Total',
-              'variant': 'primary',
             },
             {
-              'label': 'Scheduled',
+              'icon': 'clock',
+              'aggregation': 'count',
+              'format': 'number',
               'filter': [
                 'fn',
                 'row',
@@ -519,14 +520,12 @@ export function stdMarketingCampaignCampaignOrbital(params: StdMarketingCampaign
                   'scheduled',
                 ],
               ],
-              'format': 'number',
+              'label': 'Scheduled',
               'variant': 'info',
-              'aggregation': 'count',
-              'icon': 'clock',
             },
             {
-              'aggregation': 'count',
               'variant': 'success',
+              'format': 'number',
               'filter': [
                 'fn',
                 'row',
@@ -537,19 +536,20 @@ export function stdMarketingCampaignCampaignOrbital(params: StdMarketingCampaign
                 ],
               ],
               'icon': 'check-circle',
-              'format': 'number',
+              'aggregation': 'count',
               'label': 'Sent',
             },
             {
-              'icon': 'eye',
+              'format': 'number',
               'suffix': '%',
+              'label': 'Open Rate',
               'field': 'openRate',
               'aggregation': 'avg',
-              'label': 'Open Rate',
-              'format': 'number',
+              'icon': 'eye',
               'variant': 'warning',
             },
           ],
+          'title': 'Campaigns',
         },
         'listens': [
           {
@@ -570,9 +570,9 @@ export function stdMarketingCampaignCampaignOrbital(params: StdMarketingCampaign
           'showLegend': false,
           'subtitle': 'Volume across channels',
           'height': 240,
-          'categoryField': 'channel',
           'aggregation': 'count',
           'chartType': 'bar',
+          'categoryField': 'channel',
         },
         'listens': [
           {
@@ -913,22 +913,22 @@ export function stdMarketingCampaignCampaignOrbital(params: StdMarketingCampaign
                   'render-ui',
                   'main',
                   {
-                    'className': 'py-12',
-                    'direction': 'vertical',
                     'align': 'center',
-                    'gap': 'md',
                     'children': [
                       {
                         'type': 'spinner',
                       },
                       {
+                        'color': 'muted',
                         'type': 'typography',
                         'variant': 'caption',
-                        'color': 'muted',
                         'content': 'Loading campaigns…',
                       },
                     ],
+                    'gap': 'md',
+                    'direction': 'vertical',
                     'type': 'stack',
+                    'className': 'py-12',
                   },
                 ],
               ],
@@ -943,56 +943,35 @@ export function stdMarketingCampaignCampaignOrbital(params: StdMarketingCampaign
                   'main',
                   {
                     'gap': 'md',
-                    'type': 'stack',
-                    'direction': 'vertical',
                     'children': [
                       {
-                        'entity': '@payload.data',
-                        'itemActions': [
-                          {
-                            'label': 'View',
-                            'event': 'VIEW',
-                            'variant': 'ghost',
-                          },
-                          {
-                            'variant': 'ghost',
-                            'label': 'Edit',
-                            'event': 'EDIT',
-                          },
-                          {
-                            'label': 'Delete',
-                            'variant': 'danger',
-                            'event': 'DELETE',
-                          },
-                        ],
-                        'cols': 1,
                         'type': 'data-grid',
                         'fields': [
                           {
+                            'variant': 'h4',
+                            'icon': 'megaphone',
                             'name': 'name',
                             'label': 'Name',
-                            'icon': 'megaphone',
-                            'variant': 'h4',
                           },
                           {
                             'name': 'channel',
-                            'variant': 'badge',
                             'label': 'Channel',
+                            'variant': 'badge',
                           },
                           {
+                            'name': 'status',
                             'label': 'Status',
                             'variant': 'badge',
-                            'name': 'status',
                           },
                           {
+                            'name': 'audience',
                             'variant': 'caption',
                             'label': 'Audience',
-                            'name': 'audience',
                           },
                           {
-                            'name': 'sendCount',
-                            'variant': 'body',
                             'label': 'Sends',
+                            'variant': 'body',
+                            'name': 'sendCount',
                           },
                           {
                             'name': 'openRate',
@@ -1005,15 +984,36 @@ export function stdMarketingCampaignCampaignOrbital(params: StdMarketingCampaign
                             'name': 'clickRate',
                           },
                           {
-                            'format': 'date',
                             'label': 'Scheduled',
                             'name': 'scheduledAt',
                             'variant': 'caption',
+                            'format': 'date',
                           },
                         ],
+                        'itemActions': [
+                          {
+                            'label': 'View',
+                            'event': 'VIEW',
+                            'variant': 'ghost',
+                          },
+                          {
+                            'variant': 'ghost',
+                            'label': 'Edit',
+                            'event': 'EDIT',
+                          },
+                          {
+                            'event': 'DELETE',
+                            'variant': 'danger',
+                            'label': 'Delete',
+                          },
+                        ],
+                        'entity': '@payload.data',
+                        'cols': 1,
                         'gap': 'sm',
                       },
                     ],
+                    'type': 'stack',
+                    'direction': 'vertical',
                   },
                 ],
               ],
@@ -1027,36 +1027,36 @@ export function stdMarketingCampaignCampaignOrbital(params: StdMarketingCampaign
                   'render-ui',
                   'main',
                   {
+                    'direction': 'vertical',
+                    'align': 'center',
+                    'gap': 'md',
                     'className': 'py-12',
                     'children': [
                       {
                         'name': 'alert-triangle',
-                        'color': 'destructive',
                         'type': 'icon',
+                        'color': 'destructive',
                       },
                       {
-                        'type': 'typography',
                         'content': 'Failed to load campaigns',
+                        'type': 'typography',
                         'variant': 'h3',
                       },
                       {
+                        'content': '@payload.error',
                         'type': 'typography',
                         'color': 'muted',
-                        'content': '@payload.error',
                         'variant': 'body',
                       },
                       {
-                        'variant': 'primary',
-                        'action': 'INIT',
-                        'icon': 'rotate-ccw',
                         'type': 'button',
                         'label': 'Retry',
+                        'variant': 'primary',
+                        'icon': 'rotate-ccw',
+                        'action': 'INIT',
                       },
                     ],
-                    'direction': 'vertical',
                     'type': 'stack',
-                    'align': 'center',
-                    'gap': 'md',
                   },
                 ],
               ],
@@ -1133,6 +1133,9 @@ export function stdMarketingCampaignCampaignOrbital(params: StdMarketingCampaign
         'name': 'CampaignCreate',
         'linkedEntity': canonicalName,
         'config': {
+          'mode': 'create',
+          'icon': 'plus-circle',
+          'title': 'New Campaign',
           'fields': [
             'name',
             'description',
@@ -1140,9 +1143,6 @@ export function stdMarketingCampaignCampaignOrbital(params: StdMarketingCampaign
             'audience',
             'scheduledAt',
           ],
-          'title': 'New Campaign',
-          'icon': 'plus-circle',
-          'mode': 'create',
         },
         'events': {
           'OPEN': 'CREATE',
@@ -1163,9 +1163,6 @@ export function stdMarketingCampaignCampaignOrbital(params: StdMarketingCampaign
         'name': 'CampaignEdit',
         'linkedEntity': canonicalName,
         'config': {
-          'mode': 'edit',
-          'icon': 'edit',
-          'title': 'Edit Campaign',
           'fields': [
             'name',
             'description',
@@ -1174,6 +1171,9 @@ export function stdMarketingCampaignCampaignOrbital(params: StdMarketingCampaign
             'audience',
             'scheduledAt',
           ],
+          'icon': 'edit',
+          'title': 'Edit Campaign',
+          'mode': 'edit',
         },
         'events': {
           'OPEN': 'EDIT',
@@ -1194,6 +1194,7 @@ export function stdMarketingCampaignCampaignOrbital(params: StdMarketingCampaign
         'name': 'CampaignView',
         'linkedEntity': canonicalName,
         'config': {
+          'icon': 'eye',
           'fields': [
             'name',
             'description',
@@ -1205,9 +1206,8 @@ export function stdMarketingCampaignCampaignOrbital(params: StdMarketingCampaign
             'clickRate',
             'scheduledAt',
           ],
-          'title': 'View Campaign',
           'mode': 'edit',
-          'icon': 'eye',
+          'title': 'View Campaign',
         },
         'events': {
           'OPEN': 'VIEW',
@@ -1228,14 +1228,14 @@ export function stdMarketingCampaignCampaignOrbital(params: StdMarketingCampaign
         'name': 'CampaignDelete',
         'linkedEntity': canonicalName,
         'config': {
+          'title': 'Delete Campaign',
           'confirmLabel': 'Delete',
           'icon': 'alert-triangle',
-          'title': 'Delete Campaign',
           'alertMessage': 'This action cannot be undone.',
         },
         'events': {
-          'REQUEST': 'DELETE',
           'CONFIRM': 'CONFIRM_DELETE',
+          'REQUEST': 'DELETE',
         },
         'listens': [
           {

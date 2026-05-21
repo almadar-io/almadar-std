@@ -143,9 +143,9 @@ export interface StdTechnicianDispatchAssignmentRejectedPayload {
 export interface StdTechnicianDispatchConfig {
   /** Default: `"Dispatch Board"` */
   title?: string;
-  /** Default: `[{"label":"Technician","variant":"body","name":"name"},{"variant":"caption","name":"skills","label":"Skills"},{"label":"Available","name":"available","variant":"badge"},{"name":"currentOrderId","label":"Current Order","variant":"caption"},{"label":"Last Seen","variant":"caption","name":"lastSeenAt"}]` */
+  /** Default: `[{"label":"Technician","variant":"body","name":"name"},{"label":"Skills","name":"skills","variant":"caption"},{"variant":"badge","label":"Available","name":"available"},{"name":"currentOrderId","label":"Current Order","variant":"caption"},{"label":"Last Seen","name":"lastSeenAt","variant":"caption"}]` */
   fields?: TraitConfig[];
-  /** Default: `[{"icon":"arrow-right","event":"OPEN_TECHNICIAN","variant":"primary","label":"Open"},{"label":"Assign","event":"ASSIGN","variant":"danger"}]` */
+  /** Default: `[{"icon":"arrow-right","variant":"primary","event":"OPEN_TECHNICIAN","label":"Open"},{"label":"Assign","event":"ASSIGN","variant":"danger"}]` */
   itemActions?: TraitConfig[];
 }
 

@@ -108,12 +108,12 @@ export interface StdWaitlistWaitlistEntryLoadFailedPayload {
  * without modifying its state-machine topology.
  */
 export interface StdWaitlistConfig {
-  /** Default: `[{"variant":"badge","name":"position","label":"#"},{"variant":"caption","label":"User","name":"userId"},{"label":"Type","name":"targetType","variant":"badge"},{"variant":"badge","name":"status","label":"Status"},{"label":"Joined","variant":"caption","name":"joinedAt"}]` */
-  fields?: TraitConfig[];
-  /** Default: `[{"icon":"arrow-right","label":"Open","event":"OPEN_ENTRY","variant":"primary"},{"label":"Cancel","variant":"danger","icon":"x","event":"CANCEL"}]` */
+  /** Default: `[{"event":"OPEN_ENTRY","label":"Open","icon":"arrow-right","variant":"primary"},{"icon":"x","event":"CANCEL","variant":"danger","label":"Cancel"}]` */
   itemActions?: TraitConfig[];
   /** Default: `"Waitlist"` */
   title?: string;
+  /** Default: `[{"variant":"badge","name":"position","label":"#"},{"label":"User","name":"userId","variant":"caption"},{"label":"Type","variant":"badge","name":"targetType"},{"variant":"badge","name":"status","label":"Status"},{"variant":"caption","name":"joinedAt","label":"Joined"}]` */
+  fields?: TraitConfig[];
 }
 
 /**

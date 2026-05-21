@@ -118,14 +118,14 @@ export interface StdApprovalRequestApprovalRequestLoadFailedPayload {
  * without modifying its state-machine topology.
  */
 export interface StdApprovalRequestConfig {
-  /** Default: `[{"icon":"arrow-right","label":"Open","event":"OPEN_REQUEST","variant":"primary"},{"variant":"danger","label":"Withdraw","event":"WITHDRAW"}]` */
-  itemActions?: TraitConfig[];
-  /** Default: `false` */
-  requireCommentOnReject?: boolean;
-  /** Default: `[{"label":"Title","variant":"caption","name":"title"},{"name":"targetType","label":"Target","variant":"badge"},{"label":"Requested By","name":"requestedBy","variant":"caption"},{"name":"assignedApprover","variant":"caption","label":"Approver"},{"label":"Decision","variant":"badge","name":"approverDecision"},{"name":"status","label":"Status","variant":"badge"},{"variant":"caption","label":"Decided","name":"decidedAt"}]` */
+  /** Default: `[{"name":"title","label":"Title","variant":"caption"},{"label":"Target","variant":"badge","name":"targetType"},{"name":"requestedBy","variant":"caption","label":"Requested By"},{"label":"Approver","name":"assignedApprover","variant":"caption"},{"label":"Decision","variant":"badge","name":"approverDecision"},{"name":"status","label":"Status","variant":"badge"},{"label":"Decided","variant":"caption","name":"decidedAt"}]` */
   fields?: TraitConfig[];
+  /** Default: `[{"label":"Open","event":"OPEN_REQUEST","variant":"primary","icon":"arrow-right"},{"label":"Withdraw","event":"WITHDRAW","variant":"danger"}]` */
+  itemActions?: TraitConfig[];
   /** Default: `"Approval Requests"` */
   title?: string;
+  /** Default: `false` */
+  requireCommentOnReject?: boolean;
 }
 
 /**

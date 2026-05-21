@@ -31,8 +31,8 @@ const ALIAS = 'Inventory';
  * without modifying its state-machine topology.
  */
 export interface StdInventoryConfig {
-  notifications?: TraitConfig;
   navItems?: TraitConfig;
+  notifications?: TraitConfig;
 }
 
 /**
@@ -195,10 +195,6 @@ export function stdInventoryInventoryItemOrbital(params: StdInventoryInventoryIt
         'ref': 'AppShell.traits.AppLayout',
         'name': 'InventoryAppLayout',
         'config': {
-          'contentTrait': '@trait.InventoryCatalog',
-          'notifications': [],
-          'appName': 'Inventory Management',
-          'searchEvent': 'INVENTORY_SEARCH',
           'notificationClickEvent': 'INVENTORY_NOTIFICATIONS_OPEN',
           'navItems': [
             {
@@ -207,8 +203,8 @@ export function stdInventoryInventoryItemOrbital(params: StdInventoryInventoryIt
               'icon': 'package',
             },
             {
-              'href': '/stock-levels',
               'label': 'Stock Levels',
+              'href': '/stock-levels',
               'icon': 'package',
             },
             {
@@ -222,11 +218,15 @@ export function stdInventoryInventoryItemOrbital(params: StdInventoryInventoryIt
               'label': 'Reorder Rules',
             },
             {
+              'label': 'Adjustments',
               'href': '/adjustments',
               'icon': 'edit',
-              'label': 'Adjustments',
             },
           ],
+          'contentTrait': '@trait.InventoryCatalog',
+          'searchEvent': 'INVENTORY_SEARCH',
+          'appName': 'Inventory Management',
+          'notifications': [],
         },
         'events': {
           'SEARCH': 'INVENTORY_SEARCH',
@@ -313,55 +313,56 @@ export function stdInventoryInventoryItemOrbital(params: StdInventoryInventoryIt
                   'render-ui',
                   'main',
                   {
+                    'gap': 'lg',
                     'children': [
                       {
-                        'type': 'stack',
-                        'align': 'center',
-                        'justify': 'between',
                         'children': [
                           {
-                            'direction': 'horizontal',
                             'align': 'center',
-                            'type': 'stack',
-                            'gap': 'sm',
                             'children': [
                               {
-                                'type': 'icon',
                                 'name': 'package',
+                                'type': 'icon',
                               },
                               {
-                                'type': 'typography',
                                 'content': 'Inventory Items',
                                 'variant': 'h2',
+                                'type': 'typography',
                               },
                             ],
+                            'type': 'stack',
+                            'gap': 'sm',
+                            'direction': 'horizontal',
                           },
                           {
-                            'type': 'stack',
                             'direction': 'horizontal',
+                            'type': 'stack',
                             'gap': 'sm',
                             'children': [
                               {
-                                'type': 'button',
-                                'icon': 'plus',
                                 'label': 'New Item',
                                 'action': 'CREATE',
                                 'variant': 'primary',
+                                'icon': 'plus',
+                                'type': 'button',
                               },
                             ],
                           },
                         ],
-                        'direction': 'horizontal',
                         'gap': 'md',
+                        'type': 'stack',
+                        'justify': 'between',
+                        'align': 'center',
+                        'direction': 'horizontal',
                       },
                       {
                         'type': 'divider',
                       },
                       {
-                        'gap': 'md',
-                        'align': 'center',
                         'type': 'stack',
+                        'gap': 'md',
                         'direction': 'horizontal',
+                        'align': 'center',
                         'children': [
                           '@trait.InventorySearch',
                           '@trait.InventoryFilter',
@@ -376,7 +377,6 @@ export function stdInventoryInventoryItemOrbital(params: StdInventoryInventoryIt
                     ],
                     'direction': 'vertical',
                     'type': 'stack',
-                    'gap': 'lg',
                   },
                 ],
               ],
@@ -397,31 +397,31 @@ export function stdInventoryInventoryItemOrbital(params: StdInventoryInventoryIt
                   {
                     'children': [
                       {
-                        'name': 'bell',
                         'type': 'icon',
+                        'name': 'bell',
                       },
                       {
-                        'content': 'No notifications',
                         'type': 'typography',
                         'variant': 'h3',
+                        'content': 'No notifications',
                       },
                       {
-                        'color': 'muted',
-                        'variant': 'caption',
                         'content': 'You\'re all caught up.',
+                        'color': 'muted',
                         'type': 'typography',
+                        'variant': 'caption',
                       },
                       {
-                        'type': 'button',
-                        'action': 'INIT',
                         'variant': 'ghost',
+                        'action': 'INIT',
                         'label': 'Back to inventory',
+                        'type': 'button',
                       },
                     ],
-                    'direction': 'vertical',
-                    'type': 'stack',
-                    'gap': 'md',
                     'align': 'center',
+                    'direction': 'vertical',
+                    'gap': 'md',
+                    'type': 'stack',
                     'className': 'py-8',
                   },
                 ],
@@ -445,13 +445,13 @@ export function stdInventoryInventoryItemOrbital(params: StdInventoryInventoryIt
         'config': {
           'filters': [
             {
+              'filterType': 'select',
               'label': 'Status',
               'options': [
                 'active',
                 'discontinued',
                 'draft',
               ],
-              'filterType': 'select',
               'field': 'status',
             },
           ],
@@ -462,20 +462,16 @@ export function stdInventoryInventoryItemOrbital(params: StdInventoryInventoryIt
         'ref': 'Stats.traits.StatsItemStats',
         'name': 'InventoryStats',
         'config': {
+          'title': 'Inventory',
           'metrics': [
             {
-              'format': 'number',
-              'icon': 'package',
-              'label': 'Total SKUs',
-              'aggregation': 'count',
               'variant': 'primary',
+              'format': 'number',
+              'label': 'Total SKUs',
+              'icon': 'package',
+              'aggregation': 'count',
             },
             {
-              'icon': 'check-circle',
-              'aggregation': 'count',
-              'format': 'number',
-              'label': 'Active',
-              'variant': 'success',
               'filter': [
                 'fn',
                 'row',
@@ -485,6 +481,11 @@ export function stdInventoryInventoryItemOrbital(params: StdInventoryInventoryIt
                   'active',
                 ],
               ],
+              'icon': 'check-circle',
+              'aggregation': 'count',
+              'variant': 'success',
+              'format': 'number',
+              'label': 'Active',
             },
             {
               'filter': [
@@ -496,14 +497,13 @@ export function stdInventoryInventoryItemOrbital(params: StdInventoryInventoryIt
                   'discontinued',
                 ],
               ],
+              'format': 'number',
+              'variant': 'warning',
+              'aggregation': 'count',
               'label': 'Discontinued',
               'icon': 'circle-off',
-              'variant': 'warning',
-              'format': 'number',
-              'aggregation': 'count',
             },
           ],
-          'title': 'Inventory',
         },
         'listens': [
           {
@@ -520,13 +520,13 @@ export function stdInventoryInventoryItemOrbital(params: StdInventoryInventoryIt
         'ref': 'Graphs.traits.GraphItemGraph',
         'name': 'InventoryGraphs',
         'config': {
-          'subtitle': 'SKU distribution across categories',
-          'showLegend': false,
-          'title': 'Items by Category',
           'chartType': 'bar',
+          'title': 'Items by Category',
           'categoryField': 'category',
           'aggregation': 'count',
           'height': 240,
+          'showLegend': false,
+          'subtitle': 'SKU distribution across categories',
         },
         'listens': [
           {
@@ -544,40 +544,16 @@ export function stdInventoryInventoryItemOrbital(params: StdInventoryInventoryIt
         'name': 'InventoryBrowseList',
         'linkedEntity': canonicalName,
         'config': {
-          'fields': [
-            {
-              'variant': 'h4',
-              'icon': 'tag',
-              'name': 'sku',
-            },
-            {
-              'name': 'name',
-              'variant': 'body',
-            },
-            {
-              'name': 'category',
-              'variant': 'caption',
-            },
-            {
-              'name': 'status',
-              'variant': 'badge',
-            },
-            {
-              'variant': 'caption',
-              'name': 'defaultUnitCost',
-            },
-          ],
-          'cols': 1,
           'itemActions': [
             {
+              'variant': 'ghost',
               'label': 'View',
               'event': 'VIEW',
-              'variant': 'ghost',
             },
             {
+              'event': 'EDIT',
               'variant': 'ghost',
               'label': 'Edit',
-              'event': 'EDIT',
             },
             {
               'label': 'Delete',
@@ -586,6 +562,30 @@ export function stdInventoryInventoryItemOrbital(params: StdInventoryInventoryIt
             },
           ],
           'gap': 'sm',
+          'fields': [
+            {
+              'variant': 'h4',
+              'name': 'sku',
+              'icon': 'tag',
+            },
+            {
+              'name': 'name',
+              'variant': 'body',
+            },
+            {
+              'variant': 'caption',
+              'name': 'category',
+            },
+            {
+              'name': 'status',
+              'variant': 'badge',
+            },
+            {
+              'name': 'defaultUnitCost',
+              'variant': 'caption',
+            },
+          ],
+          'cols': 1,
         },
         'listens': [
           {
@@ -635,7 +635,6 @@ export function stdInventoryInventoryItemOrbital(params: StdInventoryInventoryIt
         'name': 'InventoryCreate',
         'linkedEntity': canonicalName,
         'config': {
-          'icon': 'plus-circle',
           'fields': [
             'sku',
             'name',
@@ -643,8 +642,9 @@ export function stdInventoryInventoryItemOrbital(params: StdInventoryInventoryIt
             'defaultUnitCost',
             'status',
           ],
-          'mode': 'create',
           'title': 'New Item',
+          'mode': 'create',
+          'icon': 'plus-circle',
         },
         'events': {
           'OPEN': 'CREATE',
@@ -665,7 +665,6 @@ export function stdInventoryInventoryItemOrbital(params: StdInventoryInventoryIt
         'name': 'InventoryEdit',
         'linkedEntity': canonicalName,
         'config': {
-          'title': 'Edit Item',
           'fields': [
             'sku',
             'name',
@@ -673,8 +672,9 @@ export function stdInventoryInventoryItemOrbital(params: StdInventoryInventoryIt
             'defaultUnitCost',
             'status',
           ],
-          'mode': 'edit',
           'icon': 'edit',
+          'title': 'Edit Item',
+          'mode': 'edit',
         },
         'events': {
           'OPEN': 'EDIT',
@@ -695,9 +695,8 @@ export function stdInventoryInventoryItemOrbital(params: StdInventoryInventoryIt
         'name': 'InventoryView',
         'linkedEntity': canonicalName,
         'config': {
-          'mode': 'edit',
-          'icon': 'eye',
           'title': 'View Item',
+          'mode': 'edit',
           'fields': [
             'sku',
             'name',
@@ -705,6 +704,7 @@ export function stdInventoryInventoryItemOrbital(params: StdInventoryInventoryIt
             'defaultUnitCost',
             'status',
           ],
+          'icon': 'eye',
         },
         'events': {
           'OPEN': 'VIEW',
@@ -725,14 +725,14 @@ export function stdInventoryInventoryItemOrbital(params: StdInventoryInventoryIt
         'name': 'InventoryDelete',
         'linkedEntity': canonicalName,
         'config': {
-          'icon': 'alert-triangle',
-          'title': 'Delete Item',
           'confirmLabel': 'Delete',
           'alertMessage': 'This action cannot be undone.',
+          'icon': 'alert-triangle',
+          'title': 'Delete Item',
         },
         'events': {
-          'REQUEST': 'DELETE',
           'CONFIRM': 'CONFIRM_DELETE',
+          'REQUEST': 'DELETE',
         },
         'listens': [
           {
@@ -1177,11 +1177,14 @@ export function stdInventoryStockLevelPanelOrbital(params: StdInventoryStockLeve
         'ref': 'AppShell.traits.AppLayout',
         'name': 'StockLevelAppLayout',
         'config': {
+          'searchEvent': 'STOCK_LEVEL_SEARCH',
+          'contentTrait': '@trait.StockLevelPanel',
+          'appName': 'Inventory Management',
           'navItems': [
             {
-              'label': 'Items',
-              'href': '/inventory',
               'icon': 'package',
+              'href': '/inventory',
+              'label': 'Items',
             },
             {
               'icon': 'package',
@@ -1189,26 +1192,23 @@ export function stdInventoryStockLevelPanelOrbital(params: StdInventoryStockLeve
               'href': '/stock-levels',
             },
             {
+              'href': '/warehouses',
               'icon': 'warehouse',
               'label': 'Warehouses',
-              'href': '/warehouses',
             },
             {
-              'icon': 'refresh-ccw',
               'label': 'Reorder Rules',
               'href': '/reorder-rules',
+              'icon': 'refresh-ccw',
             },
             {
+              'icon': 'edit',
               'href': '/adjustments',
               'label': 'Adjustments',
-              'icon': 'edit',
             },
           ],
-          'searchEvent': 'STOCK_LEVEL_SEARCH',
           'notifications': [],
-          'appName': 'Inventory Management',
           'notificationClickEvent': 'STOCK_LEVEL_NOTIFICATIONS_OPEN',
-          'contentTrait': '@trait.StockLevelPanel',
         },
         'events': {
           'NOTIFY_CLICK': 'STOCK_LEVEL_NOTIFICATIONS_OPEN',
@@ -1241,33 +1241,33 @@ export function stdInventoryStockLevelPanelOrbital(params: StdInventoryStockLeve
                   'render-ui',
                   'main',
                   {
-                    'className': 'max-w-6xl mx-auto w-full p-4',
-                    'type': 'stack',
-                    'direction': 'vertical',
                     'children': [
                       {
-                        'type': 'stack',
-                        'align': 'center',
                         'children': [
                           {
-                            'name': 'package',
                             'type': 'icon',
+                            'name': 'package',
                           },
                           {
                             'content': 'Stock Levels',
-                            'variant': 'h2',
                             'type': 'typography',
+                            'variant': 'h2',
                           },
                         ],
-                        'direction': 'horizontal',
                         'gap': 'sm',
+                        'type': 'stack',
+                        'align': 'center',
+                        'direction': 'horizontal',
                       },
                       {
                         'type': 'divider',
                       },
                       '@trait.StockLevelView',
                     ],
+                    'type': 'stack',
                     'gap': 'lg',
+                    'direction': 'vertical',
+                    'className': 'max-w-6xl mx-auto w-full p-4',
                   },
                 ],
               ],
@@ -1496,10 +1496,7 @@ export function stdInventoryWarehousePanelOrbital(params: StdInventoryWarehouseP
         'ref': 'AppShell.traits.AppLayout',
         'name': 'WarehouseAppLayout',
         'config': {
-          'notificationClickEvent': 'WAREHOUSE_NOTIFICATIONS_OPEN',
           'appName': 'Inventory Management',
-          'searchEvent': 'WAREHOUSE_SEARCH',
-          'notifications': [],
           'navItems': [
             {
               'href': '/inventory',
@@ -1507,14 +1504,14 @@ export function stdInventoryWarehousePanelOrbital(params: StdInventoryWarehouseP
               'label': 'Items',
             },
             {
-              'icon': 'package',
               'href': '/stock-levels',
               'label': 'Stock Levels',
+              'icon': 'package',
             },
             {
+              'label': 'Warehouses',
               'href': '/warehouses',
               'icon': 'warehouse',
-              'label': 'Warehouses',
             },
             {
               'href': '/reorder-rules',
@@ -1522,16 +1519,19 @@ export function stdInventoryWarehousePanelOrbital(params: StdInventoryWarehouseP
               'icon': 'refresh-ccw',
             },
             {
-              'label': 'Adjustments',
               'href': '/adjustments',
               'icon': 'edit',
+              'label': 'Adjustments',
             },
           ],
           'contentTrait': '@trait.WarehousePanel',
+          'searchEvent': 'WAREHOUSE_SEARCH',
+          'notificationClickEvent': 'WAREHOUSE_NOTIFICATIONS_OPEN',
+          'notifications': [],
         },
         'events': {
-          'SEARCH': 'WAREHOUSE_SEARCH',
           'NOTIFY_CLICK': 'WAREHOUSE_NOTIFICATIONS_OPEN',
+          'SEARCH': 'WAREHOUSE_SEARCH',
         },
       }),
       rebindInlineTraitEntity({
@@ -1560,27 +1560,27 @@ export function stdInventoryWarehousePanelOrbital(params: StdInventoryWarehouseP
                   'render-ui',
                   'main',
                   {
-                    'className': 'max-w-6xl mx-auto w-full p-4',
-                    'direction': 'vertical',
                     'type': 'stack',
+                    'direction': 'vertical',
                     'gap': 'lg',
+                    'className': 'max-w-6xl mx-auto w-full p-4',
                     'children': [
                       {
-                        'align': 'center',
                         'children': [
                           {
                             'name': 'warehouse',
                             'type': 'icon',
                           },
                           {
+                            'variant': 'h2',
                             'type': 'typography',
                             'content': 'Warehouses',
-                            'variant': 'h2',
                           },
                         ],
-                        'type': 'stack',
-                        'gap': 'sm',
+                        'align': 'center',
                         'direction': 'horizontal',
+                        'gap': 'sm',
+                        'type': 'stack',
                       },
                       {
                         'type': 'divider',
@@ -1816,14 +1816,12 @@ export function stdInventoryReorderRulePanelOrbital(params: StdInventoryReorderR
         'name': 'ReorderRuleAppLayout',
         'config': {
           'notifications': [],
-          'notificationClickEvent': 'REORDER_RULE_NOTIFICATIONS_OPEN',
-          'searchEvent': 'REORDER_RULE_SEARCH',
-          'contentTrait': '@trait.ReorderRulePanel',
           'appName': 'Inventory Management',
+          'contentTrait': '@trait.ReorderRulePanel',
           'navItems': [
             {
-              'label': 'Items',
               'icon': 'package',
+              'label': 'Items',
               'href': '/inventory',
             },
             {
@@ -1832,25 +1830,27 @@ export function stdInventoryReorderRulePanelOrbital(params: StdInventoryReorderR
               'href': '/stock-levels',
             },
             {
+              'label': 'Warehouses',
               'href': '/warehouses',
               'icon': 'warehouse',
-              'label': 'Warehouses',
             },
             {
               'href': '/reorder-rules',
-              'icon': 'refresh-ccw',
               'label': 'Reorder Rules',
+              'icon': 'refresh-ccw',
             },
             {
-              'icon': 'edit',
-              'label': 'Adjustments',
               'href': '/adjustments',
+              'label': 'Adjustments',
+              'icon': 'edit',
             },
           ],
+          'notificationClickEvent': 'REORDER_RULE_NOTIFICATIONS_OPEN',
+          'searchEvent': 'REORDER_RULE_SEARCH',
         },
         'events': {
-          'NOTIFY_CLICK': 'REORDER_RULE_NOTIFICATIONS_OPEN',
           'SEARCH': 'REORDER_RULE_SEARCH',
+          'NOTIFY_CLICK': 'REORDER_RULE_NOTIFICATIONS_OPEN',
         },
       }),
       rebindInlineTraitEntity({
@@ -1879,31 +1879,31 @@ export function stdInventoryReorderRulePanelOrbital(params: StdInventoryReorderR
                   'render-ui',
                   'main',
                   {
-                    'type': 'stack',
-                    'gap': 'lg',
                     'children': [
                       {
-                        'gap': 'sm',
                         'align': 'center',
-                        'direction': 'horizontal',
                         'children': [
                           {
                             'type': 'icon',
                             'name': 'refresh-ccw',
                           },
                           {
-                            'variant': 'h2',
-                            'type': 'typography',
                             'content': 'Reorder Rules',
+                            'type': 'typography',
+                            'variant': 'h2',
                           },
                         ],
                         'type': 'stack',
+                        'direction': 'horizontal',
+                        'gap': 'sm',
                       },
                       {
                         'type': 'divider',
                       },
                       '@trait.ReorderRuleView',
                     ],
+                    'type': 'stack',
+                    'gap': 'lg',
                     'className': 'max-w-6xl mx-auto w-full p-4',
                     'direction': 'vertical',
                   },
@@ -2162,19 +2162,20 @@ export function stdInventoryStockAdjustmentPanelOrbital(params: StdInventoryStoc
         'ref': 'AppShell.traits.AppLayout',
         'name': 'StockAdjustmentAppLayout',
         'config': {
-          'appName': 'Inventory Management',
+          'notificationClickEvent': 'STOCK_ADJUSTMENT_NOTIFICATIONS_OPEN',
           'searchEvent': 'STOCK_ADJUSTMENT_SEARCH',
-          'notifications': [],
+          'contentTrait': '@trait.StockAdjustmentPanel',
+          'appName': 'Inventory Management',
           'navItems': [
             {
-              'label': 'Items',
-              'icon': 'package',
               'href': '/inventory',
+              'icon': 'package',
+              'label': 'Items',
             },
             {
-              'href': '/stock-levels',
-              'icon': 'package',
               'label': 'Stock Levels',
+              'icon': 'package',
+              'href': '/stock-levels',
             },
             {
               'label': 'Warehouses',
@@ -2183,21 +2184,20 @@ export function stdInventoryStockAdjustmentPanelOrbital(params: StdInventoryStoc
             },
             {
               'label': 'Reorder Rules',
-              'icon': 'refresh-ccw',
               'href': '/reorder-rules',
+              'icon': 'refresh-ccw',
             },
             {
+              'href': '/adjustments',
               'label': 'Adjustments',
               'icon': 'edit',
-              'href': '/adjustments',
             },
           ],
-          'notificationClickEvent': 'STOCK_ADJUSTMENT_NOTIFICATIONS_OPEN',
-          'contentTrait': '@trait.StockAdjustmentPanel',
+          'notifications': [],
         },
         'events': {
-          'SEARCH': 'STOCK_ADJUSTMENT_SEARCH',
           'NOTIFY_CLICK': 'STOCK_ADJUSTMENT_NOTIFICATIONS_OPEN',
+          'SEARCH': 'STOCK_ADJUSTMENT_SEARCH',
         },
       }),
       rebindInlineTraitEntity({
@@ -2226,12 +2226,12 @@ export function stdInventoryStockAdjustmentPanelOrbital(params: StdInventoryStoc
                   'render-ui',
                   'main',
                   {
-                    'className': 'max-w-6xl mx-auto w-full p-4',
                     'gap': 'lg',
-                    'direction': 'vertical',
-                    'type': 'stack',
                     'children': [
                       {
+                        'gap': 'sm',
+                        'direction': 'horizontal',
+                        'align': 'center',
                         'type': 'stack',
                         'children': [
                           {
@@ -2239,20 +2239,20 @@ export function stdInventoryStockAdjustmentPanelOrbital(params: StdInventoryStoc
                             'type': 'icon',
                           },
                           {
-                            'type': 'typography',
                             'variant': 'h2',
                             'content': 'Stock Adjustments',
+                            'type': 'typography',
                           },
                         ],
-                        'align': 'center',
-                        'direction': 'horizontal',
-                        'gap': 'sm',
                       },
                       {
                         'type': 'divider',
                       },
                       '@trait.StockAdjustmentBrowse',
                     ],
+                    'className': 'max-w-6xl mx-auto w-full p-4',
+                    'type': 'stack',
+                    'direction': 'vertical',
                   },
                 ],
               ],

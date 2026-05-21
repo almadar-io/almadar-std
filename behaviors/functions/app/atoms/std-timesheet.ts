@@ -172,12 +172,12 @@ export interface StdTimesheetTimesheetLoadFailedPayload {
  * without modifying its state-machine topology.
  */
 export interface StdTimesheetConfig {
-  /** Default: `[{"variant":"caption","name":"employeeName","label":"Employee"},{"variant":"caption","name":"periodStart","label":"Period Start"},{"name":"periodEnd","variant":"caption","label":"Period End"},{"name":"totalHours","label":"Total Hours","variant":"caption"},{"name":"billableHours","label":"Billable","variant":"caption"},{"label":"Status","name":"status","variant":"badge"},{"label":"Approved By","variant":"caption","name":"approvedBy"}]` */
-  fields?: TraitConfig[];
-  /** Default: `[{"variant":"primary","event":"OPEN_TIMESHEET","label":"Open","icon":"arrow-right"},{"event":"REQUEST_DELETE","variant":"danger","label":"Delete"}]` */
-  itemActions?: TraitConfig[];
   /** Default: `"Timesheets"` */
   title?: string;
+  /** Default: `[{"icon":"arrow-right","label":"Open","event":"OPEN_TIMESHEET","variant":"primary"},{"label":"Delete","event":"REQUEST_DELETE","variant":"danger"}]` */
+  itemActions?: TraitConfig[];
+  /** Default: `[{"name":"employeeName","label":"Employee","variant":"caption"},{"label":"Period Start","variant":"caption","name":"periodStart"},{"name":"periodEnd","label":"Period End","variant":"caption"},{"name":"totalHours","variant":"caption","label":"Total Hours"},{"name":"billableHours","label":"Billable","variant":"caption"},{"name":"status","label":"Status","variant":"badge"},{"variant":"caption","name":"approvedBy","label":"Approved By"}]` */
+  fields?: TraitConfig[];
 }
 
 /**

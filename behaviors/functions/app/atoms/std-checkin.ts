@@ -87,14 +87,14 @@ export interface StdCheckinCheckinLoadFailedPayload {
  * without modifying its state-machine topology.
  */
 export interface StdCheckinConfig {
-  /** Default: `"geo"` */
-  mode?: string;
-  /** Default: `[{"icon":"arrow-right","variant":"primary","label":"Open","event":"OPEN_CHECKIN"},{"label":"Revoke","variant":"danger","event":"REVOKE_CHECKIN"}]` */
-  itemActions?: TraitConfig[];
-  /** Default: `[{"variant":"badge","name":"targetType","label":"Type"},{"label":"Target","name":"targetId","variant":"caption"},{"label":"User","name":"userId","variant":"caption"},{"name":"mode","label":"Mode","variant":"badge"},{"name":"checkedInAt","variant":"caption","label":"When"}]` */
-  fields?: TraitConfig[];
   /** Default: `"Check-ins"` */
   title?: string;
+  /** Default: `[{"name":"targetType","label":"Type","variant":"badge"},{"label":"Target","name":"targetId","variant":"caption"},{"name":"userId","label":"User","variant":"caption"},{"name":"mode","label":"Mode","variant":"badge"},{"label":"When","variant":"caption","name":"checkedInAt"}]` */
+  fields?: TraitConfig[];
+  /** Default: `[{"event":"OPEN_CHECKIN","label":"Open","icon":"arrow-right","variant":"primary"},{"variant":"danger","label":"Revoke","event":"REVOKE_CHECKIN"}]` */
+  itemActions?: TraitConfig[];
+  /** Default: `"geo"` */
+  mode?: string;
 }
 
 /**

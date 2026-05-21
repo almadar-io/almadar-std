@@ -110,9 +110,9 @@ export interface StdApplicantApplicantLoadFailedPayload {
 export interface StdApplicantConfig {
   /** Default: `"Applicants"` */
   title?: string;
-  /** Default: `[{"name":"name","variant":"caption","label":"Name"},{"label":"Email","variant":"caption","name":"email"},{"label":"Job","variant":"caption","name":"jobId"},{"name":"stage","variant":"badge","label":"Stage"},{"label":"Applied","variant":"caption","name":"appliedAt"}]` */
+  /** Default: `[{"label":"Name","variant":"caption","name":"name"},{"name":"email","label":"Email","variant":"caption"},{"name":"jobId","variant":"caption","label":"Job"},{"label":"Stage","variant":"badge","name":"stage"},{"label":"Applied","variant":"caption","name":"appliedAt"}]` */
   fields?: TraitConfig[];
-  /** Default: `[{"variant":"primary","event":"OPEN_APPLICANT","label":"Open","icon":"arrow-right"},{"event":"REJECT_APPLICANT","label":"Reject","variant":"danger"}]` */
+  /** Default: `[{"label":"Open","variant":"primary","event":"OPEN_APPLICANT","icon":"arrow-right"},{"label":"Reject","event":"REJECT_APPLICANT","variant":"danger"}]` */
   itemActions?: TraitConfig[];
 }
 

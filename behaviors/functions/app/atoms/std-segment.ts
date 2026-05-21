@@ -76,10 +76,10 @@ export interface StdSegmentSegmentLoadFailedPayload {
  * without modifying its state-machine topology.
  */
 export interface StdSegmentConfig {
-  /** Default: `[{"label":"Open","event":"OPEN_SEGMENT","icon":"arrow-right","variant":"primary"},{"event":"RECALCULATE","variant":"danger","label":"Recalculate"}]` */
-  itemActions?: TraitConfig[];
-  /** Default: `[{"variant":"caption","name":"name","label":"Name"},{"name":"description","label":"Description","variant":"caption"},{"label":"Members","name":"memberCount","variant":"badge"},{"variant":"caption","name":"lastUpdated","label":"Updated"}]` */
+  /** Default: `[{"name":"name","variant":"caption","label":"Name"},{"variant":"caption","name":"description","label":"Description"},{"label":"Members","variant":"badge","name":"memberCount"},{"label":"Updated","variant":"caption","name":"lastUpdated"}]` */
   fields?: TraitConfig[];
+  /** Default: `[{"event":"OPEN_SEGMENT","icon":"arrow-right","variant":"primary","label":"Open"},{"variant":"danger","event":"RECALCULATE","label":"Recalculate"}]` */
+  itemActions?: TraitConfig[];
   /** Default: `"Segments"` */
   title?: string;
 }

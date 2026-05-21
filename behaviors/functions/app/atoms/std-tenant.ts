@@ -88,9 +88,9 @@ export interface StdTenantTenantLoadFailedPayload {
 export interface StdTenantConfig {
   /** Default: `"Tenants"` */
   title?: string;
-  /** Default: `[{"name":"name","label":"Name","variant":"h4"},{"name":"email","label":"Email","variant":"body"},{"name":"phone","variant":"caption","label":"Phone"},{"name":"status","variant":"badge","label":"Status"},{"variant":"caption","label":"Move-In","name":"moveInDate"}]` */
+  /** Default: `[{"label":"Name","variant":"h4","name":"name"},{"variant":"body","name":"email","label":"Email"},{"name":"phone","variant":"caption","label":"Phone"},{"label":"Status","variant":"badge","name":"status"},{"label":"Move-In","variant":"caption","name":"moveInDate"}]` */
   fields?: TraitConfig[];
-  /** Default: `[{"icon":"arrow-right","label":"Open","event":"OPEN_TENANT","variant":"primary"},{"label":"Move Out","event":"MOVE_OUT","variant":"danger"}]` */
+  /** Default: `[{"variant":"primary","icon":"arrow-right","event":"OPEN_TENANT","label":"Open"},{"variant":"danger","event":"MOVE_OUT","label":"Move Out"}]` */
   itemActions?: TraitConfig[];
 }
 

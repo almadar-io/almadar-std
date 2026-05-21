@@ -85,10 +85,10 @@ export interface StdTimeEntryTimeEntryLoadFailedPayload {
 export interface StdTimeEntryConfig {
   /** Default: `"Time Entries"` */
   title?: string;
-  /** Default: `[{"icon":"arrow-right","label":"Open","event":"OPEN_ENTRY","variant":"primary"},{"variant":"danger","label":"Delete","event":"REQUEST_DELETE"}]` */
-  itemActions?: TraitConfig[];
-  /** Default: `[{"name":"projectName","label":"Project","variant":"caption"},{"name":"taskDescription","variant":"caption","label":"Task"},{"name":"workDate","label":"Date","variant":"caption"},{"variant":"caption","name":"hours","label":"Hours"},{"variant":"badge","name":"billable","label":"Billable"},{"variant":"caption","label":"Rate","name":"hourlyRate"},{"label":"Status","name":"status","variant":"badge"}]` */
+  /** Default: `[{"label":"Project","name":"projectName","variant":"caption"},{"variant":"caption","name":"taskDescription","label":"Task"},{"name":"workDate","label":"Date","variant":"caption"},{"variant":"caption","name":"hours","label":"Hours"},{"variant":"badge","name":"billable","label":"Billable"},{"name":"hourlyRate","label":"Rate","variant":"caption"},{"label":"Status","name":"status","variant":"badge"}]` */
   fields?: TraitConfig[];
+  /** Default: `[{"label":"Open","event":"OPEN_ENTRY","variant":"primary","icon":"arrow-right"},{"label":"Delete","event":"REQUEST_DELETE","variant":"danger"}]` */
+  itemActions?: TraitConfig[];
 }
 
 /**

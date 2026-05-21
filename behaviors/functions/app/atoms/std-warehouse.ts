@@ -69,12 +69,12 @@ export interface StdWarehouseWarehouseLoadFailedPayload {
  * without modifying its state-machine topology.
  */
 export interface StdWarehouseConfig {
-  /** Default: `[{"variant":"primary","icon":"arrow-right","event":"OPEN_WAREHOUSE","label":"Open"}]` */
+  /** Default: `[{"variant":"primary","event":"OPEN_WAREHOUSE","icon":"arrow-right","label":"Open"}]` */
   itemActions?: TraitConfig[];
-  /** Default: `[{"label":"Code","variant":"caption","name":"code"},{"label":"Name","name":"name","variant":"caption"},{"name":"type","variant":"badge","label":"Type"},{"variant":"caption","name":"totalSkus","label":"SKUs"},{"variant":"badge","label":"Active","name":"isActive"}]` */
-  fields?: TraitConfig[];
   /** Default: `"Locations"` */
   title?: string;
+  /** Default: `[{"variant":"caption","label":"Code","name":"code"},{"name":"name","variant":"caption","label":"Name"},{"label":"Type","variant":"badge","name":"type"},{"variant":"caption","name":"totalSkus","label":"SKUs"},{"variant":"badge","label":"Active","name":"isActive"}]` */
+  fields?: TraitConfig[];
 }
 
 /**

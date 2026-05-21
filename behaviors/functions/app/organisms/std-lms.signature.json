@@ -78,18 +78,18 @@
             "type": "unknown",
             "default": [
               {
+                "label": "Courses",
                 "href": "/courses",
-                "icon": "graduation-cap",
-                "label": "Courses"
+                "icon": "graduation-cap"
               },
               {
-                "href": "/enroll",
+                "icon": "user-plus",
                 "label": "Enroll",
-                "icon": "user-plus"
+                "href": "/enroll"
               },
               {
-                "label": "Progress",
                 "href": "/progress",
+                "label": "Progress",
                 "icon": "trending-up"
               }
             ]
@@ -162,6 +162,7 @@
             "type": "unknown",
             "default": [
               {
+                "label": "Category",
                 "field": "category",
                 "filterType": "select",
                 "options": [
@@ -169,17 +170,16 @@
                   "design",
                   "business",
                   "marketing"
-                ],
-                "label": "Category"
+                ]
               },
               {
+                "field": "level",
+                "filterType": "select",
                 "options": [
                   "beginner",
                   "intermediate",
                   "advanced"
                 ],
-                "field": "level",
-                "filterType": "select",
                 "label": "Level"
               }
             ]
@@ -200,36 +200,36 @@
             "type": "unknown",
             "default": [
               {
-                "label": "Total Courses",
                 "icon": "graduation-cap",
-                "variant": "primary",
+                "label": "Total Courses",
+                "aggregation": "count",
                 "format": "number",
-                "aggregation": "count"
+                "variant": "primary"
               },
               {
+                "variant": "info",
+                "icon": "users",
                 "format": "number",
                 "field": "enrolledCount",
-                "label": "Enrolled Students",
                 "aggregation": "sum",
-                "icon": "users",
-                "variant": "info"
+                "label": "Enrolled Students"
               },
               {
+                "aggregation": "avg",
                 "field": "completionPct",
-                "aggregation": "avg",
-                "format": "percent",
-                "label": "Completion Rate",
+                "icon": "check-circle",
                 "variant": "success",
-                "icon": "check-circle"
+                "label": "Completion Rate",
+                "format": "percent"
               },
               {
-                "suffix": "h",
                 "aggregation": "avg",
-                "field": "durationHours",
-                "icon": "clock",
                 "variant": "default",
                 "format": "number",
-                "label": "Avg Duration"
+                "suffix": "h",
+                "icon": "clock",
+                "label": "Avg Duration",
+                "field": "durationHours"
               }
             ]
           },
@@ -535,10 +535,20 @@
         "name": "CourseLessonPlayer",
         "emittedEvents": [
           "LESSON_COMPLETE",
-          "NEXT_LESSON"
+          "NEXT_LESSON",
+          "CourseLessonPlayerLoaded",
+          "CourseLessonPlayerLoadFailed"
         ],
         "listenedEvents": [],
-        "overridableConfigKeys": [],
+        "overridableConfigKeys": [
+          {
+            "key": "videoId",
+            "type": "string",
+            "default": "",
+            "label": "Video ID",
+            "description": "YouTube video identifier shown to the learner for the current lesson"
+          }
+        ],
         "capabilities": []
       }
     ],
@@ -554,6 +564,8 @@
       "COURSE_DELETED",
       "COURSE_UPDATED",
       "CREATE",
+      "CourseLessonPlayerLoadFailed",
+      "CourseLessonPlayerLoaded",
       "DELETE_COURSE",
       "EDIT_COURSE",
       "LESSON_COMPLETE",
@@ -635,19 +647,19 @@
             "type": "unknown",
             "default": [
               {
-                "href": "/courses",
                 "icon": "graduation-cap",
-                "label": "Courses"
+                "label": "Courses",
+                "href": "/courses"
               },
               {
                 "label": "Enroll",
-                "icon": "user-plus",
-                "href": "/enroll"
+                "href": "/enroll",
+                "icon": "user-plus"
               },
               {
+                "label": "Progress",
                 "icon": "trending-up",
-                "href": "/progress",
-                "label": "Progress"
+                "href": "/progress"
               }
             ]
           },
@@ -779,19 +791,19 @@
             "type": "unknown",
             "default": [
               {
-                "icon": "graduation-cap",
                 "href": "/courses",
-                "label": "Courses"
+                "label": "Courses",
+                "icon": "graduation-cap"
               },
               {
                 "href": "/enroll",
-                "icon": "user-plus",
-                "label": "Enroll"
+                "label": "Enroll",
+                "icon": "user-plus"
               },
               {
-                "icon": "trending-up",
+                "label": "Progress",
                 "href": "/progress",
-                "label": "Progress"
+                "icon": "trending-up"
               }
             ]
           },
@@ -863,14 +875,14 @@
             "type": "unknown",
             "default": [
               {
-                "icon": "book-open",
                 "label": "Course",
                 "name": "courseName",
+                "icon": "book-open",
                 "variant": "h4"
               },
               {
-                "format": "percent",
                 "label": "Completion",
+                "format": "percent",
                 "variant": "badge",
                 "name": "completionPct"
               },
@@ -881,14 +893,14 @@
               },
               {
                 "name": "totalLessons",
-                "variant": "body",
-                "label": "Total Lessons"
+                "label": "Total Lessons",
+                "variant": "body"
               },
               {
+                "variant": "caption",
                 "label": "Last Activity",
-                "format": "date",
                 "name": "lastActivity",
-                "variant": "caption"
+                "format": "date"
               }
             ]
           },

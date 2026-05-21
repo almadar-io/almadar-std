@@ -166,14 +166,14 @@ export interface StdInvoiceInvoiceRefundFailedPayload {
  * without modifying its state-machine topology.
  */
 export interface StdInvoiceConfig {
-  /** Default: `[{"icon":"arrow-right","event":"OPEN_INVOICE","label":"Open","variant":"primary"},{"label":"Void","icon":"x","event":"VOID","variant":"danger"}]` */
-  itemActions?: TraitConfig[];
-  /** Default: `"Invoices"` */
-  title?: string;
+  /** Default: `[{"name":"invoiceNumber","label":"Invoice #","variant":"caption"},{"variant":"caption","name":"customerId","label":"Customer"},{"label":"Status","variant":"badge","name":"status"},{"variant":"caption","name":"total","label":"Total"},{"label":"Currency","name":"currency","variant":"badge"},{"variant":"caption","name":"dueAt","label":"Due"}]` */
+  fields?: TraitConfig[];
   /** Default: `"[]"` */
   refundTiersJson?: string;
-  /** Default: `[{"name":"invoiceNumber","label":"Invoice #","variant":"caption"},{"variant":"caption","name":"customerId","label":"Customer"},{"variant":"badge","name":"status","label":"Status"},{"variant":"caption","name":"total","label":"Total"},{"variant":"badge","name":"currency","label":"Currency"},{"name":"dueAt","label":"Due","variant":"caption"}]` */
-  fields?: TraitConfig[];
+  /** Default: `"Invoices"` */
+  title?: string;
+  /** Default: `[{"icon":"arrow-right","label":"Open","event":"OPEN_INVOICE","variant":"primary"},{"variant":"danger","event":"VOID","icon":"x","label":"Void"}]` */
+  itemActions?: TraitConfig[];
 }
 
 /**

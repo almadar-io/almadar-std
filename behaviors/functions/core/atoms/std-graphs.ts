@@ -39,44 +39,44 @@ export type StdGraphsEventKey = 'INIT' | 'ITEMS_LOADED';
  * without modifying its state-machine topology.
  */
 export interface StdGraphsConfig {
-  /** Default: `"Counts per category"` */
-  subtitle?: string;
   /** Default: `false` */
   showValues?: boolean;
+  /** Default: `"none"` */
+  stack?: 'none' | 'stack' | 'normalize';
+  /** Default: `[]` */
+  series?: EntityRow[];
+  /** Default: `"desc"` */
+  sortDir?: 'asc' | 'desc';
+  /** Default: `280` */
+  height?: number;
+  /** Default: `"bar"` */
+  chartType?: 'bar' | 'line' | 'pie' | 'area' | 'donut' | 'histogram' | 'scatter';
   /** Default: `false` */
   timeAxis?: boolean;
   /** Default: `"date"` */
   timeField?: string;
-  /** Default: `0` */
-  limit?: number;
-  /** Default: `"count"` */
-  aggregation?: 'count' | 'sum' | 'avg' | 'min' | 'max';
-  /** Default: `"bar"` */
-  chartType?: 'bar' | 'line' | 'pie' | 'area' | 'donut' | 'histogram' | 'scatter';
-  /** Default: `[]` */
-  series?: EntityRow[];
-  /** Default: `280` */
-  height?: number;
-  /** Default: `""` */
-  valueField?: string;
-  /** Default: `"month"` */
-  period?: 'day' | 'week' | 'month' | 'quarter' | 'year';
-  /** Default: `"none"` */
-  stack?: 'none' | 'stack' | 'normalize';
-  /** Default: `"status"` */
-  categoryField?: string;
-  /** Default: `"desc"` */
-  sortDir?: 'asc' | 'desc';
-  /** Default: `true` */
-  showLegend?: boolean;
-  /** Default: `"none"` */
-  sortField?: 'value' | 'label' | 'none';
-  /** Default: `"Distribution"` */
-  title?: string;
-  /** Default: `""` */
-  drillEvent?: string;
   /** Default: `"chart"` */
   viewPattern?: unknown;
+  /** Default: `0` */
+  limit?: number;
+  /** Default: `"none"` */
+  sortField?: 'value' | 'label' | 'none';
+  /** Default: `"Counts per category"` */
+  subtitle?: string;
+  /** Default: `""` */
+  drillEvent?: string;
+  /** Default: `"count"` */
+  aggregation?: 'count' | 'sum' | 'avg' | 'min' | 'max';
+  /** Default: `"Distribution"` */
+  title?: string;
+  /** Default: `"month"` */
+  period?: 'day' | 'week' | 'month' | 'quarter' | 'year';
+  /** Default: `""` */
+  valueField?: string;
+  /** Default: `"status"` */
+  categoryField?: string;
+  /** Default: `true` */
+  showLegend?: boolean;
 }
 
 /**

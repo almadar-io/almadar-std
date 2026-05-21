@@ -83,10 +83,10 @@ export interface StdWizardWizardSaveFailedPayload {
  * without modifying its state-machine topology.
  */
 export interface StdWizardConfig {
+  /** Default: `[{"key":"details","label":"Details","description":"Basic information","icon":"file-text","fields":["title","description"]},{"label":"Options","description":"Configure preferences","key":"options","fields":["category","priority"],"icon":"settings"},{"icon":"check-circle","fields":["notes"],"description":"Confirm and submit","key":"review","label":"Review"}]` */
+  steps?: TraitConfig[];
   /** Default: `"Wizard"` */
   title?: string;
-  /** Default: `[{"description":"Basic information","key":"details","label":"Details","icon":"file-text","fields":["title","description"]},{"key":"options","label":"Options","description":"Configure preferences","icon":"settings","fields":["category","priority"]},{"fields":["notes"],"label":"Review","icon":"check-circle","key":"review","description":"Confirm and submit"}]` */
-  steps?: TraitConfig[];
 }
 
 /**
