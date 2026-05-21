@@ -337,8 +337,8 @@ export function stdPuzzleAppPuzzleLevelOrbital(params: StdPuzzleAppPuzzleLevelOr
                   'PuzzleLevel',
                   {
                     'emit': {
-                      'failure': 'PuzzleLevelLoadFailed',
                       'success': 'PuzzleLevelLoaded',
+                      'failure': 'PuzzleLevelLoadFailed',
                     },
                   },
                 ],
@@ -347,13 +347,9 @@ export function stdPuzzleAppPuzzleLevelOrbital(params: StdPuzzleAppPuzzleLevelOr
                   'main',
                   {
                     'type': 'game-shell',
-                    'appName': 'Puzzle App',
                     'showTopBar': true,
                     'children': [
                       {
-                        'title': 'Puzzle Challenge',
-                        'type': 'game-menu',
-                        'subtitle': 'Puzzle Challenge',
                         'menuItems': [
                           {
                             'event': 'START',
@@ -361,8 +357,12 @@ export function stdPuzzleAppPuzzleLevelOrbital(params: StdPuzzleAppPuzzleLevelOr
                             'variant': 'primary',
                           },
                         ],
+                        'type': 'game-menu',
+                        'subtitle': 'Puzzle Challenge',
+                        'title': 'Puzzle Challenge',
                       },
                     ],
+                    'appName': 'Puzzle App',
                   },
                 ],
               ],
@@ -377,16 +377,16 @@ export function stdPuzzleAppPuzzleLevelOrbital(params: StdPuzzleAppPuzzleLevelOr
                   'main',
                   {
                     'showTopBar': true,
+                    'appName': 'Puzzle App',
                     'children': [
                       {
-                        'width': 800,
-                        'height': 600,
                         'fps': 60,
+                        'height': 600,
                         'type': 'game-canvas-2d',
+                        'width': 800,
                       },
                     ],
                     'type': 'game-shell',
-                    'appName': 'Puzzle App',
                   },
                 ],
               ],
@@ -414,16 +414,16 @@ export function stdPuzzleAppPuzzleLevelOrbital(params: StdPuzzleAppPuzzleLevelOr
                   'render-ui',
                   'main',
                   {
-                    'showTopBar': true,
+                    'type': 'game-shell',
                     'children': [
                       {
-                        'height': 600,
-                        'width': 800,
                         'type': 'game-canvas-2d',
+                        'height': 600,
                         'fps': 60,
+                        'width': 800,
                       },
                     ],
-                    'type': 'game-shell',
+                    'showTopBar': true,
                     'appName': 'Puzzle App',
                   },
                 ],
@@ -443,20 +443,20 @@ export function stdPuzzleAppPuzzleLevelOrbital(params: StdPuzzleAppPuzzleLevelOr
                   'render-ui',
                   'modal',
                   {
+                    'type': 'game-menu',
                     'title': 'Paused',
                     'menuItems': [
                       {
-                        'variant': 'primary',
                         'event': 'RESUME',
                         'label': 'Resume',
+                        'variant': 'primary',
                       },
                       {
-                        'event': 'RESTART',
-                        'variant': 'ghost',
                         'label': 'Quit',
+                        'variant': 'ghost',
+                        'event': 'RESTART',
                       },
                     ],
-                    'type': 'game-menu',
                   },
                 ],
               ],
@@ -470,22 +470,21 @@ export function stdPuzzleAppPuzzleLevelOrbital(params: StdPuzzleAppPuzzleLevelOr
                   'render-ui',
                   'main',
                   {
-                    'type': 'game-shell',
                     'appName': 'Puzzle App',
                     'children': [
                       {
-                        'type': 'game-over-screen',
                         'title': 'Puzzle Complete',
+                        'type': 'game-over-screen',
                         'menuItems': [
                           {
-                            'label': 'Play Again',
                             'variant': 'primary',
+                            'label': 'Play Again',
                             'event': 'RESTART',
                           },
                           {
+                            'event': 'RESTART',
                             'variant': 'secondary',
                             'label': 'Main Menu',
-                            'event': 'RESTART',
                           },
                         ],
                         'stats': [
@@ -500,6 +499,7 @@ export function stdPuzzleAppPuzzleLevelOrbital(params: StdPuzzleAppPuzzleLevelOr
                         ],
                       },
                     ],
+                    'type': 'game-shell',
                     'showTopBar': true,
                   },
                 ],
@@ -524,17 +524,17 @@ export function stdPuzzleAppPuzzleLevelOrbital(params: StdPuzzleAppPuzzleLevelOr
                   'render-ui',
                   'main',
                   {
+                    'showTopBar': true,
                     'type': 'game-shell',
+                    'appName': 'Puzzle App',
                     'children': [
                       {
-                        'height': 600,
-                        'type': 'game-canvas-2d',
                         'fps': 60,
                         'width': 800,
+                        'type': 'game-canvas-2d',
+                        'height': 600,
                       },
                     ],
-                    'showTopBar': true,
-                    'appName': 'Puzzle App',
                   },
                 ],
               ],
@@ -553,17 +553,17 @@ export function stdPuzzleAppPuzzleLevelOrbital(params: StdPuzzleAppPuzzleLevelOr
                   'render-ui',
                   'main',
                   {
-                    'appName': 'Puzzle App',
                     'type': 'game-shell',
                     'showTopBar': true,
                     'children': [
                       {
-                        'width': 800,
-                        'fps': 60,
-                        'type': 'game-canvas-2d',
                         'height': 600,
+                        'width': 800,
+                        'type': 'game-canvas-2d',
+                        'fps': 60,
                       },
                     ],
+                    'appName': 'Puzzle App',
                   },
                 ],
               ],
@@ -582,23 +582,23 @@ export function stdPuzzleAppPuzzleLevelOrbital(params: StdPuzzleAppPuzzleLevelOr
                   'render-ui',
                   'main',
                   {
-                    'type': 'game-shell',
-                    'appName': 'Puzzle App',
+                    'showTopBar': true,
                     'children': [
                       {
-                        'subtitle': 'Puzzle Challenge',
                         'type': 'game-menu',
                         'menuItems': [
                           {
-                            'event': 'START',
-                            'label': 'Start Puzzle',
                             'variant': 'primary',
+                            'label': 'Start Puzzle',
+                            'event': 'START',
                           },
                         ],
                         'title': 'Puzzle Challenge',
+                        'subtitle': 'Puzzle Challenge',
                       },
                     ],
-                    'showTopBar': true,
+                    'type': 'game-shell',
+                    'appName': 'Puzzle App',
                   },
                 ],
               ],
@@ -612,23 +612,23 @@ export function stdPuzzleAppPuzzleLevelOrbital(params: StdPuzzleAppPuzzleLevelOr
                   'render-ui',
                   'main',
                   {
-                    'type': 'game-shell',
                     'appName': 'Puzzle App',
-                    'showTopBar': true,
+                    'type': 'game-shell',
                     'children': [
                       {
                         'title': 'Puzzle Challenge',
+                        'subtitle': 'Puzzle Challenge',
                         'type': 'game-menu',
                         'menuItems': [
                           {
                             'event': 'START',
-                            'label': 'Start Puzzle',
                             'variant': 'primary',
+                            'label': 'Start Puzzle',
                           },
                         ],
-                        'subtitle': 'Puzzle Challenge',
                       },
                     ],
+                    'showTopBar': true,
                   },
                 ],
               ],
@@ -837,19 +837,19 @@ export function stdPuzzleAppPuzzleLevelOrbital(params: StdPuzzleAppPuzzleLevelOr
                   'render-ui',
                   'main',
                   {
+                    'type': 'game-shell',
+                    'appName': 'Puzzle App',
                     'children': [
                       {
-                        'level': '@entity.level',
-                        'combo': '@entity.combo',
                         'score': '@entity.score',
+                        'highScore': '@entity.highScore',
                         'type': 'score-board',
                         'multiplier': '@entity.multiplier',
-                        'highScore': '@entity.highScore',
+                        'combo': '@entity.combo',
+                        'level': '@entity.level',
                       },
                     ],
-                    'appName': 'Puzzle App',
                     'showTopBar': true,
-                    'type': 'game-shell',
                   },
                 ],
               ],
@@ -873,11 +873,11 @@ export function stdPuzzleAppPuzzleLevelOrbital(params: StdPuzzleAppPuzzleLevelOr
                     'type': 'game-shell',
                     'children': [
                       {
-                        'type': 'score-board',
+                        'combo': '@entity.combo',
+                        'score': '@entity.score',
                         'highScore': '@entity.highScore',
                         'level': '@entity.level',
-                        'score': '@entity.score',
-                        'combo': '@entity.combo',
+                        'type': 'score-board',
                         'multiplier': '@entity.multiplier',
                       },
                     ],
@@ -909,19 +909,19 @@ export function stdPuzzleAppPuzzleLevelOrbital(params: StdPuzzleAppPuzzleLevelOr
                   'render-ui',
                   'main',
                   {
+                    'type': 'game-shell',
+                    'showTopBar': true,
                     'appName': 'Puzzle App',
                     'children': [
                       {
-                        'combo': '@entity.combo',
+                        'multiplier': '@entity.multiplier',
                         'highScore': '@entity.highScore',
-                        'level': '@entity.level',
                         'type': 'score-board',
                         'score': '@entity.score',
-                        'multiplier': '@entity.multiplier',
+                        'combo': '@entity.combo',
+                        'level': '@entity.level',
                       },
                     ],
-                    'type': 'game-shell',
-                    'showTopBar': true,
                   },
                 ],
               ],
@@ -1292,8 +1292,8 @@ export function stdPuzzleAppPuzzleScoreOrbital(params: StdPuzzleAppPuzzleScoreOr
                   'PuzzleScore',
                   {
                     'emit': {
-                      'success': 'PuzzleScoreLoaded',
                       'failure': 'PuzzleScoreLoadFailed',
+                      'success': 'PuzzleScoreLoaded',
                     },
                   },
                 ],
@@ -1301,17 +1301,17 @@ export function stdPuzzleAppPuzzleScoreOrbital(params: StdPuzzleAppPuzzleScoreOr
                   'render-ui',
                   'main',
                   {
-                    'type': 'game-shell',
-                    'appName': 'Puzzle App',
                     'showTopBar': true,
+                    'appName': 'Puzzle App',
+                    'type': 'game-shell',
                     'children': [
                       {
-                        'type': 'score-board',
-                        'highScore': '@entity.highScore',
-                        'level': '@entity.level',
-                        'score': '@entity.score',
-                        'combo': '@entity.combo',
                         'multiplier': '@entity.multiplier',
+                        'level': '@entity.level',
+                        'highScore': '@entity.highScore',
+                        'combo': '@entity.combo',
+                        'type': 'score-board',
+                        'score': '@entity.score',
                       },
                     ],
                   },
@@ -1345,19 +1345,19 @@ export function stdPuzzleAppPuzzleScoreOrbital(params: StdPuzzleAppPuzzleScoreOr
                   'render-ui',
                   'main',
                   {
-                    'type': 'game-shell',
-                    'showTopBar': true,
                     'appName': 'Puzzle App',
+                    'type': 'game-shell',
                     'children': [
                       {
-                        'type': 'score-board',
                         'score': '@entity.score',
+                        'highScore': '@entity.highScore',
                         'multiplier': '@entity.multiplier',
                         'level': '@entity.level',
+                        'type': 'score-board',
                         'combo': '@entity.combo',
-                        'highScore': '@entity.highScore',
                       },
                     ],
+                    'showTopBar': true,
                   },
                 ],
               ],
@@ -1376,19 +1376,19 @@ export function stdPuzzleAppPuzzleScoreOrbital(params: StdPuzzleAppPuzzleScoreOr
                   'render-ui',
                   'main',
                   {
-                    'showTopBar': true,
-                    'children': [
-                      {
-                        'highScore': '@entity.highScore',
-                        'level': '@entity.level',
-                        'score': '@entity.score',
-                        'combo': '@entity.combo',
-                        'multiplier': '@entity.multiplier',
-                        'type': 'score-board',
-                      },
-                    ],
                     'appName': 'Puzzle App',
                     'type': 'game-shell',
+                    'children': [
+                      {
+                        'score': '@entity.score',
+                        'multiplier': '@entity.multiplier',
+                        'combo': '@entity.combo',
+                        'type': 'score-board',
+                        'highScore': '@entity.highScore',
+                        'level': '@entity.level',
+                      },
+                    ],
+                    'showTopBar': true,
                   },
                 ],
               ],
@@ -1417,19 +1417,19 @@ export function stdPuzzleAppPuzzleScoreOrbital(params: StdPuzzleAppPuzzleScoreOr
                   'render-ui',
                   'main',
                   {
-                    'type': 'game-shell',
-                    'appName': 'Puzzle App',
-                    'showTopBar': true,
                     'children': [
                       {
-                        'level': '@entity.level',
+                        'multiplier': '@entity.multiplier',
                         'score': '@entity.score',
                         'highScore': '@entity.highScore',
                         'combo': '@entity.combo',
-                        'multiplier': '@entity.multiplier',
+                        'level': '@entity.level',
                         'type': 'score-board',
                       },
                     ],
+                    'type': 'game-shell',
+                    'appName': 'Puzzle App',
+                    'showTopBar': true,
                   },
                 ],
               ],

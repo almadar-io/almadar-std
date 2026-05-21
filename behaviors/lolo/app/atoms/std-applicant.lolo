@@ -1,6 +1,9 @@
 app std-applicant "1.1.0"
 "std-applicant — job applicant primitive tracking a person who applied to a job, their pipeline stage, and basic info. Lists applicants in `browsing`; opens applicant detail in `viewing_single` with Advance / Reject actions. Agents tune the list shape via `config.fields` + `config.itemActions`."
 
+type FieldSpec = { name : string!, label : string, variant : string, icon : string, format : string, key : string, header : string }
+type ItemAction = { label : string!, event : string!, variant : string, icon : string }
+
 orbital ApplicantOrbital {
   entity Applicant [persistent: applicants] {
     id         : string!
@@ -22,7 +25,7 @@ orbital ApplicantOrbital {
       title       : string   = "Applicants"
         @label "Section title"
         @description "Heading shown above the applicant pipeline"
-      fields      : [object] = [
+      fields      : [FieldSpec] = [
         { name: "name",      label: "Name",    variant: "caption" },
         { name: "email",     label: "Email",   variant: "caption" },
         { name: "jobId",     label: "Job",     variant: "caption" },
@@ -31,7 +34,7 @@ orbital ApplicantOrbital {
       ]
         @label "Columns to show"
         @description "Each column maps to one field on the Applicant entity"
-      itemActions : [object] = [
+      itemActions : [ItemAction] = [
         { label: "Open",   event: "OPEN_APPLICANT",   variant: "primary", icon: "arrow-right" },
         { label: "Reject", event: "REJECT_APPLICANT", variant: "danger" }
       ]

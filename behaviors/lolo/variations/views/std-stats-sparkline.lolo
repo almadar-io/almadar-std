@@ -1,12 +1,14 @@
 app std-stats-sparkline "1.1.0"
 "Sparkline stat view. Composes std-stats with metrics that carry `sparklineData` arrays so each stat-display item renders its mini line chart. std-stats already supports per-metric sparkline rendering — the variation supplies the data; the atom does the rest. Distinguishes from std-stats-bignumber by the presence of sparklineData on every metric."
 
+type CardSpec = { label : string!, value : string, icon : string, variant : string, format : string, max : number, target : number, prefix : string, suffix : string, trend : number, trendPolarity : string, trendFormat : string, clickEvent : string, sparklineData : [number] }
+
 orbital SparklineStatsItemOrbital {
   uses Stats from "std/behaviors/std-stats"
 
   entity SparklineStatsItem [runtime] {
     id    : string!
-    cards : [object] = []
+    cards : [CardSpec] = []
   }
 
   trait SparklineStatsItemStats = Stats.traits.StatsItemStats -> SparklineStatsItem {

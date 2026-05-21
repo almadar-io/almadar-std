@@ -1,6 +1,9 @@
 app std-invoice "1.1.0"
 "std-invoice — invoice generation atom. Owns an Invoice entity (line-items + tax + total + refund tiers via config). Browses invoices in a data-grid with Send / Mark-Paid / Void / Refund actions; viewing state renders the canonical invoice pattern detail. Agents tune the list shape via `config.fields` + `config.itemActions`."
 
+type FieldSpec = { name : string!, label : string, variant : string, icon : string, format : string, key : string, header : string }
+type ItemAction = { label : string!, event : string!, variant : string, icon : string }
+
 orbital InvoiceOrbital {
   entity InvoiceRecord [persistent: invoices] {
     id              : string!
@@ -34,7 +37,7 @@ orbital InvoiceOrbital {
       refundTiersJson : string   = "[]"
         @label "Refund tiers"
         @description "JSON list of refund options (e.g. 50% / 100%) shown on the detail view"
-      fields          : [object] = [
+      fields          : [FieldSpec] = [
         { name: "invoiceNumber", label: "Invoice #", variant: "caption" },
         { name: "customerId",    label: "Customer",  variant: "caption" },
         { name: "status",        label: "Status",    variant: "badge"   },
@@ -44,7 +47,7 @@ orbital InvoiceOrbital {
       ]
         @label "Columns to show"
         @description "Each column maps to one field on the Invoice entity"
-      itemActions     : [object] = [
+      itemActions     : [ItemAction] = [
         { label: "Open", event: "OPEN_INVOICE", variant: "primary", icon: "arrow-right" },
         { label: "Void", event: "VOID",         variant: "danger",  icon: "x" }
       ]

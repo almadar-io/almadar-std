@@ -21,6 +21,12 @@ orbital ServiceStripeOrbital {
   type ServiceStripeStripeCompleted = Event { result : object }
   type ServiceStripeStripeFailed = Event { error : string, code : string }
 
+  ;; Typed Stripe metadata. Stripe accepts string→string maps; lolo's
+  ;; config type system bans bare `object` so the metadata config field
+  ;; declares a struct alias with the most common Stripe metadata slots.
+  ;; Empty strings are valid (Stripe just omits empty entries).
+  type StripeMetadata = { orderId : string, customerEmail : string }
+
   ;; Default UI: a sibling trait pointing back at the standalone test form.
   ;; Consumers override `uiTrait` to inject their own Stripe Elements card form;
   ;; the default value below keeps standalone usage working.
@@ -47,9 +53,9 @@ orbital ServiceStripeOrbital {
       currency : string = "usd"
         @label "Currency code"
         @description "ISO 4217 currency code Stripe should charge in (e.g. usd, eur)"
-      metadata : object = {}
-        @label "Extra metadata"
-        @description "Free-form key/value metadata attached to the Stripe charge"
+      metadata : StripeMetadata = { orderId: "", customerEmail: "" }
+        @label "Stripe metadata"
+        @description "Metadata attached to the Stripe charge (orderId for fulfillment correlation, customerEmail for receipt routing). Empty strings are dropped before sending to Stripe."
     }
     state idle {
       INIT -> idle

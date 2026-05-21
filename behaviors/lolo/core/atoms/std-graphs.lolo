@@ -1,6 +1,8 @@
 app std-graphs "2.0.0"
 "std-graphs — embeddable chart atom. ITEMS_LOADED groups @payload.data by @config.categoryField (or @config.timeField when timeAxis=true) and aggregates per bucket. Multi-series rendering via @config.series (preformatted ChartSeries shape). Histograms via chartType=histogram pass pre-binned @payload.data through unchanged. Stacked / 100% stacked bars via @config.stack. Post-process sort + limit. Clicking a data point emits UI:@config.drillEvent with { label, value, seriesLabel? }. Drop into a dashboard alongside std-stats / std-browse."
 
+type ObjectSpec = { id : string, label : string, value : string }
+
 orbital GraphItemOrbital {
   type ChartPoint = { label : string!, value : number! }
   type SeriesSpec = { name : string!, data : [ChartPoint], color : string, dashed : boolean }
@@ -125,7 +127,7 @@ orbital GraphItemOrbital {
         (render-ui main { type: "@config.viewPattern", title: "@config.title", subtitle: "@config.subtitle", chartType: "@config.chartType", data: "@entity.chartData", series: "@config.series", height: "@config.height", showLegend: "@config.showLegend", showValues: "@config.showValues", stack: "@config.stack", timeAxis: "@config.timeAxis", drillEvent: "@config.drillEvent" })
     }
     listens {
-      ITEMS_LOADED { data : [object], totalCount : number }
+      ITEMS_LOADED { data : [ObjectSpec], totalCount : number }
     }
   }
   page "/graphitems" as GraphItemGraphPage -> GraphItemGraph

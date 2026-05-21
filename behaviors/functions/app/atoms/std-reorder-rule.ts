@@ -87,10 +87,10 @@ export interface StdReorderRuleReorderRuleLoadFailedPayload {
 export interface StdReorderRuleConfig {
   /** Default: `"Reorder Rules"` */
   title?: string;
-  /** Default: `[{"name":"sku","label":"SKU","variant":"caption"},{"name":"locationId","label":"Location","variant":"caption"},{"label":"Threshold","variant":"caption","name":"thresholdQty"},{"label":"Reorder Qty","variant":"caption","name":"reorderQty"},{"name":"vendor","label":"Vendor","variant":"caption"},{"name":"leadTimeDays","label":"Lead (d)","variant":"caption"}]` */
-  fields?: TraitConfig[];
-  /** Default: `[{"label":"Open","event":"OPEN_RULE","variant":"primary","icon":"arrow-right"},{"label":"Disable","variant":"danger","event":"DISABLE_RULE"}]` */
-  itemActions?: TraitConfig[];
+  /** Default: `[{"variant":"caption","name":"sku","label":"SKU"},{"name":"locationId","variant":"caption","label":"Location"},{"name":"thresholdQty","label":"Threshold","variant":"caption"},{"variant":"caption","label":"Reorder Qty","name":"reorderQty"},{"name":"vendor","variant":"caption","label":"Vendor"},{"name":"leadTimeDays","label":"Lead (d)","variant":"caption"}]` */
+  fields?: EntityRow[];
+  /** Default: `[{"event":"OPEN_RULE","label":"Open","variant":"primary","icon":"arrow-right"},{"label":"Disable","event":"DISABLE_RULE","variant":"danger"}]` */
+  itemActions?: EntityRow[];
 }
 
 /**

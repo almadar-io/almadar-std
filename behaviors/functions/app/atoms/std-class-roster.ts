@@ -85,12 +85,12 @@ export interface StdClassRosterRosterEntryLoadFailedPayload {
  * without modifying its state-machine topology.
  */
 export interface StdClassRosterConfig {
-  /** Default: `[{"label":"Member","variant":"caption","name":"memberName"},{"name":"sessionId","label":"Session","variant":"caption"},{"label":"Status","name":"status","variant":"badge"},{"name":"checkedInAt","variant":"caption","label":"Checked In"}]` */
-  fields?: TraitConfig[];
-  /** Default: `[{"label":"Open","variant":"primary","icon":"arrow-right","event":"OPEN_ENTRY"},{"variant":"secondary","event":"CHECK_IN","label":"Check In"},{"label":"No Show","variant":"danger","event":"MARK_NO_SHOW"}]` */
-  itemActions?: TraitConfig[];
+  /** Default: `[{"event":"OPEN_ENTRY","label":"Open","icon":"arrow-right","variant":"primary"},{"event":"CHECK_IN","label":"Check In","variant":"secondary"},{"variant":"danger","label":"No Show","event":"MARK_NO_SHOW"}]` */
+  itemActions?: EntityRow[];
   /** Default: `"Class Roster"` */
   title?: string;
+  /** Default: `[{"variant":"caption","name":"memberName","label":"Member"},{"name":"sessionId","variant":"caption","label":"Session"},{"label":"Status","name":"status","variant":"badge"},{"name":"checkedInAt","label":"Checked In","variant":"caption"}]` */
+  fields?: EntityRow[];
 }
 
 /**

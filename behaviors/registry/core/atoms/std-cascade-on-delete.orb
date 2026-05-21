@@ -43,7 +43,7 @@
               "payloadSchema": [
                 {
                   "name": "data",
-                  "type": "[object]"
+                  "type": "[ObjectSpec]"
                 }
               ]
             },
@@ -57,7 +57,7 @@
                 },
                 {
                   "name": "data",
-                  "type": "[object]"
+                  "type": "[ObjectSpec]"
                 }
               ]
             },
@@ -114,7 +114,7 @@
                 "payloadSchema": [
                   {
                     "name": "data",
-                    "type": "[object]"
+                    "type": "[ObjectSpec]"
                   }
                 ]
               },
@@ -128,7 +128,7 @@
                   },
                   {
                     "name": "data",
-                    "type": "[object]"
+                    "type": "[ObjectSpec]"
                   }
                 ]
               },
@@ -181,10 +181,6 @@
                     "fetch",
                     "CascadeLog",
                     {
-                      "emit": {
-                        "success": "CascadeRowsFetched",
-                        "failure": "CascadeFailed"
-                      },
                       "filter": [
                         "=",
                         [
@@ -193,7 +189,11 @@
                           "@config.foreignKeyField"
                         ],
                         "@entity.parentId"
-                      ]
+                      ],
+                      "emit": {
+                        "success": "CascadeRowsFetched",
+                        "failure": "CascadeFailed"
+                      }
                     }
                   ]
                 ]
@@ -215,16 +215,16 @@
                     "emit",
                     "CascadeRowsLoaded",
                     {
-                      "parentId": "@entity.parentId",
-                      "data": "@payload.data"
+                      "data": "@payload.data",
+                      "parentId": "@entity.parentId"
                     }
                   ],
                   [
                     "emit",
                     "CascadeCompleted",
                     {
-                      "deletedCount": "@entity.rowCount",
-                      "parentId": "@entity.parentId"
+                      "parentId": "@entity.parentId",
+                      "deletedCount": "@entity.rowCount"
                     }
                   ]
                 ]
@@ -241,17 +241,17 @@
                 "type": "string"
               }
             },
-            "parentEntity": {
-              "type": "string",
-              "default": "",
-              "label": "Parent entity",
-              "description": "Entity whose deletion triggers the cascade"
-            },
             "foreignKeyField": {
               "type": "string",
               "default": "",
               "label": "Foreign-key field",
               "description": "Field on dependent rows that holds the parent's id"
+            },
+            "parentEntity": {
+              "type": "string",
+              "default": "",
+              "label": "Parent entity",
+              "description": "Entity whose deletion triggers the cascade"
             }
           },
           "scope": "instance"

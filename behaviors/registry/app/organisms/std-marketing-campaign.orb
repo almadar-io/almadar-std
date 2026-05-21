@@ -132,37 +132,37 @@
           "name": "CampaignAppLayout",
           "config": {
             "notificationClickEvent": "CAMPAIGN_NOTIFICATIONS_OPEN",
-            "appName": "Marketing",
             "navItems": [
               {
-                "href": "/campaigns",
                 "icon": "megaphone",
+                "href": "/campaigns",
                 "label": "Campaigns"
               },
               {
+                "href": "/broadcasts",
                 "icon": "send",
-                "label": "Broadcasts",
-                "href": "/broadcasts"
+                "label": "Broadcasts"
               },
               {
-                "label": "Segments",
                 "href": "/segments",
+                "label": "Segments",
                 "icon": "users"
               },
               {
-                "label": "Sequences",
                 "href": "/sequences",
-                "icon": "mail"
+                "icon": "mail",
+                "label": "Sequences"
               },
               {
+                "href": "/templates",
                 "icon": "file-text",
-                "label": "Templates",
-                "href": "/templates"
+                "label": "Templates"
               }
             ],
-            "searchEvent": "CAMPAIGN_SEARCH",
+            "contentTrait": "@trait.CampaignCatalog",
+            "appName": "Marketing",
             "notifications": [],
-            "contentTrait": "@trait.CampaignCatalog"
+            "searchEvent": "CAMPAIGN_SEARCH"
           },
           "events": {
             "SEARCH": "CAMPAIGN_SEARCH",
@@ -249,15 +249,20 @@
                     "render-ui",
                     "main",
                     {
+                      "direction": "vertical",
+                      "gap": "lg",
                       "type": "stack",
                       "children": [
                         {
+                          "align": "center",
+                          "type": "stack",
+                          "direction": "horizontal",
+                          "gap": "md",
+                          "justify": "between",
                           "children": [
                             {
-                              "gap": "sm",
-                              "align": "center",
-                              "direction": "horizontal",
                               "type": "stack",
+                              "gap": "sm",
                               "children": [
                                 {
                                   "type": "icon",
@@ -265,44 +270,41 @@
                                 },
                                 {
                                   "variant": "h2",
-                                  "content": "Campaigns",
-                                  "type": "typography"
+                                  "type": "typography",
+                                  "content": "Campaigns"
                                 }
-                              ]
+                              ],
+                              "direction": "horizontal",
+                              "align": "center"
                             },
                             {
                               "gap": "sm",
-                              "type": "stack",
                               "children": [
                                 {
-                                  "label": "New Campaign",
-                                  "icon": "plus",
-                                  "type": "button",
                                   "variant": "primary",
-                                  "action": "CREATE"
+                                  "type": "button",
+                                  "action": "CREATE",
+                                  "label": "New Campaign",
+                                  "icon": "plus"
                                 }
                               ],
-                              "direction": "horizontal"
+                              "direction": "horizontal",
+                              "type": "stack"
                             }
-                          ],
-                          "gap": "md",
-                          "justify": "between",
-                          "align": "center",
-                          "type": "stack",
-                          "direction": "horizontal"
+                          ]
                         },
                         {
                           "type": "divider"
                         },
                         {
-                          "gap": "md",
                           "direction": "horizontal",
                           "align": "center",
-                          "type": "stack",
+                          "gap": "md",
                           "children": [
                             "@trait.CampaignSearch",
                             "@trait.CampaignFilter"
-                          ]
+                          ],
+                          "type": "stack"
                         },
                         "@trait.CampaignStats",
                         "@trait.CampaignGraphs",
@@ -310,9 +312,7 @@
                           "type": "divider"
                         },
                         "@trait.CampaignBrowseList"
-                      ],
-                      "direction": "vertical",
-                      "gap": "lg"
+                      ]
                     }
                   ]
                 ]
@@ -331,13 +331,12 @@
                     "render-ui",
                     "main",
                     {
-                      "type": "stack",
+                      "direction": "vertical",
                       "align": "center",
-                      "className": "py-8",
                       "children": [
                         {
-                          "type": "icon",
-                          "name": "bell"
+                          "name": "bell",
+                          "type": "icon"
                         },
                         {
                           "content": "No notifications",
@@ -347,18 +346,19 @@
                         {
                           "variant": "caption",
                           "color": "muted",
-                          "type": "typography",
-                          "content": "You're all caught up."
+                          "content": "You're all caught up.",
+                          "type": "typography"
                         },
                         {
+                          "label": "Back to campaigns",
                           "action": "INIT",
-                          "variant": "ghost",
                           "type": "button",
-                          "label": "Back to campaigns"
+                          "variant": "ghost"
                         }
                       ],
-                      "gap": "md",
-                      "direction": "vertical"
+                      "type": "stack",
+                      "className": "py-8",
+                      "gap": "md"
                     }
                   ]
                 ]
@@ -371,27 +371,30 @@
           "ref": "Search.traits.SearchResultSearch",
           "name": "CampaignSearch",
           "config": {
-            "placeholder": "Search campaigns…",
-            "event": "CAMPAIGN_SEARCH"
+            "event": "CAMPAIGN_SEARCH",
+            "placeholder": "Search campaigns…"
           }
         },
         {
           "ref": "Filter.traits.FilterTargetFilter",
           "name": "CampaignFilter",
           "config": {
+            "event": "CAMPAIGN_FILTER",
             "filters": [
               {
                 "filterType": "select",
                 "label": "Channel",
-                "field": "channel",
                 "options": [
                   "email",
                   "sms",
                   "push",
                   "mixed"
-                ]
+                ],
+                "field": "channel"
               },
               {
+                "label": "Status",
+                "field": "status",
                 "options": [
                   "draft",
                   "scheduled",
@@ -399,30 +402,27 @@
                   "sent",
                   "paused"
                 ],
-                "label": "Status",
-                "field": "status",
                 "filterType": "select"
               }
-            ],
-            "event": "CAMPAIGN_FILTER"
+            ]
           }
         },
         {
           "ref": "Stats.traits.StatsItemStats",
           "name": "CampaignStats",
           "config": {
+            "title": "Campaigns",
             "metrics": [
               {
+                "format": "number",
+                "icon": "megaphone",
                 "variant": "primary",
                 "aggregation": "count",
-                "icon": "megaphone",
-                "format": "number",
                 "label": "Total"
               },
               {
                 "icon": "clock",
-                "aggregation": "count",
-                "format": "number",
+                "variant": "info",
                 "filter": [
                   "fn",
                   "row",
@@ -432,10 +432,14 @@
                     "scheduled"
                   ]
                 ],
+                "format": "number",
                 "label": "Scheduled",
-                "variant": "info"
+                "aggregation": "count"
               },
               {
+                "aggregation": "count",
+                "icon": "check-circle",
+                "label": "Sent",
                 "variant": "success",
                 "format": "number",
                 "filter": [
@@ -446,22 +450,18 @@
                     "@row.status",
                     "sent"
                   ]
-                ],
-                "icon": "check-circle",
-                "aggregation": "count",
-                "label": "Sent"
+                ]
               },
               {
+                "field": "openRate",
+                "icon": "eye",
+                "label": "Open Rate",
+                "variant": "warning",
                 "format": "number",
                 "suffix": "%",
-                "label": "Open Rate",
-                "field": "openRate",
-                "aggregation": "avg",
-                "icon": "eye",
-                "variant": "warning"
+                "aggregation": "avg"
               }
-            ],
-            "title": "Campaigns"
+            ]
           },
           "listens": [
             {
@@ -478,13 +478,13 @@
           "ref": "Graphs.traits.GraphItemGraph",
           "name": "CampaignGraphs",
           "config": {
-            "title": "Campaigns by Channel",
-            "showLegend": false,
             "subtitle": "Volume across channels",
             "height": 240.0,
-            "aggregation": "count",
+            "categoryField": "channel",
+            "title": "Campaigns by Channel",
             "chartType": "bar",
-            "categoryField": "channel"
+            "showLegend": false,
+            "aggregation": "count"
           },
           "listens": [
             {
@@ -816,8 +816,8 @@
                     "Campaign",
                     {
                       "emit": {
-                        "success": "CampaignLoaded",
-                        "failure": "CampaignLoadFailed"
+                        "failure": "CampaignLoadFailed",
+                        "success": "CampaignLoaded"
                       }
                     }
                   ],
@@ -825,22 +825,22 @@
                     "render-ui",
                     "main",
                     {
-                      "align": "center",
                       "children": [
                         {
                           "type": "spinner"
                         },
                         {
-                          "color": "muted",
-                          "type": "typography",
                           "variant": "caption",
-                          "content": "Loading campaigns…"
+                          "content": "Loading campaigns…",
+                          "color": "muted",
+                          "type": "typography"
                         }
                       ],
                       "gap": "md",
-                      "direction": "vertical",
+                      "align": "center",
+                      "className": "py-12",
                       "type": "stack",
-                      "className": "py-12"
+                      "direction": "vertical"
                     }
                   ]
                 ]
@@ -854,21 +854,19 @@
                     "render-ui",
                     "main",
                     {
-                      "gap": "md",
                       "children": [
                         {
-                          "type": "data-grid",
                           "fields": [
                             {
                               "variant": "h4",
                               "icon": "megaphone",
-                              "name": "name",
-                              "label": "Name"
+                              "label": "Name",
+                              "name": "name"
                             },
                             {
-                              "name": "channel",
+                              "variant": "badge",
                               "label": "Channel",
-                              "variant": "badge"
+                              "name": "channel"
                             },
                             {
                               "name": "status",
@@ -877,31 +875,35 @@
                             },
                             {
                               "name": "audience",
-                              "variant": "caption",
-                              "label": "Audience"
+                              "label": "Audience",
+                              "variant": "caption"
                             },
                             {
                               "label": "Sends",
-                              "variant": "body",
-                              "name": "sendCount"
-                            },
-                            {
-                              "name": "openRate",
-                              "label": "Opens %",
+                              "name": "sendCount",
                               "variant": "body"
                             },
                             {
-                              "label": "Clicks %",
+                              "name": "openRate",
                               "variant": "body",
-                              "name": "clickRate"
+                              "label": "Opens %"
                             },
                             {
-                              "label": "Scheduled",
+                              "name": "clickRate",
+                              "variant": "body",
+                              "label": "Clicks %"
+                            },
+                            {
                               "name": "scheduledAt",
                               "variant": "caption",
-                              "format": "date"
+                              "format": "date",
+                              "label": "Scheduled"
                             }
                           ],
+                          "type": "data-grid",
+                          "cols": 1.0,
+                          "entity": "@payload.data",
+                          "gap": "sm",
                           "itemActions": [
                             {
                               "label": "View",
@@ -910,22 +912,20 @@
                             },
                             {
                               "variant": "ghost",
-                              "label": "Edit",
-                              "event": "EDIT"
+                              "event": "EDIT",
+                              "label": "Edit"
                             },
                             {
                               "event": "DELETE",
                               "variant": "danger",
                               "label": "Delete"
                             }
-                          ],
-                          "entity": "@payload.data",
-                          "cols": 1.0,
-                          "gap": "sm"
+                          ]
                         }
                       ],
-                      "type": "stack",
-                      "direction": "vertical"
+                      "gap": "md",
+                      "direction": "vertical",
+                      "type": "stack"
                     }
                   ]
                 ]
@@ -939,36 +939,36 @@
                     "render-ui",
                     "main",
                     {
-                      "direction": "vertical",
-                      "align": "center",
-                      "gap": "md",
-                      "className": "py-12",
                       "children": [
                         {
-                          "name": "alert-triangle",
+                          "color": "destructive",
                           "type": "icon",
-                          "color": "destructive"
+                          "name": "alert-triangle"
                         },
                         {
+                          "variant": "h3",
                           "content": "Failed to load campaigns",
-                          "type": "typography",
-                          "variant": "h3"
+                          "type": "typography"
                         },
                         {
-                          "content": "@payload.error",
+                          "variant": "body",
                           "type": "typography",
                           "color": "muted",
-                          "variant": "body"
+                          "content": "@payload.error"
                         },
                         {
-                          "type": "button",
-                          "label": "Retry",
-                          "variant": "primary",
                           "icon": "rotate-ccw",
-                          "action": "INIT"
+                          "label": "Retry",
+                          "action": "INIT",
+                          "variant": "primary",
+                          "type": "button"
                         }
                       ],
-                      "type": "stack"
+                      "direction": "vertical",
+                      "align": "center",
+                      "type": "stack",
+                      "className": "py-12",
+                      "gap": "md"
                     }
                   ]
                 ]
@@ -1045,16 +1045,16 @@
           "name": "CampaignCreate",
           "linkedEntity": "Campaign",
           "config": {
-            "mode": "create",
-            "icon": "plus-circle",
-            "title": "New Campaign",
             "fields": [
               "name",
               "description",
               "channel",
               "audience",
               "scheduledAt"
-            ]
+            ],
+            "title": "New Campaign",
+            "mode": "create",
+            "icon": "plus-circle"
           },
           "events": {
             "OPEN": "CREATE"
@@ -1075,6 +1075,7 @@
           "name": "CampaignEdit",
           "linkedEntity": "Campaign",
           "config": {
+            "title": "Edit Campaign",
             "fields": [
               "name",
               "description",
@@ -1084,7 +1085,6 @@
               "scheduledAt"
             ],
             "icon": "edit",
-            "title": "Edit Campaign",
             "mode": "edit"
           },
           "events": {
@@ -1107,6 +1107,8 @@
           "linkedEntity": "Campaign",
           "config": {
             "icon": "eye",
+            "title": "View Campaign",
+            "mode": "edit",
             "fields": [
               "name",
               "description",
@@ -1117,9 +1119,7 @@
               "openRate",
               "clickRate",
               "scheduledAt"
-            ],
-            "mode": "edit",
-            "title": "View Campaign"
+            ]
           },
           "events": {
             "OPEN": "VIEW"
@@ -1140,14 +1140,14 @@
           "name": "CampaignDelete",
           "linkedEntity": "Campaign",
           "config": {
-            "title": "Delete Campaign",
-            "confirmLabel": "Delete",
             "icon": "alert-triangle",
-            "alertMessage": "This action cannot be undone."
+            "confirmLabel": "Delete",
+            "alertMessage": "This action cannot be undone.",
+            "title": "Delete Campaign"
           },
           "events": {
-            "CONFIRM": "CONFIRM_DELETE",
-            "REQUEST": "DELETE"
+            "REQUEST": "DELETE",
+            "CONFIRM": "CONFIRM_DELETE"
           },
           "listens": [
             {

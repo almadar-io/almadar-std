@@ -173,20 +173,20 @@ export function stdMarketplaceVendorOrbital(params: StdMarketplaceVendorOrbitalP
         'ref': 'AppShell.traits.AppLayout',
         'name': 'VendorAppLayout',
         'config': {
-          'searchEvent': 'VENDOR_SEARCH',
+          'appName': 'Marketplace',
           'notifications': [],
           'notificationClickEvent': 'VENDOR_NOTIFICATIONS_OPEN',
-          'appName': 'Marketplace',
+          'contentTrait': '@trait.VendorCatalog',
           'navItems': [
             {
-              'href': '/vendors',
               'label': 'Vendors',
               'icon': 'store',
+              'href': '/vendors',
             },
             {
               'icon': 'package',
-              'label': 'Listings',
               'href': '/listings',
+              'label': 'Listings',
             },
             {
               'label': 'Orders',
@@ -194,7 +194,7 @@ export function stdMarketplaceVendorOrbital(params: StdMarketplaceVendorOrbitalP
               'icon': 'shopping-cart',
             },
           ],
-          'contentTrait': '@trait.VendorCatalog',
+          'searchEvent': 'VENDOR_SEARCH',
         },
         'events': {
           'NOTIFY_CLICK': 'VENDOR_NOTIFICATIONS_OPEN',
@@ -281,49 +281,48 @@ export function stdMarketplaceVendorOrbital(params: StdMarketplaceVendorOrbitalP
                   'render-ui',
                   'main',
                   {
-                    'gap': 'lg',
-                    'direction': 'vertical',
                     'type': 'stack',
+                    'gap': 'lg',
                     'children': [
                       {
                         'children': [
                           {
-                            'align': 'center',
                             'type': 'stack',
                             'direction': 'horizontal',
-                            'gap': 'sm',
                             'children': [
                               {
                                 'type': 'icon',
                                 'name': 'store',
                               },
                               {
+                                'type': 'typography',
                                 'content': 'Vendors',
                                 'variant': 'h2',
-                                'type': 'typography',
                               },
                             ],
+                            'gap': 'sm',
+                            'align': 'center',
                           },
                           {
                             'type': 'stack',
+                            'direction': 'horizontal',
                             'gap': 'sm',
                             'children': [
                               {
-                                'label': 'New Vendor',
-                                'action': 'CREATE',
                                 'type': 'button',
-                                'variant': 'primary',
                                 'icon': 'plus',
+                                'action': 'CREATE',
+                                'label': 'New Vendor',
+                                'variant': 'primary',
                               },
                             ],
-                            'direction': 'horizontal',
                           },
                         ],
-                        'type': 'stack',
                         'gap': 'md',
-                        'align': 'center',
-                        'justify': 'between',
                         'direction': 'horizontal',
+                        'type': 'stack',
+                        'justify': 'between',
+                        'align': 'center',
                       },
                       {
                         'type': 'divider',
@@ -334,6 +333,7 @@ export function stdMarketplaceVendorOrbital(params: StdMarketplaceVendorOrbitalP
                       },
                       '@trait.VendorPayoutLedger',
                     ],
+                    'direction': 'vertical',
                   },
                 ],
               ],
@@ -352,10 +352,6 @@ export function stdMarketplaceVendorOrbital(params: StdMarketplaceVendorOrbitalP
                   'render-ui',
                   'main',
                   {
-                    'align': 'center',
-                    'type': 'stack',
-                    'gap': 'md',
-                    'className': 'py-8',
                     'children': [
                       {
                         'name': 'bell',
@@ -367,18 +363,22 @@ export function stdMarketplaceVendorOrbital(params: StdMarketplaceVendorOrbitalP
                         'type': 'typography',
                       },
                       {
-                        'type': 'typography',
-                        'variant': 'caption',
                         'content': 'You\'re all caught up.',
+                        'variant': 'caption',
+                        'type': 'typography',
                         'color': 'muted',
                       },
                       {
-                        'type': 'button',
-                        'label': 'Back to vendors',
                         'variant': 'ghost',
+                        'label': 'Back to vendors',
+                        'type': 'button',
                         'action': 'INIT',
                       },
                     ],
+                    'type': 'stack',
+                    'className': 'py-8',
+                    'gap': 'md',
+                    'align': 'center',
                     'direction': 'vertical',
                   },
                 ],
@@ -393,6 +393,7 @@ export function stdMarketplaceVendorOrbital(params: StdMarketplaceVendorOrbitalP
         'name': 'VendorBrowseList',
         'linkedEntity': canonicalName,
         'config': {
+          'cols': 1,
           'fields': [
             {
               'variant': 'h3',
@@ -404,38 +405,37 @@ export function stdMarketplaceVendorOrbital(params: StdMarketplaceVendorOrbitalP
               'variant': 'body',
             },
             {
-              'name': 'status',
               'variant': 'badge',
+              'name': 'status',
             },
             {
-              'format': 'currency',
               'name': 'totalSales',
+              'format': 'currency',
               'variant': 'caption',
             },
             {
-              'name': 'rating',
               'variant': 'caption',
+              'name': 'rating',
             },
           ],
+          'gap': 'sm',
           'itemActions': [
             {
-              'variant': 'ghost',
               'event': 'VIEW',
               'label': 'View',
+              'variant': 'ghost',
             },
             {
+              'label': 'Edit',
               'variant': 'ghost',
               'event': 'EDIT',
-              'label': 'Edit',
             },
             {
-              'label': 'Delete',
-              'event': 'DELETE',
               'variant': 'danger',
+              'event': 'DELETE',
+              'label': 'Delete',
             },
           ],
-          'cols': 1,
-          'gap': 'sm',
         },
         'listens': [
           {
@@ -468,8 +468,8 @@ export function stdMarketplaceVendorOrbital(params: StdMarketplaceVendorOrbitalP
         'ref': 'Payout.traits.PayoutLedger',
         'name': 'VendorPayoutLedger',
         'config': {
-          'minimumWithdrawal': 50,
           'title': 'Vendor Payouts',
+          'minimumWithdrawal': 50,
         },
       }),
       makeTraitRef({
@@ -484,9 +484,9 @@ export function stdMarketplaceVendorOrbital(params: StdMarketplaceVendorOrbitalP
             'totalSales',
             'rating',
           ],
-          'icon': 'plus-circle',
           'title': 'New Vendor',
           'mode': 'create',
+          'icon': 'plus-circle',
         },
         'events': {
           'OPEN': 'CREATE',
@@ -507,9 +507,9 @@ export function stdMarketplaceVendorOrbital(params: StdMarketplaceVendorOrbitalP
         'name': 'VendorEdit',
         'linkedEntity': canonicalName,
         'config': {
-          'title': 'Edit Vendor',
           'icon': 'edit',
           'mode': 'edit',
+          'title': 'Edit Vendor',
           'fields': [
             'name',
             'businessName',
@@ -538,7 +538,7 @@ export function stdMarketplaceVendorOrbital(params: StdMarketplaceVendorOrbitalP
         'linkedEntity': canonicalName,
         'config': {
           'mode': 'edit',
-          'title': 'View Vendor',
+          'icon': 'eye',
           'fields': [
             'name',
             'businessName',
@@ -546,7 +546,7 @@ export function stdMarketplaceVendorOrbital(params: StdMarketplaceVendorOrbitalP
             'totalSales',
             'rating',
           ],
-          'icon': 'eye',
+          'title': 'View Vendor',
         },
         'events': {
           'OPEN': 'VIEW',
@@ -567,14 +567,14 @@ export function stdMarketplaceVendorOrbital(params: StdMarketplaceVendorOrbitalP
         'name': 'VendorDelete',
         'linkedEntity': canonicalName,
         'config': {
-          'icon': 'alert-triangle',
-          'confirmLabel': 'Delete',
           'title': 'Delete Vendor',
           'alertMessage': 'This action cannot be undone.',
+          'confirmLabel': 'Delete',
+          'icon': 'alert-triangle',
         },
         'events': {
-          'CONFIRM': 'CONFIRM_DELETE',
           'REQUEST': 'DELETE',
+          'CONFIRM': 'CONFIRM_DELETE',
         },
         'listens': [
           {
@@ -1085,6 +1085,7 @@ export function stdMarketplaceListingOrbital(params: StdMarketplaceListingOrbita
         'name': 'ListingAppLayout',
         'config': {
           'notificationClickEvent': 'LISTING_NOTIFICATIONS_OPEN',
+          'appName': 'Marketplace',
           'navItems': [
             {
               'href': '/vendors',
@@ -1092,20 +1093,19 @@ export function stdMarketplaceListingOrbital(params: StdMarketplaceListingOrbita
               'label': 'Vendors',
             },
             {
+              'icon': 'package',
               'label': 'Listings',
               'href': '/listings',
-              'icon': 'package',
             },
             {
-              'href': '/orders',
               'label': 'Orders',
+              'href': '/orders',
               'icon': 'shopping-cart',
             },
           ],
-          'notifications': [],
-          'appName': 'Marketplace',
-          'contentTrait': '@trait.ListingCatalog',
           'searchEvent': 'LISTING_SEARCH',
+          'notifications': [],
+          'contentTrait': '@trait.ListingCatalog',
         },
         'events': {
           'NOTIFY_CLICK': 'LISTING_NOTIFICATIONS_OPEN',
@@ -1193,46 +1193,44 @@ export function stdMarketplaceListingOrbital(params: StdMarketplaceListingOrbita
                   'main',
                   {
                     'gap': 'lg',
-                    'type': 'stack',
-                    'direction': 'vertical',
                     'children': [
                       {
-                        'gap': 'md',
-                        'direction': 'horizontal',
                         'type': 'stack',
-                        'justify': 'between',
+                        'gap': 'md',
                         'align': 'center',
+                        'direction': 'horizontal',
+                        'justify': 'between',
                         'children': [
                           {
-                            'direction': 'horizontal',
-                            'align': 'center',
                             'children': [
                               {
                                 'type': 'icon',
                                 'name': 'package',
                               },
                               {
+                                'content': 'Listings',
                                 'variant': 'h2',
                                 'type': 'typography',
-                                'content': 'Listings',
                               },
                             ],
-                            'gap': 'sm',
+                            'direction': 'horizontal',
                             'type': 'stack',
+                            'gap': 'sm',
+                            'align': 'center',
                           },
                           {
-                            'gap': 'sm',
                             'type': 'stack',
-                            'direction': 'horizontal',
                             'children': [
                               {
-                                'icon': 'plus',
-                                'variant': 'primary',
                                 'label': 'New Listing',
                                 'type': 'button',
+                                'variant': 'primary',
+                                'icon': 'plus',
                                 'action': 'CREATE',
                               },
                             ],
+                            'direction': 'horizontal',
+                            'gap': 'sm',
                           },
                         ],
                       },
@@ -1244,9 +1242,9 @@ export function stdMarketplaceListingOrbital(params: StdMarketplaceListingOrbita
                           '@trait.ListingSearch',
                           '@trait.ListingFilter',
                         ],
-                        'type': 'stack',
                         'gap': 'md',
                         'direction': 'horizontal',
+                        'type': 'stack',
                         'align': 'center',
                       },
                       '@trait.ListingStats',
@@ -1272,6 +1270,8 @@ export function stdMarketplaceListingOrbital(params: StdMarketplaceListingOrbita
                       },
                       '@trait.ListingModQueue',
                     ],
+                    'type': 'stack',
+                    'direction': 'vertical',
                   },
                 ],
               ],
@@ -1290,13 +1290,13 @@ export function stdMarketplaceListingOrbital(params: StdMarketplaceListingOrbita
                   'render-ui',
                   'main',
                   {
-                    'align': 'center',
-                    'gap': 'md',
+                    'className': 'py-8',
+                    'direction': 'vertical',
                     'type': 'stack',
                     'children': [
                       {
-                        'name': 'bell',
                         'type': 'icon',
+                        'name': 'bell',
                       },
                       {
                         'type': 'typography',
@@ -1304,20 +1304,20 @@ export function stdMarketplaceListingOrbital(params: StdMarketplaceListingOrbita
                         'content': 'No notifications',
                       },
                       {
-                        'variant': 'caption',
-                        'type': 'typography',
-                        'content': 'You\'re all caught up.',
                         'color': 'muted',
+                        'variant': 'caption',
+                        'content': 'You\'re all caught up.',
+                        'type': 'typography',
                       },
                       {
-                        'variant': 'ghost',
                         'type': 'button',
                         'label': 'Back to listings',
                         'action': 'INIT',
+                        'variant': 'ghost',
                       },
                     ],
-                    'direction': 'vertical',
-                    'className': 'py-8',
+                    'gap': 'md',
+                    'align': 'center',
                   },
                 ],
               ],
@@ -1340,25 +1340,25 @@ export function stdMarketplaceListingOrbital(params: StdMarketplaceListingOrbita
         'config': {
           'filters': [
             {
-              'field': 'status',
               'filterType': 'select',
+              'field': 'status',
+              'label': 'Status',
               'options': [
                 'draft',
                 'active',
                 'sold',
                 'removed',
               ],
-              'label': 'Status',
             },
             {
               'field': 'currency',
+              'label': 'Currency',
+              'filterType': 'select',
               'options': [
                 'USD',
                 'EUR',
                 'GBP',
               ],
-              'filterType': 'select',
-              'label': 'Currency',
             },
           ],
           'event': 'LISTING_FILTER',
@@ -1368,19 +1368,20 @@ export function stdMarketplaceListingOrbital(params: StdMarketplaceListingOrbita
         'ref': 'Stats.traits.StatsItemStats',
         'name': 'ListingStats',
         'config': {
+          'title': 'Listings',
           'metrics': [
             {
               'aggregation': 'count',
               'label': 'Total',
-              'format': 'number',
-              'icon': 'package',
               'variant': 'primary',
+              'icon': 'package',
+              'format': 'number',
             },
             {
-              'format': 'number',
-              'label': 'Active',
-              'icon': 'check-circle',
               'aggregation': 'count',
+              'label': 'Active',
+              'format': 'number',
+              'variant': 'success',
               'filter': [
                 'fn',
                 'row',
@@ -1390,9 +1391,12 @@ export function stdMarketplaceListingOrbital(params: StdMarketplaceListingOrbita
                   'active',
                 ],
               ],
-              'variant': 'success',
+              'icon': 'check-circle',
             },
             {
+              'icon': 'edit',
+              'aggregation': 'count',
+              'variant': 'warning',
               'filter': [
                 'fn',
                 'row',
@@ -1402,14 +1406,10 @@ export function stdMarketplaceListingOrbital(params: StdMarketplaceListingOrbita
                   'draft',
                 ],
               ],
-              'aggregation': 'count',
-              'label': 'Draft',
-              'icon': 'edit',
-              'variant': 'warning',
               'format': 'number',
+              'label': 'Draft',
             },
           ],
-          'title': 'Listings',
         },
         'listens': [
           {
@@ -1435,8 +1435,23 @@ export function stdMarketplaceListingOrbital(params: StdMarketplaceListingOrbita
         'name': 'ListingBrowseList',
         'linkedEntity': canonicalName,
         'config': {
-          'cols': 1,
-          'gap': 'sm',
+          'itemActions': [
+            {
+              'variant': 'ghost',
+              'label': 'View',
+              'event': 'VIEW',
+            },
+            {
+              'event': 'EDIT',
+              'variant': 'ghost',
+              'label': 'Edit',
+            },
+            {
+              'label': 'Delete',
+              'variant': 'danger',
+              'event': 'DELETE',
+            },
+          ],
           'fields': [
             {
               'icon': 'package',
@@ -1444,17 +1459,17 @@ export function stdMarketplaceListingOrbital(params: StdMarketplaceListingOrbita
               'variant': 'h3',
             },
             {
-              'variant': 'h4',
-              'name': 'price',
               'format': 'currency',
+              'name': 'price',
+              'variant': 'h4',
             },
             {
+              'variant': 'badge',
               'name': 'currency',
-              'variant': 'badge',
             },
             {
-              'variant': 'badge',
               'name': 'status',
+              'variant': 'badge',
             },
             {
               'variant': 'caption',
@@ -1465,27 +1480,12 @@ export function stdMarketplaceListingOrbital(params: StdMarketplaceListingOrbita
               'variant': 'caption',
             },
             {
-              'variant': 'caption',
               'name': 'description',
+              'variant': 'caption',
             },
           ],
-          'itemActions': [
-            {
-              'variant': 'ghost',
-              'label': 'View',
-              'event': 'VIEW',
-            },
-            {
-              'label': 'Edit',
-              'event': 'EDIT',
-              'variant': 'ghost',
-            },
-            {
-              'variant': 'danger',
-              'event': 'DELETE',
-              'label': 'Delete',
-            },
-          ],
+          'cols': 1,
+          'gap': 'sm',
         },
         'listens': [
           {
@@ -1534,21 +1534,21 @@ export function stdMarketplaceListingOrbital(params: StdMarketplaceListingOrbita
         'ref': 'ImageUpload.traits.UploadedImageUpload',
         'name': 'ListingImages',
         'config': {
-          'accept': 'image/*',
-          'maxImages': 10,
-          'maxBytesPerImage': 10485760,
           'title': 'Listing Images',
+          'maxBytesPerImage': 10485760,
+          'maxImages': 10,
+          'accept': 'image/*',
         },
       }),
       makeTraitRef({
         'ref': 'RatingReview.traits.RatingReviewSubmit',
         'name': 'ListingRating',
         'config': {
-          'title': 'Rate this listing',
-          'maxStars': 5,
-          'allowComment': true,
-          'allowPhotos': false,
           'submitEvent': 'SUBMIT_REVIEW',
+          'maxStars': 5,
+          'title': 'Rate this listing',
+          'allowPhotos': false,
+          'allowComment': true,
         },
       }),
       makeTraitRef({
@@ -1570,8 +1570,8 @@ export function stdMarketplaceListingOrbital(params: StdMarketplaceListingOrbita
         'ref': 'ModQueue.traits.ModQueueItemReview',
         'name': 'ListingModQueue',
         'config': {
-          'title': 'Listing Moderation Queue',
           'autoEscalateThreshold': 5,
+          'title': 'Listing Moderation Queue',
         },
       }),
       makeTraitRef({
@@ -1579,6 +1579,8 @@ export function stdMarketplaceListingOrbital(params: StdMarketplaceListingOrbita
         'name': 'ListingCreate',
         'linkedEntity': canonicalName,
         'config': {
+          'icon': 'plus-circle',
+          'title': 'New Listing',
           'fields': [
             'vendorId',
             'title',
@@ -1588,8 +1590,6 @@ export function stdMarketplaceListingOrbital(params: StdMarketplaceListingOrbita
             'status',
           ],
           'mode': 'create',
-          'title': 'New Listing',
-          'icon': 'plus-circle',
         },
         'events': {
           'OPEN': 'CREATE',
@@ -1610,7 +1610,6 @@ export function stdMarketplaceListingOrbital(params: StdMarketplaceListingOrbita
         'name': 'ListingEdit',
         'linkedEntity': canonicalName,
         'config': {
-          'title': 'Edit Listing',
           'fields': [
             'vendorId',
             'title',
@@ -1620,6 +1619,7 @@ export function stdMarketplaceListingOrbital(params: StdMarketplaceListingOrbita
             'status',
           ],
           'icon': 'edit',
+          'title': 'Edit Listing',
           'mode': 'edit',
         },
         'events': {
@@ -1641,6 +1641,9 @@ export function stdMarketplaceListingOrbital(params: StdMarketplaceListingOrbita
         'name': 'ListingView',
         'linkedEntity': canonicalName,
         'config': {
+          'mode': 'edit',
+          'title': 'View Listing',
+          'icon': 'eye',
           'fields': [
             'vendorId',
             'title',
@@ -1649,9 +1652,6 @@ export function stdMarketplaceListingOrbital(params: StdMarketplaceListingOrbita
             'currency',
             'status',
           ],
-          'mode': 'edit',
-          'icon': 'eye',
-          'title': 'View Listing',
         },
         'events': {
           'OPEN': 'VIEW',
@@ -1672,10 +1672,10 @@ export function stdMarketplaceListingOrbital(params: StdMarketplaceListingOrbita
         'name': 'ListingDelete',
         'linkedEntity': canonicalName,
         'config': {
-          'alertMessage': 'This action cannot be undone.',
-          'confirmLabel': 'Delete',
           'icon': 'alert-triangle',
+          'confirmLabel': 'Delete',
           'title': 'Delete Listing',
+          'alertMessage': 'This action cannot be undone.',
         },
         'events': {
           'REQUEST': 'DELETE',
@@ -2159,32 +2159,32 @@ export function stdMarketplaceOrderOrbital(params: StdMarketplaceOrderOrbitalPar
         'ref': 'AppShell.traits.AppLayout',
         'name': 'OrderAppLayout',
         'config': {
-          'appName': 'Marketplace',
           'contentTrait': '@trait.OrderCatalog',
+          'appName': 'Marketplace',
           'searchEvent': 'ORDER_SEARCH',
           'notifications': [],
           'notificationClickEvent': 'ORDER_NOTIFICATIONS_OPEN',
           'navItems': [
             {
-              'href': '/vendors',
-              'icon': 'store',
               'label': 'Vendors',
+              'icon': 'store',
+              'href': '/vendors',
             },
             {
-              'label': 'Listings',
-              'icon': 'package',
               'href': '/listings',
+              'icon': 'package',
+              'label': 'Listings',
             },
             {
+              'icon': 'shopping-cart',
               'label': 'Orders',
               'href': '/orders',
-              'icon': 'shopping-cart',
             },
           ],
         },
         'events': {
-          'SEARCH': 'ORDER_SEARCH',
           'NOTIFY_CLICK': 'ORDER_NOTIFICATIONS_OPEN',
+          'SEARCH': 'ORDER_SEARCH',
         },
       }),
       rebindInlineTraitEntity({
@@ -2267,47 +2267,48 @@ export function stdMarketplaceOrderOrbital(params: StdMarketplaceOrderOrbitalPar
                   'render-ui',
                   'main',
                   {
-                    'type': 'stack',
                     'direction': 'vertical',
+                    'type': 'stack',
+                    'gap': 'lg',
                     'children': [
                       {
+                        'type': 'stack',
+                        'direction': 'horizontal',
+                        'gap': 'md',
                         'justify': 'between',
                         'children': [
                           {
-                            'align': 'center',
                             'children': [
                               {
-                                'name': 'shopping-cart',
                                 'type': 'icon',
+                                'name': 'shopping-cart',
                               },
                               {
+                                'type': 'typography',
                                 'variant': 'h2',
                                 'content': 'Orders',
-                                'type': 'typography',
                               },
                             ],
-                            'gap': 'sm',
                             'type': 'stack',
+                            'gap': 'sm',
+                            'align': 'center',
                             'direction': 'horizontal',
                           },
                           {
+                            'direction': 'horizontal',
                             'gap': 'sm',
+                            'type': 'stack',
                             'children': [
                               {
-                                'type': 'button',
-                                'variant': 'primary',
-                                'icon': 'plus',
                                 'action': 'CREATE',
                                 'label': 'New Order',
+                                'icon': 'plus',
+                                'variant': 'primary',
+                                'type': 'button',
                               },
                             ],
-                            'direction': 'horizontal',
-                            'type': 'stack',
                           },
                         ],
-                        'direction': 'horizontal',
-                        'type': 'stack',
-                        'gap': 'md',
                         'align': 'center',
                       },
                       {
@@ -2319,7 +2320,6 @@ export function stdMarketplaceOrderOrbital(params: StdMarketplaceOrderOrbitalPar
                       },
                       '@trait.OrderCart',
                     ],
-                    'gap': 'lg',
                   },
                 ],
               ],
@@ -2339,7 +2339,6 @@ export function stdMarketplaceOrderOrbital(params: StdMarketplaceOrderOrbitalPar
                   'main',
                   {
                     'className': 'py-8',
-                    'align': 'center',
                     'children': [
                       {
                         'type': 'icon',
@@ -2351,19 +2350,20 @@ export function stdMarketplaceOrderOrbital(params: StdMarketplaceOrderOrbitalPar
                         'variant': 'h3',
                       },
                       {
-                        'content': 'You\'re all caught up.',
                         'variant': 'caption',
-                        'type': 'typography',
                         'color': 'muted',
+                        'content': 'You\'re all caught up.',
+                        'type': 'typography',
                       },
                       {
-                        'type': 'button',
                         'label': 'Back to orders',
                         'action': 'INIT',
+                        'type': 'button',
                         'variant': 'ghost',
                       },
                     ],
                     'direction': 'vertical',
+                    'align': 'center',
                     'type': 'stack',
                     'gap': 'md',
                   },
@@ -2379,11 +2379,10 @@ export function stdMarketplaceOrderOrbital(params: StdMarketplaceOrderOrbitalPar
         'name': 'OrderBrowseList',
         'linkedEntity': canonicalName,
         'config': {
-          'cols': 1,
           'fields': [
             {
-              'variant': 'caption',
               'name': 'buyerId',
+              'variant': 'caption',
             },
             {
               'name': 'listingId',
@@ -2399,8 +2398,8 @@ export function stdMarketplaceOrderOrbital(params: StdMarketplaceOrderOrbitalPar
               'name': 'totalAmount',
             },
             {
-              'name': 'status',
               'variant': 'badge',
+              'name': 'status',
             },
           ],
           'gap': 'sm',
@@ -2411,9 +2410,9 @@ export function stdMarketplaceOrderOrbital(params: StdMarketplaceOrderOrbitalPar
               'variant': 'ghost',
             },
             {
-              'variant': 'ghost',
-              'event': 'EDIT',
               'label': 'Edit',
+              'event': 'EDIT',
+              'variant': 'ghost',
             },
             {
               'label': 'Delete',
@@ -2421,6 +2420,7 @@ export function stdMarketplaceOrderOrbital(params: StdMarketplaceOrderOrbitalPar
               'variant': 'danger',
             },
           ],
+          'cols': 1,
         },
         'listens': [
           {
@@ -2470,8 +2470,7 @@ export function stdMarketplaceOrderOrbital(params: StdMarketplaceOrderOrbitalPar
         'name': 'OrderCreate',
         'linkedEntity': canonicalName,
         'config': {
-          'title': 'New Order',
-          'mode': 'create',
+          'icon': 'plus-circle',
           'fields': [
             'buyerId',
             'listingId',
@@ -2479,7 +2478,8 @@ export function stdMarketplaceOrderOrbital(params: StdMarketplaceOrderOrbitalPar
             'totalAmount',
             'status',
           ],
-          'icon': 'plus-circle',
+          'title': 'New Order',
+          'mode': 'create',
         },
         'events': {
           'OPEN': 'CREATE',
@@ -2500,6 +2500,9 @@ export function stdMarketplaceOrderOrbital(params: StdMarketplaceOrderOrbitalPar
         'name': 'OrderEdit',
         'linkedEntity': canonicalName,
         'config': {
+          'mode': 'edit',
+          'icon': 'edit',
+          'title': 'Edit Order',
           'fields': [
             'buyerId',
             'listingId',
@@ -2507,9 +2510,6 @@ export function stdMarketplaceOrderOrbital(params: StdMarketplaceOrderOrbitalPar
             'totalAmount',
             'status',
           ],
-          'icon': 'edit',
-          'title': 'Edit Order',
-          'mode': 'edit',
         },
         'events': {
           'OPEN': 'EDIT',
@@ -2530,8 +2530,9 @@ export function stdMarketplaceOrderOrbital(params: StdMarketplaceOrderOrbitalPar
         'name': 'OrderView',
         'linkedEntity': canonicalName,
         'config': {
-          'icon': 'eye',
           'mode': 'edit',
+          'title': 'View Order',
+          'icon': 'eye',
           'fields': [
             'buyerId',
             'listingId',
@@ -2539,7 +2540,6 @@ export function stdMarketplaceOrderOrbital(params: StdMarketplaceOrderOrbitalPar
             'totalAmount',
             'status',
           ],
-          'title': 'View Order',
         },
         'events': {
           'OPEN': 'VIEW',
@@ -2560,14 +2560,14 @@ export function stdMarketplaceOrderOrbital(params: StdMarketplaceOrderOrbitalPar
         'name': 'OrderDelete',
         'linkedEntity': canonicalName,
         'config': {
-          'icon': 'alert-triangle',
           'title': 'Delete Order',
-          'alertMessage': 'This action cannot be undone.',
           'confirmLabel': 'Delete',
+          'alertMessage': 'This action cannot be undone.',
+          'icon': 'alert-triangle',
         },
         'events': {
-          'REQUEST': 'DELETE',
           'CONFIRM': 'CONFIRM_DELETE',
+          'REQUEST': 'DELETE',
         },
         'listens': [
           {

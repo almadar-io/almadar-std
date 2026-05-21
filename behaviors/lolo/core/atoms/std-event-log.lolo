@@ -1,6 +1,9 @@
 app std-event-log "2.1.0"
 "std-event-log — generic chronological event feed (Stripe activity log / GitHub PR timeline / Linear event feed style). Renders a vertical `timeline` with type-coded dots, a single horizontal chip-bar of kind filters (All + per-kind), reverse-chronological sort, and an inline form for logging events that weren't auto-captured. `config.kindOptions` maps each kind → status/icon/label so consuming molecules/organisms get type-coded visuals without re-implementing topology. Topology = loading / viewing / backfilling / error."
 
+type ObjectSpec = { id : string, label : string, value : string }
+type KindOption = { label : string!, value : string! }
+
 orbital EventLogOrbital {
   type LogEntry = {
     id          : string!
@@ -41,7 +44,7 @@ orbital EventLogOrbital {
     errorMessage        : string = ""
   }
 
-  type EventLogLoaded     = Event { data : [object] }                "Fired when event entries finish loading"
+  type EventLogLoaded     = Event { data : [ObjectSpec] }                "Fired when event entries finish loading"
   type EventLogLoadFailed = Event { error : string, code : string }  "Fired when fetch fails"
   type EventLogSaved      = Event { row : object }                   "Fired when an entry has been persisted"
   type EventLogSaveFailed = Event { error : string, code : string }  "Fired when persist fails"
@@ -51,7 +54,7 @@ orbital EventLogOrbital {
       title       : string     = "Activity"
         @label "Section title"
         @description "Heading shown above the activity timeline"
-      kindOptions : [object]   = [
+      kindOptions : [KindOption]   = [
         { key: "created",  label: "Created",  icon: "plus-circle",   status: "active"   },
         { key: "updated",  label: "Updated",  icon: "edit-3",        status: "pending"  },
         { key: "approved", label: "Approved", icon: "check-circle",  status: "complete" },
@@ -125,7 +128,7 @@ orbital EventLogOrbital {
       OPEN_BACKFILL          { }
       SAVE_BACKFILL          { data : object }
       CANCEL_BACKFILL        { }
-      EventLogLoaded         { data : [object] }
+      EventLogLoaded         { data : [ObjectSpec] }
       EventLogLoadFailed     { error : string, code : string }
       EventLogSaved          { row : object }
       EventLogSaveFailed     { error : string, code : string }
@@ -135,7 +138,7 @@ orbital EventLogOrbital {
       OPEN_BACKFILL          { }
       SAVE_BACKFILL          { data : object }
       CANCEL_BACKFILL        { }
-      EventLogLoaded         { data : [object] }
+      EventLogLoaded         { data : [ObjectSpec] }
       EventLogLoadFailed     { error : string, code : string }
       EventLogSaved          { row : object }
       EventLogSaveFailed     { error : string, code : string }

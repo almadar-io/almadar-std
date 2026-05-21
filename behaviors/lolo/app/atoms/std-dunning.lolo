@@ -1,6 +1,9 @@
 app std-dunning "1.1.0"
 "std-dunning — failed-payment escalation ladder for subscriptions. Lists open dunning cases in `browsing`; opens detail in `viewing_single` with Escalate / Resolve / Suspend actions. Agents tune the list shape via `config.fields` + `config.itemActions`."
 
+type FieldSpec = { name : string!, label : string, variant : string, icon : string, format : string, key : string, header : string }
+type ItemAction = { label : string!, event : string!, variant : string, icon : string }
+
 orbital DunningCaseOrbital {
   entity DunningCase [persistent: dunningcases] {
     id             : string!
@@ -25,7 +28,7 @@ orbital DunningCaseOrbital {
       title       : string   = "Dunning Cases"
         @label "Section title"
         @description "Heading shown above the failed-payment cases"
-      fields      : [object] = [
+      fields      : [FieldSpec] = [
         { name: "subscriptionId", label: "Subscription", variant: "caption" },
         { name: "customerId",     label: "Customer",     variant: "caption" },
         { name: "severity",       label: "Severity",     variant: "badge"   },
@@ -35,7 +38,7 @@ orbital DunningCaseOrbital {
       ]
         @label "Columns to show"
         @description "Each column maps to one field on the Dunning Case entity"
-      itemActions : [object] = [
+      itemActions : [ItemAction] = [
         { label: "Open",    event: "OPEN_CASE", variant: "primary", icon: "arrow-right" },
         { label: "Suspend", event: "SUSPEND",   variant: "danger",  icon: "ban" }
       ]

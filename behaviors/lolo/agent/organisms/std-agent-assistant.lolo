@@ -4,7 +4,7 @@ app std-agent-assistant "1.0.0"
 orbital AssistantOrbital {
   entity Assistant [runtime] {
     id : string!
-    messages : string = "[]"
+    messages : string = ""
     currentMessage : string = ""
     response : string = ""
     memoryCount : number = 0
@@ -103,7 +103,7 @@ orbital AssistantOrbital {
         (emit TOKEN_UPDATE)
       PAUSE -> paused
       CLEAR -> idle
-        (set @entity.messages [])
+        (set @entity.messages "")
         (set @entity.turnCount 0)
         (set @entity.lastMessage "")
         (set @entity.tokenCount 0)
@@ -111,7 +111,7 @@ orbital AssistantOrbital {
     state paused {
       RESUME -> active
       CLEAR -> idle
-        (set @entity.messages [])
+        (set @entity.messages "")
         (set @entity.turnCount 0)
         (set @entity.lastMessage "")
         (set @entity.tokenCount 0)
@@ -275,7 +275,7 @@ orbital AssistantContextOrbital {
     max : number
     threshold : number
     message : string
-    notificationType : string
+    notificationType : "info" | "success" | "warning" | "error" = "info"
   }
 
   type AssistantContextLoaded     = Event { data : [AssistantContext] }                  "Fired when AssistantContext finishes loading"
@@ -459,7 +459,7 @@ orbital ProviderConfigOrbital {
     fallbackProvider : string
     requestCount : number
     message : string
-    notificationType : string
+    notificationType : "info" | "success" | "warning" | "error" = "info"
   }
 
   type ProviderConfigLoaded     = Event { data : [ProviderConfig] }                  "Fired when ProviderConfig finishes loading"
@@ -581,7 +581,7 @@ emits {
 orbital AssistantNavOrbital {
   entity AssistantNav [runtime] {
     id : string!
-    messages : string = "[]"
+    messages : string = ""
     currentMessage : string = ""
     response : string = ""
     memoryCount : number = 0

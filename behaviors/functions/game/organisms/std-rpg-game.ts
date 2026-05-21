@@ -551,8 +551,8 @@ export function stdRpgGameBattleStateOrbital(params: StdRpgGameBattleStateOrbita
                   'BattleState',
                   {
                     'emit': {
-                      'success': 'BattleStateLoaded',
                       'failure': 'BattleStateLoadFailed',
+                      'success': 'BattleStateLoaded',
                     },
                   },
                 ],
@@ -560,11 +560,10 @@ export function stdRpgGameBattleStateOrbital(params: StdRpgGameBattleStateOrbita
                   'render-ui',
                   'main',
                   {
+                    'showTopBar': true,
+                    'type': 'game-shell',
                     'children': [
                       {
-                        'title': 'Battle Arena',
-                        'subtitle': 'Turn-Based Strategy',
-                        'type': 'game-menu',
                         'menuItems': [
                           {
                             'label': 'Start Battle',
@@ -572,11 +571,12 @@ export function stdRpgGameBattleStateOrbital(params: StdRpgGameBattleStateOrbita
                             'variant': 'primary',
                           },
                         ],
+                        'title': 'Battle Arena',
+                        'type': 'game-menu',
+                        'subtitle': 'Turn-Based Strategy',
                       },
                     ],
                     'appName': 'RPG Game',
-                    'showTopBar': true,
-                    'type': 'game-shell',
                   },
                 ],
               ],
@@ -593,21 +593,21 @@ export function stdRpgGameBattleStateOrbital(params: StdRpgGameBattleStateOrbita
                     'type': 'game-shell',
                     'children': [
                       {
-                        'type': 'game-hud',
                         'stats': [
                           {
-                            'label': 'Turn',
                             'value': '@entity.turn',
+                            'label': 'Turn',
                           },
                           {
-                            'value': '@entity.score',
                             'label': 'Score',
+                            'value': '@entity.score',
                           },
                         ],
+                        'type': 'game-hud',
                       },
                     ],
-                    'showTopBar': true,
                     'appName': 'RPG Game',
+                    'showTopBar': true,
                   },
                 ],
               ],
@@ -635,24 +635,24 @@ export function stdRpgGameBattleStateOrbital(params: StdRpgGameBattleStateOrbita
                   'render-ui',
                   'main',
                   {
-                    'showTopBar': true,
-                    'appName': 'RPG Game',
                     'children': [
                       {
+                        'type': 'game-hud',
                         'stats': [
                           {
-                            'value': '@entity.turn',
                             'label': 'Turn',
+                            'value': '@entity.turn',
                           },
                           {
                             'value': '@entity.score',
                             'label': 'Score',
                           },
                         ],
-                        'type': 'game-hud',
                       },
                     ],
+                    'showTopBar': true,
                     'type': 'game-shell',
+                    'appName': 'RPG Game',
                   },
                 ],
               ],
@@ -666,20 +666,20 @@ export function stdRpgGameBattleStateOrbital(params: StdRpgGameBattleStateOrbita
                   'render-ui',
                   'modal',
                   {
-                    'title': 'Paused',
                     'type': 'game-menu',
                     'menuItems': [
                       {
                         'variant': 'primary',
-                        'event': 'RESUME',
                         'label': 'Resume',
+                        'event': 'RESUME',
                       },
                       {
                         'event': 'RESTART',
-                        'label': 'Quit',
                         'variant': 'ghost',
+                        'label': 'Quit',
                       },
                     ],
+                    'title': 'Paused',
                   },
                 ],
               ],
@@ -695,35 +695,35 @@ export function stdRpgGameBattleStateOrbital(params: StdRpgGameBattleStateOrbita
                   {
                     'type': 'game-shell',
                     'showTopBar': true,
-                    'appName': 'RPG Game',
                     'children': [
                       {
                         'type': 'game-over-screen',
-                        'title': 'Battle Over',
-                        'menuItems': [
-                          {
-                            'event': 'RESTART',
-                            'variant': 'primary',
-                            'label': 'Play Again',
-                          },
-                          {
-                            'variant': 'secondary',
-                            'event': 'RESTART',
-                            'label': 'Main Menu',
-                          },
-                        ],
                         'stats': [
                           {
                             'label': 'Turns',
                             'value': '@entity.turn',
                           },
                           {
-                            'value': '@entity.score',
                             'label': 'Score',
+                            'value': '@entity.score',
                           },
                         ],
+                        'menuItems': [
+                          {
+                            'label': 'Play Again',
+                            'event': 'RESTART',
+                            'variant': 'primary',
+                          },
+                          {
+                            'variant': 'secondary',
+                            'label': 'Main Menu',
+                            'event': 'RESTART',
+                          },
+                        ],
+                        'title': 'Battle Over',
                       },
                     ],
+                    'appName': 'RPG Game',
                   },
                 ],
               ],
@@ -748,23 +748,23 @@ export function stdRpgGameBattleStateOrbital(params: StdRpgGameBattleStateOrbita
                   'main',
                   {
                     'type': 'game-shell',
-                    'appName': 'RPG Game',
                     'showTopBar': true,
                     'children': [
                       {
+                        'type': 'game-hud',
                         'stats': [
                           {
-                            'label': 'Turn',
                             'value': '@entity.turn',
+                            'label': 'Turn',
                           },
                           {
                             'value': '@entity.score',
                             'label': 'Score',
                           },
                         ],
-                        'type': 'game-hud',
                       },
                     ],
+                    'appName': 'RPG Game',
                   },
                 ],
               ],
@@ -783,12 +783,8 @@ export function stdRpgGameBattleStateOrbital(params: StdRpgGameBattleStateOrbita
                   'render-ui',
                   'main',
                   {
-                    'type': 'game-shell',
-                    'appName': 'RPG Game',
-                    'showTopBar': true,
                     'children': [
                       {
-                        'type': 'game-hud',
                         'stats': [
                           {
                             'value': '@entity.turn',
@@ -799,8 +795,12 @@ export function stdRpgGameBattleStateOrbital(params: StdRpgGameBattleStateOrbita
                             'value': '@entity.score',
                           },
                         ],
+                        'type': 'game-hud',
                       },
                     ],
+                    'type': 'game-shell',
+                    'showTopBar': true,
+                    'appName': 'RPG Game',
                   },
                 ],
               ],
@@ -819,23 +819,23 @@ export function stdRpgGameBattleStateOrbital(params: StdRpgGameBattleStateOrbita
                   'render-ui',
                   'main',
                   {
-                    'showTopBar': true,
-                    'type': 'game-shell',
                     'children': [
                       {
-                        'title': 'Battle Arena',
-                        'subtitle': 'Turn-Based Strategy',
-                        'type': 'game-menu',
                         'menuItems': [
                           {
-                            'event': 'START',
                             'label': 'Start Battle',
+                            'event': 'START',
                             'variant': 'primary',
                           },
                         ],
+                        'type': 'game-menu',
+                        'subtitle': 'Turn-Based Strategy',
+                        'title': 'Battle Arena',
                       },
                     ],
+                    'showTopBar': true,
                     'appName': 'RPG Game',
+                    'type': 'game-shell',
                   },
                 ],
               ],
@@ -849,23 +849,23 @@ export function stdRpgGameBattleStateOrbital(params: StdRpgGameBattleStateOrbita
                   'render-ui',
                   'main',
                   {
+                    'appName': 'RPG Game',
                     'children': [
                       {
                         'type': 'game-menu',
-                        'title': 'Battle Arena',
                         'menuItems': [
                           {
-                            'label': 'Start Battle',
                             'event': 'START',
                             'variant': 'primary',
+                            'label': 'Start Battle',
                           },
                         ],
+                        'title': 'Battle Arena',
                         'subtitle': 'Turn-Based Strategy',
                       },
                     ],
-                    'type': 'game-shell',
                     'showTopBar': true,
-                    'appName': 'RPG Game',
+                    'type': 'game-shell',
                   },
                 ],
               ],
@@ -969,8 +969,8 @@ export function stdRpgGameBattleStateOrbital(params: StdRpgGameBattleStateOrbita
                   'BattleState',
                   {
                     'emit': {
-                      'failure': 'BattleStateLoadFailed',
                       'success': 'BattleStateLoaded',
+                      'failure': 'BattleStateLoadFailed',
                     },
                   },
                 ],
@@ -985,19 +985,19 @@ export function stdRpgGameBattleStateOrbital(params: StdRpgGameBattleStateOrbita
                   'render-ui',
                   'main',
                   {
-                    'appName': 'RPG Game',
-                    'showTopBar': true,
                     'type': 'game-shell',
                     'children': [
                       {
-                        'maxVisible': 10,
-                        'autoScroll': true,
-                        'type': 'combat-log',
                         'showTimestamps': true,
+                        'type': 'combat-log',
+                        'autoScroll': true,
                         'title': 'Combat Log',
+                        'maxVisible': 10,
                         'events': '@BattleState',
                       },
                     ],
+                    'showTopBar': true,
+                    'appName': 'RPG Game',
                   },
                 ],
               ],
@@ -1011,18 +1011,18 @@ export function stdRpgGameBattleStateOrbital(params: StdRpgGameBattleStateOrbita
                   'render-ui',
                   'main',
                   {
+                    'type': 'game-shell',
                     'appName': 'RPG Game',
                     'children': [
                       {
+                        'type': 'combat-log',
                         'maxVisible': 10,
                         'events': '@BattleState',
-                        'type': 'combat-log',
                         'autoScroll': true,
                         'showTimestamps': true,
                         'title': 'Combat Log',
                       },
                     ],
-                    'type': 'game-shell',
                     'showTopBar': true,
                   },
                 ],
@@ -1329,8 +1329,8 @@ export function stdRpgGameWorldZoneOrbital(params: StdRpgGameWorldZoneOrbitalPar
                   'WorldZone',
                   {
                     'emit': {
-                      'success': 'WorldZoneLoaded',
                       'failure': 'WorldZoneLoadFailed',
+                      'success': 'WorldZoneLoaded',
                     },
                   },
                 ],
@@ -1338,22 +1338,22 @@ export function stdRpgGameWorldZoneOrbital(params: StdRpgGameWorldZoneOrbitalPar
                   'render-ui',
                   'main',
                   {
+                    'type': 'stack',
                     'gap': 'md',
                     'className': 'py-12',
+                    'direction': 'vertical',
+                    'align': 'center',
                     'children': [
                       {
                         'type': 'spinner',
                       },
                       {
-                        'content': 'Loading map…',
-                        'type': 'typography',
                         'variant': 'caption',
+                        'content': 'Loading map…',
                         'color': 'muted',
+                        'type': 'typography',
                       },
                     ],
-                    'align': 'center',
-                    'type': 'stack',
-                    'direction': 'vertical',
                   },
                 ],
               ],
@@ -1367,15 +1367,19 @@ export function stdRpgGameWorldZoneOrbital(params: StdRpgGameWorldZoneOrbitalPar
                   'render-ui',
                   'main',
                   {
+                    'showTopBar': true,
+                    'type': 'game-shell',
+                    'appName': 'RPG Game',
                     'children': [
                       {
-                        'type': 'stack',
                         'gap': 'lg',
+                        'direction': 'vertical',
                         'children': [
                           {
-                            'type': 'stack',
+                            'direction': 'horizontal',
                             'children': [
                               {
+                                'gap': 'md',
                                 'type': 'stack',
                                 'direction': 'horizontal',
                                 'children': [
@@ -1384,96 +1388,92 @@ export function stdRpgGameWorldZoneOrbital(params: StdRpgGameWorldZoneOrbitalPar
                                     'name': 'map',
                                   },
                                   {
+                                    'variant': 'h2',
                                     'content': 'World Map',
                                     'type': 'typography',
-                                    'variant': 'h2',
                                   },
                                 ],
-                                'gap': 'md',
                               },
                               {
-                                'label': 'Exploring',
-                                'pulse': false,
-                                'status': 'online',
                                 'type': 'status-dot',
+                                'label': 'Exploring',
+                                'status': 'online',
+                                'pulse': false,
                               },
                             ],
+                            'type': 'stack',
                             'justify': 'between',
                             'gap': 'md',
-                            'direction': 'horizontal',
                           },
                           {
                             'type': 'divider',
                           },
                           {
-                            'type': 'map-view',
-                            'zoom': 10,
                             'markers': [],
+                            'zoom': 10,
                             'height': '200px',
+                            'type': 'map-view',
                           },
                           {
-                            'type': 'data-grid',
-                            'renderItem': [
-                              'fn',
-                              'item',
-                              {
-                                'children': [
-                                  {
-                                    'justify': 'between',
-                                    'type': 'stack',
-                                    'align': 'center',
-                                    'direction': 'horizontal',
-                                    'children': [
-                                      {
-                                        'direction': 'horizontal',
-                                        'type': 'stack',
-                                        'gap': 'sm',
-                                        'align': 'center',
-                                        'children': [
-                                          {
-                                            'type': 'icon',
-                                            'name': 'map-pin',
-                                          },
-                                          {
-                                            'content': '@item.name',
-                                            'type': 'typography',
-                                            'variant': 'h4',
-                                          },
-                                        ],
-                                      },
-                                      {
-                                        'type': 'badge',
-                                        'label': '@item.description',
-                                      },
-                                    ],
-                                  },
-                                  {
-                                    'variant': 'caption',
-                                    'content': '@item.level',
-                                    'type': 'typography',
-                                  },
-                                ],
-                                'direction': 'vertical',
-                                'gap': 'sm',
-                                'type': 'stack',
-                              },
-                            ],
                             'entity': '@payload.data',
+                            'type': 'data-grid',
                             'itemActions': [
                               {
                                 'label': 'Travel',
                                 'event': 'TRAVEL',
                               },
                             ],
+                            'renderItem': [
+                              'fn',
+                              'item',
+                              {
+                                'gap': 'sm',
+                                'children': [
+                                  {
+                                    'direction': 'horizontal',
+                                    'align': 'center',
+                                    'justify': 'between',
+                                    'children': [
+                                      {
+                                        'align': 'center',
+                                        'direction': 'horizontal',
+                                        'children': [
+                                          {
+                                            'name': 'map-pin',
+                                            'type': 'icon',
+                                          },
+                                          {
+                                            'type': 'typography',
+                                            'content': '@item.name',
+                                            'variant': 'h4',
+                                          },
+                                        ],
+                                        'type': 'stack',
+                                        'gap': 'sm',
+                                      },
+                                      {
+                                        'label': '@item.description',
+                                        'type': 'badge',
+                                      },
+                                    ],
+                                    'type': 'stack',
+                                  },
+                                  {
+                                    'content': '@item.level',
+                                    'type': 'typography',
+                                    'variant': 'caption',
+                                  },
+                                ],
+                                'direction': 'vertical',
+                                'type': 'stack',
+                              },
+                            ],
                             'fields': [],
                           },
                         ],
-                        'direction': 'vertical',
+                        'type': 'stack',
                       },
                     ],
-                    'showTopBar': true,
-                    'appName': 'RPG Game',
-                    'type': 'game-shell',
                   },
                 ],
               ],
@@ -1487,11 +1487,12 @@ export function stdRpgGameWorldZoneOrbital(params: StdRpgGameWorldZoneOrbitalPar
                   'render-ui',
                   'main',
                   {
+                    'align': 'center',
                     'children': [
                       {
                         'type': 'icon',
-                        'name': 'alert-triangle',
                         'color': 'destructive',
+                        'name': 'alert-triangle',
                       },
                       {
                         'type': 'typography',
@@ -1505,18 +1506,17 @@ export function stdRpgGameWorldZoneOrbital(params: StdRpgGameWorldZoneOrbitalPar
                         'content': '@payload.error',
                       },
                       {
-                        'variant': 'primary',
-                        'type': 'button',
-                        'action': 'INIT',
                         'label': 'Retry',
+                        'action': 'INIT',
                         'icon': 'rotate-ccw',
+                        'type': 'button',
+                        'variant': 'primary',
                       },
                     ],
                     'type': 'stack',
-                    'align': 'center',
                     'direction': 'vertical',
-                    'gap': 'md',
                     'className': 'py-12',
+                    'gap': 'md',
                   },
                 ],
               ],
@@ -1530,11 +1530,11 @@ export function stdRpgGameWorldZoneOrbital(params: StdRpgGameWorldZoneOrbitalPar
                   'render-ui',
                   'main',
                   {
-                    'appName': 'RPG Game',
-                    'type': 'game-shell',
                     'children': [
                       {
                         'gap': 'lg',
+                        'direction': 'vertical',
+                        'type': 'stack',
                         'children': [
                           {
                             'children': [
@@ -1543,29 +1543,29 @@ export function stdRpgGameWorldZoneOrbital(params: StdRpgGameWorldZoneOrbitalPar
                                 'name': 'loader',
                               },
                               {
-                                'content': 'Traveling...',
                                 'type': 'typography',
+                                'content': 'Traveling...',
                                 'variant': 'h2',
                               },
                             ],
+                            'direction': 'horizontal',
                             'type': 'stack',
                             'gap': 'md',
-                            'direction': 'horizontal',
                           },
                           {
                             'type': 'divider',
                           },
                           {
-                            'variant': 'body',
-                            'type': 'typography',
                             'content': 'Traveling to the destination worldzone.',
+                            'type': 'typography',
+                            'variant': 'body',
                           },
                         ],
-                        'direction': 'vertical',
                         'align': 'center',
-                        'type': 'stack',
                       },
                     ],
+                    'type': 'game-shell',
+                    'appName': 'RPG Game',
                     'showTopBar': true,
                   },
                 ],
@@ -1581,8 +1581,8 @@ export function stdRpgGameWorldZoneOrbital(params: StdRpgGameWorldZoneOrbitalPar
                   'WorldZone',
                   {
                     'emit': {
-                      'failure': 'WorldZoneLoadFailed',
                       'success': 'WorldZoneLoaded',
+                      'failure': 'WorldZoneLoadFailed',
                     },
                   },
                 ],
@@ -1991,22 +1991,22 @@ export function stdRpgGameRpgItemOrbital(params: StdRpgGameRpgItemOrbitalParams 
                   'render-ui',
                   'main',
                   {
-                    'className': 'py-12',
-                    'align': 'center',
-                    'gap': 'md',
-                    'type': 'stack',
                     'children': [
                       {
                         'type': 'spinner',
                       },
                       {
+                        'color': 'muted',
                         'type': 'typography',
                         'variant': 'caption',
                         'content': 'Loading…',
-                        'color': 'muted',
                       },
                     ],
+                    'align': 'center',
                     'direction': 'vertical',
+                    'className': 'py-12',
+                    'type': 'stack',
+                    'gap': 'md',
                   },
                 ],
               ],
@@ -2020,36 +2020,36 @@ export function stdRpgGameRpgItemOrbital(params: StdRpgGameRpgItemOrbitalParams 
                   'render-ui',
                   'main',
                   {
-                    'appName': 'RPG Game',
+                    'showTopBar': true,
                     'type': 'game-shell',
+                    'appName': 'RPG Game',
                     'children': [
                       {
-                        'className': 'max-w-5xl mx-auto w-full',
                         'direction': 'vertical',
+                        'type': 'stack',
+                        'className': 'max-w-5xl mx-auto w-full',
                         'children': [
                           {
-                            'gap': 'md',
-                            'align': 'center',
-                            'justify': 'between',
                             'type': 'stack',
-                            'direction': 'horizontal',
+                            'gap': 'md',
+                            'justify': 'between',
                             'children': [
                               {
-                                'align': 'center',
+                                'gap': 'sm',
                                 'type': 'stack',
+                                'align': 'center',
                                 'children': [
                                   {
-                                    'name': 'briefcase',
                                     'type': 'icon',
+                                    'name': 'briefcase',
                                   },
                                   {
-                                    'type': 'typography',
-                                    'variant': 'h2',
                                     'content': 'Inventory',
+                                    'variant': 'h2',
+                                    'type': 'typography',
                                   },
                                 ],
                                 'direction': 'horizontal',
-                                'gap': 'sm',
                               },
                               {
                                 'type': 'stack',
@@ -2057,15 +2057,17 @@ export function stdRpgGameRpgItemOrbital(params: StdRpgGameRpgItemOrbitalParams 
                                 'gap': 'sm',
                                 'children': [
                                   {
-                                    'label': 'Add RpgItem',
-                                    'variant': 'primary',
-                                    'icon': 'plus',
                                     'type': 'button',
+                                    'variant': 'primary',
+                                    'label': 'Add RpgItem',
                                     'action': 'ADD_ITEM',
+                                    'icon': 'plus',
                                   },
                                 ],
                               },
                             ],
+                            'direction': 'horizontal',
+                            'align': 'center',
                           },
                           {
                             'type': 'divider',
@@ -2073,43 +2075,43 @@ export function stdRpgGameRpgItemOrbital(params: StdRpgGameRpgItemOrbitalParams 
                           {
                             'itemActions': [
                               {
-                                'event': 'USE_ITEM',
                                 'variant': 'ghost',
                                 'label': 'Use',
+                                'event': 'USE_ITEM',
                               },
                               {
-                                'event': 'DROP',
                                 'variant': 'danger',
                                 'label': 'Drop',
+                                'event': 'DROP',
                               },
                             ],
                             'entity': '@payload.data',
                             'type': 'data-grid',
                             'fields': [
                               {
-                                'icon': 'briefcase',
                                 'name': 'name',
+                                'icon': 'briefcase',
                                 'label': 'Name',
                                 'variant': 'h4',
                               },
                               {
-                                'variant': 'badge',
                                 'label': 'Type',
-                                'name': 'type',
                                 'colorMap': {
-                                  'archived': 'neutral',
-                                  'error': 'destructive',
-                                  'failed': 'destructive',
-                                  'completed': 'success',
-                                  'active': 'success',
-                                  'disabled': 'neutral',
-                                  'cancelled': 'destructive',
-                                  'done': 'success',
-                                  'inactive': 'neutral',
-                                  'pending': 'warning',
-                                  'scheduled': 'warning',
                                   'draft': 'warning',
+                                  'inactive': 'neutral',
+                                  'archived': 'neutral',
+                                  'cancelled': 'destructive',
+                                  'completed': 'success',
+                                  'scheduled': 'warning',
+                                  'pending': 'warning',
+                                  'disabled': 'neutral',
+                                  'active': 'success',
+                                  'done': 'success',
+                                  'failed': 'destructive',
+                                  'error': 'destructive',
                                 },
+                                'name': 'type',
+                                'variant': 'badge',
                               },
                               {
                                 'variant': 'caption',
@@ -2119,11 +2121,9 @@ export function stdRpgGameRpgItemOrbital(params: StdRpgGameRpgItemOrbitalParams 
                             ],
                           },
                         ],
-                        'type': 'stack',
                         'gap': 'lg',
                       },
                     ],
-                    'showTopBar': true,
                   },
                 ],
               ],
@@ -2137,36 +2137,36 @@ export function stdRpgGameRpgItemOrbital(params: StdRpgGameRpgItemOrbitalParams 
                   'render-ui',
                   'main',
                   {
-                    'align': 'center',
                     'direction': 'vertical',
                     'gap': 'md',
+                    'type': 'stack',
+                    'className': 'py-12',
                     'children': [
                       {
-                        'type': 'icon',
-                        'color': 'destructive',
                         'name': 'alert-triangle',
+                        'color': 'destructive',
+                        'type': 'icon',
                       },
                       {
-                        'type': 'typography',
-                        'variant': 'h3',
                         'content': 'Failed to load rpgitem',
+                        'variant': 'h3',
+                        'type': 'typography',
                       },
                       {
-                        'type': 'typography',
-                        'variant': 'body',
                         'color': 'muted',
+                        'variant': 'body',
+                        'type': 'typography',
                         'content': '@payload.error',
                       },
                       {
                         'label': 'Retry',
-                        'icon': 'rotate-ccw',
                         'action': 'INIT',
+                        'icon': 'rotate-ccw',
                         'type': 'button',
                         'variant': 'primary',
                       },
                     ],
-                    'type': 'stack',
-                    'className': 'py-12',
+                    'align': 'center',
                   },
                 ],
               ],
@@ -2358,8 +2358,8 @@ export function stdRpgGameRpgItemOrbital(params: StdRpgGameRpgItemOrbitalParams 
                   'RpgItem',
                   {
                     'emit': {
-                      'success': 'RpgItemLoaded',
                       'failure': 'RpgItemLoadFailed',
+                      'success': 'RpgItemLoaded',
                     },
                   },
                 ],
@@ -2369,40 +2369,40 @@ export function stdRpgGameRpgItemOrbital(params: StdRpgGameRpgItemOrbitalParams 
                   {
                     'gap': 'md',
                     'direction': 'vertical',
+                    'type': 'stack',
                     'children': [
                       {
-                        'gap': 'sm',
+                        'type': 'stack',
                         'children': [
                           {
-                            'name': 'plus-circle',
                             'type': 'icon',
+                            'name': 'plus-circle',
                           },
                           {
-                            'type': 'typography',
                             'content': 'Add RpgItem',
+                            'type': 'typography',
                             'variant': 'h3',
                           },
                         ],
-                        'type': 'stack',
+                        'gap': 'sm',
                         'direction': 'horizontal',
                       },
                       {
                         'type': 'divider',
                       },
                       {
-                        'mode': 'create',
-                        'type': 'form-section',
-                        'submitEvent': 'SAVE',
                         'fields': [
                           'name',
                           'type',
                           'quantity',
                           'rarity',
                         ],
+                        'mode': 'create',
+                        'type': 'form-section',
+                        'submitEvent': 'SAVE',
                         'cancelEvent': 'CLOSE',
                       },
                     ],
-                    'type': 'stack',
                   },
                 ],
               ],
@@ -2443,8 +2443,8 @@ export function stdRpgGameRpgItemOrbital(params: StdRpgGameRpgItemOrbitalParams 
                   '@payload.data',
                   {
                     'emit': {
-                      'success': 'RpgItemSaved',
                       'failure': 'RpgItemSaveFailed',
+                      'success': 'RpgItemSaved',
                     },
                   },
                 ],
@@ -2647,8 +2647,8 @@ export function stdRpgGameRpgItemOrbital(params: StdRpgGameRpgItemOrbitalParams 
                   'RpgItem',
                   {
                     'emit': {
-                      'success': 'RpgItemLoaded',
                       'failure': 'RpgItemLoadFailed',
+                      'success': 'RpgItemLoaded',
                     },
                   },
                 ],
@@ -2675,57 +2675,57 @@ export function stdRpgGameRpgItemOrbital(params: StdRpgGameRpgItemOrbitalParams 
                   'modal',
                   {
                     'type': 'stack',
-                    'direction': 'vertical',
-                    'align': 'center',
-                    'gap': 'md',
                     'children': [
                       {
-                        'gap': 'sm',
                         'type': 'stack',
                         'align': 'center',
+                        'direction': 'horizontal',
+                        'gap': 'sm',
                         'children': [
                           {
-                            'type': 'icon',
                             'name': 'zap',
+                            'type': 'icon',
                           },
                           {
-                            'content': 'Use RpgItem',
                             'type': 'typography',
+                            'content': 'Use RpgItem',
                             'variant': 'h3',
                           },
                         ],
-                        'direction': 'horizontal',
                       },
                       {
                         'type': 'divider',
                       },
                       {
-                        'content': '@entity.name',
                         'type': 'typography',
+                        'content': '@entity.name',
                         'variant': 'body',
                       },
                       {
                         'justify': 'center',
                         'children': [
                           {
+                            'action': 'CLOSE',
                             'label': 'Cancel',
                             'variant': 'ghost',
-                            'action': 'CLOSE',
                             'type': 'button',
                           },
                           {
-                            'icon': 'check',
                             'type': 'button',
-                            'action': 'SAVE',
-                            'label': 'Confirm Use',
                             'variant': 'primary',
+                            'label': 'Confirm Use',
+                            'icon': 'check',
+                            'action': 'SAVE',
                           },
                         ],
+                        'gap': 'sm',
                         'type': 'stack',
                         'direction': 'horizontal',
-                        'gap': 'sm',
                       },
                     ],
+                    'align': 'center',
+                    'direction': 'vertical',
+                    'gap': 'md',
                   },
                 ],
               ],
@@ -2766,8 +2766,8 @@ export function stdRpgGameRpgItemOrbital(params: StdRpgGameRpgItemOrbitalParams 
                   '@payload.data',
                   {
                     'emit': {
-                      'failure': 'RpgItemUpdateFailed',
                       'success': 'RpgItemUpdated',
+                      'failure': 'RpgItemUpdateFailed',
                     },
                   },
                 ],
@@ -2959,8 +2959,8 @@ export function stdRpgGameRpgItemOrbital(params: StdRpgGameRpgItemOrbitalParams 
                   'RpgItem',
                   {
                     'emit': {
-                      'failure': 'RpgItemLoadFailed',
                       'success': 'RpgItemLoaded',
+                      'failure': 'RpgItemLoadFailed',
                     },
                   },
                 ],
@@ -2981,8 +2981,8 @@ export function stdRpgGameRpgItemOrbital(params: StdRpgGameRpgItemOrbitalParams 
                   'RpgItem',
                   {
                     'emit': {
-                      'success': 'RpgItemLoaded',
                       'failure': 'RpgItemLoadFailed',
+                      'success': 'RpgItemLoaded',
                     },
                     'id': '@payload.id',
                   },
@@ -2991,57 +2991,57 @@ export function stdRpgGameRpgItemOrbital(params: StdRpgGameRpgItemOrbitalParams 
                   'render-ui',
                   'modal',
                   {
-                    'gap': 'md',
-                    'direction': 'vertical',
+                    'type': 'stack',
                     'children': [
                       {
-                        'type': 'stack',
-                        'direction': 'horizontal',
+                        'gap': 'sm',
+                        'align': 'center',
                         'children': [
                           {
-                            'name': 'alert-triangle',
                             'type': 'icon',
+                            'name': 'alert-triangle',
                           },
                           {
                             'variant': 'h3',
-                            'content': 'Drop RpgItem',
                             'type': 'typography',
+                            'content': 'Drop RpgItem',
                           },
                         ],
-                        'gap': 'sm',
-                        'align': 'center',
+                        'direction': 'horizontal',
+                        'type': 'stack',
                       },
                       {
                         'type': 'divider',
                       },
                       {
+                        'message': 'Are you sure you want to drop this rpgitem?',
                         'type': 'alert',
                         'variant': 'error',
-                        'message': 'Are you sure you want to drop this rpgitem?',
                       },
                       {
-                        'type': 'stack',
-                        'gap': 'sm',
-                        'justify': 'end',
                         'direction': 'horizontal',
+                        'gap': 'sm',
+                        'type': 'stack',
+                        'justify': 'end',
                         'children': [
                           {
-                            'action': 'CANCEL',
                             'type': 'button',
-                            'label': 'Cancel',
                             'variant': 'ghost',
+                            'label': 'Cancel',
+                            'action': 'CANCEL',
                           },
                           {
-                            'type': 'button',
-                            'action': 'CONFIRM_DROP',
-                            'label': 'Drop',
-                            'variant': 'danger',
                             'icon': 'check',
+                            'label': 'Drop',
+                            'action': 'CONFIRM_DROP',
+                            'type': 'button',
+                            'variant': 'danger',
                           },
                         ],
                       },
                     ],
-                    'type': 'stack',
+                    'gap': 'md',
+                    'direction': 'vertical',
                   },
                 ],
               ],
@@ -3058,8 +3058,8 @@ export function stdRpgGameRpgItemOrbital(params: StdRpgGameRpgItemOrbitalParams 
                   '@entity.pendingId',
                   {
                     'emit': {
-                      'failure': 'RpgItemDeleteFailed',
                       'success': 'RpgItemDeleted',
+                      'failure': 'RpgItemDeleteFailed',
                     },
                   },
                 ],
@@ -3138,8 +3138,8 @@ export function stdRpgGameRpgItemOrbital(params: StdRpgGameRpgItemOrbitalParams 
                   'RpgItem',
                   {
                     'emit': {
-                      'success': 'RpgItemLoaded',
                       'failure': 'RpgItemLoadFailed',
+                      'success': 'RpgItemLoaded',
                     },
                   },
                 ],
@@ -3524,8 +3524,8 @@ export function stdRpgGameMissionOrbital(params: StdRpgGameMissionOrbitalParams 
                   'Mission',
                   {
                     'emit': {
-                      'success': 'MissionLoaded',
                       'failure': 'MissionLoadFailed',
+                      'success': 'MissionLoaded',
                     },
                   },
                 ],
@@ -3534,7 +3534,7 @@ export function stdRpgGameMissionOrbital(params: StdRpgGameMissionOrbitalParams 
                   'main',
                   {
                     'type': 'stack',
-                    'align': 'center',
+                    'direction': 'vertical',
                     'gap': 'md',
                     'className': 'py-12',
                     'children': [
@@ -3543,12 +3543,12 @@ export function stdRpgGameMissionOrbital(params: StdRpgGameMissionOrbitalParams 
                       },
                       {
                         'variant': 'caption',
-                        'content': 'Loading missions…',
-                        'color': 'muted',
                         'type': 'typography',
+                        'color': 'muted',
+                        'content': 'Loading missions…',
                       },
                     ],
-                    'direction': 'vertical',
+                    'align': 'center',
                   },
                 ],
               ],
@@ -3562,18 +3562,20 @@ export function stdRpgGameMissionOrbital(params: StdRpgGameMissionOrbitalParams 
                   'render-ui',
                   'main',
                   {
-                    'appName': 'RPG Game',
                     'children': [
                       {
                         'type': 'stack',
-                        'direction': 'vertical',
                         'gap': 'lg',
                         'children': [
                           {
+                            'gap': 'md',
+                            'direction': 'horizontal',
+                            'justify': 'between',
                             'type': 'stack',
                             'children': [
                               {
                                 'type': 'stack',
+                                'direction': 'horizontal',
                                 'gap': 'md',
                                 'children': [
                                   {
@@ -3581,69 +3583,20 @@ export function stdRpgGameMissionOrbital(params: StdRpgGameMissionOrbitalParams 
                                     'type': 'icon',
                                   },
                                   {
-                                    'content': 'Missions Board',
                                     'variant': 'h2',
                                     'type': 'typography',
+                                    'content': 'Missions Board',
                                   },
                                 ],
-                                'direction': 'horizontal',
                               },
                             ],
-                            'direction': 'horizontal',
-                            'gap': 'md',
-                            'justify': 'between',
                           },
                           {
                             'type': 'divider',
                           },
                           {
+                            'groupBy': 'status',
                             'fields': [],
-                            'type': 'data-list',
-                            'renderItem': [
-                              'fn',
-                              'item',
-                              {
-                                'type': 'stack',
-                                'gap': 'sm',
-                                'direction': 'vertical',
-                                'children': [
-                                  {
-                                    'direction': 'horizontal',
-                                    'type': 'stack',
-                                    'children': [
-                                      {
-                                        'direction': 'horizontal',
-                                        'children': [
-                                          {
-                                            'name': 'flag',
-                                            'type': 'icon',
-                                          },
-                                          {
-                                            'type': 'typography',
-                                            'content': '@item.title',
-                                            'variant': 'h4',
-                                          },
-                                        ],
-                                        'gap': 'sm',
-                                        'align': 'center',
-                                        'type': 'stack',
-                                      },
-                                      {
-                                        'type': 'badge',
-                                        'label': '@item.description',
-                                      },
-                                    ],
-                                    'justify': 'between',
-                                    'align': 'center',
-                                  },
-                                  {
-                                    'type': 'typography',
-                                    'variant': 'caption',
-                                    'content': '@item.status',
-                                  },
-                                ],
-                              },
-                            ],
                             'entity': '@payload.data',
                             'itemActions': [
                               {
@@ -3651,11 +3604,58 @@ export function stdRpgGameMissionOrbital(params: StdRpgGameMissionOrbitalParams 
                                 'event': 'ACCEPT',
                               },
                             ],
-                            'groupBy': 'status',
+                            'type': 'data-list',
+                            'renderItem': [
+                              'fn',
+                              'item',
+                              {
+                                'type': 'stack',
+                                'children': [
+                                  {
+                                    'justify': 'between',
+                                    'direction': 'horizontal',
+                                    'align': 'center',
+                                    'type': 'stack',
+                                    'children': [
+                                      {
+                                        'children': [
+                                          {
+                                            'type': 'icon',
+                                            'name': 'flag',
+                                          },
+                                          {
+                                            'type': 'typography',
+                                            'variant': 'h4',
+                                            'content': '@item.title',
+                                          },
+                                        ],
+                                        'type': 'stack',
+                                        'gap': 'sm',
+                                        'direction': 'horizontal',
+                                        'align': 'center',
+                                      },
+                                      {
+                                        'type': 'badge',
+                                        'label': '@item.description',
+                                      },
+                                    ],
+                                  },
+                                  {
+                                    'variant': 'caption',
+                                    'type': 'typography',
+                                    'content': '@item.status',
+                                  },
+                                ],
+                                'direction': 'vertical',
+                                'gap': 'sm',
+                              },
+                            ],
                           },
                         ],
+                        'direction': 'vertical',
                       },
                     ],
+                    'appName': 'RPG Game',
                     'type': 'game-shell',
                     'showTopBar': true,
                   },
@@ -3673,34 +3673,34 @@ export function stdRpgGameMissionOrbital(params: StdRpgGameMissionOrbitalParams 
                   {
                     'type': 'stack',
                     'gap': 'md',
-                    'align': 'center',
+                    'direction': 'vertical',
                     'className': 'py-12',
+                    'align': 'center',
                     'children': [
                       {
                         'type': 'icon',
-                        'name': 'alert-triangle',
                         'color': 'destructive',
+                        'name': 'alert-triangle',
                       },
                       {
+                        'type': 'typography',
                         'variant': 'h3',
                         'content': 'Failed to load missions',
-                        'type': 'typography',
                       },
                       {
+                        'variant': 'body',
                         'color': 'muted',
                         'content': '@payload.error',
                         'type': 'typography',
-                        'variant': 'body',
                       },
                       {
-                        'variant': 'primary',
                         'type': 'button',
                         'icon': 'rotate-ccw',
-                        'action': 'INIT',
                         'label': 'Retry',
+                        'action': 'INIT',
+                        'variant': 'primary',
                       },
                     ],
-                    'direction': 'vertical',
                   },
                 ],
               ],
@@ -3714,52 +3714,52 @@ export function stdRpgGameMissionOrbital(params: StdRpgGameMissionOrbitalParams 
                   'render-ui',
                   'main',
                   {
-                    'type': 'game-shell',
-                    'showTopBar': true,
                     'appName': 'RPG Game',
+                    'showTopBar': true,
+                    'type': 'game-shell',
                     'children': [
                       {
                         'gap': 'lg',
                         'type': 'stack',
+                        'direction': 'vertical',
                         'align': 'center',
                         'children': [
                           {
+                            'type': 'typography',
                             'content': 'Quest Active',
                             'variant': 'h2',
-                            'type': 'typography',
                           },
                           {
                             'showPercentage': true,
-                            'value': 50,
                             'type': 'progress-bar',
+                            'value': 50,
                           },
                           {
                             'direction': 'horizontal',
+                            'gap': 'sm',
                             'type': 'stack',
                             'children': [
                               {
-                                'action': 'PROGRESS',
                                 'type': 'button',
-                                'variant': 'primary',
                                 'label': 'Progress',
+                                'variant': 'primary',
+                                'action': 'PROGRESS',
                               },
                               {
                                 'variant': 'success',
-                                'action': 'COMPLETE',
-                                'label': 'Complete',
                                 'type': 'button',
+                                'label': 'Complete',
+                                'action': 'COMPLETE',
                               },
                               {
-                                'label': 'Fail',
                                 'action': 'FAIL',
                                 'type': 'button',
+                                'label': 'Fail',
                                 'variant': 'danger',
                               },
                             ],
-                            'gap': 'sm',
                           },
                         ],
-                        'direction': 'vertical',
                       },
                     ],
                   },
@@ -3775,13 +3775,11 @@ export function stdRpgGameMissionOrbital(params: StdRpgGameMissionOrbitalParams 
                   'render-ui',
                   'modal',
                   {
+                    'gap': 'md',
                     'type': 'stack',
                     'direction': 'vertical',
-                    'gap': 'md',
                     'children': [
                       {
-                        'type': 'stack',
-                        'gap': 'sm',
                         'children': [
                           {
                             'type': 'icon',
@@ -3789,27 +3787,29 @@ export function stdRpgGameMissionOrbital(params: StdRpgGameMissionOrbitalParams 
                           },
                           {
                             'variant': 'h3',
-                            'content': 'Update Progress',
                             'type': 'typography',
+                            'content': 'Update Progress',
                           },
                         ],
+                        'type': 'stack',
                         'direction': 'horizontal',
+                        'gap': 'sm',
                       },
                       {
                         'type': 'divider',
                       },
                       {
                         'type': 'form-section',
+                        'entity': '@entity',
+                        'cancelEvent': 'CANCEL',
                         'submitEvent': 'SAVE',
+                        'mode': 'edit',
                         'fields': [
                           'title',
                           'description',
                           'status',
                           'reward',
                         ],
-                        'cancelEvent': 'CANCEL',
-                        'entity': '@entity',
-                        'mode': 'edit',
                       },
                     ],
                   },
@@ -3826,7 +3826,6 @@ export function stdRpgGameMissionOrbital(params: StdRpgGameMissionOrbitalParams 
                   'main',
                   {
                     'appName': 'RPG Game',
-                    'showTopBar': true,
                     'type': 'game-shell',
                     'children': [
                       {
@@ -3836,29 +3835,30 @@ export function stdRpgGameMissionOrbital(params: StdRpgGameMissionOrbitalParams 
                             'type': 'icon',
                           },
                           {
-                            'content': 'Quest Complete',
                             'variant': 'h2',
+                            'content': 'Quest Complete',
                             'type': 'typography',
                           },
                           {
-                            'variant': 'success',
-                            'message': 'Congratulations! The quest has been completed.',
                             'type': 'alert',
+                            'message': 'Congratulations! The quest has been completed.',
+                            'variant': 'success',
                           },
                           {
                             'type': 'button',
-                            'icon': 'arrow-left',
                             'variant': 'primary',
+                            'icon': 'arrow-left',
                             'action': 'RESET',
                             'label': 'View Quests',
                           },
                         ],
-                        'direction': 'vertical',
-                        'gap': 'lg',
                         'type': 'stack',
                         'align': 'center',
+                        'direction': 'vertical',
+                        'gap': 'lg',
                       },
                     ],
+                    'showTopBar': true,
                   },
                 ],
               ],
@@ -3872,24 +3872,20 @@ export function stdRpgGameMissionOrbital(params: StdRpgGameMissionOrbitalParams 
                   'render-ui',
                   'main',
                   {
-                    'showTopBar': true,
-                    'appName': 'RPG Game',
-                    'type': 'game-shell',
                     'children': [
                       {
-                        'align': 'center',
-                        'gap': 'lg',
-                        'direction': 'vertical',
                         'type': 'stack',
+                        'direction': 'vertical',
+                        'align': 'center',
                         'children': [
                           {
-                            'type': 'icon',
                             'name': 'x-circle',
+                            'type': 'icon',
                           },
                           {
                             'content': 'Quest Failed',
-                            'variant': 'h2',
                             'type': 'typography',
+                            'variant': 'h2',
                           },
                           {
                             'type': 'alert',
@@ -3898,14 +3894,18 @@ export function stdRpgGameMissionOrbital(params: StdRpgGameMissionOrbitalParams 
                           },
                           {
                             'variant': 'primary',
-                            'action': 'RESET',
                             'type': 'button',
-                            'label': 'View Quests',
                             'icon': 'arrow-left',
+                            'label': 'View Quests',
+                            'action': 'RESET',
                           },
                         ],
+                        'gap': 'lg',
                       },
                     ],
+                    'type': 'game-shell',
+                    'showTopBar': true,
+                    'appName': 'RPG Game',
                   },
                 ],
               ],
@@ -3937,8 +3937,8 @@ export function stdRpgGameMissionOrbital(params: StdRpgGameMissionOrbitalParams 
                   'Mission',
                   {
                     'emit': {
-                      'failure': 'MissionLoadFailed',
                       'success': 'MissionLoaded',
+                      'failure': 'MissionLoadFailed',
                     },
                   },
                 ],
@@ -3966,8 +3966,8 @@ export function stdRpgGameMissionOrbital(params: StdRpgGameMissionOrbitalParams 
                   'Mission',
                   {
                     'emit': {
-                      'success': 'MissionLoaded',
                       'failure': 'MissionLoadFailed',
+                      'success': 'MissionLoaded',
                     },
                   },
                 ],
@@ -4019,8 +4019,8 @@ export function stdRpgGameMissionOrbital(params: StdRpgGameMissionOrbitalParams 
                   'Mission',
                   {
                     'emit': {
-                      'failure': 'MissionLoadFailed',
                       'success': 'MissionLoaded',
+                      'failure': 'MissionLoadFailed',
                     },
                   },
                 ],

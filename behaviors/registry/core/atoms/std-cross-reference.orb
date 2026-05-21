@@ -35,7 +35,24 @@
             "type": "array",
             "default": [],
             "items": {
-              "type": "object"
+              "type": "object",
+              "properties": {
+                "label": {
+                  "name": "label",
+                  "type": "string",
+                  "required": true
+                },
+                "href": {
+                  "name": "href",
+                  "type": "string",
+                  "required": true
+                },
+                "icon": {
+                  "name": "icon",
+                  "type": "string",
+                  "required": false
+                }
+              }
             }
           }
         ]
@@ -80,7 +97,7 @@
                 },
                 {
                   "name": "data",
-                  "type": "[object]"
+                  "type": "[ObjectSpec]"
                 }
               ]
             },
@@ -90,7 +107,7 @@
               "payloadSchema": [
                 {
                   "name": "data",
-                  "type": "[object]"
+                  "type": "[ObjectSpec]"
                 }
               ]
             },
@@ -161,7 +178,7 @@
                 "payloadSchema": [
                   {
                     "name": "data",
-                    "type": "[object]"
+                    "type": "[ObjectSpec]"
                   }
                 ]
               },
@@ -199,7 +216,7 @@
                   },
                   {
                     "name": "data",
-                    "type": "[object]"
+                    "type": "[ObjectSpec]"
                   }
                 ]
               },
@@ -229,8 +246,8 @@
                     "create",
                     "CrossRefLink",
                     {
-                      "rightId": "@payload.rightId",
-                      "leftId": "@payload.leftId"
+                      "leftId": "@payload.leftId",
+                      "rightId": "@payload.rightId"
                     },
                     {
                       "emit": {
@@ -275,8 +292,8 @@
                     "CrossRefLink",
                     {
                       "emit": {
-                        "success": "LinksFetched",
-                        "failure": "LinkOpFailed"
+                        "failure": "LinkOpFailed",
+                        "success": "LinksFetched"
                       }
                     }
                   ]
@@ -312,8 +329,8 @@
                     "emit",
                     "LinksLoaded",
                     {
-                      "leftId": "@entity.leftId",
-                      "data": "@entity.filteredLinks"
+                      "data": "@entity.filteredLinks",
+                      "leftId": "@entity.leftId"
                     }
                   ]
                 ]
@@ -321,17 +338,17 @@
             ]
           },
           "config": {
-            "leftEntity": {
-              "type": "string",
-              "default": "",
-              "label": "Left entity",
-              "description": "Entity type on the left side of the N:M relationship"
-            },
             "rightEntity": {
               "type": "string",
               "default": "",
               "label": "Right entity",
               "description": "Entity type on the right side of the N:M relationship"
+            },
+            "rightIdField": {
+              "type": "string",
+              "default": "",
+              "label": "Right FK field",
+              "description": "Junction column holding the right entity's id"
             },
             "junctionEntity": {
               "type": "string",
@@ -339,17 +356,17 @@
               "label": "Junction entity",
               "description": "Persistent entity used as the join table"
             },
+            "leftEntity": {
+              "type": "string",
+              "default": "",
+              "label": "Left entity",
+              "description": "Entity type on the left side of the N:M relationship"
+            },
             "leftIdField": {
               "type": "string",
               "default": "",
               "label": "Left FK field",
               "description": "Junction column holding the left entity's id"
-            },
-            "rightIdField": {
-              "type": "string",
-              "default": "",
-              "label": "Right FK field",
-              "description": "Junction column holding the right entity's id"
             }
           },
           "scope": "instance"

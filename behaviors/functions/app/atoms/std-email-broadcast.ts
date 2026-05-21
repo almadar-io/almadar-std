@@ -86,12 +86,12 @@ export interface StdEmailBroadcastEmailBroadcastLoadFailedPayload {
  * without modifying its state-machine topology.
  */
 export interface StdEmailBroadcastConfig {
+  /** Default: `[{"name":"name","label":"Name","variant":"caption"},{"label":"Subject","name":"subject","variant":"caption"},{"label":"Status","name":"status","variant":"badge"},{"name":"recipientCount","label":"Recipients","variant":"caption"},{"name":"sentCount","label":"Sent","variant":"caption"},{"label":"Scheduled","variant":"caption","name":"scheduledAt"}]` */
+  fields?: EntityRow[];
   /** Default: `"Email Broadcasts"` */
   title?: string;
-  /** Default: `[{"event":"OPEN_BROADCAST","label":"Open","variant":"primary","icon":"arrow-right"},{"label":"Cancel","variant":"danger","event":"CANCEL_BROADCAST"}]` */
-  itemActions?: TraitConfig[];
-  /** Default: `[{"name":"name","variant":"caption","label":"Name"},{"name":"subject","label":"Subject","variant":"caption"},{"label":"Status","name":"status","variant":"badge"},{"variant":"caption","name":"recipientCount","label":"Recipients"},{"label":"Sent","variant":"caption","name":"sentCount"},{"variant":"caption","name":"scheduledAt","label":"Scheduled"}]` */
-  fields?: TraitConfig[];
+  /** Default: `[{"label":"Open","icon":"arrow-right","event":"OPEN_BROADCAST","variant":"primary"},{"label":"Cancel","event":"CANCEL_BROADCAST","variant":"danger"}]` */
+  itemActions?: EntityRow[];
 }
 
 /**

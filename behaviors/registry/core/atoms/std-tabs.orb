@@ -26,13 +26,23 @@
             "items": {
               "type": "object",
               "properties": {
+                "badge": {
+                  "name": "badge",
+                  "type": "string",
+                  "required": false
+                },
                 "id": {
                   "name": "id",
                   "type": "string",
                   "required": true
                 },
-                "badge": {
-                  "name": "badge",
+                "label": {
+                  "name": "label",
+                  "type": "string",
+                  "required": true
+                },
+                "icon": {
+                  "name": "icon",
                   "type": "string",
                   "required": false
                 },
@@ -40,16 +50,6 @@
                   "name": "content",
                   "type": "trait",
                   "required": false
-                },
-                "icon": {
-                  "name": "icon",
-                  "type": "string",
-                  "required": false
-                },
-                "label": {
-                  "name": "label",
-                  "type": "string",
-                  "required": true
                 }
               }
             }
@@ -119,11 +119,11 @@
                     "main",
                     {
                       "orientation": "@config.orientation",
-                      "type": "tabs",
                       "activeTab": "@entity.activeTab",
                       "variant": "@config.variant",
                       "tabChangeEvent": "TAB_CHANGED",
-                      "items": "@entity.items"
+                      "items": "@entity.items",
+                      "type": "tabs"
                     }
                   ]
                 ]
@@ -147,12 +147,12 @@
                     "render-ui",
                     "main",
                     {
+                      "tabChangeEvent": "TAB_CHANGED",
                       "orientation": "@config.orientation",
-                      "items": "@entity.items",
                       "activeTab": "@entity.activeTab",
                       "variant": "@config.variant",
                       "type": "tabs",
-                      "tabChangeEvent": "TAB_CHANGED"
+                      "items": "@entity.items"
                     }
                   ]
                 ]
@@ -160,6 +160,58 @@
             ]
           },
           "config": {
+            "tabs": {
+              "type": "[TabSpec]",
+              "default": [
+                {
+                  "label": "Overview",
+                  "id": "overview",
+                  "icon": "info"
+                },
+                {
+                  "label": "Details",
+                  "id": "details",
+                  "icon": "list"
+                },
+                {
+                  "icon": "settings",
+                  "id": "settings",
+                  "label": "Settings"
+                }
+              ],
+              "label": "Tabs",
+              "description": "Tab entries with id, label, icon, badge, and optional content trait",
+              "items": {
+                "type": "object",
+                "properties": {
+                  "content": {
+                    "name": "content",
+                    "type": "trait",
+                    "required": false
+                  },
+                  "id": {
+                    "name": "id",
+                    "type": "string",
+                    "required": true
+                  },
+                  "label": {
+                    "name": "label",
+                    "type": "string",
+                    "required": true
+                  },
+                  "icon": {
+                    "name": "icon",
+                    "type": "string",
+                    "required": false
+                  },
+                  "badge": {
+                    "name": "badge",
+                    "type": "string",
+                    "required": false
+                  }
+                }
+              }
+            },
             "defaultTab": {
               "type": "string",
               "default": "overview",
@@ -175,31 +227,6 @@
                 "horizontal",
                 "vertical"
               ]
-            },
-            "tabs": {
-              "type": "[object]",
-              "default": [
-                {
-                  "label": "Overview",
-                  "icon": "info",
-                  "id": "overview"
-                },
-                {
-                  "icon": "list",
-                  "label": "Details",
-                  "id": "details"
-                },
-                {
-                  "icon": "settings",
-                  "id": "settings",
-                  "label": "Settings"
-                }
-              ],
-              "label": "Tabs",
-              "description": "Tab entries with id, label, icon, badge, and optional content trait",
-              "items": {
-                "type": "object"
-              }
             },
             "variant": {
               "type": "string",

@@ -1,6 +1,9 @@
 app std-step-flow "3.3.0"
 "std-step-flow — generic N-step sequential decision chain (Stripe Connect / TurboTax / Vercel deploy style). `config.steps` is an array of step definitions `{ key, label, description, icon, allowedRoles?: [string] }`; the trait projects the current step into a prominent body card and a `wizard-progress` stepper bar at the top. When a step declares `allowedRoles`, only users whose `@user.role` is in that list can advance through it. One primary button ADVANCEs along the chain; at the last step the same button finalizes (label/icon/variant swap via entity binding, state routed via guard). REJECT/ESCALATE terminate. Topology = loading / running / approved / rejected / escalated / error."
 
+type ObjectSpec = { id : string, label : string, value : string }
+type StepSpec = { label : string!, key : string, icon : string }
+
 orbital StepFlowOrbital {
   type WizardStep = {
     id          : string!
@@ -26,7 +29,7 @@ orbital StepFlowOrbital {
     errorMessage          : string = ""
   }
 
-  type StepItemsLoaded     = Event { data : [object] }                "Fired when the source item finishes loading"
+  type StepItemsLoaded     = Event { data : [ObjectSpec] }                "Fired when the source item finishes loading"
   type StepItemsLoadFailed = Event { error : string, code : string }  "Fired when source fetch fails"
   type StepItemsSaved      = Event { row : object }                   "Fired when a decision has been persisted"
   type StepItemsSaveFailed = Event { error : string, code : string }  "Fired when a persist intent fails"
@@ -36,7 +39,7 @@ orbital StepFlowOrbital {
       title    : string   = "Review"
         @label "Flow title"
         @description "Heading shown above the step progress bar"
-      steps    : [object] = [
+      steps    : [StepSpec] = [
         { key: "manager",   label: "Manager Review",     description: "Initial review by direct manager",   icon: "user" },
         { key: "director",  label: "Director Approval",  description: "Department director sign-off",       icon: "users" },
         { key: "executive", label: "Executive Sign-off", description: "Final executive approval",           icon: "shield" }
@@ -141,7 +144,7 @@ orbital StepFlowOrbital {
       REJECT                 { id : string, reason : string }
       ESCALATE               { id : string, reason : string }
       RESTART                { id : string }
-      StepItemsLoaded        { data : [object] }
+      StepItemsLoaded        { data : [ObjectSpec] }
       StepItemsLoadFailed    { error : string, code : string }
     }
     listens {
@@ -150,7 +153,7 @@ orbital StepFlowOrbital {
       REJECT                 { id : string, reason : string }
       ESCALATE               { id : string, reason : string }
       RESTART                { id : string }
-      StepItemsLoaded        { data : [object] }
+      StepItemsLoaded        { data : [ObjectSpec] }
       StepItemsLoadFailed    { error : string, code : string }
       StepItemsSaved         { row : object }
       StepItemsSaveFailed    { error : string, code : string }

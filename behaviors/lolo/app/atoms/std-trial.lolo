@@ -1,6 +1,9 @@
 app std-trial "1.1.0"
 "std-trial — subscription trial countdown with auto-convert at expiry. Lists trials in `browsing`; opens detail in `viewing_single` with Convert / Expire / Cancel actions. Agents tune the list shape via `config.fields` + `config.itemActions`."
 
+type FieldSpec = { name : string!, label : string, variant : string, icon : string, format : string, key : string, header : string }
+type ItemAction = { label : string!, event : string!, variant : string, icon : string }
+
 orbital TrialOrbital {
   entity Trial [persistent: trials] {
     id             : string!
@@ -22,10 +25,10 @@ orbital TrialOrbital {
       title : string = "Trials"
         @label "Section title"
         @description "Heading shown above the trial subscriptions list"
-      fields      : [object] = [{ name: "customerId", label: "Customer", variant: "caption" }, { name: "planId", label: "Plan", variant: "caption" }, { name: "status", label: "Status", variant: "badge" }, { name: "startedAt", label: "Started", variant: "caption" }, { name: "expiresAt", label: "Expires", variant: "caption" }, { name: "convertedAt", label: "Converted", variant: "caption" }, { name: "notifiedAt", label: "Notified", variant: "caption" }]
+      fields      : [FieldSpec] = [{ name: "customerId", label: "Customer", variant: "caption" }, { name: "planId", label: "Plan", variant: "caption" }, { name: "status", label: "Status", variant: "badge" }, { name: "startedAt", label: "Started", variant: "caption" }, { name: "expiresAt", label: "Expires", variant: "caption" }, { name: "convertedAt", label: "Converted", variant: "caption" }, { name: "notifiedAt", label: "Notified", variant: "caption" }]
         @label "Columns to show"
         @description "Each column maps to one field on the Trial entity"
-      itemActions : [object] = [{ label: "Open", event: "OPEN_TRIAL", variant: "primary", icon: "arrow-right" }, { label: "Cancel", event: "CANCEL", variant: "danger", icon: "x" }]
+      itemActions : [ItemAction] = [{ label: "Open", event: "OPEN_TRIAL", variant: "primary", icon: "arrow-right" }, { label: "Cancel", event: "CANCEL", variant: "danger", icon: "x" }]
         @label "Row actions"
         @description "Buttons users can click on each trial row"
     }

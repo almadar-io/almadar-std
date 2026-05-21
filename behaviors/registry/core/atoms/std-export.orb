@@ -110,36 +110,36 @@
                     "render-ui",
                     "main",
                     {
+                      "children": {
+                        "type": "button",
+                        "icon": "download",
+                        "size": "sm",
+                        "action": "OPEN_EXPORT",
+                        "variant": "ghost",
+                        "label": "@config.buttonLabel"
+                      },
+                      "position": "bottom",
+                      "type": "popover",
                       "content": {
-                        "type": "data-list",
-                        "entity": "@entity.options",
                         "renderItem": [
                           "fn",
                           "fmt",
                           {
+                            "icon": "file-down",
+                            "label": "@fmt.label",
                             "type": "button",
                             "variant": "ghost",
-                            "label": "@fmt.label",
-                            "action": "@config.event",
                             "size": "sm",
+                            "action": "@config.event",
                             "actionPayload": {
-                              "tileId": "@config.tileId",
-                              "format": "@fmt.format"
-                            },
-                            "icon": "file-down"
+                              "format": "@fmt.format",
+                              "tileId": "@config.tileId"
+                            }
                           }
                         ],
+                        "entity": "@entity.options",
+                        "type": "data-list",
                         "fields": []
-                      },
-                      "position": "bottom",
-                      "type": "popover",
-                      "children": {
-                        "label": "@config.buttonLabel",
-                        "action": "OPEN_EXPORT",
-                        "icon": "download",
-                        "size": "sm",
-                        "variant": "ghost",
-                        "type": "button"
                       }
                     }
                   ]
@@ -179,30 +179,23 @@
               "description": "Event emitted when the user picks a format",
               "synonyms": "bus event name. internal wiring; users rarely target directly"
             },
-            "tileId": {
-              "type": "string",
-              "default": "",
-              "label": "Tile id",
-              "description": "Identifier of the dashboard tile being exported",
-              "synonyms": "internal identifier — host orbital wires this; users rarely set it directly"
-            },
             "formats": {
               "type": "[FormatOption]",
               "default": [
                 {
                   "format": "csv",
-                  "id": "csv",
-                  "label": "CSV"
+                  "label": "CSV",
+                  "id": "csv"
                 },
                 {
+                  "label": "XLSX",
                   "id": "xlsx",
-                  "format": "xlsx",
-                  "label": "XLSX"
+                  "format": "xlsx"
                 },
                 {
-                  "id": "pdf",
+                  "format": "pdf",
                   "label": "PDF",
-                  "format": "pdf"
+                  "id": "pdf"
                 }
               ],
               "label": "Available formats",
@@ -228,6 +221,13 @@
                   }
                 }
               }
+            },
+            "tileId": {
+              "type": "string",
+              "default": "",
+              "label": "Tile id",
+              "description": "Identifier of the dashboard tile being exported",
+              "synonyms": "internal identifier — host orbital wires this; users rarely set it directly"
             },
             "buttonLabel": {
               "type": "string",

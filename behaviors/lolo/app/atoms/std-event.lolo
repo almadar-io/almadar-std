@@ -1,6 +1,9 @@
 app std-event "1.1.0"
 "std-event — event-ticketing event entity (date, venue, capacity, recurrenceRule, status). Lists events in `browsing`; opens detail in `viewing_single` with Publish / Cancel / Update actions. Agents tune the list shape via `config.fields` + `config.itemActions`."
 
+type FieldSpec = { name : string!, label : string, variant : string, icon : string, format : string, key : string, header : string }
+type ItemAction = { label : string!, event : string!, variant : string, icon : string }
+
 orbital EventOrbital {
   entity EventRecord [persistent: events] {
     id              : string!
@@ -26,7 +29,7 @@ orbital EventOrbital {
       title       : string   = "Events"
         @label "Section title"
         @description "Heading shown above the events list"
-      fields      : [object] = [
+      fields      : [FieldSpec] = [
         { name: "name",     label: "Name",     variant: "caption" },
         { name: "venue",    label: "Venue",    variant: "caption" },
         { name: "startsAt", label: "Starts",   variant: "caption" },
@@ -36,7 +39,7 @@ orbital EventOrbital {
       ]
         @label "Columns to show"
         @description "Each column maps to one field on the Event entity"
-      itemActions : [object] = [
+      itemActions : [ItemAction] = [
         { label: "Open",   event: "OPEN_EVENT", variant: "primary", icon: "arrow-right" },
         { label: "Cancel", event: "CANCEL",     variant: "danger",  icon: "x" }
       ]

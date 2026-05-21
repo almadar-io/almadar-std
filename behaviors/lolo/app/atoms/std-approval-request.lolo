@@ -1,6 +1,9 @@
 app std-approval-request "1.3.0"
 "std-approval-request — approver inbox / triage queue. Browses many pending approval requests in a list (data-grid), opens one at a time for detail with Approve / Reject / Request Info / Withdraw. Pick this when the user is an approver working through a queue. For single-item N-step sequential approval (manager → finance → exec on ONE item), use std-approval-chain instead. Agents tune the list shape via `config.fields` + `config.itemActions`."
 
+type FieldSpec = { name : string!, label : string, variant : string, icon : string, format : string, key : string, header : string }
+type ItemAction = { label : string!, event : string!, variant : string, icon : string }
+
 orbital ApprovalRequestOrbital {
   entity ApprovalRequest [persistent: approvalrequests] {
     id                : string!
@@ -28,7 +31,7 @@ orbital ApprovalRequestOrbital {
       requireCommentOnReject : boolean  = false
         @label "Require reject comment"
         @description "Force approvers to enter a reason when rejecting"
-      fields                 : [object] = [
+      fields                 : [FieldSpec] = [
         { name: "title",            label: "Title",        variant: "caption" },
         { name: "targetType",       label: "Target",       variant: "badge"   },
         { name: "requestedBy",      label: "Requested By", variant: "caption" },
@@ -39,7 +42,7 @@ orbital ApprovalRequestOrbital {
       ]
         @label "Columns to show"
         @description "Each column maps to one field on the Approval Request entity"
-      itemActions            : [object] = [
+      itemActions            : [ItemAction] = [
         { label: "Open",     event: "OPEN_REQUEST", variant: "primary", icon: "arrow-right" },
         { label: "Withdraw", event: "WITHDRAW",     variant: "danger" }
       ]

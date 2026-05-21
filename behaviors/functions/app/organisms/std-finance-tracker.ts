@@ -31,8 +31,8 @@ const ALIAS = 'FinanceTracker';
  * without modifying its state-machine topology.
  */
 export interface StdFinanceTrackerConfig {
-  notifications?: TraitConfig;
   navItems?: TraitConfig;
+  notifications?: TraitConfig;
 }
 
 /**
@@ -182,28 +182,28 @@ export function stdFinanceTrackerTransactionOrbital(params: StdFinanceTrackerTra
         'ref': 'AppShell.traits.AppLayout',
         'name': 'TransactionAppLayout',
         'config': {
-          'searchEvent': 'TRANSACTION_SEARCH',
-          'notificationClickEvent': 'TRANSACTION_NOTIFICATIONS_OPEN',
-          'notifications': [],
-          'appName': 'Finance Tracker',
           'navItems': [
             {
-              'icon': 'receipt',
-              'href': '/transactions',
               'label': 'Transactions',
+              'href': '/transactions',
+              'icon': 'receipt',
             },
             {
-              'label': 'Summary',
-              'href': '/summary',
               'icon': 'layout-list',
+              'href': '/summary',
+              'label': 'Summary',
             },
             {
               'icon': 'bar-chart',
-              'href': '/reports',
               'label': 'Reports',
+              'href': '/reports',
             },
           ],
+          'notifications': [],
           'contentTrait': '@trait.TransactionCatalog',
+          'appName': 'Finance Tracker',
+          'searchEvent': 'TRANSACTION_SEARCH',
+          'notificationClickEvent': 'TRANSACTION_NOTIFICATIONS_OPEN',
         },
         'events': {
           'SEARCH': 'TRANSACTION_SEARCH',
@@ -290,62 +290,62 @@ export function stdFinanceTrackerTransactionOrbital(params: StdFinanceTrackerTra
                   'render-ui',
                   'main',
                   {
-                    'gap': 'lg',
                     'direction': 'vertical',
                     'type': 'stack',
+                    'gap': 'lg',
                     'children': [
                       {
-                        'type': 'stack',
-                        'direction': 'horizontal',
-                        'justify': 'between',
                         'children': [
                           {
-                            'gap': 'sm',
-                            'align': 'center',
+                            'type': 'stack',
                             'direction': 'horizontal',
+                            'gap': 'sm',
                             'children': [
                               {
-                                'type': 'icon',
                                 'name': 'receipt',
+                                'type': 'icon',
                               },
                               {
+                                'variant': 'h2',
                                 'type': 'typography',
                                 'content': 'Transactions',
-                                'variant': 'h2',
                               },
                             ],
-                            'type': 'stack',
+                            'align': 'center',
                           },
                           {
-                            'gap': 'sm',
-                            'direction': 'horizontal',
                             'children': [
                               {
                                 'type': 'button',
                                 'icon': 'plus',
                                 'variant': 'primary',
-                                'action': 'CREATE',
                                 'label': 'Add Transaction',
+                                'action': 'CREATE',
                               },
                             ],
                             'type': 'stack',
+                            'gap': 'sm',
+                            'direction': 'horizontal',
                           },
                         ],
-                        'align': 'center',
+                        'direction': 'horizontal',
                         'gap': 'md',
+                        'justify': 'between',
+                        'type': 'stack',
+                        'align': 'center',
                       },
                       {
                         'type': 'divider',
                       },
                       {
-                        'direction': 'horizontal',
-                        'gap': 'md',
+                        'type': 'stack',
                         'children': [
                           '@trait.TransactionSearch',
                           '@trait.TransactionFilter',
                         ],
-                        'type': 'stack',
+                        'direction': 'horizontal',
                         'align': 'center',
+                        'gap': 'md',
                       },
                       '@trait.TransactionStats',
                       '@trait.TransactionGraphs',
@@ -372,34 +372,34 @@ export function stdFinanceTrackerTransactionOrbital(params: StdFinanceTrackerTra
                   'render-ui',
                   'main',
                   {
+                    'type': 'stack',
+                    'gap': 'md',
+                    'className': 'py-8',
                     'children': [
                       {
                         'type': 'icon',
                         'name': 'bell',
                       },
                       {
-                        'content': 'No notifications',
                         'type': 'typography',
+                        'content': 'No notifications',
                         'variant': 'h3',
                       },
                       {
-                        'content': 'You\'re all caught up.',
-                        'type': 'typography',
-                        'color': 'muted',
                         'variant': 'caption',
+                        'color': 'muted',
+                        'type': 'typography',
+                        'content': 'You\'re all caught up.',
                       },
                       {
-                        'type': 'button',
-                        'action': 'INIT',
-                        'label': 'Back to transactions',
                         'variant': 'ghost',
+                        'action': 'INIT',
+                        'type': 'button',
+                        'label': 'Back to transactions',
                       },
                     ],
                     'direction': 'vertical',
-                    'type': 'stack',
                     'align': 'center',
-                    'gap': 'md',
-                    'className': 'py-8',
                   },
                 ],
               ],
@@ -422,9 +422,9 @@ export function stdFinanceTrackerTransactionOrbital(params: StdFinanceTrackerTra
         'config': {
           'filters': [
             {
-              'field': 'category',
               'label': 'Category',
               'filterType': 'text',
+              'field': 'category',
             },
             {
               'field': 'account',
@@ -432,13 +432,13 @@ export function stdFinanceTrackerTransactionOrbital(params: StdFinanceTrackerTra
               'filterType': 'text',
             },
             {
-              'filterType': 'select',
               'field': 'type',
+              'filterType': 'select',
+              'label': 'Type',
               'options': [
                 'income',
                 'expense',
               ],
-              'label': 'Type',
             },
           ],
           'event': 'TRANSACTION_FILTER',
@@ -451,8 +451,11 @@ export function stdFinanceTrackerTransactionOrbital(params: StdFinanceTrackerTra
           'title': 'Transactions',
           'metrics': [
             {
-              'field': 'amount',
+              'aggregation': 'sum',
+              'label': 'Income',
               'variant': 'success',
+              'field': 'amount',
+              'format': 'currency',
               'filter': [
                 'fn',
                 'row',
@@ -463,15 +466,8 @@ export function stdFinanceTrackerTransactionOrbital(params: StdFinanceTrackerTra
                 ],
               ],
               'icon': 'trending-up',
-              'format': 'currency',
-              'aggregation': 'sum',
-              'label': 'Income',
             },
             {
-              'label': 'Expenses',
-              'icon': 'trending-down',
-              'format': 'currency',
-              'variant': 'error',
               'filter': [
                 'fn',
                 'row',
@@ -481,14 +477,18 @@ export function stdFinanceTrackerTransactionOrbital(params: StdFinanceTrackerTra
                   'expense',
                 ],
               ],
+              'icon': 'trending-down',
+              'format': 'currency',
+              'label': 'Expenses',
               'field': 'amount',
+              'variant': 'error',
               'aggregation': 'sum',
             },
             {
+              'label': 'Savings Rate',
               'variant': 'primary',
               'format': 'number',
               'aggregation': 'count',
-              'label': 'Savings Rate',
               'icon': 'percent',
             },
           ],
@@ -508,14 +508,14 @@ export function stdFinanceTrackerTransactionOrbital(params: StdFinanceTrackerTra
         'ref': 'Graphs.traits.GraphItemGraph',
         'name': 'TransactionGraphs',
         'config': {
-          'aggregation': 'sum',
-          'subtitle': 'Distribution across categories',
           'showLegend': true,
-          'height': 240,
-          'valueField': 'amount',
-          'title': 'Spending by Category',
           'chartType': 'pie',
+          'valueField': 'amount',
           'categoryField': 'category',
+          'title': 'Spending by Category',
+          'subtitle': 'Distribution across categories',
+          'aggregation': 'sum',
+          'height': 240,
         },
         'listens': [
           {
@@ -533,26 +533,26 @@ export function stdFinanceTrackerTransactionOrbital(params: StdFinanceTrackerTra
         'name': 'TransactionBrowseList',
         'linkedEntity': canonicalName,
         'config': {
-          'cols': 1,
+          'gap': 'sm',
           'fields': [
             {
               'name': 'date',
-              'format': 'date',
               'variant': 'caption',
+              'format': 'date',
             },
             {
+              'icon': 'receipt',
               'name': 'description',
               'variant': 'h4',
-              'icon': 'receipt',
             },
             {
               'name': 'category',
               'variant': 'badge',
             },
             {
+              'name': 'amount',
               'variant': 'h4',
               'format': 'currency',
-              'name': 'amount',
             },
             {
               'name': 'type',
@@ -561,9 +561,9 @@ export function stdFinanceTrackerTransactionOrbital(params: StdFinanceTrackerTra
           ],
           'itemActions': [
             {
+              'event': 'VIEW',
               'variant': 'ghost',
               'label': 'View',
-              'event': 'VIEW',
             },
             {
               'label': 'Edit',
@@ -576,7 +576,7 @@ export function stdFinanceTrackerTransactionOrbital(params: StdFinanceTrackerTra
               'label': 'Delete',
             },
           ],
-          'gap': 'sm',
+          'cols': 1,
         },
         'listens': [
           {
@@ -626,8 +626,6 @@ export function stdFinanceTrackerTransactionOrbital(params: StdFinanceTrackerTra
         'name': 'TransactionCreate',
         'linkedEntity': canonicalName,
         'config': {
-          'icon': 'plus-circle',
-          'title': 'Add Transaction',
           'mode': 'create',
           'fields': [
             'description',
@@ -637,6 +635,8 @@ export function stdFinanceTrackerTransactionOrbital(params: StdFinanceTrackerTra
             'type',
             'date',
           ],
+          'icon': 'plus-circle',
+          'title': 'Add Transaction',
         },
         'events': {
           'OPEN': 'CREATE',
@@ -658,6 +658,7 @@ export function stdFinanceTrackerTransactionOrbital(params: StdFinanceTrackerTra
         'linkedEntity': canonicalName,
         'config': {
           'title': 'Edit Transaction',
+          'icon': 'edit',
           'mode': 'edit',
           'fields': [
             'description',
@@ -667,7 +668,6 @@ export function stdFinanceTrackerTransactionOrbital(params: StdFinanceTrackerTra
             'type',
             'date',
           ],
-          'icon': 'edit',
         },
         'events': {
           'OPEN': 'EDIT',
@@ -688,9 +688,9 @@ export function stdFinanceTrackerTransactionOrbital(params: StdFinanceTrackerTra
         'name': 'TransactionView',
         'linkedEntity': canonicalName,
         'config': {
-          'icon': 'eye',
-          'title': 'View Transaction',
           'mode': 'edit',
+          'title': 'View Transaction',
+          'icon': 'eye',
           'fields': [
             'description',
             'amount',
@@ -721,12 +721,12 @@ export function stdFinanceTrackerTransactionOrbital(params: StdFinanceTrackerTra
         'config': {
           'alertMessage': 'This action cannot be undone.',
           'confirmLabel': 'Delete',
-          'icon': 'alert-triangle',
           'title': 'Delete Transaction',
+          'icon': 'alert-triangle',
         },
         'events': {
-          'CONFIRM': 'CONFIRM_DELETE',
           'REQUEST': 'DELETE',
+          'CONFIRM': 'CONFIRM_DELETE',
         },
         'listens': [
           {
@@ -1150,32 +1150,32 @@ export function stdFinanceTrackerFinanceSummaryOrbital(params: StdFinanceTracker
         'name': 'FinanceSummaryAppLayout',
         'linkedEntity': canonicalName,
         'config': {
-          'contentTrait': '@trait.FinanceSummaryDisplay',
+          'appName': 'Finance Tracker',
           'searchEvent': 'FINANCE_SUMMARY_SEARCH',
           'notifications': [],
-          'appName': 'Finance Tracker',
           'notificationClickEvent': 'FINANCE_SUMMARY_NOTIFICATIONS_OPEN',
+          'contentTrait': '@trait.FinanceSummaryDisplay',
           'navItems': [
             {
-              'icon': 'receipt',
               'label': 'Transactions',
               'href': '/transactions',
+              'icon': 'receipt',
             },
             {
               'icon': 'layout-list',
-              'href': '/summary',
               'label': 'Summary',
+              'href': '/summary',
             },
             {
               'label': 'Reports',
-              'href': '/reports',
               'icon': 'bar-chart',
+              'href': '/reports',
             },
           ],
         },
         'events': {
-          'NOTIFY_CLICK': 'FINANCE_SUMMARY_NOTIFICATIONS_OPEN',
           'SEARCH': 'FINANCE_SUMMARY_SEARCH',
+          'NOTIFY_CLICK': 'FINANCE_SUMMARY_NOTIFICATIONS_OPEN',
         },
       }),
       rebindInlineTraitEntity({
@@ -1282,8 +1282,8 @@ export function stdFinanceTrackerFinanceSummaryOrbital(params: StdFinanceTracker
                   'FinanceSummary',
                   {
                     'emit': {
-                      'failure': 'FinanceSummaryLoadFailed',
                       'success': 'FinanceSummaryLoaded',
+                      'failure': 'FinanceSummaryLoadFailed',
                     },
                   },
                 ],
@@ -1291,6 +1291,7 @@ export function stdFinanceTrackerFinanceSummaryOrbital(params: StdFinanceTracker
                   'render-ui',
                   'main',
                   {
+                    'type': 'stack',
                     'children': [
                       {
                         'type': 'breadcrumb',
@@ -1305,12 +1306,10 @@ export function stdFinanceTrackerFinanceSummaryOrbital(params: StdFinanceTracker
                         ],
                       },
                       {
-                        'align': 'center',
                         'children': [
                           {
-                            'direction': 'horizontal',
-                            'align': 'center',
                             'type': 'stack',
+                            'align': 'center',
                             'children': [
                               {
                                 'name': 'pie-chart',
@@ -1322,62 +1321,63 @@ export function stdFinanceTrackerFinanceSummaryOrbital(params: StdFinanceTracker
                                 'content': 'Financial Summary',
                               },
                             ],
+                            'direction': 'horizontal',
                             'gap': 'sm',
                           },
                           {
-                            'variant': 'secondary',
-                            'action': 'REFRESH',
-                            'label': 'Refresh',
                             'icon': 'refresh-cw',
                             'type': 'button',
+                            'label': 'Refresh',
+                            'action': 'REFRESH',
+                            'variant': 'secondary',
                           },
                         ],
-                        'direction': 'horizontal',
-                        'justify': 'between',
+                        'align': 'center',
                         'type': 'stack',
+                        'direction': 'horizontal',
                         'gap': 'md',
+                        'justify': 'between',
                       },
                       {
                         'type': 'divider',
                       },
                       {
-                        'type': 'simple-grid',
+                        'cols': 4,
                         'children': [
                           {
-                            'variant': 'success',
                             'type': 'stat-display',
                             'label': 'Total Income',
-                            'icon': 'trending-up',
                             'value': '@entity.totalIncome',
+                            'icon': 'trending-up',
+                            'variant': 'success',
                           },
                           {
-                            'type': 'stat-display',
-                            'label': 'Total Expenses',
                             'value': '@entity.totalExpenses',
+                            'label': 'Total Expenses',
                             'icon': 'trending-down',
+                            'type': 'stat-display',
                             'variant': 'error',
                           },
                           {
-                            'value': '@entity.balance',
-                            'icon': 'wallet',
-                            'type': 'stat-display',
                             'label': 'Balance',
                             'variant': 'primary',
+                            'icon': 'wallet',
+                            'value': '@entity.balance',
+                            'type': 'stat-display',
                           },
                           {
                             'type': 'stat-display',
-                            'value': '@entity.savingsRate',
-                            'icon': 'percent',
                             'label': 'Savings Rate',
+                            'icon': 'percent',
                             'variant': 'primary',
+                            'value': '@entity.savingsRate',
                           },
                         ],
-                        'cols': 4,
+                        'type': 'simple-grid',
                       },
                     ],
-                    'type': 'stack',
-                    'gap': 'lg',
                     'direction': 'vertical',
+                    'gap': 'lg',
                     'className': 'max-w-5xl mx-auto w-full',
                   },
                 ],
@@ -1613,11 +1613,13 @@ export function stdFinanceTrackerFinanceReportOrbital(params: StdFinanceTrackerF
         'name': 'FinanceReportAppLayout',
         'linkedEntity': canonicalName,
         'config': {
+          'searchEvent': 'FINANCE_REPORT_SEARCH',
+          'notifications': [],
           'navItems': [
             {
-              'href': '/transactions',
-              'label': 'Transactions',
               'icon': 'receipt',
+              'label': 'Transactions',
+              'href': '/transactions',
             },
             {
               'label': 'Summary',
@@ -1630,11 +1632,9 @@ export function stdFinanceTrackerFinanceReportOrbital(params: StdFinanceTrackerF
               'icon': 'bar-chart',
             },
           ],
-          'notifications': [],
           'notificationClickEvent': 'FINANCE_REPORT_NOTIFICATIONS_OPEN',
-          'appName': 'Finance Tracker',
-          'searchEvent': 'FINANCE_REPORT_SEARCH',
           'contentTrait': '@trait.FinanceReportBrowse',
+          'appName': 'Finance Tracker',
         },
         'events': {
           'SEARCH': 'FINANCE_REPORT_SEARCH',
@@ -1921,22 +1921,22 @@ export function stdFinanceTrackerFinanceReportOrbital(params: StdFinanceTrackerF
                   'render-ui',
                   'main',
                   {
+                    'align': 'center',
+                    'className': 'py-12',
+                    'direction': 'vertical',
+                    'gap': 'md',
+                    'type': 'stack',
                     'children': [
                       {
                         'type': 'spinner',
                       },
                       {
                         'content': 'Loading…',
-                        'color': 'muted',
                         'type': 'typography',
                         'variant': 'caption',
+                        'color': 'muted',
                       },
                     ],
-                    'direction': 'vertical',
-                    'gap': 'md',
-                    'type': 'stack',
-                    'align': 'center',
-                    'className': 'py-12',
                   },
                 ],
               ],
@@ -1950,88 +1950,56 @@ export function stdFinanceTrackerFinanceReportOrbital(params: StdFinanceTrackerF
                   'render-ui',
                   'main',
                   {
-                    'type': 'stack',
-                    'className': 'max-w-5xl mx-auto w-full',
                     'children': [
                       {
-                        'type': 'stack',
-                        'justify': 'between',
-                        'direction': 'horizontal',
                         'children': [
                           {
-                            'type': 'stack',
-                            'direction': 'horizontal',
                             'children': [
                               {
-                                'type': 'icon',
                                 'name': 'file-text',
+                                'type': 'icon',
                               },
                               {
+                                'content': 'Reports',
                                 'variant': 'h2',
                                 'type': 'typography',
-                                'content': 'Reports',
                               },
                             ],
-                            'align': 'center',
+                            'type': 'stack',
+                            'direction': 'horizontal',
                             'gap': 'sm',
+                            'align': 'center',
                           },
                           {
                             'gap': 'sm',
-                            'type': 'stack',
                             'direction': 'horizontal',
+                            'type': 'stack',
                             'children': [
                               {
-                                'action': 'CREATE',
                                 'type': 'button',
-                                'label': 'New Report',
-                                'variant': 'primary',
                                 'icon': 'plus',
+                                'action': 'CREATE',
+                                'variant': 'primary',
+                                'label': 'New Report',
                               },
                             ],
                           },
                         ],
+                        'type': 'stack',
+                        'direction': 'horizontal',
                         'gap': 'md',
                         'align': 'center',
+                        'justify': 'between',
                       },
                       {
                         'type': 'divider',
                       },
                       {
-                        'variant': 'info',
-                        'message': 'Generated reports are downloadable as PDF or CSV.',
                         'type': 'alert',
+                        'message': 'Generated reports are downloadable as PDF or CSV.',
+                        'variant': 'info',
                       },
                       {
-                        'entity': '@payload.data',
-                        'variant': 'card',
-                        'gap': 'sm',
-                        'fields': [
-                          {
-                            'icon': 'file-text',
-                            'name': 'title',
-                            'variant': 'h3',
-                          },
-                          {
-                            'variant': 'badge',
-                            'name': 'period',
-                          },
-                          {
-                            'name': 'dateRange',
-                            'label': 'Date Range',
-                            'variant': 'caption',
-                          },
-                          {
-                            'name': 'total',
-                            'variant': 'h4',
-                            'format': 'currency',
-                          },
-                          {
-                            'name': 'generatedAt',
-                            'label': 'Generated',
-                            'format': 'date',
-                            'variant': 'caption',
-                          },
-                        ],
                         'type': 'data-list',
                         'itemActions': [
                           {
@@ -2041,19 +2009,51 @@ export function stdFinanceTrackerFinanceReportOrbital(params: StdFinanceTrackerF
                           },
                           {
                             'event': 'EXPORT_PDF',
-                            'variant': 'primary',
                             'label': 'Download PDF',
+                            'variant': 'primary',
                           },
                           {
+                            'variant': 'ghost',
                             'event': 'EXPORT_CSV',
                             'label': 'Download CSV',
-                            'variant': 'ghost',
                           },
                         ],
+                        'fields': [
+                          {
+                            'name': 'title',
+                            'variant': 'h3',
+                            'icon': 'file-text',
+                          },
+                          {
+                            'name': 'period',
+                            'variant': 'badge',
+                          },
+                          {
+                            'label': 'Date Range',
+                            'variant': 'caption',
+                            'name': 'dateRange',
+                          },
+                          {
+                            'variant': 'h4',
+                            'format': 'currency',
+                            'name': 'total',
+                          },
+                          {
+                            'name': 'generatedAt',
+                            'label': 'Generated',
+                            'variant': 'caption',
+                            'format': 'date',
+                          },
+                        ],
+                        'variant': 'card',
+                        'entity': '@payload.data',
+                        'gap': 'sm',
                       },
                     ],
+                    'type': 'stack',
                     'direction': 'vertical',
                     'gap': 'lg',
+                    'className': 'max-w-5xl mx-auto w-full',
                   },
                 ],
               ],
@@ -2067,36 +2067,36 @@ export function stdFinanceTrackerFinanceReportOrbital(params: StdFinanceTrackerF
                   'render-ui',
                   'main',
                   {
-                    'gap': 'md',
                     'children': [
                       {
-                        'color': 'destructive',
-                        'type': 'icon',
                         'name': 'alert-triangle',
+                        'type': 'icon',
+                        'color': 'destructive',
                       },
                       {
+                        'variant': 'h3',
                         'content': 'Failed to load reports',
                         'type': 'typography',
-                        'variant': 'h3',
                       },
                       {
-                        'color': 'muted',
                         'type': 'typography',
-                        'content': '@payload.error',
                         'variant': 'body',
+                        'content': '@payload.error',
+                        'color': 'muted',
                       },
                       {
-                        'icon': 'rotate-ccw',
+                        'variant': 'primary',
                         'label': 'Retry',
                         'action': 'INIT',
-                        'variant': 'primary',
+                        'icon': 'rotate-ccw',
                         'type': 'button',
                       },
                     ],
-                    'type': 'stack',
-                    'align': 'center',
                     'className': 'py-12',
                     'direction': 'vertical',
+                    'gap': 'md',
+                    'align': 'center',
+                    'type': 'stack',
                   },
                 ],
               ],
@@ -2134,6 +2134,7 @@ export function stdFinanceTrackerFinanceReportOrbital(params: StdFinanceTrackerF
         'name': 'FinanceReportView',
         'linkedEntity': canonicalName,
         'config': {
+          'icon': 'eye',
           'fields': [
             'title',
             'period',
@@ -2141,9 +2142,8 @@ export function stdFinanceTrackerFinanceReportOrbital(params: StdFinanceTrackerF
             'total',
             'generatedAt',
           ],
-          'title': 'Report Preview',
           'mode': 'edit',
-          'icon': 'eye',
+          'title': 'Report Preview',
         },
         'events': {
           'OPEN': 'VIEW',
@@ -2164,15 +2164,15 @@ export function stdFinanceTrackerFinanceReportOrbital(params: StdFinanceTrackerF
         'name': 'FinanceReportCreate',
         'linkedEntity': canonicalName,
         'config': {
+          'title': 'New Report',
+          'icon': 'plus-circle',
+          'mode': 'create',
           'fields': [
             'title',
             'period',
             'dateRange',
             'filters',
           ],
-          'icon': 'plus-circle',
-          'title': 'New Report',
-          'mode': 'create',
         },
         'events': {
           'OPEN': 'CREATE',

@@ -1,6 +1,9 @@
 app std-board "1.0.0"
 "std-board — generic N-column board primitive. `config.columns` is an array of column definitions ({ key, label, icon, variant }); the trait `array/map`s them on `BoardItemsLoaded` into `@entity.boards` where each board carries its filtered items + a count. The render is a `data-grid` over `@entity.boards` (one card per column) whose `renderItem` lambda nests a `data-list` over `@col.items` (the cards in that stage). N is config-driven — pass any number of columns; the outer `data-grid`'s `cols` is bound to `@config.gridCols` so the grid wraps if you exceed it. Topology = loading / viewing_board / viewing_card / adding / error — distinct from the cookie-cutter `loading/browsing/viewing_single/error` CRUD shape. App-level atoms (e.g. std-pipeline) compose std-board via `uses` and add a sibling persistor + extended source entity."
 
+type ObjectSpec = { id : string, label : string, value : string }
+type ColumnSpec = { name : string!, label : string }
+
 orbital BoardOrbital {
   type BoardItem = {
     id          : string!
@@ -36,7 +39,7 @@ orbital BoardOrbital {
     errorMessage        : string = ""
   }
 
-  type BoardItemsLoaded     = Event { data : [object] }                "Fired when board items finish loading (from an upstream fetcher / persistor)"
+  type BoardItemsLoaded     = Event { data : [ObjectSpec] }                "Fired when board items finish loading (from an upstream fetcher / persistor)"
   type BoardItemsLoadFailed = Event { error : string, code : string }  "Fired when the upstream fetch fails"
   type BoardItemsSaved      = Event { row : object }                   "Fired when a board item has been persisted"
   type BoardItemsSaveFailed = Event { error : string, code : string }  "Fired when a persist intent fails"
@@ -46,7 +49,7 @@ orbital BoardOrbital {
       title    : string   = "Board"
         @label "Board title"
         @description "Heading shown above the column board"
-      columns  : [object] = [
+      columns  : [ColumnSpec] = [
         { key: "todo",  label: "To Do",       icon: "circle",       variant: "default" },
         { key: "doing", label: "In Progress", icon: "circle-dot",   variant: "primary" },
         { key: "done",  label: "Done",        icon: "check-circle", variant: "success" }
@@ -145,7 +148,7 @@ orbital BoardOrbital {
       MOVE_CARD              { id : string!, sourceGroup : string, targetGroup : string!, newIndex : number }
       REORDER_CARD           { id : string!, oldIndex : number, newIndex : number }
       DELETE_CARD            { id : string! }
-      BoardItemsLoaded       { data : [object] }
+      BoardItemsLoaded       { data : [ObjectSpec] }
       BoardItemsLoadFailed   { error : string, code : string }
       BoardItemsSaved        { row : object }
       BoardItemsSaveFailed   { error : string, code : string }
@@ -160,7 +163,7 @@ orbital BoardOrbital {
       REORDER_CARD           { id : string!, oldIndex : number, newIndex : number }
       REORDER_POSITION       { id : string!, position : number! }
       DELETE_CARD            { id : string! }
-      BoardItemsLoaded       { data : [object] }
+      BoardItemsLoaded       { data : [ObjectSpec] }
       BoardItemsLoadFailed   { error : string, code : string }
       BoardItemsSaved        { row : object }
       BoardItemsSaveFailed   { error : string, code : string }

@@ -1,6 +1,9 @@
 app std-vehicle "1.1.0"
 "std-vehicle — fleet vehicle primitive. Lists vehicles in `browsing` with fleet stats + map view; opens vehicle detail in `viewing_single` (VIN, plate, make/model, odometer, status, driver) with Assign Driver / Maintenance / Retire actions. Agents tune the list shape via `config.fields` + `config.itemActions`."
 
+type FieldSpec = { name : string!, label : string, variant : string, icon : string, format : string, key : string, header : string }
+type ItemAction = { label : string!, event : string!, variant : string, icon : string }
+
 orbital VehicleOrbital {
   entity Vehicle [persistent: vehicles] {
     id               : string!
@@ -25,10 +28,10 @@ orbital VehicleOrbital {
       title : string = "Fleet"
         @label "Section title"
         @description "Heading shown above the fleet vehicle list"
-      fields      : [object] = [{ name: "licensePlate", label: "Plate", variant: "caption" }, { name: "make", label: "Make", variant: "caption" }, { name: "model", label: "Model", variant: "caption" }, { name: "year", label: "Year", variant: "caption" }, { name: "vehicleType", label: "Type", variant: "badge" }, { name: "odometer", label: "Odometer", variant: "caption" }, { name: "status", label: "Status", variant: "badge" }]
+      fields      : [FieldSpec] = [{ name: "licensePlate", label: "Plate", variant: "caption" }, { name: "make", label: "Make", variant: "caption" }, { name: "model", label: "Model", variant: "caption" }, { name: "year", label: "Year", variant: "caption" }, { name: "vehicleType", label: "Type", variant: "badge" }, { name: "odometer", label: "Odometer", variant: "caption" }, { name: "status", label: "Status", variant: "badge" }]
         @label "Columns to show"
         @description "Each column maps to one field on the Vehicle entity"
-      itemActions : [object] = [{ label: "Open", event: "OPEN_VEHICLE", variant: "primary", icon: "arrow-right" }, { label: "Retire", event: "RETIRE", variant: "danger" }]
+      itemActions : [ItemAction] = [{ label: "Open", event: "OPEN_VEHICLE", variant: "primary", icon: "arrow-right" }, { label: "Retire", event: "RETIRE", variant: "danger" }]
         @label "Row actions"
         @description "Buttons users can click on each vehicle row"
     }

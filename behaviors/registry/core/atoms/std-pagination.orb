@@ -1,7 +1,7 @@
 {
   "name": "std-pagination",
   "version": "1.0.0",
-  "description": "std-pagination — single primitive: pagination control. PAGE accepts the Pagination component's `{page}` emit; ITEMS_LOADED accepts an upstream `{data:[object]}` payload and derives totalPages = ceil(len/pageSize). Molecules wire `BrowseItemLoaded -> ITEMS_LOADED` to keep it in lockstep with the data hub.",
+  "description": "std-pagination — single primitive: pagination control. PAGE accepts the Pagination component's `{page}` emit; ITEMS_LOADED accepts an upstream `{data:[ObjectSpec]}` payload and derives totalPages = ceil(len/pageSize). Molecules wire `BrowseItemLoaded -> ITEMS_LOADED` to keep it in lockstep with the data hub.",
   "orbitals": [
     {
       "name": "PagedItemOrbital",
@@ -91,7 +91,7 @@
                 "payloadSchema": [
                   {
                     "name": "data",
-                    "type": "[object]"
+                    "type": "[ObjectSpec]"
                   },
                   {
                     "name": "totalCount",
@@ -129,11 +129,11 @@
                     "render-ui",
                     "main",
                     {
-                      "currentPage": "@entity.currentPage",
-                      "type": "pagination",
-                      "totalPages": "@entity.totalPages",
+                      "showPageSize": false,
                       "pageChangeEvent": "@config.event",
-                      "showPageSize": false
+                      "currentPage": "@entity.currentPage",
+                      "totalPages": "@entity.totalPages",
+                      "type": "pagination"
                     }
                   ]
                 ]
@@ -147,11 +147,11 @@
                     "render-ui",
                     "main",
                     {
-                      "totalPages": "@entity.totalPages",
-                      "currentPage": "@entity.currentPage",
                       "pageChangeEvent": "@config.event",
+                      "totalPages": "@entity.totalPages",
                       "showPageSize": false,
-                      "type": "pagination"
+                      "type": "pagination",
+                      "currentPage": "@entity.currentPage"
                     }
                   ]
                 ]
@@ -170,11 +170,11 @@
                     "render-ui",
                     "main",
                     {
-                      "pageChangeEvent": "@config.event",
+                      "type": "pagination",
                       "totalPages": "@entity.totalPages",
                       "showPageSize": false,
                       "currentPage": "@entity.currentPage",
-                      "type": "pagination"
+                      "pageChangeEvent": "@config.event"
                     }
                   ]
                 ]
@@ -200,11 +200,11 @@
                     "render-ui",
                     "main",
                     {
-                      "showPageSize": false,
-                      "totalPages": "@entity.totalPages",
-                      "pageChangeEvent": "@config.event",
                       "currentPage": "@entity.currentPage",
-                      "type": "pagination"
+                      "type": "pagination",
+                      "totalPages": "@entity.totalPages",
+                      "showPageSize": false,
+                      "pageChangeEvent": "@config.event"
                     }
                   ]
                 ]
@@ -212,17 +212,17 @@
             ]
           },
           "config": {
-            "event": {
-              "type": "string",
-              "default": "PAGE",
-              "label": "Page-change event",
-              "description": "Event emitted when the user picks a new page"
-            },
             "pageSize": {
               "type": "number",
               "default": 10.0,
               "label": "Page size",
               "description": "Rows per page used to derive total page count"
+            },
+            "event": {
+              "type": "string",
+              "default": "PAGE",
+              "label": "Page-change event",
+              "description": "Event emitted when the user picks a new page"
             }
           },
           "scope": "instance"

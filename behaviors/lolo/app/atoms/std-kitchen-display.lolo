@@ -1,6 +1,9 @@
 app std-kitchen-display "1.1.0"
 "std-kitchen-display — restaurant POS kitchen display system. Owns a KitchenTicket entity (one row per kitchen-bound order) and a single management trait that loads pending tickets, renders them in a data-grid with Mark Preparing / Ready / Served actions, and persists status + aging back to the row. Agents tune the list shape via `config.fields` + `config.itemActions`."
 
+type FieldSpec = { name : string!, label : string, variant : string, icon : string, format : string, key : string, header : string }
+type ItemAction = { label : string!, event : string!, variant : string, icon : string }
+
 orbital KitchenTicketOrbital {
   entity KitchenTicket [persistent: kitchentickets] {
     id          : string!
@@ -28,7 +31,7 @@ orbital KitchenTicketOrbital {
       overdueMinutes : number   = 20
         @label "Overdue threshold (min)"
         @description "Tickets older than this flip to the overdue aging tier"
-      fields         : [object] = [
+      fields         : [FieldSpec] = [
         { name: "orderId",    label: "Order",    variant: "caption" },
         { name: "tableLabel", label: "Table",    variant: "caption" },
         { name: "serverName", label: "Server",   variant: "caption" },
@@ -38,7 +41,7 @@ orbital KitchenTicketOrbital {
       ]
         @label "Columns to show"
         @description "Each column maps to one field on the Kitchen Ticket entity"
-      itemActions    : [object] = [
+      itemActions    : [ItemAction] = [
         { label: "Open",        event: "OPEN_TICKET", variant: "primary", icon: "arrow-right" },
         { label: "Mark Served", event: "MARK_SERVED", variant: "danger",  icon: "utensils" }
       ]

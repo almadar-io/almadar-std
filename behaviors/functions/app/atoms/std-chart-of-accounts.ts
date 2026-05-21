@@ -85,10 +85,10 @@ export interface StdChartOfAccountsAccountLoadFailedPayload {
 export interface StdChartOfAccountsConfig {
   /** Default: `"Chart of Accounts"` */
   title?: string;
-  /** Default: `[{"name":"code","label":"Code","variant":"caption"},{"name":"name","label":"Name","variant":"caption"},{"variant":"badge","name":"type","label":"Type"},{"label":"Parent","variant":"caption","name":"parentCode"},{"name":"balance","label":"Balance","variant":"caption"}]` */
-  fields?: TraitConfig[];
-  /** Default: `[{"variant":"primary","event":"OPEN_ACCOUNT","icon":"arrow-right","label":"Open"},{"event":"DEACTIVATE_ACCOUNT","variant":"danger","label":"Deactivate"}]` */
-  itemActions?: TraitConfig[];
+  /** Default: `[{"label":"Open","variant":"primary","event":"OPEN_ACCOUNT","icon":"arrow-right"},{"variant":"danger","label":"Deactivate","event":"DEACTIVATE_ACCOUNT"}]` */
+  itemActions?: EntityRow[];
+  /** Default: `[{"label":"Code","variant":"caption","name":"code"},{"label":"Name","variant":"caption","name":"name"},{"variant":"badge","name":"type","label":"Type"},{"label":"Parent","name":"parentCode","variant":"caption"},{"variant":"caption","name":"balance","label":"Balance"}]` */
+  fields?: EntityRow[];
 }
 
 /**

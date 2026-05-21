@@ -132,10 +132,10 @@ export interface StdTicketTierTicketTierLoadFailedPayload {
  * without modifying its state-machine topology.
  */
 export interface StdTicketTierConfig {
-  /** Default: `[{"name":"name","variant":"badge","label":"Tier"},{"label":"Price","name":"price","variant":"caption"},{"variant":"badge","label":"Currency","name":"currency"},{"name":"quantityTotal","label":"Total","variant":"caption"},{"label":"Sold","variant":"caption","name":"quantitySold"},{"label":"Status","variant":"badge","name":"status"}]` */
-  fields?: TraitConfig[];
-  /** Default: `[{"event":"OPEN_TIER","icon":"arrow-right","label":"Open","variant":"primary"},{"label":"Close","icon":"x","event":"CLOSE","variant":"danger"}]` */
-  itemActions?: TraitConfig[];
+  /** Default: `[{"icon":"arrow-right","label":"Open","event":"OPEN_TIER","variant":"primary"},{"variant":"danger","event":"CLOSE","label":"Close","icon":"x"}]` */
+  itemActions?: EntityRow[];
+  /** Default: `[{"label":"Tier","name":"name","variant":"badge"},{"variant":"caption","name":"price","label":"Price"},{"variant":"badge","name":"currency","label":"Currency"},{"name":"quantityTotal","label":"Total","variant":"caption"},{"name":"quantitySold","label":"Sold","variant":"caption"},{"label":"Status","variant":"badge","name":"status"}]` */
+  fields?: EntityRow[];
   /** Default: `"Ticket Tiers"` */
   title?: string;
 }

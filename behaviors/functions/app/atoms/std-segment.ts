@@ -76,12 +76,12 @@ export interface StdSegmentSegmentLoadFailedPayload {
  * without modifying its state-machine topology.
  */
 export interface StdSegmentConfig {
-  /** Default: `[{"name":"name","variant":"caption","label":"Name"},{"variant":"caption","name":"description","label":"Description"},{"label":"Members","variant":"badge","name":"memberCount"},{"label":"Updated","variant":"caption","name":"lastUpdated"}]` */
-  fields?: TraitConfig[];
-  /** Default: `[{"event":"OPEN_SEGMENT","icon":"arrow-right","variant":"primary","label":"Open"},{"variant":"danger","event":"RECALCULATE","label":"Recalculate"}]` */
-  itemActions?: TraitConfig[];
+  /** Default: `[{"variant":"caption","label":"Name","name":"name"},{"variant":"caption","label":"Description","name":"description"},{"variant":"badge","label":"Members","name":"memberCount"},{"name":"lastUpdated","variant":"caption","label":"Updated"}]` */
+  fields?: EntityRow[];
   /** Default: `"Segments"` */
   title?: string;
+  /** Default: `[{"event":"OPEN_SEGMENT","variant":"primary","label":"Open","icon":"arrow-right"},{"label":"Recalculate","event":"RECALCULATE","variant":"danger"}]` */
+  itemActions?: EntityRow[];
 }
 
 /**

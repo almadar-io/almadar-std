@@ -1,6 +1,9 @@
 app std-response-collector "1.1.0"
 "std-response-collector — survey per-respondent answer accumulator. Lists responses in `browsing`; opens detail in `viewing_single` with Resubmit / Delete actions. Agents tune the list shape via `config.fields` + `config.itemActions`."
 
+type FieldSpec = { name : string!, label : string, variant : string, icon : string, format : string, key : string, header : string }
+type ItemAction = { label : string!, event : string!, variant : string, icon : string }
+
 orbital ResponseCollectorOrbital {
   entity Response [persistent: responses] {
     id           : string!
@@ -19,7 +22,7 @@ orbital ResponseCollectorOrbital {
       title       : string   = "Responses"
         @label "Section title"
         @description "Heading shown above the survey response list"
-      fields      : [object] = [
+      fields      : [FieldSpec] = [
         { name: "questionId",   label: "Question",   variant: "caption" },
         { name: "respondentId", label: "Respondent", variant: "caption" },
         { name: "surveyId",     label: "Survey",     variant: "caption" },
@@ -28,7 +31,7 @@ orbital ResponseCollectorOrbital {
       ]
         @label "Columns to show"
         @description "Each column maps to one field on the Response entity"
-      itemActions : [object] = [
+      itemActions : [ItemAction] = [
         { label: "Open",   event: "OPEN_RESPONSE",   variant: "primary", icon: "arrow-right" },
         { label: "Delete", event: "DELETE_RESPONSE", variant: "danger" }
       ]

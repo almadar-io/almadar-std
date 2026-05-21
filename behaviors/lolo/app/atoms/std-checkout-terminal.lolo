@@ -1,6 +1,9 @@
 app std-checkout-terminal "1.1.0"
 "std-checkout-terminal — retail POS checkout terminal sessions. Lists open sessions in `browsing`; opens a read-only session detail view (terminal, cashier, status, totals, payment method) in `viewing_single`. Tender / Void / Open are the only interactions; post-action transitions re-fetch the list. Agents tune the list shape via `config.fields` + `config.itemActions`."
 
+type FieldSpec = { name : string!, label : string, variant : string, icon : string, format : string, key : string, header : string }
+type ItemAction = { label : string!, event : string!, variant : string, icon : string }
+
 orbital CheckoutSessionOrbital {
   entity CheckoutSession [persistent: checkoutsessions] {
     id            : string!
@@ -25,7 +28,7 @@ orbital CheckoutSessionOrbital {
       title       : string   = "Terminals"
         @label "Section title"
         @description "Heading shown above the checkout terminals list"
-      fields      : [object] = [
+      fields      : [FieldSpec] = [
         { name: "terminalId",  label: "Terminal", variant: "caption" },
         { name: "cashierName", label: "Cashier",  variant: "caption" },
         { name: "status",      label: "Status",   variant: "badge"   },
@@ -34,7 +37,7 @@ orbital CheckoutSessionOrbital {
       ]
         @label "Columns to show"
         @description "Each column maps to one field on the Checkout Session entity"
-      itemActions : [object] = [
+      itemActions : [ItemAction] = [
         { label: "Open", event: "OPEN_TERMINAL", variant: "primary" },
         { label: "Void", event: "VOID_SESSION",  variant: "danger" }
       ]

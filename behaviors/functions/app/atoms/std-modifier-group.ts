@@ -159,10 +159,10 @@ export interface StdModifierGroupModifierGroupWriteFailedPayload {
 export interface StdModifierGroupConfig {
   /** Default: `"Modifier Groups"` */
   title?: string;
-  /** Default: `[{"event":"OPEN_GROUP","variant":"primary","icon":"arrow-right","label":"Open"},{"event":"DELETE","variant":"danger","label":"Delete","icon":"trash"}]` */
-  itemActions?: TraitConfig[];
-  /** Default: `[{"label":"Group","name":"name","variant":"caption"},{"name":"constraintType","variant":"badge","label":"Constraint"},{"variant":"badge","name":"required","label":"Required"},{"variant":"caption","name":"minSelect","label":"Min"},{"name":"maxSelect","label":"Max","variant":"caption"}]` */
-  fields?: TraitConfig[];
+  /** Default: `[{"event":"OPEN_GROUP","label":"Open","icon":"arrow-right","variant":"primary"},{"variant":"danger","label":"Delete","event":"DELETE","icon":"trash"}]` */
+  itemActions?: EntityRow[];
+  /** Default: `[{"name":"name","label":"Group","variant":"caption"},{"variant":"badge","name":"constraintType","label":"Constraint"},{"variant":"badge","name":"required","label":"Required"},{"variant":"caption","label":"Min","name":"minSelect"},{"name":"maxSelect","label":"Max","variant":"caption"}]` */
+  fields?: EntityRow[];
 }
 
 /**

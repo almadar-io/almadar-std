@@ -1,6 +1,9 @@
 app std-payout-ledger "1.1.0"
 "std-payout-ledger — marketplace vendor payout atom. Lists payouts in `browsing`; opens detail in `viewing_single` with Withdraw / Mark Paid actions. Agents tune the list shape via `config.fields` + `config.itemActions`."
 
+type FieldSpec = { name : string!, label : string, variant : string, icon : string, format : string, key : string, header : string }
+type ItemAction = { label : string!, event : string!, variant : string, icon : string }
+
 orbital PayoutOrbital {
   entity Payout [persistent: payouts] {
     id                : string!
@@ -25,7 +28,7 @@ orbital PayoutOrbital {
       minimumWithdrawal : number   = 50
         @label "Minimum withdrawal"
         @description "Smallest amount a vendor can request to cash out"
-      fields            : [object] = [
+      fields            : [FieldSpec] = [
         { name: "vendorId",          label: "Vendor",    variant: "caption" },
         { name: "amount",            label: "Amount",    variant: "caption" },
         { name: "currency",          label: "Currency",  variant: "badge"   },
@@ -35,7 +38,7 @@ orbital PayoutOrbital {
       ]
         @label "Columns to show"
         @description "Each column maps to one field on the Payout entity"
-      itemActions       : [object] = [
+      itemActions       : [ItemAction] = [
         { label: "Open",     event: "OPEN_PAYOUT",      variant: "primary", icon: "arrow-right" },
         { label: "Withdraw", event: "REQUEST_WITHDRAW", variant: "danger" }
       ]

@@ -1,5 +1,7 @@
 app std-pagination "1.0.0"
-"std-pagination — single primitive: pagination control. PAGE accepts the Pagination component's `{page}` emit; ITEMS_LOADED accepts an upstream `{data:[object]}` payload and derives totalPages = ceil(len/pageSize). Molecules wire `BrowseItemLoaded -> ITEMS_LOADED` to keep it in lockstep with the data hub."
+"std-pagination — single primitive: pagination control. PAGE accepts the Pagination component's `{page}` emit; ITEMS_LOADED accepts an upstream `{data:[ObjectSpec]}` payload and derives totalPages = ceil(len/pageSize). Molecules wire `BrowseItemLoaded -> ITEMS_LOADED` to keep it in lockstep with the data hub."
+
+type ObjectSpec = { id : string, label : string, value : string }
 
 orbital PagedItemOrbital {
   entity PagedItem [runtime] {
@@ -41,7 +43,7 @@ orbital PagedItemOrbital {
     }
     listens {
       PAGE { page : number! }
-      ITEMS_LOADED { data : [object], totalCount : number }
+      ITEMS_LOADED { data : [ObjectSpec], totalCount : number }
       PagedItemLoaded { data : [PagedItem] }
     }
   }

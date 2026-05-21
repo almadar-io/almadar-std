@@ -1,6 +1,9 @@
 app std-timesheet "1.1.0"
 "std-timesheet — weekly timesheet primitive holding total/billable hours for one employee. Lists timesheets in `browsing`; opens detail in `viewing_single` with Submit / Approve / Reject / Revise / Delete actions. Agents tune the list shape via `config.fields` + `config.itemActions`."
 
+type FieldSpec = { name : string!, label : string, variant : string, icon : string, format : string, key : string, header : string }
+type ItemAction = { label : string!, event : string!, variant : string, icon : string }
+
 orbital TimesheetOrbital {
   entity Timesheet [persistent: timesheets] {
     id            : string!
@@ -26,10 +29,10 @@ orbital TimesheetOrbital {
       title : string = "Timesheets"
         @label "Section title"
         @description "Heading shown above the weekly timesheet list"
-      fields      : [object] = [{ name: "employeeName", label: "Employee", variant: "caption" }, { name: "periodStart", label: "Period Start", variant: "caption" }, { name: "periodEnd", label: "Period End", variant: "caption" }, { name: "totalHours", label: "Total Hours", variant: "caption" }, { name: "billableHours", label: "Billable", variant: "caption" }, { name: "status", label: "Status", variant: "badge" }, { name: "approvedBy", label: "Approved By", variant: "caption" }]
+      fields      : [FieldSpec] = [{ name: "employeeName", label: "Employee", variant: "caption" }, { name: "periodStart", label: "Period Start", variant: "caption" }, { name: "periodEnd", label: "Period End", variant: "caption" }, { name: "totalHours", label: "Total Hours", variant: "caption" }, { name: "billableHours", label: "Billable", variant: "caption" }, { name: "status", label: "Status", variant: "badge" }, { name: "approvedBy", label: "Approved By", variant: "caption" }]
         @label "Columns to show"
         @description "Each column maps to one field on the Timesheet entity"
-      itemActions : [object] = [{ label: "Open", event: "OPEN_TIMESHEET", variant: "primary", icon: "arrow-right" }, { label: "Delete", event: "REQUEST_DELETE", variant: "danger" }]
+      itemActions : [ItemAction] = [{ label: "Open", event: "OPEN_TIMESHEET", variant: "primary", icon: "arrow-right" }, { label: "Delete", event: "REQUEST_DELETE", variant: "danger" }]
         @label "Row actions"
         @description "Buttons users can click on each timesheet row"
     }

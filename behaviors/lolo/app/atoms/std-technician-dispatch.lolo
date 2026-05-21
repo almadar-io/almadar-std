@@ -1,6 +1,9 @@
 app std-technician-dispatch "1.1.0"
 "std-technician-dispatch — dispatch board for field technicians. Lists technicians in `browsing`; opens detail in `viewing_single` with Assign / Accept / Reject / Toggle Availability actions. Agents tune the list shape via `config.fields` + `config.itemActions`."
 
+type FieldSpec = { name : string!, label : string, variant : string, icon : string, format : string, key : string, header : string }
+type ItemAction = { label : string!, event : string!, variant : string, icon : string }
+
 orbital TechnicianDispatchOrbital {
   entity Technician [persistent: technicians] {
     id             : string!
@@ -26,10 +29,10 @@ orbital TechnicianDispatchOrbital {
       title : string = "Dispatch Board"
         @label "Section title"
         @description "Heading shown above the technician dispatch board"
-      fields      : [object] = [{ name: "name", label: "Technician", variant: "body" }, { name: "skills", label: "Skills", variant: "caption" }, { name: "available", label: "Available", variant: "badge" }, { name: "currentOrderId", label: "Current Order", variant: "caption" }, { name: "lastSeenAt", label: "Last Seen", variant: "caption" }]
+      fields      : [FieldSpec] = [{ name: "name", label: "Technician", variant: "body" }, { name: "skills", label: "Skills", variant: "caption" }, { name: "available", label: "Available", variant: "badge" }, { name: "currentOrderId", label: "Current Order", variant: "caption" }, { name: "lastSeenAt", label: "Last Seen", variant: "caption" }]
         @label "Columns to show"
         @description "Each column maps to one field on the Technician entity"
-      itemActions : [object] = [{ label: "Open", event: "OPEN_TECHNICIAN", variant: "primary", icon: "arrow-right" }, { label: "Assign", event: "ASSIGN", variant: "danger" }]
+      itemActions : [ItemAction] = [{ label: "Open", event: "OPEN_TECHNICIAN", variant: "primary", icon: "arrow-right" }, { label: "Assign", event: "ASSIGN", variant: "danger" }]
         @label "Row actions"
         @description "Buttons users can click on each technician row"
     }

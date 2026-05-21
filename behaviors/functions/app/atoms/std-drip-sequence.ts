@@ -87,10 +87,10 @@ export interface StdDripSequenceDripSequenceLoadFailedPayload {
 export interface StdDripSequenceConfig {
   /** Default: `"Drip Sequences"` */
   title?: string;
-  /** Default: `[{"variant":"primary","event":"OPEN_SEQUENCE","label":"Open","icon":"arrow-right"},{"variant":"danger","label":"Pause","event":"PAUSE"}]` */
-  itemActions?: TraitConfig[];
-  /** Default: `[{"label":"Name","name":"name","variant":"caption"},{"label":"Description","variant":"caption","name":"description"},{"name":"triggerEvent","variant":"caption","label":"Trigger"},{"variant":"badge","label":"Status","name":"status"},{"name":"totalEnrolled","label":"Enrolled","variant":"caption"},{"label":"Completed","name":"totalCompleted","variant":"caption"}]` */
-  fields?: TraitConfig[];
+  /** Default: `[{"label":"Name","variant":"caption","name":"name"},{"name":"description","variant":"caption","label":"Description"},{"name":"triggerEvent","label":"Trigger","variant":"caption"},{"variant":"badge","name":"status","label":"Status"},{"variant":"caption","name":"totalEnrolled","label":"Enrolled"},{"name":"totalCompleted","label":"Completed","variant":"caption"}]` */
+  fields?: EntityRow[];
+  /** Default: `[{"event":"OPEN_SEQUENCE","label":"Open","variant":"primary","icon":"arrow-right"},{"variant":"danger","label":"Pause","event":"PAUSE"}]` */
+  itemActions?: EntityRow[];
 }
 
 /**

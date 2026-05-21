@@ -89,10 +89,10 @@ export interface StdHelpCategoryHelpCategoryLoadFailedPayload {
 export interface StdHelpCategoryConfig {
   /** Default: `"Help Categories"` */
   title?: string;
-  /** Default: `[{"label":"Open","variant":"primary","event":"OPEN_CATEGORY","icon":"arrow-right"},{"label":"Archive","variant":"danger","event":"ARCHIVE"}]` */
-  itemActions?: TraitConfig[];
-  /** Default: `[{"name":"name","label":"Name","variant":"caption"},{"name":"slug","label":"Slug","variant":"caption"},{"variant":"caption","name":"articleCount","label":"Articles"},{"name":"sortOrder","variant":"caption","label":"Order"},{"label":"Status","name":"status","variant":"badge"},{"name":"updatedAt","label":"Updated","variant":"caption"}]` */
-  fields?: TraitConfig[];
+  /** Default: `[{"label":"Name","variant":"caption","name":"name"},{"name":"slug","label":"Slug","variant":"caption"},{"label":"Articles","name":"articleCount","variant":"caption"},{"name":"sortOrder","variant":"caption","label":"Order"},{"name":"status","variant":"badge","label":"Status"},{"label":"Updated","variant":"caption","name":"updatedAt"}]` */
+  fields?: EntityRow[];
+  /** Default: `[{"label":"Open","event":"OPEN_CATEGORY","variant":"primary","icon":"arrow-right"},{"event":"ARCHIVE","variant":"danger","label":"Archive"}]` */
+  itemActions?: EntityRow[];
 }
 
 /**

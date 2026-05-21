@@ -1,6 +1,9 @@
 app std-class-roster "1.1.0"
 "std-class-roster — list of members enrolled in a specific class session. Lists roster entries in `browsing`; opens entry detail in `viewing_single` with Check In / No Show actions. Agents tune the list shape via `config.fields` + `config.itemActions`."
 
+type FieldSpec = { name : string!, label : string, variant : string, icon : string, format : string, key : string, header : string }
+type ItemAction = { label : string!, event : string!, variant : string, icon : string }
+
 orbital ClassRosterOrbital {
   entity RosterEntry [persistent: rosterentries] {
     id           : string!
@@ -21,7 +24,7 @@ orbital ClassRosterOrbital {
       title       : string   = "Class Roster"
         @label "Section title"
         @description "Heading shown above the class roster"
-      fields      : [object] = [
+      fields      : [FieldSpec] = [
         { name: "memberName",  label: "Member",     variant: "caption" },
         { name: "sessionId",   label: "Session",    variant: "caption" },
         { name: "status",      label: "Status",     variant: "badge"   },
@@ -29,7 +32,7 @@ orbital ClassRosterOrbital {
       ]
         @label "Columns to show"
         @description "Each column maps to one field on the Roster Entry entity"
-      itemActions : [object] = [
+      itemActions : [ItemAction] = [
         { label: "Open",     event: "OPEN_ENTRY",   variant: "primary",   icon: "arrow-right" },
         { label: "Check In", event: "CHECK_IN",     variant: "secondary" },
         { label: "No Show",  event: "MARK_NO_SHOW", variant: "danger" }

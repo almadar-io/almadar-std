@@ -94,12 +94,12 @@ export interface StdCustomerAccountCustomerAccountLoadFailedPayload {
  * without modifying its state-machine topology.
  */
 export interface StdCustomerAccountConfig {
-  /** Default: `[{"variant":"primary","event":"OPEN_CUSTOMER","icon":"arrow-right","label":"Open"},{"event":"BAN_CUSTOMER","variant":"danger","label":"Ban"}]` */
-  itemActions?: TraitConfig[];
   /** Default: `"Customers"` */
   title?: string;
-  /** Default: `[{"label":"Name","variant":"caption","name":"name"},{"name":"email","variant":"caption","label":"Email"},{"variant":"caption","label":"Phone","name":"phone"},{"name":"loyaltyPoints","variant":"caption","label":"Points"},{"variant":"caption","name":"totalSpent","label":"Total Spent"},{"variant":"badge","label":"Status","name":"status"}]` */
-  fields?: TraitConfig[];
+  /** Default: `[{"variant":"caption","name":"name","label":"Name"},{"label":"Email","variant":"caption","name":"email"},{"name":"phone","variant":"caption","label":"Phone"},{"name":"loyaltyPoints","label":"Points","variant":"caption"},{"label":"Total Spent","variant":"caption","name":"totalSpent"},{"name":"status","label":"Status","variant":"badge"}]` */
+  fields?: EntityRow[];
+  /** Default: `[{"variant":"primary","label":"Open","icon":"arrow-right","event":"OPEN_CUSTOMER"},{"event":"BAN_CUSTOMER","label":"Ban","variant":"danger"}]` */
+  itemActions?: EntityRow[];
 }
 
 /**

@@ -58,27 +58,27 @@
           "ref": "Search.traits.SearchResultSearch",
           "name": "FilteredItemSearch",
           "config": {
-            "placeholder": "Search filtered items…",
-            "event": "SEARCH"
+            "event": "SEARCH",
+            "placeholder": "Search filtered items…"
           }
         },
         {
           "ref": "Filter.traits.FilterTargetFilter",
           "name": "FilteredItemFilter",
           "config": {
-            "event": "FILTER",
             "filters": [
               {
-                "field": "status",
-                "label": "Status",
-                "filterType": "select",
                 "options": [
                   "active",
                   "inactive",
                   "pending"
-                ]
+                ],
+                "label": "Status",
+                "field": "status",
+                "filterType": "select"
               }
-            ]
+            ],
+            "event": "FILTER"
           }
         },
         {
@@ -86,24 +86,24 @@
           "name": "FilteredItemBrowse",
           "linkedEntity": "FilteredListItem",
           "config": {
-            "pageSize": 3.0,
             "fields": [
               {
+                "name": "name",
                 "variant": "h4",
-                "label": "Name",
-                "name": "name"
+                "label": "Name"
               },
               {
-                "label": "Description",
                 "variant": "caption",
-                "name": "description"
+                "name": "description",
+                "label": "Description"
               },
               {
-                "variant": "badge",
+                "name": "status",
                 "label": "Status",
-                "name": "status"
+                "variant": "badge"
               }
-            ]
+            ],
+            "pageSize": 3.0
           },
           "listens": [
             {
@@ -136,8 +136,8 @@
           "ref": "Pagination.traits.PagedItemPagination",
           "name": "FilteredItemPagination",
           "config": {
-            "pageSize": 3.0,
-            "event": "PAGE"
+            "event": "PAGE",
+            "pageSize": 3.0
           },
           "listens": [
             {
@@ -228,8 +228,8 @@
                     "FilteredListItem",
                     {
                       "emit": {
-                        "failure": "FilteredListItemLoadFailed",
-                        "success": "FilteredListItemLoaded"
+                        "success": "FilteredListItemLoaded",
+                        "failure": "FilteredListItemLoadFailed"
                       }
                     }
                   ],
@@ -238,38 +238,38 @@
                     "main",
                     {
                       "gap": "md",
+                      "className": "max-w-5xl mx-auto w-full",
                       "type": "stack",
                       "direction": "vertical",
-                      "className": "max-w-5xl mx-auto w-full",
                       "children": [
                         {
-                          "align": "center",
-                          "type": "stack",
-                          "direction": "horizontal",
                           "children": [
                             {
-                              "type": "icon",
-                              "name": "list"
+                              "name": "list",
+                              "type": "icon"
                             },
                             {
-                              "type": "typography",
                               "variant": "h2",
+                              "type": "typography",
                               "content": "Filtered List"
                             }
                           ],
+                          "type": "stack",
+                          "align": "center",
+                          "direction": "horizontal",
                           "gap": "sm"
                         },
                         {
                           "type": "divider"
                         },
                         {
+                          "type": "stack",
                           "children": [
                             "@trait.FilteredItemSearch",
                             "@trait.FilteredItemFilter"
                           ],
-                          "gap": "sm",
                           "direction": "horizontal",
-                          "type": "stack"
+                          "gap": "sm"
                         },
                         "@trait.FilteredItemBrowse",
                         "@trait.FilteredItemPagination"

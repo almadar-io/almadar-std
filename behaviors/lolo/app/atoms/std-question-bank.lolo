@@ -1,6 +1,9 @@
 app std-question-bank "1.1.0"
 "std-question-bank — typed question library for surveys. Lists questions in `browsing`; opens detail in `viewing_single` with Update / Delete actions. Agents tune the list shape via `config.fields` + `config.itemActions`."
 
+type FieldSpec = { name : string!, label : string, variant : string, icon : string, format : string, key : string, header : string }
+type ItemAction = { label : string!, event : string!, variant : string, icon : string }
+
 orbital QuestionBankOrbital {
   entity Question [persistent: questions] {
     id          : string!
@@ -21,7 +24,7 @@ orbital QuestionBankOrbital {
       title       : string   = "Question Bank"
         @label "Section title"
         @description "Heading shown above the survey question library"
-      fields      : [object] = [
+      fields      : [FieldSpec] = [
         { name: "label",    label: "Question", variant: "caption" },
         { name: "kind",     label: "Type",     variant: "badge"   },
         { name: "category", label: "Category", variant: "caption" },
@@ -30,7 +33,7 @@ orbital QuestionBankOrbital {
       ]
         @label "Columns to show"
         @description "Each column maps to one field on the Question entity"
-      itemActions : [object] = [
+      itemActions : [ItemAction] = [
         { label: "Open",   event: "OPEN_QUESTION",   variant: "primary", icon: "arrow-right" },
         { label: "Delete", event: "DELETE_QUESTION", variant: "danger" }
       ]

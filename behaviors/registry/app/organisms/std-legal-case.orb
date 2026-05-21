@@ -134,37 +134,37 @@
           "ref": "AppShell.traits.AppLayout",
           "name": "MatterAppLayout",
           "config": {
-            "notificationClickEvent": "MATTER_NOTIFICATIONS_OPEN",
-            "searchEvent": "MATTER_SEARCH",
-            "contentTrait": "@trait.MatterCatalog",
             "notifications": [],
+            "searchEvent": "MATTER_SEARCH",
             "appName": "Legal Case",
+            "notificationClickEvent": "MATTER_NOTIFICATIONS_OPEN",
+            "contentTrait": "@trait.MatterCatalog",
             "navItems": [
               {
-                "icon": "scale",
+                "label": "Matters",
                 "href": "/matters",
-                "label": "Matters"
+                "icon": "scale"
               },
               {
                 "icon": "folder",
-                "href": "/cases",
-                "label": "Cases"
+                "label": "Cases",
+                "href": "/cases"
               },
               {
-                "href": "/timesheet",
+                "icon": "clock",
                 "label": "Time",
-                "icon": "clock"
+                "href": "/timesheet"
               },
               {
-                "href": "/deadlines",
                 "icon": "calendar",
-                "label": "Deadlines"
+                "label": "Deadlines",
+                "href": "/deadlines"
               }
             ]
           },
           "events": {
-            "SEARCH": "MATTER_SEARCH",
-            "NOTIFY_CLICK": "MATTER_NOTIFICATIONS_OPEN"
+            "NOTIFY_CLICK": "MATTER_NOTIFICATIONS_OPEN",
+            "SEARCH": "MATTER_SEARCH"
           }
         },
         {
@@ -247,26 +247,32 @@
                     "render-ui",
                     "main",
                     {
+                      "direction": "vertical",
                       "gap": "lg",
                       "children": [
                         {
+                          "direction": "horizontal",
+                          "gap": "md",
+                          "type": "stack",
+                          "justify": "between",
+                          "align": "center",
                           "children": [
                             {
-                              "direction": "horizontal",
-                              "type": "stack",
                               "children": [
                                 {
-                                  "type": "icon",
-                                  "name": "scale"
+                                  "name": "scale",
+                                  "type": "icon"
                                 },
                                 {
-                                  "variant": "h2",
+                                  "type": "typography",
                                   "content": "Matters",
-                                  "type": "typography"
+                                  "variant": "h2"
                                 }
                               ],
-                              "gap": "sm",
-                              "align": "center"
+                              "direction": "horizontal",
+                              "type": "stack",
+                              "align": "center",
+                              "gap": "sm"
                             },
                             {
                               "gap": "sm",
@@ -274,33 +280,28 @@
                               "type": "stack",
                               "children": [
                                 {
-                                  "variant": "primary",
-                                  "icon": "plus",
                                   "label": "New Matter",
+                                  "variant": "primary",
+                                  "action": "CREATE",
                                   "type": "button",
-                                  "action": "CREATE"
+                                  "icon": "plus"
                                 }
                               ]
                             }
-                          ],
-                          "gap": "md",
-                          "type": "stack",
-                          "justify": "between",
-                          "direction": "horizontal",
-                          "align": "center"
+                          ]
                         },
                         {
                           "type": "divider"
                         },
                         {
                           "direction": "horizontal",
-                          "gap": "md",
+                          "align": "center",
+                          "type": "stack",
                           "children": [
                             "@trait.MatterSearch",
                             "@trait.MatterFilter"
                           ],
-                          "align": "center",
-                          "type": "stack"
+                          "gap": "md"
                         },
                         "@trait.MatterStats",
                         "@trait.MatterGraphs",
@@ -309,8 +310,7 @@
                         },
                         "@trait.MatterBrowseList"
                       ],
-                      "type": "stack",
-                      "direction": "vertical"
+                      "type": "stack"
                     }
                   ]
                 ]
@@ -329,34 +329,34 @@
                     "render-ui",
                     "main",
                     {
-                      "gap": "md",
                       "direction": "vertical",
                       "className": "py-8",
+                      "type": "stack",
                       "children": [
                         {
-                          "type": "icon",
-                          "name": "bell"
+                          "name": "bell",
+                          "type": "icon"
                         },
                         {
-                          "type": "typography",
+                          "variant": "h3",
                           "content": "No notifications",
-                          "variant": "h3"
+                          "type": "typography"
                         },
                         {
                           "content": "You're all caught up.",
                           "variant": "caption",
-                          "color": "muted",
-                          "type": "typography"
+                          "type": "typography",
+                          "color": "muted"
                         },
                         {
-                          "action": "INIT",
                           "label": "Back to matters",
+                          "action": "INIT",
                           "variant": "ghost",
                           "type": "button"
                         }
                       ],
-                      "type": "stack",
-                      "align": "center"
+                      "align": "center",
+                      "gap": "md"
                     }
                   ]
                 ]
@@ -377,10 +377,10 @@
           "ref": "Filter.traits.FilterTargetFilter",
           "name": "MatterFilter",
           "config": {
+            "event": "MATTER_FILTER",
             "filters": [
               {
                 "label": "Practice",
-                "filterType": "select",
                 "options": [
                   "litigation",
                   "transactional",
@@ -390,9 +390,11 @@
                   "family",
                   "other"
                 ],
+                "filterType": "select",
                 "field": "practiceArea"
               },
               {
+                "filterType": "select",
                 "options": [
                   "open",
                   "active",
@@ -401,11 +403,9 @@
                   "archived"
                 ],
                 "label": "Status",
-                "filterType": "select",
                 "field": "status"
               }
-            ],
-            "event": "MATTER_FILTER"
+            ]
           }
         },
         {
@@ -415,18 +415,16 @@
             "title": "Matters",
             "metrics": [
               {
-                "icon": "scale",
-                "format": "number",
                 "label": "Total",
+                "variant": "primary",
+                "format": "number",
                 "aggregation": "count",
-                "variant": "primary"
+                "icon": "scale"
               },
               {
                 "aggregation": "count",
-                "icon": "circle",
                 "label": "Open",
                 "variant": "warning",
-                "format": "number",
                 "filter": [
                   "fn",
                   "row",
@@ -435,14 +433,15 @@
                     "@row.status",
                     "open"
                   ]
-                ]
+                ],
+                "format": "number",
+                "icon": "circle"
               },
               {
-                "icon": "check-circle",
-                "label": "Active",
-                "variant": "success",
                 "format": "number",
+                "icon": "check-circle",
                 "aggregation": "count",
+                "label": "Active",
                 "filter": [
                   "fn",
                   "row",
@@ -451,13 +450,14 @@
                     "@row.status",
                     "active"
                   ]
-                ]
+                ],
+                "variant": "success"
               },
               {
-                "format": "number",
-                "label": "Closed",
-                "variant": "info",
+                "icon": "archive",
                 "aggregation": "count",
+                "variant": "info",
+                "label": "Closed",
                 "filter": [
                   "fn",
                   "row",
@@ -467,7 +467,7 @@
                     "closed"
                   ]
                 ],
-                "icon": "archive"
+                "format": "number"
               }
             ]
           },
@@ -486,12 +486,12 @@
           "ref": "Graphs.traits.GraphItemGraph",
           "name": "MatterGraphs",
           "config": {
-            "height": 240.0,
-            "title": "Matters by Practice Area",
-            "showLegend": false,
             "chartType": "bar",
+            "height": 240.0,
             "subtitle": "Caseload composition across practice areas",
+            "title": "Matters by Practice Area",
             "categoryField": "practiceArea",
+            "showLegend": false,
             "aggregation": "count"
           },
           "listens": [
@@ -510,27 +510,29 @@
           "name": "MatterBrowseList",
           "linkedEntity": "Matter",
           "config": {
+            "cols": 1.0,
+            "gap": "sm",
             "fields": [
               {
                 "variant": "caption",
-                "icon": "hash",
-                "name": "matterNumber"
+                "name": "matterNumber",
+                "icon": "hash"
               },
               {
-                "name": "title",
-                "variant": "h3"
+                "variant": "h3",
+                "name": "title"
               },
               {
-                "name": "clientName",
-                "variant": "body"
+                "variant": "body",
+                "name": "clientName"
               },
               {
-                "variant": "badge",
-                "name": "practiceArea"
+                "name": "practiceArea",
+                "variant": "badge"
               },
               {
-                "name": "leadAttorney",
-                "variant": "caption"
+                "variant": "caption",
+                "name": "leadAttorney"
               },
               {
                 "name": "status",
@@ -539,23 +541,21 @@
             ],
             "itemActions": [
               {
-                "event": "VIEW",
+                "variant": "ghost",
                 "label": "View",
-                "variant": "ghost"
+                "event": "VIEW"
               },
               {
-                "event": "EDIT",
+                "variant": "ghost",
                 "label": "Edit",
-                "variant": "ghost"
+                "event": "EDIT"
               },
               {
-                "event": "DELETE",
                 "variant": "danger",
-                "label": "Delete"
+                "label": "Delete",
+                "event": "DELETE"
               }
-            ],
-            "gap": "sm",
-            "cols": 1.0
+            ]
           },
           "listens": [
             {
@@ -638,6 +638,9 @@
           "name": "MatterEdit",
           "linkedEntity": "Matter",
           "config": {
+            "title": "Edit Matter",
+            "mode": "edit",
+            "icon": "edit",
             "fields": [
               "matterNumber",
               "title",
@@ -648,10 +651,7 @@
               "openedAt",
               "closedAt",
               "notes"
-            ],
-            "title": "Edit Matter",
-            "icon": "edit",
-            "mode": "edit"
+            ]
           },
           "events": {
             "OPEN": "EDIT"
@@ -672,7 +672,7 @@
           "name": "MatterView",
           "linkedEntity": "Matter",
           "config": {
-            "mode": "edit",
+            "title": "View Matter",
             "icon": "eye",
             "fields": [
               "matterNumber",
@@ -685,7 +685,7 @@
               "closedAt",
               "notes"
             ],
-            "title": "View Matter"
+            "mode": "edit"
           },
           "events": {
             "OPEN": "VIEW"
@@ -706,10 +706,10 @@
           "name": "MatterDelete",
           "linkedEntity": "Matter",
           "config": {
-            "icon": "alert-triangle",
-            "title": "Delete Matter",
+            "confirmLabel": "Delete",
             "alertMessage": "This action cannot be undone.",
-            "confirmLabel": "Delete"
+            "title": "Delete Matter",
+            "icon": "alert-triangle"
           },
           "events": {
             "CONFIRM": "CONFIRM_DELETE",
@@ -1040,8 +1040,7 @@
           "ref": "AppShell.traits.AppLayout",
           "name": "BillableHourAppLayout",
           "config": {
-            "notifications": [],
-            "appName": "Legal Case",
+            "notificationClickEvent": "BILLABLE_HOUR_NOTIFICATIONS_OPEN",
             "contentTrait": "@trait.BillableHourPanel",
             "navItems": [
               {
@@ -1050,27 +1049,28 @@
                 "icon": "scale"
               },
               {
-                "label": "Cases",
+                "icon": "folder",
                 "href": "/cases",
-                "icon": "folder"
+                "label": "Cases"
               },
               {
-                "label": "Time",
                 "href": "/timesheet",
-                "icon": "clock"
+                "icon": "clock",
+                "label": "Time"
               },
               {
                 "label": "Deadlines",
-                "href": "/deadlines",
-                "icon": "calendar"
+                "icon": "calendar",
+                "href": "/deadlines"
               }
             ],
             "searchEvent": "BILLABLE_HOUR_SEARCH",
-            "notificationClickEvent": "BILLABLE_HOUR_NOTIFICATIONS_OPEN"
+            "notifications": [],
+            "appName": "Legal Case"
           },
           "events": {
-            "SEARCH": "BILLABLE_HOUR_SEARCH",
-            "NOTIFY_CLICK": "BILLABLE_HOUR_NOTIFICATIONS_OPEN"
+            "NOTIFY_CLICK": "BILLABLE_HOUR_NOTIFICATIONS_OPEN",
+            "SEARCH": "BILLABLE_HOUR_SEARCH"
           }
         },
         {
@@ -1100,10 +1100,9 @@
                     "main",
                     {
                       "direction": "vertical",
+                      "gap": "lg",
                       "children": [
                         {
-                          "gap": "sm",
-                          "align": "center",
                           "children": [
                             {
                               "name": "clock",
@@ -1115,17 +1114,18 @@
                               "variant": "h2"
                             }
                           ],
-                          "direction": "horizontal",
-                          "type": "stack"
+                          "gap": "sm",
+                          "type": "stack",
+                          "align": "center",
+                          "direction": "horizontal"
                         },
                         {
                           "type": "divider"
                         },
                         "@trait.BillableHourTimesheetView"
                       ],
-                      "type": "stack",
                       "className": "max-w-6xl mx-auto w-full p-4",
-                      "gap": "lg"
+                      "type": "stack"
                     }
                   ]
                 ]
@@ -1248,33 +1248,33 @@
           "ref": "AppShell.traits.AppLayout",
           "name": "CourtDeadlineAppLayout",
           "config": {
-            "contentTrait": "@trait.CourtDeadlinePanel",
+            "appName": "Legal Case",
             "navItems": [
               {
-                "label": "Matters",
+                "href": "/matters",
                 "icon": "scale",
-                "href": "/matters"
+                "label": "Matters"
               },
               {
-                "href": "/cases",
+                "label": "Cases",
                 "icon": "folder",
-                "label": "Cases"
+                "href": "/cases"
               },
               {
-                "href": "/timesheet",
+                "label": "Time",
                 "icon": "clock",
-                "label": "Time"
+                "href": "/timesheet"
               },
               {
-                "label": "Deadlines",
                 "icon": "calendar",
+                "label": "Deadlines",
                 "href": "/deadlines"
               }
             ],
+            "searchEvent": "COURT_DEADLINE_SEARCH",
             "notifications": [],
-            "notificationClickEvent": "COURT_DEADLINE_NOTIFICATIONS_OPEN",
-            "appName": "Legal Case",
-            "searchEvent": "COURT_DEADLINE_SEARCH"
+            "contentTrait": "@trait.CourtDeadlinePanel",
+            "notificationClickEvent": "COURT_DEADLINE_NOTIFICATIONS_OPEN"
           },
           "events": {
             "SEARCH": "COURT_DEADLINE_SEARCH",
@@ -1307,12 +1307,13 @@
                     "render-ui",
                     "main",
                     {
+                      "className": "max-w-6xl mx-auto w-full p-4",
+                      "type": "stack",
                       "direction": "vertical",
                       "gap": "lg",
                       "children": [
                         {
                           "direction": "horizontal",
-                          "type": "stack",
                           "gap": "sm",
                           "align": "center",
                           "children": [
@@ -1321,19 +1322,18 @@
                               "name": "calendar"
                             },
                             {
-                              "variant": "h2",
                               "content": "Court Deadlines",
+                              "variant": "h2",
                               "type": "typography"
                             }
-                          ]
+                          ],
+                          "type": "stack"
                         },
                         {
                           "type": "divider"
                         },
                         "@trait.CourtDeadlineDocketView"
-                      ],
-                      "type": "stack",
-                      "className": "max-w-6xl mx-auto w-full p-4"
+                      ]
                     }
                   ]
                 ]
@@ -1458,33 +1458,33 @@
           "ref": "AppShell.traits.AppLayout",
           "name": "MatterCaseAppLayout",
           "config": {
-            "searchEvent": "MATTER_CASE_SEARCH",
-            "appName": "Legal Case",
-            "notificationClickEvent": "MATTER_CASE_NOTIFICATIONS_OPEN",
-            "notifications": [],
-            "contentTrait": "@trait.MatterCasePanel",
             "navItems": [
               {
                 "icon": "scale",
-                "href": "/matters",
-                "label": "Matters"
+                "label": "Matters",
+                "href": "/matters"
               },
               {
-                "icon": "folder",
                 "label": "Cases",
-                "href": "/cases"
+                "href": "/cases",
+                "icon": "folder"
               },
               {
-                "href": "/timesheet",
+                "label": "Time",
                 "icon": "clock",
-                "label": "Time"
+                "href": "/timesheet"
               },
               {
                 "label": "Deadlines",
-                "icon": "calendar",
-                "href": "/deadlines"
+                "href": "/deadlines",
+                "icon": "calendar"
               }
-            ]
+            ],
+            "notifications": [],
+            "contentTrait": "@trait.MatterCasePanel",
+            "searchEvent": "MATTER_CASE_SEARCH",
+            "notificationClickEvent": "MATTER_CASE_NOTIFICATIONS_OPEN",
+            "appName": "Legal Case"
           },
           "events": {
             "NOTIFY_CLICK": "MATTER_CASE_NOTIFICATIONS_OPEN",
@@ -1518,10 +1518,13 @@
                     "main",
                     {
                       "direction": "vertical",
+                      "type": "stack",
+                      "className": "max-w-6xl mx-auto w-full p-4",
                       "children": [
                         {
-                          "align": "center",
                           "direction": "horizontal",
+                          "align": "center",
+                          "type": "stack",
                           "gap": "sm",
                           "children": [
                             {
@@ -1533,17 +1536,14 @@
                               "content": "Cases",
                               "type": "typography"
                             }
-                          ],
-                          "type": "stack"
+                          ]
                         },
                         {
                           "type": "divider"
                         },
                         "@trait.MatterCaseDocketView"
                       ],
-                      "className": "max-w-6xl mx-auto w-full p-4",
-                      "gap": "lg",
-                      "type": "stack"
+                      "gap": "lg"
                     }
                   ]
                 ]

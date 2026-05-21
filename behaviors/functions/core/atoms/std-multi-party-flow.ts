@@ -75,30 +75,30 @@ export interface StdMultiPartyFlowFlowLoadFailedPayload {
  * without modifying its state-machine topology.
  */
 export interface StdMultiPartyFlowConfig {
-  /** Default: `"Release funds"` */
-  releaseLabel?: string;
   /** Default: `"Open dispute"` */
   disputeLabel?: string;
+  /** Default: `[{"icon":"user","actor":"Alice Chen","description":"Funds the transaction and confirms receipt of the vehicle.","stepLabel":"Step 1 of 2","actionLabel":"Confirm payment","id":"buyer","actionDescription":"Authorize $28,500 to be held in escrow until delivery is confirmed.","title":"Buyer","actionIcon":"credit-card"},{"description":"Ships the vehicle and uploads delivery proof.","icon":"user-check","title":"Seller","id":"seller","actionLabel":"Confirm shipment","actionIcon":"package","actor":"Bob's Auto Sales LLC","actionDescription":"Mark the vehicle as shipped. Funds will release after the buyer confirms receipt.","stepLabel":"Step 2 of 2"}]` */
+  parties?: EntityRow[];
+  /** Default: `"Release funds"` */
+  releaseLabel?: string;
   /** Default: `"Escrow transaction"` */
   title?: string;
-  /** Default: `"$28,500"` */
-  transactionAmount?: string;
-  /** Default: `"TXN-A8B2C-2024-001"` */
-  transactionReference?: string;
   /** Default: `"alert-triangle"` */
   disputeIcon?: string;
   /** Default: `"unlock"` */
   releaseIcon?: string;
-  /** Default: `"Sale of 2024 Honda CR-V"` */
-  transactionSubject?: string;
-  /** Default: `[{"description":"Funds the transaction and confirms receipt of the vehicle.","stepLabel":"Step 1 of 2","actionDescription":"Authorize $28,500 to be held in escrow until delivery is confirmed.","actionLabel":"Confirm payment","icon":"user","id":"buyer","actionIcon":"credit-card","actor":"Alice Chen","title":"Buyer"},{"actionIcon":"package","id":"seller","actor":"Bob's Auto Sales LLC","actionLabel":"Confirm shipment","stepLabel":"Step 2 of 2","icon":"user-check","description":"Ships the vehicle and uploads delivery proof.","title":"Seller","actionDescription":"Mark the vehicle as shipped. Funds will release after the buyer confirms receipt."}]` */
-  parties?: TraitConfig[];
-  /** Default: `"Cancel transaction"` */
-  cancelLabel?: string;
   /** Default: `"x"` */
   cancelIcon?: string;
+  /** Default: `"$28,500"` */
+  transactionAmount?: string;
+  /** Default: `"Cancel transaction"` */
+  cancelLabel?: string;
+  /** Default: `"Sale of 2024 Honda CR-V"` */
+  transactionSubject?: string;
   /** Default: `["reason"]` */
   reasonFields?: string[];
+  /** Default: `"TXN-A8B2C-2024-001"` */
+  transactionReference?: string;
 }
 
 /**

@@ -162,10 +162,10 @@ export interface StdKitchenDisplayConfig {
   title?: string;
   /** Default: `20` */
   overdueMinutes?: number;
-  /** Default: `[{"name":"orderId","label":"Order","variant":"caption"},{"name":"tableLabel","label":"Table","variant":"caption"},{"name":"serverName","label":"Server","variant":"caption"},{"variant":"badge","label":"Status","name":"status"},{"label":"Aging","variant":"badge","name":"aging"},{"name":"receivedAt","label":"Received","variant":"caption"}]` */
-  fields?: TraitConfig[];
-  /** Default: `[{"label":"Open","icon":"arrow-right","variant":"primary","event":"OPEN_TICKET"},{"event":"MARK_SERVED","variant":"danger","label":"Mark Served","icon":"utensils"}]` */
-  itemActions?: TraitConfig[];
+  /** Default: `[{"variant":"caption","name":"orderId","label":"Order"},{"name":"tableLabel","label":"Table","variant":"caption"},{"label":"Server","name":"serverName","variant":"caption"},{"variant":"badge","name":"status","label":"Status"},{"name":"aging","label":"Aging","variant":"badge"},{"variant":"caption","name":"receivedAt","label":"Received"}]` */
+  fields?: EntityRow[];
+  /** Default: `[{"label":"Open","icon":"arrow-right","variant":"primary","event":"OPEN_TICKET"},{"variant":"danger","label":"Mark Served","event":"MARK_SERVED","icon":"utensils"}]` */
+  itemActions?: EntityRow[];
 }
 
 /**

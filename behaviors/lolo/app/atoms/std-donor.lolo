@@ -1,6 +1,9 @@
 app std-donor "1.1.0"
 "std-donor — nonprofit donor primitive (person or org with lifetime giving total). Lists donors in `browsing`; opens donor detail in `viewing_single` with Thank / Solicit actions. Agents tune the list shape via `config.fields` + `config.itemActions`."
 
+type FieldSpec = { name : string!, label : string, variant : string, icon : string, format : string, key : string, header : string }
+type ItemAction = { label : string!, event : string!, variant : string, icon : string }
+
 orbital DonorOrbital {
   entity Donor [persistent: donors] {
     id                 : string!
@@ -23,7 +26,7 @@ orbital DonorOrbital {
       title       : string   = "Donors"
         @label "Section title"
         @description "Heading shown above the donor roster"
-      fields      : [object] = [
+      fields      : [FieldSpec] = [
         { name: "name",           label: "Name",     variant: "h4"      },
         { name: "donorType",      label: "Type",     variant: "badge"   },
         { name: "email",          label: "Email",    variant: "body"    },
@@ -32,7 +35,7 @@ orbital DonorOrbital {
       ]
         @label "Columns to show"
         @description "Each column maps to one field on the Donor entity"
-      itemActions : [object] = [
+      itemActions : [ItemAction] = [
         { label: "Open",  event: "OPEN_DONOR",  variant: "primary",   icon: "arrow-right" },
         { label: "Thank", event: "THANK_DONOR", variant: "secondary" }
       ]

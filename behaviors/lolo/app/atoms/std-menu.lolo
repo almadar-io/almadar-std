@@ -1,6 +1,9 @@
 app std-menu "1.1.0"
 "std-menu — restaurant POS menu items grouped by category with availability windows. Owns a MenuItem entity (price, category, available, prep time, modifier groups) and a single manage trait that loads items, browses them in a data-grid with Create / Update / Toggle-Available / Delete actions, and persists each verdict back to the row. Agents tune the list shape via `config.fields` + `config.itemActions`."
 
+type FieldSpec = { name : string!, label : string, variant : string, icon : string, format : string, key : string, header : string }
+type ItemAction = { label : string!, event : string!, variant : string, icon : string }
+
 orbital MenuOrbital {
   entity MenuItem [persistent: menuitems] {
     id                : string!
@@ -31,7 +34,7 @@ orbital MenuOrbital {
       title       : string   = "Menu"
         @label "Section title"
         @description "Heading shown above the menu item list"
-      fields      : [object] = [
+      fields      : [FieldSpec] = [
         { name: "name",            label: "Item",       variant: "caption" },
         { name: "category",        label: "Category",   variant: "badge"   },
         { name: "price",           label: "Price",      variant: "caption" },
@@ -41,7 +44,7 @@ orbital MenuOrbital {
       ]
         @label "Columns to show"
         @description "Each column maps to one field on the Menu Item entity"
-      itemActions : [object] = [
+      itemActions : [ItemAction] = [
         { label: "Open",   event: "OPEN_ITEM", variant: "primary", icon: "arrow-right" },
         { label: "Delete", event: "DELETE",    variant: "danger",  icon: "trash" }
       ]

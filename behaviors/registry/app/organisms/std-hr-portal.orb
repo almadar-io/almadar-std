@@ -110,36 +110,36 @@
           "name": "EmployeeAppLayout",
           "config": {
             "notificationClickEvent": "EMPLOYEE_NOTIFICATIONS_OPEN",
-            "notifications": [],
-            "contentTrait": "@trait.EmployeeCatalog",
             "appName": "HRPortal",
+            "contentTrait": "@trait.EmployeeCatalog",
             "navItems": [
               {
+                "label": "Employees",
                 "href": "/employees",
-                "icon": "users",
-                "label": "Employees"
+                "icon": "users"
               },
               {
+                "icon": "clipboard-check",
                 "label": "Onboarding",
-                "href": "/onboarding",
-                "icon": "clipboard-check"
+                "href": "/onboarding"
               },
               {
-                "label": "Time Off",
+                "href": "/timeoff",
                 "icon": "calendar",
-                "href": "/timeoff"
+                "label": "Time Off"
               },
               {
+                "href": "/org-chart",
                 "icon": "git-branch",
-                "label": "Org Chart",
-                "href": "/org-chart"
+                "label": "Org Chart"
               }
             ],
-            "searchEvent": "EMPLOYEE_SEARCH"
+            "searchEvent": "EMPLOYEE_SEARCH",
+            "notifications": []
           },
           "events": {
-            "NOTIFY_CLICK": "EMPLOYEE_NOTIFICATIONS_OPEN",
-            "SEARCH": "EMPLOYEE_SEARCH"
+            "SEARCH": "EMPLOYEE_SEARCH",
+            "NOTIFY_CLICK": "EMPLOYEE_NOTIFICATIONS_OPEN"
           }
         },
         {
@@ -222,59 +222,61 @@
                     "render-ui",
                     "main",
                     {
+                      "gap": "lg",
+                      "type": "stack",
                       "direction": "vertical",
                       "children": [
                         {
-                          "direction": "horizontal",
+                          "type": "stack",
                           "align": "center",
+                          "gap": "md",
                           "children": [
                             {
                               "direction": "horizontal",
+                              "gap": "sm",
+                              "type": "stack",
+                              "align": "center",
                               "children": [
                                 {
-                                  "type": "icon",
-                                  "name": "users"
+                                  "name": "users",
+                                  "type": "icon"
                                 },
                                 {
-                                  "variant": "h2",
                                   "type": "typography",
+                                  "variant": "h2",
                                   "content": "Employees"
                                 }
-                              ],
-                              "type": "stack",
-                              "gap": "sm",
-                              "align": "center"
+                              ]
                             },
                             {
-                              "type": "stack",
                               "children": [
                                 {
                                   "label": "Add Employee",
-                                  "type": "button",
                                   "variant": "primary",
-                                  "icon": "plus",
-                                  "action": "CREATE"
+                                  "action": "CREATE",
+                                  "type": "button",
+                                  "icon": "plus"
                                 }
                               ],
-                              "gap": "sm",
-                              "direction": "horizontal"
+                              "type": "stack",
+                              "direction": "horizontal",
+                              "gap": "sm"
                             }
                           ],
-                          "justify": "between",
-                          "type": "stack",
-                          "gap": "md"
+                          "direction": "horizontal",
+                          "justify": "between"
                         },
                         {
                           "type": "divider"
                         },
                         {
                           "direction": "horizontal",
-                          "type": "stack",
-                          "gap": "sm",
                           "children": [
                             "@trait.EmployeeSearch",
                             "@trait.EmployeeFilter"
-                          ]
+                          ],
+                          "gap": "sm",
+                          "type": "stack"
                         },
                         "@trait.EmployeeStats",
                         "@trait.EmployeeGraphs",
@@ -282,9 +284,7 @@
                           "type": "divider"
                         },
                         "@trait.EmployeeBrowseList"
-                      ],
-                      "type": "stack",
-                      "gap": "lg"
+                      ]
                     }
                   ]
                 ]
@@ -303,34 +303,34 @@
                     "render-ui",
                     "main",
                     {
-                      "className": "py-8",
                       "children": [
                         {
-                          "type": "icon",
-                          "name": "bell"
+                          "name": "bell",
+                          "type": "icon"
                         },
                         {
-                          "content": "No notifications",
+                          "variant": "h3",
                           "type": "typography",
-                          "variant": "h3"
+                          "content": "No notifications"
                         },
                         {
-                          "color": "muted",
                           "type": "typography",
+                          "variant": "caption",
                           "content": "You're all caught up.",
-                          "variant": "caption"
+                          "color": "muted"
                         },
                         {
-                          "type": "button",
                           "variant": "ghost",
+                          "label": "Back to employees",
                           "action": "INIT",
-                          "label": "Back to employees"
+                          "type": "button"
                         }
                       ],
+                      "direction": "vertical",
                       "gap": "md",
-                      "align": "center",
                       "type": "stack",
-                      "direction": "vertical"
+                      "align": "center",
+                      "className": "py-8"
                     }
                   ]
                 ]
@@ -351,11 +351,11 @@
           "ref": "Filter.traits.FilterTargetFilter",
           "name": "EmployeeFilter",
           "config": {
+            "event": "FILTER",
             "filters": [
               {
-                "label": "Department",
-                "filterType": "select",
                 "field": "department",
+                "label": "Department",
                 "options": [
                   "engineering",
                   "design",
@@ -363,10 +363,10 @@
                   "sales",
                   "hr",
                   "finance"
-                ]
+                ],
+                "filterType": "select"
               },
               {
-                "filterType": "select",
                 "options": [
                   "manager",
                   "lead",
@@ -374,52 +374,54 @@
                   "intern"
                 ],
                 "field": "role",
-                "label": "Role"
+                "label": "Role",
+                "filterType": "select"
               },
               {
-                "field": "status",
                 "label": "Status",
+                "filterType": "select",
+                "field": "status",
                 "options": [
                   "active",
                   "leave",
                   "terminated"
-                ],
-                "filterType": "select"
+                ]
               }
-            ],
-            "event": "FILTER"
+            ]
           }
         },
         {
           "ref": "Stats.traits.StatsItemStats",
           "name": "EmployeeStats",
           "config": {
+            "title": "Workforce Overview",
             "metrics": [
               {
-                "aggregation": "count",
-                "label": "Total Employees",
                 "variant": "primary",
-                "format": "number",
-                "icon": "users"
-              },
-              {
-                "label": "By Department",
+                "label": "Total Employees",
                 "aggregation": "count",
-                "icon": "layers",
-                "format": "number",
-                "variant": "default"
-              },
-              {
-                "label": "New This Month",
-                "aggregation": "count",
-                "icon": "user-plus",
-                "variant": "info",
+                "icon": "users",
                 "format": "number"
               },
               {
-                "aggregation": "count",
+                "label": "By Department",
+                "icon": "layers",
                 "format": "number",
+                "variant": "default",
+                "aggregation": "count"
+              },
+              {
+                "icon": "user-plus",
+                "aggregation": "count",
+                "variant": "info",
+                "format": "number",
+                "label": "New This Month"
+              },
+              {
+                "aggregation": "count",
                 "label": "On Leave",
+                "icon": "calendar-off",
+                "variant": "warning",
                 "filter": [
                   "fn",
                   "row",
@@ -429,11 +431,9 @@
                     "leave"
                   ]
                 ],
-                "icon": "calendar-off",
-                "variant": "warning"
+                "format": "number"
               }
-            ],
-            "title": "Workforce Overview"
+            ]
           },
           "listens": [
             {
@@ -452,11 +452,11 @@
           "config": {
             "chartType": "pie",
             "categoryField": "department",
-            "subtitle": "Headcount distribution",
             "height": 280.0,
             "showLegend": true,
             "aggregation": "count",
-            "title": "Employees by Department"
+            "title": "Employees by Department",
+            "subtitle": "Headcount distribution"
           },
           "listens": [
             {
@@ -474,48 +474,48 @@
           "name": "EmployeeBrowseList",
           "linkedEntity": "Employee",
           "config": {
+            "imageField": "avatar",
+            "itemActions": [
+              {
+                "event": "VIEW",
+                "label": "View",
+                "variant": "ghost"
+              },
+              {
+                "event": "EDIT",
+                "label": "Edit",
+                "variant": "ghost"
+              },
+              {
+                "variant": "danger",
+                "label": "Delete",
+                "event": "DELETE"
+              }
+            ],
             "gap": "sm",
             "fields": [
               {
                 "variant": "h3",
-                "icon": "user",
-                "name": "name"
+                "name": "name",
+                "icon": "user"
               },
               {
                 "name": "role",
                 "variant": "body"
               },
               {
-                "name": "department",
-                "variant": "badge"
+                "variant": "badge",
+                "name": "department"
               },
               {
                 "name": "email",
                 "variant": "caption"
               },
               {
-                "format": "date",
-                "label": "Joined",
                 "variant": "caption",
+                "label": "Joined",
+                "format": "date",
                 "name": "hireDate"
-              }
-            ],
-            "imageField": "avatar",
-            "itemActions": [
-              {
-                "event": "VIEW",
-                "variant": "ghost",
-                "label": "View"
-              },
-              {
-                "label": "Edit",
-                "variant": "ghost",
-                "event": "EDIT"
-              },
-              {
-                "label": "Delete",
-                "variant": "danger",
-                "event": "DELETE"
               }
             ]
           },
@@ -576,6 +576,7 @@
           "name": "EmployeeCreate",
           "linkedEntity": "Employee",
           "config": {
+            "title": "Add Employee",
             "fields": [
               "name",
               "email",
@@ -585,7 +586,6 @@
               "status"
             ],
             "mode": "create",
-            "title": "Add Employee",
             "icon": "plus-circle"
           },
           "events": {
@@ -608,7 +608,9 @@
           "name": "EmployeeEdit",
           "linkedEntity": "Employee",
           "config": {
+            "mode": "edit",
             "title": "Edit Employee",
+            "icon": "edit",
             "fields": [
               "name",
               "email",
@@ -616,9 +618,7 @@
               "role",
               "hireDate",
               "status"
-            ],
-            "mode": "edit",
-            "icon": "edit"
+            ]
           },
           "events": {
             "SAVE": "EMPLOYEE_UPDATED",
@@ -648,8 +648,8 @@
               "hireDate",
               "status"
             ],
-            "icon": "eye",
             "title": "Employee Details",
+            "icon": "eye",
             "mode": "edit"
           },
           "events": {
@@ -672,13 +672,13 @@
           "linkedEntity": "Employee",
           "config": {
             "confirmLabel": "Delete",
-            "title": "Delete Employee",
+            "alertMessage": "This action cannot be undone.",
             "icon": "alert-triangle",
-            "alertMessage": "This action cannot be undone."
+            "title": "Delete Employee"
           },
           "events": {
-            "REQUEST": "DELETE",
-            "CONFIRM": "EMPLOYEE_DELETED"
+            "CONFIRM": "EMPLOYEE_DELETED",
+            "REQUEST": "DELETE"
           },
           "listens": [
             {
@@ -882,15 +882,15 @@
           "ref": "Storage.traits.ServiceStorageStorage",
           "name": "EmployeeAvatarUpload",
           "config": {
-            "bucket": "employee-avatars",
-            "maxSize": 5242880.0,
-            "acl": "public",
             "uiTrait": "@trait.EmployeeAvatarUploadForm",
+            "maxSize": 5242880.0,
             "allowedMimeTypes": [
               "image/jpeg",
               "image/png",
               "image/webp"
-            ]
+            ],
+            "bucket": "employee-avatars",
+            "acl": "public"
           }
         },
         {
@@ -935,40 +935,40 @@
                     "render-ui",
                     "main",
                     {
-                      "type": "stack",
-                      "gap": "md",
-                      "direction": "vertical",
                       "children": [
                         {
+                          "type": "stack",
+                          "direction": "horizontal",
                           "align": "center",
+                          "gap": "sm",
                           "children": [
                             {
-                              "name": "image",
-                              "type": "icon"
+                              "type": "icon",
+                              "name": "image"
                             },
                             {
                               "variant": "h3",
                               "type": "typography",
                               "content": "Upload Avatar"
                             }
-                          ],
-                          "type": "stack",
-                          "direction": "horizontal",
-                          "gap": "sm"
+                          ]
                         },
                         {
+                          "type": "input",
                           "inputType": "text",
-                          "placeholder": "Choose file path…",
-                          "type": "input"
+                          "placeholder": "Choose file path…"
                         },
                         {
-                          "action": "UPLOAD",
                           "variant": "primary",
+                          "icon": "upload",
                           "type": "button",
                           "label": "Upload",
-                          "icon": "upload"
+                          "action": "UPLOAD"
                         }
-                      ]
+                      ],
+                      "type": "stack",
+                      "gap": "md",
+                      "direction": "vertical"
                     }
                   ]
                 ]
@@ -1098,12 +1098,13 @@
           "name": "OnboardingAppLayout",
           "linkedEntity": "Onboarding",
           "config": {
-            "notifications": [],
+            "contentTrait": "@trait.OnboardingWizard",
+            "notificationClickEvent": "ONBOARDING_NOTIFICATIONS_OPEN",
             "navItems": [
               {
-                "href": "/employees",
+                "label": "Employees",
                 "icon": "users",
-                "label": "Employees"
+                "href": "/employees"
               },
               {
                 "icon": "clipboard-check",
@@ -1111,20 +1112,19 @@
                 "href": "/onboarding"
               },
               {
-                "href": "/timeoff",
                 "icon": "calendar",
-                "label": "Time Off"
+                "label": "Time Off",
+                "href": "/timeoff"
               },
               {
+                "label": "Org Chart",
                 "href": "/org-chart",
-                "icon": "git-branch",
-                "label": "Org Chart"
+                "icon": "git-branch"
               }
             ],
-            "contentTrait": "@trait.OnboardingWizard",
-            "appName": "HRPortal",
             "searchEvent": "ONBOARDING_SEARCH",
-            "notificationClickEvent": "ONBOARDING_NOTIFICATIONS_OPEN"
+            "appName": "HRPortal",
+            "notifications": []
           },
           "events": {
             "SEARCH": "ONBOARDING_SEARCH",
@@ -1382,8 +1382,8 @@
                     "Onboarding",
                     {
                       "emit": {
-                        "success": "OnboardingLoaded",
-                        "failure": "OnboardingLoadFailed"
+                        "failure": "OnboardingLoadFailed",
+                        "success": "OnboardingLoaded"
                       }
                     }
                   ],
@@ -1392,25 +1392,26 @@
                     "main",
                     {
                       "direction": "vertical",
-                      "type": "stack",
                       "className": "max-w-xl mx-auto w-full",
+                      "gap": "lg",
+                      "type": "stack",
                       "children": [
                         {
-                          "type": "stack",
-                          "direction": "horizontal",
                           "gap": "sm",
-                          "align": "center",
                           "children": [
                             {
-                              "name": "clipboard-check",
-                              "type": "icon"
+                              "type": "icon",
+                              "name": "clipboard-check"
                             },
                             {
                               "content": "Employee Onboarding",
                               "variant": "h2",
                               "type": "typography"
                             }
-                          ]
+                          ],
+                          "direction": "horizontal",
+                          "align": "center",
+                          "type": "stack"
                         },
                         {
                           "currentStep": 0.0,
@@ -1427,34 +1428,33 @@
                         },
                         {
                           "type": "typography",
-                          "content": "Employee Details",
-                          "variant": "h3"
+                          "variant": "h3",
+                          "content": "Employee Details"
                         },
                         {
+                          "submitLabel": "Continue",
                           "showCancel": false,
                           "submitEvent": "NEXT",
+                          "mode": "create",
+                          "type": "form-section",
                           "fields": [
                             {
-                              "min": 2.0,
                               "name": "employeeName",
+                              "min": 2.0,
                               "required": true
                             },
                             {
                               "name": "email",
-                              "required": true,
-                              "type": "email"
+                              "type": "email",
+                              "required": true
                             },
                             {
                               "name": "department",
                               "required": true
                             }
-                          ],
-                          "mode": "create",
-                          "submitLabel": "Continue",
-                          "type": "form-section"
+                          ]
                         }
-                      ],
-                      "gap": "lg"
+                      ]
                     }
                   ]
                 ]
@@ -1490,49 +1490,49 @@
                     "main",
                     {
                       "type": "stack",
-                      "className": "max-w-xl mx-auto w-full",
+                      "gap": "lg",
                       "children": [
                         {
+                          "type": "typography",
                           "variant": "h2",
-                          "content": "Employee Onboarding",
-                          "type": "typography"
+                          "content": "Employee Onboarding"
                         },
                         {
-                          "currentStep": 1.0,
                           "type": "wizard-progress",
                           "steps": [
                             "Employee Details",
                             "Manager Assignment",
                             "Setup Checklist",
                             "Review"
-                          ]
+                          ],
+                          "currentStep": 1.0
                         },
                         {
                           "type": "divider"
                         },
                         {
-                          "type": "typography",
                           "variant": "h3",
-                          "content": "Manager Assignment"
+                          "content": "Manager Assignment",
+                          "type": "typography"
                         },
                         {
-                          "submitLabel": "Continue",
-                          "submitEvent": "NEXT",
-                          "cancelLabel": "Back",
+                          "cancelEvent": "PREV",
                           "fields": [
                             {
-                              "required": true,
-                              "name": "manager"
+                              "name": "manager",
+                              "required": true
                             }
                           ],
                           "type": "form-section",
-                          "cancelEvent": "PREV",
-                          "mode": "edit",
-                          "entity": "@entity"
+                          "entity": "@entity",
+                          "submitLabel": "Continue",
+                          "cancelLabel": "Back",
+                          "submitEvent": "NEXT",
+                          "mode": "edit"
                         }
                       ],
                       "direction": "vertical",
-                      "gap": "lg"
+                      "className": "max-w-xl mx-auto w-full"
                     }
                   ]
                 ]
@@ -1559,47 +1559,47 @@
                     "main",
                     {
                       "type": "stack",
-                      "gap": "lg",
-                      "direction": "vertical",
+                      "className": "max-w-xl mx-auto w-full",
                       "children": [
                         {
-                          "variant": "h2",
                           "content": "Employee Onboarding",
-                          "type": "typography"
+                          "type": "typography",
+                          "variant": "h2"
                         },
                         {
-                          "currentStep": 2.0,
-                          "type": "wizard-progress",
                           "steps": [
                             "Employee Details",
                             "Manager Assignment",
                             "Setup Checklist",
                             "Review"
-                          ]
+                          ],
+                          "currentStep": 2.0,
+                          "type": "wizard-progress"
                         },
                         {
                           "type": "divider"
                         },
                         {
+                          "variant": "h3",
                           "content": "Setup Checklist",
-                          "type": "typography",
-                          "variant": "h3"
+                          "type": "typography"
                         },
                         {
                           "mode": "edit",
                           "type": "form-section",
-                          "entity": "@entity",
                           "cancelEvent": "PREV",
-                          "submitLabel": "Continue",
+                          "submitEvent": "NEXT",
                           "fields": [
                             "equipmentReady",
                             "accessGranted"
                           ],
-                          "cancelLabel": "Back",
-                          "submitEvent": "NEXT"
+                          "entity": "@entity",
+                          "submitLabel": "Continue",
+                          "cancelLabel": "Back"
                         }
                       ],
-                      "className": "max-w-xl mx-auto w-full"
+                      "gap": "lg",
+                      "direction": "vertical"
                     }
                   ]
                 ]
@@ -1613,24 +1613,20 @@
                     "render-ui",
                     "main",
                     {
-                      "direction": "vertical",
-                      "gap": "lg",
-                      "type": "stack",
-                      "className": "max-w-xl mx-auto w-full",
                       "children": [
                         {
-                          "variant": "h2",
+                          "type": "typography",
                           "content": "Employee Onboarding",
-                          "type": "typography"
+                          "variant": "h2"
                         },
                         {
+                          "type": "wizard-progress",
                           "steps": [
                             "Employee Details",
                             "Manager Assignment",
                             "Setup Checklist",
                             "Review"
                           ],
-                          "type": "wizard-progress",
                           "currentStep": 0.0
                         },
                         {
@@ -1638,20 +1634,21 @@
                         },
                         {
                           "type": "typography",
-                          "variant": "h3",
-                          "content": "Employee Details"
+                          "content": "Employee Details",
+                          "variant": "h3"
                         },
                         {
                           "showCancel": false,
+                          "mode": "edit",
                           "fields": [
                             {
                               "name": "employeeName",
-                              "required": true,
-                              "min": 2.0
+                              "min": 2.0,
+                              "required": true
                             },
                             {
-                              "type": "email",
                               "required": true,
+                              "type": "email",
                               "name": "email"
                             },
                             {
@@ -1659,13 +1656,16 @@
                               "name": "department"
                             }
                           ],
-                          "submitEvent": "NEXT",
                           "type": "form-section",
+                          "submitEvent": "NEXT",
                           "entity": "@entity",
-                          "mode": "edit",
                           "submitLabel": "Continue"
                         }
-                      ]
+                      ],
+                      "gap": "lg",
+                      "type": "stack",
+                      "className": "max-w-xl mx-auto w-full",
+                      "direction": "vertical"
                     }
                   ]
                 ]
@@ -1696,7 +1696,10 @@
                     "render-ui",
                     "main",
                     {
+                      "direction": "vertical",
+                      "gap": "lg",
                       "className": "max-w-xl mx-auto w-full",
+                      "type": "stack",
                       "children": [
                         {
                           "variant": "h2",
@@ -1704,96 +1707,97 @@
                           "type": "typography"
                         },
                         {
-                          "currentStep": 3.0,
+                          "type": "wizard-progress",
                           "steps": [
                             "Employee Details",
                             "Manager Assignment",
                             "Setup Checklist",
                             "Review"
                           ],
-                          "type": "wizard-progress"
+                          "currentStep": 3.0
                         },
                         {
                           "type": "divider"
                         },
                         {
+                          "type": "stack",
                           "children": [
                             {
                               "direction": "horizontal",
                               "justify": "between",
-                              "type": "stack",
+                              "gap": "md",
                               "children": [
                                 {
-                                  "type": "typography",
-                                  "variant": "caption",
-                                  "content": "Employee"
-                                },
-                                {
-                                  "content": "@entity.employeeName",
-                                  "type": "typography",
-                                  "variant": "body"
-                                }
-                              ],
-                              "gap": "md"
-                            },
-                            {
-                              "type": "stack",
-                              "direction": "horizontal",
-                              "children": [
-                                {
-                                  "content": "Email",
+                                  "content": "Employee",
                                   "type": "typography",
                                   "variant": "caption"
                                 },
                                 {
-                                  "content": "@entity.email",
                                   "variant": "body",
+                                  "content": "@entity.employeeName",
                                   "type": "typography"
                                 }
                               ],
-                              "justify": "between",
-                              "gap": "md"
+                              "type": "stack"
                             },
                             {
-                              "direction": "horizontal",
-                              "gap": "md",
-                              "type": "stack",
                               "justify": "between",
                               "children": [
                                 {
                                   "type": "typography",
                                   "variant": "caption",
+                                  "content": "Email"
+                                },
+                                {
+                                  "variant": "body",
+                                  "content": "@entity.email",
+                                  "type": "typography"
+                                }
+                              ],
+                              "gap": "md",
+                              "direction": "horizontal",
+                              "type": "stack"
+                            },
+                            {
+                              "justify": "between",
+                              "direction": "horizontal",
+                              "type": "stack",
+                              "gap": "md",
+                              "children": [
+                                {
+                                  "variant": "caption",
+                                  "type": "typography",
                                   "content": "Department"
                                 },
                                 {
-                                  "content": "@entity.department",
+                                  "variant": "body",
                                   "type": "typography",
-                                  "variant": "body"
+                                  "content": "@entity.department"
                                 }
                               ]
                             },
                             {
+                              "gap": "md",
+                              "direction": "horizontal",
+                              "justify": "between",
                               "children": [
                                 {
                                   "content": "Manager",
-                                  "variant": "caption",
-                                  "type": "typography"
+                                  "type": "typography",
+                                  "variant": "caption"
                                 },
                                 {
-                                  "content": "@entity.manager",
                                   "type": "typography",
-                                  "variant": "body"
+                                  "variant": "body",
+                                  "content": "@entity.manager"
                                 }
                               ],
-                              "gap": "md",
-                              "type": "stack",
-                              "direction": "horizontal",
-                              "justify": "between"
+                              "type": "stack"
                             },
                             {
+                              "type": "stack",
                               "gap": "md",
                               "direction": "horizontal",
-                              "type": "stack",
                               "justify": "between",
                               "children": [
                                 {
@@ -1802,32 +1806,31 @@
                                   "content": "Equipment Ready"
                                 },
                                 {
-                                  "content": "@entity.equipmentReady",
                                   "type": "typography",
-                                  "variant": "body"
+                                  "variant": "body",
+                                  "content": "@entity.equipmentReady"
                                 }
                               ]
                             },
                             {
-                              "justify": "between",
+                              "direction": "horizontal",
+                              "gap": "md",
                               "type": "stack",
+                              "justify": "between",
                               "children": [
                                 {
-                                  "variant": "caption",
                                   "content": "Access Granted",
-                                  "type": "typography"
+                                  "type": "typography",
+                                  "variant": "caption"
                                 },
                                 {
-                                  "variant": "body",
                                   "type": "typography",
+                                  "variant": "body",
                                   "content": "@entity.accessGranted"
                                 }
-                              ],
-                              "direction": "horizontal",
-                              "gap": "md"
+                              ]
                             }
                           ],
-                          "type": "stack",
                           "direction": "vertical",
                           "gap": "sm"
                         },
@@ -1836,30 +1839,27 @@
                         },
                         {
                           "type": "stack",
-                          "direction": "horizontal",
                           "justify": "between",
+                          "gap": "sm",
                           "children": [
                             {
-                              "type": "button",
-                              "icon": "arrow-left",
-                              "action": "PREV",
                               "variant": "ghost",
-                              "label": "Back"
+                              "icon": "arrow-left",
+                              "label": "Back",
+                              "action": "PREV",
+                              "type": "button"
                             },
                             {
-                              "type": "button",
-                              "label": "Complete Onboarding",
                               "action": "COMPLETE",
                               "icon": "check",
-                              "variant": "primary"
+                              "variant": "primary",
+                              "type": "button",
+                              "label": "Complete Onboarding"
                             }
                           ],
-                          "gap": "sm"
+                          "direction": "horizontal"
                         }
-                      ],
-                      "gap": "lg",
-                      "direction": "vertical",
-                      "type": "stack"
+                      ]
                     }
                   ]
                 ]
@@ -1874,37 +1874,31 @@
                     "main",
                     {
                       "type": "stack",
-                      "className": "max-w-xl mx-auto w-full",
-                      "direction": "vertical",
-                      "gap": "lg",
                       "children": [
                         {
+                          "content": "Employee Onboarding",
                           "type": "typography",
-                          "variant": "h2",
-                          "content": "Employee Onboarding"
+                          "variant": "h2"
                         },
                         {
-                          "type": "wizard-progress",
+                          "currentStep": 1.0,
                           "steps": [
                             "Employee Details",
                             "Manager Assignment",
                             "Setup Checklist",
                             "Review"
                           ],
-                          "currentStep": 1.0
+                          "type": "wizard-progress"
                         },
                         {
                           "type": "divider"
                         },
                         {
-                          "type": "typography",
                           "content": "Manager Assignment",
+                          "type": "typography",
                           "variant": "h3"
                         },
                         {
-                          "entity": "@entity",
-                          "type": "form-section",
-                          "mode": "edit",
                           "fields": [
                             {
                               "required": true,
@@ -1913,10 +1907,16 @@
                           ],
                           "cancelLabel": "Back",
                           "submitLabel": "Continue",
-                          "submitEvent": "NEXT",
-                          "cancelEvent": "PREV"
+                          "entity": "@entity",
+                          "cancelEvent": "PREV",
+                          "mode": "edit",
+                          "type": "form-section",
+                          "submitEvent": "NEXT"
                         }
-                      ]
+                      ],
+                      "gap": "lg",
+                      "direction": "vertical",
+                      "className": "max-w-xl mx-auto w-full"
                     }
                   ]
                 ]
@@ -1951,14 +1951,14 @@
                     "send",
                     {
                       "subject": "Welcome to the team",
+                      "recipient": "@entity.email",
                       "body": "Welcome aboard! Your manager and equipment have been set up.",
-                      "sender": "hr@example.com",
-                      "recipient": "@entity.email"
+                      "sender": "hr@example.com"
                     },
                     {
                       "emit": {
-                        "success": "OnboardingEmailSent",
-                        "failure": "OnboardingEmailFailed"
+                        "failure": "OnboardingEmailFailed",
+                        "success": "OnboardingEmailSent"
                       }
                     }
                   ],
@@ -1978,12 +1978,12 @@
                     "render-ui",
                     "main",
                     {
-                      "gap": "lg",
                       "align": "center",
+                      "className": "max-w-xl mx-auto w-full py-12",
                       "children": [
                         {
-                          "type": "icon",
-                          "name": "check-circle"
+                          "name": "check-circle",
+                          "type": "icon"
                         },
                         {
                           "variant": "h2",
@@ -1997,15 +1997,15 @@
                           "content": "The new employee has been fully onboarded."
                         },
                         {
-                          "variant": "ghost",
-                          "icon": "rotate-ccw",
-                          "action": "RESTART",
                           "type": "button",
-                          "label": "Start new onboarding"
+                          "variant": "ghost",
+                          "label": "Start new onboarding",
+                          "action": "RESTART",
+                          "icon": "rotate-ccw"
                         }
                       ],
+                      "gap": "lg",
                       "type": "stack",
-                      "className": "max-w-xl mx-auto w-full py-12",
                       "direction": "vertical"
                     }
                   ]
@@ -2020,48 +2020,48 @@
                     "render-ui",
                     "main",
                     {
-                      "className": "max-w-xl mx-auto w-full",
-                      "gap": "lg",
                       "children": [
                         {
-                          "variant": "h2",
                           "content": "Employee Onboarding",
+                          "variant": "h2",
                           "type": "typography"
                         },
                         {
-                          "currentStep": 2.0,
+                          "type": "wizard-progress",
                           "steps": [
                             "Employee Details",
                             "Manager Assignment",
                             "Setup Checklist",
                             "Review"
                           ],
-                          "type": "wizard-progress"
+                          "currentStep": 2.0
                         },
                         {
                           "type": "divider"
                         },
                         {
-                          "type": "typography",
+                          "content": "Setup Checklist",
                           "variant": "h3",
-                          "content": "Setup Checklist"
+                          "type": "typography"
                         },
                         {
-                          "cancelEvent": "PREV",
                           "type": "form-section",
-                          "submitEvent": "NEXT",
-                          "mode": "edit",
-                          "cancelLabel": "Back",
-                          "submitLabel": "Continue",
                           "entity": "@entity",
+                          "cancelEvent": "PREV",
+                          "mode": "edit",
+                          "submitEvent": "NEXT",
+                          "submitLabel": "Continue",
+                          "cancelLabel": "Back",
                           "fields": [
                             "equipmentReady",
                             "accessGranted"
                           ]
                         }
                       ],
+                      "type": "stack",
                       "direction": "vertical",
-                      "type": "stack"
+                      "gap": "lg",
+                      "className": "max-w-xl mx-auto w-full"
                     }
                   ]
                 ]
@@ -2129,41 +2129,47 @@
                     "render-ui",
                     "main",
                     {
-                      "direction": "vertical",
+                      "type": "stack",
+                      "className": "max-w-xl mx-auto w-full",
+                      "gap": "lg",
                       "children": [
                         {
+                          "variant": "h2",
                           "content": "Employee Onboarding",
-                          "type": "typography",
-                          "variant": "h2"
+                          "type": "typography"
                         },
                         {
-                          "currentStep": 0.0,
+                          "type": "wizard-progress",
                           "steps": [
                             "Employee Details",
                             "Manager Assignment",
                             "Setup Checklist",
                             "Review"
                           ],
-                          "type": "wizard-progress"
+                          "currentStep": 0.0
                         },
                         {
                           "type": "divider"
                         },
                         {
-                          "type": "typography",
+                          "content": "Employee Details",
                           "variant": "h3",
-                          "content": "Employee Details"
+                          "type": "typography"
                         },
                         {
+                          "submitEvent": "NEXT",
+                          "mode": "create",
+                          "submitLabel": "Continue",
+                          "type": "form-section",
                           "fields": [
                             {
-                              "required": true,
+                              "name": "employeeName",
                               "min": 2.0,
-                              "name": "employeeName"
+                              "required": true
                             },
                             {
-                              "type": "email",
                               "name": "email",
+                              "type": "email",
                               "required": true
                             },
                             {
@@ -2171,16 +2177,10 @@
                               "name": "department"
                             }
                           ],
-                          "type": "form-section",
-                          "submitEvent": "NEXT",
-                          "submitLabel": "Continue",
-                          "mode": "create",
                           "showCancel": false
                         }
                       ],
-                      "type": "stack",
-                      "gap": "lg",
-                      "className": "max-w-xl mx-auto w-full"
+                      "direction": "vertical"
                     }
                   ]
                 ]
@@ -2302,16 +2302,21 @@
           "name": "TimeOffAppLayout",
           "linkedEntity": "TimeOff",
           "config": {
+            "notificationClickEvent": "TIME_OFF_NOTIFICATIONS_OPEN",
+            "appName": "HRPortal",
+            "contentTrait": "@trait.TimeOffCatalog",
+            "notifications": [],
+            "searchEvent": "TIME_OFF_SEARCH",
             "navItems": [
               {
-                "icon": "users",
+                "label": "Employees",
                 "href": "/employees",
-                "label": "Employees"
+                "icon": "users"
               },
               {
-                "href": "/onboarding",
                 "icon": "clipboard-check",
-                "label": "Onboarding"
+                "label": "Onboarding",
+                "href": "/onboarding"
               },
               {
                 "label": "Time Off",
@@ -2319,20 +2324,15 @@
                 "icon": "calendar"
               },
               {
+                "href": "/org-chart",
                 "icon": "git-branch",
-                "label": "Org Chart",
-                "href": "/org-chart"
+                "label": "Org Chart"
               }
-            ],
-            "searchEvent": "TIME_OFF_SEARCH",
-            "notificationClickEvent": "TIME_OFF_NOTIFICATIONS_OPEN",
-            "notifications": [],
-            "appName": "HRPortal",
-            "contentTrait": "@trait.TimeOffCatalog"
+            ]
           },
           "events": {
-            "NOTIFY_CLICK": "TIME_OFF_NOTIFICATIONS_OPEN",
-            "SEARCH": "TIME_OFF_SEARCH"
+            "SEARCH": "TIME_OFF_SEARCH",
+            "NOTIFY_CLICK": "TIME_OFF_NOTIFICATIONS_OPEN"
           }
         },
         {
@@ -2377,26 +2377,26 @@
                     "render-ui",
                     "main",
                     {
+                      "gap": "lg",
+                      "type": "stack",
+                      "direction": "vertical",
                       "children": [
                         {
-                          "direction": "horizontal",
-                          "justify": "between",
-                          "align": "center",
                           "children": [
                             {
-                              "gap": "sm",
-                              "align": "center",
                               "direction": "horizontal",
+                              "align": "center",
                               "type": "stack",
+                              "gap": "sm",
                               "children": [
                                 {
                                   "type": "icon",
                                   "name": "calendar"
                                 },
                                 {
-                                  "type": "typography",
+                                  "variant": "h2",
                                   "content": "Time Off Requests",
-                                  "variant": "h2"
+                                  "type": "typography"
                                 }
                               ]
                             },
@@ -2404,18 +2404,21 @@
                               "children": [
                                 {
                                   "label": "Request Time Off",
-                                  "type": "button",
+                                  "icon": "plus",
                                   "action": "CREATE",
                                   "variant": "primary",
-                                  "icon": "plus"
+                                  "type": "button"
                                 }
                               ],
                               "type": "stack",
-                              "direction": "horizontal",
-                              "gap": "sm"
+                              "gap": "sm",
+                              "direction": "horizontal"
                             }
                           ],
+                          "justify": "between",
                           "type": "stack",
+                          "direction": "horizontal",
+                          "align": "center",
                           "gap": "md"
                         },
                         {
@@ -2426,10 +2429,7 @@
                           "type": "divider"
                         },
                         "@trait.TimeOffBrowseList"
-                      ],
-                      "direction": "vertical",
-                      "type": "stack",
-                      "gap": "lg"
+                      ]
                     }
                   ]
                 ]
@@ -2443,8 +2443,8 @@
           "name": "TimeOffCalendar",
           "linkedEntity": "TimeOff",
           "config": {
-            "dateField": "startDate",
             "colorField": "status",
+            "dateField": "startDate",
             "titleField": "reason"
           },
           "listens": [
@@ -2479,49 +2479,48 @@
           "name": "TimeOffBrowseList",
           "linkedEntity": "TimeOff",
           "config": {
-            "gap": "sm",
             "fields": [
               {
-                "variant": "h4",
+                "name": "employeeName",
                 "label": "Employee",
-                "icon": "user",
-                "name": "employeeName"
+                "variant": "h4",
+                "icon": "user"
               },
               {
                 "variant": "badge",
-                "label": "Type",
-                "name": "leaveType"
+                "name": "leaveType",
+                "label": "Type"
               },
               {
                 "name": "status",
                 "variant": "badge"
               },
               {
-                "label": "From",
+                "name": "startDate",
                 "variant": "caption",
                 "format": "date",
-                "name": "startDate"
+                "label": "From"
               },
               {
+                "format": "date",
                 "label": "To",
                 "variant": "caption",
-                "name": "endDate",
-                "format": "date"
+                "name": "endDate"
               },
               {
-                "variant": "caption",
-                "name": "reason"
+                "name": "reason",
+                "variant": "caption"
               }
             ],
             "itemActions": [
               {
+                "label": "View",
                 "event": "VIEW",
-                "variant": "ghost",
-                "label": "View"
+                "variant": "ghost"
               },
               {
-                "event": "EDIT",
                 "variant": "ghost",
+                "event": "EDIT",
                 "label": "Edit"
               },
               {
@@ -2529,7 +2528,8 @@
                 "event": "DELETE",
                 "variant": "danger"
               }
-            ]
+            ],
+            "gap": "sm"
           },
           "listens": [
             {
@@ -2563,6 +2563,7 @@
           "name": "TimeOffCreate",
           "linkedEntity": "TimeOff",
           "config": {
+            "icon": "plus-circle",
             "title": "Request Time Off",
             "fields": [
               "employeeName",
@@ -2573,8 +2574,7 @@
               "reason",
               "status"
             ],
-            "mode": "create",
-            "icon": "plus-circle"
+            "mode": "create"
           },
           "events": {
             "OPEN": "CREATE",
@@ -2596,8 +2596,6 @@
           "name": "TimeOffEdit",
           "linkedEntity": "TimeOff",
           "config": {
-            "icon": "edit",
-            "title": "Edit Time Off",
             "fields": [
               "employeeName",
               "employeeEmail",
@@ -2607,7 +2605,9 @@
               "reason",
               "status"
             ],
-            "mode": "edit"
+            "mode": "edit",
+            "title": "Edit Time Off",
+            "icon": "edit"
           },
           "events": {
             "OPEN": "EDIT",
@@ -2629,6 +2629,8 @@
           "name": "TimeOffView",
           "linkedEntity": "TimeOff",
           "config": {
+            "title": "Time Off Details",
+            "icon": "eye",
             "fields": [
               "employeeName",
               "employeeEmail",
@@ -2638,9 +2640,7 @@
               "reason",
               "status"
             ],
-            "mode": "edit",
-            "title": "Time Off Details",
-            "icon": "eye"
+            "mode": "edit"
           },
           "events": {
             "OPEN": "VIEW"
@@ -2661,10 +2661,10 @@
           "name": "TimeOffDelete",
           "linkedEntity": "TimeOff",
           "config": {
-            "title": "Delete Time Off Request",
-            "alertMessage": "This action cannot be undone.",
             "confirmLabel": "Delete",
-            "icon": "alert-triangle"
+            "icon": "alert-triangle",
+            "alertMessage": "This action cannot be undone.",
+            "title": "Delete Time Off Request"
           },
           "events": {
             "CONFIRM": "TIME_OFF_DELETED",
@@ -2895,10 +2895,10 @@
                     "email",
                     "send",
                     {
-                      "subject": "Time-off @payload.data.status",
                       "body": "Your time-off request has been updated. Status: @payload.data.status.",
-                      "recipient": "@payload.data.employeeEmail",
-                      "sender": "hr@example.com"
+                      "subject": "Time-off @payload.data.status",
+                      "sender": "hr@example.com",
+                      "recipient": "@payload.data.employeeEmail"
                     },
                     {
                       "emit": {
@@ -3041,10 +3041,6 @@
           "name": "OrgChartAppLayout",
           "linkedEntity": "OrgNode",
           "config": {
-            "searchEvent": "ORG_CHART_SEARCH",
-            "notifications": [],
-            "contentTrait": "@trait.OrgChartDisplay",
-            "notificationClickEvent": "ORG_CHART_NOTIFICATIONS_OPEN",
             "navItems": [
               {
                 "icon": "users",
@@ -3052,26 +3048,30 @@
                 "href": "/employees"
               },
               {
-                "icon": "clipboard-check",
+                "label": "Onboarding",
                 "href": "/onboarding",
-                "label": "Onboarding"
+                "icon": "clipboard-check"
               },
               {
-                "label": "Time Off",
                 "href": "/timeoff",
-                "icon": "calendar"
+                "icon": "calendar",
+                "label": "Time Off"
               },
               {
-                "label": "Org Chart",
                 "href": "/org-chart",
+                "label": "Org Chart",
                 "icon": "git-branch"
               }
             ],
-            "appName": "HRPortal"
+            "contentTrait": "@trait.OrgChartDisplay",
+            "searchEvent": "ORG_CHART_SEARCH",
+            "notifications": [],
+            "appName": "HRPortal",
+            "notificationClickEvent": "ORG_CHART_NOTIFICATIONS_OPEN"
           },
           "events": {
-            "SEARCH": "ORG_CHART_SEARCH",
-            "NOTIFY_CLICK": "ORG_CHART_NOTIFICATIONS_OPEN"
+            "NOTIFY_CLICK": "ORG_CHART_NOTIFICATIONS_OPEN",
+            "SEARCH": "ORG_CHART_SEARCH"
           }
         },
         {
@@ -3196,18 +3196,19 @@
                     "render-ui",
                     "main",
                     {
-                      "gap": "lg",
-                      "type": "stack",
                       "children": [
                         {
+                          "type": "stack",
+                          "justify": "between",
                           "children": [
                             {
                               "type": "stack",
+                              "align": "center",
                               "direction": "horizontal",
                               "children": [
                                 {
-                                  "type": "icon",
-                                  "name": "git-branch"
+                                  "name": "git-branch",
+                                  "type": "icon"
                                 },
                                 {
                                   "content": "Org Chart",
@@ -3215,29 +3216,129 @@
                                   "variant": "h2"
                                 }
                               ],
-                              "gap": "sm",
-                              "align": "center"
+                              "gap": "sm"
                             },
                             {
-                              "icon": "refresh-cw",
-                              "action": "REFRESH",
-                              "type": "button",
                               "label": "Refresh",
-                              "variant": "secondary"
+                              "action": "REFRESH",
+                              "variant": "secondary",
+                              "type": "button",
+                              "icon": "refresh-cw"
                             }
                           ],
                           "gap": "md",
                           "align": "center",
-                          "direction": "horizontal",
-                          "type": "stack",
-                          "justify": "between"
+                          "direction": "horizontal"
                         },
                         {
                           "type": "divider"
                         },
                         {
+                          "nodes": [
+                            {
+                              "id": "ceo",
+                              "label": "CEO"
+                            },
+                            {
+                              "id": "vp-eng",
+                              "label": "VP Engineering"
+                            },
+                            {
+                              "label": "VP Sales",
+                              "id": "vp-sales"
+                            },
+                            {
+                              "id": "lead-fe",
+                              "label": "Frontend Lead"
+                            },
+                            {
+                              "label": "Backend Lead",
+                              "id": "lead-be"
+                            }
+                          ],
                           "type": "graph-view",
                           "width": 800.0,
+                          "edges": [
+                            {
+                              "source": "ceo",
+                              "target": "vp-eng"
+                            },
+                            {
+                              "source": "ceo",
+                              "target": "vp-sales"
+                            },
+                            {
+                              "source": "vp-eng",
+                              "target": "lead-fe"
+                            },
+                            {
+                              "source": "vp-eng",
+                              "target": "lead-be"
+                            }
+                          ],
+                          "height": 400.0
+                        }
+                      ],
+                      "type": "stack",
+                      "className": "max-w-6xl mx-auto w-full p-4",
+                      "gap": "lg",
+                      "direction": "vertical"
+                    }
+                  ]
+                ]
+              },
+              {
+                "from": "loading",
+                "to": "displaying",
+                "event": "OrgChartLoaded",
+                "effects": [
+                  [
+                    "render-ui",
+                    "main",
+                    {
+                      "className": "max-w-6xl mx-auto w-full p-4",
+                      "type": "stack",
+                      "direction": "vertical",
+                      "children": [
+                        {
+                          "children": [
+                            {
+                              "gap": "sm",
+                              "direction": "horizontal",
+                              "type": "stack",
+                              "children": [
+                                {
+                                  "type": "icon",
+                                  "name": "git-branch"
+                                },
+                                {
+                                  "type": "typography",
+                                  "content": "Org Chart",
+                                  "variant": "h2"
+                                }
+                              ],
+                              "align": "center"
+                            },
+                            {
+                              "icon": "refresh-cw",
+                              "label": "Refresh",
+                              "variant": "secondary",
+                              "type": "button",
+                              "action": "REFRESH"
+                            }
+                          ],
+                          "type": "stack",
+                          "direction": "horizontal",
+                          "justify": "between",
+                          "gap": "md",
+                          "align": "center"
+                        },
+                        {
+                          "type": "divider"
+                        },
+                        {
+                          "width": 800.0,
+                          "type": "graph-view",
                           "edges": [
                             {
                               "source": "ceo",
@@ -3252,14 +3353,15 @@
                               "source": "vp-eng"
                             },
                             {
-                              "source": "vp-eng",
-                              "target": "lead-be"
+                              "target": "lead-be",
+                              "source": "vp-eng"
                             }
                           ],
+                          "height": 400.0,
                           "nodes": [
                             {
-                              "id": "ceo",
-                              "label": "CEO"
+                              "label": "CEO",
+                              "id": "ceo"
                             },
                             {
                               "label": "VP Engineering",
@@ -3274,115 +3376,13 @@
                               "id": "lead-fe"
                             },
                             {
-                              "label": "Backend Lead",
-                              "id": "lead-be"
-                            }
-                          ],
-                          "height": 400.0
-                        }
-                      ],
-                      "direction": "vertical",
-                      "className": "max-w-6xl mx-auto w-full p-4"
-                    }
-                  ]
-                ]
-              },
-              {
-                "from": "loading",
-                "to": "displaying",
-                "event": "OrgChartLoaded",
-                "effects": [
-                  [
-                    "render-ui",
-                    "main",
-                    {
-                      "type": "stack",
-                      "className": "max-w-6xl mx-auto w-full p-4",
-                      "direction": "vertical",
-                      "gap": "lg",
-                      "children": [
-                        {
-                          "justify": "between",
-                          "children": [
-                            {
-                              "type": "stack",
-                              "align": "center",
-                              "children": [
-                                {
-                                  "name": "git-branch",
-                                  "type": "icon"
-                                },
-                                {
-                                  "type": "typography",
-                                  "variant": "h2",
-                                  "content": "Org Chart"
-                                }
-                              ],
-                              "gap": "sm",
-                              "direction": "horizontal"
-                            },
-                            {
-                              "action": "REFRESH",
-                              "type": "button",
-                              "variant": "secondary",
-                              "icon": "refresh-cw",
-                              "label": "Refresh"
-                            }
-                          ],
-                          "align": "center",
-                          "gap": "md",
-                          "type": "stack",
-                          "direction": "horizontal"
-                        },
-                        {
-                          "type": "divider"
-                        },
-                        {
-                          "edges": [
-                            {
-                              "target": "vp-eng",
-                              "source": "ceo"
-                            },
-                            {
-                              "target": "vp-sales",
-                              "source": "ceo"
-                            },
-                            {
-                              "target": "lead-fe",
-                              "source": "vp-eng"
-                            },
-                            {
-                              "target": "lead-be",
-                              "source": "vp-eng"
-                            }
-                          ],
-                          "width": 800.0,
-                          "height": 400.0,
-                          "type": "graph-view",
-                          "nodes": [
-                            {
-                              "id": "ceo",
-                              "label": "CEO"
-                            },
-                            {
-                              "label": "VP Engineering",
-                              "id": "vp-eng"
-                            },
-                            {
-                              "id": "vp-sales",
-                              "label": "VP Sales"
-                            },
-                            {
-                              "id": "lead-fe",
-                              "label": "Frontend Lead"
-                            },
-                            {
                               "id": "lead-be",
                               "label": "Backend Lead"
                             }
                           ]
                         }
-                      ]
+                      ],
+                      "gap": "lg"
                     }
                   ]
                 ]
@@ -3406,22 +3406,22 @@
                     "render-ui",
                     "main",
                     {
+                      "direction": "vertical",
                       "children": [
                         {
                           "type": "spinner"
                         },
                         {
-                          "color": "muted",
+                          "type": "typography",
                           "variant": "caption",
-                          "content": "Refreshing…",
-                          "type": "typography"
+                          "color": "muted",
+                          "content": "Refreshing…"
                         }
                       ],
-                      "type": "stack",
                       "align": "center",
-                      "direction": "vertical",
-                      "gap": "md",
-                      "className": "py-12"
+                      "className": "py-12",
+                      "type": "stack",
+                      "gap": "md"
                     }
                   ]
                 ]

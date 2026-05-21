@@ -1,6 +1,9 @@
 app std-form-builder "1.1.0"
 "std-form-builder — survey form composer with list/detail browse + sidebar question and rules editors. Agents tune the list shape via `config.fields` + `config.itemActions`."
 
+type FieldSpec = { name : string!, label : string, variant : string, icon : string, format : string, key : string, header : string }
+type ItemAction = { label : string!, event : string!, variant : string, icon : string }
+
 orbital FormBuilderOrbital {
   entity Survey [persistent: surveys] {
     id            : string!
@@ -23,7 +26,7 @@ orbital FormBuilderOrbital {
       title       : string   = "Survey Builder"
         @label "Section title"
         @description "Heading shown above the survey list"
-      fields      : [object] = [
+      fields      : [FieldSpec] = [
         { name: "title",       label: "Title",       variant: "caption" },
         { name: "description", label: "Description", variant: "caption" },
         { name: "status",      label: "Status",      variant: "badge"   },
@@ -31,7 +34,7 @@ orbital FormBuilderOrbital {
       ]
         @label "Columns to show"
         @description "Each column maps to one field on the Survey entity"
-      itemActions : [object] = [
+      itemActions : [ItemAction] = [
         { label: "Open",    event: "OPEN_SURVEY", variant: "primary",   icon: "arrow-right" },
         { label: "Publish", event: "PUBLISH",     variant: "secondary", icon: "send" }
       ]

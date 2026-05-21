@@ -1,6 +1,8 @@
 app std-notes "1.0.0"
 "Notes: Notion-style personal hierarchical notes with rich-text content, page tree, search, and favorites. Pick for personal/lightweight notes (vs std-wiki for collaborative team KB)."
 
+type BlockSpec = { type : string!, content : string, id : string }
+
 orbital NoteOrbital {
   uses AppShell     from "std/behaviors/std-app-layout"
   uses Modal        from "std/behaviors/std-modal"
@@ -17,7 +19,7 @@ orbital NoteOrbital {
     id           : string!
     title        : string!
     content      : string = ""
-    blocksJson   : [object]
+    blocksJson   : [BlockSpec]
     parentId     : string = ""
     path         : string = ""
     icon         : string = "file-text"
@@ -278,7 +280,7 @@ orbital RichEditorPanelOrbital {
   entity Document [persistent: documents] {
     id         : string!
     title      : string!
-    blocksJson : [object]
+    blocksJson : [BlockSpec]
     authorId   : string = ""
     parentId   : string = ""
     kind       : "page" | "doc" | "post" = "page"

@@ -1,6 +1,9 @@
 app std-membership "1.1.0"
 "std-membership — recurring gym/fitness/club membership with tier, renewal, freeze, and self-managed cancel. Lists memberships in `browsing`; opens membership detail in `viewing_single` with Upgrade / Freeze / Cancel actions. Agents tune the list shape via `config.fields` + `config.itemActions`."
 
+type FieldSpec = { name : string!, label : string, variant : string, icon : string, format : string, key : string, header : string }
+type ItemAction = { label : string!, event : string!, variant : string, icon : string }
+
 orbital MembershipOrbital {
   entity Membership [persistent: memberships] {
     id           : string!
@@ -23,7 +26,7 @@ orbital MembershipOrbital {
       title       : string   = "Memberships"
         @label "Section title"
         @description "Heading shown above the membership list"
-      fields      : [object] = [
+      fields      : [FieldSpec] = [
         { name: "memberName",  label: "Member",       variant: "caption" },
         { name: "tier",        label: "Tier",         variant: "badge"   },
         { name: "monthlyDues", label: "Monthly Dues", variant: "caption" },
@@ -32,7 +35,7 @@ orbital MembershipOrbital {
       ]
         @label "Columns to show"
         @description "Each column maps to one field on the Membership entity"
-      itemActions : [object] = [
+      itemActions : [ItemAction] = [
         { label: "Open",   event: "OPEN_MEMBERSHIP",   variant: "primary", icon: "arrow-right" },
         { label: "Cancel", event: "CANCEL_MEMBERSHIP", variant: "danger" }
       ]

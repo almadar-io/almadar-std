@@ -88,10 +88,10 @@ export interface StdTenantTenantLoadFailedPayload {
 export interface StdTenantConfig {
   /** Default: `"Tenants"` */
   title?: string;
-  /** Default: `[{"label":"Name","variant":"h4","name":"name"},{"variant":"body","name":"email","label":"Email"},{"name":"phone","variant":"caption","label":"Phone"},{"label":"Status","variant":"badge","name":"status"},{"label":"Move-In","variant":"caption","name":"moveInDate"}]` */
-  fields?: TraitConfig[];
-  /** Default: `[{"variant":"primary","icon":"arrow-right","event":"OPEN_TENANT","label":"Open"},{"variant":"danger","event":"MOVE_OUT","label":"Move Out"}]` */
-  itemActions?: TraitConfig[];
+  /** Default: `[{"label":"Open","variant":"primary","event":"OPEN_TENANT","icon":"arrow-right"},{"label":"Move Out","event":"MOVE_OUT","variant":"danger"}]` */
+  itemActions?: EntityRow[];
+  /** Default: `[{"label":"Name","variant":"h4","name":"name"},{"variant":"body","name":"email","label":"Email"},{"name":"phone","label":"Phone","variant":"caption"},{"name":"status","label":"Status","variant":"badge"},{"label":"Move-In","name":"moveInDate","variant":"caption"}]` */
+  fields?: EntityRow[];
 }
 
 /**

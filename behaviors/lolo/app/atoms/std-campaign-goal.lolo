@@ -1,6 +1,9 @@
 app std-campaign-goal "1.1.0"
 "std-campaign-goal — nonprofit fundraising campaign with target / raised / donor count / deadline / status. Lists campaigns in `browsing`; opens campaign detail in `viewing_single` with Launch / End actions. Agents tune the list shape via `config.fields` + `config.itemActions`."
 
+type FieldSpec = { name : string!, label : string, variant : string, icon : string, format : string, key : string, header : string }
+type ItemAction = { label : string!, event : string!, variant : string, icon : string }
+
 orbital CampaignGoalOrbital {
   entity CampaignGoal [persistent: campaigngoals] {
     id            : string!
@@ -22,7 +25,7 @@ orbital CampaignGoalOrbital {
       title       : string   = "Campaigns"
         @label "Section title"
         @description "Heading shown above the fundraising campaign list"
-      fields      : [object] = [
+      fields      : [FieldSpec] = [
         { name: "name",         label: "Name",   variant: "caption" },
         { name: "targetAmount", label: "Target", variant: "caption" },
         { name: "raisedAmount", label: "Raised", variant: "caption" },
@@ -31,7 +34,7 @@ orbital CampaignGoalOrbital {
       ]
         @label "Columns to show"
         @description "Each column maps to one field on the Campaign entity"
-      itemActions : [object] = [
+      itemActions : [ItemAction] = [
         { label: "Open", event: "OPEN_CAMPAIGN", variant: "primary", icon: "arrow-right" },
         { label: "End",  event: "END_CAMPAIGN",  variant: "danger" }
       ]

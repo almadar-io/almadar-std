@@ -1,6 +1,9 @@
 app std-chart-of-accounts "1.1.0"
 "std-chart-of-accounts — list of all accounts (asset, liability, equity, revenue, expense) that ledger entries post against. Lists accounts in `browsing`; opens detail in `viewing_single` with Activate / Deactivate actions. Agents tune the list shape via `config.fields` + `config.itemActions`."
 
+type FieldSpec = { name : string!, label : string, variant : string, icon : string, format : string, key : string, header : string }
+type ItemAction = { label : string!, event : string!, variant : string, icon : string }
+
 orbital ChartOfAccountsOrbital {
   entity Account [persistent: accounts] {
     id         : string!
@@ -20,7 +23,7 @@ orbital ChartOfAccountsOrbital {
       title       : string   = "Chart of Accounts"
         @label "Section title"
         @description "Heading shown above the accounts list"
-      fields      : [object] = [
+      fields      : [FieldSpec] = [
         { name: "code",       label: "Code",    variant: "caption" },
         { name: "name",       label: "Name",    variant: "caption" },
         { name: "type",       label: "Type",    variant: "badge"   },
@@ -29,7 +32,7 @@ orbital ChartOfAccountsOrbital {
       ]
         @label "Columns to show"
         @description "Each column maps to one field on the Account entity"
-      itemActions : [object] = [
+      itemActions : [ItemAction] = [
         { label: "Open",       event: "OPEN_ACCOUNT",       variant: "primary", icon: "arrow-right" },
         { label: "Deactivate", event: "DEACTIVATE_ACCOUNT", variant: "danger" }
       ]

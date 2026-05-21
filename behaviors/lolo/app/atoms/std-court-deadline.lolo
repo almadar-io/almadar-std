@@ -1,6 +1,9 @@
 app std-court-deadline "1.1.0"
 "std-court-deadline — statutory filing deadline tied to a legal matter. Lists deadlines in `browsing`; opens detail in `viewing_single` with Complete / Extend actions. Agents tune the list shape via `config.fields` + `config.itemActions`."
 
+type FieldSpec = { name : string!, label : string, variant : string, icon : string, format : string, key : string, header : string }
+type ItemAction = { label : string!, event : string!, variant : string, icon : string }
+
 orbital CourtDeadlineOrbital {
   entity CourtDeadline [persistent: courtdeadlines] {
     id            : string!
@@ -23,7 +26,7 @@ orbital CourtDeadlineOrbital {
       title       : string   = "Deadlines"
         @label "Section title"
         @description "Heading shown above the legal deadlines docket"
-      fields      : [object] = [
+      fields      : [FieldSpec] = [
         { name: "title",        label: "Title",        variant: "caption" },
         { name: "deadlineType", label: "Type",         variant: "badge"   },
         { name: "dueAt",        label: "Due",          variant: "caption" },
@@ -33,7 +36,7 @@ orbital CourtDeadlineOrbital {
       ]
         @label "Columns to show"
         @description "Each column maps to one field on the Court Deadline entity"
-      itemActions : [object] = [
+      itemActions : [ItemAction] = [
         { label: "Open",     event: "OPEN_DEADLINE",  variant: "primary", icon: "arrow-right" },
         { label: "Complete", event: "MARK_COMPLETED", variant: "danger" }
       ]

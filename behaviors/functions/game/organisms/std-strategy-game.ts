@@ -257,8 +257,8 @@ export function stdStrategyGameArmyBattleOrbital(params: StdStrategyGameArmyBatt
                   'ArmyBattle',
                   {
                     'emit': {
-                      'failure': 'ArmyBattleLoadFailed',
                       'success': 'ArmyBattleLoaded',
+                      'failure': 'ArmyBattleLoadFailed',
                     },
                   },
                 ],
@@ -266,20 +266,20 @@ export function stdStrategyGameArmyBattleOrbital(params: StdStrategyGameArmyBatt
                   'render-ui',
                   'main',
                   {
-                    'type': 'game-shell',
                     'appName': 'Strategy Game',
+                    'type': 'game-shell',
                     'children': [
                       {
                         'subtitle': 'Turn-Based Strategy',
-                        'title': 'Army Battle',
-                        'type': 'game-menu',
                         'menuItems': [
                           {
-                            'label': 'Start Battle',
                             'variant': 'primary',
                             'event': 'START',
+                            'label': 'Start Battle',
                           },
                         ],
+                        'type': 'game-menu',
+                        'title': 'Army Battle',
                       },
                     ],
                     'showTopBar': true,
@@ -315,15 +315,15 @@ export function stdStrategyGameArmyBattleOrbital(params: StdStrategyGameArmyBatt
                             'label': 'Turn',
                           },
                           {
-                            'value': '@entity.score',
                             'label': 'Score',
+                            'value': '@entity.score',
                           },
                         ],
                       },
                     ],
-                    'appName': 'Strategy Game',
-                    'showTopBar': true,
                     'type': 'game-shell',
+                    'showTopBar': true,
+                    'appName': 'Strategy Game',
                   },
                 ],
               ],
@@ -351,24 +351,24 @@ export function stdStrategyGameArmyBattleOrbital(params: StdStrategyGameArmyBatt
                   'render-ui',
                   'main',
                   {
-                    'showTopBar': true,
                     'type': 'game-shell',
-                    'appName': 'Strategy Game',
                     'children': [
                       {
-                        'type': 'game-hud',
                         'stats': [
                           {
-                            'value': '@entity.turn',
                             'label': 'Turn',
+                            'value': '@entity.turn',
                           },
                           {
                             'value': '@entity.score',
                             'label': 'Score',
                           },
                         ],
+                        'type': 'game-hud',
                       },
                     ],
+                    'showTopBar': true,
+                    'appName': 'Strategy Game',
                   },
                 ],
               ],
@@ -382,20 +382,20 @@ export function stdStrategyGameArmyBattleOrbital(params: StdStrategyGameArmyBatt
                   'render-ui',
                   'modal',
                   {
-                    'type': 'game-menu',
-                    'title': 'Paused',
                     'menuItems': [
                       {
                         'label': 'Resume',
-                        'event': 'RESUME',
                         'variant': 'primary',
+                        'event': 'RESUME',
                       },
                       {
-                        'variant': 'ghost',
                         'label': 'Quit',
                         'event': 'RESTART',
+                        'variant': 'ghost',
                       },
                     ],
+                    'type': 'game-menu',
+                    'title': 'Paused',
                   },
                 ],
               ],
@@ -409,34 +409,34 @@ export function stdStrategyGameArmyBattleOrbital(params: StdStrategyGameArmyBatt
                   'render-ui',
                   'main',
                   {
-                    'type': 'game-shell',
                     'appName': 'Strategy Game',
+                    'type': 'game-shell',
                     'children': [
                       {
                         'type': 'game-over-screen',
-                        'title': 'Battle Over',
-                        'stats': [
-                          {
-                            'value': '@entity.turn',
-                            'label': 'Turns',
-                          },
-                          {
-                            'label': 'Score',
-                            'value': '@entity.score',
-                          },
-                        ],
                         'menuItems': [
                           {
+                            'variant': 'primary',
                             'label': 'Play Again',
                             'event': 'RESTART',
-                            'variant': 'primary',
                           },
                           {
-                            'label': 'Main Menu',
                             'event': 'RESTART',
                             'variant': 'secondary',
+                            'label': 'Main Menu',
                           },
                         ],
+                        'stats': [
+                          {
+                            'label': 'Turns',
+                            'value': '@entity.turn',
+                          },
+                          {
+                            'value': '@entity.score',
+                            'label': 'Score',
+                          },
+                        ],
+                        'title': 'Battle Over',
                       },
                     ],
                     'showTopBar': true,
@@ -463,14 +463,15 @@ export function stdStrategyGameArmyBattleOrbital(params: StdStrategyGameArmyBatt
                   'render-ui',
                   'main',
                   {
-                    'type': 'game-shell',
                     'appName': 'Strategy Game',
+                    'type': 'game-shell',
+                    'showTopBar': true,
                     'children': [
                       {
                         'stats': [
                           {
-                            'label': 'Turn',
                             'value': '@entity.turn',
+                            'label': 'Turn',
                           },
                           {
                             'value': '@entity.score',
@@ -480,7 +481,6 @@ export function stdStrategyGameArmyBattleOrbital(params: StdStrategyGameArmyBatt
                         'type': 'game-hud',
                       },
                     ],
-                    'showTopBar': true,
                   },
                 ],
               ],
@@ -499,24 +499,24 @@ export function stdStrategyGameArmyBattleOrbital(params: StdStrategyGameArmyBatt
                   'render-ui',
                   'main',
                   {
-                    'showTopBar': true,
-                    'appName': 'Strategy Game',
                     'type': 'game-shell',
+                    'appName': 'Strategy Game',
                     'children': [
                       {
-                        'type': 'game-hud',
                         'stats': [
                           {
                             'label': 'Turn',
                             'value': '@entity.turn',
                           },
                           {
-                            'label': 'Score',
                             'value': '@entity.score',
+                            'label': 'Score',
                           },
                         ],
+                        'type': 'game-hud',
                       },
                     ],
+                    'showTopBar': true,
                   },
                 ],
               ],
@@ -535,21 +535,21 @@ export function stdStrategyGameArmyBattleOrbital(params: StdStrategyGameArmyBatt
                   'render-ui',
                   'main',
                   {
-                    'type': 'game-shell',
-                    'appName': 'Strategy Game',
                     'showTopBar': true,
+                    'appName': 'Strategy Game',
+                    'type': 'game-shell',
                     'children': [
                       {
                         'type': 'game-menu',
                         'menuItems': [
                           {
-                            'event': 'START',
                             'variant': 'primary',
                             'label': 'Start Battle',
+                            'event': 'START',
                           },
                         ],
-                        'subtitle': 'Turn-Based Strategy',
                         'title': 'Army Battle',
+                        'subtitle': 'Turn-Based Strategy',
                       },
                     ],
                   },
@@ -565,23 +565,23 @@ export function stdStrategyGameArmyBattleOrbital(params: StdStrategyGameArmyBatt
                   'render-ui',
                   'main',
                   {
+                    'showTopBar': true,
                     'children': [
                       {
                         'menuItems': [
                           {
+                            'label': 'Start Battle',
                             'event': 'START',
                             'variant': 'primary',
-                            'label': 'Start Battle',
                           },
                         ],
-                        'type': 'game-menu',
-                        'subtitle': 'Turn-Based Strategy',
                         'title': 'Army Battle',
+                        'subtitle': 'Turn-Based Strategy',
+                        'type': 'game-menu',
                       },
                     ],
                     'type': 'game-shell',
                     'appName': 'Strategy Game',
-                    'showTopBar': true,
                   },
                 ],
               ],
@@ -685,8 +685,8 @@ export function stdStrategyGameArmyBattleOrbital(params: StdStrategyGameArmyBatt
                   'ArmyBattle',
                   {
                     'emit': {
-                      'failure': 'ArmyBattleLoadFailed',
                       'success': 'ArmyBattleLoaded',
+                      'failure': 'ArmyBattleLoadFailed',
                     },
                   },
                 ],
@@ -702,18 +702,18 @@ export function stdStrategyGameArmyBattleOrbital(params: StdStrategyGameArmyBatt
                   'main',
                   {
                     'type': 'game-shell',
-                    'children': [
-                      {
-                        'showTimestamps': true,
-                        'title': 'Combat Log',
-                        'type': 'combat-log',
-                        'events': '@ArmyBattle',
-                        'maxVisible': 10,
-                        'autoScroll': true,
-                      },
-                    ],
                     'appName': 'Strategy Game',
                     'showTopBar': true,
+                    'children': [
+                      {
+                        'title': 'Combat Log',
+                        'type': 'combat-log',
+                        'maxVisible': 10,
+                        'autoScroll': true,
+                        'events': '@ArmyBattle',
+                        'showTimestamps': true,
+                      },
+                    ],
                   },
                 ],
               ],
@@ -730,16 +730,16 @@ export function stdStrategyGameArmyBattleOrbital(params: StdStrategyGameArmyBatt
                     'children': [
                       {
                         'title': 'Combat Log',
-                        'showTimestamps': true,
-                        'events': '@ArmyBattle',
                         'maxVisible': 10,
+                        'events': '@ArmyBattle',
                         'type': 'combat-log',
                         'autoScroll': true,
+                        'showTimestamps': true,
                       },
                     ],
                     'appName': 'Strategy Game',
-                    'type': 'game-shell',
                     'showTopBar': true,
+                    'type': 'game-shell',
                   },
                 ],
               ],
@@ -1030,22 +1030,22 @@ export function stdStrategyGameTerritoryOrbital(params: StdStrategyGameTerritory
                   'render-ui',
                   'main',
                   {
-                    'gap': 'md',
                     'align': 'center',
-                    'className': 'py-12',
                     'direction': 'vertical',
+                    'type': 'stack',
+                    'className': 'py-12',
+                    'gap': 'md',
                     'children': [
                       {
                         'type': 'spinner',
                       },
                       {
-                        'content': 'Loading…',
-                        'color': 'muted',
-                        'variant': 'caption',
                         'type': 'typography',
+                        'color': 'muted',
+                        'content': 'Loading…',
+                        'variant': 'caption',
                       },
                     ],
-                    'type': 'stack',
                   },
                 ],
               ],
@@ -1059,18 +1059,14 @@ export function stdStrategyGameTerritoryOrbital(params: StdStrategyGameTerritory
                   'render-ui',
                   'main',
                   {
-                    'showTopBar': true,
-                    'type': 'game-shell',
                     'children': [
                       {
-                        'gap': 'lg',
+                        'direction': 'vertical',
                         'children': [
                           {
-                            'type': 'stack',
-                            'direction': 'horizontal',
-                            'justify': 'between',
                             'children': [
                               {
+                                'gap': 'md',
                                 'children': [
                                   {
                                     'name': 'map',
@@ -1082,52 +1078,47 @@ export function stdStrategyGameTerritoryOrbital(params: StdStrategyGameTerritory
                                     'variant': 'h2',
                                   },
                                 ],
-                                'gap': 'md',
-                                'direction': 'horizontal',
                                 'type': 'stack',
+                                'direction': 'horizontal',
                               },
                               {
+                                'label': 'Exploring',
                                 'type': 'status-dot',
                                 'status': 'online',
                                 'pulse': false,
-                                'label': 'Exploring',
                               },
                             ],
+                            'type': 'stack',
+                            'justify': 'between',
                             'gap': 'md',
+                            'direction': 'horizontal',
                           },
                           {
                             'type': 'divider',
                           },
                           {
-                            'height': '200px',
-                            'markers': [],
                             'type': 'map-view',
+                            'markers': [],
+                            'height': '200px',
                             'zoom': 10,
                           },
                           {
-                            'fields': [],
-                            'entity': '@payload.data',
-                            'itemActions': [
-                              {
-                                'label': 'Travel',
-                                'event': 'TRAVEL',
-                              },
-                            ],
-                            'type': 'data-grid',
                             'renderItem': [
                               'fn',
                               'item',
                               {
+                                'type': 'stack',
+                                'direction': 'vertical',
+                                'gap': 'sm',
                                 'children': [
                                   {
-                                    'justify': 'between',
                                     'align': 'center',
-                                    'type': 'stack',
                                     'direction': 'horizontal',
                                     'children': [
                                       {
                                         'gap': 'sm',
                                         'align': 'center',
+                                        'direction': 'horizontal',
                                         'children': [
                                           {
                                             'name': 'map-pin',
@@ -1139,32 +1130,41 @@ export function stdStrategyGameTerritoryOrbital(params: StdStrategyGameTerritory
                                             'type': 'typography',
                                           },
                                         ],
-                                        'direction': 'horizontal',
                                         'type': 'stack',
                                       },
                                       {
-                                        'type': 'badge',
                                         'label': '@item.owner',
+                                        'type': 'badge',
                                       },
                                     ],
+                                    'justify': 'between',
+                                    'type': 'stack',
                                   },
                                   {
-                                    'variant': 'caption',
-                                    'type': 'typography',
                                     'content': '@item.defense',
+                                    'type': 'typography',
+                                    'variant': 'caption',
                                   },
                                 ],
-                                'direction': 'vertical',
-                                'type': 'stack',
-                                'gap': 'sm',
                               },
                             ],
+                            'entity': '@payload.data',
+                            'fields': [],
+                            'itemActions': [
+                              {
+                                'label': 'Travel',
+                                'event': 'TRAVEL',
+                              },
+                            ],
+                            'type': 'data-grid',
                           },
                         ],
                         'type': 'stack',
-                        'direction': 'vertical',
+                        'gap': 'lg',
                       },
                     ],
+                    'type': 'game-shell',
+                    'showTopBar': true,
                     'appName': 'Strategy Game',
                   },
                 ],
@@ -1179,36 +1179,36 @@ export function stdStrategyGameTerritoryOrbital(params: StdStrategyGameTerritory
                   'render-ui',
                   'main',
                   {
-                    'direction': 'vertical',
-                    'align': 'center',
-                    'className': 'py-12',
                     'children': [
                       {
+                        'name': 'alert-triangle',
                         'color': 'destructive',
                         'type': 'icon',
-                        'name': 'alert-triangle',
                       },
                       {
-                        'type': 'typography',
                         'variant': 'h3',
                         'content': 'Failed to load territory',
+                        'type': 'typography',
                       },
                       {
-                        'color': 'muted',
-                        'variant': 'body',
                         'type': 'typography',
+                        'variant': 'body',
                         'content': '@payload.error',
+                        'color': 'muted',
                       },
                       {
                         'type': 'button',
                         'variant': 'primary',
-                        'icon': 'rotate-ccw',
-                        'label': 'Retry',
                         'action': 'INIT',
+                        'label': 'Retry',
+                        'icon': 'rotate-ccw',
                       },
                     ],
                     'gap': 'md',
                     'type': 'stack',
+                    'direction': 'vertical',
+                    'align': 'center',
+                    'className': 'py-12',
                   },
                 ],
               ],
@@ -1222,25 +1222,30 @@ export function stdStrategyGameTerritoryOrbital(params: StdStrategyGameTerritory
                   'render-ui',
                   'main',
                   {
+                    'showTopBar': true,
+                    'appName': 'Strategy Game',
+                    'type': 'game-shell',
                     'children': [
                       {
                         'align': 'center',
+                        'gap': 'lg',
+                        'direction': 'vertical',
                         'children': [
                           {
+                            'type': 'stack',
                             'children': [
                               {
                                 'name': 'loader',
                                 'type': 'icon',
                               },
                               {
-                                'content': 'Traveling...',
                                 'variant': 'h2',
                                 'type': 'typography',
+                                'content': 'Traveling...',
                               },
                             ],
-                            'type': 'stack',
-                            'direction': 'horizontal',
                             'gap': 'md',
+                            'direction': 'horizontal',
                           },
                           {
                             'type': 'divider',
@@ -1252,13 +1257,8 @@ export function stdStrategyGameTerritoryOrbital(params: StdStrategyGameTerritory
                           },
                         ],
                         'type': 'stack',
-                        'direction': 'vertical',
-                        'gap': 'lg',
                       },
                     ],
-                    'appName': 'Strategy Game',
-                    'showTopBar': true,
-                    'type': 'game-shell',
                   },
                 ],
               ],
@@ -1273,8 +1273,8 @@ export function stdStrategyGameTerritoryOrbital(params: StdStrategyGameTerritory
                   'Territory',
                   {
                     'emit': {
-                      'failure': 'TerritoryLoadFailed',
                       'success': 'TerritoryLoaded',
+                      'failure': 'TerritoryLoadFailed',
                     },
                   },
                 ],
@@ -1282,22 +1282,22 @@ export function stdStrategyGameTerritoryOrbital(params: StdStrategyGameTerritory
                   'render-ui',
                   'main',
                   {
-                    'align': 'center',
-                    'className': 'py-12',
+                    'direction': 'vertical',
                     'children': [
                       {
                         'type': 'spinner',
                       },
                       {
-                        'variant': 'caption',
-                        'content': 'Loading…',
                         'color': 'muted',
+                        'content': 'Loading…',
                         'type': 'typography',
+                        'variant': 'caption',
                       },
                     ],
-                    'gap': 'md',
                     'type': 'stack',
-                    'direction': 'vertical',
+                    'align': 'center',
+                    'gap': 'md',
+                    'className': 'py-12',
                   },
                 ],
               ],
@@ -1311,74 +1311,79 @@ export function stdStrategyGameTerritoryOrbital(params: StdStrategyGameTerritory
                   'render-ui',
                   'main',
                   {
+                    'appName': 'Strategy Game',
+                    'showTopBar': true,
                     'children': [
                       {
                         'direction': 'vertical',
-                        'type': 'stack',
                         'gap': 'lg',
                         'children': [
                           {
                             'children': [
                               {
+                                'direction': 'horizontal',
+                                'gap': 'md',
                                 'children': [
                                   {
                                     'name': 'map',
                                     'type': 'icon',
                                   },
                                   {
-                                    'type': 'typography',
-                                    'content': 'Territorys Map',
                                     'variant': 'h2',
+                                    'content': 'Territorys Map',
+                                    'type': 'typography',
                                   },
                                 ],
                                 'type': 'stack',
-                                'direction': 'horizontal',
-                                'gap': 'md',
                               },
                               {
-                                'label': 'Entered',
                                 'type': 'status-dot',
                                 'status': 'online',
+                                'label': 'Entered',
                               },
                             ],
+                            'direction': 'horizontal',
+                            'type': 'stack',
                             'gap': 'md',
                             'justify': 'between',
-                            'type': 'stack',
-                            'direction': 'horizontal',
                           },
                           {
                             'type': 'divider',
                           },
                           {
                             'type': 'data-grid',
+                            'entity': '@payload.data',
                             'fields': [],
                             'renderItem': [
                               'fn',
                               'item',
                               {
+                                'direction': 'vertical',
+                                'type': 'stack',
+                                'gap': 'sm',
                                 'children': [
                                   {
-                                    'direction': 'horizontal',
                                     'justify': 'between',
                                     'align': 'center',
                                     'type': 'stack',
+                                    'direction': 'horizontal',
                                     'children': [
                                       {
-                                        'type': 'stack',
-                                        'align': 'center',
-                                        'direction': 'horizontal',
-                                        'gap': 'sm',
                                         'children': [
                                           {
                                             'name': 'map-pin',
                                             'type': 'icon',
                                           },
                                           {
-                                            'type': 'typography',
-                                            'variant': 'h4',
                                             'content': '@item.name',
+                                            'variant': 'h4',
+                                            'type': 'typography',
                                           },
                                         ],
+                                        'direction': 'horizontal',
+                                        'gap': 'sm',
+                                        'type': 'stack',
+                                        'align': 'center',
                                       },
                                       {
                                         'type': 'badge',
@@ -1387,41 +1392,36 @@ export function stdStrategyGameTerritoryOrbital(params: StdStrategyGameTerritory
                                     ],
                                   },
                                   {
-                                    'type': 'typography',
                                     'variant': 'caption',
                                     'content': '@item.defense',
+                                    'type': 'typography',
                                   },
                                 ],
-                                'type': 'stack',
-                                'gap': 'sm',
-                                'direction': 'vertical',
                               },
                             ],
-                            'entity': '@payload.data',
                           },
                           {
                             'type': 'divider',
                           },
                           {
-                            'justify': 'end',
                             'direction': 'horizontal',
+                            'justify': 'end',
                             'children': [
                               {
-                                'icon': 'arrow-left',
-                                'action': 'BACK',
                                 'type': 'button',
-                                'label': 'Back to Map',
+                                'icon': 'arrow-left',
                                 'variant': 'ghost',
+                                'label': 'Back to Map',
+                                'action': 'BACK',
                               },
                             ],
-                            'gap': 'sm',
                             'type': 'stack',
+                            'gap': 'sm',
                           },
                         ],
+                        'type': 'stack',
                       },
                     ],
-                    'appName': 'Strategy Game',
-                    'showTopBar': true,
                     'type': 'game-shell',
                   },
                 ],
@@ -1437,16 +1437,18 @@ export function stdStrategyGameTerritoryOrbital(params: StdStrategyGameTerritory
                   'main',
                   {
                     'className': 'py-12',
+                    'type': 'stack',
+                    'direction': 'vertical',
                     'children': [
                       {
-                        'type': 'icon',
                         'name': 'alert-triangle',
                         'color': 'destructive',
+                        'type': 'icon',
                       },
                       {
                         'content': 'Failed to load territory',
-                        'variant': 'h3',
                         'type': 'typography',
+                        'variant': 'h3',
                       },
                       {
                         'color': 'muted',
@@ -1456,15 +1458,13 @@ export function stdStrategyGameTerritoryOrbital(params: StdStrategyGameTerritory
                       },
                       {
                         'label': 'Retry',
+                        'action': 'INIT',
                         'variant': 'primary',
                         'type': 'button',
                         'icon': 'rotate-ccw',
-                        'action': 'INIT',
                       },
                     ],
-                    'direction': 'vertical',
                     'gap': 'md',
-                    'type': 'stack',
                     'align': 'center',
                   },
                 ],
@@ -1489,21 +1489,21 @@ export function stdStrategyGameTerritoryOrbital(params: StdStrategyGameTerritory
                   'render-ui',
                   'main',
                   {
-                    'className': 'py-12',
-                    'direction': 'vertical',
+                    'type': 'stack',
+                    'align': 'center',
                     'children': [
                       {
                         'type': 'spinner',
                       },
                       {
+                        'content': 'Loading…',
+                        'color': 'muted',
                         'type': 'typography',
                         'variant': 'caption',
-                        'color': 'muted',
-                        'content': 'Loading…',
                       },
                     ],
-                    'type': 'stack',
-                    'align': 'center',
+                    'className': 'py-12',
+                    'direction': 'vertical',
                     'gap': 'md',
                   },
                 ],
@@ -1518,17 +1518,20 @@ export function stdStrategyGameTerritoryOrbital(params: StdStrategyGameTerritory
                   'render-ui',
                   'main',
                   {
+                    'appName': 'Strategy Game',
                     'type': 'game-shell',
+                    'showTopBar': true,
                     'children': [
                       {
-                        'gap': 'lg',
                         'direction': 'vertical',
+                        'type': 'stack',
+                        'gap': 'lg',
                         'children': [
                           {
+                            'type': 'stack',
+                            'justify': 'between',
                             'children': [
                               {
-                                'type': 'stack',
-                                'gap': 'md',
                                 'children': [
                                   {
                                     'name': 'map',
@@ -1536,21 +1539,21 @@ export function stdStrategyGameTerritoryOrbital(params: StdStrategyGameTerritory
                                   },
                                   {
                                     'variant': 'h2',
-                                    'content': 'Territory Map',
                                     'type': 'typography',
+                                    'content': 'Territory Map',
                                   },
                                 ],
+                                'gap': 'md',
                                 'direction': 'horizontal',
+                                'type': 'stack',
                               },
                               {
-                                'label': 'Exploring',
-                                'type': 'status-dot',
                                 'status': 'online',
                                 'pulse': false,
+                                'label': 'Exploring',
+                                'type': 'status-dot',
                               },
                             ],
-                            'type': 'stack',
-                            'justify': 'between',
                             'gap': 'md',
                             'direction': 'horizontal',
                           },
@@ -1559,72 +1562,69 @@ export function stdStrategyGameTerritoryOrbital(params: StdStrategyGameTerritory
                           },
                           {
                             'markers': [],
+                            'zoom': 10,
                             'height': '200px',
                             'type': 'map-view',
-                            'zoom': 10,
                           },
                           {
+                            'itemActions': [
+                              {
+                                'event': 'TRAVEL',
+                                'label': 'Travel',
+                              },
+                            ],
                             'fields': [],
                             'renderItem': [
                               'fn',
                               'item',
                               {
+                                'gap': 'sm',
+                                'direction': 'vertical',
+                                'type': 'stack',
                                 'children': [
                                   {
-                                    'align': 'center',
-                                    'justify': 'between',
-                                    'type': 'stack',
                                     'children': [
                                       {
                                         'type': 'stack',
-                                        'direction': 'horizontal',
-                                        'align': 'center',
                                         'children': [
                                           {
-                                            'type': 'icon',
                                             'name': 'map-pin',
+                                            'type': 'icon',
                                           },
                                           {
-                                            'content': '@item.name',
                                             'variant': 'h4',
+                                            'content': '@item.name',
                                             'type': 'typography',
                                           },
                                         ],
+                                        'direction': 'horizontal',
                                         'gap': 'sm',
+                                        'align': 'center',
                                       },
                                       {
-                                        'label': '@item.owner',
                                         'type': 'badge',
+                                        'label': '@item.owner',
                                       },
                                     ],
+                                    'justify': 'between',
+                                    'align': 'center',
+                                    'type': 'stack',
                                     'direction': 'horizontal',
                                   },
                                   {
-                                    'type': 'typography',
-                                    'variant': 'caption',
                                     'content': '@item.defense',
+                                    'variant': 'caption',
+                                    'type': 'typography',
                                   },
                                 ],
-                                'direction': 'vertical',
-                                'type': 'stack',
-                                'gap': 'sm',
-                              },
-                            ],
-                            'type': 'data-grid',
-                            'itemActions': [
-                              {
-                                'label': 'Travel',
-                                'event': 'TRAVEL',
                               },
                             ],
                             'entity': '@payload.data',
+                            'type': 'data-grid',
                           },
                         ],
-                        'type': 'stack',
                       },
                     ],
-                    'showTopBar': true,
-                    'appName': 'Strategy Game',
                   },
                 ],
               ],
@@ -1638,36 +1638,36 @@ export function stdStrategyGameTerritoryOrbital(params: StdStrategyGameTerritory
                   'render-ui',
                   'main',
                   {
+                    'direction': 'vertical',
                     'gap': 'md',
-                    'type': 'stack',
                     'align': 'center',
-                    'className': 'py-12',
                     'children': [
                       {
-                        'type': 'icon',
                         'name': 'alert-triangle',
                         'color': 'destructive',
+                        'type': 'icon',
                       },
                       {
+                        'type': 'typography',
                         'variant': 'h3',
                         'content': 'Failed to load territory',
-                        'type': 'typography',
                       },
                       {
-                        'type': 'typography',
-                        'variant': 'body',
                         'content': '@payload.error',
+                        'variant': 'body',
+                        'type': 'typography',
                         'color': 'muted',
                       },
                       {
-                        'action': 'INIT',
-                        'type': 'button',
                         'label': 'Retry',
                         'variant': 'primary',
+                        'action': 'INIT',
                         'icon': 'rotate-ccw',
+                        'type': 'button',
                       },
                     ],
-                    'direction': 'vertical',
+                    'className': 'py-12',
+                    'type': 'stack',
                   },
                 ],
               ],
@@ -1964,8 +1964,8 @@ export function stdStrategyGameResourceOrbital(params: StdStrategyGameResourceOr
                   'Resource',
                   {
                     'emit': {
-                      'failure': 'ResourceLoadFailed',
                       'success': 'ResourceLoaded',
+                      'failure': 'ResourceLoadFailed',
                     },
                   },
                 ],
@@ -1973,20 +1973,23 @@ export function stdStrategyGameResourceOrbital(params: StdStrategyGameResourceOr
                   'render-ui',
                   'main',
                   {
+                    'showTopBar': true,
+                    'appName': 'Strategy Game',
                     'type': 'game-shell',
                     'children': [
                       {
                         'type': 'scaled-diagram',
                         'children': [
                           {
-                            'direction': 'vertical',
                             'gap': 'lg',
+                            'direction': 'vertical',
+                            'type': 'stack',
                             'children': [
                               {
                                 'items': [
                                   {
-                                    'href': '/',
                                     'label': 'Home',
+                                    'href': '/',
                                   },
                                   {
                                     'label': 'Resources',
@@ -1995,56 +1998,52 @@ export function stdStrategyGameResourceOrbital(params: StdStrategyGameResourceOr
                                 'type': 'breadcrumb',
                               },
                               {
-                                'justify': 'between',
                                 'type': 'stack',
                                 'direction': 'horizontal',
-                                'gap': 'md',
                                 'children': [
                                   {
-                                    'direction': 'horizontal',
                                     'gap': 'md',
-                                    'type': 'stack',
+                                    'direction': 'horizontal',
                                     'children': [
                                       {
-                                        'name': 'database',
                                         'type': 'icon',
+                                        'name': 'database',
                                       },
                                       {
-                                        'content': 'Resources',
-                                        'type': 'typography',
                                         'variant': 'h2',
+                                        'type': 'typography',
+                                        'content': 'Resources',
                                       },
                                     ],
+                                    'type': 'stack',
                                   },
                                   {
-                                    'type': 'button',
-                                    'label': 'Refresh',
                                     'icon': 'refresh-cw',
-                                    'action': 'REFRESH',
+                                    'type': 'button',
                                     'variant': 'secondary',
+                                    'action': 'REFRESH',
+                                    'label': 'Refresh',
                                   },
                                 ],
+                                'gap': 'md',
+                                'justify': 'between',
                               },
                               {
                                 'type': 'divider',
                               },
                               {
-                                'type': 'stack',
-                                'gap': 'sm',
-                                'direction': 'vertical',
                                 'children': [
                                   {
-                                    'cols': 3,
                                     'children': [
                                       {
-                                        'label': 'Gold',
-                                        'type': 'stat-display',
                                         'value': '@entity.gold',
+                                        'type': 'stat-display',
+                                        'label': 'Gold',
                                       },
                                       {
-                                        'type': 'stat-display',
-                                        'value': '@entity.food',
                                         'label': 'Food',
+                                        'value': '@entity.food',
+                                        'type': 'stat-display',
                                       },
                                       {
                                         'label': 'Wood',
@@ -2052,19 +2051,25 @@ export function stdStrategyGameResourceOrbital(params: StdStrategyGameResourceOr
                                         'type': 'stat-display',
                                       },
                                       {
+                                        'label': 'Iron',
                                         'value': '@entity.iron',
                                         'type': 'stat-display',
-                                        'label': 'Iron',
                                       },
                                     ],
+                                    'cols': 3,
                                     'type': 'simple-grid',
                                   },
                                 ],
+                                'type': 'stack',
+                                'gap': 'sm',
+                                'direction': 'vertical',
                               },
                               {
                                 'type': 'divider',
                               },
                               {
+                                'cols': 2,
+                                'gap': 'md',
                                 'children': [
                                   {
                                     'children': [
@@ -2080,16 +2085,14 @@ export function stdStrategyGameResourceOrbital(params: StdStrategyGameResourceOr
                                     'type': 'card',
                                     'children': [
                                       {
+                                        'content': 'Graph View',
                                         'type': 'typography',
                                         'variant': 'caption',
-                                        'content': 'Graph View',
                                       },
                                     ],
                                   },
                                 ],
                                 'type': 'grid',
-                                'gap': 'md',
-                                'cols': 2,
                               },
                               {
                                 'type': 'line-chart',
@@ -2099,32 +2102,32 @@ export function stdStrategyGameResourceOrbital(params: StdStrategyGameResourceOr
                                     'value': 12,
                                   },
                                   {
-                                    'value': 19,
                                     'date': 'Feb',
+                                    'value': 19,
                                   },
                                   {
                                     'value': 15,
                                     'date': 'Mar',
                                   },
                                   {
-                                    'date': 'Apr',
                                     'value': 25,
+                                    'date': 'Apr',
                                   },
                                   {
-                                    'date': 'May',
                                     'value': 22,
+                                    'date': 'May',
                                   },
                                   {
-                                    'value': 30,
                                     'date': 'Jun',
+                                    'value': 30,
                                   },
                                 ],
                               },
                               {
                                 'items': [
                                   {
-                                    'color': 'primary',
                                     'label': 'Current',
+                                    'color': 'primary',
                                   },
                                   {
                                     'label': 'Previous',
@@ -2134,10 +2137,23 @@ export function stdStrategyGameResourceOrbital(params: StdStrategyGameResourceOr
                                 'type': 'chart-legend',
                               },
                               {
+                                'type': 'graph-view',
+                                'edges': [
+                                  {
+                                    'target': 'b',
+                                    'source': 'a',
+                                  },
+                                  {
+                                    'target': 'c',
+                                    'source': 'b',
+                                  },
+                                ],
+                                'width': 400,
+                                'height': 200,
                                 'nodes': [
                                   {
-                                    'id': 'a',
                                     'label': 'Start',
+                                    'id': 'a',
                                   },
                                   {
                                     'id': 'b',
@@ -2148,28 +2164,12 @@ export function stdStrategyGameResourceOrbital(params: StdStrategyGameResourceOr
                                     'label': 'End',
                                   },
                                 ],
-                                'type': 'graph-view',
-                                'edges': [
-                                  {
-                                    'source': 'a',
-                                    'target': 'b',
-                                  },
-                                  {
-                                    'source': 'b',
-                                    'target': 'c',
-                                  },
-                                ],
-                                'height': 200,
-                                'width': 400,
                               },
                             ],
-                            'type': 'stack',
                           },
                         ],
                       },
                     ],
-                    'showTopBar': true,
-                    'appName': 'Strategy Game',
                   },
                 ],
               ],
@@ -2184,8 +2184,8 @@ export function stdStrategyGameResourceOrbital(params: StdStrategyGameResourceOr
                   'Resource',
                   {
                     'emit': {
-                      'failure': 'ResourceLoadFailed',
                       'success': 'ResourceLoaded',
+                      'failure': 'ResourceLoadFailed',
                     },
                   },
                 ],
@@ -2193,13 +2193,13 @@ export function stdStrategyGameResourceOrbital(params: StdStrategyGameResourceOr
                   'render-ui',
                   'main',
                   {
+                    'appName': 'Strategy Game',
                     'children': [
                       {
                         'type': 'scaled-diagram',
                         'children': [
                           {
-                            'type': 'stack',
-                            'direction': 'vertical',
+                            'gap': 'lg',
                             'children': [
                               {
                                 'type': 'breadcrumb',
@@ -2214,40 +2214,42 @@ export function stdStrategyGameResourceOrbital(params: StdStrategyGameResourceOr
                                 ],
                               },
                               {
+                                'type': 'stack',
+                                'gap': 'md',
                                 'children': [
                                   {
-                                    'direction': 'horizontal',
-                                    'gap': 'md',
-                                    'type': 'stack',
                                     'children': [
                                       {
-                                        'type': 'icon',
                                         'name': 'database',
+                                        'type': 'icon',
                                       },
                                       {
+                                        'variant': 'h2',
                                         'type': 'typography',
                                         'content': 'Resources',
-                                        'variant': 'h2',
                                       },
                                     ],
+                                    'gap': 'md',
+                                    'type': 'stack',
+                                    'direction': 'horizontal',
                                   },
                                   {
+                                    'action': 'REFRESH',
                                     'label': 'Refresh',
+                                    'type': 'button',
                                     'variant': 'secondary',
                                     'icon': 'refresh-cw',
-                                    'type': 'button',
-                                    'action': 'REFRESH',
                                   },
                                 ],
-                                'type': 'stack',
                                 'direction': 'horizontal',
-                                'gap': 'md',
                                 'justify': 'between',
                               },
                               {
                                 'type': 'divider',
                               },
                               {
+                                'type': 'stack',
+                                'direction': 'vertical',
                                 'children': [
                                   {
                                     'type': 'simple-grid',
@@ -2265,50 +2267,48 @@ export function stdStrategyGameResourceOrbital(params: StdStrategyGameResourceOr
                                       },
                                       {
                                         'type': 'stat-display',
-                                        'value': '@entity.wood',
                                         'label': 'Wood',
+                                        'value': '@entity.wood',
                                       },
                                       {
                                         'type': 'stat-display',
-                                        'value': '@entity.iron',
                                         'label': 'Iron',
+                                        'value': '@entity.iron',
                                       },
                                     ],
                                   },
                                 ],
                                 'gap': 'sm',
-                                'type': 'stack',
-                                'direction': 'vertical',
                               },
                               {
                                 'type': 'divider',
                               },
                               {
-                                'type': 'grid',
+                                'cols': 2,
                                 'children': [
                                   {
+                                    'type': 'card',
                                     'children': [
                                       {
-                                        'content': 'Chart View',
                                         'variant': 'caption',
                                         'type': 'typography',
+                                        'content': 'Chart View',
                                       },
                                     ],
-                                    'type': 'card',
                                   },
                                   {
                                     'type': 'card',
                                     'children': [
                                       {
-                                        'variant': 'caption',
                                         'content': 'Graph View',
                                         'type': 'typography',
+                                        'variant': 'caption',
                                       },
                                     ],
                                   },
                                 ],
+                                'type': 'grid',
                                 'gap': 'md',
-                                'cols': 2,
                               },
                               {
                                 'data': [
@@ -2317,20 +2317,20 @@ export function stdStrategyGameResourceOrbital(params: StdStrategyGameResourceOr
                                     'value': 12,
                                   },
                                   {
-                                    'date': 'Feb',
                                     'value': 19,
+                                    'date': 'Feb',
                                   },
                                   {
-                                    'date': 'Mar',
                                     'value': 15,
+                                    'date': 'Mar',
                                   },
                                   {
                                     'date': 'Apr',
                                     'value': 25,
                                   },
                                   {
-                                    'date': 'May',
                                     'value': 22,
+                                    'date': 'May',
                                   },
                                   {
                                     'date': 'Jun',
@@ -2340,19 +2340,22 @@ export function stdStrategyGameResourceOrbital(params: StdStrategyGameResourceOr
                                 'type': 'line-chart',
                               },
                               {
-                                'type': 'chart-legend',
                                 'items': [
                                   {
-                                    'color': 'primary',
                                     'label': 'Current',
+                                    'color': 'primary',
                                   },
                                   {
                                     'label': 'Previous',
                                     'color': 'muted',
                                   },
                                 ],
+                                'type': 'chart-legend',
                               },
                               {
+                                'width': 400,
+                                'height': 200,
+                                'type': 'graph-view',
                                 'edges': [
                                   {
                                     'source': 'a',
@@ -2363,31 +2366,28 @@ export function stdStrategyGameResourceOrbital(params: StdStrategyGameResourceOr
                                     'target': 'c',
                                   },
                                 ],
-                                'type': 'graph-view',
-                                'height': 200,
                                 'nodes': [
                                   {
-                                    'id': 'a',
                                     'label': 'Start',
+                                    'id': 'a',
                                   },
                                   {
-                                    'id': 'b',
                                     'label': 'Process',
+                                    'id': 'b',
                                   },
                                   {
-                                    'id': 'c',
                                     'label': 'End',
+                                    'id': 'c',
                                   },
                                 ],
-                                'width': 400,
                               },
                             ],
-                            'gap': 'lg',
+                            'type': 'stack',
+                            'direction': 'vertical',
                           },
                         ],
                       },
                     ],
-                    'appName': 'Strategy Game',
                     'showTopBar': true,
                     'type': 'game-shell',
                   },
@@ -2413,21 +2413,18 @@ export function stdStrategyGameResourceOrbital(params: StdStrategyGameResourceOr
                   'render-ui',
                   'main',
                   {
-                    'type': 'game-shell',
-                    'appName': 'Strategy Game',
                     'children': [
                       {
                         'type': 'scaled-diagram',
                         'children': [
                           {
-                            'gap': 'lg',
                             'type': 'stack',
                             'children': [
                               {
                                 'items': [
                                   {
-                                    'href': '/',
                                     'label': 'Home',
+                                    'href': '/',
                                   },
                                   {
                                     'label': 'Resources',
@@ -2436,33 +2433,33 @@ export function stdStrategyGameResourceOrbital(params: StdStrategyGameResourceOr
                                 'type': 'breadcrumb',
                               },
                               {
-                                'justify': 'between',
-                                'gap': 'md',
                                 'direction': 'horizontal',
                                 'type': 'stack',
+                                'gap': 'md',
+                                'justify': 'between',
                                 'children': [
                                   {
-                                    'gap': 'md',
                                     'type': 'stack',
+                                    'gap': 'md',
                                     'direction': 'horizontal',
                                     'children': [
                                       {
-                                        'name': 'database',
                                         'type': 'icon',
+                                        'name': 'database',
                                       },
                                       {
-                                        'variant': 'h2',
                                         'type': 'typography',
+                                        'variant': 'h2',
                                         'content': 'Resources',
                                       },
                                     ],
                                   },
                                   {
-                                    'action': 'REFRESH',
-                                    'variant': 'secondary',
-                                    'label': 'Refresh',
                                     'icon': 'refresh-cw',
+                                    'label': 'Refresh',
+                                    'action': 'REFRESH',
                                     'type': 'button',
+                                    'variant': 'secondary',
                                   },
                                 ],
                               },
@@ -2470,11 +2467,12 @@ export function stdStrategyGameResourceOrbital(params: StdStrategyGameResourceOr
                                 'type': 'divider',
                               },
                               {
+                                'type': 'stack',
                                 'direction': 'vertical',
                                 'children': [
                                   {
-                                    'type': 'simple-grid',
                                     'cols': 3,
+                                    'type': 'simple-grid',
                                     'children': [
                                       {
                                         'label': 'Gold',
@@ -2482,55 +2480,54 @@ export function stdStrategyGameResourceOrbital(params: StdStrategyGameResourceOr
                                         'type': 'stat-display',
                                       },
                                       {
+                                        'value': '@entity.food',
                                         'label': 'Food',
                                         'type': 'stat-display',
-                                        'value': '@entity.food',
                                       },
                                       {
+                                        'value': '@entity.wood',
                                         'type': 'stat-display',
                                         'label': 'Wood',
-                                        'value': '@entity.wood',
                                       },
                                       {
+                                        'label': 'Iron',
                                         'type': 'stat-display',
                                         'value': '@entity.iron',
-                                        'label': 'Iron',
                                       },
                                     ],
                                   },
                                 ],
-                                'type': 'stack',
                                 'gap': 'sm',
                               },
                               {
                                 'type': 'divider',
                               },
                               {
-                                'cols': 2,
-                                'gap': 'md',
                                 'type': 'grid',
+                                'cols': 2,
                                 'children': [
                                   {
                                     'type': 'card',
                                     'children': [
                                       {
-                                        'variant': 'caption',
                                         'type': 'typography',
+                                        'variant': 'caption',
                                         'content': 'Chart View',
                                       },
                                     ],
                                   },
                                   {
-                                    'type': 'card',
                                     'children': [
                                       {
-                                        'variant': 'caption',
-                                        'type': 'typography',
                                         'content': 'Graph View',
+                                        'type': 'typography',
+                                        'variant': 'caption',
                                       },
                                     ],
+                                    'type': 'card',
                                   },
                                 ],
+                                'gap': 'md',
                               },
                               {
                                 'data': [
@@ -2543,8 +2540,8 @@ export function stdStrategyGameResourceOrbital(params: StdStrategyGameResourceOr
                                     'value': 19,
                                   },
                                   {
-                                    'value': 15,
                                     'date': 'Mar',
+                                    'value': 15,
                                   },
                                   {
                                     'date': 'Apr',
@@ -2569,13 +2566,12 @@ export function stdStrategyGameResourceOrbital(params: StdStrategyGameResourceOr
                                     'label': 'Current',
                                   },
                                   {
-                                    'color': 'muted',
                                     'label': 'Previous',
+                                    'color': 'muted',
                                   },
                                 ],
                               },
                               {
-                                'type': 'graph-view',
                                 'nodes': [
                                   {
                                     'id': 'a',
@@ -2586,29 +2582,33 @@ export function stdStrategyGameResourceOrbital(params: StdStrategyGameResourceOr
                                     'id': 'b',
                                   },
                                   {
-                                    'id': 'c',
                                     'label': 'End',
+                                    'id': 'c',
                                   },
                                 ],
+                                'height': 200,
+                                'width': 400,
                                 'edges': [
                                   {
-                                    'source': 'a',
                                     'target': 'b',
+                                    'source': 'a',
                                   },
                                   {
                                     'source': 'b',
                                     'target': 'c',
                                   },
                                 ],
-                                'width': 400,
-                                'height': 200,
+                                'type': 'graph-view',
                               },
                             ],
                             'direction': 'vertical',
+                            'gap': 'lg',
                           },
                         ],
                       },
                     ],
+                    'type': 'game-shell',
+                    'appName': 'Strategy Game',
                     'showTopBar': true,
                   },
                 ],
@@ -2633,34 +2633,33 @@ export function stdStrategyGameResourceOrbital(params: StdStrategyGameResourceOr
                   'render-ui',
                   'main',
                   {
-                    'showTopBar': true,
-                    'appName': 'Strategy Game',
+                    'type': 'game-shell',
                     'children': [
                       {
                         'type': 'scaled-diagram',
                         'children': [
                           {
+                            'direction': 'vertical',
+                            'gap': 'lg',
                             'type': 'stack',
                             'children': [
                               {
+                                'type': 'breadcrumb',
                                 'items': [
                                   {
-                                    'href': '/',
                                     'label': 'Home',
+                                    'href': '/',
                                   },
                                   {
                                     'label': 'Resources',
                                   },
                                 ],
-                                'type': 'breadcrumb',
                               },
                               {
-                                'gap': 'md',
+                                'type': 'stack',
                                 'justify': 'between',
                                 'children': [
                                   {
-                                    'type': 'stack',
-                                    'gap': 'md',
                                     'direction': 'horizontal',
                                     'children': [
                                       {
@@ -2668,42 +2667,45 @@ export function stdStrategyGameResourceOrbital(params: StdStrategyGameResourceOr
                                         'name': 'database',
                                       },
                                       {
-                                        'variant': 'h2',
-                                        'type': 'typography',
                                         'content': 'Resources',
+                                        'type': 'typography',
+                                        'variant': 'h2',
                                       },
                                     ],
+                                    'type': 'stack',
+                                    'gap': 'md',
                                   },
                                   {
-                                    'variant': 'secondary',
-                                    'type': 'button',
-                                    'label': 'Refresh',
                                     'action': 'REFRESH',
+                                    'variant': 'secondary',
                                     'icon': 'refresh-cw',
+                                    'label': 'Refresh',
+                                    'type': 'button',
                                   },
                                 ],
+                                'gap': 'md',
                                 'direction': 'horizontal',
-                                'type': 'stack',
                               },
                               {
                                 'type': 'divider',
                               },
                               {
                                 'type': 'stack',
+                                'direction': 'vertical',
                                 'children': [
                                   {
                                     'type': 'simple-grid',
                                     'cols': 3,
                                     'children': [
                                       {
-                                        'type': 'stat-display',
-                                        'value': '@entity.gold',
                                         'label': 'Gold',
+                                        'value': '@entity.gold',
+                                        'type': 'stat-display',
                                       },
                                       {
-                                        'type': 'stat-display',
                                         'label': 'Food',
                                         'value': '@entity.food',
+                                        'type': 'stat-display',
                                       },
                                       {
                                         'label': 'Wood',
@@ -2711,51 +2713,51 @@ export function stdStrategyGameResourceOrbital(params: StdStrategyGameResourceOr
                                         'type': 'stat-display',
                                       },
                                       {
+                                        'value': '@entity.iron',
                                         'label': 'Iron',
                                         'type': 'stat-display',
-                                        'value': '@entity.iron',
                                       },
                                     ],
                                   },
                                 ],
-                                'direction': 'vertical',
                                 'gap': 'sm',
                               },
                               {
                                 'type': 'divider',
                               },
                               {
-                                'cols': 2,
+                                'type': 'grid',
                                 'gap': 'md',
                                 'children': [
                                   {
+                                    'type': 'card',
+                                    'children': [
+                                      {
+                                        'content': 'Chart View',
+                                        'variant': 'caption',
+                                        'type': 'typography',
+                                      },
+                                    ],
+                                  },
+                                  {
+                                    'type': 'card',
                                     'children': [
                                       {
                                         'type': 'typography',
-                                        'variant': 'caption',
-                                        'content': 'Chart View',
-                                      },
-                                    ],
-                                    'type': 'card',
-                                  },
-                                  {
-                                    'children': [
-                                      {
                                         'content': 'Graph View',
                                         'variant': 'caption',
-                                        'type': 'typography',
                                       },
                                     ],
-                                    'type': 'card',
                                   },
                                 ],
-                                'type': 'grid',
+                                'cols': 2,
                               },
                               {
+                                'type': 'line-chart',
                                 'data': [
                                   {
-                                    'value': 12,
                                     'date': 'Jan',
+                                    'value': 12,
                                   },
                                   {
                                     'date': 'Feb',
@@ -2766,26 +2768,25 @@ export function stdStrategyGameResourceOrbital(params: StdStrategyGameResourceOr
                                     'value': 15,
                                   },
                                   {
-                                    'date': 'Apr',
                                     'value': 25,
+                                    'date': 'Apr',
                                   },
                                   {
                                     'date': 'May',
                                     'value': 22,
                                   },
                                   {
-                                    'value': 30,
                                     'date': 'Jun',
+                                    'value': 30,
                                   },
                                 ],
-                                'type': 'line-chart',
                               },
                               {
                                 'type': 'chart-legend',
                                 'items': [
                                   {
-                                    'label': 'Current',
                                     'color': 'primary',
+                                    'label': 'Current',
                                   },
                                   {
                                     'color': 'muted',
@@ -2794,11 +2795,10 @@ export function stdStrategyGameResourceOrbital(params: StdStrategyGameResourceOr
                                 ],
                               },
                               {
-                                'type': 'graph-view',
                                 'nodes': [
                                   {
-                                    'id': 'a',
                                     'label': 'Start',
+                                    'id': 'a',
                                   },
                                   {
                                     'label': 'Process',
@@ -2811,8 +2811,8 @@ export function stdStrategyGameResourceOrbital(params: StdStrategyGameResourceOr
                                 ],
                                 'edges': [
                                   {
-                                    'source': 'a',
                                     'target': 'b',
+                                    'source': 'a',
                                   },
                                   {
                                     'source': 'b',
@@ -2821,15 +2821,15 @@ export function stdStrategyGameResourceOrbital(params: StdStrategyGameResourceOr
                                 ],
                                 'width': 400,
                                 'height': 200,
+                                'type': 'graph-view',
                               },
                             ],
-                            'gap': 'lg',
-                            'direction': 'vertical',
                           },
                         ],
                       },
                     ],
-                    'type': 'game-shell',
+                    'showTopBar': true,
+                    'appName': 'Strategy Game',
                   },
                 ],
               ],
@@ -2844,8 +2844,8 @@ export function stdStrategyGameResourceOrbital(params: StdStrategyGameResourceOr
                   'Resource',
                   {
                     'emit': {
-                      'success': 'ResourceLoaded',
                       'failure': 'ResourceLoadFailed',
+                      'success': 'ResourceLoaded',
                     },
                   },
                 ],
@@ -2853,13 +2853,13 @@ export function stdStrategyGameResourceOrbital(params: StdStrategyGameResourceOr
                   'render-ui',
                   'main',
                   {
-                    'type': 'game-shell',
+                    'showTopBar': true,
                     'appName': 'Strategy Game',
                     'children': [
                       {
+                        'type': 'scaled-diagram',
                         'children': [
                           {
-                            'direction': 'vertical',
                             'children': [
                               {
                                 'type': 'breadcrumb',
@@ -2874,17 +2874,15 @@ export function stdStrategyGameResourceOrbital(params: StdStrategyGameResourceOr
                                 ],
                               },
                               {
-                                'direction': 'horizontal',
-                                'gap': 'md',
-                                'justify': 'between',
                                 'children': [
                                   {
                                     'direction': 'horizontal',
+                                    'type': 'stack',
                                     'gap': 'md',
                                     'children': [
                                       {
-                                        'name': 'database',
                                         'type': 'icon',
+                                        'name': 'database',
                                       },
                                       {
                                         'content': 'Resources',
@@ -2892,32 +2890,33 @@ export function stdStrategyGameResourceOrbital(params: StdStrategyGameResourceOr
                                         'type': 'typography',
                                       },
                                     ],
-                                    'type': 'stack',
                                   },
                                   {
+                                    'icon': 'refresh-cw',
                                     'action': 'REFRESH',
                                     'type': 'button',
-                                    'label': 'Refresh',
                                     'variant': 'secondary',
-                                    'icon': 'refresh-cw',
+                                    'label': 'Refresh',
                                   },
                                 ],
+                                'justify': 'between',
+                                'gap': 'md',
+                                'direction': 'horizontal',
                                 'type': 'stack',
                               },
                               {
                                 'type': 'divider',
                               },
                               {
-                                'gap': 'sm',
-                                'type': 'stack',
-                                'direction': 'vertical',
                                 'children': [
                                   {
+                                    'cols': 3,
+                                    'type': 'simple-grid',
                                     'children': [
                                       {
                                         'type': 'stat-display',
-                                        'label': 'Gold',
                                         'value': '@entity.gold',
+                                        'label': 'Gold',
                                       },
                                       {
                                         'label': 'Food',
@@ -2925,79 +2924,80 @@ export function stdStrategyGameResourceOrbital(params: StdStrategyGameResourceOr
                                         'type': 'stat-display',
                                       },
                                       {
-                                        'type': 'stat-display',
                                         'label': 'Wood',
                                         'value': '@entity.wood',
+                                        'type': 'stat-display',
                                       },
                                       {
-                                        'type': 'stat-display',
                                         'label': 'Iron',
                                         'value': '@entity.iron',
+                                        'type': 'stat-display',
                                       },
                                     ],
-                                    'type': 'simple-grid',
-                                    'cols': 3,
                                   },
                                 ],
+                                'type': 'stack',
+                                'direction': 'vertical',
+                                'gap': 'sm',
                               },
                               {
                                 'type': 'divider',
                               },
                               {
                                 'type': 'grid',
-                                'gap': 'md',
-                                'cols': 2,
                                 'children': [
                                   {
-                                    'type': 'card',
                                     'children': [
                                       {
                                         'content': 'Chart View',
-                                        'type': 'typography',
                                         'variant': 'caption',
-                                      },
-                                    ],
-                                  },
-                                  {
-                                    'children': [
-                                      {
                                         'type': 'typography',
-                                        'variant': 'caption',
-                                        'content': 'Graph View',
                                       },
                                     ],
                                     'type': 'card',
                                   },
+                                  {
+                                    'type': 'card',
+                                    'children': [
+                                      {
+                                        'variant': 'caption',
+                                        'type': 'typography',
+                                        'content': 'Graph View',
+                                      },
+                                    ],
+                                  },
                                 ],
+                                'gap': 'md',
+                                'cols': 2,
                               },
                               {
-                                'type': 'line-chart',
                                 'data': [
                                   {
                                     'value': 12,
                                     'date': 'Jan',
                                   },
                                   {
-                                    'value': 19,
                                     'date': 'Feb',
+                                    'value': 19,
                                   },
                                   {
-                                    'date': 'Mar',
                                     'value': 15,
+                                    'date': 'Mar',
                                   },
                                   {
-                                    'date': 'Apr',
                                     'value': 25,
+                                    'date': 'Apr',
                                   },
                                   {
-                                    'value': 22,
                                     'date': 'May',
+                                    'value': 22,
                                   },
                                   {
                                     'value': 30,
                                     'date': 'Jun',
                                   },
                                 ],
+                                'type': 'line-chart',
                               },
                               {
                                 'type': 'chart-legend',
@@ -3007,13 +3007,15 @@ export function stdStrategyGameResourceOrbital(params: StdStrategyGameResourceOr
                                     'color': 'primary',
                                   },
                                   {
-                                    'color': 'muted',
                                     'label': 'Previous',
+                                    'color': 'muted',
                                   },
                                 ],
                               },
                               {
                                 'height': 200,
+                                'width': 400,
+                                'type': 'graph-view',
                                 'edges': [
                                   {
                                     'source': 'a',
@@ -3024,32 +3026,30 @@ export function stdStrategyGameResourceOrbital(params: StdStrategyGameResourceOr
                                     'target': 'c',
                                   },
                                 ],
-                                'width': 400,
                                 'nodes': [
                                   {
-                                    'id': 'a',
                                     'label': 'Start',
+                                    'id': 'a',
                                   },
                                   {
                                     'id': 'b',
                                     'label': 'Process',
                                   },
                                   {
-                                    'id': 'c',
                                     'label': 'End',
+                                    'id': 'c',
                                   },
                                 ],
-                                'type': 'graph-view',
                               },
                             ],
                             'type': 'stack',
+                            'direction': 'vertical',
                             'gap': 'lg',
                           },
                         ],
-                        'type': 'scaled-diagram',
                       },
                     ],
-                    'showTopBar': true,
+                    'type': 'game-shell',
                   },
                 ],
               ],

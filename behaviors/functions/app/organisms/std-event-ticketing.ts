@@ -31,8 +31,8 @@ const ALIAS = 'EventTicketing';
  * without modifying its state-machine topology.
  */
 export interface StdEventTicketingConfig {
-  navItems?: TraitConfig;
   notifications?: TraitConfig;
+  navItems?: TraitConfig;
 }
 
 /**
@@ -199,8 +199,10 @@ export function stdEventTicketingEventOrbital(params: StdEventTicketingEventOrbi
         'ref': 'AppShell.traits.AppLayout',
         'name': 'EventAppLayout',
         'config': {
+          'appName': 'EventTicketing',
           'searchEvent': 'EVENT_SEARCH',
-          'contentTrait': '@trait.EventCatalog',
+          'notifications': [],
+          'notificationClickEvent': 'EVENT_NOTIFICATIONS_OPEN',
           'navItems': [
             {
               'label': 'Events',
@@ -208,14 +210,14 @@ export function stdEventTicketingEventOrbital(params: StdEventTicketingEventOrbi
               'icon': 'calendar',
             },
             {
+              'icon': 'ticket',
               'label': 'Tickets',
               'href': '/tickets',
-              'icon': 'ticket',
             },
             {
+              'href': '/checkin',
               'icon': 'qr-code',
               'label': 'Check-in',
-              'href': '/checkin',
             },
             {
               'icon': 'users',
@@ -223,13 +225,11 @@ export function stdEventTicketingEventOrbital(params: StdEventTicketingEventOrbi
               'label': 'Waitlist',
             },
           ],
-          'notifications': [],
-          'notificationClickEvent': 'EVENT_NOTIFICATIONS_OPEN',
-          'appName': 'EventTicketing',
+          'contentTrait': '@trait.EventCatalog',
         },
         'events': {
-          'NOTIFY_CLICK': 'EVENT_NOTIFICATIONS_OPEN',
           'SEARCH': 'EVENT_SEARCH',
+          'NOTIFY_CLICK': 'EVENT_NOTIFICATIONS_OPEN',
         },
       }),
       rebindInlineTraitEntity({
@@ -312,46 +312,45 @@ export function stdEventTicketingEventOrbital(params: StdEventTicketingEventOrbi
                   'render-ui',
                   'main',
                   {
-                    'type': 'stack',
                     'children': [
                       {
-                        'direction': 'horizontal',
-                        'justify': 'between',
-                        'align': 'center',
-                        'type': 'stack',
                         'children': [
                           {
-                            'direction': 'horizontal',
-                            'align': 'center',
-                            'gap': 'sm',
                             'children': [
                               {
                                 'type': 'icon',
                                 'name': 'calendar',
                               },
                               {
+                                'type': 'typography',
                                 'variant': 'h2',
                                 'content': 'Events',
-                                'type': 'typography',
                               },
                             ],
-                            'type': 'stack',
-                          },
-                          {
+                            'gap': 'sm',
+                            'align': 'center',
                             'type': 'stack',
                             'direction': 'horizontal',
-                            'gap': 'sm',
+                          },
+                          {
+                            'direction': 'horizontal',
                             'children': [
                               {
-                                'icon': 'plus',
+                                'type': 'button',
                                 'label': 'New Event',
                                 'action': 'CREATE',
                                 'variant': 'primary',
-                                'type': 'button',
+                                'icon': 'plus',
                               },
                             ],
+                            'type': 'stack',
+                            'gap': 'sm',
                           },
                         ],
+                        'type': 'stack',
+                        'align': 'center',
+                        'direction': 'horizontal',
+                        'justify': 'between',
                         'gap': 'md',
                       },
                       {
@@ -359,13 +358,13 @@ export function stdEventTicketingEventOrbital(params: StdEventTicketingEventOrbi
                       },
                       {
                         'align': 'center',
+                        'type': 'stack',
+                        'gap': 'md',
                         'children': [
                           '@trait.EventSearch',
                           '@trait.EventFilter',
                         ],
-                        'type': 'stack',
                         'direction': 'horizontal',
-                        'gap': 'md',
                       },
                       '@trait.EventStats',
                       {
@@ -380,14 +379,15 @@ export function stdEventTicketingEventOrbital(params: StdEventTicketingEventOrbi
                         'type': 'divider',
                       },
                       {
+                        'content': 'Advanced Event Admin',
                         'type': 'typography',
                         'variant': 'h3',
-                        'content': 'Advanced Event Admin',
                       },
                       '@trait.EventAdvancedAdmin',
                     ],
-                    'direction': 'vertical',
                     'gap': 'lg',
+                    'direction': 'vertical',
+                    'type': 'stack',
                   },
                 ],
               ],
@@ -406,34 +406,34 @@ export function stdEventTicketingEventOrbital(params: StdEventTicketingEventOrbi
                   'render-ui',
                   'main',
                   {
-                    'type': 'stack',
+                    'gap': 'md',
+                    'className': 'py-8',
+                    'align': 'center',
                     'children': [
                       {
                         'name': 'bell',
                         'type': 'icon',
                       },
                       {
-                        'variant': 'h3',
+                        'type': 'typography',
                         'content': 'No notifications',
-                        'type': 'typography',
+                        'variant': 'h3',
                       },
                       {
-                        'content': 'You\'re all caught up.',
-                        'type': 'typography',
                         'variant': 'caption',
+                        'content': 'You\'re all caught up.',
                         'color': 'muted',
+                        'type': 'typography',
                       },
                       {
-                        'label': 'Back to events',
                         'variant': 'ghost',
+                        'label': 'Back to events',
                         'type': 'button',
                         'action': 'INIT',
                       },
                     ],
-                    'gap': 'md',
-                    'align': 'center',
                     'direction': 'vertical',
-                    'className': 'py-8',
+                    'type': 'stack',
                   },
                 ],
               ],
@@ -446,15 +446,14 @@ export function stdEventTicketingEventOrbital(params: StdEventTicketingEventOrbi
         'ref': 'Search.traits.SearchResultSearch',
         'name': 'EventSearch',
         'config': {
-          'event': 'EVENT_SEARCH',
           'placeholder': 'Search events…',
+          'event': 'EVENT_SEARCH',
         },
       }),
       makeTraitRef({
         'ref': 'Filter.traits.FilterTargetFilter',
         'name': 'EventFilter',
         'config': {
-          'event': 'EVENT_FILTER',
           'filters': [
             {
               'field': 'status',
@@ -468,6 +467,7 @@ export function stdEventTicketingEventOrbital(params: StdEventTicketingEventOrbi
               'label': 'Status',
             },
           ],
+          'event': 'EVENT_FILTER',
         },
       }),
       makeTraitRef({
@@ -477,14 +477,17 @@ export function stdEventTicketingEventOrbital(params: StdEventTicketingEventOrbi
           'title': 'Events',
           'metrics': [
             {
+              'format': 'number',
+              'aggregation': 'count',
               'label': 'Total',
               'variant': 'primary',
-              'format': 'number',
               'icon': 'calendar',
-              'aggregation': 'count',
             },
             {
-              'icon': 'send',
+              'variant': 'success',
+              'label': 'Published',
+              'aggregation': 'count',
+              'format': 'number',
               'filter': [
                 'fn',
                 'row',
@@ -494,16 +497,13 @@ export function stdEventTicketingEventOrbital(params: StdEventTicketingEventOrbi
                   'published',
                 ],
               ],
-              'aggregation': 'count',
-              'label': 'Published',
-              'format': 'number',
-              'variant': 'success',
+              'icon': 'send',
             },
             {
-              'aggregation': 'count',
-              'variant': 'warning',
-              'label': 'Sold Out',
               'format': 'number',
+              'variant': 'warning',
+              'aggregation': 'count',
+              'icon': 'check-circle',
               'filter': [
                 'fn',
                 'row',
@@ -513,15 +513,15 @@ export function stdEventTicketingEventOrbital(params: StdEventTicketingEventOrbi
                   'sold-out',
                 ],
               ],
-              'icon': 'check-circle',
+              'label': 'Sold Out',
             },
             {
-              'icon': 'users',
-              'aggregation': 'sum',
-              'label': 'Capacity',
-              'variant': 'info',
               'format': 'number',
+              'label': 'Capacity',
               'field': 'capacity',
+              'variant': 'info',
+              'aggregation': 'sum',
+              'icon': 'users',
             },
           ],
         },
@@ -541,30 +541,11 @@ export function stdEventTicketingEventOrbital(params: StdEventTicketingEventOrbi
         'name': 'EventBrowseList',
         'linkedEntity': canonicalName,
         'config': {
-          'itemActions': [
-            {
-              'variant': 'ghost',
-              'label': 'View',
-              'event': 'VIEW',
-            },
-            {
-              'label': 'Edit',
-              'event': 'EDIT',
-              'variant': 'ghost',
-            },
-            {
-              'variant': 'danger',
-              'label': 'Delete',
-              'event': 'DELETE',
-            },
-          ],
-          'cols': 1,
-          'gap': 'sm',
           'fields': [
             {
-              'name': 'name',
-              'variant': 'h3',
               'icon': 'calendar',
+              'variant': 'h3',
+              'name': 'name',
             },
             {
               'variant': 'body',
@@ -572,24 +553,43 @@ export function stdEventTicketingEventOrbital(params: StdEventTicketingEventOrbi
             },
             {
               'name': 'startsAt',
-              'variant': 'caption',
               'format': 'date',
+              'variant': 'caption',
             },
             {
-              'format': 'date',
+              'variant': 'caption',
               'name': 'endsAt',
-              'variant': 'caption',
+              'format': 'date',
             },
             {
-              'variant': 'body',
               'name': 'capacity',
+              'variant': 'body',
               'format': 'number',
             },
             {
-              'name': 'status',
               'variant': 'badge',
+              'name': 'status',
             },
           ],
+          'itemActions': [
+            {
+              'label': 'View',
+              'event': 'VIEW',
+              'variant': 'ghost',
+            },
+            {
+              'label': 'Edit',
+              'variant': 'ghost',
+              'event': 'EDIT',
+            },
+            {
+              'label': 'Delete',
+              'event': 'DELETE',
+              'variant': 'danger',
+            },
+          ],
+          'cols': 1,
+          'gap': 'sm',
         },
         'listens': [
           {
@@ -681,6 +681,7 @@ export function stdEventTicketingEventOrbital(params: StdEventTicketingEventOrbi
         'name': 'EventCreate',
         'linkedEntity': canonicalName,
         'config': {
+          'icon': 'plus-circle',
           'fields': [
             'name',
             'description',
@@ -693,7 +694,6 @@ export function stdEventTicketingEventOrbital(params: StdEventTicketingEventOrbi
           ],
           'mode': 'create',
           'title': 'New Event',
-          'icon': 'plus-circle',
         },
         'events': {
           'OPEN': 'CREATE',
@@ -714,9 +714,6 @@ export function stdEventTicketingEventOrbital(params: StdEventTicketingEventOrbi
         'name': 'EventEdit',
         'linkedEntity': canonicalName,
         'config': {
-          'mode': 'edit',
-          'icon': 'edit',
-          'title': 'Edit Event',
           'fields': [
             'name',
             'description',
@@ -727,6 +724,9 @@ export function stdEventTicketingEventOrbital(params: StdEventTicketingEventOrbi
             'status',
             'organizerId',
           ],
+          'title': 'Edit Event',
+          'icon': 'edit',
+          'mode': 'edit',
         },
         'events': {
           'OPEN': 'EDIT',
@@ -747,8 +747,9 @@ export function stdEventTicketingEventOrbital(params: StdEventTicketingEventOrbi
         'name': 'EventView',
         'linkedEntity': canonicalName,
         'config': {
-          'mode': 'edit',
           'title': 'View Event',
+          'mode': 'edit',
+          'icon': 'eye',
           'fields': [
             'name',
             'description',
@@ -759,7 +760,6 @@ export function stdEventTicketingEventOrbital(params: StdEventTicketingEventOrbi
             'status',
             'organizerId',
           ],
-          'icon': 'eye',
         },
         'events': {
           'OPEN': 'VIEW',
@@ -780,9 +780,9 @@ export function stdEventTicketingEventOrbital(params: StdEventTicketingEventOrbi
         'name': 'EventDelete',
         'linkedEntity': canonicalName,
         'config': {
-          'icon': 'alert-triangle',
-          'alertMessage': 'This action cannot be undone.',
           'title': 'Delete Event',
+          'alertMessage': 'This action cannot be undone.',
+          'icon': 'alert-triangle',
           'confirmLabel': 'Delete',
         },
         'events': {
@@ -1264,11 +1264,11 @@ export function stdEventTicketingTicketOrbital(params: StdEventTicketingTicketOr
         'ref': 'AppShell.traits.AppLayout',
         'name': 'TicketAppLayout',
         'config': {
-          'searchEvent': 'TICKET_SEARCH',
           'notifications': [],
-          'notificationClickEvent': 'TICKET_NOTIFICATIONS_OPEN',
           'appName': 'EventTicketing',
           'contentTrait': '@trait.TicketShop',
+          'notificationClickEvent': 'TICKET_NOTIFICATIONS_OPEN',
+          'searchEvent': 'TICKET_SEARCH',
           'navItems': [
             {
               'icon': 'calendar',
@@ -1276,25 +1276,25 @@ export function stdEventTicketingTicketOrbital(params: StdEventTicketingTicketOr
               'href': '/events',
             },
             {
+              'href': '/tickets',
               'icon': 'ticket',
               'label': 'Tickets',
-              'href': '/tickets',
             },
             {
               'label': 'Check-in',
-              'icon': 'qr-code',
               'href': '/checkin',
+              'icon': 'qr-code',
             },
             {
-              'icon': 'users',
               'href': '/waitlist',
+              'icon': 'users',
               'label': 'Waitlist',
             },
           ],
         },
         'events': {
-          'SEARCH': 'TICKET_SEARCH',
           'NOTIFY_CLICK': 'TICKET_NOTIFICATIONS_OPEN',
+          'SEARCH': 'TICKET_SEARCH',
         },
       }),
       rebindInlineTraitEntity({
@@ -1377,54 +1377,57 @@ export function stdEventTicketingTicketOrbital(params: StdEventTicketingTicketOr
                   'render-ui',
                   'main',
                   {
+                    'gap': 'lg',
+                    'direction': 'vertical',
+                    'type': 'stack',
                     'children': [
                       {
-                        'type': 'stack',
-                        'justify': 'between',
                         'direction': 'horizontal',
+                        'gap': 'md',
+                        'justify': 'between',
+                        'align': 'center',
+                        'type': 'stack',
                         'children': [
                           {
                             'type': 'stack',
-                            'align': 'center',
+                            'gap': 'sm',
                             'children': [
                               {
                                 'type': 'icon',
                                 'name': 'ticket',
                               },
                               {
-                                'variant': 'h2',
                                 'content': 'Tickets',
                                 'type': 'typography',
+                                'variant': 'h2',
                               },
                             ],
                             'direction': 'horizontal',
-                            'gap': 'sm',
+                            'align': 'center',
                           },
                           {
-                            'direction': 'horizontal',
-                            'gap': 'sm',
                             'type': 'stack',
                             'children': [
                               {
-                                'icon': 'plus',
-                                'action': 'ISSUE',
-                                'variant': 'primary',
                                 'type': 'button',
+                                'action': 'ISSUE',
                                 'label': 'Issue Ticket',
+                                'variant': 'primary',
+                                'icon': 'plus',
                               },
                             ],
+                            'gap': 'sm',
+                            'direction': 'horizontal',
                           },
                         ],
-                        'gap': 'md',
-                        'align': 'center',
                       },
                       {
                         'type': 'divider',
                       },
                       {
-                        'variant': 'h3',
-                        'type': 'typography',
                         'content': 'Available Tiers',
+                        'type': 'typography',
+                        'variant': 'h3',
                       },
                       '@trait.TicketTierShop',
                       {
@@ -1441,14 +1444,11 @@ export function stdEventTicketingTicketOrbital(params: StdEventTicketingTicketOr
                       },
                       {
                         'type': 'typography',
-                        'variant': 'h3',
                         'content': 'Tickets Issued',
+                        'variant': 'h3',
                       },
                       '@trait.TicketBrowseList',
                     ],
-                    'gap': 'lg',
-                    'type': 'stack',
-                    'direction': 'vertical',
                   },
                 ],
               ],
@@ -1495,6 +1495,35 @@ export function stdEventTicketingTicketOrbital(params: StdEventTicketingTicketOr
         'name': 'TicketBrowseList',
         'linkedEntity': canonicalName,
         'config': {
+          'fields': [
+            {
+              'icon': 'ticket',
+              'name': 'holderName',
+              'variant': 'h4',
+            },
+            {
+              'name': 'holderEmail',
+              'variant': 'caption',
+            },
+            {
+              'name': 'tierId',
+              'variant': 'badge',
+            },
+            {
+              'name': 'qrCode',
+              'variant': 'body',
+            },
+            {
+              'name': 'status',
+              'variant': 'badge',
+            },
+            {
+              'variant': 'caption',
+              'format': 'date',
+              'name': 'purchasedAt',
+            },
+          ],
+          'cols': 1,
           'itemActions': [
             {
               'variant': 'ghost',
@@ -1502,36 +1531,7 @@ export function stdEventTicketingTicketOrbital(params: StdEventTicketingTicketOr
               'event': 'VIEW',
             },
           ],
-          'cols': 1,
           'gap': 'sm',
-          'fields': [
-            {
-              'variant': 'h4',
-              'icon': 'ticket',
-              'name': 'holderName',
-            },
-            {
-              'name': 'holderEmail',
-              'variant': 'caption',
-            },
-            {
-              'variant': 'badge',
-              'name': 'tierId',
-            },
-            {
-              'name': 'qrCode',
-              'variant': 'body',
-            },
-            {
-              'variant': 'badge',
-              'name': 'status',
-            },
-            {
-              'name': 'purchasedAt',
-              'variant': 'caption',
-              'format': 'date',
-            },
-          ],
         },
         'listens': [
           {
@@ -1549,8 +1549,7 @@ export function stdEventTicketingTicketOrbital(params: StdEventTicketingTicketOr
         'name': 'TicketIssueModal',
         'linkedEntity': canonicalName,
         'config': {
-          'title': 'Issue Ticket',
-          'mode': 'create',
+          'icon': 'plus-circle',
           'fields': [
             'eventId',
             'tierId',
@@ -1558,7 +1557,8 @@ export function stdEventTicketingTicketOrbital(params: StdEventTicketingTicketOr
             'holderEmail',
             'status',
           ],
-          'icon': 'plus-circle',
+          'title': 'Issue Ticket',
+          'mode': 'create',
         },
         'events': {
           'OPEN': 'ISSUE',
@@ -1896,20 +1896,21 @@ export function stdEventTicketingCheckinOrbital(params: StdEventTicketingCheckin
         'ref': 'AppShell.traits.AppLayout',
         'name': 'CheckinAppLayout',
         'config': {
-          'appName': 'EventTicketing',
+          'searchEvent': 'CHECKIN_SEARCH',
+          'notifications': [],
           'notificationClickEvent': 'CHECKIN_NOTIFICATIONS_OPEN',
           'contentTrait': '@trait.CheckinDashboard',
-          'searchEvent': 'CHECKIN_SEARCH',
+          'appName': 'EventTicketing',
           'navItems': [
             {
-              'href': '/events',
-              'label': 'Events',
               'icon': 'calendar',
+              'label': 'Events',
+              'href': '/events',
             },
             {
-              'label': 'Tickets',
               'href': '/tickets',
               'icon': 'ticket',
+              'label': 'Tickets',
             },
             {
               'href': '/checkin',
@@ -1917,16 +1918,15 @@ export function stdEventTicketingCheckinOrbital(params: StdEventTicketingCheckin
               'label': 'Check-in',
             },
             {
-              'label': 'Waitlist',
-              'icon': 'users',
               'href': '/waitlist',
+              'icon': 'users',
+              'label': 'Waitlist',
             },
           ],
-          'notifications': [],
         },
         'events': {
-          'SEARCH': 'CHECKIN_SEARCH',
           'NOTIFY_CLICK': 'CHECKIN_NOTIFICATIONS_OPEN',
+          'SEARCH': 'CHECKIN_SEARCH',
         },
       }),
       rebindInlineTraitEntity({
@@ -1993,26 +1993,23 @@ export function stdEventTicketingCheckinOrbital(params: StdEventTicketingCheckin
                   'render-ui',
                   'main',
                   {
-                    'direction': 'vertical',
-                    'type': 'stack',
-                    'gap': 'lg',
                     'children': [
                       {
                         'gap': 'sm',
                         'direction': 'horizontal',
+                        'align': 'center',
+                        'type': 'stack',
                         'children': [
                           {
-                            'name': 'qr-code',
                             'type': 'icon',
+                            'name': 'qr-code',
                           },
                           {
                             'type': 'typography',
-                            'content': 'Door Check-in',
                             'variant': 'h2',
+                            'content': 'Door Check-in',
                           },
                         ],
-                        'align': 'center',
-                        'type': 'stack',
                       },
                       {
                         'type': 'divider',
@@ -2022,12 +2019,15 @@ export function stdEventTicketingCheckinOrbital(params: StdEventTicketingCheckin
                         'type': 'divider',
                       },
                       {
-                        'content': 'Attendees',
-                        'type': 'typography',
                         'variant': 'h3',
+                        'type': 'typography',
+                        'content': 'Attendees',
                       },
                       '@trait.AttendeeListing',
                     ],
+                    'type': 'stack',
+                    'direction': 'vertical',
+                    'gap': 'lg',
                   },
                 ],
               ],
@@ -2050,8 +2050,8 @@ export function stdEventTicketingCheckinOrbital(params: StdEventTicketingCheckin
         'ref': 'CheckinAtom.traits.CheckinScan',
         'name': 'GateScanner',
         'config': {
-          'title': 'Scan Ticket QR',
           'mode': 'qr',
+          'title': 'Scan Ticket QR',
         },
       }),
       makeTraitRef({
@@ -2285,33 +2285,33 @@ export function stdEventTicketingWaitlistOrbital(params: StdEventTicketingWaitli
         'ref': 'AppShell.traits.AppLayout',
         'name': 'WaitlistAppLayout',
         'config': {
+          'searchEvent': 'WAITLIST_SEARCH',
+          'notificationClickEvent': 'WAITLIST_NOTIFICATIONS_OPEN',
           'navItems': [
             {
-              'icon': 'calendar',
               'label': 'Events',
+              'icon': 'calendar',
               'href': '/events',
             },
             {
-              'label': 'Tickets',
               'href': '/tickets',
               'icon': 'ticket',
+              'label': 'Tickets',
             },
             {
               'label': 'Check-in',
-              'href': '/checkin',
               'icon': 'qr-code',
+              'href': '/checkin',
             },
             {
-              'label': 'Waitlist',
-              'href': '/waitlist',
               'icon': 'users',
+              'href': '/waitlist',
+              'label': 'Waitlist',
             },
           ],
           'contentTrait': '@trait.WaitlistDashboard',
           'appName': 'EventTicketing',
-          'searchEvent': 'WAITLIST_SEARCH',
           'notifications': [],
-          'notificationClickEvent': 'WAITLIST_NOTIFICATIONS_OPEN',
         },
         'events': {
           'SEARCH': 'WAITLIST_SEARCH',
@@ -2398,48 +2398,49 @@ export function stdEventTicketingWaitlistOrbital(params: StdEventTicketingWaitli
                   'render-ui',
                   'main',
                   {
-                    'type': 'stack',
                     'gap': 'lg',
+                    'type': 'stack',
+                    'direction': 'vertical',
                     'children': [
                       {
-                        'direction': 'horizontal',
-                        'type': 'stack',
-                        'gap': 'md',
-                        'justify': 'between',
-                        'align': 'center',
                         'children': [
                           {
                             'gap': 'sm',
-                            'type': 'stack',
                             'align': 'center',
+                            'direction': 'horizontal',
+                            'type': 'stack',
                             'children': [
                               {
                                 'name': 'users',
                                 'type': 'icon',
                               },
                               {
-                                'type': 'typography',
                                 'content': 'Waitlist',
                                 'variant': 'h2',
+                                'type': 'typography',
                               },
                             ],
-                            'direction': 'horizontal',
                           },
                           {
                             'type': 'stack',
                             'children': [
                               {
-                                'variant': 'primary',
                                 'label': 'Join Waitlist',
+                                'variant': 'primary',
                                 'icon': 'user-plus',
-                                'action': 'JOIN',
                                 'type': 'button',
+                                'action': 'JOIN',
                               },
                             ],
-                            'gap': 'sm',
                             'direction': 'horizontal',
+                            'gap': 'sm',
                           },
                         ],
+                        'align': 'center',
+                        'direction': 'horizontal',
+                        'type': 'stack',
+                        'gap': 'md',
+                        'justify': 'between',
                       },
                       {
                         'type': 'divider',
@@ -2455,7 +2456,6 @@ export function stdEventTicketingWaitlistOrbital(params: StdEventTicketingWaitli
                       },
                       '@trait.WaitlistBrowseList',
                     ],
-                    'direction': 'vertical',
                   },
                 ],
               ],
@@ -2486,23 +2486,23 @@ export function stdEventTicketingWaitlistOrbital(params: StdEventTicketingWaitli
         'name': 'WaitlistBrowseList',
         'linkedEntity': canonicalName,
         'config': {
-          'cols': 1,
+          'gap': 'sm',
           'fields': [
             {
-              'variant': 'badge',
               'name': 'position',
-            },
-            {
-              'variant': 'h4',
-              'name': 'userId',
-            },
-            {
-              'name': 'targetId',
-              'variant': 'caption',
-            },
-            {
-              'name': 'status',
               'variant': 'badge',
+            },
+            {
+              'name': 'userId',
+              'variant': 'h4',
+            },
+            {
+              'variant': 'caption',
+              'name': 'targetId',
+            },
+            {
+              'variant': 'badge',
+              'name': 'status',
             },
             {
               'name': 'joinedAt',
@@ -2510,8 +2510,8 @@ export function stdEventTicketingWaitlistOrbital(params: StdEventTicketingWaitli
               'format': 'date',
             },
           ],
-          'gap': 'sm',
           'itemActions': [],
+          'cols': 1,
         },
         'listens': [
           {
@@ -2529,13 +2529,13 @@ export function stdEventTicketingWaitlistOrbital(params: StdEventTicketingWaitli
         'name': 'WaitlistJoinModal',
         'linkedEntity': canonicalName,
         'config': {
-          'mode': 'create',
           'title': 'Join Waitlist',
           'fields': [
             'targetId',
             'userId',
             'status',
           ],
+          'mode': 'create',
           'icon': 'user-plus',
         },
         'events': {

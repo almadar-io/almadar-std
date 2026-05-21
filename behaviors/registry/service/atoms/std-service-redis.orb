@@ -121,31 +121,29 @@
                     "render-ui",
                     "main",
                     {
+                      "type": "stack",
                       "children": [
                         {
-                          "direction": "horizontal",
+                          "type": "stack",
+                          "gap": "md",
                           "children": [
                             {
-                              "name": "database",
-                              "type": "icon"
+                              "type": "icon",
+                              "name": "database"
                             },
                             {
-                              "variant": "h2",
+                              "content": "Redis Cache",
                               "type": "typography",
-                              "content": "Redis Cache"
+                              "variant": "h2"
                             }
                           ],
                           "align": "center",
-                          "gap": "md",
-                          "type": "stack"
+                          "direction": "horizontal"
                         },
                         {
                           "type": "divider"
                         },
                         {
-                          "type": "stack",
-                          "gap": "md",
-                          "direction": "vertical",
                           "children": [
                             {
                               "type": "select",
@@ -159,8 +157,8 @@
                                   "value": "set"
                                 },
                                 {
-                                  "value": "del",
-                                  "label": "Delete"
+                                  "label": "Delete",
+                                  "value": "del"
                                 }
                               ]
                             },
@@ -177,20 +175,22 @@
                               "placeholder": "ttl seconds",
                               "type": "input"
                             }
-                          ]
+                          ],
+                          "gap": "md",
+                          "type": "stack",
+                          "direction": "vertical"
                         },
                         {
-                          "action": "EXEC",
-                          "type": "button",
+                          "icon": "play",
                           "label": "Execute",
+                          "action": "EXEC",
                           "variant": "primary",
-                          "icon": "play"
+                          "type": "button"
                         }
                       ],
-                      "type": "stack",
-                      "gap": "lg",
                       "align": "center",
-                      "direction": "vertical"
+                      "direction": "vertical",
+                      "gap": "lg"
                     }
                   ]
                 ]
@@ -394,12 +394,12 @@
                     "render-ui",
                     "main",
                     {
+                      "gap": "md",
                       "type": "stack",
-                      "direction": "vertical",
                       "children": [
                         "@config.uiTrait"
                       ],
-                      "gap": "md"
+                      "direction": "vertical"
                     }
                   ]
                 ]
@@ -423,8 +423,8 @@
                     "redis",
                     "@config.op",
                     {
-                      "ttl": "@config.ttl",
                       "key": "@config.key",
+                      "ttl": "@config.ttl",
                       "value": "@config.value"
                     },
                     {
@@ -465,13 +465,10 @@
                     "render-ui",
                     "main",
                     {
-                      "align": "center",
-                      "gap": "lg",
-                      "type": "stack",
                       "children": [
                         {
-                          "type": "icon",
-                          "name": "check-circle"
+                          "name": "check-circle",
+                          "type": "icon"
                         },
                         {
                           "variant": "success",
@@ -479,10 +476,10 @@
                           "message": "Operation complete"
                         },
                         {
-                          "color": "muted",
-                          "type": "typography",
+                          "variant": "body",
                           "content": "@entity.result",
-                          "variant": "body"
+                          "type": "typography",
+                          "color": "muted"
                         },
                         {
                           "type": "button",
@@ -492,7 +489,10 @@
                           "icon": "rotate-ccw"
                         }
                       ],
-                      "direction": "vertical"
+                      "direction": "vertical",
+                      "gap": "lg",
+                      "align": "center",
+                      "type": "stack"
                     }
                   ]
                 ]
@@ -511,18 +511,18 @@
                     "emit",
                     "ServiceRedisRedisFailed",
                     {
-                      "code": "redis_op_failed",
-                      "error": "@entity.error"
+                      "error": "@entity.error",
+                      "code": "redis_op_failed"
                     }
                   ],
                   [
                     "render-ui",
                     "main",
                     {
-                      "message": "@entity.error",
+                      "title": "Redis Error",
                       "onRetry": "RESET",
-                      "type": "error-state",
-                      "title": "Redis Error"
+                      "message": "@entity.error",
+                      "type": "error-state"
                     }
                   ]
                 ]
@@ -537,11 +537,11 @@
                     "main",
                     {
                       "type": "stack",
+                      "gap": "md",
                       "children": [
                         "@config.uiTrait"
                       ],
-                      "direction": "vertical",
-                      "gap": "md"
+                      "direction": "vertical"
                     }
                   ]
                 ]
@@ -565,12 +565,12 @@
                     "render-ui",
                     "main",
                     {
-                      "type": "stack",
-                      "gap": "md",
                       "direction": "vertical",
                       "children": [
                         "@config.uiTrait"
-                      ]
+                      ],
+                      "gap": "md",
+                      "type": "stack"
                     }
                   ]
                 ]
@@ -578,11 +578,29 @@
             ]
           },
           "config": {
+            "key": {
+              "type": "string",
+              "default": "",
+              "label": "Cache key",
+              "description": "Redis key the operation reads, writes, or deletes"
+            },
+            "value": {
+              "type": "string",
+              "default": "",
+              "label": "Cache value",
+              "description": "Value to store when running a set operation"
+            },
             "uiTrait": {
               "type": "trait",
               "default": "@trait.ServiceRedisDefaultForm",
               "label": "Operation form",
               "description": "Trait that renders the Redis operation UI"
+            },
+            "ttl": {
+              "type": "number",
+              "default": 0.0,
+              "label": "TTL seconds",
+              "description": "Time-to-live for the key in seconds (0 = no expiry)"
             },
             "op": {
               "type": "string",
@@ -594,24 +612,6 @@
                 "set",
                 "del"
               ]
-            },
-            "value": {
-              "type": "string",
-              "default": "",
-              "label": "Cache value",
-              "description": "Value to store when running a set operation"
-            },
-            "ttl": {
-              "type": "number",
-              "default": 0.0,
-              "label": "TTL seconds",
-              "description": "Time-to-live for the key in seconds (0 = no expiry)"
-            },
-            "key": {
-              "type": "string",
-              "default": "",
-              "label": "Cache key",
-              "description": "Redis key the operation reads, writes, or deletes"
             }
           },
           "scope": "instance"
