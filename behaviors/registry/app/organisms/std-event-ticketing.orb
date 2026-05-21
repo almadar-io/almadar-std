@@ -112,32 +112,32 @@
           "name": "EventAppLayout",
           "config": {
             "appName": "EventTicketing",
-            "searchEvent": "EVENT_SEARCH",
             "notifications": [],
-            "notificationClickEvent": "EVENT_NOTIFICATIONS_OPEN",
+            "searchEvent": "EVENT_SEARCH",
+            "contentTrait": "@trait.EventCatalog",
             "navItems": [
               {
-                "label": "Events",
                 "href": "/events",
-                "icon": "calendar"
+                "icon": "calendar",
+                "label": "Events"
               },
               {
                 "icon": "ticket",
-                "label": "Tickets",
-                "href": "/tickets"
+                "href": "/tickets",
+                "label": "Tickets"
               },
               {
+                "label": "Check-in",
                 "href": "/checkin",
-                "icon": "qr-code",
-                "label": "Check-in"
+                "icon": "qr-code"
               },
               {
-                "icon": "users",
+                "label": "Waitlist",
                 "href": "/waitlist",
-                "label": "Waitlist"
+                "icon": "users"
               }
             ],
-            "contentTrait": "@trait.EventCatalog"
+            "notificationClickEvent": "EVENT_NOTIFICATIONS_OPEN"
           },
           "events": {
             "SEARCH": "EVENT_SEARCH",
@@ -228,55 +228,55 @@
                         {
                           "children": [
                             {
-                              "children": [
-                                {
-                                  "type": "icon",
-                                  "name": "calendar"
-                                },
-                                {
-                                  "type": "typography",
-                                  "variant": "h2",
-                                  "content": "Events"
-                                }
-                              ],
-                              "gap": "sm",
-                              "align": "center",
                               "type": "stack",
-                              "direction": "horizontal"
-                            },
-                            {
                               "direction": "horizontal",
                               "children": [
                                 {
-                                  "type": "button",
-                                  "label": "New Event",
-                                  "action": "CREATE",
-                                  "variant": "primary",
-                                  "icon": "plus"
+                                  "name": "calendar",
+                                  "type": "icon"
+                                },
+                                {
+                                  "variant": "h2",
+                                  "content": "Events",
+                                  "type": "typography"
                                 }
                               ],
+                              "gap": "sm",
+                              "align": "center"
+                            },
+                            {
+                              "gap": "sm",
                               "type": "stack",
-                              "gap": "sm"
+                              "direction": "horizontal",
+                              "children": [
+                                {
+                                  "icon": "plus",
+                                  "type": "button",
+                                  "action": "CREATE",
+                                  "label": "New Event",
+                                  "variant": "primary"
+                                }
+                              ]
                             }
                           ],
-                          "type": "stack",
+                          "justify": "between",
+                          "gap": "md",
                           "align": "center",
                           "direction": "horizontal",
-                          "justify": "between",
-                          "gap": "md"
+                          "type": "stack"
                         },
                         {
                           "type": "divider"
                         },
                         {
-                          "align": "center",
-                          "type": "stack",
                           "gap": "md",
                           "children": [
                             "@trait.EventSearch",
                             "@trait.EventFilter"
                           ],
-                          "direction": "horizontal"
+                          "type": "stack",
+                          "direction": "horizontal",
+                          "align": "center"
                         },
                         "@trait.EventStats",
                         {
@@ -292,8 +292,8 @@
                         },
                         {
                           "content": "Advanced Event Admin",
-                          "type": "typography",
-                          "variant": "h3"
+                          "variant": "h3",
+                          "type": "typography"
                         },
                         "@trait.EventAdvancedAdmin"
                       ],
@@ -318,33 +318,33 @@
                     "render-ui",
                     "main",
                     {
-                      "gap": "md",
-                      "className": "py-8",
                       "align": "center",
+                      "className": "py-8",
+                      "direction": "vertical",
                       "children": [
                         {
-                          "name": "bell",
-                          "type": "icon"
+                          "type": "icon",
+                          "name": "bell"
                         },
                         {
                           "type": "typography",
-                          "content": "No notifications",
-                          "variant": "h3"
+                          "variant": "h3",
+                          "content": "No notifications"
                         },
                         {
-                          "variant": "caption",
-                          "content": "You're all caught up.",
                           "color": "muted",
-                          "type": "typography"
+                          "variant": "caption",
+                          "type": "typography",
+                          "content": "You're all caught up."
                         },
                         {
-                          "variant": "ghost",
-                          "label": "Back to events",
+                          "action": "INIT",
                           "type": "button",
-                          "action": "INIT"
+                          "label": "Back to events",
+                          "variant": "ghost"
                         }
                       ],
-                      "direction": "vertical",
+                      "gap": "md",
                       "type": "stack"
                     }
                   ]
@@ -358,8 +358,8 @@
           "ref": "Search.traits.SearchResultSearch",
           "name": "EventSearch",
           "config": {
-            "placeholder": "Search events…",
-            "event": "EVENT_SEARCH"
+            "event": "EVENT_SEARCH",
+            "placeholder": "Search events…"
           }
         },
         {
@@ -386,20 +386,19 @@
           "ref": "Stats.traits.StatsItemStats",
           "name": "EventStats",
           "config": {
-            "title": "Events",
             "metrics": [
               {
-                "format": "number",
                 "aggregation": "count",
-                "label": "Total",
+                "icon": "calendar",
                 "variant": "primary",
-                "icon": "calendar"
+                "label": "Total",
+                "format": "number"
               },
               {
-                "variant": "success",
-                "label": "Published",
-                "aggregation": "count",
                 "format": "number",
+                "variant": "success",
+                "aggregation": "count",
+                "icon": "send",
                 "filter": [
                   "fn",
                   "row",
@@ -409,13 +408,10 @@
                     "published"
                   ]
                 ],
-                "icon": "send"
+                "label": "Published"
               },
               {
                 "format": "number",
-                "variant": "warning",
-                "aggregation": "count",
-                "icon": "check-circle",
                 "filter": [
                   "fn",
                   "row",
@@ -425,17 +421,21 @@
                     "sold-out"
                   ]
                 ],
+                "icon": "check-circle",
+                "aggregation": "count",
+                "variant": "warning",
                 "label": "Sold Out"
               },
               {
-                "format": "number",
-                "label": "Capacity",
-                "field": "capacity",
+                "icon": "users",
                 "variant": "info",
+                "format": "number",
                 "aggregation": "sum",
-                "icon": "users"
+                "label": "Capacity",
+                "field": "capacity"
               }
-            ]
+            ],
+            "title": "Events"
           },
           "listens": [
             {
@@ -453,36 +453,6 @@
           "name": "EventBrowseList",
           "linkedEntity": "EventRow",
           "config": {
-            "fields": [
-              {
-                "icon": "calendar",
-                "variant": "h3",
-                "name": "name"
-              },
-              {
-                "variant": "body",
-                "name": "venue"
-              },
-              {
-                "name": "startsAt",
-                "format": "date",
-                "variant": "caption"
-              },
-              {
-                "variant": "caption",
-                "name": "endsAt",
-                "format": "date"
-              },
-              {
-                "name": "capacity",
-                "variant": "body",
-                "format": "number"
-              },
-              {
-                "variant": "badge",
-                "name": "status"
-              }
-            ],
             "itemActions": [
               {
                 "label": "View",
@@ -500,8 +470,38 @@
                 "variant": "danger"
               }
             ],
-            "cols": 1.0,
-            "gap": "sm"
+            "fields": [
+              {
+                "icon": "calendar",
+                "name": "name",
+                "variant": "h3"
+              },
+              {
+                "variant": "body",
+                "name": "venue"
+              },
+              {
+                "name": "startsAt",
+                "variant": "caption",
+                "format": "date"
+              },
+              {
+                "variant": "caption",
+                "format": "date",
+                "name": "endsAt"
+              },
+              {
+                "format": "number",
+                "name": "capacity",
+                "variant": "body"
+              },
+              {
+                "name": "status",
+                "variant": "badge"
+              }
+            ],
+            "gap": "sm",
+            "cols": 1.0
           },
           "listens": [
             {
@@ -593,7 +593,6 @@
           "name": "EventCreate",
           "linkedEntity": "EventRow",
           "config": {
-            "icon": "plus-circle",
             "fields": [
               "name",
               "description",
@@ -604,6 +603,7 @@
               "status",
               "organizerId"
             ],
+            "icon": "plus-circle",
             "mode": "create",
             "title": "New Event"
           },
@@ -626,6 +626,9 @@
           "name": "EventEdit",
           "linkedEntity": "EventRow",
           "config": {
+            "icon": "edit",
+            "title": "Edit Event",
+            "mode": "edit",
             "fields": [
               "name",
               "description",
@@ -635,10 +638,7 @@
               "capacity",
               "status",
               "organizerId"
-            ],
-            "title": "Edit Event",
-            "icon": "edit",
-            "mode": "edit"
+            ]
           },
           "events": {
             "OPEN": "EDIT"
@@ -659,9 +659,9 @@
           "name": "EventView",
           "linkedEntity": "EventRow",
           "config": {
+            "icon": "eye",
             "title": "View Event",
             "mode": "edit",
-            "icon": "eye",
             "fields": [
               "name",
               "description",
@@ -692,10 +692,10 @@
           "name": "EventDelete",
           "linkedEntity": "EventRow",
           "config": {
-            "title": "Delete Event",
             "alertMessage": "This action cannot be undone.",
-            "icon": "alert-triangle",
-            "confirmLabel": "Delete"
+            "title": "Delete Event",
+            "confirmLabel": "Delete",
+            "icon": "alert-triangle"
           },
           "events": {
             "REQUEST": "DELETE",
@@ -1036,11 +1036,10 @@
           "ref": "AppShell.traits.AppLayout",
           "name": "TicketAppLayout",
           "config": {
-            "notifications": [],
             "appName": "EventTicketing",
             "contentTrait": "@trait.TicketShop",
-            "notificationClickEvent": "TICKET_NOTIFICATIONS_OPEN",
             "searchEvent": "TICKET_SEARCH",
+            "notifications": [],
             "navItems": [
               {
                 "icon": "calendar",
@@ -1048,25 +1047,26 @@
                 "href": "/events"
               },
               {
+                "label": "Tickets",
                 "href": "/tickets",
-                "icon": "ticket",
-                "label": "Tickets"
+                "icon": "ticket"
               },
               {
+                "icon": "qr-code",
                 "label": "Check-in",
-                "href": "/checkin",
-                "icon": "qr-code"
+                "href": "/checkin"
               },
               {
-                "href": "/waitlist",
+                "label": "Waitlist",
                 "icon": "users",
-                "label": "Waitlist"
+                "href": "/waitlist"
               }
-            ]
+            ],
+            "notificationClickEvent": "TICKET_NOTIFICATIONS_OPEN"
           },
           "events": {
-            "NOTIFY_CLICK": "TICKET_NOTIFICATIONS_OPEN",
-            "SEARCH": "TICKET_SEARCH"
+            "SEARCH": "TICKET_SEARCH",
+            "NOTIFY_CLICK": "TICKET_NOTIFICATIONS_OPEN"
           }
         },
         {
@@ -1149,20 +1149,16 @@
                     "render-ui",
                     "main",
                     {
-                      "gap": "lg",
-                      "direction": "vertical",
                       "type": "stack",
+                      "direction": "vertical",
+                      "gap": "lg",
                       "children": [
                         {
-                          "direction": "horizontal",
-                          "gap": "md",
-                          "justify": "between",
-                          "align": "center",
                           "type": "stack",
+                          "direction": "horizontal",
+                          "justify": "between",
                           "children": [
                             {
-                              "type": "stack",
-                              "gap": "sm",
                               "children": [
                                 {
                                   "type": "icon",
@@ -1170,35 +1166,39 @@
                                 },
                                 {
                                   "content": "Tickets",
-                                  "type": "typography",
-                                  "variant": "h2"
+                                  "variant": "h2",
+                                  "type": "typography"
                                 }
                               ],
                               "direction": "horizontal",
-                              "align": "center"
+                              "align": "center",
+                              "gap": "sm",
+                              "type": "stack"
                             },
                             {
-                              "type": "stack",
                               "children": [
                                 {
-                                  "type": "button",
                                   "action": "ISSUE",
-                                  "label": "Issue Ticket",
                                   "variant": "primary",
+                                  "label": "Issue Ticket",
+                                  "type": "button",
                                   "icon": "plus"
                                 }
                               ],
-                              "gap": "sm",
-                              "direction": "horizontal"
+                              "direction": "horizontal",
+                              "type": "stack",
+                              "gap": "sm"
                             }
-                          ]
+                          ],
+                          "align": "center",
+                          "gap": "md"
                         },
                         {
                           "type": "divider"
                         },
                         {
-                          "content": "Available Tiers",
                           "type": "typography",
+                          "content": "Available Tiers",
                           "variant": "h3"
                         },
                         "@trait.TicketTierShop",
@@ -1215,9 +1215,9 @@
                           "type": "divider"
                         },
                         {
-                          "type": "typography",
                           "content": "Tickets Issued",
-                          "variant": "h3"
+                          "variant": "h3",
+                          "type": "typography"
                         },
                         "@trait.TicketBrowseList"
                       ]
@@ -1270,8 +1270,8 @@
             "fields": [
               {
                 "icon": "ticket",
-                "name": "holderName",
-                "variant": "h4"
+                "variant": "h4",
+                "name": "holderName"
               },
               {
                 "name": "holderEmail",
@@ -1290,19 +1290,19 @@
                 "variant": "badge"
               },
               {
+                "name": "purchasedAt",
                 "variant": "caption",
-                "format": "date",
-                "name": "purchasedAt"
+                "format": "date"
+              }
+            ],
+            "itemActions": [
+              {
+                "event": "VIEW",
+                "label": "View",
+                "variant": "ghost"
               }
             ],
             "cols": 1.0,
-            "itemActions": [
-              {
-                "variant": "ghost",
-                "label": "View",
-                "event": "VIEW"
-              }
-            ],
             "gap": "sm"
           },
           "listens": [
@@ -1321,6 +1321,7 @@
           "name": "TicketIssueModal",
           "linkedEntity": "Ticket",
           "config": {
+            "mode": "create",
             "icon": "plus-circle",
             "fields": [
               "eventId",
@@ -1329,8 +1330,7 @@
               "holderEmail",
               "status"
             ],
-            "title": "Issue Ticket",
-            "mode": "create"
+            "title": "Issue Ticket"
           },
           "events": {
             "OPEN": "ISSUE"
@@ -1531,33 +1531,33 @@
           "ref": "AppShell.traits.AppLayout",
           "name": "CheckinAppLayout",
           "config": {
-            "searchEvent": "CHECKIN_SEARCH",
-            "notifications": [],
-            "notificationClickEvent": "CHECKIN_NOTIFICATIONS_OPEN",
             "contentTrait": "@trait.CheckinDashboard",
+            "notifications": [],
+            "searchEvent": "CHECKIN_SEARCH",
             "appName": "EventTicketing",
             "navItems": [
               {
                 "icon": "calendar",
-                "label": "Events",
-                "href": "/events"
+                "href": "/events",
+                "label": "Events"
               },
               {
-                "href": "/tickets",
                 "icon": "ticket",
+                "href": "/tickets",
                 "label": "Tickets"
               },
               {
+                "label": "Check-in",
                 "href": "/checkin",
-                "icon": "qr-code",
-                "label": "Check-in"
+                "icon": "qr-code"
               },
               {
                 "href": "/waitlist",
-                "icon": "users",
-                "label": "Waitlist"
+                "label": "Waitlist",
+                "icon": "users"
               }
-            ]
+            ],
+            "notificationClickEvent": "CHECKIN_NOTIFICATIONS_OPEN"
           },
           "events": {
             "NOTIFY_CLICK": "CHECKIN_NOTIFICATIONS_OPEN",
@@ -1628,12 +1628,12 @@
                     "render-ui",
                     "main",
                     {
+                      "gap": "lg",
+                      "direction": "vertical",
                       "children": [
                         {
-                          "gap": "sm",
                           "direction": "horizontal",
                           "align": "center",
-                          "type": "stack",
                           "children": [
                             {
                               "type": "icon",
@@ -1641,10 +1641,12 @@
                             },
                             {
                               "type": "typography",
-                              "variant": "h2",
-                              "content": "Door Check-in"
+                              "content": "Door Check-in",
+                              "variant": "h2"
                             }
-                          ]
+                          ],
+                          "type": "stack",
+                          "gap": "sm"
                         },
                         {
                           "type": "divider"
@@ -1655,14 +1657,12 @@
                         },
                         {
                           "variant": "h3",
-                          "type": "typography",
-                          "content": "Attendees"
+                          "content": "Attendees",
+                          "type": "typography"
                         },
                         "@trait.AttendeeListing"
                       ],
-                      "type": "stack",
-                      "direction": "vertical",
-                      "gap": "lg"
+                      "type": "stack"
                     }
                   ]
                 ]
@@ -1685,8 +1685,8 @@
           "ref": "CheckinAtom.traits.CheckinScan",
           "name": "GateScanner",
           "config": {
-            "mode": "qr",
-            "title": "Scan Ticket QR"
+            "title": "Scan Ticket QR",
+            "mode": "qr"
           }
         },
         {
@@ -1789,37 +1789,37 @@
           "ref": "AppShell.traits.AppLayout",
           "name": "WaitlistAppLayout",
           "config": {
-            "searchEvent": "WAITLIST_SEARCH",
             "notificationClickEvent": "WAITLIST_NOTIFICATIONS_OPEN",
             "navItems": [
               {
                 "label": "Events",
-                "icon": "calendar",
-                "href": "/events"
+                "href": "/events",
+                "icon": "calendar"
               },
               {
-                "href": "/tickets",
                 "icon": "ticket",
-                "label": "Tickets"
+                "label": "Tickets",
+                "href": "/tickets"
               },
               {
+                "href": "/checkin",
                 "label": "Check-in",
-                "icon": "qr-code",
-                "href": "/checkin"
+                "icon": "qr-code"
               },
               {
-                "icon": "users",
+                "label": "Waitlist",
                 "href": "/waitlist",
-                "label": "Waitlist"
+                "icon": "users"
               }
             ],
-            "contentTrait": "@trait.WaitlistDashboard",
             "appName": "EventTicketing",
-            "notifications": []
+            "notifications": [],
+            "contentTrait": "@trait.WaitlistDashboard",
+            "searchEvent": "WAITLIST_SEARCH"
           },
           "events": {
-            "SEARCH": "WAITLIST_SEARCH",
-            "NOTIFY_CLICK": "WAITLIST_NOTIFICATIONS_OPEN"
+            "NOTIFY_CLICK": "WAITLIST_NOTIFICATIONS_OPEN",
+            "SEARCH": "WAITLIST_SEARCH"
           }
         },
         {
@@ -1902,17 +1902,14 @@
                     "render-ui",
                     "main",
                     {
-                      "gap": "lg",
-                      "type": "stack",
                       "direction": "vertical",
+                      "type": "stack",
+                      "gap": "lg",
                       "children": [
                         {
                           "children": [
                             {
-                              "gap": "sm",
                               "align": "center",
-                              "direction": "horizontal",
-                              "type": "stack",
                               "children": [
                                 {
                                   "name": "users",
@@ -1923,28 +1920,31 @@
                                   "variant": "h2",
                                   "type": "typography"
                                 }
-                              ]
+                              ],
+                              "direction": "horizontal",
+                              "type": "stack",
+                              "gap": "sm"
                             },
                             {
                               "type": "stack",
+                              "direction": "horizontal",
                               "children": [
                                 {
                                   "label": "Join Waitlist",
+                                  "action": "JOIN",
                                   "variant": "primary",
-                                  "icon": "user-plus",
                                   "type": "button",
-                                  "action": "JOIN"
+                                  "icon": "user-plus"
                                 }
                               ],
-                              "direction": "horizontal",
                               "gap": "sm"
                             }
                           ],
-                          "align": "center",
-                          "direction": "horizontal",
-                          "type": "stack",
                           "gap": "md",
-                          "justify": "between"
+                          "type": "stack",
+                          "justify": "between",
+                          "direction": "horizontal",
+                          "align": "center"
                         },
                         {
                           "type": "divider"
@@ -1991,6 +1991,7 @@
           "linkedEntity": "WaitlistRow",
           "config": {
             "gap": "sm",
+            "cols": 1.0,
             "fields": [
               {
                 "name": "position",
@@ -2005,17 +2006,16 @@
                 "name": "targetId"
               },
               {
-                "variant": "badge",
-                "name": "status"
+                "name": "status",
+                "variant": "badge"
               },
               {
+                "format": "date",
                 "name": "joinedAt",
-                "variant": "caption",
-                "format": "date"
+                "variant": "caption"
               }
             ],
-            "itemActions": [],
-            "cols": 1.0
+            "itemActions": []
           },
           "listens": [
             {
@@ -2034,12 +2034,12 @@
           "linkedEntity": "WaitlistRow",
           "config": {
             "title": "Join Waitlist",
+            "mode": "create",
             "fields": [
               "targetId",
               "userId",
               "status"
             ],
-            "mode": "create",
             "icon": "user-plus"
           },
           "events": {

@@ -282,8 +282,79 @@
                     "fetch",
                     "BrowseItem",
                     {
+                      "emit": {
+                        "success": "BrowseItemLoaded",
+                        "failure": "BrowseItemLoadFailed"
+                      },
                       "offset": 0.0,
+                      "limit": "@config.pageSize"
+                    }
+                  ],
+                  [
+                    "render-ui",
+                    "main",
+                    {
+                      "size": "sm",
+                      "type": "spinner"
+                    }
+                  ]
+                ]
+              },
+              {
+                "from": "loading",
+                "to": "browsing",
+                "event": "BrowseItemLoaded",
+                "effects": [
+                  [
+                    "render-ui",
+                    "main",
+                    {
+                      "type": "stack",
+                      "children": [
+                        {
+                          "imageField": "@config.imageField",
+                          "pageSize": "@config.displayPageSize",
+                          "itemActions": "@config.itemActions",
+                          "gap": "@config.gap",
+                          "cols": "@config.cols",
+                          "entity": "@payload.data",
+                          "fields": "@config.fields",
+                          "type": "@config.viewPattern"
+                        }
+                      ],
+                      "direction": "vertical"
+                    }
+                  ]
+                ]
+              },
+              {
+                "from": "loading",
+                "to": "error",
+                "event": "BrowseItemLoadFailed",
+                "effects": [
+                  [
+                    "render-ui",
+                    "main",
+                    {
+                      "type": "typography",
+                      "content": "@payload.error",
+                      "variant": "caption",
+                      "color": "error"
+                    }
+                  ]
+                ]
+              },
+              {
+                "from": "browsing",
+                "to": "loading",
+                "event": "INIT",
+                "effects": [
+                  [
+                    "fetch",
+                    "BrowseItem",
+                    {
                       "limit": "@config.pageSize",
+                      "offset": 0.0,
                       "emit": {
                         "failure": "BrowseItemLoadFailed",
                         "success": "BrowseItemLoaded"
@@ -301,77 +372,6 @@
                 ]
               },
               {
-                "from": "loading",
-                "to": "browsing",
-                "event": "BrowseItemLoaded",
-                "effects": [
-                  [
-                    "render-ui",
-                    "main",
-                    {
-                      "children": [
-                        {
-                          "type": "@config.viewPattern",
-                          "gap": "@config.gap",
-                          "fields": "@config.fields",
-                          "imageField": "@config.imageField",
-                          "itemActions": "@config.itemActions",
-                          "cols": "@config.cols",
-                          "pageSize": "@config.displayPageSize",
-                          "entity": "@payload.data"
-                        }
-                      ],
-                      "direction": "vertical",
-                      "type": "stack"
-                    }
-                  ]
-                ]
-              },
-              {
-                "from": "loading",
-                "to": "error",
-                "event": "BrowseItemLoadFailed",
-                "effects": [
-                  [
-                    "render-ui",
-                    "main",
-                    {
-                      "type": "typography",
-                      "color": "error",
-                      "variant": "caption",
-                      "content": "@payload.error"
-                    }
-                  ]
-                ]
-              },
-              {
-                "from": "browsing",
-                "to": "loading",
-                "event": "INIT",
-                "effects": [
-                  [
-                    "fetch",
-                    "BrowseItem",
-                    {
-                      "offset": 0.0,
-                      "limit": "@config.pageSize",
-                      "emit": {
-                        "failure": "BrowseItemLoadFailed",
-                        "success": "BrowseItemLoaded"
-                      }
-                    }
-                  ],
-                  [
-                    "render-ui",
-                    "main",
-                    {
-                      "size": "sm",
-                      "type": "spinner"
-                    }
-                  ]
-                ]
-              },
-              {
                 "from": "browsing",
                 "to": "browsing",
                 "event": "REFETCH_QUERY",
@@ -380,6 +380,7 @@
                     "fetch",
                     "BrowseItem",
                     {
+                      "offset": 0.0,
                       "limit": "@config.pageSize",
                       "filter": [
                         "or",
@@ -398,10 +399,9 @@
                           "@payload.searchTerm"
                         ]
                       ],
-                      "offset": 0.0,
                       "emit": {
-                        "success": "BrowseItemLoaded",
-                        "failure": "BrowseItemLoadFailed"
+                        "failure": "BrowseItemLoadFailed",
+                        "success": "BrowseItemLoaded"
                       }
                     }
                   ]
@@ -416,6 +416,12 @@
                     "fetch",
                     "BrowseItem",
                     {
+                      "emit": {
+                        "failure": "BrowseItemLoadFailed",
+                        "success": "BrowseItemLoaded"
+                      },
+                      "offset": 0.0,
+                      "limit": "@config.pageSize",
                       "filter": [
                         "or",
                         [
@@ -432,13 +438,7 @@
                           ],
                           "@payload.value"
                         ]
-                      ],
-                      "emit": {
-                        "success": "BrowseItemLoaded",
-                        "failure": "BrowseItemLoadFailed"
-                      },
-                      "limit": "@config.pageSize",
-                      "offset": 0.0
+                      ]
                     }
                   ]
                 ]
@@ -453,6 +453,10 @@
                     "BrowseItem",
                     {
                       "limit": "@config.pageSize",
+                      "emit": {
+                        "failure": "BrowseItemLoadFailed",
+                        "success": "BrowseItemLoaded"
+                      },
                       "offset": [
                         "*",
                         [
@@ -461,11 +465,7 @@
                           1.0
                         ],
                         "@config.pageSize"
-                      ],
-                      "emit": {
-                        "success": "BrowseItemLoaded",
-                        "failure": "BrowseItemLoadFailed"
-                      }
+                      ]
                     }
                   ]
                 ]
@@ -479,20 +479,20 @@
                     "render-ui",
                     "main",
                     {
-                      "direction": "vertical",
-                      "type": "stack",
                       "children": [
                         {
-                          "imageField": "@config.imageField",
-                          "pageSize": "@config.displayPageSize",
-                          "gap": "@config.gap",
-                          "entity": "@payload.data",
-                          "fields": "@config.fields",
                           "itemActions": "@config.itemActions",
+                          "gap": "@config.gap",
+                          "cols": "@config.cols",
                           "type": "@config.viewPattern",
-                          "cols": "@config.cols"
+                          "fields": "@config.fields",
+                          "imageField": "@config.imageField",
+                          "entity": "@payload.data",
+                          "pageSize": "@config.displayPageSize"
                         }
-                      ]
+                      ],
+                      "type": "stack",
+                      "direction": "vertical"
                     }
                   ]
                 ]
@@ -506,20 +506,20 @@
                     "fetch",
                     "BrowseItem",
                     {
-                      "limit": "@config.pageSize",
-                      "offset": 0.0,
                       "emit": {
-                        "failure": "BrowseItemLoadFailed",
-                        "success": "BrowseItemLoaded"
-                      }
+                        "success": "BrowseItemLoaded",
+                        "failure": "BrowseItemLoadFailed"
+                      },
+                      "offset": 0.0,
+                      "limit": "@config.pageSize"
                     }
                   ],
                   [
                     "render-ui",
                     "main",
                     {
-                      "type": "spinner",
-                      "size": "sm"
+                      "size": "sm",
+                      "type": "spinner"
                     }
                   ]
                 ]
@@ -527,73 +527,23 @@
             ]
           },
           "config": {
+            "gap": {
+              "type": "string",
+              "default": "md",
+              "label": "Cell spacing",
+              "description": "Gap size between rows (sm, md, lg)"
+            },
             "cols": {
               "type": "number",
               "default": 1.0,
               "label": "Grid columns",
               "description": "Number of columns in the responsive grid layout"
             },
-            "fields": {
-              "type": "[FieldSpec]",
-              "default": [
-                {
-                  "variant": "h4",
-                  "label": "Name",
-                  "name": "name"
-                },
-                {
-                  "name": "description",
-                  "label": "Description",
-                  "variant": "caption"
-                },
-                {
-                  "label": "Status",
-                  "variant": "badge",
-                  "name": "status"
-                }
-              ],
-              "label": "Columns to show",
-              "description": "Each column maps to one field on the BrowseItem entity",
-              "items": {
-                "type": "object",
-                "properties": {
-                  "icon": {
-                    "name": "icon",
-                    "type": "string",
-                    "required": false
-                  },
-                  "key": {
-                    "name": "key",
-                    "type": "string",
-                    "required": false
-                  },
-                  "variant": {
-                    "name": "variant",
-                    "type": "string",
-                    "required": false
-                  },
-                  "label": {
-                    "name": "label",
-                    "type": "string",
-                    "required": false
-                  },
-                  "name": {
-                    "name": "name",
-                    "type": "string",
-                    "required": true
-                  },
-                  "format": {
-                    "name": "format",
-                    "type": "string",
-                    "required": false
-                  },
-                  "header": {
-                    "name": "header",
-                    "type": "string",
-                    "required": false
-                  }
-                }
-              }
+            "displayPageSize": {
+              "type": "number",
+              "default": 10.0,
+              "label": "Page size (display)",
+              "description": "Rows shown per visible page before pagination"
             },
             "itemActions": {
               "type": "[ItemAction]",
@@ -603,15 +553,15 @@
               "items": {
                 "type": "object",
                 "properties": {
-                  "variant": {
-                    "name": "variant",
-                    "type": "string",
-                    "required": false
-                  },
                   "label": {
                     "name": "label",
                     "type": "string",
                     "required": true
+                  },
+                  "variant": {
+                    "name": "variant",
+                    "type": "string",
+                    "required": false
                   },
                   "icon": {
                     "name": "icon",
@@ -632,29 +582,79 @@
               "label": "Image field",
               "description": "Entity field that holds the row thumbnail URL"
             },
-            "viewPattern": {
-              "type": "pattern",
-              "default": "data-grid",
-              "label": "Render pattern",
-              "description": "UI pattern used to render the collection"
-            },
-            "gap": {
-              "type": "string",
-              "default": "md",
-              "label": "Cell spacing",
-              "description": "Gap size between rows (sm, md, lg)"
-            },
             "pageSize": {
               "type": "number",
               "default": 10.0,
               "label": "Page size (fetch)",
               "description": "Rows fetched from the server per page"
             },
-            "displayPageSize": {
-              "type": "number",
-              "default": 10.0,
-              "label": "Page size (display)",
-              "description": "Rows shown per visible page before pagination"
+            "fields": {
+              "type": "[FieldSpec]",
+              "default": [
+                {
+                  "label": "Name",
+                  "name": "name",
+                  "variant": "h4"
+                },
+                {
+                  "name": "description",
+                  "label": "Description",
+                  "variant": "caption"
+                },
+                {
+                  "variant": "badge",
+                  "name": "status",
+                  "label": "Status"
+                }
+              ],
+              "label": "Columns to show",
+              "description": "Each column maps to one field on the BrowseItem entity",
+              "items": {
+                "type": "object",
+                "properties": {
+                  "name": {
+                    "name": "name",
+                    "type": "string",
+                    "required": true
+                  },
+                  "icon": {
+                    "name": "icon",
+                    "type": "string",
+                    "required": false
+                  },
+                  "format": {
+                    "name": "format",
+                    "type": "string",
+                    "required": false
+                  },
+                  "key": {
+                    "name": "key",
+                    "type": "string",
+                    "required": false
+                  },
+                  "header": {
+                    "name": "header",
+                    "type": "string",
+                    "required": false
+                  },
+                  "variant": {
+                    "name": "variant",
+                    "type": "string",
+                    "required": false
+                  },
+                  "label": {
+                    "name": "label",
+                    "type": "string",
+                    "required": false
+                  }
+                }
+              }
+            },
+            "viewPattern": {
+              "type": "pattern",
+              "default": "data-grid",
+              "label": "Render pattern",
+              "description": "UI pattern used to render the collection"
             }
           },
           "scope": "collection"

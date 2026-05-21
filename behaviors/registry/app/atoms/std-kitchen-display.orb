@@ -533,8 +533,8 @@
                     "KitchenTicket",
                     {
                       "emit": {
-                        "success": "KitchenTicketLoaded",
-                        "failure": "KitchenTicketLoadFailed"
+                        "failure": "KitchenTicketLoadFailed",
+                        "success": "KitchenTicketLoaded"
                       }
                     }
                   ],
@@ -542,22 +542,22 @@
                     "render-ui",
                     "main",
                     {
-                      "align": "center",
-                      "className": "py-12",
                       "children": [
                         {
                           "type": "spinner"
                         },
                         {
+                          "content": "Loading kitchen tickets…",
                           "type": "typography",
                           "variant": "caption",
-                          "content": "Loading kitchen tickets…",
                           "color": "muted"
                         }
                       ],
-                      "gap": "md",
+                      "align": "center",
                       "type": "stack",
-                      "direction": "vertical"
+                      "direction": "vertical",
+                      "gap": "md",
+                      "className": "py-12"
                     }
                   ]
                 ]
@@ -572,24 +572,23 @@
                     "main",
                     {
                       "type": "stack",
-                      "gap": "md",
                       "direction": "vertical",
                       "children": [
                         {
                           "type": "stack",
                           "gap": "sm",
+                          "direction": "horizontal",
                           "children": [
                             {
                               "type": "icon",
                               "name": "chef-hat"
                             },
                             {
-                              "content": "@config.title",
                               "variant": "h3",
-                              "type": "typography"
+                              "type": "typography",
+                              "content": "@config.title"
                             }
                           ],
-                          "direction": "horizontal",
                           "align": "center"
                         },
                         {
@@ -598,21 +597,21 @@
                           "children": [
                             {
                               "value": "@payload.data.length",
-                              "icon": "chef-hat",
                               "label": "Open tickets",
+                              "icon": "chef-hat",
                               "type": "stat-display"
                             },
                             {
                               "type": "stat-display",
-                              "icon": "flame",
                               "label": "Preparing",
+                              "icon": "flame",
                               "value": "8"
                             },
                             {
-                              "value": "3",
-                              "type": "stat-display",
+                              "label": "Ready",
                               "icon": "check-circle",
-                              "label": "Ready"
+                              "type": "stat-display",
+                              "value": "3"
                             },
                             {
                               "label": "Avg prep (min)",
@@ -626,14 +625,15 @@
                           "type": "divider"
                         },
                         {
-                          "type": "data-grid",
                           "gap": "sm",
-                          "entity": "@payload.data",
                           "cols": 1.0,
+                          "fields": "@config.fields",
                           "itemActions": "@config.itemActions",
-                          "fields": "@config.fields"
+                          "entity": "@payload.data",
+                          "type": "data-grid"
                         }
-                      ]
+                      ],
+                      "gap": "md"
                     }
                   ]
                 ]
@@ -648,8 +648,8 @@
                     "main",
                     {
                       "message": "@payload.error",
-                      "variant": "error",
-                      "type": "alert"
+                      "type": "alert",
+                      "variant": "error"
                     }
                   ]
                 ]
@@ -713,74 +713,72 @@
                     "render-ui",
                     "main",
                     {
+                      "type": "stack",
+                      "gap": "md",
                       "children": [
                         {
-                          "type": "stack",
-                          "direction": "horizontal",
-                          "gap": "sm",
                           "align": "center",
+                          "direction": "horizontal",
                           "children": [
                             {
-                              "variant": "ghost",
                               "label": "Back",
+                              "action": "CLOSE_VIEW",
                               "type": "button",
-                              "action": "CLOSE_VIEW"
+                              "variant": "ghost"
                             },
                             {
                               "name": "chef-hat",
                               "type": "icon"
                             },
                             {
-                              "type": "typography",
                               "content": "@entity.orderId",
-                              "variant": "h3"
+                              "variant": "h3",
+                              "type": "typography"
                             },
                             {
                               "type": "badge",
-                              "variant": "primary",
-                              "label": "@entity.status"
+                              "label": "@entity.status",
+                              "variant": "primary"
                             },
                             {
+                              "type": "badge",
                               "label": "@entity.aging",
-                              "variant": "default",
-                              "type": "badge"
+                              "variant": "default"
                             }
-                          ]
+                          ],
+                          "gap": "sm",
+                          "type": "stack"
                         },
                         {
                           "type": "divider"
                         },
                         {
-                          "type": "stack",
-                          "direction": "vertical",
-                          "gap": "sm",
                           "children": [
                             {
                               "children": [
                                 {
-                                  "color": "muted",
-                                  "variant": "caption",
                                   "content": "Table",
-                                  "type": "typography"
+                                  "color": "muted",
+                                  "type": "typography",
+                                  "variant": "caption"
                                 },
                                 {
+                                  "type": "typography",
                                   "variant": "body",
-                                  "content": "@entity.tableLabel",
-                                  "type": "typography"
+                                  "content": "@entity.tableLabel"
                                 }
                               ],
+                              "gap": "md",
                               "type": "stack",
-                              "direction": "horizontal",
-                              "gap": "md"
+                              "direction": "horizontal"
                             },
                             {
-                              "type": "stack",
                               "children": [
                                 {
-                                  "type": "typography",
-                                  "content": "Server",
                                   "variant": "caption",
-                                  "color": "muted"
+                                  "content": "Server",
+                                  "color": "muted",
+                                  "type": "typography"
                                 },
                                 {
                                   "content": "@entity.serverName",
@@ -789,62 +787,67 @@
                                 }
                               ],
                               "gap": "md",
-                              "direction": "horizontal"
+                              "direction": "horizontal",
+                              "type": "stack"
                             },
                             {
+                              "direction": "horizontal",
                               "type": "stack",
+                              "gap": "md",
                               "children": [
                                 {
-                                  "variant": "caption",
                                   "content": "Items",
                                   "type": "typography",
+                                  "variant": "caption",
                                   "color": "muted"
                                 },
                                 {
-                                  "content": "@entity.itemsJson",
+                                  "type": "typography",
                                   "variant": "body",
-                                  "type": "typography"
+                                  "content": "@entity.itemsJson"
                                 }
-                              ],
-                              "gap": "md",
-                              "direction": "horizontal"
+                              ]
                             }
-                          ]
+                          ],
+                          "type": "stack",
+                          "direction": "vertical",
+                          "gap": "sm"
                         },
                         {
                           "type": "divider"
                         },
                         {
+                          "type": "simple-grid",
                           "children": [
                             {
-                              "type": "stat-display",
-                              "label": "Received",
                               "value": "@entity.receivedAt",
-                              "icon": "clock"
+                              "icon": "clock",
+                              "type": "stat-display",
+                              "label": "Received"
                             },
                             {
+                              "value": "@entity.readyAt",
                               "icon": "check-circle",
                               "type": "stat-display",
-                              "value": "@entity.readyAt",
                               "label": "Ready at"
                             },
                             {
-                              "label": "Served at",
-                              "type": "stat-display",
                               "icon": "utensils",
-                              "value": "@entity.servedAt"
+                              "type": "stat-display",
+                              "value": "@entity.servedAt",
+                              "label": "Served at"
                             }
                           ],
-                          "type": "simple-grid",
                           "cols": 3.0
                         },
                         {
+                          "direction": "horizontal",
                           "align": "center",
-                          "gap": "sm",
+                          "type": "stack",
                           "children": [
                             {
-                              "label": "Mark Preparing",
                               "type": "button",
+                              "label": "Mark Preparing",
                               "action": "MARK_PREPARING",
                               "variant": "secondary",
                               "actionPayload": {
@@ -852,33 +855,30 @@
                               }
                             },
                             {
+                              "label": "Mark Ready",
                               "action": "MARK_READY",
                               "type": "button",
                               "variant": "primary",
                               "actionPayload": {
                                 "ticketId": "@entity.id",
                                 "readyAt": "now"
-                              },
-                              "label": "Mark Ready"
+                              }
                             },
                             {
-                              "label": "Mark Served",
+                              "type": "button",
+                              "variant": "primary",
                               "actionPayload": {
-                                "servedAt": "now",
-                                "ticketId": "@entity.id"
+                                "ticketId": "@entity.id",
+                                "servedAt": "now"
                               },
                               "action": "MARK_SERVED",
-                              "type": "button",
-                              "variant": "primary"
+                              "label": "Mark Served"
                             }
                           ],
-                          "type": "stack",
-                          "direction": "horizontal"
+                          "gap": "sm"
                         }
                       ],
-                      "direction": "vertical",
-                      "gap": "md",
-                      "type": "stack"
+                      "direction": "vertical"
                     }
                   ]
                 ]
@@ -910,8 +910,8 @@
                     "@entity",
                     {
                       "emit": {
-                        "success": "KitchenTicketUpdated",
-                        "failure": "KitchenTicketUpdateFailed"
+                        "failure": "KitchenTicketUpdateFailed",
+                        "success": "KitchenTicketUpdated"
                       }
                     }
                   ],
@@ -919,9 +919,10 @@
                     "render-ui",
                     "main",
                     {
+                      "type": "stack",
                       "direction": "vertical",
                       "gap": "md",
-                      "type": "stack",
+                      "align": "center",
                       "className": "py-12",
                       "children": [
                         {
@@ -930,11 +931,10 @@
                         {
                           "type": "typography",
                           "variant": "caption",
-                          "content": "Marking ticket served…",
-                          "color": "muted"
+                          "color": "muted",
+                          "content": "Marking ticket served…"
                         }
-                      ],
-                      "align": "center"
+                      ]
                     }
                   ]
                 ]
@@ -966,8 +966,8 @@
                     "main",
                     {
                       "variant": "error",
-                      "message": "@payload.error",
-                      "type": "alert"
+                      "type": "alert",
+                      "message": "@payload.error"
                     }
                   ]
                 ]
@@ -992,21 +992,21 @@
                     "main",
                     {
                       "direction": "vertical",
-                      "className": "py-12",
                       "children": [
                         {
                           "type": "spinner"
                         },
                         {
                           "content": "Loading kitchen tickets…",
-                          "color": "muted",
                           "type": "typography",
-                          "variant": "caption"
+                          "variant": "caption",
+                          "color": "muted"
                         }
                       ],
                       "type": "stack",
                       "gap": "md",
-                      "align": "center"
+                      "align": "center",
+                      "className": "py-12"
                     }
                   ]
                 ]
@@ -1042,9 +1042,11 @@
                     "render-ui",
                     "main",
                     {
-                      "direction": "vertical",
                       "gap": "md",
+                      "type": "stack",
                       "align": "center",
+                      "className": "py-12",
+                      "direction": "vertical",
                       "children": [
                         {
                           "type": "spinner"
@@ -1055,9 +1057,7 @@
                           "content": "Marking ticket preparing…",
                           "type": "typography"
                         }
-                      ],
-                      "type": "stack",
-                      "className": "py-12"
+                      ]
                     }
                   ]
                 ]
@@ -1099,21 +1099,21 @@
                     "main",
                     {
                       "align": "center",
-                      "className": "py-12",
-                      "direction": "vertical",
+                      "gap": "md",
+                      "type": "stack",
                       "children": [
                         {
                           "type": "spinner"
                         },
                         {
                           "type": "typography",
-                          "variant": "caption",
                           "color": "muted",
+                          "variant": "caption",
                           "content": "Marking ticket ready…"
                         }
                       ],
-                      "gap": "md",
-                      "type": "stack"
+                      "className": "py-12",
+                      "direction": "vertical"
                     }
                   ]
                 ]
@@ -1154,22 +1154,22 @@
                     "render-ui",
                     "main",
                     {
+                      "className": "py-12",
+                      "gap": "md",
+                      "direction": "vertical",
+                      "align": "center",
                       "children": [
                         {
                           "type": "spinner"
                         },
                         {
                           "type": "typography",
-                          "content": "Marking ticket served…",
+                          "color": "muted",
                           "variant": "caption",
-                          "color": "muted"
+                          "content": "Marking ticket served…"
                         }
                       ],
-                      "align": "center",
-                      "type": "stack",
-                      "gap": "md",
-                      "className": "py-12",
-                      "direction": "vertical"
+                      "type": "stack"
                     }
                   ]
                 ]
@@ -1193,8 +1193,8 @@
                     "render-ui",
                     "main",
                     {
-                      "size": "sm",
-                      "type": "spinner"
+                      "type": "spinner",
+                      "size": "sm"
                     }
                   ]
                 ]
@@ -1202,109 +1202,20 @@
             ]
           },
           "config": {
-            "title": {
-              "type": "string",
-              "default": "Kitchen Display",
-              "label": "Section title",
-              "description": "Heading shown above the kitchen ticket board"
-            },
-            "overdueMinutes": {
-              "type": "number",
-              "default": 20.0,
-              "label": "Overdue threshold (min)",
-              "description": "Tickets older than this flip to the overdue aging tier"
-            },
-            "fields": {
-              "type": "[FieldSpec]",
-              "default": [
-                {
-                  "variant": "caption",
-                  "name": "orderId",
-                  "label": "Order"
-                },
-                {
-                  "name": "tableLabel",
-                  "label": "Table",
-                  "variant": "caption"
-                },
-                {
-                  "label": "Server",
-                  "name": "serverName",
-                  "variant": "caption"
-                },
-                {
-                  "variant": "badge",
-                  "name": "status",
-                  "label": "Status"
-                },
-                {
-                  "name": "aging",
-                  "label": "Aging",
-                  "variant": "badge"
-                },
-                {
-                  "variant": "caption",
-                  "name": "receivedAt",
-                  "label": "Received"
-                }
-              ],
-              "label": "Columns to show",
-              "description": "Each column maps to one field on the Kitchen Ticket entity",
-              "items": {
-                "type": "object",
-                "properties": {
-                  "header": {
-                    "name": "header",
-                    "type": "string",
-                    "required": false
-                  },
-                  "name": {
-                    "name": "name",
-                    "type": "string",
-                    "required": true
-                  },
-                  "label": {
-                    "name": "label",
-                    "type": "string",
-                    "required": false
-                  },
-                  "icon": {
-                    "name": "icon",
-                    "type": "string",
-                    "required": false
-                  },
-                  "variant": {
-                    "name": "variant",
-                    "type": "string",
-                    "required": false
-                  },
-                  "key": {
-                    "name": "key",
-                    "type": "string",
-                    "required": false
-                  },
-                  "format": {
-                    "name": "format",
-                    "type": "string",
-                    "required": false
-                  }
-                }
-              }
-            },
             "itemActions": {
               "type": "[ItemAction]",
               "default": [
                 {
                   "label": "Open",
+                  "event": "OPEN_TICKET",
                   "icon": "arrow-right",
-                  "variant": "primary",
-                  "event": "OPEN_TICKET"
+                  "variant": "primary"
                 },
                 {
-                  "variant": "danger",
                   "label": "Mark Served",
-                  "event": "MARK_SERVED",
-                  "icon": "utensils"
+                  "icon": "utensils",
+                  "variant": "danger",
+                  "event": "MARK_SERVED"
                 }
               ],
               "label": "Row actions",
@@ -1312,6 +1223,11 @@
               "items": {
                 "type": "object",
                 "properties": {
+                  "variant": {
+                    "name": "variant",
+                    "type": "string",
+                    "required": false
+                  },
                   "label": {
                     "name": "label",
                     "type": "string",
@@ -1326,6 +1242,84 @@
                     "name": "event",
                     "type": "string",
                     "required": true
+                  }
+                }
+              }
+            },
+            "overdueMinutes": {
+              "type": "number",
+              "default": 20.0,
+              "label": "Overdue threshold (min)",
+              "description": "Tickets older than this flip to the overdue aging tier"
+            },
+            "fields": {
+              "type": "[FieldSpec]",
+              "default": [
+                {
+                  "label": "Order",
+                  "name": "orderId",
+                  "variant": "caption"
+                },
+                {
+                  "name": "tableLabel",
+                  "label": "Table",
+                  "variant": "caption"
+                },
+                {
+                  "name": "serverName",
+                  "label": "Server",
+                  "variant": "caption"
+                },
+                {
+                  "name": "status",
+                  "label": "Status",
+                  "variant": "badge"
+                },
+                {
+                  "name": "aging",
+                  "label": "Aging",
+                  "variant": "badge"
+                },
+                {
+                  "name": "receivedAt",
+                  "variant": "caption",
+                  "label": "Received"
+                }
+              ],
+              "label": "Columns to show",
+              "description": "Each column maps to one field on the Kitchen Ticket entity",
+              "items": {
+                "type": "object",
+                "properties": {
+                  "icon": {
+                    "name": "icon",
+                    "type": "string",
+                    "required": false
+                  },
+                  "header": {
+                    "name": "header",
+                    "type": "string",
+                    "required": false
+                  },
+                  "key": {
+                    "name": "key",
+                    "type": "string",
+                    "required": false
+                  },
+                  "label": {
+                    "name": "label",
+                    "type": "string",
+                    "required": false
+                  },
+                  "format": {
+                    "name": "format",
+                    "type": "string",
+                    "required": false
+                  },
+                  "name": {
+                    "name": "name",
+                    "type": "string",
+                    "required": true
                   },
                   "variant": {
                     "name": "variant",
@@ -1334,6 +1328,12 @@
                   }
                 }
               }
+            },
+            "title": {
+              "type": "string",
+              "default": "Kitchen Display",
+              "label": "Section title",
+              "description": "Heading shown above the kitchen ticket board"
             }
           },
           "scope": "collection"

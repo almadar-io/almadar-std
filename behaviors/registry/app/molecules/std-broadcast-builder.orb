@@ -268,20 +268,20 @@
                     {
                       "type": "stack",
                       "direction": "vertical",
+                      "gap": "md",
+                      "align": "center",
                       "children": [
                         {
                           "type": "spinner"
                         },
                         {
                           "content": "Loading broadcasts…",
-                          "variant": "caption",
+                          "type": "typography",
                           "color": "muted",
-                          "type": "typography"
+                          "variant": "caption"
                         }
                       ],
-                      "align": "center",
-                      "className": "py-12",
-                      "gap": "md"
+                      "className": "py-12"
                     }
                   ]
                 ]
@@ -296,37 +296,39 @@
                     "main",
                     {
                       "type": "stack",
+                      "gap": "md",
+                      "direction": "vertical",
                       "children": [
                         {
-                          "gap": "md",
                           "direction": "horizontal",
                           "justify": "between",
                           "children": [
                             {
+                              "gap": "sm",
                               "align": "center",
+                              "type": "stack",
+                              "direction": "horizontal",
                               "children": [
                                 {
-                                  "name": "send",
-                                  "type": "icon"
+                                  "type": "icon",
+                                  "name": "send"
                                 },
                                 {
-                                  "content": "Broadcasts",
                                   "variant": "h3",
-                                  "type": "typography"
+                                  "type": "typography",
+                                  "content": "Broadcasts"
                                 }
-                              ],
-                              "gap": "sm",
-                              "type": "stack",
-                              "direction": "horizontal"
+                              ]
                             },
                             {
-                              "action": "CREATE",
+                              "icon": "plus",
                               "type": "button",
                               "label": "New Broadcast",
-                              "variant": "primary",
-                              "icon": "plus"
+                              "action": "CREATE",
+                              "variant": "primary"
                             }
                           ],
+                          "gap": "md",
                           "type": "stack"
                         },
                         {
@@ -335,27 +337,27 @@
                           "children": [
                             {
                               "type": "stat-display",
-                              "icon": "send",
+                              "label": "Total drafts",
                               "value": "@payload.data.length",
-                              "label": "Total drafts"
+                              "icon": "send"
                             },
                             {
-                              "value": "128",
-                              "type": "stat-display",
                               "label": "Sent this month",
-                              "icon": "check-circle"
+                              "value": "128",
+                              "icon": "check-circle",
+                              "type": "stat-display"
                             },
                             {
                               "type": "stat-display",
-                              "icon": "mail-open",
                               "value": "42%",
+                              "icon": "mail-open",
                               "label": "Open rate"
                             },
                             {
-                              "type": "stat-display",
                               "label": "Click rate",
-                              "value": "11%",
-                              "icon": "mouse-pointer"
+                              "type": "stat-display",
+                              "icon": "mouse-pointer",
+                              "value": "11%"
                             }
                           ]
                         },
@@ -363,13 +365,22 @@
                           "type": "divider"
                         },
                         {
-                          "type": "data-grid",
+                          "cols": 1.0,
+                          "gap": "sm",
+                          "entity": "@payload.data",
+                          "itemActions": [
+                            {
+                              "event": "REQUEST_DELETE",
+                              "variant": "danger",
+                              "label": "Delete"
+                            }
+                          ],
                           "fields": [
                             {
                               "icon": "send",
-                              "variant": "caption",
                               "name": "name",
-                              "label": "Name"
+                              "label": "Name",
+                              "variant": "caption"
                             },
                             {
                               "name": "subject",
@@ -382,35 +393,24 @@
                               "variant": "caption"
                             },
                             {
+                              "variant": "caption",
                               "name": "templateName",
-                              "label": "Template",
-                              "variant": "caption"
+                              "label": "Template"
                             },
                             {
-                              "label": "Scheduled",
                               "name": "scheduledAt",
+                              "label": "Scheduled",
                               "variant": "caption"
                             },
                             {
+                              "variant": "badge",
                               "label": "Status",
-                              "name": "status",
-                              "variant": "badge"
+                              "name": "status"
                             }
                           ],
-                          "cols": 1.0,
-                          "entity": "@payload.data",
-                          "itemActions": [
-                            {
-                              "event": "REQUEST_DELETE",
-                              "label": "Delete",
-                              "variant": "danger"
-                            }
-                          ],
-                          "gap": "sm"
+                          "type": "data-grid"
                         }
-                      ],
-                      "direction": "vertical",
-                      "gap": "md"
+                      ]
                     }
                   ]
                 ]
@@ -424,9 +424,9 @@
                     "render-ui",
                     "main",
                     {
-                      "message": "@payload.error",
+                      "variant": "error",
                       "type": "alert",
-                      "variant": "error"
+                      "message": "@payload.error"
                     }
                   ]
                 ]
@@ -441,8 +441,8 @@
                     "BroadcastDraft",
                     {
                       "emit": {
-                        "failure": "BroadcastDraftLoadFailed",
-                        "success": "BroadcastDraftLoaded"
+                        "success": "BroadcastDraftLoaded",
+                        "failure": "BroadcastDraftLoadFailed"
                       }
                     }
                   ],
@@ -488,16 +488,16 @@
           "name": "BroadcastDraftCreate",
           "linkedEntity": "BroadcastDraft",
           "config": {
+            "title": "New Broadcast",
+            "icon": "plus-circle",
+            "mode": "create",
             "fields": [
               "name",
               "segmentId",
               "templateId",
               "subject",
               "scheduledAt"
-            ],
-            "mode": "create",
-            "icon": "plus-circle",
-            "title": "New Broadcast"
+            ]
           },
           "events": {
             "OPEN": "CREATE"
@@ -519,9 +519,9 @@
           "linkedEntity": "BroadcastDraft",
           "config": {
             "alertMessage": "This will discard the draft.",
-            "confirmLabel": "Delete",
+            "icon": "alert-triangle",
             "title": "Delete Draft",
-            "icon": "alert-triangle"
+            "confirmLabel": "Delete"
           },
           "events": {
             "CONFIRM": "CONFIRM_DELETE",

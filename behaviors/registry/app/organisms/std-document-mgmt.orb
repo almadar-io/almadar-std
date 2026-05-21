@@ -112,42 +112,42 @@
           "ref": "AppShell.traits.AppLayout",
           "name": "DocumentAppLayout",
           "config": {
-            "notificationClickEvent": "DOCUMENT_NOTIFICATIONS_OPEN",
             "appName": "Documents",
+            "searchEvent": "DOCUMENT_SEARCH",
+            "notificationClickEvent": "DOCUMENT_NOTIFICATIONS_OPEN",
+            "notifications": [],
+            "contentTrait": "@trait.DocumentCatalog",
             "navItems": [
               {
-                "href": "/documents",
                 "icon": "file-text",
-                "label": "Documents"
+                "label": "Documents",
+                "href": "/documents"
               },
               {
-                "icon": "file-signature",
                 "label": "E-Sign Flow",
-                "href": "/esign-flow"
+                "href": "/esign-flow",
+                "icon": "file-signature"
               },
               {
                 "label": "Files",
-                "icon": "folder",
-                "href": "/files"
+                "href": "/files",
+                "icon": "folder"
               },
               {
-                "label": "Signatures",
                 "href": "/esign",
+                "label": "Signatures",
                 "icon": "pen-tool"
               },
               {
+                "label": "Versions",
                 "href": "/revisions/manage",
-                "icon": "history",
-                "label": "Versions"
+                "icon": "history"
               }
-            ],
-            "contentTrait": "@trait.DocumentCatalog",
-            "searchEvent": "DOCUMENT_SEARCH",
-            "notifications": []
+            ]
           },
           "events": {
-            "NOTIFY_CLICK": "DOCUMENT_NOTIFICATIONS_OPEN",
-            "SEARCH": "DOCUMENT_SEARCH"
+            "SEARCH": "DOCUMENT_SEARCH",
+            "NOTIFY_CLICK": "DOCUMENT_NOTIFICATIONS_OPEN"
           }
         },
         {
@@ -230,59 +230,59 @@
                     "render-ui",
                     "main",
                     {
-                      "gap": "lg",
+                      "type": "stack",
                       "children": [
                         {
                           "children": [
                             {
                               "gap": "sm",
+                              "align": "center",
+                              "direction": "horizontal",
                               "children": [
                                 {
                                   "type": "icon",
                                   "name": "file-text"
                                 },
                                 {
-                                  "variant": "h2",
                                   "type": "typography",
-                                  "content": "Documents"
+                                  "content": "Documents",
+                                  "variant": "h2"
+                                }
+                              ],
+                              "type": "stack"
+                            },
+                            {
+                              "children": [
+                                {
+                                  "type": "button",
+                                  "icon": "plus",
+                                  "label": "New Document",
+                                  "variant": "primary",
+                                  "action": "CREATE"
                                 }
                               ],
                               "direction": "horizontal",
                               "type": "stack",
-                              "align": "center"
-                            },
-                            {
-                              "direction": "horizontal",
-                              "gap": "sm",
-                              "type": "stack",
-                              "children": [
-                                {
-                                  "action": "CREATE",
-                                  "icon": "plus",
-                                  "variant": "primary",
-                                  "type": "button",
-                                  "label": "New Document"
-                                }
-                              ]
+                              "gap": "sm"
                             }
                           ],
-                          "direction": "horizontal",
+                          "gap": "md",
                           "type": "stack",
-                          "align": "center",
+                          "direction": "horizontal",
                           "justify": "between",
-                          "gap": "md"
+                          "align": "center"
                         },
                         {
                           "type": "divider"
                         },
                         {
+                          "align": "center",
+                          "type": "stack",
                           "children": [
                             "@trait.DocumentSearch",
                             "@trait.DocumentFilter"
                           ],
-                          "type": "stack",
                           "gap": "md",
-                          "align": "center",
                           "direction": "horizontal"
                         },
                         "@trait.DocumentStats",
@@ -292,7 +292,7 @@
                         },
                         "@trait.DocumentBrowseList"
                       ],
-                      "type": "stack",
+                      "gap": "lg",
                       "direction": "vertical"
                     }
                   ]
@@ -312,34 +312,34 @@
                     "render-ui",
                     "main",
                     {
-                      "direction": "vertical",
+                      "type": "stack",
                       "align": "center",
                       "className": "py-8",
-                      "type": "stack",
-                      "gap": "md",
+                      "direction": "vertical",
                       "children": [
                         {
-                          "type": "icon",
-                          "name": "bell"
+                          "name": "bell",
+                          "type": "icon"
                         },
                         {
-                          "variant": "h3",
                           "content": "No notifications",
+                          "type": "typography",
+                          "variant": "h3"
+                        },
+                        {
+                          "variant": "caption",
+                          "content": "You're all caught up.",
+                          "color": "muted",
                           "type": "typography"
                         },
                         {
-                          "type": "typography",
-                          "variant": "caption",
-                          "color": "muted",
-                          "content": "You're all caught up."
-                        },
-                        {
+                          "label": "Back to documents",
                           "action": "INIT",
-                          "type": "button",
                           "variant": "ghost",
-                          "label": "Back to documents"
+                          "type": "button"
                         }
-                      ]
+                      ],
+                      "gap": "md"
                     }
                   ]
                 ]
@@ -352,53 +352,55 @@
           "ref": "Search.traits.SearchResultSearch",
           "name": "DocumentSearch",
           "config": {
-            "event": "DOCUMENT_SEARCH",
-            "placeholder": "Search documents…"
+            "placeholder": "Search documents…",
+            "event": "DOCUMENT_SEARCH"
           }
         },
         {
           "ref": "Filter.traits.FilterTargetFilter",
           "name": "DocumentFilter",
           "config": {
-            "event": "DOCUMENT_FILTER",
             "filters": [
               {
-                "label": "Status",
                 "options": [
                   "active",
                   "archived",
                   "pending-review"
                 ],
+                "label": "Status",
                 "field": "status",
                 "filterType": "select"
               },
               {
+                "label": "Type",
+                "filterType": "select",
                 "options": [
                   "pdf",
                   "doc",
                   "text",
                   "image"
                 ],
-                "field": "mimeType",
-                "filterType": "select",
-                "label": "Type"
+                "field": "mimeType"
               }
-            ]
+            ],
+            "event": "DOCUMENT_FILTER"
           }
         },
         {
           "ref": "Stats.traits.StatsItemStats",
           "name": "DocumentStats",
           "config": {
+            "title": "Documents",
             "metrics": [
               {
-                "aggregation": "count",
-                "icon": "file-text",
                 "label": "Total",
-                "variant": "primary",
-                "format": "number"
+                "aggregation": "count",
+                "format": "number",
+                "icon": "file-text",
+                "variant": "primary"
               },
               {
+                "icon": "check-circle",
                 "variant": "success",
                 "aggregation": "count",
                 "filter": [
@@ -411,12 +413,14 @@
                   ]
                 ],
                 "label": "Active",
-                "format": "number",
-                "icon": "check-circle"
+                "format": "number"
               },
               {
-                "aggregation": "count",
                 "icon": "clock",
+                "format": "number",
+                "variant": "warning",
+                "label": "Pending Review",
+                "aggregation": "count",
                 "filter": [
                   "fn",
                   "row",
@@ -425,21 +429,17 @@
                     "@row.status",
                     "pending-review"
                   ]
-                ],
-                "format": "number",
-                "variant": "warning",
-                "label": "Pending Review"
+                ]
               },
               {
+                "label": "Total Size",
                 "aggregation": "sum",
                 "icon": "hard-drive",
                 "field": "sizeBytes",
-                "label": "Total Size",
-                "variant": "primary",
-                "format": "number"
+                "format": "number",
+                "variant": "primary"
               }
-            ],
-            "title": "Documents"
+            ]
           },
           "listens": [
             {
@@ -456,13 +456,13 @@
           "ref": "Graphs.traits.GraphItemGraph",
           "name": "DocumentGraphs",
           "config": {
+            "aggregation": "count",
             "title": "Documents by Status",
-            "categoryField": "status",
-            "showLegend": false,
-            "chartType": "bar",
             "subtitle": "Volume across status buckets",
+            "categoryField": "status",
             "height": 240.0,
-            "aggregation": "count"
+            "showLegend": false,
+            "chartType": "bar"
           },
           "listens": [
             {
@@ -480,29 +480,12 @@
           "name": "DocumentBrowseList",
           "linkedEntity": "Document",
           "config": {
-            "itemActions": [
-              {
-                "event": "VIEW",
-                "variant": "ghost",
-                "label": "View"
-              },
-              {
-                "label": "Edit",
-                "event": "EDIT",
-                "variant": "ghost"
-              },
-              {
-                "label": "Delete",
-                "event": "DELETE",
-                "variant": "danger"
-              }
-            ],
-            "cols": 1.0,
+            "gap": "sm",
             "fields": [
               {
                 "variant": "h3",
-                "icon": "file-text",
-                "name": "name"
+                "name": "name",
+                "icon": "file-text"
               },
               {
                 "name": "status",
@@ -517,12 +500,29 @@
                 "name": "owner"
               },
               {
-                "format": "date",
                 "variant": "caption",
-                "name": "lastModified"
+                "name": "lastModified",
+                "format": "date"
               }
             ],
-            "gap": "sm"
+            "cols": 1.0,
+            "itemActions": [
+              {
+                "event": "VIEW",
+                "variant": "ghost",
+                "label": "View"
+              },
+              {
+                "label": "Edit",
+                "event": "EDIT",
+                "variant": "ghost"
+              },
+              {
+                "variant": "danger",
+                "label": "Delete",
+                "event": "DELETE"
+              }
+            ]
           },
           "listens": [
             {
@@ -573,7 +573,7 @@
           "linkedEntity": "Document",
           "config": {
             "title": "New Document",
-            "icon": "plus-circle",
+            "mode": "create",
             "fields": [
               "name",
               "mimeType",
@@ -581,7 +581,7 @@
               "owner",
               "status"
             ],
-            "mode": "create"
+            "icon": "plus-circle"
           },
           "events": {
             "OPEN": "CREATE"
@@ -603,15 +603,15 @@
           "linkedEntity": "Document",
           "config": {
             "icon": "edit",
+            "title": "Edit Document",
+            "mode": "edit",
             "fields": [
               "name",
               "mimeType",
               "sizeBytes",
               "owner",
               "status"
-            ],
-            "title": "Edit Document",
-            "mode": "edit"
+            ]
           },
           "events": {
             "OPEN": "EDIT"
@@ -632,7 +632,6 @@
           "name": "DocumentView",
           "linkedEntity": "Document",
           "config": {
-            "title": "View Document",
             "mode": "edit",
             "fields": [
               "name",
@@ -642,6 +641,7 @@
               "status",
               "lastModified"
             ],
+            "title": "View Document",
             "icon": "eye"
           },
           "events": {
@@ -663,14 +663,14 @@
           "name": "DocumentDelete",
           "linkedEntity": "Document",
           "config": {
-            "confirmLabel": "Delete",
             "icon": "alert-triangle",
+            "title": "Delete Document",
             "alertMessage": "This action cannot be undone.",
-            "title": "Delete Document"
+            "confirmLabel": "Delete"
           },
           "events": {
-            "REQUEST": "DELETE",
-            "CONFIRM": "CONFIRM_DELETE"
+            "CONFIRM": "CONFIRM_DELETE",
+            "REQUEST": "DELETE"
           },
           "listens": [
             {

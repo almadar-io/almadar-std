@@ -104,25 +104,25 @@
           "name": "TicketAppLayout",
           "config": {
             "appName": "Helpdesk",
-            "searchEvent": "TICKET_SEARCH",
             "navItems": [
               {
-                "icon": "inbox",
+                "href": "/tickets",
                 "label": "Tickets",
-                "href": "/tickets"
+                "icon": "inbox"
               },
               {
-                "icon": "message-circle",
+                "label": "Replies",
                 "href": "/replies",
-                "label": "Replies"
+                "icon": "message-circle"
               },
               {
+                "icon": "layout-list",
                 "label": "Metrics",
-                "href": "/metrics",
-                "icon": "layout-list"
+                "href": "/metrics"
               }
             ],
             "contentTrait": "@trait.TicketCatalog",
+            "searchEvent": "TICKET_SEARCH",
             "notifications": [],
             "notificationClickEvent": "TICKET_NOTIFICATIONS_OPEN"
           },
@@ -211,18 +211,20 @@
                     "render-ui",
                     "main",
                     {
-                      "gap": "lg",
-                      "type": "stack",
-                      "direction": "vertical",
                       "children": [
                         {
+                          "gap": "md",
+                          "direction": "horizontal",
+                          "align": "center",
+                          "justify": "between",
                           "children": [
                             {
+                              "gap": "sm",
                               "align": "center",
                               "children": [
                                 {
-                                  "type": "icon",
-                                  "name": "inbox"
+                                  "name": "inbox",
+                                  "type": "icon"
                                 },
                                 {
                                   "type": "typography",
@@ -231,42 +233,37 @@
                                 }
                               ],
                               "type": "stack",
-                              "gap": "sm",
                               "direction": "horizontal"
                             },
                             {
-                              "children": [
-                                {
-                                  "icon": "plus",
-                                  "action": "CREATE",
-                                  "label": "New Ticket",
-                                  "type": "button",
-                                  "variant": "primary"
-                                }
-                              ],
                               "direction": "horizontal",
                               "gap": "sm",
+                              "children": [
+                                {
+                                  "type": "button",
+                                  "action": "CREATE",
+                                  "variant": "primary",
+                                  "label": "New Ticket",
+                                  "icon": "plus"
+                                }
+                              ],
                               "type": "stack"
                             }
                           ],
-                          "align": "center",
-                          "gap": "md",
-                          "justify": "between",
-                          "direction": "horizontal",
                           "type": "stack"
                         },
                         {
                           "type": "divider"
                         },
                         {
+                          "align": "center",
+                          "gap": "md",
                           "children": [
                             "@trait.TicketSearch",
                             "@trait.TicketFilter"
                           ],
                           "direction": "horizontal",
-                          "type": "stack",
-                          "align": "center",
-                          "gap": "md"
+                          "type": "stack"
                         },
                         "@trait.TicketStats",
                         "@trait.TicketGraphs",
@@ -274,7 +271,10 @@
                           "type": "divider"
                         },
                         "@trait.TicketBrowseList"
-                      ]
+                      ],
+                      "type": "stack",
+                      "gap": "lg",
+                      "direction": "vertical"
                     }
                   ]
                 ]
@@ -293,26 +293,23 @@
                     "render-ui",
                     "main",
                     {
-                      "gap": "md",
                       "direction": "vertical",
-                      "type": "stack",
-                      "align": "center",
-                      "className": "py-8",
+                      "gap": "md",
                       "children": [
                         {
                           "type": "icon",
                           "name": "bell"
                         },
                         {
-                          "type": "typography",
                           "variant": "h3",
-                          "content": "No notifications"
+                          "content": "No notifications",
+                          "type": "typography"
                         },
                         {
                           "content": "You're all caught up.",
-                          "color": "muted",
+                          "type": "typography",
                           "variant": "caption",
-                          "type": "typography"
+                          "color": "muted"
                         },
                         {
                           "type": "button",
@@ -320,7 +317,10 @@
                           "action": "INIT",
                           "variant": "ghost"
                         }
-                      ]
+                      ],
+                      "className": "py-8",
+                      "type": "stack",
+                      "align": "center"
                     }
                   ]
                 ]
@@ -333,8 +333,8 @@
           "ref": "Search.traits.SearchResultSearch",
           "name": "TicketSearch",
           "config": {
-            "event": "TICKET_SEARCH",
-            "placeholder": "Search tickets…"
+            "placeholder": "Search tickets…",
+            "event": "TICKET_SEARCH"
           }
         },
         {
@@ -350,20 +350,20 @@
                   "high",
                   "critical"
                 ],
-                "label": "Priority",
                 "field": "priority",
+                "label": "Priority",
                 "filterType": "select"
               },
               {
-                "filterType": "select",
-                "label": "Status",
                 "field": "status",
+                "label": "Status",
                 "options": [
                   "open",
                   "in-progress",
                   "resolved",
                   "closed"
-                ]
+                ],
+                "filterType": "select"
               }
             ]
           }
@@ -372,17 +372,17 @@
           "ref": "Stats.traits.StatsItemStats",
           "name": "TicketStats",
           "config": {
+            "title": "Tickets",
             "metrics": [
               {
                 "format": "number",
+                "icon": "inbox",
                 "aggregation": "count",
                 "label": "Total",
-                "icon": "inbox",
                 "variant": "primary"
               },
               {
-                "label": "Open",
-                "format": "number",
+                "icon": "circle",
                 "filter": [
                   "fn",
                   "row",
@@ -393,15 +393,16 @@
                   ]
                 ],
                 "aggregation": "count",
-                "icon": "circle",
+                "label": "Open",
+                "format": "number",
                 "variant": "warning"
               },
               {
                 "aggregation": "count",
+                "icon": "check-circle",
                 "label": "Resolved",
                 "format": "number",
                 "variant": "success",
-                "icon": "check-circle",
                 "filter": [
                   "fn",
                   "row",
@@ -412,8 +413,7 @@
                   ]
                 ]
               }
-            ],
-            "title": "Tickets"
+            ]
           },
           "listens": [
             {
@@ -430,13 +430,13 @@
           "ref": "Graphs.traits.GraphItemGraph",
           "name": "TicketGraphs",
           "config": {
-            "categoryField": "priority",
             "chartType": "bar",
-            "subtitle": "Volume across priority buckets",
-            "title": "Tickets by Priority",
-            "aggregation": "count",
             "height": 240.0,
-            "showLegend": false
+            "aggregation": "count",
+            "showLegend": false,
+            "subtitle": "Volume across priority buckets",
+            "categoryField": "priority",
+            "title": "Tickets by Priority"
           },
           "listens": [
             {
@@ -455,6 +455,7 @@
           "linkedEntity": "Ticket",
           "config": {
             "cols": 1.0,
+            "gap": "sm",
             "fields": [
               {
                 "variant": "h3",
@@ -466,16 +467,16 @@
                 "name": "priority"
               },
               {
-                "name": "status",
-                "variant": "badge"
+                "variant": "badge",
+                "name": "status"
               },
               {
                 "variant": "body",
                 "name": "assignee"
               },
               {
-                "name": "description",
-                "variant": "caption"
+                "variant": "caption",
+                "name": "description"
               }
             ],
             "itemActions": [
@@ -485,17 +486,16 @@
                 "variant": "ghost"
               },
               {
+                "event": "EDIT",
                 "variant": "ghost",
-                "label": "Edit",
-                "event": "EDIT"
+                "label": "Edit"
               },
               {
                 "variant": "danger",
                 "label": "Delete",
                 "event": "DELETE"
               }
-            ],
-            "gap": "sm"
+            ]
           },
           "listens": [
             {
@@ -545,8 +545,8 @@
           "name": "TicketCreate",
           "linkedEntity": "Ticket",
           "config": {
+            "title": "New Ticket",
             "mode": "create",
-            "icon": "plus-circle",
             "fields": [
               "subject",
               "description",
@@ -555,7 +555,7 @@
               "assignee",
               "customerEmail"
             ],
-            "title": "New Ticket"
+            "icon": "plus-circle"
           },
           "events": {
             "OPEN": "CREATE"
@@ -576,6 +576,9 @@
           "name": "TicketEdit",
           "linkedEntity": "Ticket",
           "config": {
+            "mode": "edit",
+            "title": "Edit Ticket",
+            "icon": "edit",
             "fields": [
               "subject",
               "description",
@@ -583,10 +586,7 @@
               "status",
               "assignee",
               "customerEmail"
-            ],
-            "title": "Edit Ticket",
-            "icon": "edit",
-            "mode": "edit"
+            ]
           },
           "events": {
             "OPEN": "EDIT"
@@ -607,6 +607,7 @@
           "name": "TicketView",
           "linkedEntity": "Ticket",
           "config": {
+            "title": "View Ticket",
             "fields": [
               "subject",
               "description",
@@ -615,7 +616,6 @@
               "assignee",
               "customerEmail"
             ],
-            "title": "View Ticket",
             "mode": "edit",
             "icon": "eye"
           },
@@ -638,10 +638,10 @@
           "name": "TicketDelete",
           "linkedEntity": "Ticket",
           "config": {
-            "confirmLabel": "Delete",
-            "alertMessage": "This action cannot be undone.",
+            "icon": "alert-triangle",
             "title": "Delete Ticket",
-            "icon": "alert-triangle"
+            "alertMessage": "This action cannot be undone.",
+            "confirmLabel": "Delete"
           },
           "events": {
             "CONFIRM": "CONFIRM_DELETE",
@@ -956,19 +956,17 @@
           "name": "TicketReplyAppLayout",
           "linkedEntity": "TicketReply",
           "config": {
-            "searchEvent": "TICKET_REPLY_SEARCH",
-            "notifications": [],
-            "contentTrait": "@trait.TicketReplyBrowse",
+            "appName": "Helpdesk",
             "notificationClickEvent": "TICKET_REPLY_NOTIFICATIONS_OPEN",
             "navItems": [
               {
-                "icon": "inbox",
+                "label": "Tickets",
                 "href": "/tickets",
-                "label": "Tickets"
+                "icon": "inbox"
               },
               {
-                "href": "/replies",
                 "icon": "message-circle",
+                "href": "/replies",
                 "label": "Replies"
               },
               {
@@ -977,11 +975,13 @@
                 "label": "Metrics"
               }
             ],
-            "appName": "Helpdesk"
+            "searchEvent": "TICKET_REPLY_SEARCH",
+            "contentTrait": "@trait.TicketReplyBrowse",
+            "notifications": []
           },
           "events": {
-            "NOTIFY_CLICK": "TICKET_REPLY_NOTIFICATIONS_OPEN",
-            "SEARCH": "TICKET_REPLY_SEARCH"
+            "SEARCH": "TICKET_REPLY_SEARCH",
+            "NOTIFY_CLICK": "TICKET_REPLY_NOTIFICATIONS_OPEN"
           }
         },
         {
@@ -1097,22 +1097,22 @@
                     "render-ui",
                     "main",
                     {
-                      "gap": "md",
                       "className": "py-12",
+                      "gap": "md",
+                      "align": "center",
+                      "direction": "vertical",
                       "children": [
                         {
                           "type": "spinner"
                         },
                         {
-                          "content": "Loading…",
                           "type": "typography",
-                          "variant": "caption",
-                          "color": "muted"
+                          "content": "Loading…",
+                          "color": "muted",
+                          "variant": "caption"
                         }
                       ],
-                      "direction": "vertical",
-                      "type": "stack",
-                      "align": "center"
+                      "type": "stack"
                     }
                   ]
                 ]
@@ -1126,40 +1126,42 @@
                     "render-ui",
                     "main",
                     {
+                      "gap": "lg",
                       "className": "max-w-5xl mx-auto w-full",
+                      "direction": "vertical",
                       "children": [
                         {
                           "type": "stack",
-                          "direction": "horizontal",
-                          "justify": "between",
-                          "gap": "md",
                           "children": [
                             {
                               "children": [
                                 {
-                                  "name": "message-circle",
-                                  "type": "icon"
+                                  "type": "icon",
+                                  "name": "message-circle"
                                 },
                                 {
+                                  "type": "typography",
                                   "content": "Replies",
-                                  "variant": "h2",
-                                  "type": "typography"
+                                  "variant": "h2"
                                 }
                               ],
-                              "type": "stack",
-                              "direction": "horizontal",
                               "align": "center",
-                              "gap": "sm"
+                              "gap": "sm",
+                              "type": "stack",
+                              "direction": "horizontal"
                             },
                             {
+                              "label": "Compose",
                               "icon": "edit",
                               "action": "CREATE",
-                              "type": "button",
-                              "label": "Compose",
-                              "variant": "primary"
+                              "variant": "primary",
+                              "type": "button"
                             }
                           ],
-                          "align": "center"
+                          "justify": "between",
+                          "gap": "md",
+                          "align": "center",
+                          "direction": "horizontal"
                         },
                         {
                           "type": "divider"
@@ -1171,28 +1173,26 @@
                         {
                           "entity": "@payload.data",
                           "variant": "card",
-                          "gap": "sm",
                           "type": "data-list",
                           "fields": [
                             {
-                              "icon": "message-circle",
                               "variant": "h4",
-                              "name": "author"
+                              "name": "author",
+                              "icon": "message-circle"
                             },
                             {
-                              "variant": "body",
-                              "name": "body"
+                              "name": "body",
+                              "variant": "body"
                             },
                             {
+                              "name": "createdAt",
                               "variant": "caption",
-                              "format": "date",
-                              "name": "createdAt"
+                              "format": "date"
                             }
-                          ]
+                          ],
+                          "gap": "sm"
                         }
                       ],
-                      "gap": "lg",
-                      "direction": "vertical",
                       "type": "stack"
                     }
                   ]
@@ -1207,36 +1207,36 @@
                     "render-ui",
                     "main",
                     {
-                      "className": "py-12",
                       "gap": "md",
-                      "direction": "vertical",
-                      "type": "stack",
                       "align": "center",
+                      "className": "py-12",
                       "children": [
                         {
-                          "type": "icon",
+                          "color": "destructive",
                           "name": "alert-triangle",
-                          "color": "destructive"
-                        },
-                        {
-                          "variant": "h3",
-                          "content": "Failed to load replies",
-                          "type": "typography"
+                          "type": "icon"
                         },
                         {
                           "type": "typography",
-                          "variant": "body",
-                          "color": "muted",
-                          "content": "@payload.error"
+                          "variant": "h3",
+                          "content": "Failed to load replies"
                         },
                         {
+                          "variant": "body",
+                          "color": "muted",
+                          "content": "@payload.error",
+                          "type": "typography"
+                        },
+                        {
+                          "label": "Retry",
                           "action": "INIT",
                           "type": "button",
-                          "label": "Retry",
-                          "variant": "primary",
-                          "icon": "rotate-ccw"
+                          "icon": "rotate-ccw",
+                          "variant": "primary"
                         }
-                      ]
+                      ],
+                      "direction": "vertical",
+                      "type": "stack"
                     }
                   ]
                 ]
@@ -1301,42 +1301,42 @@
                     "render-ui",
                     "main",
                     {
-                      "direction": "vertical",
-                      "type": "stack",
-                      "gap": "md",
                       "children": [
                         {
-                          "content": "New reply",
+                          "type": "typography",
                           "variant": "h3",
-                          "type": "typography"
+                          "content": "New reply"
                         },
                         {
                           "placeholder": "Write your reply…",
                           "type": "textarea"
                         },
                         {
-                          "direction": "horizontal",
-                          "justify": "end",
                           "type": "stack",
+                          "direction": "horizontal",
+                          "gap": "sm",
                           "children": [
                             {
-                              "type": "button",
                               "variant": "ghost",
                               "icon": "save",
-                              "action": "CREATE",
-                              "label": "Save Draft"
+                              "type": "button",
+                              "label": "Save Draft",
+                              "action": "CREATE"
                             },
                             {
-                              "label": "Send Reply",
                               "variant": "primary",
+                              "icon": "send",
                               "type": "button",
                               "action": "SEND",
-                              "icon": "send"
+                              "label": "Send Reply"
                             }
                           ],
-                          "gap": "sm"
+                          "justify": "end"
                         }
-                      ]
+                      ],
+                      "gap": "md",
+                      "direction": "vertical",
+                      "type": "stack"
                     }
                   ]
                 ]
@@ -1350,7 +1350,6 @@
           "name": "TicketReplyCreate",
           "linkedEntity": "TicketReply",
           "config": {
-            "mode": "create",
             "fields": [
               "ticketId",
               "body",
@@ -1359,7 +1358,8 @@
               "subject"
             ],
             "title": "New Reply",
-            "icon": "message-circle"
+            "icon": "message-circle",
+            "mode": "create"
           },
           "events": {
             "OPEN": "CREATE"
@@ -1387,11 +1387,11 @@
           "ref": "Email.traits.ServiceEmailEmail",
           "name": "TicketReplyEmail",
           "config": {
-            "body": "",
             "recipient": "",
+            "uiTrait": "@trait.TicketReplyComposerForm",
             "subject": "Re: your ticket",
             "sender": "support@example.com",
-            "uiTrait": "@trait.TicketReplyComposerForm"
+            "body": ""
           },
           "listens": [
             {
@@ -1579,15 +1579,14 @@
           "name": "SupportMetricsAppLayout",
           "linkedEntity": "SupportMetric",
           "config": {
-            "contentTrait": "@trait.SupportMetricsDisplay",
+            "appName": "Helpdesk",
             "searchEvent": "SUPPORT_METRICS_SEARCH",
-            "notifications": [],
-            "notificationClickEvent": "SUPPORT_METRICS_NOTIFICATIONS_OPEN",
+            "contentTrait": "@trait.SupportMetricsDisplay",
             "navItems": [
               {
-                "label": "Tickets",
+                "icon": "inbox",
                 "href": "/tickets",
-                "icon": "inbox"
+                "label": "Tickets"
               },
               {
                 "label": "Replies",
@@ -1595,16 +1594,17 @@
                 "icon": "message-circle"
               },
               {
+                "icon": "layout-list",
                 "href": "/metrics",
-                "label": "Metrics",
-                "icon": "layout-list"
+                "label": "Metrics"
               }
             ],
-            "appName": "Helpdesk"
+            "notifications": [],
+            "notificationClickEvent": "SUPPORT_METRICS_NOTIFICATIONS_OPEN"
           },
           "events": {
-            "NOTIFY_CLICK": "SUPPORT_METRICS_NOTIFICATIONS_OPEN",
-            "SEARCH": "SUPPORT_METRICS_SEARCH"
+            "SEARCH": "SUPPORT_METRICS_SEARCH",
+            "NOTIFY_CLICK": "SUPPORT_METRICS_NOTIFICATIONS_OPEN"
           }
         },
         {
@@ -1612,6 +1612,8 @@
           "name": "SupportMetricsBrowse",
           "linkedEntity": "SupportMetric",
           "config": {
+            "pageSize": 100.0,
+            "displayPageSize": 5.0,
             "fields": [
               {
                 "label": "Name",
@@ -1619,23 +1621,21 @@
                 "variant": "h4"
               },
               {
-                "label": "Category",
                 "name": "category",
-                "variant": "caption"
+                "variant": "caption",
+                "label": "Category"
               },
               {
                 "name": "status",
-                "label": "Status",
-                "variant": "badge"
+                "variant": "badge",
+                "label": "Status"
               },
               {
                 "name": "priority",
-                "variant": "badge",
-                "label": "Priority"
+                "label": "Priority",
+                "variant": "badge"
               }
-            ],
-            "pageSize": 100.0,
-            "displayPageSize": 5.0
+            ]
           }
         },
         {
@@ -1664,37 +1664,37 @@
                     "render-ui",
                     "main",
                     {
-                      "type": "stack",
-                      "direction": "vertical",
-                      "className": "max-w-6xl mx-auto w-full p-4",
                       "children": [
                         {
+                          "direction": "horizontal",
+                          "gap": "sm",
                           "type": "stack",
                           "align": "center",
                           "children": [
                             {
-                              "type": "icon",
-                              "name": "activity"
+                              "name": "activity",
+                              "type": "icon"
                             },
                             {
                               "variant": "h2",
                               "content": "Support Metrics",
                               "type": "typography"
                             }
-                          ],
-                          "direction": "horizontal",
-                          "gap": "sm"
+                          ]
                         },
                         {
                           "type": "divider"
                         },
                         {
-                          "variant": "h3",
                           "type": "typography",
-                          "content": "Recent"
+                          "content": "Recent",
+                          "variant": "h3"
                         },
                         "@trait.SupportMetricsBrowse"
                       ],
+                      "className": "max-w-6xl mx-auto w-full p-4",
+                      "type": "stack",
+                      "direction": "vertical",
                       "gap": "lg"
                     }
                   ]

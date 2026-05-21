@@ -119,33 +119,33 @@
           "ref": "AppShell.traits.AppLayout",
           "name": "ProjectAppLayout",
           "config": {
-            "notifications": [],
-            "searchEvent": "PROJECT_SEARCH",
+            "appName": "Construction PM",
             "navItems": [
               {
                 "href": "/projects",
-                "label": "Projects",
-                "icon": "briefcase"
+                "icon": "briefcase",
+                "label": "Projects"
               },
               {
-                "href": "/rfis",
                 "icon": "message-circle",
-                "label": "RFIs"
+                "label": "RFIs",
+                "href": "/rfis"
               },
               {
                 "label": "Submittals",
-                "href": "/submittals",
-                "icon": "file-text"
+                "icon": "file-text",
+                "href": "/submittals"
               },
               {
-                "label": "Change Orders",
                 "href": "/change-orders",
-                "icon": "edit"
+                "icon": "edit",
+                "label": "Change Orders"
               }
             ],
-            "contentTrait": "@trait.ProjectCatalog",
+            "searchEvent": "PROJECT_SEARCH",
             "notificationClickEvent": "PROJECT_NOTIFICATIONS_OPEN",
-            "appName": "Construction PM"
+            "contentTrait": "@trait.ProjectCatalog",
+            "notifications": []
           },
           "events": {
             "SEARCH": "PROJECT_SEARCH",
@@ -232,43 +232,44 @@
                     "render-ui",
                     "main",
                     {
+                      "gap": "lg",
                       "children": [
                         {
                           "direction": "horizontal",
-                          "align": "center",
                           "children": [
                             {
-                              "align": "center",
                               "type": "stack",
-                              "gap": "sm",
-                              "direction": "horizontal",
+                              "align": "center",
                               "children": [
                                 {
-                                  "name": "briefcase",
-                                  "type": "icon"
+                                  "type": "icon",
+                                  "name": "briefcase"
                                 },
                                 {
                                   "type": "typography",
                                   "content": "Projects",
                                   "variant": "h2"
                                 }
-                              ]
+                              ],
+                              "gap": "sm",
+                              "direction": "horizontal"
                             },
                             {
+                              "gap": "sm",
+                              "direction": "horizontal",
                               "children": [
                                 {
-                                  "type": "button",
-                                  "variant": "primary",
-                                  "icon": "plus",
                                   "action": "CREATE",
-                                  "label": "New Project"
+                                  "label": "New Project",
+                                  "variant": "primary",
+                                  "type": "button",
+                                  "icon": "plus"
                                 }
                               ],
-                              "type": "stack",
-                              "direction": "horizontal",
-                              "gap": "sm"
+                              "type": "stack"
                             }
                           ],
+                          "align": "center",
                           "justify": "between",
                           "type": "stack",
                           "gap": "md"
@@ -277,14 +278,14 @@
                           "type": "divider"
                         },
                         {
+                          "type": "stack",
+                          "direction": "horizontal",
+                          "gap": "md",
                           "align": "center",
                           "children": [
                             "@trait.ProjectSearch",
                             "@trait.ProjectFilter"
-                          ],
-                          "direction": "horizontal",
-                          "type": "stack",
-                          "gap": "md"
+                          ]
                         },
                         "@trait.ProjectStats",
                         "@trait.ProjectGraphs",
@@ -293,9 +294,8 @@
                         },
                         "@trait.ProjectBrowseList"
                       ],
-                      "direction": "vertical",
-                      "gap": "lg",
-                      "type": "stack"
+                      "type": "stack",
+                      "direction": "vertical"
                     }
                   ]
                 ]
@@ -314,14 +314,16 @@
                     "render-ui",
                     "main",
                     {
+                      "gap": "md",
+                      "align": "center",
                       "children": [
                         {
                           "name": "bell",
                           "type": "icon"
                         },
                         {
-                          "variant": "h3",
                           "type": "typography",
+                          "variant": "h3",
                           "content": "No notifications"
                         },
                         {
@@ -332,16 +334,14 @@
                         },
                         {
                           "variant": "ghost",
-                          "action": "INIT",
                           "label": "Back to projects",
-                          "type": "button"
+                          "type": "button",
+                          "action": "INIT"
                         }
                       ],
-                      "direction": "vertical",
-                      "gap": "md",
-                      "type": "stack",
                       "className": "py-8",
-                      "align": "center"
+                      "type": "stack",
+                      "direction": "vertical"
                     }
                   ]
                 ]
@@ -364,15 +364,15 @@
           "config": {
             "filters": [
               {
+                "filterType": "select",
+                "field": "status",
                 "options": [
                   "active",
                   "on-hold",
                   "completed",
                   "cancelled"
                 ],
-                "filterType": "select",
-                "label": "Status",
-                "field": "status"
+                "label": "Status"
               }
             ],
             "event": "PROJECT_FILTER"
@@ -385,18 +385,14 @@
             "title": "Projects",
             "metrics": [
               {
+                "aggregation": "count",
                 "label": "Total",
                 "icon": "briefcase",
-                "aggregation": "count",
                 "variant": "primary",
                 "format": "number"
               },
               {
-                "aggregation": "count",
-                "format": "number",
                 "label": "Active",
-                "variant": "success",
-                "icon": "check-circle",
                 "filter": [
                   "fn",
                   "row",
@@ -405,9 +401,18 @@
                     "@row.status",
                     "active"
                   ]
-                ]
+                ],
+                "format": "number",
+                "icon": "check-circle",
+                "aggregation": "count",
+                "variant": "success"
               },
               {
+                "label": "On Hold",
+                "variant": "warning",
+                "aggregation": "count",
+                "icon": "pause-circle",
+                "format": "number",
                 "filter": [
                   "fn",
                   "row",
@@ -416,20 +421,15 @@
                     "@row.status",
                     "on-hold"
                   ]
-                ],
-                "icon": "pause-circle",
-                "label": "On Hold",
-                "aggregation": "count",
-                "variant": "warning",
-                "format": "number"
+                ]
               },
               {
-                "field": "budgetUsd",
+                "icon": "dollar-sign",
                 "label": "Total Budget",
                 "aggregation": "sum",
+                "format": "number",
                 "variant": "info",
-                "icon": "dollar-sign",
-                "format": "number"
+                "field": "budgetUsd"
               }
             ]
           },
@@ -448,12 +448,12 @@
           "ref": "Graphs.traits.GraphItemGraph",
           "name": "ProjectGraphs",
           "config": {
-            "showLegend": false,
-            "chartType": "bar",
             "title": "Projects by Status",
-            "subtitle": "Portfolio composition across project statuses",
-            "aggregation": "count",
+            "chartType": "bar",
+            "showLegend": false,
             "categoryField": "status",
+            "aggregation": "count",
+            "subtitle": "Portfolio composition across project statuses",
             "height": 240.0
           },
           "listens": [
@@ -474,46 +474,46 @@
           "config": {
             "itemActions": [
               {
+                "event": "VIEW",
                 "variant": "ghost",
-                "label": "View",
-                "event": "VIEW"
+                "label": "View"
               },
               {
-                "event": "EDIT",
                 "label": "Edit",
+                "event": "EDIT",
                 "variant": "ghost"
               },
               {
-                "event": "DELETE",
+                "label": "Delete",
                 "variant": "danger",
-                "label": "Delete"
+                "event": "DELETE"
               }
             ],
+            "cols": 1.0,
             "fields": [
               {
-                "icon": "briefcase",
                 "variant": "h3",
-                "name": "name"
+                "name": "name",
+                "icon": "briefcase"
+              },
+              {
+                "name": "jobNumber",
+                "variant": "caption"
               },
               {
                 "variant": "caption",
-                "name": "jobNumber"
-              },
-              {
-                "name": "client",
-                "variant": "caption"
+                "name": "client"
               },
               {
                 "variant": "badge",
                 "name": "status"
               },
               {
-                "variant": "caption",
-                "name": "projectManager"
+                "name": "projectManager",
+                "variant": "caption"
               }
             ],
-            "gap": "sm",
-            "cols": 1.0
+            "gap": "sm"
           },
           "listens": [
             {
@@ -563,7 +563,6 @@
           "name": "ProjectCreate",
           "linkedEntity": "ConstructionProject",
           "config": {
-            "title": "New Project",
             "mode": "create",
             "fields": [
               "name",
@@ -575,7 +574,8 @@
               "budgetUsd",
               "projectManager"
             ],
-            "icon": "plus-circle"
+            "icon": "plus-circle",
+            "title": "New Project"
           },
           "events": {
             "OPEN": "CREATE"
@@ -596,8 +596,8 @@
           "name": "ProjectEdit",
           "linkedEntity": "ConstructionProject",
           "config": {
-            "title": "Edit Project",
             "icon": "edit",
+            "title": "Edit Project",
             "mode": "edit",
             "fields": [
               "name",
@@ -629,6 +629,7 @@
           "name": "ProjectView",
           "linkedEntity": "ConstructionProject",
           "config": {
+            "mode": "edit",
             "title": "View Project",
             "icon": "eye",
             "fields": [
@@ -640,8 +641,7 @@
               "targetEndDate",
               "budgetUsd",
               "projectManager"
-            ],
-            "mode": "edit"
+            ]
           },
           "events": {
             "OPEN": "VIEW"
@@ -662,14 +662,14 @@
           "name": "ProjectDelete",
           "linkedEntity": "ConstructionProject",
           "config": {
-            "icon": "alert-triangle",
             "confirmLabel": "Delete",
+            "icon": "alert-triangle",
             "title": "Delete Project",
             "alertMessage": "This action cannot be undone."
           },
           "events": {
-            "CONFIRM": "CONFIRM_DELETE",
-            "REQUEST": "DELETE"
+            "REQUEST": "DELETE",
+            "CONFIRM": "CONFIRM_DELETE"
           },
           "listens": [
             {
@@ -1001,20 +1001,15 @@
           "ref": "AppShell.traits.AppLayout",
           "name": "RfiAppLayout",
           "config": {
-            "notificationClickEvent": "RFI_NOTIFICATIONS_OPEN",
-            "appName": "Construction PM",
-            "notifications": [],
-            "contentTrait": "@trait.RfiPanel",
-            "searchEvent": "RFI_SEARCH",
             "navItems": [
               {
                 "icon": "briefcase",
-                "href": "/projects",
-                "label": "Projects"
+                "label": "Projects",
+                "href": "/projects"
               },
               {
-                "href": "/rfis",
                 "label": "RFIs",
+                "href": "/rfis",
                 "icon": "message-circle"
               },
               {
@@ -1023,11 +1018,16 @@
                 "icon": "file-text"
               },
               {
-                "href": "/change-orders",
+                "icon": "edit",
                 "label": "Change Orders",
-                "icon": "edit"
+                "href": "/change-orders"
               }
-            ]
+            ],
+            "appName": "Construction PM",
+            "notifications": [],
+            "notificationClickEvent": "RFI_NOTIFICATIONS_OPEN",
+            "contentTrait": "@trait.RfiPanel",
+            "searchEvent": "RFI_SEARCH"
           },
           "events": {
             "SEARCH": "RFI_SEARCH",
@@ -1061,11 +1061,11 @@
                     "main",
                     {
                       "gap": "lg",
-                      "className": "max-w-6xl mx-auto w-full p-4",
+                      "direction": "vertical",
                       "type": "stack",
+                      "className": "max-w-6xl mx-auto w-full p-4",
                       "children": [
                         {
-                          "gap": "sm",
                           "children": [
                             {
                               "name": "message-circle",
@@ -1077,16 +1077,16 @@
                               "type": "typography"
                             }
                           ],
+                          "gap": "sm",
                           "align": "center",
-                          "direction": "horizontal",
-                          "type": "stack"
+                          "type": "stack",
+                          "direction": "horizontal"
                         },
                         {
                           "type": "divider"
                         },
                         "@trait.RfiPipelineView"
-                      ],
-                      "direction": "vertical"
+                      ]
                     }
                   ]
                 ]
@@ -1213,6 +1213,10 @@
           "ref": "AppShell.traits.AppLayout",
           "name": "SubmittalAppLayout",
           "config": {
+            "searchEvent": "SUBMITTAL_SEARCH",
+            "notifications": [],
+            "appName": "Construction PM",
+            "notificationClickEvent": "SUBMITTAL_NOTIFICATIONS_OPEN",
             "contentTrait": "@trait.SubmittalPanel",
             "navItems": [
               {
@@ -1222,24 +1226,20 @@
               },
               {
                 "icon": "message-circle",
-                "href": "/rfis",
-                "label": "RFIs"
+                "label": "RFIs",
+                "href": "/rfis"
               },
               {
                 "href": "/submittals",
-                "label": "Submittals",
-                "icon": "file-text"
+                "icon": "file-text",
+                "label": "Submittals"
               },
               {
-                "icon": "edit",
+                "label": "Change Orders",
                 "href": "/change-orders",
-                "label": "Change Orders"
+                "icon": "edit"
               }
-            ],
-            "notifications": [],
-            "notificationClickEvent": "SUBMITTAL_NOTIFICATIONS_OPEN",
-            "appName": "Construction PM",
-            "searchEvent": "SUBMITTAL_SEARCH"
+            ]
           },
           "events": {
             "SEARCH": "SUBMITTAL_SEARCH",
@@ -1274,31 +1274,31 @@
                     {
                       "className": "max-w-6xl mx-auto w-full p-4",
                       "type": "stack",
+                      "gap": "lg",
                       "direction": "vertical",
                       "children": [
                         {
-                          "gap": "sm",
-                          "type": "stack",
                           "direction": "horizontal",
-                          "align": "center",
+                          "type": "stack",
+                          "gap": "sm",
                           "children": [
                             {
                               "type": "icon",
                               "name": "file-text"
                             },
                             {
-                              "variant": "h2",
                               "type": "typography",
+                              "variant": "h2",
                               "content": "Submittals"
                             }
-                          ]
+                          ],
+                          "align": "center"
                         },
                         {
                           "type": "divider"
                         },
                         "@trait.SubmittalReviewView"
-                      ],
-                      "gap": "lg"
+                      ]
                     }
                   ]
                 ]
@@ -1424,37 +1424,37 @@
           "ref": "AppShell.traits.AppLayout",
           "name": "ChangeOrderAppLayout",
           "config": {
-            "notifications": [],
+            "appName": "Construction PM",
             "navItems": [
               {
+                "label": "Projects",
                 "href": "/projects",
-                "icon": "briefcase",
-                "label": "Projects"
+                "icon": "briefcase"
               },
               {
-                "icon": "message-circle",
                 "href": "/rfis",
-                "label": "RFIs"
+                "label": "RFIs",
+                "icon": "message-circle"
               },
               {
-                "label": "Submittals",
                 "icon": "file-text",
-                "href": "/submittals"
+                "href": "/submittals",
+                "label": "Submittals"
               },
               {
-                "icon": "edit",
+                "label": "Change Orders",
                 "href": "/change-orders",
-                "label": "Change Orders"
+                "icon": "edit"
               }
             ],
-            "searchEvent": "CHANGE_ORDER_SEARCH",
-            "appName": "Construction PM",
             "contentTrait": "@trait.ChangeOrderPanel",
-            "notificationClickEvent": "CHANGE_ORDER_NOTIFICATIONS_OPEN"
+            "notifications": [],
+            "notificationClickEvent": "CHANGE_ORDER_NOTIFICATIONS_OPEN",
+            "searchEvent": "CHANGE_ORDER_SEARCH"
           },
           "events": {
-            "NOTIFY_CLICK": "CHANGE_ORDER_NOTIFICATIONS_OPEN",
-            "SEARCH": "CHANGE_ORDER_SEARCH"
+            "SEARCH": "CHANGE_ORDER_SEARCH",
+            "NOTIFY_CLICK": "CHANGE_ORDER_NOTIFICATIONS_OPEN"
           }
         },
         {
@@ -1484,32 +1484,32 @@
                     "main",
                     {
                       "gap": "lg",
-                      "type": "stack",
                       "children": [
                         {
+                          "align": "center",
+                          "type": "stack",
+                          "direction": "horizontal",
+                          "gap": "sm",
                           "children": [
                             {
-                              "name": "edit",
-                              "type": "icon"
+                              "type": "icon",
+                              "name": "edit"
                             },
                             {
                               "content": "Change Orders",
                               "type": "typography",
                               "variant": "h2"
                             }
-                          ],
-                          "type": "stack",
-                          "direction": "horizontal",
-                          "gap": "sm",
-                          "align": "center"
+                          ]
                         },
                         {
                           "type": "divider"
                         },
                         "@trait.ChangeOrderLedgerView"
                       ],
-                      "className": "max-w-6xl mx-auto w-full p-4",
-                      "direction": "vertical"
+                      "type": "stack",
+                      "direction": "vertical",
+                      "className": "max-w-6xl mx-auto w-full p-4"
                     }
                   ]
                 ]
