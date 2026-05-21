@@ -85,12 +85,12 @@ export interface StdReorderRuleReorderRuleLoadFailedPayload {
  * without modifying its state-machine topology.
  */
 export interface StdReorderRuleConfig {
-  /** Default: `[{"label":"Open","icon":"arrow-right","variant":"primary","event":"OPEN_RULE"},{"label":"Disable","variant":"danger","event":"DISABLE_RULE"}]` */
-  itemActions?: TraitConfig[];
-  /** Default: `[{"label":"SKU","variant":"caption","name":"sku"},{"variant":"caption","label":"Location","name":"locationId"},{"label":"Threshold","variant":"caption","name":"thresholdQty"},{"name":"reorderQty","variant":"caption","label":"Reorder Qty"},{"label":"Vendor","name":"vendor","variant":"caption"},{"label":"Lead (d)","variant":"caption","name":"leadTimeDays"}]` */
-  fields?: TraitConfig[];
   /** Default: `"Reorder Rules"` */
   title?: string;
+  /** Default: `[{"name":"sku","label":"SKU","variant":"caption"},{"name":"locationId","label":"Location","variant":"caption"},{"label":"Threshold","variant":"caption","name":"thresholdQty"},{"label":"Reorder Qty","variant":"caption","name":"reorderQty"},{"name":"vendor","label":"Vendor","variant":"caption"},{"name":"leadTimeDays","label":"Lead (d)","variant":"caption"}]` */
+  fields?: TraitConfig[];
+  /** Default: `[{"label":"Open","event":"OPEN_RULE","variant":"primary","icon":"arrow-right"},{"label":"Disable","variant":"danger","event":"DISABLE_RULE"}]` */
+  itemActions?: TraitConfig[];
 }
 
 /**

@@ -84,12 +84,12 @@ export interface StdQuestionBankQuestionLoadFailedPayload {
  * without modifying its state-machine topology.
  */
 export interface StdQuestionBankConfig {
+  /** Default: `[{"name":"label","label":"Question","variant":"caption"},{"name":"kind","label":"Type","variant":"badge"},{"name":"category","label":"Category","variant":"caption"},{"variant":"caption","label":"Survey","name":"surveyId"},{"name":"order","variant":"caption","label":"Order"}]` */
+  fields?: TraitConfig[];
+  /** Default: `[{"label":"Open","icon":"arrow-right","event":"OPEN_QUESTION","variant":"primary"},{"label":"Delete","event":"DELETE_QUESTION","variant":"danger"}]` */
+  itemActions?: TraitConfig[];
   /** Default: `"Question Bank"` */
   title?: string;
-  /** Default: `[{"variant":"caption","label":"Question","name":"label"},{"name":"kind","variant":"badge","label":"Type"},{"name":"category","label":"Category","variant":"caption"},{"name":"surveyId","label":"Survey","variant":"caption"},{"label":"Order","name":"order","variant":"caption"}]` */
-  fields?: TraitConfig[];
-  /** Default: `[{"label":"Open","event":"OPEN_QUESTION","icon":"arrow-right","variant":"primary"},{"variant":"danger","label":"Delete","event":"DELETE_QUESTION"}]` */
-  itemActions?: TraitConfig[];
 }
 
 /**

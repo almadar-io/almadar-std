@@ -89,12 +89,12 @@ export interface StdReceiptReceiptLoadFailedPayload {
  * without modifying its state-machine topology.
  */
 export interface StdReceiptConfig {
-  /** Default: `[{"variant":"caption","name":"receiptNumber","label":"Receipt #"},{"name":"recipientName","variant":"caption","label":"Recipient"},{"variant":"badge","name":"transactionType","label":"Type"},{"name":"total","variant":"caption","label":"Total"},{"variant":"caption","name":"issuedAt","label":"Issued"}]` */
-  fields?: TraitConfig[];
-  /** Default: `[{"event":"OPEN_RECEIPT","variant":"primary","icon":"arrow-right","label":"Open"},{"variant":"danger","label":"Reprint","event":"REPRINT_RECEIPT"}]` */
+  /** Default: `[{"event":"OPEN_RECEIPT","variant":"primary","label":"Open","icon":"arrow-right"},{"event":"REPRINT_RECEIPT","variant":"danger","label":"Reprint"}]` */
   itemActions?: TraitConfig[];
   /** Default: `"Receipts"` */
   title?: string;
+  /** Default: `[{"variant":"caption","label":"Receipt #","name":"receiptNumber"},{"name":"recipientName","label":"Recipient","variant":"caption"},{"label":"Type","variant":"badge","name":"transactionType"},{"label":"Total","variant":"caption","name":"total"},{"variant":"caption","name":"issuedAt","label":"Issued"}]` */
+  fields?: TraitConfig[];
 }
 
 /**

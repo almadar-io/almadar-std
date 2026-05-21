@@ -87,12 +87,12 @@ export interface StdHelpCategoryHelpCategoryLoadFailedPayload {
  * without modifying its state-machine topology.
  */
 export interface StdHelpCategoryConfig {
-  /** Default: `[{"name":"name","label":"Name","variant":"caption"},{"name":"slug","variant":"caption","label":"Slug"},{"label":"Articles","variant":"caption","name":"articleCount"},{"variant":"caption","label":"Order","name":"sortOrder"},{"name":"status","label":"Status","variant":"badge"},{"variant":"caption","label":"Updated","name":"updatedAt"}]` */
-  fields?: TraitConfig[];
-  /** Default: `[{"label":"Open","icon":"arrow-right","variant":"primary","event":"OPEN_CATEGORY"},{"label":"Archive","event":"ARCHIVE","variant":"danger"}]` */
-  itemActions?: TraitConfig[];
   /** Default: `"Help Categories"` */
   title?: string;
+  /** Default: `[{"label":"Open","variant":"primary","event":"OPEN_CATEGORY","icon":"arrow-right"},{"label":"Archive","variant":"danger","event":"ARCHIVE"}]` */
+  itemActions?: TraitConfig[];
+  /** Default: `[{"name":"name","label":"Name","variant":"caption"},{"name":"slug","label":"Slug","variant":"caption"},{"variant":"caption","name":"articleCount","label":"Articles"},{"name":"sortOrder","variant":"caption","label":"Order"},{"label":"Status","name":"status","variant":"badge"},{"name":"updatedAt","label":"Updated","variant":"caption"}]` */
+  fields?: TraitConfig[];
 }
 
 /**

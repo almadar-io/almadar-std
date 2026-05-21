@@ -31,8 +31,8 @@ const ALIAS = 'SocialFeed';
  * without modifying its state-machine topology.
  */
 export interface StdSocialFeedConfig {
-  notifications?: TraitConfig;
   navItems?: TraitConfig;
+  notifications?: TraitConfig;
 }
 
 /**
@@ -175,11 +175,7 @@ export function stdSocialFeedPostOrbital(params: StdSocialFeedPostOrbitalParams 
         'ref': 'AppShell.traits.AppLayout',
         'name': 'PostAppLayout',
         'config': {
-          'notificationClickEvent': 'POST_NOTIFICATIONS_OPEN',
           'appName': 'SocialFeed',
-          'searchEvent': 'POST_SEARCH',
-          'contentTrait': '@trait.FeedCatalog',
-          'notifications': [],
           'navItems': [
             {
               'icon': 'rss',
@@ -188,10 +184,14 @@ export function stdSocialFeedPostOrbital(params: StdSocialFeedPostOrbitalParams 
             },
             {
               'label': 'Comments',
-              'icon': 'message-circle',
               'href': '/comments',
+              'icon': 'message-circle',
             },
           ],
+          'notificationClickEvent': 'POST_NOTIFICATIONS_OPEN',
+          'contentTrait': '@trait.FeedCatalog',
+          'searchEvent': 'POST_SEARCH',
+          'notifications': [],
         },
         'events': {
           'SEARCH': 'POST_SEARCH',
@@ -278,17 +278,14 @@ export function stdSocialFeedPostOrbital(params: StdSocialFeedPostOrbitalParams 
                   'render-ui',
                   'main',
                   {
-                    'direction': 'vertical',
-                    'type': 'stack',
-                    'gap': 'lg',
                     'children': [
                       {
                         'children': [
                           {
-                            'type': 'stack',
-                            'gap': 'sm',
                             'direction': 'horizontal',
                             'align': 'center',
+                            'gap': 'sm',
+                            'type': 'stack',
                             'children': [
                               {
                                 'type': 'icon',
@@ -302,37 +299,37 @@ export function stdSocialFeedPostOrbital(params: StdSocialFeedPostOrbitalParams 
                             ],
                           },
                           {
-                            'gap': 'sm',
                             'type': 'stack',
                             'direction': 'horizontal',
                             'children': [
                               {
-                                'type': 'button',
                                 'variant': 'primary',
-                                'icon': 'plus',
                                 'action': 'CREATE',
                                 'label': 'New Post',
+                                'icon': 'plus',
+                                'type': 'button',
                               },
                             ],
+                            'gap': 'sm',
                           },
                         ],
-                        'gap': 'md',
-                        'justify': 'between',
-                        'align': 'center',
                         'direction': 'horizontal',
                         'type': 'stack',
+                        'align': 'center',
+                        'gap': 'md',
+                        'justify': 'between',
                       },
                       {
                         'type': 'divider',
                       },
                       {
-                        'align': 'center',
+                        'type': 'stack',
+                        'gap': 'md',
                         'children': [
                           '@trait.PostSearch',
                         ],
-                        'type': 'stack',
                         'direction': 'horizontal',
-                        'gap': 'md',
+                        'align': 'center',
                       },
                       '@trait.PostStats',
                       {
@@ -340,6 +337,9 @@ export function stdSocialFeedPostOrbital(params: StdSocialFeedPostOrbitalParams 
                       },
                       '@trait.PostBrowseList',
                     ],
+                    'type': 'stack',
+                    'direction': 'vertical',
+                    'gap': 'lg',
                   },
                 ],
               ],
@@ -358,34 +358,34 @@ export function stdSocialFeedPostOrbital(params: StdSocialFeedPostOrbitalParams 
                   'render-ui',
                   'main',
                   {
-                    'gap': 'md',
                     'type': 'stack',
-                    'className': 'py-8',
-                    'direction': 'vertical',
+                    'gap': 'md',
                     'align': 'center',
                     'children': [
                       {
-                        'name': 'bell',
                         'type': 'icon',
+                        'name': 'bell',
                       },
                       {
                         'type': 'typography',
-                        'content': 'No notifications',
                         'variant': 'h3',
+                        'content': 'No notifications',
                       },
                       {
-                        'color': 'muted',
                         'type': 'typography',
-                        'content': 'You\'re all caught up.',
                         'variant': 'caption',
+                        'content': 'You\'re all caught up.',
+                        'color': 'muted',
                       },
                       {
                         'variant': 'ghost',
-                        'type': 'button',
                         'label': 'Back to feed',
+                        'type': 'button',
                         'action': 'INIT',
                       },
                     ],
+                    'className': 'py-8',
+                    'direction': 'vertical',
                   },
                 ],
               ],
@@ -398,25 +398,23 @@ export function stdSocialFeedPostOrbital(params: StdSocialFeedPostOrbitalParams 
         'ref': 'Search.traits.SearchResultSearch',
         'name': 'PostSearch',
         'config': {
-          'placeholder': 'Search posts…',
           'event': 'POST_SEARCH',
+          'placeholder': 'Search posts…',
         },
       }),
       makeTraitRef({
         'ref': 'Stats.traits.StatsItemStats',
         'name': 'PostStats',
         'config': {
-          'title': 'Feed',
           'metrics': [
             {
-              'icon': 'rss',
-              'label': 'Total Posts',
               'aggregation': 'count',
-              'variant': 'primary',
               'format': 'number',
+              'variant': 'primary',
+              'label': 'Total Posts',
+              'icon': 'rss',
             },
             {
-              'label': 'Today',
               'filter': [
                 'fn',
                 'row',
@@ -426,12 +424,14 @@ export function stdSocialFeedPostOrbital(params: StdSocialFeedPostOrbitalParams 
                   'today',
                 ],
               ],
-              'icon': 'calendar',
               'aggregation': 'count',
-              'variant': 'info',
+              'label': 'Today',
+              'icon': 'calendar',
               'format': 'number',
+              'variant': 'info',
             },
           ],
+          'title': 'Feed',
         },
         'listens': [
           {
@@ -449,48 +449,48 @@ export function stdSocialFeedPostOrbital(params: StdSocialFeedPostOrbitalParams 
         'name': 'PostBrowseList',
         'linkedEntity': canonicalName,
         'config': {
-          'variant': 'card',
-          'imageField': 'image',
-          'cols': 1,
           'fields': [
             {
               'name': 'author',
-              'variant': 'h4',
               'icon': 'user',
+              'variant': 'h4',
             },
             {
               'name': 'content',
               'variant': 'body',
             },
             {
-              'format': 'date',
               'name': 'timestamp',
               'variant': 'caption',
+              'format': 'date',
             },
             {
+              'name': 'likes',
               'variant': 'badge',
               'format': 'number',
-              'name': 'likes',
             },
           ],
           'itemActions': [
             {
-              'event': 'VIEW',
               'variant': 'ghost',
               'label': 'View',
+              'event': 'VIEW',
             },
             {
-              'label': 'Edit',
               'event': 'EDIT',
               'variant': 'ghost',
+              'label': 'Edit',
             },
             {
-              'label': 'Delete',
-              'variant': 'danger',
               'event': 'DELETE',
+              'variant': 'danger',
+              'label': 'Delete',
             },
           ],
+          'cols': 1,
+          'imageField': 'image',
           'gap': 'md',
+          'variant': 'card',
         },
         'listens': [
           {
@@ -534,13 +534,13 @@ export function stdSocialFeedPostOrbital(params: StdSocialFeedPostOrbitalParams 
         'config': {
           'title': 'New Post',
           'mode': 'create',
+          'icon': 'plus-circle',
           'fields': [
             'author',
             'content',
             'image',
             'tag',
           ],
-          'icon': 'plus-circle',
         },
         'events': {
           'OPEN': 'CREATE',
@@ -561,15 +561,15 @@ export function stdSocialFeedPostOrbital(params: StdSocialFeedPostOrbitalParams 
         'name': 'PostEdit',
         'linkedEntity': canonicalName,
         'config': {
-          'title': 'Edit Post',
-          'mode': 'edit',
-          'icon': 'edit',
           'fields': [
             'author',
             'content',
             'image',
             'tag',
           ],
+          'icon': 'edit',
+          'mode': 'edit',
+          'title': 'Edit Post',
         },
         'events': {
           'OPEN': 'EDIT',
@@ -590,6 +590,7 @@ export function stdSocialFeedPostOrbital(params: StdSocialFeedPostOrbitalParams 
         'name': 'PostView',
         'linkedEntity': canonicalName,
         'config': {
+          'title': 'View Post',
           'icon': 'eye',
           'fields': [
             'author',
@@ -599,7 +600,6 @@ export function stdSocialFeedPostOrbital(params: StdSocialFeedPostOrbitalParams 
             'likes',
           ],
           'mode': 'edit',
-          'title': 'View Post',
         },
         'events': {
           'OPEN': 'VIEW',
@@ -620,9 +620,9 @@ export function stdSocialFeedPostOrbital(params: StdSocialFeedPostOrbitalParams 
         'name': 'PostDeleteConfirm',
         'linkedEntity': canonicalName,
         'config': {
+          'icon': 'alert-triangle',
           'title': 'Delete Post',
           'alertMessage': 'This action cannot be undone.',
-          'icon': 'alert-triangle',
           'confirmLabel': 'Delete',
         },
         'events': {
@@ -650,10 +650,10 @@ export function stdSocialFeedPostOrbital(params: StdSocialFeedPostOrbitalParams 
             'image/gif',
             'image/webp',
           ],
-          'bucket': 'social-feed-images',
           'maxSize': 10485760,
-          'uiTrait': '@trait.PostImageUploadForm',
+          'bucket': 'social-feed-images',
           'acl': 'public',
+          'uiTrait': '@trait.PostImageUploadForm',
         },
       }),
       rebindInlineTraitEntity({
@@ -702,28 +702,28 @@ export function stdSocialFeedPostOrbital(params: StdSocialFeedPostOrbitalParams 
                   'render-ui',
                   'main',
                   {
-                    'type': 'stack',
                     'direction': 'vertical',
+                    'gap': 'md',
                     'children': [
                       {
-                        'content': 'Attach an image',
                         'type': 'typography',
+                        'content': 'Attach an image',
                         'variant': 'caption',
                       },
                       {
-                        'placeholder': 'Choose image…',
                         'type': 'input',
+                        'placeholder': 'Choose image…',
                         'inputType': 'text',
                       },
                       {
-                        'action': 'UPLOAD',
                         'variant': 'ghost',
-                        'icon': 'upload',
                         'type': 'button',
+                        'action': 'UPLOAD',
                         'label': 'Upload',
+                        'icon': 'upload',
                       },
                     ],
-                    'gap': 'md',
+                    'type': 'stack',
                   },
                 ],
               ],
@@ -991,21 +991,21 @@ export function stdSocialFeedPostOrbital(params: StdSocialFeedPostOrbitalParams 
                   'render-ui',
                   'main',
                   {
-                    'direction': 'horizontal',
                     'children': [
                       {
                         'label': 'Like',
-                        'type': 'button',
+                        'action': 'LIKE',
                         'variant': 'ghost',
                         'icon': 'heart',
-                        'action': 'LIKE',
+                        'type': 'button',
                       },
                       {
                         'content': '@entity.likes',
-                        'type': 'typography',
                         'variant': 'caption',
+                        'type': 'typography',
                       },
                     ],
+                    'direction': 'horizontal',
                     'gap': 'sm',
                     'type': 'stack',
                     'align': 'center',
@@ -1288,27 +1288,27 @@ export function stdSocialFeedCommentOrbital(params: StdSocialFeedCommentOrbitalP
         'name': 'CommentAppLayout',
         'linkedEntity': canonicalName,
         'config': {
-          'appName': 'SocialFeed',
-          'notificationClickEvent': 'COMMENT_NOTIFICATIONS_OPEN',
           'contentTrait': '@trait.CommentDisplay',
           'navItems': [
             {
-              'label': 'Feed',
               'icon': 'rss',
+              'label': 'Feed',
               'href': '/feed',
             },
             {
-              'icon': 'message-circle',
               'label': 'Comments',
               'href': '/comments',
+              'icon': 'message-circle',
             },
           ],
-          'notifications': [],
           'searchEvent': 'COMMENT_SEARCH',
+          'appName': 'SocialFeed',
+          'notifications': [],
+          'notificationClickEvent': 'COMMENT_NOTIFICATIONS_OPEN',
         },
         'events': {
-          'SEARCH': 'COMMENT_SEARCH',
           'NOTIFY_CLICK': 'COMMENT_NOTIFICATIONS_OPEN',
+          'SEARCH': 'COMMENT_SEARCH',
         },
       }),
       rebindInlineTraitEntity({
@@ -1392,55 +1392,55 @@ export function stdSocialFeedCommentOrbital(params: StdSocialFeedCommentOrbitalP
                   'main',
                   {
                     'type': 'stack',
+                    'direction': 'vertical',
+                    'className': 'max-w-5xl mx-auto w-full',
+                    'gap': 'lg',
                     'children': [
                       {
-                        'gap': 'md',
-                        'direction': 'horizontal',
-                        'align': 'center',
+                        'type': 'stack',
                         'justify': 'between',
+                        'gap': 'md',
+                        'align': 'center',
                         'children': [
                           {
-                            'type': 'stack',
                             'align': 'center',
+                            'gap': 'sm',
+                            'type': 'stack',
                             'children': [
                               {
-                                'type': 'icon',
                                 'name': 'message-circle',
+                                'type': 'icon',
                               },
                               {
-                                'type': 'typography',
                                 'content': 'Comments',
                                 'variant': 'h2',
+                                'type': 'typography',
                               },
                             ],
                             'direction': 'horizontal',
-                            'gap': 'sm',
                           },
                           {
-                            'direction': 'horizontal',
                             'type': 'stack',
+                            'gap': 'sm',
+                            'direction': 'horizontal',
                             'children': [
                               {
-                                'type': 'button',
                                 'variant': 'primary',
-                                'icon': 'edit',
                                 'label': 'New Comment',
                                 'action': 'CREATE',
+                                'type': 'button',
+                                'icon': 'edit',
                               },
                             ],
-                            'gap': 'sm',
                           },
                         ],
-                        'type': 'stack',
+                        'direction': 'horizontal',
                       },
                       {
                         'type': 'divider',
                       },
                       '@trait.CommentBrowseList',
                     ],
-                    'direction': 'vertical',
-                    'gap': 'lg',
-                    'className': 'max-w-5xl mx-auto w-full',
                   },
                 ],
               ],
@@ -1459,34 +1459,34 @@ export function stdSocialFeedCommentOrbital(params: StdSocialFeedCommentOrbitalP
                   'render-ui',
                   'main',
                   {
-                    'align': 'center',
-                    'type': 'stack',
                     'direction': 'vertical',
+                    'className': 'py-8',
                     'children': [
                       {
                         'type': 'icon',
                         'name': 'bell',
                       },
                       {
-                        'type': 'typography',
                         'content': 'No notifications',
+                        'type': 'typography',
                         'variant': 'h3',
                       },
                       {
-                        'variant': 'caption',
-                        'type': 'typography',
                         'color': 'muted',
+                        'type': 'typography',
                         'content': 'You\'re all caught up.',
+                        'variant': 'caption',
                       },
                       {
                         'type': 'button',
-                        'label': 'Back to comments',
                         'action': 'INIT',
+                        'label': 'Back to comments',
                         'variant': 'ghost',
                       },
                     ],
-                    'className': 'py-8',
                     'gap': 'md',
+                    'type': 'stack',
+                    'align': 'center',
                   },
                 ],
               ],
@@ -1500,24 +1500,25 @@ export function stdSocialFeedCommentOrbital(params: StdSocialFeedCommentOrbitalP
         'name': 'CommentBrowseList',
         'linkedEntity': canonicalName,
         'config': {
-          'variant': 'card',
           'cols': 1,
           'fields': [
             {
+              'icon': 'user',
               'name': 'author',
               'variant': 'h4',
-              'icon': 'user',
             },
             {
-              'name': 'body',
               'variant': 'body',
+              'name': 'body',
             },
             {
               'name': 'createdAt',
-              'variant': 'caption',
               'format': 'date',
+              'variant': 'caption',
             },
           ],
+          'variant': 'card',
+          'gap': 'sm',
           'itemActions': [
             {
               'label': 'View',
@@ -1525,17 +1526,16 @@ export function stdSocialFeedCommentOrbital(params: StdSocialFeedCommentOrbitalP
               'variant': 'ghost',
             },
             {
-              'variant': 'ghost',
               'label': 'Edit',
+              'variant': 'ghost',
               'event': 'EDIT',
             },
             {
-              'label': 'Delete',
               'event': 'DELETE',
               'variant': 'danger',
+              'label': 'Delete',
             },
           ],
-          'gap': 'sm',
         },
         'listens': [
           {
@@ -1569,14 +1569,14 @@ export function stdSocialFeedCommentOrbital(params: StdSocialFeedCommentOrbitalP
         'name': 'CommentCreate',
         'linkedEntity': canonicalName,
         'config': {
-          'title': 'New Comment',
-          'mode': 'create',
+          'icon': 'plus-circle',
           'fields': [
             'postId',
             'author',
             'body',
           ],
-          'icon': 'plus-circle',
+          'mode': 'create',
+          'title': 'New Comment',
         },
         'events': {
           'OPEN': 'CREATE',
@@ -1626,8 +1626,8 @@ export function stdSocialFeedCommentOrbital(params: StdSocialFeedCommentOrbitalP
         'linkedEntity': canonicalName,
         'config': {
           'icon': 'eye',
-          'title': 'View Comment',
           'mode': 'edit',
+          'title': 'View Comment',
           'fields': [
             'postId',
             'author',
@@ -1654,14 +1654,14 @@ export function stdSocialFeedCommentOrbital(params: StdSocialFeedCommentOrbitalP
         'name': 'CommentDeleteConfirm',
         'linkedEntity': canonicalName,
         'config': {
-          'title': 'Delete Comment',
-          'icon': 'alert-triangle',
-          'confirmLabel': 'Delete',
           'alertMessage': 'This action cannot be undone.',
+          'icon': 'alert-triangle',
+          'title': 'Delete Comment',
+          'confirmLabel': 'Delete',
         },
         'events': {
-          'CONFIRM': 'CONFIRM_DELETE',
           'REQUEST': 'DELETE',
+          'CONFIRM': 'CONFIRM_DELETE',
         },
         'listens': [
           {

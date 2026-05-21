@@ -89,12 +89,12 @@ export interface StdCheckoutTerminalCheckoutSessionLoadFailedPayload {
  * without modifying its state-machine topology.
  */
 export interface StdCheckoutTerminalConfig {
-  /** Default: `[{"label":"Terminal","name":"terminalId","variant":"caption"},{"name":"cashierName","variant":"caption","label":"Cashier"},{"name":"status","label":"Status","variant":"badge"},{"name":"total","variant":"caption","label":"Total"},{"name":"openedAt","variant":"caption","label":"Opened"}]` */
+  /** Default: `[{"name":"terminalId","label":"Terminal","variant":"caption"},{"name":"cashierName","label":"Cashier","variant":"caption"},{"variant":"badge","name":"status","label":"Status"},{"label":"Total","variant":"caption","name":"total"},{"label":"Opened","variant":"caption","name":"openedAt"}]` */
   fields?: TraitConfig[];
+  /** Default: `[{"label":"Open","event":"OPEN_TERMINAL","variant":"primary"},{"label":"Void","event":"VOID_SESSION","variant":"danger"}]` */
+  itemActions?: TraitConfig[];
   /** Default: `"Terminals"` */
   title?: string;
-  /** Default: `[{"variant":"primary","event":"OPEN_TERMINAL","label":"Open"},{"label":"Void","variant":"danger","event":"VOID_SESSION"}]` */
-  itemActions?: TraitConfig[];
 }
 
 /**

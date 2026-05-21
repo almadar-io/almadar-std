@@ -94,7 +94,7 @@ export interface StdStepFlowStepItemsLoadFailedPayload {
 export interface StdStepFlowConfig {
   /** Default: `"Review"` */
   title?: string;
-  /** Default: `[{"description":"Initial review by direct manager","key":"manager","icon":"user","label":"Manager Review"},{"label":"Director Approval","description":"Department director sign-off","icon":"users","key":"director"},{"label":"Executive Sign-off","description":"Final executive approval","icon":"shield","key":"executive"}]` */
+  /** Default: `[{"description":"Initial review by direct manager","label":"Manager Review","icon":"user","key":"manager"},{"description":"Department director sign-off","icon":"users","label":"Director Approval","key":"director"},{"label":"Executive Sign-off","description":"Final executive approval","key":"executive","icon":"shield"}]` */
   steps?: TraitConfig[];
 }
 

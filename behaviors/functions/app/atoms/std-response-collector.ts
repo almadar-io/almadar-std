@@ -83,10 +83,10 @@ export interface StdResponseCollectorResponseLoadFailedPayload {
  * without modifying its state-machine topology.
  */
 export interface StdResponseCollectorConfig {
-  /** Default: `[{"variant":"caption","label":"Question","name":"questionId"},{"name":"respondentId","label":"Respondent","variant":"caption"},{"variant":"caption","name":"surveyId","label":"Survey"},{"name":"answerJson","label":"Answer","variant":"caption"},{"label":"Submitted","name":"submittedAt","variant":"caption"}]` */
-  fields?: TraitConfig[];
-  /** Default: `[{"variant":"primary","icon":"arrow-right","event":"OPEN_RESPONSE","label":"Open"},{"label":"Delete","event":"DELETE_RESPONSE","variant":"danger"}]` */
+  /** Default: `[{"variant":"primary","icon":"arrow-right","label":"Open","event":"OPEN_RESPONSE"},{"variant":"danger","event":"DELETE_RESPONSE","label":"Delete"}]` */
   itemActions?: TraitConfig[];
+  /** Default: `[{"name":"questionId","variant":"caption","label":"Question"},{"name":"respondentId","label":"Respondent","variant":"caption"},{"variant":"caption","name":"surveyId","label":"Survey"},{"name":"answerJson","variant":"caption","label":"Answer"},{"label":"Submitted","variant":"caption","name":"submittedAt"}]` */
+  fields?: TraitConfig[];
   /** Default: `"Responses"` */
   title?: string;
 }

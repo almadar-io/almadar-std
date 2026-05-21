@@ -97,12 +97,12 @@ export interface StdVehicleVehicleLoadFailedPayload {
  * without modifying its state-machine topology.
  */
 export interface StdVehicleConfig {
-  /** Default: `[{"name":"licensePlate","label":"Plate","variant":"caption"},{"variant":"caption","name":"make","label":"Make"},{"name":"model","label":"Model","variant":"caption"},{"name":"year","variant":"caption","label":"Year"},{"variant":"badge","label":"Type","name":"vehicleType"},{"name":"odometer","variant":"caption","label":"Odometer"},{"label":"Status","variant":"badge","name":"status"}]` */
+  /** Default: `[{"name":"licensePlate","label":"Plate","variant":"caption"},{"name":"make","label":"Make","variant":"caption"},{"variant":"caption","name":"model","label":"Model"},{"name":"year","label":"Year","variant":"caption"},{"name":"vehicleType","label":"Type","variant":"badge"},{"label":"Odometer","variant":"caption","name":"odometer"},{"name":"status","variant":"badge","label":"Status"}]` */
   fields?: TraitConfig[];
+  /** Default: `[{"variant":"primary","icon":"arrow-right","event":"OPEN_VEHICLE","label":"Open"},{"label":"Retire","event":"RETIRE","variant":"danger"}]` */
+  itemActions?: TraitConfig[];
   /** Default: `"Fleet"` */
   title?: string;
-  /** Default: `[{"event":"OPEN_VEHICLE","variant":"primary","label":"Open","icon":"arrow-right"},{"label":"Retire","event":"RETIRE","variant":"danger"}]` */
-  itemActions?: TraitConfig[];
 }
 
 /**

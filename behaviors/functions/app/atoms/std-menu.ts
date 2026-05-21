@@ -228,12 +228,12 @@ export interface StdMenuMenuItemWriteFailedPayload {
  * without modifying its state-machine topology.
  */
 export interface StdMenuConfig {
-  /** Default: `[{"label":"Item","name":"name","variant":"caption"},{"variant":"badge","label":"Category","name":"category"},{"name":"price","label":"Price","variant":"caption"},{"label":"Currency","name":"currency","variant":"badge"},{"variant":"caption","name":"prepTimeMinutes","label":"Prep (min)"},{"name":"available","variant":"badge","label":"Available"}]` */
+  /** Default: `[{"label":"Item","variant":"caption","name":"name"},{"name":"category","label":"Category","variant":"badge"},{"name":"price","label":"Price","variant":"caption"},{"label":"Currency","name":"currency","variant":"badge"},{"label":"Prep (min)","name":"prepTimeMinutes","variant":"caption"},{"label":"Available","name":"available","variant":"badge"}]` */
   fields?: TraitConfig[];
+  /** Default: `[{"variant":"primary","label":"Open","event":"OPEN_ITEM","icon":"arrow-right"},{"event":"DELETE","variant":"danger","icon":"trash","label":"Delete"}]` */
+  itemActions?: TraitConfig[];
   /** Default: `"Menu"` */
   title?: string;
-  /** Default: `[{"label":"Open","event":"OPEN_ITEM","icon":"arrow-right","variant":"primary"},{"label":"Delete","event":"DELETE","variant":"danger","icon":"trash"}]` */
-  itemActions?: TraitConfig[];
 }
 
 /**

@@ -87,12 +87,12 @@ export interface StdClassSessionClassSessionLoadFailedPayload {
  * without modifying its state-machine topology.
  */
 export interface StdClassSessionConfig {
+  /** Default: `[{"label":"Open","variant":"primary","event":"OPEN_SESSION","icon":"arrow-right"},{"variant":"danger","label":"Cancel","event":"CANCEL_CLASS"}]` */
+  itemActions?: TraitConfig[];
+  /** Default: `[{"label":"Class","name":"className","variant":"caption"},{"name":"instructorName","label":"Instructor","variant":"caption"},{"name":"startTime","variant":"caption","label":"Start"},{"name":"capacity","variant":"badge","label":"Capacity"},{"name":"bookedCount","label":"Booked","variant":"badge"},{"variant":"badge","label":"Status","name":"status"}]` */
+  fields?: TraitConfig[];
   /** Default: `"Class Sessions"` */
   title?: string;
-  /** Default: `[{"variant":"primary","event":"OPEN_SESSION","label":"Open","icon":"arrow-right"},{"variant":"danger","event":"CANCEL_CLASS","label":"Cancel"}]` */
-  itemActions?: TraitConfig[];
-  /** Default: `[{"label":"Class","variant":"caption","name":"className"},{"variant":"caption","label":"Instructor","name":"instructorName"},{"name":"startTime","label":"Start","variant":"caption"},{"label":"Capacity","name":"capacity","variant":"badge"},{"name":"bookedCount","variant":"badge","label":"Booked"},{"name":"status","variant":"badge","label":"Status"}]` */
-  fields?: TraitConfig[];
 }
 
 /**

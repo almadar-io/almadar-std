@@ -31,8 +31,8 @@ const ALIAS = 'Pipeline';
  * without modifying its state-machine topology.
  */
 export interface StdPipelineConfig {
-  formFields?: TraitConfig;
   columns?: TraitConfig;
+  formFields?: TraitConfig;
 }
 
 /**

@@ -88,10 +88,10 @@ export interface StdCampaignGoalCampaignGoalLoadFailedPayload {
 export interface StdCampaignGoalConfig {
   /** Default: `"Campaigns"` */
   title?: string;
-  /** Default: `[{"variant":"caption","name":"name","label":"Name"},{"label":"Target","variant":"caption","name":"targetAmount"},{"variant":"caption","label":"Raised","name":"raisedAmount"},{"label":"Donors","name":"donorCount","variant":"caption"},{"variant":"badge","name":"status","label":"Status"}]` */
-  fields?: TraitConfig[];
-  /** Default: `[{"label":"Open","event":"OPEN_CAMPAIGN","variant":"primary","icon":"arrow-right"},{"label":"End","event":"END_CAMPAIGN","variant":"danger"}]` */
+  /** Default: `[{"variant":"primary","icon":"arrow-right","event":"OPEN_CAMPAIGN","label":"Open"},{"event":"END_CAMPAIGN","variant":"danger","label":"End"}]` */
   itemActions?: TraitConfig[];
+  /** Default: `[{"variant":"caption","label":"Name","name":"name"},{"label":"Target","variant":"caption","name":"targetAmount"},{"variant":"caption","name":"raisedAmount","label":"Raised"},{"label":"Donors","variant":"caption","name":"donorCount"},{"name":"status","label":"Status","variant":"badge"}]` */
+  fields?: TraitConfig[];
 }
 
 /**

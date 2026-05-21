@@ -86,13 +86,13 @@ export interface StdPayoutLedgerPayoutLoadFailedPayload {
  * without modifying its state-machine topology.
  */
 export interface StdPayoutLedgerConfig {
-  /** Default: `50` */
-  minimumWithdrawal?: number;
-  /** Default: `[{"event":"OPEN_PAYOUT","icon":"arrow-right","variant":"primary","label":"Open"},{"event":"REQUEST_WITHDRAW","variant":"danger","label":"Withdraw"}]` */
-  itemActions?: TraitConfig[];
   /** Default: `"Payouts"` */
   title?: string;
-  /** Default: `[{"variant":"caption","name":"vendorId","label":"Vendor"},{"name":"amount","variant":"caption","label":"Amount"},{"variant":"badge","label":"Currency","name":"currency"},{"name":"status","label":"Status","variant":"badge"},{"variant":"caption","label":"Bank","name":"bankAccountMasked"},{"label":"Requested","name":"requestedAt","variant":"caption"}]` */
+  /** Default: `[{"label":"Open","icon":"arrow-right","variant":"primary","event":"OPEN_PAYOUT"},{"label":"Withdraw","event":"REQUEST_WITHDRAW","variant":"danger"}]` */
+  itemActions?: TraitConfig[];
+  /** Default: `50` */
+  minimumWithdrawal?: number;
+  /** Default: `[{"label":"Vendor","variant":"caption","name":"vendorId"},{"variant":"caption","name":"amount","label":"Amount"},{"name":"currency","label":"Currency","variant":"badge"},{"label":"Status","name":"status","variant":"badge"},{"name":"bankAccountMasked","variant":"caption","label":"Bank"},{"label":"Requested","variant":"caption","name":"requestedAt"}]` */
   fields?: TraitConfig[];
 }
 

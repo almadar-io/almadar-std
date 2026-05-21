@@ -169,12 +169,12 @@ export interface StdMaintenanceRequestMaintenanceRequestUpdateFailedPayload {
  * without modifying its state-machine topology.
  */
 export interface StdMaintenanceRequestConfig {
-  /** Default: `[{"event":"OPEN_REQUEST","label":"Open","variant":"primary","icon":"arrow-right"},{"icon":"x","label":"Cancel","event":"CANCEL_REQUEST","variant":"danger"}]` */
+  /** Default: `[{"variant":"primary","event":"OPEN_REQUEST","icon":"arrow-right","label":"Open"},{"event":"CANCEL_REQUEST","variant":"danger","icon":"x","label":"Cancel"}]` */
   itemActions?: TraitConfig[];
-  /** Default: `[{"label":"Unit","name":"unitId","variant":"caption"},{"variant":"caption","name":"requesterName","label":"Requester"},{"name":"description","label":"Description","variant":"caption"},{"name":"priority","label":"Priority","variant":"badge"},{"name":"status","label":"Status","variant":"badge"},{"variant":"caption","name":"requestedAt","label":"Requested"}]` */
-  fields?: TraitConfig[];
   /** Default: `"Maintenance Requests"` */
   title?: string;
+  /** Default: `[{"name":"unitId","label":"Unit","variant":"caption"},{"name":"requesterName","label":"Requester","variant":"caption"},{"name":"description","label":"Description","variant":"caption"},{"label":"Priority","variant":"badge","name":"priority"},{"name":"status","label":"Status","variant":"badge"},{"label":"Requested","name":"requestedAt","variant":"caption"}]` */
+  fields?: TraitConfig[];
 }
 
 /**

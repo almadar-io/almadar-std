@@ -91,12 +91,12 @@ export interface StdTemplateEditorMessageTemplateLoadFailedPayload {
  * without modifying its state-machine topology.
  */
 export interface StdTemplateEditorConfig {
+  /** Default: `[{"label":"Open","event":"OPEN_TEMPLATE","variant":"primary","icon":"arrow-right"},{"event":"DELETE_TEMPLATE","variant":"danger","label":"Delete"}]` */
+  itemActions?: TraitConfig[];
   /** Default: `"Templates"` */
   title?: string;
-  /** Default: `[{"name":"name","label":"Name","variant":"caption"},{"label":"Channel","name":"channel","variant":"badge"},{"label":"Subject","variant":"caption","name":"subject"},{"name":"lastEditedAt","variant":"caption","label":"Updated"}]` */
+  /** Default: `[{"name":"name","variant":"caption","label":"Name"},{"variant":"badge","label":"Channel","name":"channel"},{"name":"subject","variant":"caption","label":"Subject"},{"label":"Updated","name":"lastEditedAt","variant":"caption"}]` */
   fields?: TraitConfig[];
-  /** Default: `[{"event":"OPEN_TEMPLATE","variant":"primary","label":"Open","icon":"arrow-right"},{"event":"DELETE_TEMPLATE","variant":"danger","label":"Delete"}]` */
-  itemActions?: TraitConfig[];
 }
 
 /**

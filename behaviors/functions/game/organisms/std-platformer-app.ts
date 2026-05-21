@@ -177,37 +177,45 @@ export function stdPlatformerAppPlatLevelOrbital(params: StdPlatformerAppPlatLev
             'name': 'player',
             'type': 'object',
             'properties': {
-              'width': {
-                'name': 'width',
-                'type': 'number',
-              },
-              'vy': {
-                'name': 'vy',
-                'type': 'number',
+              'facingRight': {
+                'name': 'facingRight',
+                'type': 'boolean',
+                'required': false,
               },
               'grounded': {
                 'name': 'grounded',
                 'type': 'boolean',
+                'required': false,
               },
-              'vx': {
-                'name': 'vx',
+              'vy': {
+                'name': 'vy',
                 'type': 'number',
-              },
-              'x': {
-                'name': 'x',
-                'type': 'number',
+                'required': false,
               },
               'height': {
                 'name': 'height',
                 'type': 'number',
+                'required': false,
               },
-              'facingRight': {
-                'name': 'facingRight',
-                'type': 'boolean',
+              'x': {
+                'name': 'x',
+                'type': 'number',
+                'required': false,
               },
               'y': {
                 'name': 'y',
                 'type': 'number',
+                'required': false,
+              },
+              'width': {
+                'name': 'width',
+                'type': 'number',
+                'required': false,
+              },
+              'vx': {
+                'name': 'vx',
+                'type': 'number',
+                'required': false,
               },
             },
           },
@@ -218,25 +226,30 @@ export function stdPlatformerAppPlatLevelOrbital(params: StdPlatformerAppPlatLev
             'items': {
               'type': 'object',
               'properties': {
-                'x': {
-                  'name': 'x',
-                  'type': 'number',
-                },
                 'height': {
                   'name': 'height',
                   'type': 'number',
-                },
-                'y': {
-                  'name': 'y',
-                  'type': 'number',
+                  'required': false,
                 },
                 'type': {
                   'name': 'type',
                   'type': 'string',
+                  'required': false,
+                },
+                'y': {
+                  'name': 'y',
+                  'type': 'number',
+                  'required': false,
                 },
                 'width': {
                   'name': 'width',
                   'type': 'number',
+                  'required': false,
+                },
+                'x': {
+                  'name': 'x',
+                  'type': 'number',
+                  'required': false,
                 },
               },
             },
@@ -536,8 +549,8 @@ export function stdPlatformerAppPlatLevelOrbital(params: StdPlatformerAppPlatLev
                   'PlatLevel',
                   {
                     'emit': {
-                      'failure': 'PlatLevelLoadFailed',
                       'success': 'PlatLevelLoaded',
+                      'failure': 'PlatLevelLoadFailed',
                     },
                   },
                 ],
@@ -545,22 +558,22 @@ export function stdPlatformerAppPlatLevelOrbital(params: StdPlatformerAppPlatLev
                   'render-ui',
                   'main',
                   {
-                    'children': [
-                      {
-                        'subtitle': 'Side-Scrolling Adventure',
-                        'type': 'game-menu',
-                        'menuItems': [
-                          {
-                            'label': 'Start Game',
-                            'event': 'START',
-                            'variant': 'primary',
-                          },
-                        ],
-                        'title': 'Platformer',
-                      },
-                    ],
                     'type': 'game-shell',
                     'appName': 'Platformer App',
+                    'children': [
+                      {
+                        'type': 'game-menu',
+                        'title': 'Platformer',
+                        'menuItems': [
+                          {
+                            'variant': 'primary',
+                            'label': 'Start Game',
+                            'event': 'START',
+                          },
+                        ],
+                        'subtitle': 'Side-Scrolling Adventure',
+                      },
+                    ],
                     'showTopBar': true,
                   },
                 ],
@@ -576,21 +589,21 @@ export function stdPlatformerAppPlatLevelOrbital(params: StdPlatformerAppPlatLev
                   'main',
                   {
                     'type': 'game-shell',
-                    'showTopBar': true,
                     'appName': 'Platformer App',
+                    'showTopBar': true,
                     'children': [
                       {
-                        'canvasWidth': 800,
-                        'worldHeight': 400,
-                        'followCamera': true,
-                        'type': 'platformer-canvas',
-                        'stopEvent': 'STOP',
-                        'canvasHeight': 400,
                         'bgColor': '#1a1a2e',
                         'worldWidth': 2400,
+                        'worldHeight': 400,
+                        'canvasWidth': 800,
                         'leftEvent': 'LEFT',
                         'rightEvent': 'RIGHT',
                         'jumpEvent': 'JUMP',
+                        'followCamera': true,
+                        'type': 'platformer-canvas',
+                        'canvasHeight': 400,
+                        'stopEvent': 'STOP',
                       },
                     ],
                   },
@@ -631,18 +644,18 @@ export function stdPlatformerAppPlatLevelOrbital(params: StdPlatformerAppPlatLev
                   'render-ui',
                   'modal',
                   {
-                    'title': 'Paused',
                     'type': 'game-menu',
+                    'title': 'Paused',
                     'menuItems': [
                       {
-                        'label': 'Resume',
                         'variant': 'primary',
                         'event': 'RESUME',
+                        'label': 'Resume',
                       },
                       {
-                        'variant': 'ghost',
                         'label': 'Quit',
                         'event': 'RESTART',
+                        'variant': 'ghost',
                       },
                     ],
                   },
@@ -658,37 +671,37 @@ export function stdPlatformerAppPlatLevelOrbital(params: StdPlatformerAppPlatLev
                   'render-ui',
                   'main',
                   {
-                    'appName': 'Platformer App',
                     'showTopBar': true,
-                    'type': 'game-shell',
                     'children': [
                       {
-                        'type': 'game-over-screen',
                         'menuItems': [
                           {
-                            'event': 'RESTART',
-                            'variant': 'primary',
                             'label': 'Play Again',
+                            'variant': 'primary',
+                            'event': 'RESTART',
                           },
                           {
-                            'variant': 'secondary',
                             'label': 'Main Menu',
                             'event': 'RESTART',
+                            'variant': 'secondary',
                           },
                         ],
+                        'title': 'Game Over',
+                        'type': 'game-over-screen',
                         'stats': [
                           {
                             'label': 'Score',
                             'value': '@entity.score',
                           },
                           {
-                            'label': 'Lives',
                             'value': '@entity.lives',
+                            'label': 'Lives',
                           },
                         ],
-                        'title': 'Game Over',
                       },
                     ],
+                    'type': 'game-shell',
+                    'appName': 'Platformer App',
                   },
                 ],
               ],
@@ -712,24 +725,24 @@ export function stdPlatformerAppPlatLevelOrbital(params: StdPlatformerAppPlatLev
                   'render-ui',
                   'main',
                   {
+                    'type': 'game-shell',
+                    'appName': 'Platformer App',
                     'showTopBar': true,
                     'children': [
                       {
+                        'worldWidth': 2400,
+                        'jumpEvent': 'JUMP',
+                        'rightEvent': 'RIGHT',
+                        'worldHeight': 400,
+                        'canvasHeight': 400,
                         'bgColor': '#1a1a2e',
+                        'followCamera': true,
+                        'leftEvent': 'LEFT',
                         'stopEvent': 'STOP',
                         'type': 'platformer-canvas',
-                        'worldWidth': 2400,
-                        'rightEvent': 'RIGHT',
                         'canvasWidth': 800,
-                        'followCamera': true,
-                        'jumpEvent': 'JUMP',
-                        'canvasHeight': 400,
-                        'worldHeight': 400,
-                        'leftEvent': 'LEFT',
                       },
                     ],
-                    'appName': 'Platformer App',
-                    'type': 'game-shell',
                   },
                 ],
               ],
@@ -748,24 +761,24 @@ export function stdPlatformerAppPlatLevelOrbital(params: StdPlatformerAppPlatLev
                   'render-ui',
                   'main',
                   {
-                    'showTopBar': true,
-                    'type': 'game-shell',
                     'appName': 'Platformer App',
+                    'showTopBar': true,
                     'children': [
                       {
-                        'canvasWidth': 800,
-                        'jumpEvent': 'JUMP',
-                        'leftEvent': 'LEFT',
-                        'stopEvent': 'STOP',
-                        'worldHeight': 400,
-                        'rightEvent': 'RIGHT',
-                        'worldWidth': 2400,
-                        'type': 'platformer-canvas',
                         'bgColor': '#1a1a2e',
-                        'followCamera': true,
+                        'jumpEvent': 'JUMP',
+                        'stopEvent': 'STOP',
                         'canvasHeight': 400,
+                        'type': 'platformer-canvas',
+                        'rightEvent': 'RIGHT',
+                        'followCamera': true,
+                        'leftEvent': 'LEFT',
+                        'canvasWidth': 800,
+                        'worldHeight': 400,
+                        'worldWidth': 2400,
                       },
                     ],
+                    'type': 'game-shell',
                   },
                 ],
               ],
@@ -785,13 +798,12 @@ export function stdPlatformerAppPlatLevelOrbital(params: StdPlatformerAppPlatLev
                   'main',
                   {
                     'appName': 'Platformer App',
-                    'showTopBar': true,
                     'type': 'game-shell',
+                    'showTopBar': true,
                     'children': [
                       {
-                        'subtitle': 'Side-Scrolling Adventure',
                         'title': 'Platformer',
-                        'type': 'game-menu',
+                        'subtitle': 'Side-Scrolling Adventure',
                         'menuItems': [
                           {
                             'variant': 'primary',
@@ -799,6 +811,7 @@ export function stdPlatformerAppPlatLevelOrbital(params: StdPlatformerAppPlatLev
                             'event': 'START',
                           },
                         ],
+                        'type': 'game-menu',
                       },
                     ],
                   },
@@ -814,23 +827,23 @@ export function stdPlatformerAppPlatLevelOrbital(params: StdPlatformerAppPlatLev
                   'render-ui',
                   'main',
                   {
-                    'type': 'game-shell',
-                    'showTopBar': true,
+                    'appName': 'Platformer App',
                     'children': [
                       {
                         'type': 'game-menu',
+                        'title': 'Platformer',
+                        'subtitle': 'Side-Scrolling Adventure',
                         'menuItems': [
                           {
-                            'event': 'START',
                             'variant': 'primary',
+                            'event': 'START',
                             'label': 'Start Game',
                           },
                         ],
-                        'subtitle': 'Side-Scrolling Adventure',
-                        'title': 'Platformer',
                       },
                     ],
-                    'appName': 'Platformer App',
+                    'type': 'game-shell',
+                    'showTopBar': true,
                   },
                 ],
               ],
@@ -946,14 +959,14 @@ export function stdPlatformerAppPlatLevelOrbital(params: StdPlatformerAppPlatLev
                   'set',
                   '@entity.player',
                   {
-                    'width': 32,
-                    'vx': 0,
-                    'x': 0,
-                    'height': 32,
                     'y': 0,
+                    'vx': 0,
+                    'width': 32,
                     'grounded': true,
-                    'facingRight': true,
+                    'height': 32,
+                    'x': 0,
                     'vy': 0,
+                    'facingRight': true,
                   },
                 ],
                 [
@@ -961,8 +974,8 @@ export function stdPlatformerAppPlatLevelOrbital(params: StdPlatformerAppPlatLev
                   'PlatLevel',
                   {
                     'emit': {
-                      'success': 'PlatLevelLoaded',
                       'failure': 'PlatLevelLoadFailed',
+                      'success': 'PlatLevelLoaded',
                     },
                   },
                 ],
@@ -977,26 +990,26 @@ export function stdPlatformerAppPlatLevelOrbital(params: StdPlatformerAppPlatLev
                   'render-ui',
                   'main',
                   {
-                    'type': 'game-shell',
                     'children': [
                       {
-                        'rightEvent': 'RIGHT',
-                        'player': '@entity.player',
-                        'jumpEvent': 'JUMP',
-                        'worldWidth': 2400,
                         'canvasWidth': 800,
-                        'type': 'platformer-canvas',
                         'followCamera': true,
-                        'leftEvent': 'LEFT',
-                        'canvasHeight': 400,
-                        'worldHeight': 400,
-                        'platforms': '@entity.platforms',
                         'bgColor': '#1a1a2e',
+                        'jumpEvent': 'JUMP',
+                        'worldHeight': 400,
+                        'type': 'platformer-canvas',
+                        'rightEvent': 'RIGHT',
+                        'platforms': '@entity.platforms',
                         'stopEvent': 'STOP',
+                        'player': '@entity.player',
+                        'canvasHeight': 400,
+                        'leftEvent': 'LEFT',
+                        'worldWidth': 2400,
                       },
                     ],
-                    'appName': 'Platformer App',
                     'showTopBar': true,
+                    'appName': 'Platformer App',
+                    'type': 'game-shell',
                   },
                 ],
               ],
@@ -1025,24 +1038,24 @@ export function stdPlatformerAppPlatLevelOrbital(params: StdPlatformerAppPlatLev
                   'render-ui',
                   'main',
                   {
-                    'showTopBar': true,
                     'appName': 'Platformer App',
                     'type': 'game-shell',
+                    'showTopBar': true,
                     'children': [
                       {
-                        'canvasHeight': 400,
-                        'canvasWidth': 800,
-                        'leftEvent': 'LEFT',
-                        'rightEvent': 'RIGHT',
-                        'player': '@entity.player',
-                        'followCamera': true,
                         'worldWidth': 2400,
-                        'platforms': '@entity.platforms',
-                        'bgColor': '#1a1a2e',
-                        'worldHeight': 400,
                         'type': 'platformer-canvas',
+                        'followCamera': true,
+                        'rightEvent': 'RIGHT',
+                        'worldHeight': 400,
+                        'canvasWidth': 800,
+                        'player': '@entity.player',
+                        'canvasHeight': 400,
+                        'leftEvent': 'LEFT',
                         'jumpEvent': 'JUMP',
                         'stopEvent': 'STOP',
+                        'bgColor': '#1a1a2e',
+                        'platforms': '@entity.platforms',
                       },
                     ],
                   },
@@ -1368,17 +1381,17 @@ export function stdPlatformerAppPlatScoreOrbital(params: StdPlatformerAppPlatSco
                   {
                     'type': 'game-shell',
                     'appName': 'Platformer App',
-                    'showTopBar': true,
                     'children': [
                       {
-                        'type': 'score-board',
-                        'level': '@entity.level',
                         'score': '@entity.score',
-                        'highScore': '@entity.highScore',
+                        'type': 'score-board',
                         'combo': '@entity.combo',
+                        'highScore': '@entity.highScore',
                         'multiplier': '@entity.multiplier',
+                        'level': '@entity.level',
                       },
                     ],
+                    'showTopBar': true,
                   },
                 ],
               ],
@@ -1410,19 +1423,19 @@ export function stdPlatformerAppPlatScoreOrbital(params: StdPlatformerAppPlatSco
                   'render-ui',
                   'main',
                   {
-                    'appName': 'Platformer App',
-                    'type': 'game-shell',
                     'children': [
                       {
-                        'type': 'score-board',
                         'combo': '@entity.combo',
-                        'score': '@entity.score',
                         'highScore': '@entity.highScore',
-                        'multiplier': '@entity.multiplier',
                         'level': '@entity.level',
+                        'score': '@entity.score',
+                        'multiplier': '@entity.multiplier',
+                        'type': 'score-board',
                       },
                     ],
                     'showTopBar': true,
+                    'type': 'game-shell',
+                    'appName': 'Platformer App',
                   },
                 ],
               ],
@@ -1442,18 +1455,18 @@ export function stdPlatformerAppPlatScoreOrbital(params: StdPlatformerAppPlatSco
                   'main',
                   {
                     'showTopBar': true,
+                    'appName': 'Platformer App',
+                    'type': 'game-shell',
                     'children': [
                       {
                         'type': 'score-board',
-                        'combo': '@entity.combo',
                         'score': '@entity.score',
                         'highScore': '@entity.highScore',
                         'multiplier': '@entity.multiplier',
                         'level': '@entity.level',
+                        'combo': '@entity.combo',
                       },
                     ],
-                    'type': 'game-shell',
-                    'appName': 'Platformer App',
                   },
                 ],
               ],
@@ -1482,19 +1495,19 @@ export function stdPlatformerAppPlatScoreOrbital(params: StdPlatformerAppPlatSco
                   'render-ui',
                   'main',
                   {
-                    'children': [
-                      {
-                        'highScore': '@entity.highScore',
-                        'combo': '@entity.combo',
-                        'multiplier': '@entity.multiplier',
-                        'type': 'score-board',
-                        'level': '@entity.level',
-                        'score': '@entity.score',
-                      },
-                    ],
-                    'type': 'game-shell',
                     'appName': 'Platformer App',
                     'showTopBar': true,
+                    'type': 'game-shell',
+                    'children': [
+                      {
+                        'type': 'score-board',
+                        'score': '@entity.score',
+                        'level': '@entity.level',
+                        'multiplier': '@entity.multiplier',
+                        'combo': '@entity.combo',
+                        'highScore': '@entity.highScore',
+                      },
+                    ],
                   },
                 ],
               ],
@@ -1877,8 +1890,8 @@ export function stdPlatformerAppCollectibleOrbital(params: StdPlatformerAppColle
                   'Collectible',
                   {
                     'emit': {
-                      'failure': 'CollectibleLoadFailed',
                       'success': 'CollectibleLoaded',
+                      'failure': 'CollectibleLoadFailed',
                     },
                   },
                 ],
@@ -1886,9 +1899,10 @@ export function stdPlatformerAppCollectibleOrbital(params: StdPlatformerAppColle
                   'render-ui',
                   'main',
                   {
-                    'align': 'center',
                     'direction': 'vertical',
+                    'align': 'center',
                     'className': 'py-12',
+                    'type': 'stack',
                     'gap': 'md',
                     'children': [
                       {
@@ -1896,12 +1910,11 @@ export function stdPlatformerAppCollectibleOrbital(params: StdPlatformerAppColle
                       },
                       {
                         'variant': 'caption',
-                        'content': 'Loading…',
                         'type': 'typography',
                         'color': 'muted',
+                        'content': 'Loading…',
                       },
                     ],
-                    'type': 'stack',
                   },
                 ],
               ],
@@ -1916,97 +1929,97 @@ export function stdPlatformerAppCollectibleOrbital(params: StdPlatformerAppColle
                   'main',
                   {
                     'type': 'game-shell',
-                    'showTopBar': true,
                     'appName': 'Platformer App',
+                    'showTopBar': true,
                     'children': [
                       {
                         'type': 'stack',
+                        'className': 'max-w-5xl mx-auto w-full',
                         'gap': 'lg',
-                        'direction': 'vertical',
                         'children': [
                           {
+                            'direction': 'horizontal',
+                            'align': 'center',
                             'children': [
                               {
-                                'align': 'center',
-                                'direction': 'horizontal',
-                                'gap': 'sm',
                                 'type': 'stack',
+                                'direction': 'horizontal',
                                 'children': [
                                   {
                                     'type': 'icon',
                                     'name': 'package',
                                   },
                                   {
+                                    'content': 'Collectibles',
                                     'variant': 'h2',
                                     'type': 'typography',
-                                    'content': 'Collectibles',
                                   },
                                 ],
+                                'gap': 'sm',
+                                'align': 'center',
                               },
                               {
-                                'direction': 'horizontal',
-                                'type': 'stack',
                                 'gap': 'sm',
+                                'type': 'stack',
                                 'children': [
                                   {
-                                    'variant': 'primary',
-                                    'icon': 'plus',
                                     'action': 'ADD_ITEM',
-                                    'label': 'Add Collectible',
+                                    'variant': 'primary',
                                     'type': 'button',
+                                    'icon': 'plus',
+                                    'label': 'Add Collectible',
                                   },
                                 ],
+                                'direction': 'horizontal',
                               },
                             ],
                             'gap': 'md',
-                            'justify': 'between',
                             'type': 'stack',
-                            'direction': 'horizontal',
-                            'align': 'center',
+                            'justify': 'between',
                           },
                           {
                             'type': 'divider',
                           },
                           {
-                            'entity': '@payload.data',
+                            'type': 'data-grid',
                             'itemActions': [
                               {
-                                'variant': 'ghost',
                                 'label': 'Use',
                                 'event': 'USE_ITEM',
+                                'variant': 'ghost',
                               },
                               {
-                                'event': 'DROP',
-                                'variant': 'danger',
                                 'label': 'Drop',
+                                'variant': 'danger',
+                                'event': 'DROP',
                               },
                             ],
-                            'type': 'data-grid',
+                            'entity': '@payload.data',
                             'fields': [
                               {
-                                'icon': 'package',
-                                'variant': 'h4',
                                 'name': 'name',
+                                'variant': 'h4',
+                                'icon': 'package',
                                 'label': 'Name',
                               },
                               {
                                 'name': 'type',
-                                'label': 'Type',
                                 'colorMap': {
-                                  'done': 'success',
                                   'completed': 'success',
-                                  'inactive': 'neutral',
-                                  'archived': 'neutral',
-                                  'draft': 'warning',
-                                  'error': 'destructive',
-                                  'active': 'success',
                                   'disabled': 'neutral',
-                                  'scheduled': 'warning',
                                   'failed': 'destructive',
-                                  'cancelled': 'destructive',
                                   'pending': 'warning',
+                                  'scheduled': 'warning',
+                                  'inactive': 'neutral',
+                                  'draft': 'warning',
+                                  'archived': 'neutral',
+                                  'error': 'destructive',
+                                  'cancelled': 'destructive',
+                                  'active': 'success',
+                                  'done': 'success',
                                 },
                                 'variant': 'badge',
+                                'label': 'Type',
                               },
                               {
                                 'name': 'quantity',
@@ -2016,7 +2029,7 @@ export function stdPlatformerAppCollectibleOrbital(params: StdPlatformerAppColle
                             ],
                           },
                         ],
-                        'className': 'max-w-5xl mx-auto w-full',
+                        'direction': 'vertical',
                       },
                     ],
                   },
@@ -2032,15 +2045,14 @@ export function stdPlatformerAppCollectibleOrbital(params: StdPlatformerAppColle
                   'render-ui',
                   'main',
                   {
-                    'align': 'center',
-                    'type': 'stack',
-                    'direction': 'vertical',
                     'gap': 'md',
                     'className': 'py-12',
+                    'direction': 'vertical',
+                    'type': 'stack',
                     'children': [
                       {
-                        'name': 'alert-triangle',
                         'type': 'icon',
+                        'name': 'alert-triangle',
                         'color': 'destructive',
                       },
                       {
@@ -2049,19 +2061,20 @@ export function stdPlatformerAppCollectibleOrbital(params: StdPlatformerAppColle
                         'type': 'typography',
                       },
                       {
-                        'variant': 'body',
                         'type': 'typography',
-                        'color': 'muted',
                         'content': '@payload.error',
+                        'color': 'muted',
+                        'variant': 'body',
                       },
                       {
+                        'action': 'INIT',
                         'type': 'button',
                         'variant': 'primary',
                         'icon': 'rotate-ccw',
-                        'action': 'INIT',
                         'label': 'Retry',
                       },
                     ],
+                    'align': 'center',
                   },
                 ],
               ],
@@ -2253,8 +2266,8 @@ export function stdPlatformerAppCollectibleOrbital(params: StdPlatformerAppColle
                   'Collectible',
                   {
                     'emit': {
-                      'failure': 'CollectibleLoadFailed',
                       'success': 'CollectibleLoaded',
+                      'failure': 'CollectibleLoadFailed',
                     },
                   },
                 ],
@@ -2262,9 +2275,11 @@ export function stdPlatformerAppCollectibleOrbital(params: StdPlatformerAppColle
                   'render-ui',
                   'modal',
                   {
-                    'direction': 'vertical',
+                    'type': 'stack',
                     'children': [
                       {
+                        'type': 'stack',
+                        'direction': 'horizontal',
                         'children': [
                           {
                             'type': 'icon',
@@ -2272,31 +2287,29 @@ export function stdPlatformerAppCollectibleOrbital(params: StdPlatformerAppColle
                           },
                           {
                             'content': 'Add Collectible',
-                            'type': 'typography',
                             'variant': 'h3',
+                            'type': 'typography',
                           },
                         ],
-                        'type': 'stack',
                         'gap': 'sm',
-                        'direction': 'horizontal',
                       },
                       {
                         'type': 'divider',
                       },
                       {
-                        'submitEvent': 'SAVE',
-                        'cancelEvent': 'CLOSE',
+                        'type': 'form-section',
                         'fields': [
                           'name',
                           'type',
                           'quantity',
                           'rarity',
                         ],
-                        'type': 'form-section',
+                        'cancelEvent': 'CLOSE',
+                        'submitEvent': 'SAVE',
                         'mode': 'create',
                       },
                     ],
-                    'type': 'stack',
+                    'direction': 'vertical',
                     'gap': 'md',
                   },
                 ],
@@ -2542,8 +2555,8 @@ export function stdPlatformerAppCollectibleOrbital(params: StdPlatformerAppColle
                   'Collectible',
                   {
                     'emit': {
-                      'failure': 'CollectibleLoadFailed',
                       'success': 'CollectibleLoaded',
+                      'failure': 'CollectibleLoadFailed',
                     },
                   },
                 ],
@@ -2569,14 +2582,9 @@ export function stdPlatformerAppCollectibleOrbital(params: StdPlatformerAppColle
                   'render-ui',
                   'modal',
                   {
-                    'direction': 'vertical',
-                    'align': 'center',
                     'children': [
                       {
-                        'type': 'stack',
                         'gap': 'sm',
-                        'direction': 'horizontal',
-                        'align': 'center',
                         'children': [
                           {
                             'type': 'icon',
@@ -2588,39 +2596,44 @@ export function stdPlatformerAppCollectibleOrbital(params: StdPlatformerAppColle
                             'type': 'typography',
                           },
                         ],
+                        'align': 'center',
+                        'type': 'stack',
+                        'direction': 'horizontal',
                       },
                       {
                         'type': 'divider',
                       },
                       {
                         'type': 'typography',
-                        'content': '@entity.name',
                         'variant': 'body',
+                        'content': '@entity.name',
                       },
                       {
-                        'justify': 'center',
-                        'direction': 'horizontal',
-                        'type': 'stack',
                         'gap': 'sm',
+                        'direction': 'horizontal',
                         'children': [
                           {
                             'action': 'CLOSE',
                             'label': 'Cancel',
-                            'variant': 'ghost',
                             'type': 'button',
+                            'variant': 'ghost',
                           },
                           {
-                            'action': 'SAVE',
+                            'label': 'Confirm Use',
                             'type': 'button',
                             'variant': 'primary',
-                            'label': 'Confirm Use',
+                            'action': 'SAVE',
                             'icon': 'check',
                           },
                         ],
+                        'type': 'stack',
+                        'justify': 'center',
                       },
                     ],
-                    'type': 'stack',
                     'gap': 'md',
+                    'direction': 'vertical',
+                    'type': 'stack',
+                    'align': 'center',
                   },
                 ],
               ],
@@ -2661,8 +2674,8 @@ export function stdPlatformerAppCollectibleOrbital(params: StdPlatformerAppColle
                   '@payload.data',
                   {
                     'emit': {
-                      'success': 'CollectibleUpdated',
                       'failure': 'CollectibleUpdateFailed',
+                      'success': 'CollectibleUpdated',
                     },
                   },
                 ],
@@ -2877,8 +2890,8 @@ export function stdPlatformerAppCollectibleOrbital(params: StdPlatformerAppColle
                   {
                     'id': '@payload.id',
                     'emit': {
-                      'failure': 'CollectibleLoadFailed',
                       'success': 'CollectibleLoaded',
+                      'failure': 'CollectibleLoadFailed',
                     },
                   },
                 ],
@@ -2888,9 +2901,6 @@ export function stdPlatformerAppCollectibleOrbital(params: StdPlatformerAppColle
                   {
                     'children': [
                       {
-                        'align': 'center',
-                        'gap': 'sm',
-                        'direction': 'horizontal',
                         'children': [
                           {
                             'type': 'icon',
@@ -2898,11 +2908,14 @@ export function stdPlatformerAppCollectibleOrbital(params: StdPlatformerAppColle
                           },
                           {
                             'content': 'Drop Collectible',
-                            'type': 'typography',
                             'variant': 'h3',
+                            'type': 'typography',
                           },
                         ],
                         'type': 'stack',
+                        'direction': 'horizontal',
+                        'gap': 'sm',
+                        'align': 'center',
                       },
                       {
                         'type': 'divider',
@@ -2913,30 +2926,30 @@ export function stdPlatformerAppCollectibleOrbital(params: StdPlatformerAppColle
                         'type': 'alert',
                       },
                       {
-                        'gap': 'sm',
+                        'justify': 'end',
                         'type': 'stack',
                         'direction': 'horizontal',
-                        'justify': 'end',
+                        'gap': 'sm',
                         'children': [
                           {
-                            'label': 'Cancel',
-                            'type': 'button',
                             'action': 'CANCEL',
+                            'label': 'Cancel',
                             'variant': 'ghost',
+                            'type': 'button',
                           },
                           {
-                            'type': 'button',
                             'label': 'Drop',
-                            'variant': 'danger',
                             'icon': 'check',
                             'action': 'CONFIRM_DROP',
+                            'type': 'button',
+                            'variant': 'danger',
                           },
                         ],
                       },
                     ],
                     'direction': 'vertical',
-                    'type': 'stack',
                     'gap': 'md',
+                    'type': 'stack',
                   },
                 ],
               ],
@@ -2953,8 +2966,8 @@ export function stdPlatformerAppCollectibleOrbital(params: StdPlatformerAppColle
                   '@entity.pendingId',
                   {
                     'emit': {
-                      'failure': 'CollectibleDeleteFailed',
                       'success': 'CollectibleDeleted',
+                      'failure': 'CollectibleDeleteFailed',
                     },
                   },
                 ],
@@ -2975,8 +2988,8 @@ export function stdPlatformerAppCollectibleOrbital(params: StdPlatformerAppColle
                   'Collectible',
                   {
                     'emit': {
-                      'success': 'CollectibleLoaded',
                       'failure': 'CollectibleLoadFailed',
+                      'success': 'CollectibleLoaded',
                     },
                   },
                 ],
@@ -3004,8 +3017,8 @@ export function stdPlatformerAppCollectibleOrbital(params: StdPlatformerAppColle
                   'Collectible',
                   {
                     'emit': {
-                      'success': 'CollectibleLoaded',
                       'failure': 'CollectibleLoadFailed',
+                      'success': 'CollectibleLoaded',
                     },
                   },
                 ],
@@ -3033,8 +3046,8 @@ export function stdPlatformerAppCollectibleOrbital(params: StdPlatformerAppColle
                   'Collectible',
                   {
                     'emit': {
-                      'success': 'CollectibleLoaded',
                       'failure': 'CollectibleLoadFailed',
+                      'success': 'CollectibleLoaded',
                     },
                   },
                 ],

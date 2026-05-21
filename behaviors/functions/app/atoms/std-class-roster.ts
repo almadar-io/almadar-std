@@ -85,9 +85,9 @@ export interface StdClassRosterRosterEntryLoadFailedPayload {
  * without modifying its state-machine topology.
  */
 export interface StdClassRosterConfig {
-  /** Default: `[{"label":"Member","name":"memberName","variant":"caption"},{"name":"sessionId","variant":"caption","label":"Session"},{"label":"Status","name":"status","variant":"badge"},{"name":"checkedInAt","label":"Checked In","variant":"caption"}]` */
+  /** Default: `[{"label":"Member","variant":"caption","name":"memberName"},{"name":"sessionId","label":"Session","variant":"caption"},{"label":"Status","name":"status","variant":"badge"},{"name":"checkedInAt","variant":"caption","label":"Checked In"}]` */
   fields?: TraitConfig[];
-  /** Default: `[{"variant":"primary","label":"Open","event":"OPEN_ENTRY","icon":"arrow-right"},{"variant":"secondary","label":"Check In","event":"CHECK_IN"},{"label":"No Show","event":"MARK_NO_SHOW","variant":"danger"}]` */
+  /** Default: `[{"label":"Open","variant":"primary","icon":"arrow-right","event":"OPEN_ENTRY"},{"variant":"secondary","event":"CHECK_IN","label":"Check In"},{"label":"No Show","variant":"danger","event":"MARK_NO_SHOW"}]` */
   itemActions?: TraitConfig[];
   /** Default: `"Class Roster"` */
   title?: string;
