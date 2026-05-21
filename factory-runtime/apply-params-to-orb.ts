@@ -172,6 +172,40 @@ function buildEntity(
   // params.fields, then concat the extras. Prevents ORB_E_DUPLICATE_FIELD
   // when the analyzer hallucinates a canonical-named field as an "extra".
   const extras: readonly EntityField[] = params.fields ?? [];
+
+  // Reject field shapes the validator will reject downstream. Catching
+  // them at the factory boundary turns a multi-iteration subagent
+  // repair loop into a single clear error the caller surfaces back to
+  // the LLM. Two type-dependent payloads are required:
+  //   - `type: "enum"` must carry `values: string[]` (ORB_E_EMPTY_ENUM_VALUES)
+  //   - `type: "relation"` must carry `relation: { entity, cardinality }`
+  //     (ORB_E_INVALID_RELATION)
+  for (const f of extras) {
+    if (f.type === 'enum') {
+      if (!Array.isArray(f.values) || f.values.length === 0) {
+        throw new Error(
+          `Field "${f.name ?? '<unnamed>'}" (type: "enum") requires a non-empty \`values: string[]\` array. ` +
+            `Got: ${f.values === undefined ? 'undefined' : JSON.stringify(f.values)}.`,
+        );
+      }
+    }
+    if (f.type === 'relation') {
+      const rel = f.relation;
+      if (!rel || typeof rel.entity !== 'string' || rel.entity.length === 0) {
+        throw new Error(
+          `Field "${f.name ?? '<unnamed>'}" (type: "relation") requires \`relation: { entity: <EntityName>, cardinality: "one" | "many" }\`. ` +
+            `Got: ${rel === undefined ? 'undefined' : JSON.stringify(rel)}.`,
+        );
+      }
+      if (rel.cardinality !== 'one' && rel.cardinality !== 'many') {
+        throw new Error(
+          `Field "${f.name ?? '<unnamed>'}" (type: "relation") requires \`relation.cardinality: "one" | "many"\`. ` +
+            `Got: ${rel.cardinality === undefined ? 'undefined' : JSON.stringify(rel.cardinality)}.`,
+        );
+      }
+    }
+  }
+
   let mergedFields: readonly EntityField[];
   if (extras.length === 0) {
     mergedFields = canonicalFields;
