@@ -131,58 +131,58 @@
                     "render-ui",
                     "main",
                     {
-                      "align": "stretch",
                       "children": [
                         {
+                          "align": "center",
+                          "type": "stack",
+                          "gap": "md",
                           "children": [
                             {
                               "type": "icon",
                               "name": "mail"
                             },
                             {
+                              "content": "Email",
                               "variant": "h2",
-                              "type": "typography",
-                              "content": "Email"
+                              "type": "typography"
                             }
                           ],
-                          "gap": "md",
-                          "direction": "horizontal",
-                          "type": "stack",
-                          "align": "center"
+                          "direction": "horizontal"
                         },
                         {
                           "type": "divider"
                         },
                         {
+                          "type": "stack",
+                          "gap": "md",
+                          "direction": "vertical",
                           "children": [
                             {
                               "type": "input",
                               "placeholder": "recipient@example.com"
                             },
                             {
-                              "type": "input",
-                              "placeholder": "Email subject"
+                              "placeholder": "Email subject",
+                              "type": "input"
                             },
                             {
                               "type": "textarea",
                               "placeholder": "Write your message..."
                             }
-                          ],
-                          "direction": "vertical",
-                          "gap": "md",
-                          "type": "stack"
+                          ]
                         },
                         {
-                          "type": "button",
-                          "variant": "primary",
                           "icon": "send",
                           "label": "Send",
-                          "action": "SEND"
+                          "type": "button",
+                          "action": "SEND",
+                          "variant": "primary"
                         }
                       ],
                       "type": "stack",
+                      "direction": "vertical",
                       "gap": "lg",
-                      "direction": "vertical"
+                      "align": "stretch"
                     }
                   ]
                 ]
@@ -405,12 +405,12 @@
                     "render-ui",
                     "main",
                     {
-                      "gap": "md",
-                      "direction": "vertical",
                       "type": "stack",
+                      "direction": "vertical",
                       "children": [
                         "@config.uiTrait"
-                      ]
+                      ],
+                      "gap": "md"
                     }
                   ]
                 ]
@@ -424,9 +424,9 @@
                     "render-ui",
                     "main",
                     {
-                      "title": "Sending email...",
                       "type": "loading-state",
-                      "message": "Delivering your message."
+                      "message": "Delivering your message.",
+                      "title": "Sending email..."
                     }
                   ],
                   [
@@ -434,13 +434,13 @@
                     "email",
                     "send",
                     {
-                      "from": "@config.sender",
-                      "replyTo": "@config.replyTo",
                       "htmlBody": "@config.htmlBody",
-                      "templateId": "@config.templateId",
+                      "body": "@config.body",
                       "to": "@config.recipient",
+                      "from": "@config.sender",
+                      "templateId": "@config.templateId",
                       "subject": "@config.subject",
-                      "body": "@config.body"
+                      "replyTo": "@config.replyTo"
                     },
                     {
                       "emit": {
@@ -480,9 +480,6 @@
                     "render-ui",
                     "main",
                     {
-                      "direction": "vertical",
-                      "type": "stack",
-                      "gap": "lg",
                       "align": "center",
                       "children": [
                         {
@@ -490,24 +487,27 @@
                           "name": "check-circle"
                         },
                         {
-                          "type": "alert",
                           "variant": "success",
-                          "message": "Email sent successfully"
+                          "message": "Email sent successfully",
+                          "type": "alert"
                         },
                         {
-                          "color": "muted",
-                          "type": "typography",
+                          "content": "@entity.messageId",
                           "variant": "body",
-                          "content": "@entity.messageId"
+                          "type": "typography",
+                          "color": "muted"
                         },
                         {
-                          "action": "RESET",
-                          "variant": "ghost",
-                          "type": "button",
+                          "icon": "rotate-ccw",
                           "label": "Send Another",
-                          "icon": "rotate-ccw"
+                          "variant": "ghost",
+                          "action": "RESET",
+                          "type": "button"
                         }
-                      ]
+                      ],
+                      "gap": "lg",
+                      "direction": "vertical",
+                      "type": "stack"
                     }
                   ]
                 ]
@@ -539,10 +539,10 @@
                     "render-ui",
                     "main",
                     {
-                      "onRetry": "RETRY",
-                      "message": "@entity.error",
                       "type": "error-state",
-                      "title": "Send Failed"
+                      "onRetry": "RETRY",
+                      "title": "Send Failed",
+                      "message": "@entity.error"
                     }
                   ]
                 ]
@@ -562,11 +562,11 @@
                     "main",
                     {
                       "direction": "vertical",
-                      "type": "stack",
                       "gap": "md",
                       "children": [
                         "@config.uiTrait"
-                      ]
+                      ],
+                      "type": "stack"
                     }
                   ]
                 ]
@@ -590,12 +590,12 @@
                     "render-ui",
                     "main",
                     {
-                      "gap": "md",
+                      "direction": "vertical",
                       "type": "stack",
                       "children": [
                         "@config.uiTrait"
                       ],
-                      "direction": "vertical"
+                      "gap": "md"
                     }
                   ]
                 ]
@@ -614,12 +614,12 @@
                     "render-ui",
                     "main",
                     {
+                      "direction": "vertical",
+                      "gap": "md",
                       "type": "stack",
                       "children": [
                         "@config.uiTrait"
-                      ],
-                      "direction": "vertical",
-                      "gap": "md"
+                      ]
                     }
                   ]
                 ]
@@ -627,23 +627,11 @@
             ]
           },
           "config": {
-            "body": {
+            "sender": {
               "type": "string",
               "default": "",
-              "label": "Plain-text body",
-              "description": "Plain-text message body for clients that block HTML"
-            },
-            "recipient": {
-              "type": "string",
-              "default": "",
-              "label": "To address",
-              "description": "Email address the message is delivered to"
-            },
-            "templateId": {
-              "type": "string",
-              "default": "",
-              "label": "Template ID",
-              "description": "Optional provider template ID to render the message"
+              "label": "From address",
+              "description": "Verified sender address the email is sent from"
             },
             "htmlBody": {
               "type": "string",
@@ -651,11 +639,23 @@
               "label": "HTML body",
               "description": "HTML-formatted version of the message body"
             },
-            "replyTo": {
+            "uiTrait": {
+              "type": "trait",
+              "default": "@trait.ServiceEmailDefaultForm",
+              "label": "Composer form",
+              "description": "Trait that renders the email composer UI"
+            },
+            "recipient": {
               "type": "string",
               "default": "",
-              "label": "Reply-to address",
-              "description": "Address replies are routed to (may differ from sender)"
+              "label": "To address",
+              "description": "Email address the message is delivered to"
+            },
+            "body": {
+              "type": "string",
+              "default": "",
+              "label": "Plain-text body",
+              "description": "Plain-text message body for clients that block HTML"
             },
             "subject": {
               "type": "string",
@@ -663,17 +663,17 @@
               "label": "Subject line",
               "description": "Subject header shown in the recipient's inbox"
             },
-            "sender": {
+            "replyTo": {
               "type": "string",
               "default": "",
-              "label": "From address",
-              "description": "Verified sender address the email is sent from"
+              "label": "Reply-to address",
+              "description": "Address replies are routed to (may differ from sender)"
             },
-            "uiTrait": {
-              "type": "trait",
-              "default": "@trait.ServiceEmailDefaultForm",
-              "label": "Composer form",
-              "description": "Trait that renders the email composer UI"
+            "templateId": {
+              "type": "string",
+              "default": "",
+              "label": "Template ID",
+              "description": "Optional provider template ID to render the message"
             }
           },
           "scope": "instance"

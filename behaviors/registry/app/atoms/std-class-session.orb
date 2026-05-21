@@ -280,22 +280,22 @@
                     "render-ui",
                     "main",
                     {
-                      "direction": "vertical",
+                      "type": "stack",
+                      "align": "center",
+                      "className": "py-12",
                       "children": [
                         {
                           "type": "spinner"
                         },
                         {
-                          "variant": "caption",
-                          "type": "typography",
                           "color": "muted",
-                          "content": "Loading class sessions…"
+                          "type": "typography",
+                          "content": "Loading class sessions…",
+                          "variant": "caption"
                         }
                       ],
                       "gap": "md",
-                      "align": "center",
-                      "type": "stack",
-                      "className": "py-12"
+                      "direction": "vertical"
                     }
                   ]
                 ]
@@ -309,26 +309,23 @@
                     "render-ui",
                     "main",
                     {
-                      "direction": "vertical",
-                      "gap": "md",
-                      "type": "stack",
                       "children": [
                         {
-                          "type": "stack",
-                          "direction": "horizontal",
-                          "align": "center",
+                          "gap": "sm",
                           "children": [
                             {
                               "type": "icon",
                               "name": "calendar"
                             },
                             {
-                              "variant": "h3",
                               "type": "typography",
-                              "content": "@config.title"
+                              "content": "@config.title",
+                              "variant": "h3"
                             }
                           ],
-                          "gap": "sm"
+                          "type": "stack",
+                          "direction": "horizontal",
+                          "align": "center"
                         },
                         {
                           "type": "simple-grid",
@@ -336,26 +333,26 @@
                           "children": [
                             {
                               "value": "@payload.data.length",
-                              "icon": "calendar",
+                              "type": "stat-display",
                               "label": "Sessions",
-                              "type": "stat-display"
+                              "icon": "calendar"
                             },
                             {
                               "label": "Today",
-                              "type": "stat-display",
                               "icon": "clock",
+                              "type": "stat-display",
                               "value": "12"
                             },
                             {
                               "type": "stat-display",
                               "value": "78%",
-                              "label": "Capacity used",
-                              "icon": "users"
+                              "icon": "users",
+                              "label": "Capacity used"
                             },
                             {
-                              "value": "2",
                               "type": "stat-display",
                               "icon": "x-circle",
+                              "value": "2",
                               "label": "Cancelled"
                             }
                           ]
@@ -364,14 +361,17 @@
                           "type": "divider"
                         },
                         {
-                          "type": "data-grid",
+                          "gap": "sm",
+                          "entity": "@payload.data",
+                          "cols": 1.0,
                           "itemActions": "@config.itemActions",
                           "fields": "@config.fields",
-                          "cols": 1.0,
-                          "gap": "sm",
-                          "entity": "@payload.data"
+                          "type": "data-grid"
                         }
-                      ]
+                      ],
+                      "direction": "vertical",
+                      "gap": "md",
+                      "type": "stack"
                     }
                   ]
                 ]
@@ -385,8 +385,8 @@
                     "render-ui",
                     "main",
                     {
-                      "variant": "error",
                       "type": "alert",
+                      "variant": "error",
                       "message": "@payload.error"
                     }
                   ]
@@ -451,60 +451,62 @@
                     "render-ui",
                     "main",
                     {
-                      "type": "stack",
+                      "direction": "vertical",
                       "gap": "md",
                       "children": [
                         {
-                          "align": "center",
-                          "gap": "sm",
-                          "direction": "horizontal",
-                          "type": "stack",
                           "children": [
                             {
                               "type": "button",
                               "label": "Back",
-                              "action": "CLOSE_VIEW",
-                              "variant": "ghost"
+                              "variant": "ghost",
+                              "action": "CLOSE_VIEW"
                             },
                             {
-                              "type": "icon",
-                              "name": "calendar"
+                              "name": "calendar",
+                              "type": "icon"
                             },
                             {
-                              "variant": "h3",
                               "type": "typography",
+                              "variant": "h3",
                               "content": "@entity.className"
                             },
                             {
-                              "type": "badge",
+                              "label": "@entity.status",
                               "variant": "default",
-                              "label": "@entity.status"
+                              "type": "badge"
                             }
-                          ]
+                          ],
+                          "type": "stack",
+                          "direction": "horizontal",
+                          "align": "center",
+                          "gap": "sm"
                         },
                         {
                           "type": "divider"
                         },
                         {
+                          "type": "stack",
+                          "gap": "sm",
                           "direction": "vertical",
                           "children": [
                             {
-                              "direction": "horizontal",
-                              "gap": "md",
                               "children": [
                                 {
-                                  "color": "muted",
                                   "variant": "caption",
-                                  "type": "typography",
-                                  "content": "Instructor"
+                                  "content": "Instructor",
+                                  "color": "muted",
+                                  "type": "typography"
                                 },
                                 {
                                   "variant": "body",
-                                  "content": "@entity.instructorName",
-                                  "type": "typography"
+                                  "type": "typography",
+                                  "content": "@entity.instructorName"
                                 }
                               ],
-                              "type": "stack"
+                              "gap": "md",
+                              "type": "stack",
+                              "direction": "horizontal"
                             },
                             {
                               "direction": "horizontal",
@@ -512,39 +514,37 @@
                               "type": "stack",
                               "children": [
                                 {
-                                  "variant": "caption",
+                                  "color": "muted",
                                   "type": "typography",
-                                  "content": "Location",
+                                  "variant": "caption",
+                                  "content": "Location"
+                                },
+                                {
+                                  "variant": "body",
+                                  "content": "@entity.location",
+                                  "type": "typography"
+                                }
+                              ]
+                            },
+                            {
+                              "direction": "horizontal",
+                              "children": [
+                                {
+                                  "variant": "caption",
+                                  "content": "Notes",
+                                  "type": "typography",
                                   "color": "muted"
                                 },
                                 {
-                                  "variant": "body",
                                   "type": "typography",
-                                  "content": "@entity.location"
+                                  "variant": "body",
+                                  "content": "@entity.notes"
                                 }
-                              ]
-                            },
-                            {
+                              ],
                               "type": "stack",
-                              "gap": "md",
-                              "direction": "horizontal",
-                              "children": [
-                                {
-                                  "type": "typography",
-                                  "color": "muted",
-                                  "content": "Notes",
-                                  "variant": "caption"
-                                },
-                                {
-                                  "variant": "body",
-                                  "content": "@entity.notes",
-                                  "type": "typography"
-                                }
-                              ]
+                              "gap": "md"
                             }
-                          ],
-                          "gap": "sm",
-                          "type": "stack"
+                          ]
                         },
                         {
                           "type": "divider"
@@ -554,59 +554,59 @@
                           "type": "simple-grid",
                           "children": [
                             {
-                              "label": "Start",
                               "type": "stat-display",
+                              "icon": "clock",
                               "value": "@entity.startTime",
-                              "icon": "clock"
+                              "label": "Start"
                             },
                             {
-                              "icon": "timer",
-                              "type": "stat-display",
                               "label": "Duration",
+                              "type": "stat-display",
+                              "icon": "timer",
                               "value": "@entity.durationMinutes"
                             },
                             {
-                              "label": "Booked",
-                              "icon": "users",
                               "value": "@entity.bookedCount",
-                              "type": "stat-display"
+                              "type": "stat-display",
+                              "icon": "users",
+                              "label": "Booked"
                             },
                             {
                               "label": "Capacity",
                               "icon": "user-plus",
-                              "type": "stat-display",
-                              "value": "@entity.capacity"
+                              "value": "@entity.capacity",
+                              "type": "stat-display"
                             }
                           ]
                         },
                         {
-                          "direction": "horizontal",
-                          "type": "stack",
                           "children": [
                             {
-                              "label": "Start Class",
+                              "action": "START_CLASS",
                               "actionPayload": {
                                 "id": "@entity.id"
                               },
-                              "action": "START_CLASS",
-                              "variant": "primary",
-                              "type": "button"
+                              "label": "Start Class",
+                              "type": "button",
+                              "variant": "primary"
                             },
                             {
                               "label": "Cancel",
                               "type": "button",
-                              "variant": "danger",
-                              "action": "CANCEL_CLASS",
                               "actionPayload": {
                                 "id": "@entity.id"
-                              }
+                              },
+                              "variant": "danger",
+                              "action": "CANCEL_CLASS"
                             }
                           ],
-                          "gap": "sm",
-                          "align": "center"
+                          "type": "stack",
+                          "direction": "horizontal",
+                          "align": "center",
+                          "gap": "sm"
                         }
                       ],
-                      "direction": "vertical"
+                      "type": "stack"
                     }
                   ]
                 ]
@@ -635,22 +635,22 @@
                     "render-ui",
                     "main",
                     {
-                      "align": "center",
-                      "direction": "vertical",
-                      "type": "stack",
-                      "className": "py-12",
                       "children": [
                         {
                           "type": "spinner"
                         },
                         {
+                          "type": "typography",
                           "variant": "caption",
                           "color": "muted",
-                          "type": "typography",
                           "content": "Cancelling class…"
                         }
                       ],
-                      "gap": "md"
+                      "type": "stack",
+                      "direction": "vertical",
+                      "gap": "md",
+                      "align": "center",
+                      "className": "py-12"
                     }
                   ]
                 ]
@@ -674,22 +674,22 @@
                     "render-ui",
                     "main",
                     {
-                      "type": "stack",
-                      "align": "center",
+                      "direction": "vertical",
+                      "gap": "md",
+                      "className": "py-12",
                       "children": [
                         {
                           "type": "spinner"
                         },
                         {
-                          "type": "typography",
                           "variant": "caption",
                           "color": "muted",
+                          "type": "typography",
                           "content": "Loading class sessions…"
                         }
                       ],
-                      "direction": "vertical",
-                      "className": "py-12",
-                      "gap": "md"
+                      "align": "center",
+                      "type": "stack"
                     }
                   ]
                 ]
@@ -709,8 +709,8 @@
                     "ClassSession",
                     {
                       "emit": {
-                        "success": "ClassSessionLoaded",
-                        "failure": "ClassSessionLoadFailed"
+                        "failure": "ClassSessionLoadFailed",
+                        "success": "ClassSessionLoaded"
                       }
                     }
                   ],
@@ -718,7 +718,7 @@
                     "render-ui",
                     "main",
                     {
-                      "direction": "vertical",
+                      "align": "center",
                       "className": "py-12",
                       "children": [
                         {
@@ -726,14 +726,14 @@
                         },
                         {
                           "content": "Starting class…",
-                          "type": "typography",
+                          "color": "muted",
                           "variant": "caption",
-                          "color": "muted"
+                          "type": "typography"
                         }
                       ],
-                      "gap": "md",
+                      "direction": "vertical",
                       "type": "stack",
-                      "align": "center"
+                      "gap": "md"
                     }
                   ]
                 ]
@@ -762,8 +762,7 @@
                     "render-ui",
                     "main",
                     {
-                      "type": "stack",
-                      "className": "py-12",
+                      "gap": "md",
                       "children": [
                         {
                           "type": "spinner"
@@ -775,9 +774,10 @@
                           "variant": "caption"
                         }
                       ],
-                      "gap": "md",
+                      "direction": "vertical",
+                      "type": "stack",
                       "align": "center",
-                      "direction": "vertical"
+                      "className": "py-12"
                     }
                   ]
                 ]
@@ -810,60 +810,23 @@
             ]
           },
           "config": {
-            "itemActions": {
-              "type": "[ItemAction]",
-              "default": [
-                {
-                  "event": "OPEN_SESSION",
-                  "label": "Open",
-                  "variant": "primary",
-                  "icon": "arrow-right"
-                },
-                {
-                  "label": "Cancel",
-                  "event": "CANCEL_CLASS",
-                  "variant": "danger"
-                }
-              ],
-              "label": "Row actions",
-              "description": "Buttons users can click on each session row",
-              "items": {
-                "type": "object",
-                "properties": {
-                  "icon": {
-                    "name": "icon",
-                    "type": "string",
-                    "required": false
-                  },
-                  "label": {
-                    "name": "label",
-                    "type": "string",
-                    "required": true
-                  },
-                  "variant": {
-                    "name": "variant",
-                    "type": "string",
-                    "required": false
-                  },
-                  "event": {
-                    "name": "event",
-                    "type": "string",
-                    "required": true
-                  }
-                }
-              }
+            "title": {
+              "type": "string",
+              "default": "Class Sessions",
+              "label": "Section title",
+              "description": "Heading shown above the class schedule"
             },
             "fields": {
               "type": "[FieldSpec]",
               "default": [
                 {
-                  "label": "Class",
+                  "variant": "caption",
                   "name": "className",
-                  "variant": "caption"
+                  "label": "Class"
                 },
                 {
-                  "name": "instructorName",
                   "label": "Instructor",
+                  "name": "instructorName",
                   "variant": "caption"
                 },
                 {
@@ -872,14 +835,14 @@
                   "variant": "caption"
                 },
                 {
+                  "name": "capacity",
                   "label": "Capacity",
-                  "variant": "badge",
-                  "name": "capacity"
+                  "variant": "badge"
                 },
                 {
-                  "name": "bookedCount",
+                  "label": "Booked",
                   "variant": "badge",
-                  "label": "Booked"
+                  "name": "bookedCount"
                 },
                 {
                   "label": "Status",
@@ -897,13 +860,13 @@
                     "type": "string",
                     "required": false
                   },
-                  "name": {
-                    "name": "name",
-                    "type": "string",
-                    "required": true
-                  },
                   "label": {
                     "name": "label",
+                    "type": "string",
+                    "required": false
+                  },
+                  "header": {
+                    "name": "header",
                     "type": "string",
                     "required": false
                   },
@@ -912,13 +875,56 @@
                     "type": "string",
                     "required": false
                   },
+                  "name": {
+                    "name": "name",
+                    "type": "string",
+                    "required": true
+                  },
+                  "icon": {
+                    "name": "icon",
+                    "type": "string",
+                    "required": false
+                  },
                   "format": {
                     "name": "format",
                     "type": "string",
                     "required": false
+                  }
+                }
+              }
+            },
+            "itemActions": {
+              "type": "[ItemAction]",
+              "default": [
+                {
+                  "event": "OPEN_SESSION",
+                  "variant": "primary",
+                  "label": "Open",
+                  "icon": "arrow-right"
+                },
+                {
+                  "event": "CANCEL_CLASS",
+                  "variant": "danger",
+                  "label": "Cancel"
+                }
+              ],
+              "label": "Row actions",
+              "description": "Buttons users can click on each session row",
+              "items": {
+                "type": "object",
+                "properties": {
+                  "label": {
+                    "name": "label",
+                    "type": "string",
+                    "required": true
                   },
-                  "header": {
-                    "name": "header",
+                  "event": {
+                    "name": "event",
+                    "type": "string",
+                    "required": true
+                  },
+                  "variant": {
+                    "name": "variant",
                     "type": "string",
                     "required": false
                   },
@@ -929,12 +935,6 @@
                   }
                 }
               }
-            },
-            "title": {
-              "type": "string",
-              "default": "Class Sessions",
-              "label": "Section title",
-              "description": "Heading shown above the class schedule"
             }
           },
           "scope": "collection"

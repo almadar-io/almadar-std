@@ -96,11 +96,10 @@
           "ref": "AppShell.traits.AppLayout",
           "name": "JobOpeningAppLayout",
           "config": {
-            "appName": "ATSRecruiting",
-            "contentTrait": "@trait.JobOpeningCatalog",
             "searchEvent": "JOB_OPENING_SEARCH",
-            "notificationClickEvent": "JOB_OPENING_NOTIFICATIONS_OPEN",
             "notifications": [],
+            "notificationClickEvent": "JOB_OPENING_NOTIFICATIONS_OPEN",
+            "contentTrait": "@trait.JobOpeningCatalog",
             "navItems": [
               {
                 "href": "/openings",
@@ -113,20 +112,21 @@
                 "label": "Pipeline"
               },
               {
-                "href": "/interviews",
                 "label": "Interviews",
+                "href": "/interviews",
                 "icon": "calendar"
               },
               {
+                "label": "Offers",
                 "icon": "file-text",
-                "href": "/offers",
-                "label": "Offers"
+                "href": "/offers"
               }
-            ]
+            ],
+            "appName": "ATSRecruiting"
           },
           "events": {
-            "SEARCH": "JOB_OPENING_SEARCH",
-            "NOTIFY_CLICK": "JOB_OPENING_NOTIFICATIONS_OPEN"
+            "NOTIFY_CLICK": "JOB_OPENING_NOTIFICATIONS_OPEN",
+            "SEARCH": "JOB_OPENING_SEARCH"
           }
         },
         {
@@ -209,44 +209,45 @@
                     "render-ui",
                     "main",
                     {
+                      "type": "stack",
                       "children": [
                         {
                           "direction": "horizontal",
-                          "justify": "between",
-                          "type": "stack",
                           "gap": "md",
+                          "type": "stack",
+                          "justify": "between",
                           "align": "center",
                           "children": [
                             {
-                              "direction": "horizontal",
+                              "gap": "sm",
+                              "align": "center",
                               "children": [
                                 {
                                   "type": "icon",
                                   "name": "briefcase"
                                 },
                                 {
+                                  "type": "typography",
                                   "content": "Job Openings",
-                                  "variant": "h2",
-                                  "type": "typography"
+                                  "variant": "h2"
                                 }
                               ],
-                              "gap": "sm",
-                              "type": "stack",
-                              "align": "center"
+                              "direction": "horizontal",
+                              "type": "stack"
                             },
                             {
-                              "direction": "horizontal",
                               "gap": "sm",
+                              "type": "stack",
+                              "direction": "horizontal",
                               "children": [
                                 {
-                                  "type": "button",
                                   "variant": "primary",
+                                  "icon": "plus",
+                                  "type": "button",
                                   "label": "New Opening",
-                                  "action": "CREATE",
-                                  "icon": "plus"
+                                  "action": "CREATE"
                                 }
-                              ],
-                              "type": "stack"
+                              ]
                             }
                           ]
                         },
@@ -254,14 +255,14 @@
                           "type": "divider"
                         },
                         {
-                          "gap": "md",
+                          "type": "stack",
                           "direction": "horizontal",
                           "align": "center",
+                          "gap": "md",
                           "children": [
                             "@trait.JobOpeningSearch",
                             "@trait.JobOpeningFilter"
-                          ],
-                          "type": "stack"
+                          ]
                         },
                         "@trait.JobOpeningStats",
                         "@trait.JobOpeningGraphs",
@@ -270,9 +271,8 @@
                         },
                         "@trait.JobOpeningBrowseList"
                       ],
-                      "type": "stack",
-                      "direction": "vertical",
-                      "gap": "lg"
+                      "gap": "lg",
+                      "direction": "vertical"
                     }
                   ]
                 ]
@@ -291,34 +291,34 @@
                     "render-ui",
                     "main",
                     {
+                      "className": "py-8",
+                      "direction": "vertical",
                       "children": [
                         {
                           "name": "bell",
                           "type": "icon"
                         },
                         {
-                          "content": "No notifications",
                           "variant": "h3",
-                          "type": "typography"
+                          "type": "typography",
+                          "content": "No notifications"
                         },
                         {
-                          "color": "muted",
+                          "content": "You're all caught up.",
                           "type": "typography",
-                          "variant": "caption",
-                          "content": "You're all caught up."
+                          "color": "muted",
+                          "variant": "caption"
                         },
                         {
                           "label": "Back to openings",
-                          "variant": "ghost",
                           "type": "button",
+                          "variant": "ghost",
                           "action": "INIT"
                         }
                       ],
-                      "gap": "md",
-                      "align": "center",
-                      "className": "py-8",
                       "type": "stack",
-                      "direction": "vertical"
+                      "gap": "md",
+                      "align": "center"
                     }
                   ]
                 ]
@@ -341,19 +341,16 @@
           "config": {
             "filters": [
               {
-                "label": "Status",
-                "field": "status",
-                "filterType": "select",
                 "options": [
                   "open",
                   "closed",
                   "draft"
-                ]
+                ],
+                "filterType": "select",
+                "field": "status",
+                "label": "Status"
               },
               {
-                "label": "Department",
-                "field": "department",
-                "filterType": "select",
                 "options": [
                   "engineering",
                   "design",
@@ -362,7 +359,10 @@
                   "hr",
                   "finance",
                   "operations"
-                ]
+                ],
+                "field": "department",
+                "filterType": "select",
+                "label": "Department"
               }
             ],
             "event": "JOB_OPENING_FILTER"
@@ -372,20 +372,15 @@
           "ref": "Stats.traits.StatsItemStats",
           "name": "JobOpeningStats",
           "config": {
-            "title": "Openings",
             "metrics": [
               {
-                "aggregation": "count",
+                "icon": "briefcase",
                 "variant": "primary",
                 "format": "number",
                 "label": "Total",
-                "icon": "briefcase"
+                "aggregation": "count"
               },
               {
-                "variant": "success",
-                "aggregation": "count",
-                "icon": "circle",
-                "format": "number",
                 "filter": [
                   "fn",
                   "row",
@@ -395,11 +390,14 @@
                     "open"
                   ]
                 ],
-                "label": "Open"
+                "label": "Open",
+                "icon": "circle",
+                "format": "number",
+                "variant": "success",
+                "aggregation": "count"
               },
               {
-                "format": "number",
-                "label": "Drafts",
+                "aggregation": "count",
                 "filter": [
                   "fn",
                   "row",
@@ -409,19 +407,21 @@
                     "draft"
                   ]
                 ],
-                "aggregation": "count",
                 "icon": "edit",
-                "variant": "warning"
+                "variant": "warning",
+                "label": "Drafts",
+                "format": "number"
               },
               {
-                "aggregation": "sum",
+                "field": "headcount",
                 "label": "Seats",
                 "variant": "primary",
                 "format": "number",
-                "field": "headcount",
+                "aggregation": "sum",
                 "icon": "users"
               }
-            ]
+            ],
+            "title": "Openings"
           },
           "listens": [
             {
@@ -439,12 +439,12 @@
           "name": "JobOpeningGraphs",
           "config": {
             "chartType": "bar",
-            "aggregation": "count",
-            "subtitle": "Headcount distribution across teams",
             "categoryField": "department",
-            "height": 240.0,
+            "showLegend": false,
+            "subtitle": "Headcount distribution across teams",
+            "aggregation": "count",
             "title": "Openings by Department",
-            "showLegend": false
+            "height": 240.0
           },
           "listens": [
             {
@@ -465,16 +465,16 @@
             "fields": [
               {
                 "name": "title",
-                "icon": "briefcase",
-                "variant": "h3"
+                "variant": "h3",
+                "icon": "briefcase"
+              },
+              {
+                "name": "department",
+                "variant": "badge"
               },
               {
                 "variant": "badge",
-                "name": "department"
-              },
-              {
-                "name": "status",
-                "variant": "badge"
+                "name": "status"
               },
               {
                 "name": "location",
@@ -489,24 +489,24 @@
                 "name": "headcount"
               }
             ],
+            "gap": "sm",
             "itemActions": [
               {
-                "event": "VIEW",
-                "label": "View",
-                "variant": "ghost"
-              },
-              {
-                "event": "EDIT",
                 "variant": "ghost",
-                "label": "Edit"
+                "label": "View",
+                "event": "VIEW"
               },
               {
-                "variant": "danger",
+                "variant": "ghost",
+                "label": "Edit",
+                "event": "EDIT"
+              },
+              {
                 "label": "Delete",
+                "variant": "danger",
                 "event": "DELETE"
               }
             ],
-            "gap": "sm",
             "cols": 1.0
           },
           "listens": [
@@ -557,8 +557,9 @@
           "name": "JobOpeningCreate",
           "linkedEntity": "JobOpening",
           "config": {
-            "title": "New Opening",
             "icon": "plus-circle",
+            "title": "New Opening",
+            "mode": "create",
             "fields": [
               "title",
               "department",
@@ -566,8 +567,7 @@
               "location",
               "hiringManager",
               "headcount"
-            ],
-            "mode": "create"
+            ]
           },
           "events": {
             "OPEN": "CREATE"
@@ -588,7 +588,7 @@
           "name": "JobOpeningEdit",
           "linkedEntity": "JobOpening",
           "config": {
-            "title": "Edit Opening",
+            "mode": "edit",
             "fields": [
               "title",
               "department",
@@ -598,7 +598,7 @@
               "headcount"
             ],
             "icon": "edit",
-            "mode": "edit"
+            "title": "Edit Opening"
           },
           "events": {
             "OPEN": "EDIT"
@@ -619,6 +619,9 @@
           "name": "JobOpeningView",
           "linkedEntity": "JobOpening",
           "config": {
+            "title": "View Opening",
+            "icon": "eye",
+            "mode": "edit",
             "fields": [
               "title",
               "department",
@@ -626,10 +629,7 @@
               "location",
               "hiringManager",
               "headcount"
-            ],
-            "title": "View Opening",
-            "mode": "edit",
-            "icon": "eye"
+            ]
           },
           "events": {
             "OPEN": "VIEW"
@@ -650,14 +650,14 @@
           "name": "JobOpeningDelete",
           "linkedEntity": "JobOpening",
           "config": {
-            "title": "Delete Opening",
-            "icon": "alert-triangle",
+            "confirmLabel": "Delete",
             "alertMessage": "This action cannot be undone.",
-            "confirmLabel": "Delete"
+            "title": "Delete Opening",
+            "icon": "alert-triangle"
           },
           "events": {
-            "CONFIRM": "CONFIRM_DELETE",
-            "REQUEST": "DELETE"
+            "REQUEST": "DELETE",
+            "CONFIRM": "CONFIRM_DELETE"
           },
           "listens": [
             {
@@ -994,13 +994,15 @@
           "ref": "AppShell.traits.AppLayout",
           "name": "ApplicantPipelineAppLayout",
           "config": {
+            "notifications": [],
+            "searchEvent": "PIPELINE_SEARCH",
             "notificationClickEvent": "PIPELINE_NOTIFICATIONS_OPEN",
-            "appName": "ATSRecruiting",
+            "contentTrait": "@trait.PipelineIntakeBrowse",
             "navItems": [
               {
-                "icon": "briefcase",
                 "href": "/openings",
-                "label": "Openings"
+                "label": "Openings",
+                "icon": "briefcase"
               },
               {
                 "href": "/pipeline",
@@ -1008,23 +1010,21 @@
                 "label": "Pipeline"
               },
               {
-                "label": "Interviews",
                 "href": "/interviews",
-                "icon": "calendar"
+                "icon": "calendar",
+                "label": "Interviews"
               },
               {
+                "label": "Offers",
                 "href": "/offers",
-                "icon": "file-text",
-                "label": "Offers"
+                "icon": "file-text"
               }
             ],
-            "notifications": [],
-            "contentTrait": "@trait.PipelineIntakeBrowse",
-            "searchEvent": "PIPELINE_SEARCH"
+            "appName": "ATSRecruiting"
           },
           "events": {
-            "NOTIFY_CLICK": "PIPELINE_NOTIFICATIONS_OPEN",
-            "SEARCH": "PIPELINE_SEARCH"
+            "SEARCH": "PIPELINE_SEARCH",
+            "NOTIFY_CLICK": "PIPELINE_NOTIFICATIONS_OPEN"
           }
         },
         {
@@ -1241,31 +1241,31 @@
           "config": {
             "navItems": [
               {
-                "icon": "briefcase",
+                "href": "/openings",
                 "label": "Openings",
-                "href": "/openings"
+                "icon": "briefcase"
               },
               {
                 "href": "/pipeline",
-                "icon": "user-plus",
-                "label": "Pipeline"
+                "label": "Pipeline",
+                "icon": "user-plus"
               },
               {
-                "label": "Interviews",
+                "href": "/interviews",
                 "icon": "calendar",
-                "href": "/interviews"
+                "label": "Interviews"
               },
               {
-                "label": "Offers",
                 "href": "/offers",
+                "label": "Offers",
                 "icon": "file-text"
               }
             ],
-            "searchEvent": "APPLICANT_SEARCH",
-            "contentTrait": "@trait.ApplicantList",
-            "appName": "ATSRecruiting",
             "notifications": [],
-            "notificationClickEvent": "APPLICANT_NOTIFICATIONS_OPEN"
+            "contentTrait": "@trait.ApplicantList",
+            "notificationClickEvent": "APPLICANT_NOTIFICATIONS_OPEN",
+            "searchEvent": "APPLICANT_SEARCH",
+            "appName": "ATSRecruiting"
           },
           "events": {
             "SEARCH": "APPLICANT_SEARCH",
@@ -1375,33 +1375,33 @@
           "ref": "AppShell.traits.AppLayout",
           "name": "InterviewScheduleAppLayout",
           "config": {
-            "appName": "ATSRecruiting",
-            "searchEvent": "INTERVIEW_SEARCH",
-            "contentTrait": "@trait.InterviewScheduleList",
-            "notifications": [],
             "notificationClickEvent": "INTERVIEW_NOTIFICATIONS_OPEN",
+            "notifications": [],
+            "appName": "ATSRecruiting",
             "navItems": [
               {
-                "href": "/openings",
+                "label": "Openings",
                 "icon": "briefcase",
-                "label": "Openings"
+                "href": "/openings"
               },
               {
-                "icon": "user-plus",
+                "href": "/pipeline",
                 "label": "Pipeline",
-                "href": "/pipeline"
+                "icon": "user-plus"
               },
               {
-                "icon": "calendar",
                 "href": "/interviews",
+                "icon": "calendar",
                 "label": "Interviews"
               },
               {
+                "href": "/offers",
                 "label": "Offers",
-                "icon": "file-text",
-                "href": "/offers"
+                "icon": "file-text"
               }
-            ]
+            ],
+            "contentTrait": "@trait.InterviewScheduleList",
+            "searchEvent": "INTERVIEW_SEARCH"
           },
           "events": {
             "SEARCH": "INTERVIEW_SEARCH",
@@ -1507,33 +1507,33 @@
           "ref": "AppShell.traits.AppLayout",
           "name": "OfferLetterAppLayout",
           "config": {
-            "notificationClickEvent": "OFFER_NOTIFICATIONS_OPEN",
             "contentTrait": "@trait.OfferLetterList",
-            "appName": "ATSRecruiting",
-            "searchEvent": "OFFER_SEARCH",
+            "notifications": [],
+            "notificationClickEvent": "OFFER_NOTIFICATIONS_OPEN",
             "navItems": [
               {
-                "href": "/openings",
                 "icon": "briefcase",
-                "label": "Openings"
+                "label": "Openings",
+                "href": "/openings"
               },
               {
-                "icon": "user-plus",
                 "label": "Pipeline",
-                "href": "/pipeline"
+                "href": "/pipeline",
+                "icon": "user-plus"
               },
               {
-                "href": "/interviews",
                 "icon": "calendar",
-                "label": "Interviews"
+                "label": "Interviews",
+                "href": "/interviews"
               },
               {
-                "label": "Offers",
                 "href": "/offers",
-                "icon": "file-text"
+                "icon": "file-text",
+                "label": "Offers"
               }
             ],
-            "notifications": []
+            "searchEvent": "OFFER_SEARCH",
+            "appName": "ATSRecruiting"
           },
           "events": {
             "SEARCH": "OFFER_SEARCH",

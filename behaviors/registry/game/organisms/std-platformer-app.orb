@@ -41,42 +41,42 @@
               "vx": {
                 "name": "vx",
                 "type": "number",
-                "required": false
-              },
-              "width": {
-                "name": "width",
-                "type": "number",
-                "required": false
+                "required": true
               },
               "x": {
                 "name": "x",
                 "type": "number",
-                "required": false
-              },
-              "y": {
-                "name": "y",
-                "type": "number",
-                "required": false
-              },
-              "vy": {
-                "name": "vy",
-                "type": "number",
-                "required": false
-              },
-              "height": {
-                "name": "height",
-                "type": "number",
-                "required": false
-              },
-              "grounded": {
-                "name": "grounded",
-                "type": "boolean",
-                "required": false
+                "required": true
               },
               "facingRight": {
                 "name": "facingRight",
                 "type": "boolean",
-                "required": false
+                "required": true
+              },
+              "y": {
+                "name": "y",
+                "type": "number",
+                "required": true
+              },
+              "height": {
+                "name": "height",
+                "type": "number",
+                "required": true
+              },
+              "vy": {
+                "name": "vy",
+                "type": "number",
+                "required": true
+              },
+              "grounded": {
+                "name": "grounded",
+                "type": "boolean",
+                "required": true
+              },
+              "width": {
+                "name": "width",
+                "type": "number",
+                "required": true
               }
             }
           },
@@ -87,30 +87,36 @@
             "items": {
               "type": "object",
               "properties": {
-                "y": {
-                  "name": "y",
+                "width": {
+                  "name": "width",
                   "type": "number",
-                  "required": false
-                },
-                "type": {
-                  "name": "type",
-                  "type": "string",
-                  "required": false
-                },
-                "x": {
-                  "name": "x",
-                  "type": "number",
-                  "required": false
+                  "required": true
                 },
                 "height": {
                   "name": "height",
                   "type": "number",
-                  "required": false
+                  "required": true
                 },
-                "width": {
-                  "name": "width",
+                "x": {
+                  "name": "x",
                   "type": "number",
-                  "required": false
+                  "required": true
+                },
+                "y": {
+                  "name": "y",
+                  "type": "number",
+                  "required": true
+                },
+                "type": {
+                  "name": "type",
+                  "type": "string",
+                  "required": false,
+                  "values": [
+                    "ground",
+                    "platform",
+                    "hazard",
+                    "goal"
+                  ]
                 }
               }
             }
@@ -405,8 +411,8 @@
                     "PlatLevel",
                     {
                       "emit": {
-                        "success": "PlatLevelLoaded",
-                        "failure": "PlatLevelLoadFailed"
+                        "failure": "PlatLevelLoadFailed",
+                        "success": "PlatLevelLoaded"
                       }
                     }
                   ],
@@ -415,20 +421,20 @@
                     "main",
                     {
                       "showTopBar": true,
-                      "type": "game-shell",
                       "appName": "Platformer App",
+                      "type": "game-shell",
                       "children": [
                         {
                           "type": "game-menu",
+                          "subtitle": "Side-Scrolling Adventure",
                           "title": "Platformer",
                           "menuItems": [
                             {
                               "label": "Start Game",
-                              "event": "START",
-                              "variant": "primary"
+                              "variant": "primary",
+                              "event": "START"
                             }
-                          ],
-                          "subtitle": "Side-Scrolling Adventure"
+                          ]
                         }
                       ]
                     }
@@ -444,24 +450,24 @@
                     "render-ui",
                     "main",
                     {
-                      "type": "game-shell",
                       "children": [
                         {
-                          "bgColor": "#1a1a2e",
-                          "rightEvent": "RIGHT",
-                          "canvasWidth": 800.0,
-                          "leftEvent": "LEFT",
-                          "jumpEvent": "JUMP",
-                          "worldWidth": 2400.0,
-                          "canvasHeight": 400.0,
-                          "worldHeight": 400.0,
-                          "stopEvent": "STOP",
                           "type": "platformer-canvas",
-                          "followCamera": true
+                          "canvasHeight": 400.0,
+                          "leftEvent": "LEFT",
+                          "bgColor": "#1a1a2e",
+                          "worldHeight": 400.0,
+                          "jumpEvent": "JUMP",
+                          "stopEvent": "STOP",
+                          "worldWidth": 2400.0,
+                          "canvasWidth": 800.0,
+                          "followCamera": true,
+                          "rightEvent": "RIGHT"
                         }
                       ],
-                      "showTopBar": true,
-                      "appName": "Platformer App"
+                      "type": "game-shell",
+                      "appName": "Platformer App",
+                      "showTopBar": true
                     }
                   ]
                 ]
@@ -500,7 +506,6 @@
                     "render-ui",
                     "modal",
                     {
-                      "type": "game-menu",
                       "title": "Paused",
                       "menuItems": [
                         {
@@ -509,11 +514,12 @@
                           "variant": "primary"
                         },
                         {
-                          "variant": "ghost",
                           "label": "Quit",
-                          "event": "RESTART"
+                          "event": "RESTART",
+                          "variant": "ghost"
                         }
-                      ]
+                      ],
+                      "type": "game-menu"
                     }
                   ]
                 ]
@@ -528,36 +534,36 @@
                     "main",
                     {
                       "type": "game-shell",
+                      "showTopBar": true,
+                      "appName": "Platformer App",
                       "children": [
                         {
+                          "type": "game-over-screen",
+                          "title": "Game Over",
+                          "menuItems": [
+                            {
+                              "event": "RESTART",
+                              "variant": "primary",
+                              "label": "Play Again"
+                            },
+                            {
+                              "label": "Main Menu",
+                              "variant": "secondary",
+                              "event": "RESTART"
+                            }
+                          ],
                           "stats": [
                             {
-                              "label": "Score",
-                              "value": "@entity.score"
+                              "value": "@entity.score",
+                              "label": "Score"
                             },
                             {
                               "label": "Lives",
                               "value": "@entity.lives"
                             }
-                          ],
-                          "type": "game-over-screen",
-                          "menuItems": [
-                            {
-                              "event": "RESTART",
-                              "label": "Play Again",
-                              "variant": "primary"
-                            },
-                            {
-                              "event": "RESTART",
-                              "label": "Main Menu",
-                              "variant": "secondary"
-                            }
-                          ],
-                          "title": "Game Over"
+                          ]
                         }
-                      ],
-                      "appName": "Platformer App",
-                      "showTopBar": true
+                      ]
                     }
                   ]
                 ]
@@ -581,23 +587,23 @@
                     "render-ui",
                     "main",
                     {
-                      "type": "game-shell",
                       "children": [
                         {
                           "rightEvent": "RIGHT",
-                          "worldHeight": 400.0,
+                          "stopEvent": "STOP",
+                          "canvasHeight": 400.0,
+                          "worldWidth": 2400.0,
                           "followCamera": true,
-                          "canvasWidth": 800.0,
-                          "bgColor": "#1a1a2e",
-                          "leftEvent": "LEFT",
                           "type": "platformer-canvas",
                           "jumpEvent": "JUMP",
-                          "worldWidth": 2400.0,
-                          "canvasHeight": 400.0,
-                          "stopEvent": "STOP"
+                          "leftEvent": "LEFT",
+                          "bgColor": "#1a1a2e",
+                          "canvasWidth": 800.0,
+                          "worldHeight": 400.0
                         }
                       ],
                       "appName": "Platformer App",
+                      "type": "game-shell",
                       "showTopBar": true
                     }
                   ]
@@ -618,22 +624,22 @@
                     "main",
                     {
                       "type": "game-shell",
+                      "showTopBar": true,
                       "children": [
                         {
-                          "canvasWidth": 800.0,
-                          "bgColor": "#1a1a2e",
-                          "leftEvent": "LEFT",
                           "worldHeight": 400.0,
-                          "stopEvent": "STOP",
-                          "rightEvent": "RIGHT",
                           "canvasHeight": 400.0,
-                          "followCamera": true,
-                          "worldWidth": 2400.0,
                           "jumpEvent": "JUMP",
-                          "type": "platformer-canvas"
+                          "bgColor": "#1a1a2e",
+                          "worldWidth": 2400.0,
+                          "leftEvent": "LEFT",
+                          "rightEvent": "RIGHT",
+                          "type": "platformer-canvas",
+                          "stopEvent": "STOP",
+                          "canvasWidth": 800.0,
+                          "followCamera": true
                         }
                       ],
-                      "showTopBar": true,
                       "appName": "Platformer App"
                     }
                   ]
@@ -653,23 +659,23 @@
                     "render-ui",
                     "main",
                     {
-                      "showTopBar": true,
+                      "appName": "Platformer App",
                       "children": [
                         {
-                          "type": "game-menu",
                           "title": "Platformer",
-                          "subtitle": "Side-Scrolling Adventure",
                           "menuItems": [
                             {
-                              "label": "Start Game",
                               "variant": "primary",
-                              "event": "START"
+                              "event": "START",
+                              "label": "Start Game"
                             }
-                          ]
+                          ],
+                          "type": "game-menu",
+                          "subtitle": "Side-Scrolling Adventure"
                         }
                       ],
                       "type": "game-shell",
-                      "appName": "Platformer App"
+                      "showTopBar": true
                     }
                   ]
                 ]
@@ -684,12 +690,10 @@
                     "main",
                     {
                       "type": "game-shell",
-                      "showTopBar": true,
                       "appName": "Platformer App",
+                      "showTopBar": true,
                       "children": [
                         {
-                          "type": "game-menu",
-                          "subtitle": "Side-Scrolling Adventure",
                           "title": "Platformer",
                           "menuItems": [
                             {
@@ -697,7 +701,9 @@
                               "variant": "primary",
                               "event": "START"
                             }
-                          ]
+                          ],
+                          "subtitle": "Side-Scrolling Adventure",
+                          "type": "game-menu"
                         }
                       ]
                     }
@@ -815,14 +821,14 @@
                     "set",
                     "@entity.player",
                     {
-                      "y": 0.0,
-                      "facingRight": true,
-                      "vx": 0.0,
-                      "width": 32.0,
-                      "height": 32.0,
                       "vy": 0.0,
-                      "x": 0.0,
-                      "grounded": true
+                      "vx": 0.0,
+                      "y": 0.0,
+                      "height": 32.0,
+                      "width": 32.0,
+                      "grounded": true,
+                      "facingRight": true,
+                      "x": 0.0
                     }
                   ],
                   [
@@ -830,8 +836,8 @@
                     "PlatLevel",
                     {
                       "emit": {
-                        "failure": "PlatLevelLoadFailed",
-                        "success": "PlatLevelLoaded"
+                        "success": "PlatLevelLoaded",
+                        "failure": "PlatLevelLoadFailed"
                       }
                     }
                   ]
@@ -848,19 +854,19 @@
                     {
                       "children": [
                         {
-                          "followCamera": true,
-                          "bgColor": "#1a1a2e",
                           "player": "@entity.player",
+                          "followCamera": true,
+                          "type": "platformer-canvas",
+                          "worldWidth": 2400.0,
+                          "canvasWidth": 800.0,
+                          "rightEvent": "RIGHT",
+                          "bgColor": "#1a1a2e",
+                          "worldHeight": 400.0,
+                          "canvasHeight": 400.0,
+                          "platforms": "@entity.platforms",
                           "leftEvent": "LEFT",
                           "stopEvent": "STOP",
-                          "rightEvent": "RIGHT",
-                          "canvasWidth": 800.0,
-                          "canvasHeight": 400.0,
-                          "worldWidth": 2400.0,
-                          "worldHeight": 400.0,
-                          "platforms": "@entity.platforms",
-                          "jumpEvent": "JUMP",
-                          "type": "platformer-canvas"
+                          "jumpEvent": "JUMP"
                         }
                       ],
                       "type": "game-shell",
@@ -895,25 +901,25 @@
                     "main",
                     {
                       "type": "game-shell",
+                      "appName": "Platformer App",
                       "showTopBar": true,
                       "children": [
                         {
                           "bgColor": "#1a1a2e",
-                          "canvasWidth": 800.0,
-                          "worldWidth": 2400.0,
-                          "leftEvent": "LEFT",
-                          "rightEvent": "RIGHT",
-                          "canvasHeight": 400.0,
-                          "stopEvent": "STOP",
                           "type": "platformer-canvas",
+                          "player": "@entity.player",
+                          "canvasWidth": 800.0,
                           "worldHeight": 400.0,
-                          "followCamera": true,
-                          "platforms": "@entity.platforms",
+                          "rightEvent": "RIGHT",
                           "jumpEvent": "JUMP",
-                          "player": "@entity.player"
+                          "worldWidth": 2400.0,
+                          "platforms": "@entity.platforms",
+                          "followCamera": true,
+                          "leftEvent": "LEFT",
+                          "canvasHeight": 400.0,
+                          "stopEvent": "STOP"
                         }
-                      ],
-                      "appName": "Platformer App"
+                      ]
                     }
                   ]
                 ]
@@ -1107,19 +1113,19 @@
                     "render-ui",
                     "main",
                     {
-                      "showTopBar": true,
                       "type": "game-shell",
                       "appName": "Platformer App",
                       "children": [
                         {
-                          "highScore": "@entity.highScore",
-                          "type": "score-board",
-                          "score": "@entity.score",
-                          "multiplier": "@entity.multiplier",
                           "combo": "@entity.combo",
-                          "level": "@entity.level"
+                          "score": "@entity.score",
+                          "level": "@entity.level",
+                          "type": "score-board",
+                          "multiplier": "@entity.multiplier",
+                          "highScore": "@entity.highScore"
                         }
-                      ]
+                      ],
+                      "showTopBar": true
                     }
                   ]
                 ]
@@ -1151,19 +1157,19 @@
                     "render-ui",
                     "main",
                     {
-                      "showTopBar": true,
                       "type": "game-shell",
-                      "appName": "Platformer App",
                       "children": [
                         {
+                          "type": "score-board",
+                          "score": "@entity.score",
                           "combo": "@entity.combo",
                           "multiplier": "@entity.multiplier",
-                          "score": "@entity.score",
-                          "level": "@entity.level",
-                          "type": "score-board",
-                          "highScore": "@entity.highScore"
+                          "highScore": "@entity.highScore",
+                          "level": "@entity.level"
                         }
-                      ]
+                      ],
+                      "appName": "Platformer App",
+                      "showTopBar": true
                     }
                   ]
                 ]
@@ -1182,18 +1188,18 @@
                     "render-ui",
                     "main",
                     {
-                      "type": "game-shell",
+                      "appName": "Platformer App",
                       "children": [
                         {
-                          "highScore": "@entity.highScore",
+                          "level": "@entity.level",
                           "type": "score-board",
-                          "multiplier": "@entity.multiplier",
                           "combo": "@entity.combo",
+                          "multiplier": "@entity.multiplier",
                           "score": "@entity.score",
-                          "level": "@entity.level"
+                          "highScore": "@entity.highScore"
                         }
                       ],
-                      "appName": "Platformer App",
+                      "type": "game-shell",
                       "showTopBar": true
                     }
                   ]
@@ -1223,19 +1229,19 @@
                     "render-ui",
                     "main",
                     {
-                      "appName": "Platformer App",
+                      "type": "game-shell",
                       "showTopBar": true,
+                      "appName": "Platformer App",
                       "children": [
                         {
                           "level": "@entity.level",
                           "score": "@entity.score",
-                          "combo": "@entity.combo",
-                          "multiplier": "@entity.multiplier",
                           "highScore": "@entity.highScore",
-                          "type": "score-board"
+                          "type": "score-board",
+                          "combo": "@entity.combo",
+                          "multiplier": "@entity.multiplier"
                         }
-                      ],
-                      "type": "game-shell"
+                      ]
                     }
                   ]
                 ]
@@ -1489,8 +1495,8 @@
                     "Collectible",
                     {
                       "emit": {
-                        "success": "CollectibleLoaded",
-                        "failure": "CollectibleLoadFailed"
+                        "failure": "CollectibleLoadFailed",
+                        "success": "CollectibleLoaded"
                       }
                     }
                   ],
@@ -1498,22 +1504,22 @@
                     "render-ui",
                     "main",
                     {
-                      "className": "py-12",
-                      "direction": "vertical",
-                      "align": "center",
-                      "gap": "md",
-                      "type": "stack",
                       "children": [
                         {
                           "type": "spinner"
                         },
                         {
-                          "color": "muted",
+                          "type": "typography",
                           "variant": "caption",
-                          "content": "Loading…",
-                          "type": "typography"
+                          "color": "muted",
+                          "content": "Loading…"
                         }
-                      ]
+                      ],
+                      "type": "stack",
+                      "gap": "md",
+                      "direction": "vertical",
+                      "className": "py-12",
+                      "align": "center"
                     }
                   ]
                 ]
@@ -1533,22 +1539,19 @@
                       "children": [
                         {
                           "direction": "vertical",
-                          "gap": "lg",
                           "type": "stack",
                           "className": "max-w-5xl mx-auto w-full",
                           "children": [
                             {
-                              "direction": "horizontal",
                               "justify": "between",
                               "type": "stack",
                               "children": [
                                 {
-                                  "gap": "sm",
-                                  "type": "stack",
+                                  "align": "center",
                                   "children": [
                                     {
-                                      "type": "icon",
-                                      "name": "package"
+                                      "name": "package",
+                                      "type": "icon"
                                     },
                                     {
                                       "content": "Collectibles",
@@ -1557,78 +1560,81 @@
                                     }
                                   ],
                                   "direction": "horizontal",
-                                  "align": "center"
+                                  "gap": "sm",
+                                  "type": "stack"
                                 },
                                 {
-                                  "direction": "horizontal",
                                   "children": [
                                     {
-                                      "type": "button",
                                       "action": "ADD_ITEM",
-                                      "icon": "plus",
+                                      "type": "button",
+                                      "variant": "primary",
                                       "label": "Add Collectible",
-                                      "variant": "primary"
+                                      "icon": "plus"
                                     }
                                   ],
+                                  "gap": "sm",
                                   "type": "stack",
-                                  "gap": "sm"
+                                  "direction": "horizontal"
                                 }
                               ],
-                              "align": "center",
-                              "gap": "md"
+                              "direction": "horizontal",
+                              "gap": "md",
+                              "align": "center"
                             },
                             {
                               "type": "divider"
                             },
                             {
+                              "type": "data-grid",
+                              "entity": "@payload.data",
+                              "fields": [
+                                {
+                                  "icon": "package",
+                                  "variant": "h4",
+                                  "label": "Name",
+                                  "name": "name"
+                                },
+                                {
+                                  "variant": "badge",
+                                  "label": "Type",
+                                  "name": "type",
+                                  "colorMap": {
+                                    "scheduled": "warning",
+                                    "active": "success",
+                                    "completed": "success",
+                                    "pending": "warning",
+                                    "inactive": "neutral",
+                                    "error": "destructive",
+                                    "disabled": "neutral",
+                                    "draft": "warning",
+                                    "cancelled": "destructive",
+                                    "done": "success",
+                                    "failed": "destructive",
+                                    "archived": "neutral"
+                                  }
+                                },
+                                {
+                                  "variant": "caption",
+                                  "label": "Quantity",
+                                  "name": "quantity"
+                                }
+                              ],
                               "itemActions": [
                                 {
+                                  "event": "USE_ITEM",
                                   "variant": "ghost",
-                                  "label": "Use",
-                                  "event": "USE_ITEM"
+                                  "label": "Use"
                                 },
                                 {
                                   "label": "Drop",
                                   "variant": "danger",
                                   "event": "DROP"
                                 }
-                              ],
-                              "entity": "@payload.data",
-                              "type": "data-grid",
-                              "fields": [
-                                {
-                                  "label": "Name",
-                                  "variant": "h4",
-                                  "icon": "package",
-                                  "name": "name"
-                                },
-                                {
-                                  "name": "type",
-                                  "label": "Type",
-                                  "colorMap": {
-                                    "completed": "success",
-                                    "error": "destructive",
-                                    "archived": "neutral",
-                                    "active": "success",
-                                    "scheduled": "warning",
-                                    "inactive": "neutral",
-                                    "draft": "warning",
-                                    "disabled": "neutral",
-                                    "cancelled": "destructive",
-                                    "failed": "destructive",
-                                    "done": "success",
-                                    "pending": "warning"
-                                  },
-                                  "variant": "badge"
-                                },
-                                {
-                                  "label": "Quantity",
-                                  "name": "quantity",
-                                  "variant": "caption"
-                                }
                               ]
                             }
-                          ]
+                          ],
+                          "gap": "lg"
                         }
                       ]
                     }
@@ -1644,6 +1650,11 @@
                     "render-ui",
                     "main",
                     {
+                      "direction": "vertical",
+                      "className": "py-12",
+                      "type": "stack",
+                      "gap": "md",
+                      "align": "center",
                       "children": [
                         {
                           "type": "icon",
@@ -1651,15 +1662,15 @@
                           "color": "destructive"
                         },
                         {
+                          "content": "Failed to load collectible",
                           "type": "typography",
-                          "variant": "h3",
-                          "content": "Failed to load collectible"
+                          "variant": "h3"
                         },
                         {
-                          "color": "muted",
-                          "type": "typography",
+                          "variant": "body",
                           "content": "@payload.error",
-                          "variant": "body"
+                          "type": "typography",
+                          "color": "muted"
                         },
                         {
                           "type": "button",
@@ -1668,12 +1679,7 @@
                           "action": "INIT",
                           "icon": "rotate-ccw"
                         }
-                      ],
-                      "className": "py-12",
-                      "direction": "vertical",
-                      "type": "stack",
-                      "gap": "md",
-                      "align": "center"
+                      ]
                     }
                   ]
                 ]
@@ -1875,12 +1881,13 @@
                     "modal",
                     {
                       "direction": "vertical",
+                      "gap": "md",
                       "type": "stack",
                       "children": [
                         {
-                          "gap": "sm",
                           "direction": "horizontal",
                           "type": "stack",
+                          "gap": "sm",
                           "children": [
                             {
                               "type": "icon",
@@ -1897,19 +1904,18 @@
                           "type": "divider"
                         },
                         {
+                          "mode": "create",
+                          "cancelEvent": "CLOSE",
+                          "type": "form-section",
+                          "submitEvent": "SAVE",
                           "fields": [
                             "name",
                             "type",
                             "quantity",
                             "rarity"
-                          ],
-                          "submitEvent": "SAVE",
-                          "cancelEvent": "CLOSE",
-                          "type": "form-section",
-                          "mode": "create"
+                          ]
                         }
-                      ],
-                      "gap": "md"
+                      ]
                     }
                   ]
                 ]
@@ -1950,8 +1956,8 @@
                     "@payload.data",
                     {
                       "emit": {
-                        "success": "CollectibleSaved",
-                        "failure": "CollectibleSaveFailed"
+                        "failure": "CollectibleSaveFailed",
+                        "success": "CollectibleSaved"
                       }
                     }
                   ],
@@ -2172,8 +2178,8 @@
                     {
                       "id": "@payload.id",
                       "emit": {
-                        "success": "CollectibleLoaded",
-                        "failure": "CollectibleLoadFailed"
+                        "failure": "CollectibleLoadFailed",
+                        "success": "CollectibleLoaded"
                       }
                     }
                   ],
@@ -2181,58 +2187,58 @@
                     "render-ui",
                     "modal",
                     {
-                      "gap": "md",
-                      "direction": "vertical",
-                      "type": "stack",
                       "align": "center",
                       "children": [
                         {
-                          "type": "stack",
-                          "align": "center",
-                          "gap": "sm",
-                          "direction": "horizontal",
                           "children": [
                             {
                               "type": "icon",
                               "name": "zap"
                             },
                             {
-                              "content": "Use Collectible",
+                              "type": "typography",
                               "variant": "h3",
-                              "type": "typography"
+                              "content": "Use Collectible"
                             }
-                          ]
+                          ],
+                          "type": "stack",
+                          "align": "center",
+                          "gap": "sm",
+                          "direction": "horizontal"
                         },
                         {
                           "type": "divider"
                         },
                         {
+                          "content": "@entity.name",
                           "variant": "body",
-                          "type": "typography",
-                          "content": "@entity.name"
+                          "type": "typography"
                         },
                         {
-                          "direction": "horizontal",
-                          "gap": "sm",
-                          "justify": "center",
-                          "type": "stack",
                           "children": [
                             {
-                              "type": "button",
-                              "action": "CLOSE",
+                              "variant": "ghost",
                               "label": "Cancel",
-                              "variant": "ghost"
+                              "action": "CLOSE",
+                              "type": "button"
                             },
                             {
-                              "action": "SAVE",
-                              "variant": "primary",
                               "label": "Confirm Use",
-                              "icon": "check",
-                              "type": "button"
+                              "action": "SAVE",
+                              "type": "button",
+                              "variant": "primary",
+                              "icon": "check"
                             }
-                          ]
+                          ],
+                          "type": "stack",
+                          "gap": "sm",
+                          "direction": "horizontal",
+                          "justify": "center"
                         }
-                      ]
+                      ],
+                      "type": "stack",
+                      "direction": "vertical",
+                      "gap": "md"
                     }
                   ]
                 ]
@@ -2487,37 +2493,37 @@
                     "fetch",
                     "Collectible",
                     {
-                      "id": "@payload.id",
                       "emit": {
-                        "failure": "CollectibleLoadFailed",
-                        "success": "CollectibleLoaded"
-                      }
+                        "success": "CollectibleLoaded",
+                        "failure": "CollectibleLoadFailed"
+                      },
+                      "id": "@payload.id"
                     }
                   ],
                   [
                     "render-ui",
                     "modal",
                     {
-                      "type": "stack",
                       "direction": "vertical",
                       "gap": "md",
+                      "type": "stack",
                       "children": [
                         {
-                          "direction": "horizontal",
                           "align": "center",
                           "type": "stack",
+                          "gap": "sm",
+                          "direction": "horizontal",
                           "children": [
                             {
-                              "type": "icon",
-                              "name": "alert-triangle"
+                              "name": "alert-triangle",
+                              "type": "icon"
                             },
                             {
                               "variant": "h3",
                               "type": "typography",
                               "content": "Drop Collectible"
                             }
-                          ],
-                          "gap": "sm"
+                          ]
                         },
                         {
                           "type": "divider"
@@ -2536,17 +2542,17 @@
                               "variant": "ghost"
                             },
                             {
-                              "label": "Drop",
-                              "action": "CONFIRM_DROP",
                               "type": "button",
+                              "icon": "check",
+                              "action": "CONFIRM_DROP",
                               "variant": "danger",
-                              "icon": "check"
+                              "label": "Drop"
                             }
                           ],
                           "type": "stack",
+                          "direction": "horizontal",
                           "gap": "sm",
-                          "justify": "end",
-                          "direction": "horizontal"
+                          "justify": "end"
                         }
                       ]
                     }
@@ -2565,8 +2571,8 @@
                     "@entity.pendingId",
                     {
                       "emit": {
-                        "failure": "CollectibleDeleteFailed",
-                        "success": "CollectibleDeleted"
+                        "success": "CollectibleDeleted",
+                        "failure": "CollectibleDeleteFailed"
                       }
                     }
                   ],
@@ -2587,8 +2593,8 @@
                     "Collectible",
                     {
                       "emit": {
-                        "failure": "CollectibleLoadFailed",
-                        "success": "CollectibleLoaded"
+                        "success": "CollectibleLoaded",
+                        "failure": "CollectibleLoadFailed"
                       }
                     }
                   ]
@@ -2645,8 +2651,8 @@
                     "Collectible",
                     {
                       "emit": {
-                        "success": "CollectibleLoaded",
-                        "failure": "CollectibleLoadFailed"
+                        "failure": "CollectibleLoadFailed",
+                        "success": "CollectibleLoaded"
                       }
                     }
                   ]

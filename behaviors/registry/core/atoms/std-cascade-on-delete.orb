@@ -191,8 +191,8 @@
                         "@entity.parentId"
                       ],
                       "emit": {
-                        "success": "CascadeRowsFetched",
-                        "failure": "CascadeFailed"
+                        "failure": "CascadeFailed",
+                        "success": "CascadeRowsFetched"
                       }
                     }
                   ]
@@ -215,16 +215,16 @@
                     "emit",
                     "CascadeRowsLoaded",
                     {
-                      "data": "@payload.data",
-                      "parentId": "@entity.parentId"
+                      "parentId": "@entity.parentId",
+                      "data": "@payload.data"
                     }
                   ],
                   [
                     "emit",
                     "CascadeCompleted",
                     {
-                      "parentId": "@entity.parentId",
-                      "deletedCount": "@entity.rowCount"
+                      "deletedCount": "@entity.rowCount",
+                      "parentId": "@entity.parentId"
                     }
                   ]
                 ]
@@ -232,6 +232,12 @@
             ]
           },
           "config": {
+            "foreignKeyField": {
+              "type": "string",
+              "default": "",
+              "label": "Foreign-key field",
+              "description": "Field on dependent rows that holds the parent's id"
+            },
             "dependentEntities": {
               "type": "[string]",
               "default": [],
@@ -240,12 +246,6 @@
               "items": {
                 "type": "string"
               }
-            },
-            "foreignKeyField": {
-              "type": "string",
-              "default": "",
-              "label": "Foreign-key field",
-              "description": "Field on dependent rows that holds the parent's id"
             },
             "parentEntity": {
               "type": "string",

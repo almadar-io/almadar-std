@@ -96,18 +96,18 @@
           "ref": "AppShell.traits.AppLayout",
           "name": "MemberAppLayout",
           "config": {
-            "searchEvent": "MEMBER_SEARCH",
+            "contentTrait": "@trait.MemberCatalog",
             "appName": "Fitness Studio",
             "navItems": [
               {
+                "icon": "users",
                 "label": "Members",
-                "href": "/members",
-                "icon": "users"
+                "href": "/members"
               },
               {
-                "label": "Classes",
                 "href": "/classes",
-                "icon": "calendar"
+                "icon": "calendar",
+                "label": "Classes"
               },
               {
                 "label": "Memberships",
@@ -120,13 +120,13 @@
                 "label": "Rosters"
               }
             ],
-            "notificationClickEvent": "MEMBER_NOTIFICATIONS_OPEN",
             "notifications": [],
-            "contentTrait": "@trait.MemberCatalog"
+            "notificationClickEvent": "MEMBER_NOTIFICATIONS_OPEN",
+            "searchEvent": "MEMBER_SEARCH"
           },
           "events": {
-            "SEARCH": "MEMBER_SEARCH",
-            "NOTIFY_CLICK": "MEMBER_NOTIFICATIONS_OPEN"
+            "NOTIFY_CLICK": "MEMBER_NOTIFICATIONS_OPEN",
+            "SEARCH": "MEMBER_SEARCH"
           }
         },
         {
@@ -209,17 +209,17 @@
                     "render-ui",
                     "main",
                     {
+                      "gap": "lg",
+                      "type": "stack",
                       "children": [
                         {
-                          "justify": "between",
                           "align": "center",
                           "children": [
                             {
-                              "direction": "horizontal",
                               "children": [
                                 {
-                                  "name": "users",
-                                  "type": "icon"
+                                  "type": "icon",
+                                  "name": "users"
                                 },
                                 {
                                   "type": "typography",
@@ -228,27 +228,29 @@
                                 }
                               ],
                               "align": "center",
-                              "type": "stack",
-                              "gap": "sm"
+                              "direction": "horizontal",
+                              "gap": "sm",
+                              "type": "stack"
                             },
                             {
+                              "type": "stack",
+                              "gap": "sm",
                               "children": [
                                 {
-                                  "type": "button",
-                                  "variant": "primary",
                                   "action": "CREATE",
-                                  "label": "New Member",
-                                  "icon": "user-plus"
+                                  "variant": "primary",
+                                  "type": "button",
+                                  "icon": "user-plus",
+                                  "label": "New Member"
                                 }
                               ],
-                              "gap": "sm",
-                              "type": "stack",
                               "direction": "horizontal"
                             }
                           ],
-                          "type": "stack",
                           "direction": "horizontal",
-                          "gap": "md"
+                          "gap": "md",
+                          "justify": "between",
+                          "type": "stack"
                         },
                         {
                           "type": "divider"
@@ -259,9 +261,9 @@
                             "@trait.MemberFilter"
                           ],
                           "direction": "horizontal",
-                          "type": "stack",
+                          "gap": "md",
                           "align": "center",
-                          "gap": "md"
+                          "type": "stack"
                         },
                         "@trait.MemberStats",
                         "@trait.MemberGraphs",
@@ -270,9 +272,7 @@
                         },
                         "@trait.MemberBrowseList"
                       ],
-                      "direction": "vertical",
-                      "type": "stack",
-                      "gap": "lg"
+                      "direction": "vertical"
                     }
                   ]
                 ]
@@ -291,8 +291,9 @@
                     "render-ui",
                     "main",
                     {
-                      "className": "py-8",
                       "gap": "md",
+                      "type": "stack",
+                      "className": "py-8",
                       "align": "center",
                       "children": [
                         {
@@ -300,25 +301,24 @@
                           "name": "bell"
                         },
                         {
-                          "variant": "h3",
-                          "content": "No notifications",
-                          "type": "typography"
-                        },
-                        {
                           "type": "typography",
-                          "color": "muted",
-                          "content": "You're all caught up.",
-                          "variant": "caption"
+                          "variant": "h3",
+                          "content": "No notifications"
                         },
                         {
-                          "variant": "ghost",
+                          "variant": "caption",
+                          "content": "You're all caught up.",
+                          "type": "typography",
+                          "color": "muted"
+                        },
+                        {
                           "label": "Back to members",
+                          "type": "button",
                           "action": "INIT",
-                          "type": "button"
+                          "variant": "ghost"
                         }
                       ],
-                      "direction": "vertical",
-                      "type": "stack"
+                      "direction": "vertical"
                     }
                   ]
                 ]
@@ -339,29 +339,29 @@
           "ref": "Filter.traits.FilterTargetFilter",
           "name": "MemberFilter",
           "config": {
+            "event": "MEMBER_FILTER",
             "filters": [
               {
-                "field": "membershipTier",
                 "filterType": "select",
-                "label": "Tier",
                 "options": [
                   "basic",
                   "premium",
                   "unlimited"
-                ]
+                ],
+                "field": "membershipTier",
+                "label": "Tier"
               },
               {
-                "label": "Status",
                 "filterType": "select",
                 "options": [
                   "active",
                   "paused",
                   "cancelled"
                 ],
+                "label": "Status",
                 "field": "status"
               }
-            ],
-            "event": "MEMBER_FILTER"
+            ]
           }
         },
         {
@@ -371,16 +371,16 @@
             "title": "Members",
             "metrics": [
               {
+                "icon": "users",
                 "aggregation": "count",
                 "label": "Total",
                 "format": "number",
-                "variant": "primary",
-                "icon": "users"
+                "variant": "primary"
               },
               {
-                "format": "number",
-                "aggregation": "count",
                 "label": "Active",
+                "icon": "user-check",
+                "format": "number",
                 "variant": "success",
                 "filter": [
                   "fn",
@@ -391,7 +391,7 @@
                     "active"
                   ]
                 ],
-                "icon": "user-check"
+                "aggregation": "count"
               },
               {
                 "filter": [
@@ -403,17 +403,14 @@
                     "paused"
                   ]
                 ],
-                "format": "number",
-                "variant": "warning",
+                "label": "Paused",
                 "icon": "pause-circle",
                 "aggregation": "count",
-                "label": "Paused"
+                "variant": "warning",
+                "format": "number"
               },
               {
-                "label": "Cancelled",
                 "variant": "error",
-                "aggregation": "count",
-                "format": "number",
                 "icon": "user-x",
                 "filter": [
                   "fn",
@@ -423,7 +420,10 @@
                     "@row.status",
                     "cancelled"
                   ]
-                ]
+                ],
+                "aggregation": "count",
+                "label": "Cancelled",
+                "format": "number"
               }
             ]
           },
@@ -443,11 +443,11 @@
           "name": "MemberGraphs",
           "config": {
             "title": "Members by Tier",
-            "subtitle": "Distribution across membership tiers",
-            "chartType": "bar",
-            "categoryField": "membershipTier",
-            "aggregation": "count",
             "height": 240.0,
+            "subtitle": "Distribution across membership tiers",
+            "categoryField": "membershipTier",
+            "chartType": "bar",
+            "aggregation": "count",
             "showLegend": false
           },
           "listens": [
@@ -466,7 +466,25 @@
           "name": "MemberBrowseList",
           "linkedEntity": "Member",
           "config": {
+            "itemActions": [
+              {
+                "variant": "ghost",
+                "event": "VIEW",
+                "label": "View"
+              },
+              {
+                "label": "Edit",
+                "event": "EDIT",
+                "variant": "ghost"
+              },
+              {
+                "event": "DELETE",
+                "label": "Delete",
+                "variant": "danger"
+              }
+            ],
             "gap": "sm",
+            "cols": 1.0,
             "fields": [
               {
                 "name": "name",
@@ -478,36 +496,18 @@
                 "variant": "body"
               },
               {
-                "variant": "badge",
-                "name": "membershipTier"
+                "name": "membershipTier",
+                "variant": "badge"
               },
               {
                 "name": "status",
                 "variant": "badge"
               },
               {
-                "variant": "caption",
-                "name": "joinedAt"
+                "name": "joinedAt",
+                "variant": "caption"
               }
-            ],
-            "itemActions": [
-              {
-                "label": "View",
-                "event": "VIEW",
-                "variant": "ghost"
-              },
-              {
-                "event": "EDIT",
-                "variant": "ghost",
-                "label": "Edit"
-              },
-              {
-                "variant": "danger",
-                "event": "DELETE",
-                "label": "Delete"
-              }
-            ],
-            "cols": 1.0
+            ]
           },
           "listens": [
             {
@@ -558,7 +558,6 @@
           "linkedEntity": "Member",
           "config": {
             "title": "New Member",
-            "mode": "create",
             "icon": "user-plus",
             "fields": [
               "name",
@@ -566,7 +565,8 @@
               "membershipTier",
               "status",
               "joinedAt"
-            ]
+            ],
+            "mode": "create"
           },
           "events": {
             "OPEN": "CREATE"
@@ -617,16 +617,16 @@
           "name": "MemberView",
           "linkedEntity": "Member",
           "config": {
-            "icon": "eye",
-            "title": "View Member",
-            "mode": "edit",
             "fields": [
               "name",
               "email",
               "membershipTier",
               "status",
               "joinedAt"
-            ]
+            ],
+            "title": "View Member",
+            "icon": "eye",
+            "mode": "edit"
           },
           "events": {
             "OPEN": "VIEW"
@@ -648,9 +648,9 @@
           "linkedEntity": "Member",
           "config": {
             "alertMessage": "This action cannot be undone.",
+            "icon": "alert-triangle",
             "confirmLabel": "Delete",
-            "title": "Cancel Membership",
-            "icon": "alert-triangle"
+            "title": "Cancel Membership"
           },
           "events": {
             "CONFIRM": "CONFIRM_DELETE",
@@ -924,11 +924,13 @@
           "ref": "AppShell.traits.AppLayout",
           "name": "ClassSessionAppLayout",
           "config": {
+            "notifications": [],
+            "contentTrait": "@trait.ClassSessionDisplay",
             "navItems": [
               {
-                "label": "Members",
                 "href": "/members",
-                "icon": "users"
+                "icon": "users",
+                "label": "Members"
               },
               {
                 "label": "Classes",
@@ -937,18 +939,16 @@
               },
               {
                 "icon": "credit-card",
-                "label": "Memberships",
-                "href": "/memberships"
+                "href": "/memberships",
+                "label": "Memberships"
               },
               {
-                "href": "/rosters",
+                "icon": "clipboard-list",
                 "label": "Rosters",
-                "icon": "clipboard-list"
+                "href": "/rosters"
               }
             ],
-            "contentTrait": "@trait.ClassSessionDisplay",
             "searchEvent": "CLASS_SESSION_SEARCH",
-            "notifications": [],
             "appName": "Fitness Studio",
             "notificationClickEvent": "CLASS_SESSION_NOTIFICATIONS_OPEN"
           },
@@ -983,39 +983,39 @@
                     "render-ui",
                     "main",
                     {
+                      "type": "stack",
                       "gap": "lg",
+                      "direction": "vertical",
                       "className": "max-w-6xl mx-auto w-full p-4",
                       "children": [
                         {
-                          "type": "stack",
-                          "direction": "horizontal",
-                          "align": "center",
                           "children": [
                             {
-                              "type": "icon",
-                              "name": "calendar"
+                              "name": "calendar",
+                              "type": "icon"
                             },
                             {
-                              "type": "typography",
                               "variant": "h2",
-                              "content": "Class Schedule"
+                              "content": "Class Schedule",
+                              "type": "typography"
                             }
                           ],
-                          "gap": "sm"
+                          "type": "stack",
+                          "direction": "horizontal",
+                          "gap": "sm",
+                          "align": "center"
                         },
                         {
                           "variant": "caption",
-                          "type": "typography",
                           "content": "Group classes for the week. Start a class to open its roster; cancel to notify enrolled members.",
-                          "color": "muted"
+                          "color": "muted",
+                          "type": "typography"
                         },
                         {
                           "type": "divider"
                         },
                         "@trait.ClassSessionSchedule"
-                      ],
-                      "direction": "vertical",
-                      "type": "stack"
+                      ]
                     }
                   ]
                 ]
@@ -1078,17 +1078,17 @@
           "ref": "AppShell.traits.AppLayout",
           "name": "MembershipAppLayout",
           "config": {
-            "notificationClickEvent": "MEMBERSHIP_NOTIFICATIONS_OPEN",
-            "appName": "Fitness Studio",
+            "searchEvent": "MEMBERSHIP_SEARCH",
+            "contentTrait": "@trait.MembershipDisplay",
             "navItems": [
               {
-                "href": "/members",
                 "icon": "users",
-                "label": "Members"
+                "label": "Members",
+                "href": "/members"
               },
               {
-                "label": "Classes",
                 "href": "/classes",
+                "label": "Classes",
                 "icon": "calendar"
               },
               {
@@ -1097,18 +1097,18 @@
                 "icon": "credit-card"
               },
               {
-                "href": "/rosters",
                 "icon": "clipboard-list",
+                "href": "/rosters",
                 "label": "Rosters"
               }
             ],
-            "contentTrait": "@trait.MembershipDisplay",
-            "searchEvent": "MEMBERSHIP_SEARCH",
-            "notifications": []
+            "appName": "Fitness Studio",
+            "notifications": [],
+            "notificationClickEvent": "MEMBERSHIP_NOTIFICATIONS_OPEN"
           },
           "events": {
-            "NOTIFY_CLICK": "MEMBERSHIP_NOTIFICATIONS_OPEN",
-            "SEARCH": "MEMBERSHIP_SEARCH"
+            "SEARCH": "MEMBERSHIP_SEARCH",
+            "NOTIFY_CLICK": "MEMBERSHIP_NOTIFICATIONS_OPEN"
           }
         },
         {
@@ -1138,38 +1138,38 @@
                     "main",
                     {
                       "type": "stack",
-                      "direction": "vertical",
                       "gap": "lg",
                       "className": "max-w-6xl mx-auto w-full p-4",
                       "children": [
                         {
+                          "gap": "sm",
                           "direction": "horizontal",
-                          "type": "stack",
-                          "align": "center",
                           "children": [
                             {
                               "name": "id-card",
                               "type": "icon"
                             },
                             {
-                              "type": "typography",
+                              "content": "Memberships",
                               "variant": "h2",
-                              "content": "Memberships"
+                              "type": "typography"
                             }
                           ],
-                          "gap": "sm"
+                          "align": "center",
+                          "type": "stack"
                         },
                         {
-                          "color": "muted",
                           "content": "Recurring subscriptions per member. Upgrade tiers, freeze, or cancel from the row actions.",
+                          "variant": "caption",
                           "type": "typography",
-                          "variant": "caption"
+                          "color": "muted"
                         },
                         {
                           "type": "divider"
                         },
                         "@trait.MembershipDirectory"
-                      ]
+                      ],
+                      "direction": "vertical"
                     }
                   ]
                 ]
@@ -1233,15 +1233,14 @@
           "name": "ClassRosterAppLayout",
           "config": {
             "notificationClickEvent": "CLASS_ROSTER_NOTIFICATIONS_OPEN",
-            "appName": "Fitness Studio",
-            "searchEvent": "CLASS_ROSTER_SEARCH",
-            "notifications": [],
             "contentTrait": "@trait.ClassRosterDisplay",
+            "appName": "Fitness Studio",
+            "notifications": [],
             "navItems": [
               {
-                "href": "/members",
+                "icon": "users",
                 "label": "Members",
-                "icon": "users"
+                "href": "/members"
               },
               {
                 "icon": "calendar",
@@ -1249,20 +1248,21 @@
                 "href": "/classes"
               },
               {
-                "label": "Memberships",
                 "href": "/memberships",
+                "label": "Memberships",
                 "icon": "credit-card"
               },
               {
-                "href": "/rosters",
                 "label": "Rosters",
-                "icon": "clipboard-list"
+                "icon": "clipboard-list",
+                "href": "/rosters"
               }
-            ]
+            ],
+            "searchEvent": "CLASS_ROSTER_SEARCH"
           },
           "events": {
-            "NOTIFY_CLICK": "CLASS_ROSTER_NOTIFICATIONS_OPEN",
-            "SEARCH": "CLASS_ROSTER_SEARCH"
+            "SEARCH": "CLASS_ROSTER_SEARCH",
+            "NOTIFY_CLICK": "CLASS_ROSTER_NOTIFICATIONS_OPEN"
           }
         },
         {
@@ -1294,6 +1294,7 @@
                       "children": [
                         {
                           "type": "stack",
+                          "gap": "sm",
                           "children": [
                             {
                               "type": "icon",
@@ -1306,23 +1307,22 @@
                             }
                           ],
                           "direction": "horizontal",
-                          "align": "center",
-                          "gap": "sm"
+                          "align": "center"
                         },
                         {
-                          "content": "Enrolled members per session. Check in arrivals or mark no-shows from the row actions.",
+                          "variant": "caption",
                           "color": "muted",
                           "type": "typography",
-                          "variant": "caption"
+                          "content": "Enrolled members per session. Check in arrivals or mark no-shows from the row actions."
                         },
                         {
                           "type": "divider"
                         },
                         "@trait.ClassRosterEntries"
                       ],
-                      "gap": "lg",
-                      "direction": "vertical",
                       "type": "stack",
+                      "direction": "vertical",
+                      "gap": "lg",
                       "className": "max-w-6xl mx-auto w-full p-4"
                     }
                   ]

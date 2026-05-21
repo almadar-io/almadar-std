@@ -264,8 +264,8 @@
                     "Checkin",
                     {
                       "emit": {
-                        "success": "CheckinLoaded",
-                        "failure": "CheckinLoadFailed"
+                        "failure": "CheckinLoadFailed",
+                        "success": "CheckinLoaded"
                       }
                     }
                   ],
@@ -273,22 +273,22 @@
                     "render-ui",
                     "main",
                     {
-                      "align": "center",
+                      "direction": "vertical",
+                      "className": "py-12",
                       "children": [
                         {
                           "type": "spinner"
                         },
                         {
+                          "color": "muted",
                           "content": "Loading check-ins…",
                           "variant": "caption",
-                          "color": "muted",
                           "type": "typography"
                         }
                       ],
-                      "className": "py-12",
-                      "direction": "vertical",
+                      "type": "stack",
                       "gap": "md",
-                      "type": "stack"
+                      "align": "center"
                     }
                   ]
                 ]
@@ -303,12 +303,10 @@
                     "main",
                     {
                       "direction": "vertical",
+                      "type": "stack",
                       "gap": "md",
                       "children": [
                         {
-                          "direction": "horizontal",
-                          "type": "stack",
-                          "gap": "sm",
                           "align": "center",
                           "children": [
                             {
@@ -316,11 +314,14 @@
                               "type": "icon"
                             },
                             {
-                              "content": "@config.title",
                               "variant": "h3",
-                              "type": "typography"
+                              "type": "typography",
+                              "content": "@config.title"
                             }
-                          ]
+                          ],
+                          "type": "stack",
+                          "gap": "sm",
+                          "direction": "horizontal"
                         },
                         {
                           "type": "simple-grid",
@@ -328,26 +329,26 @@
                           "children": [
                             {
                               "type": "stat-display",
-                              "icon": "map-pin",
                               "label": "Total check-ins",
-                              "value": "@payload.data.length"
+                              "value": "@payload.data.length",
+                              "icon": "map-pin"
                             },
                             {
-                              "type": "stat-display",
+                              "icon": "check-circle",
                               "value": "92%",
-                              "label": "Verified",
-                              "icon": "check-circle"
-                            },
-                            {
                               "type": "stat-display",
-                              "icon": "calendar",
-                              "label": "Today",
-                              "value": "47"
+                              "label": "Verified"
                             },
                             {
-                              "value": "18",
-                              "icon": "globe",
+                              "label": "Today",
+                              "value": "47",
+                              "icon": "calendar",
+                              "type": "stat-display"
+                            },
+                            {
                               "label": "Sites covered",
+                              "icon": "globe",
+                              "value": "18",
                               "type": "stat-display"
                             }
                           ]
@@ -356,15 +357,14 @@
                           "type": "divider"
                         },
                         {
-                          "entity": "@payload.data",
-                          "type": "data-grid",
-                          "fields": "@config.fields",
                           "cols": 1.0,
+                          "gap": "sm",
+                          "type": "data-grid",
+                          "entity": "@payload.data",
                           "itemActions": "@config.itemActions",
-                          "gap": "sm"
+                          "fields": "@config.fields"
                         }
-                      ],
-                      "type": "stack"
+                      ]
                     }
                   ]
                 ]
@@ -378,9 +378,9 @@
                     "render-ui",
                     "main",
                     {
-                      "variant": "error",
+                      "message": "@payload.error",
                       "type": "alert",
-                      "message": "@payload.error"
+                      "variant": "error"
                     }
                   ]
                 ]
@@ -444,20 +444,23 @@
                     "render-ui",
                     "main",
                     {
-                      "type": "stack",
                       "direction": "vertical",
                       "children": [
                         {
+                          "type": "stack",
+                          "align": "center",
+                          "direction": "horizontal",
+                          "gap": "sm",
                           "children": [
                             {
                               "type": "button",
                               "label": "Back",
-                              "action": "CLOSE_VIEW",
-                              "variant": "ghost"
+                              "variant": "ghost",
+                              "action": "CLOSE_VIEW"
                             },
                             {
-                              "name": "map-pin",
-                              "type": "icon"
+                              "type": "icon",
+                              "name": "map-pin"
                             },
                             {
                               "type": "typography",
@@ -466,76 +469,8 @@
                             },
                             {
                               "variant": "primary",
-                              "type": "badge",
-                              "label": "@entity.mode"
-                            }
-                          ],
-                          "gap": "sm",
-                          "type": "stack",
-                          "direction": "horizontal",
-                          "align": "center"
-                        },
-                        {
-                          "type": "divider"
-                        },
-                        {
-                          "direction": "vertical",
-                          "gap": "sm",
-                          "type": "stack",
-                          "children": [
-                            {
-                              "children": [
-                                {
-                                  "content": "Target type",
-                                  "color": "muted",
-                                  "type": "typography",
-                                  "variant": "caption"
-                                },
-                                {
-                                  "type": "typography",
-                                  "variant": "body",
-                                  "content": "@entity.targetType"
-                                }
-                              ],
-                              "direction": "horizontal",
-                              "gap": "md",
-                              "type": "stack"
-                            },
-                            {
-                              "type": "stack",
-                              "children": [
-                                {
-                                  "content": "User",
-                                  "type": "typography",
-                                  "color": "muted",
-                                  "variant": "caption"
-                                },
-                                {
-                                  "type": "typography",
-                                  "variant": "body",
-                                  "content": "@entity.userId"
-                                }
-                              ],
-                              "direction": "horizontal",
-                              "gap": "md"
-                            },
-                            {
-                              "direction": "horizontal",
-                              "children": [
-                                {
-                                  "content": "QR code",
-                                  "color": "muted",
-                                  "type": "typography",
-                                  "variant": "caption"
-                                },
-                                {
-                                  "content": "@entity.qrCode",
-                                  "type": "typography",
-                                  "variant": "body"
-                                }
-                              ],
-                              "gap": "md",
-                              "type": "stack"
+                              "label": "@entity.mode",
+                              "type": "badge"
                             }
                           ]
                         },
@@ -543,56 +478,121 @@
                           "type": "divider"
                         },
                         {
+                          "children": [
+                            {
+                              "direction": "horizontal",
+                              "gap": "md",
+                              "children": [
+                                {
+                                  "type": "typography",
+                                  "color": "muted",
+                                  "variant": "caption",
+                                  "content": "Target type"
+                                },
+                                {
+                                  "content": "@entity.targetType",
+                                  "type": "typography",
+                                  "variant": "body"
+                                }
+                              ],
+                              "type": "stack"
+                            },
+                            {
+                              "type": "stack",
+                              "direction": "horizontal",
+                              "gap": "md",
+                              "children": [
+                                {
+                                  "content": "User",
+                                  "color": "muted",
+                                  "variant": "caption",
+                                  "type": "typography"
+                                },
+                                {
+                                  "type": "typography",
+                                  "variant": "body",
+                                  "content": "@entity.userId"
+                                }
+                              ]
+                            },
+                            {
+                              "gap": "md",
+                              "direction": "horizontal",
+                              "type": "stack",
+                              "children": [
+                                {
+                                  "color": "muted",
+                                  "content": "QR code",
+                                  "variant": "caption",
+                                  "type": "typography"
+                                },
+                                {
+                                  "content": "@entity.qrCode",
+                                  "variant": "body",
+                                  "type": "typography"
+                                }
+                              ]
+                            }
+                          ],
+                          "gap": "sm",
+                          "direction": "vertical",
+                          "type": "stack"
+                        },
+                        {
+                          "type": "divider"
+                        },
+                        {
+                          "type": "simple-grid",
                           "cols": 3.0,
                           "children": [
                             {
-                              "value": "@entity.lat",
                               "label": "Latitude",
                               "type": "stat-display",
+                              "value": "@entity.lat",
                               "icon": "map"
                             },
                             {
-                              "type": "stat-display",
-                              "value": "@entity.lng",
                               "icon": "map",
+                              "value": "@entity.lng",
+                              "type": "stat-display",
                               "label": "Longitude"
                             },
                             {
-                              "icon": "clock",
                               "label": "Checked in",
                               "value": "@entity.checkedInAt",
-                              "type": "stat-display"
+                              "type": "stat-display",
+                              "icon": "clock"
                             }
-                          ],
-                          "type": "simple-grid"
+                          ]
                         },
                         {
+                          "align": "center",
+                          "type": "stack",
+                          "direction": "horizontal",
+                          "gap": "sm",
                           "children": [
                             {
                               "type": "button",
+                              "variant": "primary",
+                              "action": "VERIFY_CHECKIN",
                               "actionPayload": {
                                 "id": "@entity.id"
                               },
-                              "label": "Verify",
-                              "action": "VERIFY_CHECKIN",
-                              "variant": "primary"
+                              "label": "Verify"
                             },
                             {
+                              "label": "Revoke",
+                              "action": "REVOKE_CHECKIN",
+                              "type": "button",
+                              "variant": "danger",
                               "actionPayload": {
                                 "id": "@entity.id"
-                              },
-                              "type": "button",
-                              "label": "Revoke",
-                              "variant": "danger",
-                              "action": "REVOKE_CHECKIN"
+                              }
                             }
-                          ],
-                          "align": "center",
-                          "direction": "horizontal",
-                          "type": "stack",
-                          "gap": "sm"
+                          ]
                         }
                       ],
+                      "type": "stack",
                       "gap": "md"
                     }
                   ]
@@ -622,22 +622,22 @@
                     "render-ui",
                     "main",
                     {
-                      "className": "py-12",
                       "children": [
                         {
                           "type": "spinner"
                         },
                         {
-                          "color": "muted",
                           "type": "typography",
+                          "content": "Revoking check-in…",
                           "variant": "caption",
-                          "content": "Revoking check-in…"
+                          "color": "muted"
                         }
                       ],
-                      "type": "stack",
                       "gap": "md",
                       "direction": "vertical",
-                      "align": "center"
+                      "align": "center",
+                      "className": "py-12",
+                      "type": "stack"
                     }
                   ]
                 ]
@@ -652,8 +652,8 @@
                     "Checkin",
                     {
                       "emit": {
-                        "failure": "CheckinLoadFailed",
-                        "success": "CheckinLoaded"
+                        "success": "CheckinLoaded",
+                        "failure": "CheckinLoadFailed"
                       }
                     }
                   ],
@@ -661,22 +661,22 @@
                     "render-ui",
                     "main",
                     {
+                      "type": "stack",
+                      "align": "center",
                       "className": "py-12",
+                      "gap": "md",
                       "direction": "vertical",
                       "children": [
                         {
                           "type": "spinner"
                         },
                         {
-                          "type": "typography",
                           "variant": "caption",
+                          "type": "typography",
                           "content": "Loading check-ins…",
                           "color": "muted"
                         }
-                      ],
-                      "align": "center",
-                      "gap": "md",
-                      "type": "stack"
+                      ]
                     }
                   ]
                 ]
@@ -696,8 +696,8 @@
                     "Checkin",
                     {
                       "emit": {
-                        "success": "CheckinLoaded",
-                        "failure": "CheckinLoadFailed"
+                        "failure": "CheckinLoadFailed",
+                        "success": "CheckinLoaded"
                       }
                     }
                   ],
@@ -705,22 +705,22 @@
                     "render-ui",
                     "main",
                     {
-                      "direction": "vertical",
-                      "className": "py-12",
-                      "align": "center",
-                      "type": "stack",
-                      "gap": "md",
                       "children": [
                         {
                           "type": "spinner"
                         },
                         {
-                          "type": "typography",
                           "color": "muted",
-                          "content": "Verifying check-in…",
-                          "variant": "caption"
+                          "type": "typography",
+                          "variant": "caption",
+                          "content": "Verifying check-in…"
                         }
-                      ]
+                      ],
+                      "type": "stack",
+                      "gap": "md",
+                      "align": "center",
+                      "direction": "vertical",
+                      "className": "py-12"
                     }
                   ]
                 ]
@@ -749,21 +749,21 @@
                     "render-ui",
                     "main",
                     {
-                      "direction": "vertical",
+                      "type": "stack",
                       "align": "center",
-                      "className": "py-12",
                       "children": [
                         {
                           "type": "spinner"
                         },
                         {
                           "type": "typography",
-                          "content": "Revoking check-in…",
+                          "color": "muted",
                           "variant": "caption",
-                          "color": "muted"
+                          "content": "Revoking check-in…"
                         }
                       ],
-                      "type": "stack",
+                      "className": "py-12",
+                      "direction": "vertical",
                       "gap": "md"
                     }
                   ]
@@ -797,12 +797,6 @@
             ]
           },
           "config": {
-            "mode": {
-              "type": "string",
-              "default": "geo",
-              "label": "Check-in mode",
-              "description": "How attendees check in (geo location or QR code)"
-            },
             "title": {
               "type": "string",
               "default": "Check-ins",
@@ -813,29 +807,29 @@
               "type": "[FieldSpec]",
               "default": [
                 {
-                  "variant": "badge",
                   "label": "Type",
+                  "variant": "badge",
                   "name": "targetType"
                 },
                 {
-                  "variant": "caption",
                   "name": "targetId",
+                  "variant": "caption",
                   "label": "Target"
                 },
                 {
-                  "label": "User",
                   "variant": "caption",
-                  "name": "userId"
+                  "name": "userId",
+                  "label": "User"
                 },
                 {
-                  "name": "mode",
                   "label": "Mode",
+                  "name": "mode",
                   "variant": "badge"
                 },
                 {
                   "variant": "caption",
-                  "name": "checkedInAt",
-                  "label": "When"
+                  "label": "When",
+                  "name": "checkedInAt"
                 }
               ],
               "label": "Columns to show",
@@ -843,15 +837,10 @@
               "items": {
                 "type": "object",
                 "properties": {
-                  "key": {
-                    "name": "key",
+                  "name": {
+                    "name": "name",
                     "type": "string",
-                    "required": false
-                  },
-                  "header": {
-                    "name": "header",
-                    "type": "string",
-                    "required": false
+                    "required": true
                   },
                   "label": {
                     "name": "label",
@@ -863,13 +852,18 @@
                     "type": "string",
                     "required": false
                   },
-                  "name": {
-                    "name": "name",
-                    "type": "string",
-                    "required": true
-                  },
                   "icon": {
                     "name": "icon",
+                    "type": "string",
+                    "required": false
+                  },
+                  "key": {
+                    "name": "key",
+                    "type": "string",
+                    "required": false
+                  },
+                  "header": {
+                    "name": "header",
                     "type": "string",
                     "required": false
                   },
@@ -881,19 +875,25 @@
                 }
               }
             },
+            "mode": {
+              "type": "string",
+              "default": "geo",
+              "label": "Check-in mode",
+              "description": "How attendees check in (geo location or QR code)"
+            },
             "itemActions": {
               "type": "[ItemAction]",
               "default": [
                 {
-                  "variant": "primary",
-                  "label": "Open",
+                  "event": "OPEN_CHECKIN",
                   "icon": "arrow-right",
-                  "event": "OPEN_CHECKIN"
+                  "label": "Open",
+                  "variant": "primary"
                 },
                 {
+                  "variant": "danger",
                   "label": "Revoke",
-                  "event": "REVOKE_CHECKIN",
-                  "variant": "danger"
+                  "event": "REVOKE_CHECKIN"
                 }
               ],
               "label": "Row actions",
@@ -901,23 +901,23 @@
               "items": {
                 "type": "object",
                 "properties": {
-                  "label": {
-                    "name": "label",
-                    "type": "string",
-                    "required": true
-                  },
                   "event": {
                     "name": "event",
                     "type": "string",
                     "required": true
                   },
-                  "variant": {
-                    "name": "variant",
+                  "label": {
+                    "name": "label",
                     "type": "string",
-                    "required": false
+                    "required": true
                   },
                   "icon": {
                     "name": "icon",
+                    "type": "string",
+                    "required": false
+                  },
+                  "variant": {
+                    "name": "variant",
                     "type": "string",
                     "required": false
                   }

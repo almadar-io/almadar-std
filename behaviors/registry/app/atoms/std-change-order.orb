@@ -412,8 +412,8 @@
                     "ChangeOrder",
                     {
                       "emit": {
-                        "success": "ChangeOrderLoaded",
-                        "failure": "ChangeOrderLoadFailed"
+                        "failure": "ChangeOrderLoadFailed",
+                        "success": "ChangeOrderLoaded"
                       }
                     }
                   ],
@@ -421,22 +421,22 @@
                     "render-ui",
                     "main",
                     {
-                      "direction": "vertical",
-                      "type": "stack",
                       "children": [
                         {
                           "type": "spinner"
                         },
                         {
+                          "type": "typography",
                           "variant": "caption",
                           "content": "Loading change orders…",
-                          "color": "muted",
-                          "type": "typography"
+                          "color": "muted"
                         }
                       ],
-                      "className": "py-12",
+                      "type": "stack",
                       "gap": "md",
-                      "align": "center"
+                      "direction": "vertical",
+                      "align": "center",
+                      "className": "py-12"
                     }
                   ]
                 ]
@@ -450,51 +450,52 @@
                     "render-ui",
                     "main",
                     {
+                      "type": "stack",
                       "direction": "vertical",
                       "gap": "md",
                       "children": [
                         {
-                          "type": "stack",
+                          "gap": "sm",
+                          "align": "center",
                           "children": [
                             {
                               "type": "icon",
                               "name": "file-text"
                             },
                             {
-                              "content": "@config.title",
                               "type": "typography",
+                              "content": "@config.title",
                               "variant": "h3"
                             }
                           ],
-                          "align": "center",
-                          "gap": "sm",
-                          "direction": "horizontal"
+                          "direction": "horizontal",
+                          "type": "stack"
                         },
                         {
                           "children": [
                             {
-                              "label": "Total orders",
-                              "icon": "file-text",
                               "value": "@payload.data.length",
-                              "type": "stat-display"
+                              "type": "stat-display",
+                              "label": "Total orders",
+                              "icon": "file-text"
                             },
                             {
+                              "type": "stat-display",
                               "label": "Pending approval",
                               "value": "11",
-                              "type": "stat-display",
                               "icon": "clock"
                             },
                             {
                               "value": "$184,500",
                               "label": "Cost impact",
-                              "icon": "dollar-sign",
-                              "type": "stat-display"
+                              "type": "stat-display",
+                              "icon": "dollar-sign"
                             },
                             {
-                              "type": "stat-display",
-                              "value": "47",
+                              "icon": "calendar",
                               "label": "Days added",
-                              "icon": "calendar"
+                              "value": "47",
+                              "type": "stat-display"
                             }
                           ],
                           "type": "simple-grid",
@@ -504,15 +505,14 @@
                           "type": "divider"
                         },
                         {
+                          "itemActions": "@config.itemActions",
+                          "fields": "@config.fields",
                           "type": "data-grid",
                           "cols": 1.0,
-                          "fields": "@config.fields",
                           "gap": "sm",
-                          "itemActions": "@config.itemActions",
                           "entity": "@payload.data"
                         }
-                      ],
-                      "type": "stack"
+                      ]
                     }
                   ]
                 ]
@@ -526,9 +526,9 @@
                     "render-ui",
                     "main",
                     {
+                      "type": "alert",
                       "variant": "error",
-                      "message": "@payload.error",
-                      "type": "alert"
+                      "message": "@payload.error"
                     }
                   ]
                 ]
@@ -597,11 +597,12 @@
                     "render-ui",
                     "main",
                     {
-                      "type": "stack",
-                      "gap": "md",
                       "direction": "vertical",
+                      "gap": "md",
+                      "type": "stack",
                       "children": [
                         {
+                          "direction": "horizontal",
                           "align": "center",
                           "children": [
                             {
@@ -611,8 +612,8 @@
                               "action": "CLOSE_VIEW"
                             },
                             {
-                              "type": "icon",
-                              "name": "file-text"
+                              "name": "file-text",
+                              "type": "icon"
                             },
                             {
                               "type": "typography",
@@ -621,181 +622,180 @@
                             },
                             {
                               "type": "badge",
-                              "variant": "primary",
-                              "label": "@entity.status"
+                              "label": "@entity.status",
+                              "variant": "primary"
                             }
                           ],
                           "type": "stack",
-                          "direction": "horizontal",
                           "gap": "sm"
                         },
                         {
                           "type": "divider"
                         },
                         {
-                          "type": "stack",
+                          "direction": "vertical",
                           "children": [
                             {
-                              "direction": "horizontal",
-                              "gap": "md",
-                              "type": "stack",
                               "children": [
                                 {
                                   "variant": "caption",
+                                  "content": "Description",
                                   "type": "typography",
-                                  "color": "muted",
-                                  "content": "Description"
+                                  "color": "muted"
                                 },
                                 {
+                                  "variant": "body",
                                   "type": "typography",
-                                  "content": "@entity.description",
-                                  "variant": "body"
-                                }
-                              ]
-                            },
-                            {
-                              "type": "stack",
-                              "children": [
-                                {
-                                  "color": "muted",
-                                  "type": "typography",
-                                  "variant": "caption",
-                                  "content": "Reason"
-                                },
-                                {
-                                  "type": "typography",
-                                  "content": "@entity.reason",
-                                  "variant": "body"
+                                  "content": "@entity.description"
                                 }
                               ],
                               "direction": "horizontal",
+                              "type": "stack",
                               "gap": "md"
                             },
                             {
+                              "direction": "horizontal",
                               "children": [
                                 {
-                                  "type": "typography",
-                                  "variant": "caption",
                                   "color": "muted",
-                                  "content": "Requested by"
+                                  "type": "typography",
+                                  "content": "Reason",
+                                  "variant": "caption"
+                                },
+                                {
+                                  "type": "typography",
+                                  "variant": "body",
+                                  "content": "@entity.reason"
+                                }
+                              ],
+                              "gap": "md",
+                              "type": "stack"
+                            },
+                            {
+                              "type": "stack",
+                              "direction": "horizontal",
+                              "gap": "md",
+                              "children": [
+                                {
+                                  "color": "muted",
+                                  "content": "Requested by",
+                                  "type": "typography",
+                                  "variant": "caption"
                                 },
                                 {
                                   "variant": "body",
                                   "content": "@entity.requestedBy",
                                   "type": "typography"
                                 }
-                              ],
-                              "gap": "md",
-                              "type": "stack",
-                              "direction": "horizontal"
+                              ]
                             },
                             {
-                              "type": "stack",
-                              "gap": "md",
                               "direction": "horizontal",
                               "children": [
                                 {
                                   "type": "typography",
                                   "color": "muted",
-                                  "content": "Approved by",
-                                  "variant": "caption"
+                                  "variant": "caption",
+                                  "content": "Approved by"
                                 },
                                 {
                                   "content": "@entity.approvedBy",
-                                  "variant": "body",
-                                  "type": "typography"
+                                  "type": "typography",
+                                  "variant": "body"
                                 }
-                              ]
+                              ],
+                              "type": "stack",
+                              "gap": "md"
                             }
                           ],
-                          "direction": "vertical",
+                          "type": "stack",
                           "gap": "sm"
                         },
                         {
                           "type": "divider"
                         },
                         {
+                          "type": "simple-grid",
                           "children": [
                             {
-                              "icon": "dollar-sign",
+                              "value": "@entity.costImpact",
                               "type": "stat-display",
                               "label": "Cost impact",
-                              "value": "@entity.costImpact"
-                            },
-                            {
-                              "value": "@entity.scheduleImpactDays",
-                              "icon": "calendar",
-                              "label": "Schedule days",
-                              "type": "stat-display"
+                              "icon": "dollar-sign"
                             },
                             {
                               "type": "stat-display",
-                              "value": "@entity.requestedAt",
+                              "label": "Schedule days",
+                              "value": "@entity.scheduleImpactDays",
+                              "icon": "calendar"
+                            },
+                            {
+                              "type": "stat-display",
                               "icon": "clock",
-                              "label": "Requested"
+                              "label": "Requested",
+                              "value": "@entity.requestedAt"
                             },
                             {
                               "value": "@entity.approvedAt",
-                              "icon": "check-circle",
                               "type": "stat-display",
-                              "label": "Approved"
+                              "label": "Approved",
+                              "icon": "check-circle"
                             }
                           ],
-                          "type": "simple-grid",
                           "cols": 4.0
                         },
                         {
                           "align": "center",
-                          "gap": "sm",
+                          "type": "stack",
                           "children": [
                             {
                               "type": "button",
-                              "variant": "primary",
-                              "actionPayload": {
-                                "id": "@entity.id"
-                              },
+                              "action": "SUBMIT_FOR_APPROVAL",
                               "label": "Submit",
-                              "action": "SUBMIT_FOR_APPROVAL"
-                            },
-                            {
-                              "type": "button",
-                              "action": "APPROVE",
                               "actionPayload": {
                                 "id": "@entity.id"
                               },
-                              "label": "Approve",
                               "variant": "primary"
                             },
                             {
-                              "action": "REJECT",
-                              "variant": "danger",
-                              "label": "Reject",
+                              "action": "APPROVE",
+                              "type": "button",
                               "actionPayload": {
                                 "id": "@entity.id"
                               },
-                              "type": "button"
+                              "variant": "primary",
+                              "label": "Approve"
                             },
                             {
-                              "variant": "primary",
-                              "label": "Execute",
                               "type": "button",
+                              "actionPayload": {
+                                "id": "@entity.id"
+                              },
+                              "label": "Reject",
+                              "variant": "danger",
+                              "action": "REJECT"
+                            },
+                            {
+                              "label": "Execute",
                               "action": "EXECUTE",
+                              "type": "button",
+                              "variant": "primary",
                               "actionPayload": {
                                 "id": "@entity.id"
                               }
                             },
                             {
+                              "label": "Delete",
+                              "type": "button",
+                              "action": "REQUEST_DELETE",
+                              "variant": "danger",
                               "actionPayload": {
                                 "id": "@entity.id"
-                              },
-                              "label": "Delete",
-                              "variant": "danger",
-                              "action": "REQUEST_DELETE",
-                              "type": "button"
+                              }
                             }
                           ],
                           "direction": "horizontal",
-                          "type": "stack"
+                          "gap": "sm"
                         }
                       ]
                     }
@@ -827,10 +827,6 @@
                     "main",
                     {
                       "direction": "vertical",
-                      "align": "center",
-                      "className": "py-12",
-                      "gap": "md",
-                      "type": "stack",
                       "children": [
                         {
                           "type": "spinner"
@@ -838,10 +834,14 @@
                         {
                           "variant": "caption",
                           "content": "Deleting change order…",
-                          "color": "muted",
-                          "type": "typography"
+                          "type": "typography",
+                          "color": "muted"
                         }
-                      ]
+                      ],
+                      "className": "py-12",
+                      "align": "center",
+                      "gap": "md",
+                      "type": "stack"
                     }
                   ]
                 ]
@@ -856,8 +856,8 @@
                     "ChangeOrder",
                     {
                       "emit": {
-                        "failure": "ChangeOrderLoadFailed",
-                        "success": "ChangeOrderLoaded"
+                        "success": "ChangeOrderLoaded",
+                        "failure": "ChangeOrderLoadFailed"
                       }
                     }
                   ],
@@ -865,9 +865,8 @@
                     "render-ui",
                     "main",
                     {
-                      "gap": "md",
                       "className": "py-12",
-                      "direction": "vertical",
+                      "align": "center",
                       "type": "stack",
                       "children": [
                         {
@@ -875,12 +874,13 @@
                         },
                         {
                           "type": "typography",
+                          "variant": "caption",
                           "color": "muted",
-                          "content": "Loading change orders…",
-                          "variant": "caption"
+                          "content": "Loading change orders…"
                         }
                       ],
-                      "align": "center"
+                      "gap": "md",
+                      "direction": "vertical"
                     }
                   ]
                 ]
@@ -900,8 +900,8 @@
                     "ChangeOrder",
                     {
                       "emit": {
-                        "failure": "ChangeOrderLoadFailed",
-                        "success": "ChangeOrderLoaded"
+                        "success": "ChangeOrderLoaded",
+                        "failure": "ChangeOrderLoadFailed"
                       }
                     }
                   ],
@@ -909,11 +909,8 @@
                     "render-ui",
                     "main",
                     {
-                      "gap": "md",
-                      "align": "center",
-                      "className": "py-12",
                       "type": "stack",
-                      "direction": "vertical",
+                      "className": "py-12",
                       "children": [
                         {
                           "type": "spinner"
@@ -924,7 +921,10 @@
                           "content": "Submitting for approval…",
                           "variant": "caption"
                         }
-                      ]
+                      ],
+                      "align": "center",
+                      "gap": "md",
+                      "direction": "vertical"
                     }
                   ]
                 ]
@@ -953,22 +953,22 @@
                     "render-ui",
                     "main",
                     {
+                      "type": "stack",
+                      "align": "center",
+                      "direction": "vertical",
                       "children": [
                         {
                           "type": "spinner"
                         },
                         {
-                          "variant": "caption",
                           "content": "Approving change order…",
                           "color": "muted",
-                          "type": "typography"
+                          "type": "typography",
+                          "variant": "caption"
                         }
                       ],
-                      "direction": "vertical",
-                      "align": "center",
-                      "gap": "md",
-                      "type": "stack",
-                      "className": "py-12"
+                      "className": "py-12",
+                      "gap": "md"
                     }
                   ]
                 ]
@@ -977,6 +977,94 @@
                 "from": "viewing_single",
                 "to": "loading",
                 "event": "REJECT",
+                "effects": [
+                  [
+                    "set",
+                    "@entity.id",
+                    "@payload.id"
+                  ],
+                  [
+                    "fetch",
+                    "ChangeOrder",
+                    {
+                      "emit": {
+                        "failure": "ChangeOrderLoadFailed",
+                        "success": "ChangeOrderLoaded"
+                      }
+                    }
+                  ],
+                  [
+                    "render-ui",
+                    "main",
+                    {
+                      "direction": "vertical",
+                      "children": [
+                        {
+                          "type": "spinner"
+                        },
+                        {
+                          "content": "Rejecting change order…",
+                          "variant": "caption",
+                          "color": "muted",
+                          "type": "typography"
+                        }
+                      ],
+                      "align": "center",
+                      "className": "py-12",
+                      "gap": "md",
+                      "type": "stack"
+                    }
+                  ]
+                ]
+              },
+              {
+                "from": "viewing_single",
+                "to": "loading",
+                "event": "EXECUTE",
+                "effects": [
+                  [
+                    "set",
+                    "@entity.id",
+                    "@payload.id"
+                  ],
+                  [
+                    "fetch",
+                    "ChangeOrder",
+                    {
+                      "emit": {
+                        "success": "ChangeOrderLoaded",
+                        "failure": "ChangeOrderLoadFailed"
+                      }
+                    }
+                  ],
+                  [
+                    "render-ui",
+                    "main",
+                    {
+                      "type": "stack",
+                      "gap": "md",
+                      "align": "center",
+                      "direction": "vertical",
+                      "className": "py-12",
+                      "children": [
+                        {
+                          "type": "spinner"
+                        },
+                        {
+                          "type": "typography",
+                          "content": "Executing change order…",
+                          "variant": "caption",
+                          "color": "muted"
+                        }
+                      ]
+                    }
+                  ]
+                ]
+              },
+              {
+                "from": "viewing_single",
+                "to": "loading",
+                "event": "REQUEST_DELETE",
                 "effects": [
                   [
                     "set",
@@ -999,108 +1087,20 @@
                     {
                       "type": "stack",
                       "className": "py-12",
-                      "direction": "vertical",
-                      "align": "center",
-                      "gap": "md",
                       "children": [
                         {
                           "type": "spinner"
                         },
                         {
                           "variant": "caption",
-                          "color": "muted",
-                          "type": "typography",
-                          "content": "Rejecting change order…"
-                        }
-                      ]
-                    }
-                  ]
-                ]
-              },
-              {
-                "from": "viewing_single",
-                "to": "loading",
-                "event": "EXECUTE",
-                "effects": [
-                  [
-                    "set",
-                    "@entity.id",
-                    "@payload.id"
-                  ],
-                  [
-                    "fetch",
-                    "ChangeOrder",
-                    {
-                      "emit": {
-                        "failure": "ChangeOrderLoadFailed",
-                        "success": "ChangeOrderLoaded"
-                      }
-                    }
-                  ],
-                  [
-                    "render-ui",
-                    "main",
-                    {
-                      "type": "stack",
-                      "align": "center",
-                      "className": "py-12",
-                      "children": [
-                        {
-                          "type": "spinner"
-                        },
-                        {
-                          "color": "muted",
-                          "content": "Executing change order…",
-                          "type": "typography",
-                          "variant": "caption"
-                        }
-                      ],
-                      "direction": "vertical",
-                      "gap": "md"
-                    }
-                  ]
-                ]
-              },
-              {
-                "from": "viewing_single",
-                "to": "loading",
-                "event": "REQUEST_DELETE",
-                "effects": [
-                  [
-                    "set",
-                    "@entity.id",
-                    "@payload.id"
-                  ],
-                  [
-                    "fetch",
-                    "ChangeOrder",
-                    {
-                      "emit": {
-                        "failure": "ChangeOrderLoadFailed",
-                        "success": "ChangeOrderLoaded"
-                      }
-                    }
-                  ],
-                  [
-                    "render-ui",
-                    "main",
-                    {
-                      "align": "center",
-                      "direction": "vertical",
-                      "type": "stack",
-                      "className": "py-12",
-                      "gap": "md",
-                      "children": [
-                        {
-                          "type": "spinner"
-                        },
-                        {
                           "type": "typography",
                           "content": "Deleting change order…",
-                          "color": "muted",
-                          "variant": "caption"
+                          "color": "muted"
                         }
-                      ]
+                      ],
+                      "gap": "md",
+                      "align": "center",
+                      "direction": "vertical"
                     }
                   ]
                 ]
@@ -1124,8 +1124,8 @@
                     "render-ui",
                     "main",
                     {
-                      "type": "spinner",
-                      "size": "sm"
+                      "size": "sm",
+                      "type": "spinner"
                     }
                   ]
                 ]
@@ -1133,96 +1133,19 @@
             ]
           },
           "config": {
-            "fields": {
-              "type": "[FieldSpec]",
-              "default": [
-                {
-                  "variant": "caption",
-                  "name": "coNumber",
-                  "label": "CO #"
-                },
-                {
-                  "label": "Description",
-                  "variant": "caption",
-                  "name": "description"
-                },
-                {
-                  "variant": "caption",
-                  "label": "Cost Impact",
-                  "name": "costImpact"
-                },
-                {
-                  "label": "Days",
-                  "variant": "caption",
-                  "name": "scheduleImpactDays"
-                },
-                {
-                  "variant": "badge",
-                  "name": "status",
-                  "label": "Status"
-                },
-                {
-                  "name": "requestedBy",
-                  "variant": "caption",
-                  "label": "Requested By"
-                }
-              ],
-              "label": "Columns to show",
-              "description": "Each column maps to one field on the Change Order entity",
-              "items": {
-                "type": "object",
-                "properties": {
-                  "key": {
-                    "name": "key",
-                    "type": "string",
-                    "required": false
-                  },
-                  "format": {
-                    "name": "format",
-                    "type": "string",
-                    "required": false
-                  },
-                  "header": {
-                    "name": "header",
-                    "type": "string",
-                    "required": false
-                  },
-                  "name": {
-                    "name": "name",
-                    "type": "string",
-                    "required": true
-                  },
-                  "icon": {
-                    "name": "icon",
-                    "type": "string",
-                    "required": false
-                  },
-                  "variant": {
-                    "name": "variant",
-                    "type": "string",
-                    "required": false
-                  },
-                  "label": {
-                    "name": "label",
-                    "type": "string",
-                    "required": false
-                  }
-                }
-              }
-            },
             "itemActions": {
               "type": "[ItemAction]",
               "default": [
                 {
                   "label": "Open",
-                  "icon": "arrow-right",
                   "event": "OPEN_CHANGE_ORDER",
-                  "variant": "primary"
+                  "variant": "primary",
+                  "icon": "arrow-right"
                 },
                 {
+                  "event": "REQUEST_DELETE",
                   "variant": "danger",
-                  "label": "Delete",
-                  "event": "REQUEST_DELETE"
+                  "label": "Delete"
                 }
               ],
               "label": "Row actions",
@@ -1230,11 +1153,6 @@
               "items": {
                 "type": "object",
                 "properties": {
-                  "variant": {
-                    "name": "variant",
-                    "type": "string",
-                    "required": false
-                  },
                   "event": {
                     "name": "event",
                     "type": "string",
@@ -1244,6 +1162,11 @@
                     "name": "label",
                     "type": "string",
                     "required": true
+                  },
+                  "variant": {
+                    "name": "variant",
+                    "type": "string",
+                    "required": false
                   },
                   "icon": {
                     "name": "icon",
@@ -1258,6 +1181,83 @@
               "default": "Change Orders",
               "label": "Section title",
               "description": "Heading shown above the change-order log"
+            },
+            "fields": {
+              "type": "[FieldSpec]",
+              "default": [
+                {
+                  "variant": "caption",
+                  "label": "CO #",
+                  "name": "coNumber"
+                },
+                {
+                  "label": "Description",
+                  "variant": "caption",
+                  "name": "description"
+                },
+                {
+                  "label": "Cost Impact",
+                  "variant": "caption",
+                  "name": "costImpact"
+                },
+                {
+                  "name": "scheduleImpactDays",
+                  "label": "Days",
+                  "variant": "caption"
+                },
+                {
+                  "name": "status",
+                  "variant": "badge",
+                  "label": "Status"
+                },
+                {
+                  "name": "requestedBy",
+                  "variant": "caption",
+                  "label": "Requested By"
+                }
+              ],
+              "label": "Columns to show",
+              "description": "Each column maps to one field on the Change Order entity",
+              "items": {
+                "type": "object",
+                "properties": {
+                  "variant": {
+                    "name": "variant",
+                    "type": "string",
+                    "required": false
+                  },
+                  "key": {
+                    "name": "key",
+                    "type": "string",
+                    "required": false
+                  },
+                  "label": {
+                    "name": "label",
+                    "type": "string",
+                    "required": false
+                  },
+                  "name": {
+                    "name": "name",
+                    "type": "string",
+                    "required": true
+                  },
+                  "icon": {
+                    "name": "icon",
+                    "type": "string",
+                    "required": false
+                  },
+                  "header": {
+                    "name": "header",
+                    "type": "string",
+                    "required": false
+                  },
+                  "format": {
+                    "name": "format",
+                    "type": "string",
+                    "required": false
+                  }
+                }
+              }
             }
           },
           "scope": "collection"

@@ -150,13 +150,13 @@
             "items": {
               "type": "object",
               "properties": {
+                "label": {
+                  "name": "label",
+                  "type": "string",
+                  "required": true
+                },
                 "icon": {
                   "name": "icon",
-                  "type": "string",
-                  "required": false
-                },
-                "value": {
-                  "name": "value",
                   "type": "string",
                   "required": false
                 },
@@ -165,10 +165,10 @@
                   "type": "string",
                   "required": false
                 },
-                "label": {
-                  "name": "label",
+                "value": {
+                  "name": "value",
                   "type": "string",
-                  "required": true
+                  "required": false
                 }
               }
             }
@@ -268,57 +268,57 @@
                     "render-ui",
                     "main",
                     {
-                      "direction": "vertical",
+                      "gap": "lg",
                       "type": "stack",
+                      "direction": "vertical",
                       "children": [
                         {
+                          "direction": "horizontal",
+                          "align": "center",
+                          "gap": "sm",
                           "children": [
                             {
                               "name": "brain",
                               "type": "icon"
                             },
                             {
+                              "variant": "h2",
                               "type": "typography",
-                              "content": "RAG Pipeline",
-                              "variant": "h2"
+                              "content": "RAG Pipeline"
                             }
                           ],
-                          "type": "stack",
-                          "gap": "sm",
-                          "align": "center",
-                          "direction": "horizontal"
+                          "type": "stack"
                         },
                         {
                           "type": "divider"
                         },
                         {
+                          "type": "card",
                           "children": [
                             {
-                              "direction": "vertical",
+                              "type": "stack",
                               "children": [
                                 {
                                   "type": "typography",
-                                  "content": "Enter a query to retrieve context and generate a response",
-                                  "variant": "body"
+                                  "variant": "body",
+                                  "content": "Enter a query to retrieve context and generate a response"
                                 },
                                 {
-                                  "mode": "edit",
-                                  "entity": "@entity",
                                   "type": "form-section",
-                                  "submitEvent": "GENERATE",
                                   "fields": [
                                     "query"
-                                  ]
+                                  ],
+                                  "entity": "@entity",
+                                  "mode": "edit",
+                                  "submitEvent": "GENERATE"
                                 }
                               ],
-                              "type": "stack",
+                              "direction": "vertical",
                               "gap": "md"
                             }
-                          ],
-                          "type": "card"
+                          ]
                         }
-                      ],
-                      "gap": "lg"
+                      ]
                     }
                   ]
                 ]
@@ -348,37 +348,37 @@
                     {
                       "type": "stack",
                       "gap": "lg",
+                      "align": "center",
                       "children": [
                         {
-                          "type": "icon",
-                          "name": "search"
+                          "name": "search",
+                          "type": "icon"
                         },
                         {
+                          "variant": "h3",
                           "type": "typography",
-                          "content": "Retrieving context...",
-                          "variant": "h3"
+                          "content": "Retrieving context..."
                         },
                         {
                           "type": "spinner"
                         },
                         {
-                          "gap": "md",
+                          "type": "stack",
+                          "direction": "horizontal",
+                          "justify": "center",
                           "children": [
                             {
                               "type": "badge",
                               "label": "Recalling memories"
                             },
                             {
-                              "type": "badge",
-                              "label": "Searching code"
+                              "label": "Searching code",
+                              "type": "badge"
                             }
                           ],
-                          "direction": "horizontal",
-                          "type": "stack",
-                          "justify": "center"
+                          "gap": "md"
                         }
                       ],
-                      "align": "center",
                       "direction": "vertical"
                     }
                   ]
@@ -426,26 +426,23 @@
                     {
                       "direction": "vertical",
                       "type": "stack",
-                      "gap": "lg",
                       "align": "center",
+                      "gap": "lg",
                       "children": [
                         {
                           "type": "icon",
                           "name": "cpu"
                         },
                         {
-                          "type": "typography",
+                          "variant": "h3",
                           "content": "Generating response...",
-                          "variant": "h3"
+                          "type": "typography"
                         },
                         {
                           "type": "spinner"
                         },
                         {
-                          "gap": "md",
-                          "justify": "center",
                           "type": "stack",
-                          "direction": "horizontal",
                           "children": [
                             {
                               "type": "badge",
@@ -455,7 +452,10 @@
                               "type": "badge",
                               "label": "@entity.searchHits"
                             }
-                          ]
+                          ],
+                          "justify": "center",
+                          "direction": "horizontal",
+                          "gap": "md"
                         }
                       ]
                     }
@@ -481,33 +481,33 @@
                     "render-ui",
                     "main",
                     {
-                      "gap": "lg",
                       "direction": "vertical",
+                      "align": "center",
+                      "gap": "lg",
                       "children": [
                         {
-                          "name": "alert-triangle",
-                          "type": "icon"
+                          "type": "icon",
+                          "name": "alert-triangle"
                         },
                         {
-                          "variant": "h2",
                           "type": "typography",
+                          "variant": "h2",
                           "content": "RAG Pipeline Error"
                         },
                         {
                           "variant": "error",
-                          "message": "@entity.error",
-                          "type": "alert"
+                          "type": "alert",
+                          "message": "@entity.error"
                         },
                         {
-                          "action": "RESET",
-                          "variant": "primary",
                           "icon": "rotate-ccw",
+                          "action": "RESET",
                           "label": "Try Again",
-                          "type": "button"
+                          "type": "button",
+                          "variant": "primary"
                         }
                       ],
-                      "type": "stack",
-                      "align": "center"
+                      "type": "stack"
                     }
                   ]
                 ]
@@ -540,14 +540,15 @@
                     "render-ui",
                     "main",
                     {
+                      "type": "stack",
                       "direction": "vertical",
                       "children": [
                         {
-                          "align": "center",
-                          "gap": "sm",
                           "justify": "between",
                           "direction": "horizontal",
                           "type": "stack",
+                          "gap": "sm",
+                          "align": "center",
                           "children": [
                             {
                               "children": [
@@ -567,9 +568,9 @@
                               "type": "stack"
                             },
                             {
+                              "label": "New Query",
                               "type": "button",
                               "action": "RESET",
-                              "label": "New Query",
                               "variant": "ghost",
                               "icon": "rotate-ccw"
                             }
@@ -579,21 +580,21 @@
                           "type": "divider"
                         },
                         {
-                          "type": "simple-grid",
                           "children": [
                             {
-                              "label": "Memory Hits",
-                              "value": "@entity.memoryHits",
+                              "icon": "brain",
                               "type": "stat-display",
-                              "icon": "brain"
+                              "value": "@entity.memoryHits",
+                              "label": "Memory Hits"
                             },
                             {
                               "type": "stat-display",
                               "icon": "code",
-                              "label": "Code Hits",
-                              "value": "@entity.searchHits"
+                              "value": "@entity.searchHits",
+                              "label": "Code Hits"
                             }
                           ],
+                          "type": "simple-grid",
                           "cols": 2.0
                         },
                         {
@@ -603,18 +604,16 @@
                           "type": "card",
                           "children": [
                             {
-                              "gap": "md",
-                              "direction": "vertical",
                               "children": [
                                 {
                                   "variant": "caption",
-                                  "content": "Query",
-                                  "type": "typography"
+                                  "type": "typography",
+                                  "content": "Query"
                                 },
                                 {
                                   "content": "@entity.query",
-                                  "type": "typography",
-                                  "variant": "body"
+                                  "variant": "body",
+                                  "type": "typography"
                                 },
                                 {
                                   "type": "divider"
@@ -625,12 +624,14 @@
                                   "type": "typography"
                                 },
                                 {
+                                  "type": "typography",
                                   "content": "@entity.response",
-                                  "variant": "body",
-                                  "type": "typography"
+                                  "variant": "body"
                                 }
                               ],
-                              "type": "stack"
+                              "type": "stack",
+                              "gap": "md",
+                              "direction": "vertical"
                             }
                           ]
                         },
@@ -639,25 +640,24 @@
                           "children": [
                             {
                               "direction": "vertical",
+                              "type": "stack",
                               "gap": "sm",
                               "children": [
                                 {
-                                  "type": "typography",
+                                  "content": "Retrieved Context",
                                   "variant": "caption",
-                                  "content": "Retrieved Context"
+                                  "type": "typography"
                                 },
                                 {
+                                  "type": "typography",
                                   "variant": "body",
-                                  "content": "@entity.context",
-                                  "type": "typography"
+                                  "content": "@entity.context"
                                 }
-                              ],
-                              "type": "stack"
+                              ]
                             }
                           ]
                         }
                       ],
-                      "type": "stack",
                       "gap": "lg"
                     }
                   ]
@@ -684,7 +684,6 @@
                     {
                       "gap": "lg",
                       "direction": "vertical",
-                      "type": "stack",
                       "align": "center",
                       "children": [
                         {
@@ -697,18 +696,19 @@
                           "variant": "h2"
                         },
                         {
-                          "variant": "error",
                           "type": "alert",
+                          "variant": "error",
                           "message": "@entity.error"
                         },
                         {
-                          "action": "RESET",
-                          "label": "Try Again",
                           "type": "button",
+                          "label": "Try Again",
                           "variant": "primary",
-                          "icon": "rotate-ccw"
+                          "icon": "rotate-ccw",
+                          "action": "RESET"
                         }
-                      ]
+                      ],
+                      "type": "stack"
                     }
                   ]
                 ]
@@ -752,55 +752,55 @@
                     "render-ui",
                     "main",
                     {
+                      "direction": "vertical",
                       "gap": "lg",
                       "type": "stack",
-                      "direction": "vertical",
                       "children": [
                         {
                           "align": "center",
-                          "type": "stack",
+                          "direction": "horizontal",
                           "children": [
                             {
-                              "name": "brain",
-                              "type": "icon"
+                              "type": "icon",
+                              "name": "brain"
                             },
                             {
+                              "type": "typography",
                               "content": "RAG Pipeline",
-                              "variant": "h2",
-                              "type": "typography"
+                              "variant": "h2"
                             }
                           ],
-                          "direction": "horizontal",
+                          "type": "stack",
                           "gap": "sm"
                         },
                         {
                           "type": "divider"
                         },
                         {
-                          "type": "card",
                           "children": [
                             {
-                              "type": "stack",
-                              "gap": "md",
                               "direction": "vertical",
+                              "gap": "md",
                               "children": [
                                 {
                                   "variant": "body",
-                                  "type": "typography",
-                                  "content": "Enter a query to retrieve context and generate a response"
+                                  "content": "Enter a query to retrieve context and generate a response",
+                                  "type": "typography"
                                 },
                                 {
+                                  "type": "form-section",
                                   "mode": "edit",
+                                  "entity": "@entity",
                                   "submitEvent": "GENERATE",
                                   "fields": [
                                     "query"
-                                  ],
-                                  "type": "form-section",
-                                  "entity": "@entity"
+                                  ]
                                 }
-                              ]
+                              ],
+                              "type": "stack"
                             }
-                          ]
+                          ],
+                          "type": "card"
                         }
                       ]
                     }

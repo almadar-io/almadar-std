@@ -118,41 +118,41 @@
           "name": "EmployeeAppLayout",
           "config": {
             "appName": "Time Tracking",
-            "searchEvent": "EMPLOYEE_SEARCH",
-            "notifications": [],
-            "contentTrait": "@trait.EmployeeCatalog",
-            "notificationClickEvent": "EMPLOYEE_NOTIFICATIONS_OPEN",
             "navItems": [
               {
+                "href": "/employees",
                 "icon": "users",
-                "label": "Employees",
-                "href": "/employees"
+                "label": "Employees"
               },
               {
-                "label": "Timesheets",
                 "href": "/timesheets",
-                "icon": "clipboard"
+                "icon": "clipboard",
+                "label": "Timesheets"
               },
               {
-                "icon": "clock",
+                "label": "Time Entries",
                 "href": "/time-entries",
-                "label": "Time Entries"
+                "icon": "clock"
               },
               {
+                "icon": "dollar-sign",
                 "href": "/billable",
-                "label": "Billable Hours",
-                "icon": "dollar-sign"
+                "label": "Billable Hours"
               },
               {
+                "label": "Approvals",
                 "href": "/approvals",
-                "icon": "check-circle",
-                "label": "Approvals"
+                "icon": "check-circle"
               }
-            ]
+            ],
+            "notifications": [],
+            "notificationClickEvent": "EMPLOYEE_NOTIFICATIONS_OPEN",
+            "contentTrait": "@trait.EmployeeCatalog",
+            "searchEvent": "EMPLOYEE_SEARCH"
           },
           "events": {
-            "SEARCH": "EMPLOYEE_SEARCH",
-            "NOTIFY_CLICK": "EMPLOYEE_NOTIFICATIONS_OPEN"
+            "NOTIFY_CLICK": "EMPLOYEE_NOTIFICATIONS_OPEN",
+            "SEARCH": "EMPLOYEE_SEARCH"
           }
         },
         {
@@ -236,61 +236,60 @@
                     "main",
                     {
                       "direction": "vertical",
-                      "type": "stack",
                       "gap": "lg",
                       "children": [
                         {
+                          "justify": "between",
+                          "align": "center",
+                          "direction": "horizontal",
+                          "gap": "md",
                           "children": [
                             {
-                              "type": "stack",
-                              "gap": "sm",
-                              "direction": "horizontal",
-                              "align": "center",
                               "children": [
                                 {
-                                  "name": "users",
-                                  "type": "icon"
+                                  "type": "icon",
+                                  "name": "users"
                                 },
                                 {
-                                  "variant": "h2",
                                   "content": "Employees",
-                                  "type": "typography"
+                                  "type": "typography",
+                                  "variant": "h2"
                                 }
-                              ]
+                              ],
+                              "align": "center",
+                              "direction": "horizontal",
+                              "gap": "sm",
+                              "type": "stack"
                             },
                             {
                               "type": "stack",
-                              "direction": "horizontal",
                               "children": [
                                 {
-                                  "type": "button",
-                                  "variant": "primary",
                                   "icon": "plus",
+                                  "type": "button",
+                                  "label": "New Employee",
                                   "action": "CREATE",
-                                  "label": "New Employee"
+                                  "variant": "primary"
                                 }
                               ],
-                              "gap": "sm"
+                              "gap": "sm",
+                              "direction": "horizontal"
                             }
                           ],
-                          "gap": "md",
-                          "direction": "horizontal",
-                          "justify": "between",
-                          "align": "center",
                           "type": "stack"
                         },
                         {
                           "type": "divider"
                         },
                         {
-                          "align": "center",
+                          "gap": "md",
                           "type": "stack",
+                          "align": "center",
                           "direction": "horizontal",
                           "children": [
                             "@trait.EmployeeSearch",
                             "@trait.EmployeeFilter"
-                          ],
-                          "gap": "md"
+                          ]
                         },
                         "@trait.EmployeeStats",
                         "@trait.EmployeeGraphs",
@@ -298,7 +297,8 @@
                           "type": "divider"
                         },
                         "@trait.EmployeeBrowseList"
-                      ]
+                      ],
+                      "type": "stack"
                     }
                   ]
                 ]
@@ -317,8 +317,6 @@
                     "render-ui",
                     "main",
                     {
-                      "align": "center",
-                      "gap": "md",
                       "className": "py-8",
                       "children": [
                         {
@@ -326,9 +324,9 @@
                           "name": "bell"
                         },
                         {
-                          "content": "No notifications",
+                          "type": "typography",
                           "variant": "h3",
-                          "type": "typography"
+                          "content": "No notifications"
                         },
                         {
                           "type": "typography",
@@ -337,14 +335,16 @@
                           "variant": "caption"
                         },
                         {
-                          "variant": "ghost",
                           "type": "button",
+                          "label": "Back to employees",
                           "action": "INIT",
-                          "label": "Back to employees"
+                          "variant": "ghost"
                         }
                       ],
+                      "gap": "md",
                       "type": "stack",
-                      "direction": "vertical"
+                      "direction": "vertical",
+                      "align": "center"
                     }
                   ]
                 ]
@@ -379,14 +379,14 @@
                 "filterType": "select"
               },
               {
-                "filterType": "select",
+                "field": "status",
                 "label": "Status",
                 "options": [
                   "active",
                   "on-leave",
                   "terminated"
                 ],
-                "field": "status"
+                "filterType": "select"
               }
             ],
             "event": "EMPLOYEE_FILTER"
@@ -398,13 +398,18 @@
           "config": {
             "metrics": [
               {
-                "icon": "users",
-                "format": "number",
-                "label": "Total",
                 "aggregation": "count",
+                "format": "number",
+                "icon": "users",
+                "label": "Total",
                 "variant": "primary"
               },
               {
+                "icon": "check-circle",
+                "aggregation": "count",
+                "label": "Active",
+                "variant": "success",
+                "format": "number",
                 "filter": [
                   "fn",
                   "row",
@@ -413,15 +418,9 @@
                     "@row.status",
                     "active"
                   ]
-                ],
-                "format": "number",
-                "label": "Active",
-                "aggregation": "count",
-                "icon": "check-circle",
-                "variant": "success"
+                ]
               },
               {
-                "icon": "pause-circle",
                 "filter": [
                   "fn",
                   "row",
@@ -431,18 +430,19 @@
                     "on-leave"
                   ]
                 ],
-                "label": "On Leave",
-                "variant": "warning",
+                "icon": "pause-circle",
                 "aggregation": "count",
-                "format": "number"
+                "format": "number",
+                "label": "On Leave",
+                "variant": "warning"
               },
               {
+                "format": "currency",
                 "field": "defaultHourlyRate",
-                "icon": "dollar-sign",
-                "label": "Avg Rate",
                 "variant": "info",
-                "aggregation": "avg",
-                "format": "currency"
+                "label": "Avg Rate",
+                "icon": "dollar-sign",
+                "aggregation": "avg"
               }
             ],
             "title": "Employees"
@@ -462,13 +462,13 @@
           "ref": "Graphs.traits.GraphItemGraph",
           "name": "EmployeeGraphs",
           "config": {
-            "categoryField": "department",
+            "title": "Employees by Department",
             "aggregation": "count",
-            "height": 240.0,
             "showLegend": false,
-            "subtitle": "Workforce distribution across departments",
+            "categoryField": "department",
             "chartType": "bar",
-            "title": "Employees by Department"
+            "height": 240.0,
+            "subtitle": "Workforce distribution across departments"
           },
           "listens": [
             {
@@ -488,9 +488,9 @@
           "config": {
             "fields": [
               {
-                "name": "name",
                 "variant": "h3",
-                "icon": "user"
+                "icon": "user",
+                "name": "name"
               },
               {
                 "name": "role",
@@ -501,24 +501,23 @@
                 "name": "department"
               },
               {
-                "name": "status",
-                "variant": "badge"
+                "variant": "badge",
+                "name": "status"
               },
               {
-                "name": "defaultHourlyRate",
-                "variant": "caption"
+                "variant": "caption",
+                "name": "defaultHourlyRate"
               }
             ],
-            "cols": 1.0,
             "itemActions": [
               {
-                "event": "VIEW",
+                "label": "View",
                 "variant": "ghost",
-                "label": "View"
+                "event": "VIEW"
               },
               {
-                "event": "EDIT",
                 "label": "Edit",
+                "event": "EDIT",
                 "variant": "ghost"
               },
               {
@@ -527,7 +526,8 @@
                 "variant": "danger"
               }
             ],
-            "gap": "sm"
+            "gap": "sm",
+            "cols": 1.0
           },
           "listens": [
             {
@@ -577,6 +577,7 @@
           "name": "EmployeeCreate",
           "linkedEntity": "Employee",
           "config": {
+            "title": "New Employee",
             "fields": [
               "name",
               "email",
@@ -587,8 +588,7 @@
               "defaultHourlyRate"
             ],
             "mode": "create",
-            "icon": "plus-circle",
-            "title": "New Employee"
+            "icon": "plus-circle"
           },
           "events": {
             "OPEN": "CREATE"
@@ -609,6 +609,8 @@
           "name": "EmployeeEdit",
           "linkedEntity": "Employee",
           "config": {
+            "icon": "edit",
+            "title": "Edit Employee",
             "mode": "edit",
             "fields": [
               "name",
@@ -618,9 +620,7 @@
               "status",
               "hireDate",
               "defaultHourlyRate"
-            ],
-            "title": "Edit Employee",
-            "icon": "edit"
+            ]
           },
           "events": {
             "OPEN": "EDIT"
@@ -642,6 +642,8 @@
           "linkedEntity": "Employee",
           "config": {
             "icon": "eye",
+            "title": "View Employee",
+            "mode": "edit",
             "fields": [
               "name",
               "email",
@@ -650,9 +652,7 @@
               "status",
               "hireDate",
               "defaultHourlyRate"
-            ],
-            "title": "View Employee",
-            "mode": "edit"
+            ]
           },
           "events": {
             "OPEN": "VIEW"
@@ -673,14 +673,14 @@
           "name": "EmployeeDelete",
           "linkedEntity": "Employee",
           "config": {
-            "confirmLabel": "Delete",
-            "title": "Delete Employee",
             "icon": "alert-triangle",
-            "alertMessage": "This action cannot be undone."
+            "title": "Delete Employee",
+            "alertMessage": "This action cannot be undone.",
+            "confirmLabel": "Delete"
           },
           "events": {
-            "REQUEST": "DELETE",
-            "CONFIRM": "CONFIRM_DELETE"
+            "CONFIRM": "CONFIRM_DELETE",
+            "REQUEST": "DELETE"
           },
           "listens": [
             {
@@ -1025,19 +1025,19 @@
                 "href": "/employees"
               },
               {
-                "label": "Timesheets",
                 "href": "/timesheets",
-                "icon": "clipboard"
+                "icon": "clipboard",
+                "label": "Timesheets"
               },
               {
-                "label": "Time Entries",
                 "icon": "clock",
+                "label": "Time Entries",
                 "href": "/time-entries"
               },
               {
+                "label": "Billable Hours",
                 "href": "/billable",
-                "icon": "dollar-sign",
-                "label": "Billable Hours"
+                "icon": "dollar-sign"
               },
               {
                 "href": "/approvals",
@@ -1045,11 +1045,11 @@
                 "icon": "check-circle"
               }
             ],
-            "searchEvent": "TIMESHEET_SEARCH",
             "notifications": [],
             "notificationClickEvent": "TIMESHEET_NOTIFICATIONS_OPEN",
-            "contentTrait": "@trait.TimesheetPanel",
-            "appName": "Time Tracking"
+            "appName": "Time Tracking",
+            "searchEvent": "TIMESHEET_SEARCH",
+            "contentTrait": "@trait.TimesheetPanel"
           },
           "events": {
             "SEARCH": "TIMESHEET_SEARCH",
@@ -1082,16 +1082,15 @@
                     "render-ui",
                     "main",
                     {
-                      "className": "max-w-6xl mx-auto w-full p-4",
+                      "direction": "vertical",
                       "type": "stack",
                       "children": [
                         {
-                          "type": "stack",
-                          "direction": "horizontal",
+                          "gap": "sm",
                           "children": [
                             {
-                              "name": "clipboard",
-                              "type": "icon"
+                              "type": "icon",
+                              "name": "clipboard"
                             },
                             {
                               "type": "typography",
@@ -1099,7 +1098,8 @@
                               "variant": "h2"
                             }
                           ],
-                          "gap": "sm",
+                          "direction": "horizontal",
+                          "type": "stack",
                           "align": "center"
                         },
                         {
@@ -1107,8 +1107,8 @@
                         },
                         "@trait.TimesheetLedgerView"
                       ],
-                      "direction": "vertical",
-                      "gap": "lg"
+                      "gap": "lg",
+                      "className": "max-w-6xl mx-auto w-full p-4"
                     }
                   ]
                 ]
@@ -1234,20 +1234,19 @@
           "name": "TimeEntryAppLayout",
           "config": {
             "notifications": [],
-            "notificationClickEvent": "TIME_ENTRY_NOTIFICATIONS_OPEN",
             "contentTrait": "@trait.TimeEntryPanel",
             "searchEvent": "TIME_ENTRY_SEARCH",
-            "appName": "Time Tracking",
+            "notificationClickEvent": "TIME_ENTRY_NOTIFICATIONS_OPEN",
             "navItems": [
               {
-                "label": "Employees",
+                "icon": "users",
                 "href": "/employees",
-                "icon": "users"
+                "label": "Employees"
               },
               {
                 "icon": "clipboard",
-                "href": "/timesheets",
-                "label": "Timesheets"
+                "label": "Timesheets",
+                "href": "/timesheets"
               },
               {
                 "label": "Time Entries",
@@ -1255,20 +1254,21 @@
                 "icon": "clock"
               },
               {
-                "href": "/billable",
                 "label": "Billable Hours",
-                "icon": "dollar-sign"
+                "icon": "dollar-sign",
+                "href": "/billable"
               },
               {
                 "label": "Approvals",
                 "href": "/approvals",
                 "icon": "check-circle"
               }
-            ]
+            ],
+            "appName": "Time Tracking"
           },
           "events": {
-            "NOTIFY_CLICK": "TIME_ENTRY_NOTIFICATIONS_OPEN",
-            "SEARCH": "TIME_ENTRY_SEARCH"
+            "SEARCH": "TIME_ENTRY_SEARCH",
+            "NOTIFY_CLICK": "TIME_ENTRY_NOTIFICATIONS_OPEN"
           }
         },
         {
@@ -1297,33 +1297,33 @@
                     "render-ui",
                     "main",
                     {
-                      "type": "stack",
                       "gap": "lg",
                       "children": [
                         {
-                          "type": "stack",
+                          "direction": "horizontal",
+                          "align": "center",
+                          "gap": "sm",
                           "children": [
                             {
-                              "type": "icon",
-                              "name": "clock"
+                              "name": "clock",
+                              "type": "icon"
                             },
                             {
-                              "type": "typography",
                               "variant": "h2",
-                              "content": "Time Entries"
+                              "content": "Time Entries",
+                              "type": "typography"
                             }
                           ],
-                          "direction": "horizontal",
-                          "gap": "sm",
-                          "align": "center"
+                          "type": "stack"
                         },
                         {
                           "type": "divider"
                         },
                         "@trait.TimeEntryLogView"
                       ],
-                      "direction": "vertical",
-                      "className": "max-w-6xl mx-auto w-full p-4"
+                      "type": "stack",
+                      "className": "max-w-6xl mx-auto w-full p-4",
+                      "direction": "vertical"
                     }
                   ]
                 ]
@@ -1443,12 +1443,13 @@
           "ref": "AppShell.traits.AppLayout",
           "name": "BillableHourAppLayout",
           "config": {
+            "notifications": [],
             "appName": "Time Tracking",
             "navItems": [
               {
                 "icon": "users",
-                "label": "Employees",
-                "href": "/employees"
+                "href": "/employees",
+                "label": "Employees"
               },
               {
                 "label": "Timesheets",
@@ -1456,25 +1457,24 @@
                 "icon": "clipboard"
               },
               {
-                "icon": "clock",
+                "href": "/time-entries",
                 "label": "Time Entries",
-                "href": "/time-entries"
+                "icon": "clock"
               },
               {
-                "label": "Billable Hours",
                 "href": "/billable",
+                "label": "Billable Hours",
                 "icon": "dollar-sign"
               },
               {
-                "label": "Approvals",
                 "icon": "check-circle",
-                "href": "/approvals"
+                "href": "/approvals",
+                "label": "Approvals"
               }
             ],
-            "searchEvent": "BILLABLE_HOUR_SEARCH",
-            "notifications": [],
             "notificationClickEvent": "BILLABLE_HOUR_NOTIFICATIONS_OPEN",
-            "contentTrait": "@trait.BillableHourPanel"
+            "contentTrait": "@trait.BillableHourPanel",
+            "searchEvent": "BILLABLE_HOUR_SEARCH"
           },
           "events": {
             "NOTIFY_CLICK": "BILLABLE_HOUR_NOTIFICATIONS_OPEN",
@@ -1508,32 +1508,32 @@
                     "main",
                     {
                       "direction": "vertical",
-                      "type": "stack",
-                      "gap": "lg",
-                      "className": "max-w-6xl mx-auto w-full p-4",
                       "children": [
                         {
-                          "align": "center",
-                          "type": "stack",
+                          "gap": "sm",
                           "children": [
                             {
-                              "name": "dollar-sign",
-                              "type": "icon"
+                              "type": "icon",
+                              "name": "dollar-sign"
                             },
                             {
-                              "variant": "h2",
                               "content": "Billable Hours",
-                              "type": "typography"
+                              "type": "typography",
+                              "variant": "h2"
                             }
                           ],
-                          "gap": "sm",
-                          "direction": "horizontal"
+                          "direction": "horizontal",
+                          "type": "stack",
+                          "align": "center"
                         },
                         {
                           "type": "divider"
                         },
                         "@trait.BillableHourTimesheetView"
-                      ]
+                      ],
+                      "gap": "lg",
+                      "type": "stack",
+                      "className": "max-w-6xl mx-auto w-full p-4"
                     }
                   ]
                 ]
@@ -1673,12 +1673,11 @@
           "ref": "AppShell.traits.AppLayout",
           "name": "ApprovalRequestAppLayout",
           "config": {
-            "searchEvent": "APPROVAL_REQUEST_SEARCH",
-            "contentTrait": "@trait.ApprovalRequestPanel",
+            "notifications": [],
             "navItems": [
               {
-                "label": "Employees",
                 "href": "/employees",
+                "label": "Employees",
                 "icon": "users"
               },
               {
@@ -1687,14 +1686,14 @@
                 "icon": "clipboard"
               },
               {
+                "icon": "clock",
                 "label": "Time Entries",
-                "href": "/time-entries",
-                "icon": "clock"
+                "href": "/time-entries"
               },
               {
+                "icon": "dollar-sign",
                 "label": "Billable Hours",
-                "href": "/billable",
-                "icon": "dollar-sign"
+                "href": "/billable"
               },
               {
                 "label": "Approvals",
@@ -1702,13 +1701,14 @@
                 "icon": "check-circle"
               }
             ],
+            "contentTrait": "@trait.ApprovalRequestPanel",
             "appName": "Time Tracking",
-            "notifications": [],
+            "searchEvent": "APPROVAL_REQUEST_SEARCH",
             "notificationClickEvent": "APPROVAL_REQUEST_NOTIFICATIONS_OPEN"
           },
           "events": {
-            "NOTIFY_CLICK": "APPROVAL_REQUEST_NOTIFICATIONS_OPEN",
-            "SEARCH": "APPROVAL_REQUEST_SEARCH"
+            "SEARCH": "APPROVAL_REQUEST_SEARCH",
+            "NOTIFY_CLICK": "APPROVAL_REQUEST_NOTIFICATIONS_OPEN"
           }
         },
         {
@@ -1737,7 +1737,9 @@
                     "render-ui",
                     "main",
                     {
-                      "type": "stack",
+                      "direction": "vertical",
+                      "className": "max-w-6xl mx-auto w-full p-4",
+                      "gap": "lg",
                       "children": [
                         {
                           "children": [
@@ -1746,24 +1748,22 @@
                               "name": "check-circle"
                             },
                             {
-                              "variant": "h2",
                               "type": "typography",
+                              "variant": "h2",
                               "content": "Approvals"
                             }
                           ],
                           "direction": "horizontal",
-                          "align": "center",
                           "type": "stack",
-                          "gap": "sm"
+                          "gap": "sm",
+                          "align": "center"
                         },
                         {
                           "type": "divider"
                         },
                         "@trait.ApprovalRequestPipelineView"
                       ],
-                      "className": "max-w-6xl mx-auto w-full p-4",
-                      "direction": "vertical",
-                      "gap": "lg"
+                      "type": "stack"
                     }
                   ]
                 ]

@@ -349,8 +349,8 @@
                     "ApplicationIntake",
                     {
                       "emit": {
-                        "failure": "ApplicationIntakeLoadFailed",
-                        "success": "ApplicationIntakeLoaded"
+                        "success": "ApplicationIntakeLoaded",
+                        "failure": "ApplicationIntakeLoadFailed"
                       }
                     }
                   ],
@@ -358,22 +358,22 @@
                     "render-ui",
                     "main",
                     {
+                      "direction": "vertical",
+                      "align": "center",
+                      "className": "py-12",
+                      "gap": "md",
                       "children": [
                         {
                           "type": "spinner"
                         },
                         {
-                          "type": "typography",
                           "variant": "caption",
+                          "content": "Loading applications…",
                           "color": "muted",
-                          "content": "Loading applications…"
+                          "type": "typography"
                         }
                       ],
-                      "gap": "md",
-                      "type": "stack",
-                      "direction": "vertical",
-                      "align": "center",
-                      "className": "py-12"
+                      "type": "stack"
                     }
                   ]
                 ]
@@ -387,93 +387,86 @@
                     "render-ui",
                     "main",
                     {
+                      "gap": "md",
+                      "direction": "vertical",
+                      "type": "stack",
                       "children": [
                         {
-                          "type": "stack",
-                          "direction": "horizontal",
                           "children": [
                             {
-                              "children": [
-                                {
-                                  "type": "icon",
-                                  "name": "user-plus"
-                                },
-                                {
-                                  "variant": "h3",
-                                  "content": "Applicant Intake",
-                                  "type": "typography"
-                                }
-                              ],
+                              "gap": "sm",
                               "direction": "horizontal",
                               "type": "stack",
-                              "gap": "sm",
-                              "align": "center"
+                              "align": "center",
+                              "children": [
+                                {
+                                  "name": "user-plus",
+                                  "type": "icon"
+                                },
+                                {
+                                  "content": "Applicant Intake",
+                                  "type": "typography",
+                                  "variant": "h3"
+                                }
+                              ]
                             },
                             {
                               "label": "New Application",
+                              "icon": "plus",
                               "type": "button",
                               "action": "CREATE",
-                              "variant": "primary",
-                              "icon": "plus"
+                              "variant": "primary"
                             }
                           ],
+                          "justify": "between",
+                          "direction": "horizontal",
                           "gap": "md",
-                          "justify": "between"
+                          "type": "stack"
                         },
                         {
-                          "cols": 4.0,
                           "children": [
                             {
-                              "label": "Total applications",
                               "icon": "user-plus",
-                              "value": "@payload.data.length",
-                              "type": "stat-display"
+                              "type": "stat-display",
+                              "label": "Total applications",
+                              "value": "@payload.data.length"
                             },
                             {
-                              "icon": "send",
+                              "type": "stat-display",
                               "value": "18",
-                              "label": "Submitted",
-                              "type": "stat-display"
+                              "icon": "send",
+                              "label": "Submitted"
                             },
                             {
-                              "label": "Interviewing",
                               "type": "stat-display",
                               "value": "7",
+                              "label": "Interviewing",
                               "icon": "calendar"
                             },
                             {
-                              "type": "stat-display",
+                              "label": "Completed",
                               "value": "24",
                               "icon": "check-circle",
-                              "label": "Completed"
+                              "type": "stat-display"
                             }
                           ],
-                          "type": "simple-grid"
+                          "type": "simple-grid",
+                          "cols": 4.0
                         },
                         {
                           "type": "divider"
                         },
                         {
-                          "gap": "sm",
                           "entity": "@payload.data",
-                          "itemActions": [
-                            {
-                              "event": "REQUEST_EDIT",
-                              "label": "Edit",
-                              "variant": "ghost"
-                            },
-                            {
-                              "variant": "danger",
-                              "label": "Delete",
-                              "event": "REQUEST_DELETE"
-                            }
-                          ],
+                          "gap": "sm",
+                          "cols": 1.0,
+                          "type": "data-grid",
                           "fields": [
                             {
-                              "variant": "caption",
                               "name": "applicantName",
-                              "icon": "user",
-                              "label": "Applicant"
+                              "label": "Applicant",
+                              "variant": "caption",
+                              "icon": "user"
                             },
                             {
                               "label": "Email",
@@ -481,28 +474,35 @@
                               "name": "applicantEmail"
                             },
                             {
-                              "label": "Job",
-                              "name": "jobId",
-                              "variant": "caption"
-                            },
-                            {
-                              "name": "firstInterviewAt",
                               "variant": "caption",
-                              "label": "First Interview"
+                              "label": "Job",
+                              "name": "jobId"
                             },
                             {
-                              "label": "Status",
+                              "variant": "caption",
+                              "label": "First Interview",
+                              "name": "firstInterviewAt"
+                            },
+                            {
                               "name": "status",
+                              "label": "Status",
                               "variant": "badge"
                             }
                           ],
-                          "type": "data-grid",
-                          "cols": 1.0
+                          "itemActions": [
+                            {
+                              "label": "Edit",
+                              "event": "REQUEST_EDIT",
+                              "variant": "ghost"
+                            },
+                            {
+                              "label": "Delete",
+                              "event": "REQUEST_DELETE",
+                              "variant": "danger"
+                            }
+                          ]
                         }
-                      ],
-                      "gap": "md",
-                      "type": "stack",
-                      "direction": "vertical"
+                      ]
                     }
                   ]
                 ]
@@ -516,9 +516,9 @@
                     "render-ui",
                     "main",
                     {
-                      "variant": "error",
                       "message": "@payload.error",
-                      "type": "alert"
+                      "type": "alert",
+                      "variant": "error"
                     }
                   ]
                 ]
@@ -580,6 +580,9 @@
           "name": "ApplicationIntakeCreate",
           "linkedEntity": "ApplicationIntake",
           "config": {
+            "mode": "create",
+            "icon": "user-plus",
+            "title": "New Application",
             "fields": [
               "applicantName",
               "applicantEmail",
@@ -589,10 +592,7 @@
               "firstInterviewAt",
               "interviewerName",
               "interviewFormat"
-            ],
-            "title": "New Application",
-            "mode": "create",
-            "icon": "user-plus"
+            ]
           },
           "events": {
             "OPEN": "CREATE"
@@ -613,6 +613,7 @@
           "name": "ApplicationIntakeEdit",
           "linkedEntity": "ApplicationIntake",
           "config": {
+            "mode": "edit",
             "fields": [
               "applicantName",
               "applicantEmail",
@@ -624,8 +625,7 @@
               "interviewFormat"
             ],
             "title": "Edit Application",
-            "icon": "pencil",
-            "mode": "edit"
+            "icon": "pencil"
           },
           "events": {
             "OPEN": "EDIT"
@@ -646,14 +646,14 @@
           "name": "ApplicationIntakeDelete",
           "linkedEntity": "ApplicationIntake",
           "config": {
-            "alertMessage": "Are you sure you want to delete this application?",
             "title": "Delete Application",
-            "icon": "alert-triangle",
-            "confirmLabel": "Delete"
+            "confirmLabel": "Delete",
+            "alertMessage": "Are you sure you want to delete this application?",
+            "icon": "alert-triangle"
           },
           "events": {
-            "REQUEST": "DELETE",
-            "CONFIRM": "CONFIRM_DELETE"
+            "CONFIRM": "CONFIRM_DELETE",
+            "REQUEST": "DELETE"
           },
           "listens": [
             {

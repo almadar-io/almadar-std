@@ -21,11 +21,6 @@
             "items": {
               "type": "object",
               "properties": {
-                "format": {
-                  "name": "format",
-                  "type": "string",
-                  "required": true
-                },
                 "id": {
                   "name": "id",
                   "type": "string",
@@ -33,6 +28,11 @@
                 },
                 "label": {
                   "name": "label",
+                  "type": "string",
+                  "required": true
+                },
+                "format": {
+                  "name": "format",
                   "type": "string",
                   "required": true
                 }
@@ -110,36 +110,36 @@
                     "render-ui",
                     "main",
                     {
+                      "position": "bottom",
                       "children": {
-                        "type": "button",
-                        "icon": "download",
                         "size": "sm",
                         "action": "OPEN_EXPORT",
+                        "icon": "download",
+                        "type": "button",
                         "variant": "ghost",
                         "label": "@config.buttonLabel"
                       },
-                      "position": "bottom",
                       "type": "popover",
                       "content": {
+                        "fields": [],
+                        "entity": "@entity.options",
                         "renderItem": [
                           "fn",
                           "fmt",
                           {
-                            "icon": "file-down",
-                            "label": "@fmt.label",
-                            "type": "button",
-                            "variant": "ghost",
-                            "size": "sm",
-                            "action": "@config.event",
                             "actionPayload": {
                               "format": "@fmt.format",
                               "tileId": "@config.tileId"
-                            }
+                            },
+                            "label": "@fmt.label",
+                            "variant": "ghost",
+                            "size": "sm",
+                            "type": "button",
+                            "icon": "file-down",
+                            "action": "@config.event"
                           }
                         ],
-                        "entity": "@entity.options",
-                        "type": "data-list",
-                        "fields": []
+                        "type": "data-list"
                       }
                     }
                   ]
@@ -172,6 +172,13 @@
             ]
           },
           "config": {
+            "tileId": {
+              "type": "string",
+              "default": "",
+              "label": "Tile id",
+              "description": "Identifier of the dashboard tile being exported",
+              "synonyms": "internal identifier — host orbital wires this; users rarely set it directly"
+            },
             "event": {
               "type": "string",
               "default": "EXPORT_REQUESTED",
@@ -179,23 +186,30 @@
               "description": "Event emitted when the user picks a format",
               "synonyms": "bus event name. internal wiring; users rarely target directly"
             },
+            "buttonLabel": {
+              "type": "string",
+              "default": "Export",
+              "label": "Button label",
+              "description": "Text shown on the toolbar button that opens the export popover",
+              "synonyms": "the text on the export trigger button. user phrases: 'rename export button to X' / 'set the button label to X' / 'call the button X' / 'change export button text to X' -> X (e.g. 'Download CSV', 'Download', 'Export Data')"
+            },
             "formats": {
               "type": "[FormatOption]",
               "default": [
                 {
-                  "format": "csv",
                   "label": "CSV",
+                  "format": "csv",
                   "id": "csv"
                 },
                 {
-                  "label": "XLSX",
+                  "format": "xlsx",
                   "id": "xlsx",
-                  "format": "xlsx"
+                  "label": "XLSX"
                 },
                 {
-                  "format": "pdf",
                   "label": "PDF",
-                  "id": "pdf"
+                  "id": "pdf",
+                  "format": "pdf"
                 }
               ],
               "label": "Available formats",
@@ -209,32 +223,18 @@
                     "type": "string",
                     "required": true
                   },
-                  "label": {
-                    "name": "label",
+                  "id": {
+                    "name": "id",
                     "type": "string",
                     "required": true
                   },
-                  "id": {
-                    "name": "id",
+                  "label": {
+                    "name": "label",
                     "type": "string",
                     "required": true
                   }
                 }
               }
-            },
-            "tileId": {
-              "type": "string",
-              "default": "",
-              "label": "Tile id",
-              "description": "Identifier of the dashboard tile being exported",
-              "synonyms": "internal identifier — host orbital wires this; users rarely set it directly"
-            },
-            "buttonLabel": {
-              "type": "string",
-              "default": "Export",
-              "label": "Button label",
-              "description": "Text shown on the toolbar button that opens the export popover",
-              "synonyms": "the text on the export trigger button. user phrases: 'rename export button to X' / 'set the button label to X' / 'call the button X' / 'change export button text to X' -> X (e.g. 'Download CSV', 'Download', 'Export Data')"
             }
           },
           "scope": "instance"

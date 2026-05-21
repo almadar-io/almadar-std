@@ -103,19 +103,21 @@
           "ref": "AppShell.traits.AppLayout",
           "name": "SaleAppLayout",
           "config": {
-            "appName": "Retail POS",
             "notificationClickEvent": "SALE_NOTIFICATIONS_OPEN",
             "contentTrait": "@trait.SaleCatalog",
+            "notifications": [],
+            "appName": "Retail POS",
+            "searchEvent": "SALE_SEARCH",
             "navItems": [
               {
-                "href": "/sales",
+                "label": "Sales",
                 "icon": "shopping-bag",
-                "label": "Sales"
+                "href": "/sales"
               },
               {
-                "label": "Checkout",
                 "href": "/checkout",
-                "icon": "credit-card"
+                "icon": "credit-card",
+                "label": "Checkout"
               },
               {
                 "icon": "receipt",
@@ -123,13 +125,11 @@
                 "label": "Receipts"
               },
               {
-                "href": "/customers",
                 "icon": "users",
-                "label": "Customers"
+                "label": "Customers",
+                "href": "/customers"
               }
-            ],
-            "searchEvent": "SALE_SEARCH",
-            "notifications": []
+            ]
           },
           "events": {
             "SEARCH": "SALE_SEARCH",
@@ -217,60 +217,61 @@
                     "main",
                     {
                       "gap": "lg",
+                      "type": "stack",
                       "direction": "vertical",
                       "children": [
                         {
+                          "direction": "horizontal",
+                          "justify": "between",
+                          "gap": "md",
                           "type": "stack",
                           "children": [
                             {
+                              "direction": "horizontal",
+                              "gap": "sm",
+                              "align": "center",
+                              "type": "stack",
                               "children": [
                                 {
-                                  "name": "shopping-bag",
-                                  "type": "icon"
+                                  "type": "icon",
+                                  "name": "shopping-bag"
                                 },
                                 {
-                                  "type": "typography",
+                                  "variant": "h2",
                                   "content": "Sales",
-                                  "variant": "h2"
+                                  "type": "typography"
                                 }
-                              ],
-                              "gap": "sm",
-                              "type": "stack",
-                              "direction": "horizontal",
-                              "align": "center"
+                              ]
                             },
                             {
+                              "direction": "horizontal",
                               "gap": "sm",
+                              "type": "stack",
                               "children": [
                                 {
-                                  "action": "CREATE",
-                                  "variant": "primary",
-                                  "icon": "plus",
                                   "type": "button",
-                                  "label": "New Sale"
+                                  "label": "New Sale",
+                                  "icon": "plus",
+                                  "variant": "primary",
+                                  "action": "CREATE"
                                 }
-                              ],
-                              "type": "stack",
-                              "direction": "horizontal"
+                              ]
                             }
                           ],
-                          "direction": "horizontal",
-                          "align": "center",
-                          "gap": "md",
-                          "justify": "between"
+                          "align": "center"
                         },
                         {
                           "type": "divider"
                         },
                         {
+                          "type": "stack",
+                          "gap": "md",
                           "direction": "horizontal",
-                          "align": "center",
                           "children": [
                             "@trait.SaleSearch",
                             "@trait.SaleFilter"
                           ],
-                          "type": "stack",
-                          "gap": "md"
+                          "align": "center"
                         },
                         "@trait.SaleStats",
                         "@trait.SaleGraphs",
@@ -278,8 +279,7 @@
                           "type": "divider"
                         },
                         "@trait.SaleBrowseList"
-                      ],
-                      "type": "stack"
+                      ]
                     }
                   ]
                 ]
@@ -298,11 +298,6 @@
                     "render-ui",
                     "main",
                     {
-                      "type": "stack",
-                      "className": "py-8",
-                      "gap": "md",
-                      "direction": "vertical",
-                      "align": "center",
                       "children": [
                         {
                           "name": "bell",
@@ -314,18 +309,23 @@
                           "content": "No notifications"
                         },
                         {
-                          "content": "You're all caught up.",
                           "type": "typography",
+                          "content": "You're all caught up.",
                           "variant": "caption",
                           "color": "muted"
                         },
                         {
-                          "variant": "ghost",
-                          "type": "button",
+                          "label": "Back to sales",
                           "action": "INIT",
-                          "label": "Back to sales"
+                          "type": "button",
+                          "variant": "ghost"
                         }
-                      ]
+                      ],
+                      "gap": "md",
+                      "direction": "vertical",
+                      "type": "stack",
+                      "className": "py-8",
+                      "align": "center"
                     }
                   ]
                 ]
@@ -338,26 +338,25 @@
           "ref": "Search.traits.SearchResultSearch",
           "name": "SaleSearch",
           "config": {
-            "event": "SALE_SEARCH",
-            "placeholder": "Search sales…"
+            "placeholder": "Search sales…",
+            "event": "SALE_SEARCH"
           }
         },
         {
           "ref": "Filter.traits.FilterTargetFilter",
           "name": "SaleFilter",
           "config": {
-            "event": "SALE_FILTER",
             "filters": [
               {
-                "filterType": "select",
+                "label": "Status",
                 "options": [
                   "in-progress",
                   "completed",
                   "refunded",
                   "voided"
                 ],
-                "label": "Status",
-                "field": "status"
+                "field": "status",
+                "filterType": "select"
               },
               {
                 "options": [
@@ -366,27 +365,28 @@
                   "check",
                   "digital"
                 ],
+                "filterType": "select",
                 "label": "Payment",
-                "field": "paymentMethod",
-                "filterType": "select"
+                "field": "paymentMethod"
               }
-            ]
+            ],
+            "event": "SALE_FILTER"
           }
         },
         {
           "ref": "Stats.traits.StatsItemStats",
           "name": "SaleStats",
           "config": {
+            "title": "Sales",
             "metrics": [
               {
-                "aggregation": "count",
-                "label": "Total",
+                "icon": "shopping-bag",
                 "variant": "primary",
-                "format": "number",
-                "icon": "shopping-bag"
+                "label": "Total",
+                "aggregation": "count",
+                "format": "number"
               },
               {
-                "label": "Completed",
                 "filter": [
                   "fn",
                   "row",
@@ -396,15 +396,14 @@
                     "completed"
                   ]
                 ],
-                "format": "number",
-                "variant": "success",
                 "icon": "check-circle",
-                "aggregation": "count"
+                "aggregation": "count",
+                "variant": "success",
+                "format": "number",
+                "label": "Completed"
               },
               {
-                "label": "Revenue",
                 "aggregation": "sum",
-                "icon": "dollar-sign",
                 "filter": [
                   "fn",
                   "row",
@@ -415,11 +414,12 @@
                   ]
                 ],
                 "format": "currency",
+                "variant": "info",
+                "icon": "dollar-sign",
                 "field": "total",
-                "variant": "info"
+                "label": "Revenue"
               }
-            ],
-            "title": "Sales"
+            ]
           },
           "listens": [
             {
@@ -436,13 +436,13 @@
           "ref": "Graphs.traits.GraphItemGraph",
           "name": "SaleGraphs",
           "config": {
+            "title": "Sales by Payment Method",
+            "categoryField": "paymentMethod",
             "subtitle": "Volume across payment types",
             "chartType": "bar",
             "height": 240.0,
-            "showLegend": false,
-            "title": "Sales by Payment Method",
-            "categoryField": "paymentMethod",
-            "aggregation": "count"
+            "aggregation": "count",
+            "showLegend": false
           },
           "listens": [
             {
@@ -460,38 +460,20 @@
           "name": "SaleBrowseList",
           "linkedEntity": "Sale",
           "config": {
-            "itemActions": [
-              {
-                "event": "VIEW",
-                "variant": "ghost",
-                "label": "View"
-              },
-              {
-                "event": "EDIT",
-                "variant": "ghost",
-                "label": "Edit"
-              },
-              {
-                "label": "Delete",
-                "event": "DELETE",
-                "variant": "danger"
-              }
-            ],
             "cols": 1.0,
-            "gap": "sm",
             "fields": [
               {
-                "variant": "h4",
+                "name": "id",
                 "icon": "shopping-bag",
-                "name": "id"
-              },
-              {
-                "name": "status",
-                "variant": "badge"
+                "variant": "h4"
               },
               {
                 "variant": "badge",
-                "name": "paymentMethod"
+                "name": "status"
+              },
+              {
+                "name": "paymentMethod",
+                "variant": "badge"
               },
               {
                 "name": "total",
@@ -501,7 +483,25 @@
                 "name": "completedAt",
                 "variant": "caption"
               }
-            ]
+            ],
+            "itemActions": [
+              {
+                "variant": "ghost",
+                "event": "VIEW",
+                "label": "View"
+              },
+              {
+                "variant": "ghost",
+                "label": "Edit",
+                "event": "EDIT"
+              },
+              {
+                "label": "Delete",
+                "event": "DELETE",
+                "variant": "danger"
+              }
+            ],
+            "gap": "sm"
           },
           "listens": [
             {
@@ -551,8 +551,8 @@
           "name": "SaleCreate",
           "linkedEntity": "Sale",
           "config": {
+            "title": "New Sale",
             "mode": "create",
-            "icon": "plus-circle",
             "fields": [
               "total",
               "status",
@@ -560,7 +560,7 @@
               "customerId",
               "cashierId"
             ],
-            "title": "New Sale"
+            "icon": "plus-circle"
           },
           "events": {
             "OPEN": "CREATE"
@@ -582,7 +582,6 @@
           "linkedEntity": "Sale",
           "config": {
             "title": "Edit Sale",
-            "icon": "edit",
             "mode": "edit",
             "fields": [
               "total",
@@ -591,7 +590,8 @@
               "customerId",
               "cashierId",
               "completedAt"
-            ]
+            ],
+            "icon": "edit"
           },
           "events": {
             "OPEN": "EDIT"
@@ -612,8 +612,7 @@
           "name": "SaleView",
           "linkedEntity": "Sale",
           "config": {
-            "title": "View Sale",
-            "icon": "eye",
+            "mode": "edit",
             "fields": [
               "total",
               "status",
@@ -622,7 +621,8 @@
               "cashierId",
               "completedAt"
             ],
-            "mode": "edit"
+            "icon": "eye",
+            "title": "View Sale"
           },
           "events": {
             "OPEN": "VIEW"
@@ -643,10 +643,10 @@
           "name": "SaleDelete",
           "linkedEntity": "Sale",
           "config": {
-            "icon": "alert-triangle",
-            "alertMessage": "This action cannot be undone.",
             "title": "Delete Sale",
-            "confirmLabel": "Delete"
+            "alertMessage": "This action cannot be undone.",
+            "confirmLabel": "Delete",
+            "icon": "alert-triangle"
           },
           "events": {
             "REQUEST": "DELETE",
@@ -988,33 +988,33 @@
           "ref": "AppShell.traits.AppLayout",
           "name": "CheckoutAppLayout",
           "config": {
+            "notifications": [],
             "searchEvent": "CHECKOUT_SEARCH",
             "notificationClickEvent": "CHECKOUT_NOTIFICATIONS_OPEN",
+            "contentTrait": "@trait.CheckoutTerminalBoard",
             "appName": "Retail POS",
             "navItems": [
               {
                 "icon": "shopping-bag",
-                "href": "/sales",
-                "label": "Sales"
+                "label": "Sales",
+                "href": "/sales"
               },
               {
-                "icon": "credit-card",
                 "href": "/checkout",
-                "label": "Checkout"
+                "label": "Checkout",
+                "icon": "credit-card"
               },
               {
+                "icon": "receipt",
                 "label": "Receipts",
-                "href": "/receipts",
-                "icon": "receipt"
+                "href": "/receipts"
               },
               {
-                "label": "Customers",
                 "href": "/customers",
-                "icon": "users"
+                "icon": "users",
+                "label": "Customers"
               }
-            ],
-            "contentTrait": "@trait.CheckoutTerminalBoard",
-            "notifications": []
+            ]
           },
           "events": {
             "SEARCH": "CHECKOUT_SEARCH",
@@ -1134,12 +1134,15 @@
           "ref": "AppShell.traits.AppLayout",
           "name": "ReceiptAppLayout",
           "config": {
+            "notifications": [],
+            "notificationClickEvent": "RECEIPT_NOTIFICATIONS_OPEN",
             "contentTrait": "@trait.ReceiptLedger",
+            "appName": "Retail POS",
             "navItems": [
               {
+                "icon": "shopping-bag",
                 "label": "Sales",
-                "href": "/sales",
-                "icon": "shopping-bag"
+                "href": "/sales"
               },
               {
                 "icon": "credit-card",
@@ -1147,20 +1150,17 @@
                 "href": "/checkout"
               },
               {
-                "label": "Receipts",
+                "icon": "receipt",
                 "href": "/receipts",
-                "icon": "receipt"
+                "label": "Receipts"
               },
               {
-                "href": "/customers",
+                "icon": "users",
                 "label": "Customers",
-                "icon": "users"
+                "href": "/customers"
               }
             ],
-            "searchEvent": "RECEIPT_SEARCH",
-            "notifications": [],
-            "appName": "Retail POS",
-            "notificationClickEvent": "RECEIPT_NOTIFICATIONS_OPEN"
+            "searchEvent": "RECEIPT_SEARCH"
           },
           "events": {
             "NOTIFY_CLICK": "RECEIPT_NOTIFICATIONS_OPEN",
@@ -1269,37 +1269,37 @@
           "ref": "AppShell.traits.AppLayout",
           "name": "CustomerAppLayout",
           "config": {
-            "contentTrait": "@trait.CustomerDirectory",
+            "searchEvent": "CUSTOMER_SEARCH",
             "notifications": [],
+            "contentTrait": "@trait.CustomerDirectory",
             "navItems": [
               {
+                "href": "/sales",
                 "label": "Sales",
-                "icon": "shopping-bag",
-                "href": "/sales"
+                "icon": "shopping-bag"
               },
               {
+                "href": "/checkout",
                 "icon": "credit-card",
-                "label": "Checkout",
-                "href": "/checkout"
+                "label": "Checkout"
               },
               {
-                "icon": "receipt",
                 "href": "/receipts",
+                "icon": "receipt",
                 "label": "Receipts"
               },
               {
-                "label": "Customers",
                 "href": "/customers",
-                "icon": "users"
+                "icon": "users",
+                "label": "Customers"
               }
             ],
-            "appName": "Retail POS",
-            "searchEvent": "CUSTOMER_SEARCH",
-            "notificationClickEvent": "CUSTOMER_NOTIFICATIONS_OPEN"
+            "notificationClickEvent": "CUSTOMER_NOTIFICATIONS_OPEN",
+            "appName": "Retail POS"
           },
           "events": {
-            "NOTIFY_CLICK": "CUSTOMER_NOTIFICATIONS_OPEN",
-            "SEARCH": "CUSTOMER_SEARCH"
+            "SEARCH": "CUSTOMER_SEARCH",
+            "NOTIFY_CLICK": "CUSTOMER_NOTIFICATIONS_OPEN"
           }
         },
         {

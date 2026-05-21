@@ -80,12 +80,13 @@
           "ref": "AppShell.traits.AppLayout",
           "name": "ChatAppLayout",
           "config": {
-            "searchEvent": "CHAT_SEARCH",
+            "contentTrait": "@trait.ChatRoom",
+            "appName": "Realtime Chat",
             "navItems": [
               {
+                "label": "Chat",
                 "href": "/chat",
-                "icon": "message-circle",
-                "label": "Chat"
+                "icon": "message-circle"
               },
               {
                 "label": "Channels",
@@ -93,19 +94,18 @@
                 "icon": "hash"
               },
               {
-                "icon": "users",
+                "href": "/online",
                 "label": "Online",
-                "href": "/online"
+                "icon": "users"
               }
             ],
-            "appName": "Realtime Chat",
-            "notifications": [],
             "notificationClickEvent": "CHAT_NOTIFICATIONS_OPEN",
-            "contentTrait": "@trait.ChatRoom"
+            "searchEvent": "CHAT_SEARCH",
+            "notifications": []
           },
           "events": {
-            "SEARCH": "CHAT_SEARCH",
-            "NOTIFY_CLICK": "CHAT_NOTIFICATIONS_OPEN"
+            "NOTIFY_CLICK": "CHAT_NOTIFICATIONS_OPEN",
+            "SEARCH": "CHAT_SEARCH"
           }
         },
         {
@@ -188,47 +188,46 @@
                     "render-ui",
                     "main",
                     {
-                      "direction": "vertical",
                       "children": [
                         {
-                          "align": "center",
-                          "direction": "horizontal",
                           "gap": "md",
-                          "justify": "between",
                           "type": "stack",
                           "children": [
                             {
                               "type": "stack",
-                              "direction": "horizontal",
                               "gap": "sm",
+                              "direction": "horizontal",
+                              "align": "center",
                               "children": [
                                 {
-                                  "type": "icon",
-                                  "name": "message-circle"
+                                  "name": "message-circle",
+                                  "type": "icon"
                                 },
                                 {
-                                  "type": "typography",
+                                  "content": "Chat",
                                   "variant": "h2",
-                                  "content": "Chat"
+                                  "type": "typography"
                                 }
-                              ],
-                              "align": "center"
+                              ]
                             },
                             {
-                              "gap": "sm",
+                              "type": "stack",
                               "children": [
                                 {
-                                  "label": "New Channel",
-                                  "variant": "primary",
                                   "icon": "plus",
+                                  "label": "New Channel",
+                                  "action": "CREATE_CHANNEL",
                                   "type": "button",
-                                  "action": "CREATE_CHANNEL"
+                                  "variant": "primary"
                                 }
                               ],
-                              "type": "stack",
+                              "gap": "sm",
                               "direction": "horizontal"
                             }
-                          ]
+                          ],
+                          "align": "center",
+                          "justify": "between",
+                          "direction": "horizontal"
                         },
                         {
                           "type": "divider"
@@ -241,7 +240,8 @@
                         "@trait.ChatMessageBrowse"
                       ],
                       "gap": "lg",
-                      "type": "stack"
+                      "type": "stack",
+                      "direction": "vertical"
                     }
                   ]
                 ]
@@ -260,34 +260,34 @@
                     "render-ui",
                     "main",
                     {
-                      "type": "stack",
-                      "direction": "vertical",
                       "gap": "md",
+                      "type": "stack",
                       "align": "center",
                       "className": "py-8",
                       "children": [
                         {
-                          "type": "icon",
-                          "name": "bell"
+                          "name": "bell",
+                          "type": "icon"
                         },
                         {
+                          "variant": "h3",
                           "content": "No notifications",
-                          "type": "typography",
-                          "variant": "h3"
+                          "type": "typography"
                         },
                         {
                           "type": "typography",
-                          "content": "You're all caught up.",
                           "variant": "caption",
+                          "content": "You're all caught up.",
                           "color": "muted"
                         },
                         {
-                          "type": "button",
                           "label": "Back to chat",
                           "variant": "ghost",
+                          "type": "button",
                           "action": "INIT"
                         }
-                      ]
+                      ],
+                      "direction": "vertical"
                     }
                   ]
                 ]
@@ -308,30 +308,30 @@
           "ref": "Stats.traits.StatsItemStats",
           "name": "ChatStats",
           "config": {
-            "title": "Chat Activity",
             "metrics": [
               {
-                "icon": "message-circle",
+                "aggregation": "count",
                 "variant": "primary",
                 "label": "Messages",
                 "format": "number",
-                "aggregation": "count"
+                "icon": "message-circle"
               },
               {
-                "label": "Active Channels",
-                "variant": "info",
-                "format": "number",
                 "icon": "hash",
-                "aggregation": "count"
+                "label": "Active Channels",
+                "aggregation": "count",
+                "variant": "info",
+                "format": "number"
               },
               {
-                "format": "number",
-                "aggregation": "count",
-                "label": "Top Author",
                 "variant": "success",
-                "icon": "user"
+                "label": "Top Author",
+                "icon": "user",
+                "format": "number",
+                "aggregation": "count"
               }
-            ]
+            ],
+            "title": "Chat Activity"
           },
           "listens": [
             {
@@ -511,9 +511,10 @@
                     "render-ui",
                     "main",
                     {
+                      "gap": "md",
                       "className": "py-12",
                       "align": "center",
-                      "gap": "md",
+                      "direction": "vertical",
                       "children": [
                         {
                           "type": "spinner"
@@ -525,8 +526,7 @@
                           "content": "Loading…"
                         }
                       ],
-                      "type": "stack",
-                      "direction": "vertical"
+                      "type": "stack"
                     }
                   ]
                 ]
@@ -557,55 +557,55 @@
                     "render-ui",
                     "main",
                     {
-                      "direction": "vertical",
-                      "gap": "md",
-                      "type": "stack",
                       "children": [
                         {
+                          "senderField": "sender",
+                          "gap": "sm",
                           "itemActions": [
                             {
-                              "event": "VIEW",
+                              "variant": "ghost",
                               "label": "View",
-                              "variant": "ghost"
+                              "event": "VIEW"
                             }
                           ],
                           "entity": "@payload.data",
+                          "type": "data-list",
                           "fields": [
                             {
                               "name": "sender",
                               "variant": "h4"
                             },
                             {
-                              "variant": "body",
-                              "name": "content"
+                              "name": "content",
+                              "variant": "body"
                             },
                             {
                               "variant": "caption",
-                              "format": "date",
-                              "name": "timestamp"
+                              "name": "timestamp",
+                              "format": "date"
                             }
                           ],
-                          "variant": "message",
-                          "type": "data-list",
-                          "gap": "sm",
-                          "senderField": "sender"
+                          "variant": "message"
                         },
                         {
                           "type": "stack",
+                          "justify": "end",
+                          "gap": "sm",
                           "direction": "horizontal",
                           "children": [
                             {
-                              "icon": "edit",
-                              "action": "COMPOSE",
-                              "type": "button",
+                              "variant": "primary",
                               "label": "Compose",
-                              "variant": "primary"
+                              "action": "COMPOSE",
+                              "icon": "edit",
+                              "type": "button"
                             }
-                          ],
-                          "justify": "end",
-                          "gap": "sm"
+                          ]
                         }
-                      ]
+                      ],
+                      "gap": "md",
+                      "type": "stack",
+                      "direction": "vertical"
                     }
                   ]
                 ]
@@ -619,16 +619,14 @@
                     "render-ui",
                     "main",
                     {
-                      "align": "center",
-                      "gap": "md",
-                      "className": "py-12",
-                      "direction": "vertical",
                       "type": "stack",
+                      "gap": "md",
+                      "align": "center",
                       "children": [
                         {
-                          "color": "destructive",
                           "type": "icon",
-                          "name": "alert-triangle"
+                          "name": "alert-triangle",
+                          "color": "destructive"
                         },
                         {
                           "type": "typography",
@@ -636,19 +634,21 @@
                           "content": "Failed to load messages"
                         },
                         {
-                          "variant": "body",
-                          "color": "muted",
                           "content": "@payload.error",
-                          "type": "typography"
+                          "color": "muted",
+                          "type": "typography",
+                          "variant": "body"
                         },
                         {
-                          "variant": "primary",
                           "action": "INIT",
                           "label": "Retry",
-                          "icon": "rotate-ccw",
-                          "type": "button"
+                          "variant": "primary",
+                          "type": "button",
+                          "icon": "rotate-ccw"
                         }
-                      ]
+                      ],
+                      "className": "py-12",
+                      "direction": "vertical"
                     }
                   ]
                 ]
@@ -662,7 +662,7 @@
           "name": "ChatMessageCompose",
           "linkedEntity": "ChatMessage",
           "config": {
-            "icon": "edit",
+            "mode": "create",
             "fields": [
               "sender",
               "content",
@@ -670,7 +670,7 @@
               "timestamp"
             ],
             "title": "New Message",
-            "mode": "create"
+            "icon": "edit"
           },
           "events": {
             "OPEN": "COMPOSE"
@@ -691,14 +691,14 @@
           "name": "ChatMessageView",
           "linkedEntity": "ChatMessage",
           "config": {
+            "icon": "eye",
+            "title": "View Message",
             "fields": [
               "sender",
               "content",
               "channel",
               "timestamp"
             ],
-            "icon": "eye",
-            "title": "View Message",
             "mode": "edit"
           },
           "events": {
@@ -891,8 +891,11 @@
                     "main",
                     {
                       "gap": "md",
+                      "type": "stack",
                       "children": [
                         {
+                          "type": "stack",
+                          "align": "center",
                           "children": [
                             {
                               "name": "paperclip",
@@ -905,25 +908,22 @@
                             }
                           ],
                           "gap": "sm",
-                          "direction": "horizontal",
-                          "type": "stack",
-                          "align": "center"
+                          "direction": "horizontal"
                         },
                         {
-                          "placeholder": "Choose file…",
                           "type": "input",
-                          "inputType": "text"
+                          "inputType": "text",
+                          "placeholder": "Choose file…"
                         },
                         {
-                          "icon": "upload",
-                          "label": "Upload",
+                          "type": "button",
                           "variant": "primary",
-                          "action": "UPLOAD",
-                          "type": "button"
+                          "label": "Upload",
+                          "icon": "upload",
+                          "action": "UPLOAD"
                         }
                       ],
-                      "direction": "vertical",
-                      "type": "stack"
+                      "direction": "vertical"
                     }
                   ]
                 ]
@@ -938,10 +938,10 @@
                     "storage",
                     "upload",
                     {
-                      "acl": "private",
-                      "maxSize": 10485760.0,
                       "bucket": "chat-attachments",
-                      "file": "@payload.file"
+                      "file": "@payload.file",
+                      "maxSize": 10485760.0,
+                      "acl": "private"
                     },
                     {
                       "emit": {
@@ -954,9 +954,9 @@
                     "render-ui",
                     "main",
                     {
+                      "type": "stack",
                       "gap": "md",
                       "direction": "vertical",
-                      "type": "stack",
                       "align": "center",
                       "children": [
                         {
@@ -1088,34 +1088,34 @@
                     "render-ui",
                     "main",
                     {
+                      "type": "stack",
                       "direction": "vertical",
                       "children": [
                         {
+                          "direction": "horizontal",
+                          "gap": "sm",
                           "align": "center",
                           "children": [
                             {
-                              "name": "bell",
-                              "type": "icon"
+                              "type": "icon",
+                              "name": "bell"
                             },
                             {
                               "type": "typography",
-                              "variant": "h3",
-                              "content": "Send SMS Notify"
+                              "content": "Send SMS Notify",
+                              "variant": "h3"
                             }
                           ],
-                          "direction": "horizontal",
-                          "type": "stack",
-                          "gap": "sm"
+                          "type": "stack"
                         },
                         {
-                          "icon": "send",
+                          "type": "button",
                           "action": "SMS_NOTIFY",
                           "label": "Send Notification",
-                          "type": "button",
-                          "variant": "primary"
+                          "variant": "primary",
+                          "icon": "send"
                         }
                       ],
-                      "type": "stack",
                       "gap": "md"
                     }
                   ]
@@ -1132,13 +1132,13 @@
                     "sendSMS",
                     {
                       "recipient": "@payload.recipient",
-                      "body": "@payload.body",
-                      "sender": "+15551234567"
+                      "sender": "+15551234567",
+                      "body": "@payload.body"
                     },
                     {
                       "emit": {
-                        "success": "ChatSmsSent",
-                        "failure": "ChatSmsFailed"
+                        "failure": "ChatSmsFailed",
+                        "success": "ChatSmsSent"
                       }
                     }
                   ],
@@ -1146,20 +1146,20 @@
                     "render-ui",
                     "main",
                     {
-                      "align": "center",
-                      "direction": "vertical",
                       "children": [
                         {
                           "type": "spinner"
                         },
                         {
-                          "content": "Sending notification…",
-                          "type": "typography",
+                          "color": "muted",
                           "variant": "caption",
-                          "color": "muted"
+                          "type": "typography",
+                          "content": "Sending notification…"
                         }
                       ],
+                      "direction": "vertical",
                       "type": "stack",
+                      "align": "center",
                       "gap": "md"
                     }
                   ]
@@ -1296,32 +1296,32 @@
           "name": "ChannelAppLayout",
           "linkedEntity": "Channel",
           "config": {
-            "searchEvent": "CHANNEL_SEARCH",
+            "notificationClickEvent": "CHANNEL_NOTIFICATIONS_OPEN",
             "contentTrait": "@trait.ChannelCatalog",
+            "appName": "Realtime Chat",
             "navItems": [
               {
                 "label": "Chat",
-                "icon": "message-circle",
-                "href": "/chat"
+                "href": "/chat",
+                "icon": "message-circle"
               },
               {
                 "icon": "hash",
-                "label": "Channels",
-                "href": "/channels"
+                "href": "/channels",
+                "label": "Channels"
               },
               {
-                "label": "Online",
                 "href": "/online",
+                "label": "Online",
                 "icon": "users"
               }
             ],
-            "notifications": [],
-            "notificationClickEvent": "CHANNEL_NOTIFICATIONS_OPEN",
-            "appName": "Realtime Chat"
+            "searchEvent": "CHANNEL_SEARCH",
+            "notifications": []
           },
           "events": {
-            "SEARCH": "CHANNEL_SEARCH",
-            "NOTIFY_CLICK": "CHANNEL_NOTIFICATIONS_OPEN"
+            "NOTIFY_CLICK": "CHANNEL_NOTIFICATIONS_OPEN",
+            "SEARCH": "CHANNEL_SEARCH"
           }
         },
         {
@@ -1377,56 +1377,56 @@
                     "render-ui",
                     "main",
                     {
-                      "direction": "vertical",
                       "children": [
                         {
                           "children": [
                             {
+                              "align": "center",
+                              "type": "stack",
+                              "gap": "sm",
                               "direction": "horizontal",
                               "children": [
                                 {
-                                  "name": "hash",
-                                  "type": "icon"
+                                  "type": "icon",
+                                  "name": "hash"
                                 },
                                 {
                                   "content": "Channels",
-                                  "type": "typography",
-                                  "variant": "h2"
+                                  "variant": "h2",
+                                  "type": "typography"
                                 }
-                              ],
-                              "type": "stack",
-                              "gap": "sm",
-                              "align": "center"
+                              ]
                             },
                             {
                               "gap": "sm",
-                              "direction": "horizontal",
-                              "type": "stack",
                               "children": [
                                 {
-                                  "label": "Create Channel",
                                   "action": "CREATE",
+                                  "label": "Create Channel",
+                                  "icon": "plus",
                                   "variant": "primary",
-                                  "type": "button",
-                                  "icon": "plus"
+                                  "type": "button"
                                 }
-                              ]
+                              ],
+                              "type": "stack",
+                              "direction": "horizontal"
                             }
                           ],
-                          "gap": "md",
-                          "direction": "horizontal",
                           "type": "stack",
-                          "align": "center",
-                          "justify": "between"
+                          "justify": "between",
+                          "direction": "horizontal",
+                          "gap": "md",
+                          "align": "center"
                         },
                         {
                           "type": "divider"
                         },
                         "@trait.ChannelBrowseList"
                       ],
+                      "gap": "lg",
+                      "direction": "vertical",
                       "type": "stack",
-                      "className": "max-w-5xl mx-auto w-full",
-                      "gap": "lg"
+                      "className": "max-w-5xl mx-auto w-full"
                     }
                   ]
                 ]
@@ -1440,17 +1440,36 @@
           "name": "ChannelBrowseList",
           "linkedEntity": "Channel",
           "config": {
-            "fields": [
+            "itemActions": [
               {
-                "name": "name",
-                "variant": "h3",
-                "icon": "hash"
+                "variant": "ghost",
+                "event": "VIEW",
+                "label": "View"
               },
               {
-                "label": "Members",
+                "event": "EDIT",
+                "variant": "ghost",
+                "label": "Edit"
+              },
+              {
+                "event": "DELETE",
+                "label": "Delete",
+                "variant": "danger"
+              }
+            ],
+            "gap": "sm",
+            "cols": 1.0,
+            "fields": [
+              {
+                "variant": "h3",
+                "icon": "hash",
+                "name": "name"
+              },
+              {
                 "name": "memberCount",
+                "variant": "badge",
                 "format": "number",
-                "variant": "badge"
+                "label": "Members"
               },
               {
                 "name": "description",
@@ -1458,30 +1477,11 @@
               },
               {
                 "variant": "body",
-                "name": "isPrivate",
                 "label": "Private",
+                "name": "isPrivate",
                 "format": "boolean"
               }
-            ],
-            "cols": 1.0,
-            "itemActions": [
-              {
-                "label": "View",
-                "event": "VIEW",
-                "variant": "ghost"
-              },
-              {
-                "label": "Edit",
-                "event": "EDIT",
-                "variant": "ghost"
-              },
-              {
-                "variant": "danger",
-                "label": "Delete",
-                "event": "DELETE"
-              }
-            ],
-            "gap": "sm"
+            ]
           },
           "listens": [
             {
@@ -1515,15 +1515,15 @@
           "name": "ChannelCreate",
           "linkedEntity": "Channel",
           "config": {
+            "mode": "create",
+            "icon": "plus-circle",
             "fields": [
               "name",
               "description",
               "memberCount",
               "isPrivate"
             ],
-            "icon": "plus-circle",
-            "title": "Create Channel",
-            "mode": "create"
+            "title": "Create Channel"
           },
           "events": {
             "OPEN": "CREATE"
@@ -1545,14 +1545,14 @@
           "linkedEntity": "Channel",
           "config": {
             "mode": "edit",
-            "title": "Edit Channel",
-            "icon": "edit",
             "fields": [
               "name",
               "description",
               "memberCount",
               "isPrivate"
-            ]
+            ],
+            "title": "Edit Channel",
+            "icon": "edit"
           },
           "events": {
             "OPEN": "EDIT"
@@ -1573,15 +1573,15 @@
           "name": "ChannelView",
           "linkedEntity": "Channel",
           "config": {
+            "title": "View Channel",
+            "mode": "edit",
             "fields": [
               "name",
               "description",
               "memberCount",
               "isPrivate"
             ],
-            "title": "View Channel",
-            "icon": "eye",
-            "mode": "edit"
+            "icon": "eye"
           },
           "events": {
             "OPEN": "VIEW"
@@ -1602,10 +1602,10 @@
           "name": "ChannelDelete",
           "linkedEntity": "Channel",
           "config": {
-            "alertMessage": "This action cannot be undone.",
             "confirmLabel": "Delete",
-            "icon": "alert-triangle",
-            "title": "Delete Channel"
+            "alertMessage": "This action cannot be undone.",
+            "title": "Delete Channel",
+            "icon": "alert-triangle"
           },
           "events": {
             "REQUEST": "DELETE",
@@ -1889,27 +1889,27 @@
           "linkedEntity": "OnlineUser",
           "config": {
             "appName": "Realtime Chat",
-            "searchEvent": "ONLINE_USER_SEARCH",
-            "notificationClickEvent": "ONLINE_USER_NOTIFICATIONS_OPEN",
+            "notifications": [],
+            "contentTrait": "@trait.OnlineUserDisplay",
             "navItems": [
               {
-                "label": "Chat",
                 "href": "/chat",
-                "icon": "message-circle"
+                "icon": "message-circle",
+                "label": "Chat"
               },
               {
-                "href": "/channels",
                 "label": "Channels",
+                "href": "/channels",
                 "icon": "hash"
               },
               {
-                "href": "/online",
+                "icon": "users",
                 "label": "Online",
-                "icon": "users"
+                "href": "/online"
               }
             ],
-            "notifications": [],
-            "contentTrait": "@trait.OnlineUserDisplay"
+            "searchEvent": "ONLINE_USER_SEARCH",
+            "notificationClickEvent": "ONLINE_USER_NOTIFICATIONS_OPEN"
           },
           "events": {
             "SEARCH": "ONLINE_USER_SEARCH",
@@ -2013,65 +2013,65 @@
                     "main",
                     {
                       "className": "max-w-5xl mx-auto w-full",
+                      "gap": "lg",
                       "direction": "vertical",
+                      "type": "stack",
                       "children": [
                         {
-                          "type": "stack",
-                          "gap": "md",
-                          "direction": "horizontal",
-                          "justify": "between",
-                          "align": "center",
                           "children": [
                             {
-                              "type": "stack",
-                              "direction": "horizontal",
                               "gap": "sm",
+                              "type": "stack",
+                              "align": "center",
                               "children": [
                                 {
-                                  "type": "icon",
-                                  "name": "users"
+                                  "name": "users",
+                                  "type": "icon"
                                 },
                                 {
+                                  "type": "typography",
                                   "content": "Online Users",
-                                  "variant": "h2",
-                                  "type": "typography"
+                                  "variant": "h2"
                                 }
                               ],
-                              "align": "center"
+                              "direction": "horizontal"
                             },
                             {
-                              "action": "REFRESH",
-                              "type": "button",
                               "icon": "refresh-cw",
+                              "variant": "secondary",
+                              "action": "REFRESH",
                               "label": "Refresh",
-                              "variant": "secondary"
+                              "type": "button"
                             }
-                          ]
+                          ],
+                          "gap": "md",
+                          "align": "center",
+                          "direction": "horizontal",
+                          "type": "stack",
+                          "justify": "between"
                         },
                         {
                           "type": "divider"
                         },
                         {
-                          "type": "stack",
                           "align": "center",
+                          "direction": "vertical",
+                          "type": "stack",
                           "gap": "md",
                           "className": "py-12",
-                          "direction": "vertical",
                           "children": [
                             {
                               "type": "spinner"
                             },
                             {
+                              "variant": "caption",
                               "color": "muted",
                               "content": "Loading presence…",
-                              "type": "typography",
-                              "variant": "caption"
+                              "type": "typography"
                             }
                           ]
                         }
-                      ],
-                      "gap": "lg",
-                      "type": "stack"
+                      ]
                     }
                   ]
                 ]
@@ -2085,50 +2085,46 @@
                     "render-ui",
                     "main",
                     {
-                      "className": "max-w-5xl mx-auto w-full",
-                      "gap": "lg",
                       "children": [
                         {
                           "type": "stack",
+                          "gap": "md",
+                          "direction": "horizontal",
+                          "justify": "between",
+                          "align": "center",
                           "children": [
                             {
-                              "type": "stack",
-                              "direction": "horizontal",
                               "align": "center",
+                              "type": "stack",
+                              "gap": "sm",
                               "children": [
                                 {
                                   "type": "icon",
                                   "name": "users"
                                 },
                                 {
-                                  "type": "typography",
                                   "content": "Online Users",
-                                  "variant": "h2"
+                                  "variant": "h2",
+                                  "type": "typography"
                                 }
                               ],
-                              "gap": "sm"
+                              "direction": "horizontal"
                             },
                             {
-                              "icon": "refresh-cw",
                               "type": "button",
+                              "icon": "refresh-cw",
                               "variant": "secondary",
-                              "action": "REFRESH",
-                              "label": "Refresh"
+                              "label": "Refresh",
+                              "action": "REFRESH"
                             }
-                          ],
-                          "gap": "md",
-                          "align": "center",
-                          "direction": "horizontal",
-                          "justify": "between"
+                          ]
                         },
                         {
                           "type": "divider"
                         },
                         {
-                          "variant": "card",
-                          "entity": "@payload.data",
-                          "gap": "sm",
                           "type": "data-list",
+                          "variant": "card",
                           "fields": [
                             {
                               "name": "username",
@@ -2139,15 +2135,19 @@
                               "name": "status"
                             },
                             {
-                              "variant": "caption",
                               "name": "lastActive",
+                              "variant": "caption",
                               "format": "date"
                             }
-                          ]
+                          ],
+                          "entity": "@payload.data",
+                          "gap": "sm"
                         }
                       ],
+                      "type": "stack",
+                      "gap": "lg",
                       "direction": "vertical",
-                      "type": "stack"
+                      "className": "max-w-5xl mx-auto w-full"
                     }
                   ]
                 ]
@@ -2171,22 +2171,22 @@
                     "render-ui",
                     "main",
                     {
+                      "type": "stack",
                       "children": [
                         {
                           "type": "spinner"
                         },
                         {
-                          "variant": "caption",
                           "type": "typography",
                           "content": "Refreshing…",
-                          "color": "muted"
+                          "color": "muted",
+                          "variant": "caption"
                         }
                       ],
-                      "direction": "vertical",
-                      "type": "stack",
+                      "className": "py-12",
                       "gap": "md",
                       "align": "center",
-                      "className": "py-12"
+                      "direction": "vertical"
                     }
                   ]
                 ]
@@ -2201,35 +2201,35 @@
                     "main",
                     {
                       "direction": "vertical",
-                      "gap": "md",
+                      "align": "center",
                       "children": [
                         {
-                          "color": "destructive",
                           "type": "icon",
+                          "color": "destructive",
                           "name": "alert-triangle"
                         },
                         {
-                          "content": "Failed to load presence",
                           "type": "typography",
-                          "variant": "h3"
+                          "variant": "h3",
+                          "content": "Failed to load presence"
                         },
                         {
                           "content": "@payload.error",
+                          "variant": "body",
                           "color": "muted",
-                          "type": "typography",
-                          "variant": "body"
+                          "type": "typography"
                         },
                         {
-                          "icon": "rotate-ccw",
-                          "variant": "primary",
-                          "label": "Retry",
+                          "type": "button",
                           "action": "REFRESH",
-                          "type": "button"
+                          "label": "Retry",
+                          "icon": "rotate-ccw",
+                          "variant": "primary"
                         }
                       ],
-                      "type": "stack",
-                      "align": "center",
-                      "className": "py-12"
+                      "gap": "md",
+                      "className": "py-12",
+                      "type": "stack"
                     }
                   ]
                 ]
