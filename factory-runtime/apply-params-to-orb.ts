@@ -597,6 +597,32 @@ export function applyParamsToOrb(
       }
       if (override.linkedEntity !== undefined) merged.linkedEntity = override.linkedEntity;
       if (override.events !== undefined) {
+        // `events` is a string->string rename map (Record<string, string>).
+        // A bare array like ["X"] would spread to {"0":"X"} which serde
+        // can't deserialize as a TraitReference — the resulting .orb fails
+        // validate downstream. Throw at the merge point so the caller (LLM
+        // subagent or coordinator) sees a clear error instead of a silent
+        // "trait not defined" cascade.
+        if (
+          override.events === null ||
+          typeof override.events !== 'object' ||
+          Array.isArray(override.events)
+        ) {
+          throw new Error(
+            `traitOverrides["${t.name}"].events must be a Record<string,string> ` +
+              `(rename map like { "OPEN": "ADD_ITEM" }), got ${
+                Array.isArray(override.events) ? 'an array' : typeof override.events
+              }`,
+          );
+        }
+        for (const [k, v] of Object.entries(override.events)) {
+          if (typeof v !== 'string') {
+            throw new Error(
+              `traitOverrides["${t.name}"].events["${k}"] must be a string ` +
+                `(target event name), got ${typeof v}`,
+            );
+          }
+        }
         merged.events = { ...(t.events ?? {}), ...override.events };
       }
       if (override.name !== undefined) merged.name = override.name;
