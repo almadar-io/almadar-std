@@ -1,6 +1,9 @@
 app std-offer-letter "1.1.0"
 "std-offer-letter — formal job offer primitive. Owns an OfferLetter entity (applicant, position, salary, start date, acceptance status). Browses offers in a data-grid with Send / Revoke actions. Agents tune the list shape via `config.fields` + `config.itemActions`."
 
+type FieldSpec = { name : string!, label : string, variant : string, icon : string, format : string, key : string, header : string }
+type ItemAction = { label : string!, event : string!, variant : string, icon : string }
+
 orbital OfferLetterOrbital {
   entity OfferLetter [persistent: offerletters] {
     id             : string!
@@ -22,7 +25,7 @@ orbital OfferLetterOrbital {
       title       : string   = "Offer Letters"
         @label "Section title"
         @description "Heading shown above the offer letters list"
-      fields      : [object] = [
+      fields      : [FieldSpec] = [
         { name: "applicantName", label: "Applicant",  variant: "caption" },
         { name: "position",      label: "Position",   variant: "caption" },
         { name: "salary",        label: "Salary",     variant: "caption" },
@@ -31,7 +34,7 @@ orbital OfferLetterOrbital {
       ]
         @label "Columns to show"
         @description "Each column maps to one field on the Offer Letter entity"
-      itemActions : [object] = [
+      itemActions : [ItemAction] = [
         { label: "Open",   event: "OPEN_OFFER",   variant: "primary", icon: "arrow-right" },
         { label: "Revoke", event: "REVOKE_OFFER", variant: "danger" }
       ]

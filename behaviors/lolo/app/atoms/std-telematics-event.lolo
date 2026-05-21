@@ -1,6 +1,9 @@
 app std-telematics-event "1.1.0"
 "std-telematics-event — read-only per-vehicle telemetry stream from GPS/OBD-II devices. Lists events in `browsing`; opens event detail in `viewing_single` with Acknowledge action. Agents tune the list shape via `config.fields` + `config.itemActions`."
 
+type FieldSpec = { name : string!, label : string, variant : string, icon : string, format : string, key : string, header : string }
+type ItemAction = { label : string!, event : string!, variant : string, icon : string }
+
 orbital TelematicsEventOrbital {
   entity TelematicsEvent [persistent: telematicsevents] {
     id              : string!
@@ -24,10 +27,10 @@ orbital TelematicsEventOrbital {
       title : string = "Telematics Events"
         @label "Section title"
         @description "Heading shown above the vehicle telemetry stream"
-      fields      : [object] = [{ name: "vehicleId", label: "Vehicle", variant: "caption" }, { name: "eventType", label: "Type", variant: "badge" }, { name: "severity", label: "Severity", variant: "badge" }, { name: "speed", label: "Speed", variant: "caption" }, { name: "occurredAt", label: "Occurred", variant: "caption" }, { name: "acknowledged", label: "Ack", variant: "badge" }]
+      fields      : [FieldSpec] = [{ name: "vehicleId", label: "Vehicle", variant: "caption" }, { name: "eventType", label: "Type", variant: "badge" }, { name: "severity", label: "Severity", variant: "badge" }, { name: "speed", label: "Speed", variant: "caption" }, { name: "occurredAt", label: "Occurred", variant: "caption" }, { name: "acknowledged", label: "Ack", variant: "badge" }]
         @label "Columns to show"
         @description "Each column maps to one field on the Telematics Event entity"
-      itemActions : [object] = [{ label: "Open", event: "OPEN_EVENT", variant: "primary", icon: "arrow-right" }, { label: "Acknowledge", event: "ACKNOWLEDGE", variant: "secondary" }]
+      itemActions : [ItemAction] = [{ label: "Open", event: "OPEN_EVENT", variant: "primary", icon: "arrow-right" }, { label: "Acknowledge", event: "ACKNOWLEDGE", variant: "secondary" }]
         @label "Row actions"
         @description "Buttons users can click on each telemetry event"
     }

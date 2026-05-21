@@ -121,10 +121,7 @@
           "ref": "AppShell.traits.AppLayout",
           "name": "TaskAppLayout",
           "config": {
-            "appName": "ProjectManagerApp",
-            "searchEvent": "TASK_SEARCH",
             "notifications": [],
-            "notificationClickEvent": "TASK_NOTIFICATIONS_OPEN",
             "navItems": [
               {
                 "href": "/tasks",
@@ -138,11 +135,14 @@
               },
               {
                 "label": "Burndown",
-                "href": "/burndown",
-                "icon": "trending-down"
+                "icon": "trending-down",
+                "href": "/burndown"
               }
             ],
-            "contentTrait": "@trait.TaskCatalog"
+            "appName": "ProjectManagerApp",
+            "notificationClickEvent": "TASK_NOTIFICATIONS_OPEN",
+            "contentTrait": "@trait.TaskCatalog",
+            "searchEvent": "TASK_SEARCH"
           },
           "events": {
             "NOTIFY_CLICK": "TASK_NOTIFICATIONS_OPEN",
@@ -229,46 +229,47 @@
                     "render-ui",
                     "main",
                     {
+                      "gap": "lg",
                       "children": [
                         {
-                          "gap": "md",
-                          "justify": "between",
-                          "direction": "horizontal",
+                          "align": "center",
+                          "type": "stack",
                           "children": [
                             {
-                              "direction": "horizontal",
                               "gap": "sm",
                               "type": "stack",
+                              "align": "center",
                               "children": [
                                 {
                                   "name": "list-todo",
                                   "type": "icon"
                                 },
                                 {
-                                  "content": "Tasks",
                                   "variant": "h2",
-                                  "type": "typography"
+                                  "type": "typography",
+                                  "content": "Tasks"
                                 }
                               ],
-                              "align": "center"
+                              "direction": "horizontal"
                             },
                             {
+                              "type": "stack",
                               "children": [
                                 {
                                   "icon": "plus",
-                                  "label": "New Task",
                                   "type": "button",
                                   "action": "CREATE",
-                                  "variant": "primary"
+                                  "variant": "primary",
+                                  "label": "New Task"
                                 }
                               ],
-                              "type": "stack",
-                              "direction": "horizontal",
-                              "gap": "sm"
+                              "gap": "sm",
+                              "direction": "horizontal"
                             }
                           ],
-                          "type": "stack",
-                          "align": "center"
+                          "gap": "md",
+                          "justify": "between",
+                          "direction": "horizontal"
                         },
                         {
                           "type": "divider"
@@ -278,10 +279,10 @@
                             "@trait.TaskSearch",
                             "@trait.TaskFilter"
                           ],
-                          "gap": "md",
-                          "align": "center",
+                          "type": "stack",
                           "direction": "horizontal",
-                          "type": "stack"
+                          "gap": "md",
+                          "align": "center"
                         },
                         "@trait.TaskStats",
                         "@trait.TaskGraphs",
@@ -291,9 +292,8 @@
                         },
                         "@trait.TaskBrowseList"
                       ],
-                      "type": "stack",
-                      "gap": "lg",
-                      "direction": "vertical"
+                      "direction": "vertical",
+                      "type": "stack"
                     }
                   ]
                 ]
@@ -312,15 +312,10 @@
                     "render-ui",
                     "main",
                     {
-                      "align": "center",
-                      "className": "py-8",
-                      "direction": "vertical",
-                      "type": "stack",
-                      "gap": "md",
                       "children": [
                         {
-                          "type": "icon",
-                          "name": "bell"
+                          "name": "bell",
+                          "type": "icon"
                         },
                         {
                           "type": "typography",
@@ -328,18 +323,23 @@
                           "variant": "h3"
                         },
                         {
-                          "variant": "caption",
-                          "color": "muted",
                           "content": "You're all caught up.",
-                          "type": "typography"
+                          "type": "typography",
+                          "variant": "caption",
+                          "color": "muted"
                         },
                         {
-                          "action": "INIT",
+                          "type": "button",
                           "label": "Back to tasks",
                           "variant": "ghost",
-                          "type": "button"
+                          "action": "INIT"
                         }
-                      ]
+                      ],
+                      "type": "stack",
+                      "direction": "vertical",
+                      "gap": "md",
+                      "align": "center",
+                      "className": "py-8"
                     }
                   ]
                 ]
@@ -362,35 +362,35 @@
           "config": {
             "filters": [
               {
-                "field": "status",
-                "label": "Status",
                 "options": [
                   "todo",
                   "in-progress",
                   "review",
                   "done"
                 ],
+                "label": "Status",
+                "field": "status",
                 "filterType": "select"
               },
               {
-                "filterType": "text",
                 "field": "assignee",
-                "label": "Assignee"
+                "label": "Assignee",
+                "filterType": "text"
               },
               {
+                "label": "Priority",
+                "filterType": "select",
                 "field": "priority",
                 "options": [
                   "low",
                   "medium",
                   "high",
                   "critical"
-                ],
-                "label": "Priority",
-                "filterType": "select"
+                ]
               },
               {
-                "label": "Sprint",
                 "field": "sprint",
+                "label": "Sprint",
                 "filterType": "text"
               }
             ],
@@ -403,15 +403,16 @@
           "config": {
             "metrics": [
               {
+                "icon": "list-todo",
+                "variant": "primary",
                 "aggregation": "count",
                 "format": "number",
-                "label": "Total",
-                "variant": "primary",
-                "icon": "list-todo"
+                "label": "Total"
               },
               {
-                "icon": "circle",
                 "label": "Todo",
+                "variant": "default",
+                "icon": "circle",
                 "filter": [
                   "fn",
                   "row",
@@ -421,16 +422,12 @@
                     "todo"
                   ]
                 ],
-                "format": "number",
                 "aggregation": "count",
-                "variant": "default"
+                "format": "number"
               },
               {
-                "aggregation": "count",
                 "format": "number",
-                "icon": "loader",
-                "label": "In Progress",
-                "variant": "warning",
+                "aggregation": "count",
                 "filter": [
                   "fn",
                   "row",
@@ -439,10 +436,16 @@
                     "@row.status",
                     "in-progress"
                   ]
-                ]
+                ],
+                "icon": "loader",
+                "label": "In Progress",
+                "variant": "warning"
               },
               {
-                "format": "number",
+                "variant": "success",
+                "label": "Done",
+                "aggregation": "count",
+                "icon": "check-circle",
                 "filter": [
                   "fn",
                   "row",
@@ -452,13 +455,11 @@
                     "done"
                   ]
                 ],
-                "variant": "success",
-                "aggregation": "count",
-                "icon": "check-circle",
-                "label": "Done"
+                "format": "number"
               },
               {
                 "label": "Critical",
+                "icon": "alert-octagon",
                 "format": "number",
                 "filter": [
                   "fn",
@@ -469,9 +470,8 @@
                     "critical"
                   ]
                 ],
-                "icon": "alert-octagon",
-                "variant": "error",
-                "aggregation": "count"
+                "aggregation": "count",
+                "variant": "error"
               }
             ],
             "title": "Tasks"
@@ -491,13 +491,13 @@
           "ref": "Graphs.traits.GraphItemGraph",
           "name": "TaskGraphs",
           "config": {
+            "title": "Tasks by Status",
+            "chartType": "bar",
+            "aggregation": "count",
             "categoryField": "status",
             "height": 240.0,
             "subtitle": "Workload distribution across status buckets",
-            "chartType": "bar",
-            "aggregation": "count",
-            "showLegend": false,
-            "title": "Tasks by Status"
+            "showLegend": false
           },
           "listens": [
             {
@@ -532,8 +532,8 @@
                 "name": "title"
               },
               {
-                "variant": "badge",
-                "name": "status"
+                "name": "status",
+                "variant": "badge"
               },
               {
                 "name": "assignee",
@@ -544,23 +544,22 @@
                 "name": "priority"
               },
               {
-                "name": "dueDate",
                 "variant": "caption",
-                "label": "Due",
-                "format": "date"
+                "format": "date",
+                "name": "dueDate",
+                "label": "Due"
               }
             ],
-            "gap": "sm",
             "itemActions": [
               {
-                "event": "VIEW",
+                "variant": "ghost",
                 "label": "View",
-                "variant": "ghost"
+                "event": "VIEW"
               },
               {
+                "label": "Edit",
                 "event": "EDIT",
-                "variant": "ghost",
-                "label": "Edit"
+                "variant": "ghost"
               },
               {
                 "variant": "danger",
@@ -568,6 +567,7 @@
                 "event": "DELETE"
               }
             ],
+            "gap": "sm",
             "cols": 1.0
           },
           "listens": [
@@ -618,8 +618,6 @@
           "name": "TaskCreate",
           "linkedEntity": "Task",
           "config": {
-            "title": "New Task",
-            "mode": "create",
             "fields": [
               "title",
               "description",
@@ -630,7 +628,9 @@
               "storyPoints",
               "dueDate"
             ],
-            "icon": "plus-circle"
+            "icon": "plus-circle",
+            "title": "New Task",
+            "mode": "create"
           },
           "events": {
             "OPEN": "CREATE"
@@ -652,6 +652,7 @@
           "linkedEntity": "Task",
           "config": {
             "icon": "edit",
+            "title": "Edit Task",
             "mode": "edit",
             "fields": [
               "title",
@@ -662,8 +663,7 @@
               "sprint",
               "storyPoints",
               "dueDate"
-            ],
-            "title": "Edit Task"
+            ]
           },
           "events": {
             "OPEN": "EDIT"
@@ -684,6 +684,8 @@
           "name": "TaskView",
           "linkedEntity": "Task",
           "config": {
+            "title": "View Task",
+            "mode": "edit",
             "icon": "eye",
             "fields": [
               "title",
@@ -694,9 +696,7 @@
               "sprint",
               "storyPoints",
               "dueDate"
-            ],
-            "title": "View Task",
-            "mode": "edit"
+            ]
           },
           "events": {
             "OPEN": "VIEW"
@@ -717,8 +717,8 @@
           "name": "TaskDelete",
           "linkedEntity": "Task",
           "config": {
-            "title": "Delete Task",
             "alertMessage": "This action cannot be undone.",
+            "title": "Delete Task",
             "confirmLabel": "Delete",
             "icon": "alert-triangle"
           },
@@ -1047,32 +1047,32 @@
           "name": "SprintAppLayout",
           "linkedEntity": "Sprint",
           "config": {
-            "appName": "ProjectManagerApp",
+            "notificationClickEvent": "SPRINT_NOTIFICATIONS_OPEN",
             "navItems": [
               {
+                "href": "/tasks",
                 "label": "Tasks",
-                "icon": "list-todo",
-                "href": "/tasks"
+                "icon": "list-todo"
               },
               {
-                "label": "Sprints",
                 "href": "/sprints",
+                "label": "Sprints",
                 "icon": "zap"
               },
               {
+                "icon": "trending-down",
                 "label": "Burndown",
-                "href": "/burndown",
-                "icon": "trending-down"
+                "href": "/burndown"
               }
             ],
             "searchEvent": "SPRINT_SEARCH",
+            "appName": "ProjectManagerApp",
             "contentTrait": "@trait.SprintCatalog",
-            "notificationClickEvent": "SPRINT_NOTIFICATIONS_OPEN",
             "notifications": []
           },
           "events": {
-            "NOTIFY_CLICK": "SPRINT_NOTIFICATIONS_OPEN",
-            "SEARCH": "SPRINT_SEARCH"
+            "SEARCH": "SPRINT_SEARCH",
+            "NOTIFY_CLICK": "SPRINT_NOTIFICATIONS_OPEN"
           }
         },
         {
@@ -1118,55 +1118,55 @@
                     "main",
                     {
                       "type": "stack",
+                      "direction": "vertical",
+                      "gap": "lg",
                       "className": "max-w-5xl mx-auto w-full",
                       "children": [
                         {
-                          "justify": "between",
-                          "gap": "md",
-                          "type": "stack",
+                          "align": "center",
                           "children": [
                             {
-                              "align": "center",
                               "gap": "sm",
+                              "direction": "horizontal",
+                              "type": "stack",
+                              "align": "center",
                               "children": [
                                 {
                                   "type": "icon",
                                   "name": "zap"
                                 },
                                 {
-                                  "content": "Sprints",
                                   "type": "typography",
-                                  "variant": "h2"
+                                  "variant": "h2",
+                                  "content": "Sprints"
                                 }
-                              ],
-                              "direction": "horizontal",
-                              "type": "stack"
+                              ]
                             },
                             {
-                              "type": "stack",
+                              "direction": "horizontal",
                               "children": [
                                 {
-                                  "type": "button",
-                                  "action": "CREATE",
-                                  "icon": "plus",
                                   "label": "New Sprint",
-                                  "variant": "primary"
+                                  "variant": "primary",
+                                  "type": "button",
+                                  "icon": "plus",
+                                  "action": "CREATE"
                                 }
                               ],
-                              "gap": "sm",
-                              "direction": "horizontal"
+                              "type": "stack",
+                              "gap": "sm"
                             }
                           ],
-                          "align": "center",
-                          "direction": "horizontal"
+                          "gap": "md",
+                          "direction": "horizontal",
+                          "type": "stack",
+                          "justify": "between"
                         },
                         {
                           "type": "divider"
                         },
                         "@trait.SprintBrowseList"
-                      ],
-                      "direction": "vertical",
-                      "gap": "lg"
+                      ]
                     }
                   ]
                 ]
@@ -1189,30 +1189,30 @@
                 "icon": "zap"
               },
               {
-                "name": "status",
-                "variant": "badge"
+                "variant": "badge",
+                "name": "status"
               },
               {
-                "variant": "body",
-                "name": "goal"
-              },
-              {
-                "label": "Start",
-                "format": "date",
-                "name": "startDate",
-                "variant": "caption"
+                "name": "goal",
+                "variant": "body"
               },
               {
                 "variant": "caption",
+                "label": "Start",
+                "name": "startDate",
+                "format": "date"
+              },
+              {
+                "name": "endDate",
                 "format": "date",
                 "label": "End",
-                "name": "endDate"
+                "variant": "caption"
               },
               {
                 "name": "taskCount",
-                "label": "Tasks",
+                "variant": "body",
                 "format": "number",
-                "variant": "body"
+                "label": "Tasks"
               }
             ],
             "itemActions": [
@@ -1266,8 +1266,8 @@
           "linkedEntity": "Sprint",
           "config": {
             "icon": "plus-circle",
-            "title": "New Sprint",
             "mode": "create",
+            "title": "New Sprint",
             "fields": [
               "name",
               "startDate",
@@ -1296,9 +1296,9 @@
           "name": "SprintEdit",
           "linkedEntity": "Sprint",
           "config": {
+            "icon": "edit",
             "title": "Edit Sprint",
             "mode": "edit",
-            "icon": "edit",
             "fields": [
               "name",
               "startDate",
@@ -1327,8 +1327,6 @@
           "name": "SprintView",
           "linkedEntity": "Sprint",
           "config": {
-            "icon": "eye",
-            "mode": "edit",
             "fields": [
               "name",
               "startDate",
@@ -1337,6 +1335,8 @@
               "status",
               "taskCount"
             ],
+            "icon": "eye",
+            "mode": "edit",
             "title": "View Sprint"
           },
           "events": {
@@ -1359,9 +1359,9 @@
           "linkedEntity": "Sprint",
           "config": {
             "alertMessage": "This action cannot be undone.",
-            "title": "Delete Sprint",
             "confirmLabel": "Delete",
-            "icon": "alert-triangle"
+            "icon": "alert-triangle",
+            "title": "Delete Sprint"
           },
           "events": {
             "CONFIRM": "CONFIRM_DELETE",
@@ -1645,32 +1645,32 @@
           "name": "BurndownAppLayout",
           "linkedEntity": "Burndown",
           "config": {
-            "searchEvent": "BURNDOWN_SEARCH",
-            "contentTrait": "@trait.BurndownDisplay",
             "appName": "ProjectManagerApp",
-            "notifications": [],
-            "notificationClickEvent": "BURNDOWN_NOTIFICATIONS_OPEN",
             "navItems": [
               {
+                "label": "Tasks",
                 "icon": "list-todo",
-                "href": "/tasks",
-                "label": "Tasks"
+                "href": "/tasks"
               },
               {
-                "label": "Sprints",
                 "href": "/sprints",
+                "label": "Sprints",
                 "icon": "zap"
               },
               {
-                "href": "/burndown",
                 "icon": "trending-down",
+                "href": "/burndown",
                 "label": "Burndown"
               }
-            ]
+            ],
+            "contentTrait": "@trait.BurndownDisplay",
+            "searchEvent": "BURNDOWN_SEARCH",
+            "notifications": [],
+            "notificationClickEvent": "BURNDOWN_NOTIFICATIONS_OPEN"
           },
           "events": {
-            "SEARCH": "BURNDOWN_SEARCH",
-            "NOTIFY_CLICK": "BURNDOWN_NOTIFICATIONS_OPEN"
+            "NOTIFY_CLICK": "BURNDOWN_NOTIFICATIONS_OPEN",
+            "SEARCH": "BURNDOWN_SEARCH"
           }
         },
         {
@@ -1805,60 +1805,23 @@
                     "render-ui",
                     "main",
                     {
+                      "gap": "lg",
+                      "className": "max-w-6xl mx-auto w-full",
                       "children": [
                         {
-                          "align": "center",
                           "direction": "horizontal",
+                          "type": "stack",
                           "gap": "sm",
+                          "align": "center",
                           "children": [
                             {
-                              "name": "trending-down",
-                              "type": "icon"
+                              "type": "icon",
+                              "name": "trending-down"
                             },
                             {
                               "content": "Burndown",
-                              "variant": "h2",
-                              "type": "typography"
-                            }
-                          ],
-                          "type": "stack"
-                        },
-                        {
-                          "type": "divider"
-                        },
-                        {
-                          "type": "simple-grid",
-                          "cols": 5.0,
-                          "children": [
-                            {
-                              "label": "Total Points",
-                              "type": "stat-display",
-                              "value": "@entity.totalPoints",
-                              "icon": "target"
-                            },
-                            {
-                              "label": "Completed",
-                              "value": "@entity.completedPoints",
-                              "type": "stat-display",
-                              "icon": "check-circle"
-                            },
-                            {
-                              "icon": "circle",
-                              "label": "Remaining",
-                              "value": "@entity.remainingPoints",
-                              "type": "stat-display"
-                            },
-                            {
-                              "icon": "zap",
-                              "label": "Velocity",
-                              "value": "@entity.velocity",
-                              "type": "stat-display"
-                            },
-                            {
-                              "type": "stat-display",
-                              "icon": "calendar",
-                              "value": "@entity.daysRemaining",
-                              "label": "Days Remaining"
+                              "type": "typography",
+                              "variant": "h2"
                             }
                           ]
                         },
@@ -1866,6 +1829,46 @@
                           "type": "divider"
                         },
                         {
+                          "children": [
+                            {
+                              "value": "@entity.totalPoints",
+                              "type": "stat-display",
+                              "label": "Total Points",
+                              "icon": "target"
+                            },
+                            {
+                              "icon": "check-circle",
+                              "value": "@entity.completedPoints",
+                              "label": "Completed",
+                              "type": "stat-display"
+                            },
+                            {
+                              "value": "@entity.remainingPoints",
+                              "icon": "circle",
+                              "type": "stat-display",
+                              "label": "Remaining"
+                            },
+                            {
+                              "type": "stat-display",
+                              "label": "Velocity",
+                              "icon": "zap",
+                              "value": "@entity.velocity"
+                            },
+                            {
+                              "icon": "calendar",
+                              "value": "@entity.daysRemaining",
+                              "type": "stat-display",
+                              "label": "Days Remaining"
+                            }
+                          ],
+                          "type": "simple-grid",
+                          "cols": 5.0
+                        },
+                        {
+                          "type": "divider"
+                        },
+                        {
+                          "type": "line-chart",
                           "data": [
                             {
                               "date": "Day 1",
@@ -1876,34 +1879,32 @@
                               "value": 92.0
                             },
                             {
-                              "date": "Day 3",
-                              "value": 85.0
+                              "value": 85.0,
+                              "date": "Day 3"
                             },
                             {
                               "date": "Day 4",
                               "value": 70.0
                             },
                             {
-                              "date": "Day 5",
-                              "value": 60.0
+                              "value": 60.0,
+                              "date": "Day 5"
                             },
                             {
-                              "date": "Day 6",
-                              "value": 45.0
+                              "value": 45.0,
+                              "date": "Day 6"
                             },
                             {
-                              "value": 30.0,
-                              "date": "Day 7"
+                              "date": "Day 7",
+                              "value": 30.0
                             },
                             {
-                              "date": "Day 8",
-                              "value": 15.0
+                              "value": 15.0,
+                              "date": "Day 8"
                             }
-                          ],
-                          "type": "line-chart"
+                          ]
                         },
                         {
-                          "type": "chart-legend",
                           "items": [
                             {
                               "label": "Remaining points",
@@ -1913,28 +1914,27 @@
                               "label": "Ideal burndown",
                               "color": "muted"
                             }
-                          ]
+                          ],
+                          "type": "chart-legend"
                         },
                         {
-                          "gap": "sm",
-                          "justify": "end",
-                          "type": "stack",
                           "direction": "horizontal",
                           "children": [
                             {
-                              "variant": "secondary",
+                              "label": "Refresh",
                               "type": "button",
                               "action": "REFRESH",
                               "icon": "refresh-cw",
-                              "label": "Refresh"
+                              "variant": "secondary"
                             }
-                          ]
+                          ],
+                          "type": "stack",
+                          "gap": "sm",
+                          "justify": "end"
                         }
                       ],
                       "type": "stack",
-                      "gap": "lg",
-                      "direction": "vertical",
-                      "className": "max-w-6xl mx-auto w-full"
+                      "direction": "vertical"
                     }
                   ]
                 ]
@@ -1949,8 +1949,8 @@
                     "Burndown",
                     {
                       "emit": {
-                        "success": "BurndownLoaded",
-                        "failure": "BurndownLoadFailed"
+                        "failure": "BurndownLoadFailed",
+                        "success": "BurndownLoaded"
                       }
                     }
                   ]

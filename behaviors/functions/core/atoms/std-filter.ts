@@ -48,7 +48,7 @@ export interface StdFilterFilterPayload {
  */
 export interface StdFilterConfig {
   /** Default: `[{"filterType":"select","label":"Status","field":"status","options":["active","inactive","pending"]}]` */
-  filters?: TraitConfig[];
+  filters?: EntityRow[];
   /** Default: `"FILTER"` */
   event?: string;
 }

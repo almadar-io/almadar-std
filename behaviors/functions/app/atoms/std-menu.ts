@@ -228,12 +228,12 @@ export interface StdMenuMenuItemWriteFailedPayload {
  * without modifying its state-machine topology.
  */
 export interface StdMenuConfig {
-  /** Default: `[{"label":"Item","variant":"caption","name":"name"},{"name":"category","label":"Category","variant":"badge"},{"name":"price","label":"Price","variant":"caption"},{"label":"Currency","name":"currency","variant":"badge"},{"label":"Prep (min)","name":"prepTimeMinutes","variant":"caption"},{"label":"Available","name":"available","variant":"badge"}]` */
-  fields?: TraitConfig[];
-  /** Default: `[{"variant":"primary","label":"Open","event":"OPEN_ITEM","icon":"arrow-right"},{"event":"DELETE","variant":"danger","icon":"trash","label":"Delete"}]` */
-  itemActions?: TraitConfig[];
+  /** Default: `[{"label":"Item","variant":"caption","name":"name"},{"label":"Category","name":"category","variant":"badge"},{"name":"price","variant":"caption","label":"Price"},{"name":"currency","label":"Currency","variant":"badge"},{"name":"prepTimeMinutes","variant":"caption","label":"Prep (min)"},{"variant":"badge","name":"available","label":"Available"}]` */
+  fields?: EntityRow[];
   /** Default: `"Menu"` */
   title?: string;
+  /** Default: `[{"event":"OPEN_ITEM","icon":"arrow-right","variant":"primary","label":"Open"},{"label":"Delete","event":"DELETE","variant":"danger","icon":"trash"}]` */
+  itemActions?: EntityRow[];
 }
 
 /**

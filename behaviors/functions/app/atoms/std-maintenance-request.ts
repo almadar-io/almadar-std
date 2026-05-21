@@ -169,12 +169,12 @@ export interface StdMaintenanceRequestMaintenanceRequestUpdateFailedPayload {
  * without modifying its state-machine topology.
  */
 export interface StdMaintenanceRequestConfig {
-  /** Default: `[{"variant":"primary","event":"OPEN_REQUEST","icon":"arrow-right","label":"Open"},{"event":"CANCEL_REQUEST","variant":"danger","icon":"x","label":"Cancel"}]` */
-  itemActions?: TraitConfig[];
   /** Default: `"Maintenance Requests"` */
   title?: string;
-  /** Default: `[{"name":"unitId","label":"Unit","variant":"caption"},{"name":"requesterName","label":"Requester","variant":"caption"},{"name":"description","label":"Description","variant":"caption"},{"label":"Priority","variant":"badge","name":"priority"},{"name":"status","label":"Status","variant":"badge"},{"label":"Requested","name":"requestedAt","variant":"caption"}]` */
-  fields?: TraitConfig[];
+  /** Default: `[{"variant":"caption","name":"unitId","label":"Unit"},{"label":"Requester","variant":"caption","name":"requesterName"},{"name":"description","variant":"caption","label":"Description"},{"name":"priority","label":"Priority","variant":"badge"},{"variant":"badge","name":"status","label":"Status"},{"label":"Requested","variant":"caption","name":"requestedAt"}]` */
+  fields?: EntityRow[];
+  /** Default: `[{"variant":"primary","icon":"arrow-right","label":"Open","event":"OPEN_REQUEST"},{"variant":"danger","event":"CANCEL_REQUEST","label":"Cancel","icon":"x"}]` */
+  itemActions?: EntityRow[];
 }
 
 /**

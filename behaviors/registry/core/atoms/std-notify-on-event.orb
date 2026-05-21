@@ -174,12 +174,12 @@
                       "create",
                       "NotificationRecord",
                       {
-                        "severity": "@config.severity",
                         "channel": "@config.notifyChannel",
                         "message": "@config.template",
                         "recipient": "@user.id",
                         "dispatched": false,
-                        "recordedAt": 0.0
+                        "recordedAt": 0.0,
+                        "severity": "@config.severity"
                       }
                     ]
                   ],
@@ -187,10 +187,10 @@
                     "emit",
                     "NotificationDispatched",
                     {
-                      "channel": "@config.notifyChannel",
+                      "message": "@config.template",
                       "severity": "@config.severity",
                       "recipient": "@user.id",
-                      "message": "@config.template"
+                      "channel": "@config.notifyChannel"
                     }
                   ]
                 ]
@@ -198,17 +198,17 @@
             ]
           },
           "config": {
-            "template": {
-              "type": "string",
-              "default": "",
-              "label": "Message template",
-              "description": "Text shown to the recipient; supports payload interpolation"
-            },
             "severity": {
               "type": "string",
               "default": "info",
               "label": "Severity",
               "description": "info, success, warning, or error — controls styling"
+            },
+            "notifyChannel": {
+              "type": "string",
+              "default": "in-app",
+              "label": "Channel",
+              "description": "Delivery channel: in-app, email, or sms"
             },
             "listensFor": {
               "type": "[string]",
@@ -219,11 +219,11 @@
                 "type": "string"
               }
             },
-            "notifyChannel": {
+            "template": {
               "type": "string",
-              "default": "in-app",
-              "label": "Channel",
-              "description": "Delivery channel: in-app, email, or sms"
+              "default": "",
+              "label": "Message template",
+              "description": "Text shown to the recipient; supports payload interpolation"
             }
           },
           "scope": "instance"

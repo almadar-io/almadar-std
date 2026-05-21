@@ -31,8 +31,8 @@ const ALIAS = 'WizardBranching';
  * without modifying its state-machine topology.
  */
 export interface StdWizardBranchingConfig {
-  currentFields?: TraitConfig;
   steps?: TraitConfig;
+  currentFields?: TraitConfig;
 }
 
 /**

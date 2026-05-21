@@ -1,6 +1,8 @@
 app std-agent-reviewer "1.0.0"
 "Agent reviewer: code/doc review with RAG analysis and issue tracking."
 
+type ItemSpec = { id : string, label : string!, value : string, icon : string }
+
 orbital ReviewOrbital {
   uses Browse from "std/behaviors/std-browse"
   uses Tabs from "std/behaviors/std-tabs"
@@ -15,7 +17,7 @@ orbital ReviewOrbital {
     reviewStatus : string = "idle"
     error : string = ""
     activeTab : string = ""
-    items : [object] = []
+    items : [ItemSpec] = []
 
   }
 
@@ -275,7 +277,7 @@ orbital AnalysisOrbital {
     confidence : number
     model : string
     message : string
-    notificationType : string
+    notificationType : "info" | "success" | "warning" | "error" = "info"
   }
 
   type AnalysisLoaded     = Event { data : [Analysis] }                  "Fired when Analysis finishes loading"
@@ -390,7 +392,7 @@ orbital ReviewCompletionOrbital {
     status : string
     error : string = ""
     message : string
-    notificationType : string
+    notificationType : "info" | "success" | "warning" | "error" = "info"
   }
 
   type ReviewCompletionLoaded     = Event { data : [ReviewCompletion] }                  "Fired when ReviewCompletion finishes loading"

@@ -1,6 +1,8 @@
 app std-scatter "1.0.0"
 "std-scatter — embeddable scatter / bubble chart atom. ITEMS_LOADED maps @payload.data into {x,y,label,size,color} points using configured fields (no aggregation step — distinct from std-graphs). Drop into a dashboard alongside std-stats / std-graphs for two-numeric correlation views."
 
+type ObjectSpec = { id : string, label : string, value : string }
+
 orbital ScatterItemOrbital {
   type ScatterPoint = {
     x     : number!
@@ -69,7 +71,7 @@ orbital ScatterItemOrbital {
         (render-ui main { type: "chart", chartType: "scatter", title: "@config.title", subtitle: "@config.subtitle", scatterData: "@entity.points", height: "@config.height", drillEvent: "@config.drillEvent" })
     }
     listens {
-      ITEMS_LOADED { data : [object], totalCount : number }
+      ITEMS_LOADED { data : [ObjectSpec], totalCount : number }
     }
   }
   page "/scatteritems" as ScatterItemPlotPage -> ScatterItemPlot

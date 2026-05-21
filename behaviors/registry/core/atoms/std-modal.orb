@@ -161,8 +161,8 @@
                     "ModalRecord",
                     {
                       "emit": {
-                        "success": "ModalRecordLoaded",
-                        "failure": "ModalRecordLoadFailed"
+                        "failure": "ModalRecordLoadFailed",
+                        "success": "ModalRecordLoaded"
                       }
                     }
                   ]
@@ -191,14 +191,13 @@
                     "render-ui",
                     "@config.detailSlot",
                     {
-                      "direction": "vertical",
                       "type": "@config.detailPattern",
                       "children": [
                         {
                           "children": [
                             {
-                              "name": "@config.icon",
-                              "type": "icon"
+                              "type": "icon",
+                              "name": "@config.icon"
                             },
                             {
                               "type": "typography",
@@ -206,23 +205,24 @@
                               "variant": "h3"
                             }
                           ],
-                          "gap": "sm",
                           "type": "stack",
-                          "direction": "horizontal"
+                          "direction": "horizontal",
+                          "gap": "sm"
                         },
                         {
                           "type": "divider"
                         },
                         {
-                          "entity": "@payload.row",
-                          "submitEvent": "SAVE",
                           "type": "form-section",
+                          "submitEvent": "SAVE",
+                          "mode": "@config.mode",
                           "cancelEvent": "CLOSE",
                           "fields": "@config.fields",
-                          "mode": "@config.mode"
+                          "entity": "@payload.row"
                         }
                       ],
-                      "gap": "md"
+                      "gap": "md",
+                      "direction": "vertical"
                     }
                   ]
                 ]
@@ -259,23 +259,11 @@
             ]
           },
           "config": {
-            "detailSlot": {
-              "type": "slot",
-              "default": "modal",
-              "label": "Render slot",
-              "description": "UI slot the modal renders into"
-            },
-            "detailPattern": {
-              "type": "pattern",
-              "default": "stack",
-              "label": "Layout pattern",
-              "description": "Pattern used to arrange the form body"
-            },
-            "mode": {
+            "icon": {
               "type": "string",
-              "default": "create",
-              "label": "Form mode",
-              "description": "create or edit — controls submit-button copy and validation"
+              "default": "layout-panel-top",
+              "label": "Icon",
+              "description": "Icon shown in the modal header"
             },
             "title": {
               "type": "string",
@@ -283,11 +271,17 @@
               "label": "Modal title",
               "description": "Heading at the top of the modal"
             },
-            "icon": {
+            "mode": {
               "type": "string",
-              "default": "layout-panel-top",
-              "label": "Icon",
-              "description": "Icon shown in the modal header"
+              "default": "create",
+              "label": "Form mode",
+              "description": "create or edit — controls submit-button copy and validation"
+            },
+            "detailPattern": {
+              "type": "pattern",
+              "default": "stack",
+              "label": "Layout pattern",
+              "description": "Pattern used to arrange the form body"
             },
             "fields": {
               "type": "[string]",
@@ -297,6 +291,12 @@
               "items": {
                 "type": "string"
               }
+            },
+            "detailSlot": {
+              "type": "slot",
+              "default": "modal",
+              "label": "Render slot",
+              "description": "UI slot the modal renders into"
             }
           },
           "scope": "instance"

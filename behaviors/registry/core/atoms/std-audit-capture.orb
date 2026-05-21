@@ -164,22 +164,22 @@
                     "create",
                     "AuditEntry",
                     {
-                      "action": "EntityMutated",
                       "actor": "@user.id",
+                      "action": "EntityMutated",
                       "entityId": "@payload.data.id",
-                      "recordedAt": 0.0,
-                      "entityType": "@config.captureEntity"
+                      "entityType": "@config.captureEntity",
+                      "recordedAt": 0.0
                     }
                   ],
                   [
                     "emit",
                     "AuditRecorded",
                     {
-                      "entityType": "@config.captureEntity",
                       "entityId": "@payload.data.id",
-                      "recordedAt": 0.0,
+                      "entityType": "@config.captureEntity",
+                      "actor": "@user.id",
                       "action": "EntityMutated",
-                      "actor": "@user.id"
+                      "recordedAt": 0.0
                     }
                   ]
                 ]
@@ -187,6 +187,15 @@
             ]
           },
           "config": {
+            "excludeFields": {
+              "type": "[string]",
+              "default": [],
+              "label": "Skip fields",
+              "description": "Entity fields to omit from the audit payload",
+              "items": {
+                "type": "string"
+              }
+            },
             "captureEventTypes": {
               "type": "[string]",
               "default": [
@@ -204,15 +213,6 @@
               "default": "",
               "label": "Entity to audit",
               "description": "Type name of the entity whose mutations get logged"
-            },
-            "excludeFields": {
-              "type": "[string]",
-              "default": [],
-              "label": "Skip fields",
-              "description": "Entity fields to omit from the audit payload",
-              "items": {
-                "type": "string"
-              }
             }
           },
           "scope": "instance"

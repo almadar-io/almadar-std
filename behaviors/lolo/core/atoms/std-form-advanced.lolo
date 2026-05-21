@@ -1,6 +1,9 @@
 app std-form-advanced "1.2.0"
 "std-form-advanced — full-typed form-section primitive. Hosts the `editing` state with a configurable `fields` array (each entry mirrors @almadar/ui's `form-section` field schema: `{ name, label, type?, values?, relation?, required? }`). Field-level constraints live in `config.fieldValidation` as `[{ field, format?: 'email'|'url'|'phone', regex?, minLength?, maxLength?, message? }]` — form-section surfaces inline errors when a submit violates a declared constraint. Agents drive shape by overriding `config.fields` + `config.fieldValidation` per-call-site."
 
+type FieldSpec = { name : string!, label : string, variant : string, icon : string, format : string, key : string, header : string }
+type ValidationSpec = { field : string!, rule : string, message : string }
+
 orbital FormEntryOrbital {
   entity FormEntry [runtime] {
     id : string
@@ -22,7 +25,7 @@ orbital FormEntryOrbital {
   type FormEntrySaveFailed = Event { error : string, code : string }
   trait FormEntryFormAdvanced -> FormEntry [interaction, instance] {
     config {
-      fields : [object] = [
+      fields : [FieldSpec] = [
         { name: "name", label: "Name" },
         { name: "description", label: "Description" },
         { name: "status", label: "Status", type: "enum", values: ["active", "inactive", "pending"] },
@@ -35,7 +38,7 @@ orbital FormEntryOrbital {
       ]
         @label "Form fields"
         @description "Inputs to render; each entry follows the form-section field schema"
-      fieldValidation : [object] = []
+      fieldValidation : [ValidationSpec] = []
         @label "Field validation"
         @description "Per-field rules (format, regex, length) shown inline on submit"
     }

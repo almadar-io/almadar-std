@@ -69,24 +69,24 @@ export interface StdAppLayoutAppLayoutStateLoadFailedPayload {
  */
 export interface StdAppLayoutConfig {
   /** Default: `[]` */
-  topBarActions?: TraitConfig[];
-  /** Default: `[]` */
-  notifications?: TraitConfig[];
-  /** Default: `"SEARCH"` */
-  searchEvent?: string;
-  /** Default: `"NOTIFY_CLICK"` */
-  notificationClickEvent?: string;
-  /** Default: `"dashboard-layout"` */
-  layoutPattern?: unknown;
+  topBarActions?: EntityRow[];
+  contentTrait?: TraitFieldRef;
   /** Default: `"sidebar"` */
   layoutMode?: 'sidebar' | 'topnav' | 'bottomnav' | 'minimal';
+  /** Default: `"dashboard-layout"` */
+  layoutPattern?: unknown;
   /** Default: `"modal"` */
   detailSlot?: unknown;
   /** Default: `"App"` */
   appName?: string;
+  /** Default: `"SEARCH"` */
+  searchEvent?: string;
   /** Default: `[]` */
-  navItems?: TraitConfig[];
-  contentTrait?: TraitFieldRef;
+  notifications?: EntityRow[];
+  /** Default: `"NOTIFY_CLICK"` */
+  notificationClickEvent?: string;
+  /** Default: `[]` */
+  navItems?: EntityRow[];
 }
 
 /**

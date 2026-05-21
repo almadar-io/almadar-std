@@ -102,42 +102,42 @@
           "ref": "AppShell.traits.AppLayout",
           "name": "JournalAppLayout",
           "config": {
-            "notificationClickEvent": "JOURNAL_NOTIFICATIONS_OPEN",
-            "notifications": [],
             "contentTrait": "@trait.JournalCatalog",
             "navItems": [
               {
-                "href": "/journal-summaries",
                 "icon": "book-open",
-                "label": "Journal"
+                "label": "Journal",
+                "href": "/journal-summaries"
               },
               {
-                "label": "Entries",
                 "href": "/entries",
-                "icon": "list"
+                "icon": "list",
+                "label": "Entries"
               },
               {
+                "label": "Chart of Accounts",
                 "href": "/accounts",
-                "icon": "layout-list",
-                "label": "Chart of Accounts"
+                "icon": "layout-list"
               },
               {
-                "label": "AP Bills",
+                "icon": "file-text",
                 "href": "/bills",
-                "icon": "file-text"
+                "label": "AP Bills"
               },
               {
-                "href": "/invoices",
                 "label": "AR Invoices",
+                "href": "/invoices",
                 "icon": "receipt"
               }
             ],
             "searchEvent": "JOURNAL_SEARCH",
+            "notifications": [],
+            "notificationClickEvent": "JOURNAL_NOTIFICATIONS_OPEN",
             "appName": "Accounting"
           },
           "events": {
-            "SEARCH": "JOURNAL_SEARCH",
-            "NOTIFY_CLICK": "JOURNAL_NOTIFICATIONS_OPEN"
+            "NOTIFY_CLICK": "JOURNAL_NOTIFICATIONS_OPEN",
+            "SEARCH": "JOURNAL_SEARCH"
           }
         },
         {
@@ -220,17 +220,21 @@
                     "render-ui",
                     "main",
                     {
+                      "direction": "vertical",
+                      "type": "stack",
                       "children": [
                         {
-                          "gap": "md",
                           "type": "stack",
+                          "direction": "horizontal",
+                          "justify": "between",
                           "align": "center",
                           "children": [
                             {
+                              "direction": "horizontal",
                               "children": [
                                 {
-                                  "type": "icon",
-                                  "name": "book-open"
+                                  "name": "book-open",
+                                  "type": "icon"
                                 },
                                 {
                                   "type": "typography",
@@ -238,41 +242,39 @@
                                   "variant": "h2"
                                 }
                               ],
-                              "direction": "horizontal",
                               "gap": "sm",
                               "type": "stack",
                               "align": "center"
                             },
                             {
-                              "type": "stack",
                               "gap": "sm",
-                              "direction": "horizontal",
                               "children": [
                                 {
-                                  "label": "New Period",
                                   "type": "button",
-                                  "icon": "plus",
+                                  "label": "New Period",
                                   "variant": "primary",
-                                  "action": "CREATE"
+                                  "action": "CREATE",
+                                  "icon": "plus"
                                 }
-                              ]
+                              ],
+                              "direction": "horizontal",
+                              "type": "stack"
                             }
                           ],
-                          "justify": "between",
-                          "direction": "horizontal"
+                          "gap": "md"
                         },
                         {
                           "type": "divider"
                         },
                         {
+                          "gap": "md",
+                          "align": "center",
+                          "direction": "horizontal",
+                          "type": "stack",
                           "children": [
                             "@trait.JournalSearch",
                             "@trait.JournalFilter"
-                          ],
-                          "type": "stack",
-                          "direction": "horizontal",
-                          "gap": "md",
-                          "align": "center"
+                          ]
                         },
                         "@trait.JournalStats",
                         "@trait.JournalGraphs",
@@ -281,9 +283,7 @@
                         },
                         "@trait.JournalBrowseList"
                       ],
-                      "gap": "lg",
-                      "type": "stack",
-                      "direction": "vertical"
+                      "gap": "lg"
                     }
                   ]
                 ]
@@ -303,33 +303,33 @@
                     "main",
                     {
                       "gap": "md",
-                      "align": "center",
-                      "className": "py-8",
-                      "type": "stack",
+                      "direction": "vertical",
                       "children": [
                         {
-                          "name": "bell",
-                          "type": "icon"
+                          "type": "icon",
+                          "name": "bell"
                         },
                         {
                           "content": "No notifications",
-                          "type": "typography",
-                          "variant": "h3"
+                          "variant": "h3",
+                          "type": "typography"
                         },
                         {
+                          "type": "typography",
+                          "variant": "caption",
                           "color": "muted",
-                          "content": "You're all caught up.",
-                          "type": "typography",
-                          "variant": "caption"
+                          "content": "You're all caught up."
                         },
                         {
-                          "variant": "ghost",
-                          "action": "INIT",
+                          "label": "Back to journal",
                           "type": "button",
-                          "label": "Back to journal"
+                          "variant": "ghost",
+                          "action": "INIT"
                         }
                       ],
-                      "direction": "vertical"
+                      "align": "center",
+                      "type": "stack",
+                      "className": "py-8"
                     }
                   ]
                 ]
@@ -350,6 +350,7 @@
           "ref": "Filter.traits.FilterTargetFilter",
           "name": "JournalFilter",
           "config": {
+            "event": "JOURNAL_FILTER",
             "filters": [
               {
                 "options": [
@@ -357,12 +358,11 @@
                   "posted",
                   "closed"
                 ],
+                "field": "status",
                 "filterType": "select",
-                "label": "Status",
-                "field": "status"
+                "label": "Status"
               }
-            ],
-            "event": "JOURNAL_FILTER"
+            ]
           }
         },
         {
@@ -372,26 +372,26 @@
             "title": "Journal Periods",
             "metrics": [
               {
-                "label": "Periods",
                 "format": "number",
-                "variant": "primary",
                 "aggregation": "count",
-                "icon": "book-open"
+                "icon": "book-open",
+                "label": "Periods",
+                "variant": "primary"
               },
               {
-                "variant": "success",
                 "label": "Debits",
-                "icon": "trending-up",
-                "aggregation": "sum",
                 "format": "number",
+                "aggregation": "sum",
+                "variant": "success",
+                "icon": "trending-up",
                 "field": "totalDebits"
               },
               {
-                "icon": "trending-down",
-                "variant": "warning",
-                "label": "Credits",
-                "format": "number",
                 "aggregation": "sum",
+                "label": "Credits",
+                "variant": "warning",
+                "icon": "trending-down",
+                "format": "number",
                 "field": "totalCredits"
               }
             ]
@@ -411,12 +411,12 @@
           "ref": "Graphs.traits.GraphItemGraph",
           "name": "JournalGraphs",
           "config": {
-            "chartType": "bar",
-            "title": "Journal Status",
-            "height": 240.0,
-            "subtitle": "Periods by status",
             "showLegend": false,
+            "chartType": "bar",
+            "subtitle": "Periods by status",
             "categoryField": "status",
+            "height": 240.0,
+            "title": "Journal Status",
             "aggregation": "count"
           },
           "listens": [
@@ -706,8 +706,8 @@
                     "JournalSummary",
                     {
                       "emit": {
-                        "success": "JournalSummaryLoaded",
-                        "failure": "JournalSummaryLoadFailed"
+                        "failure": "JournalSummaryLoadFailed",
+                        "success": "JournalSummaryLoaded"
                       }
                     }
                   ],
@@ -715,22 +715,22 @@
                     "render-ui",
                     "main",
                     {
-                      "className": "py-12",
-                      "align": "center",
+                      "type": "stack",
                       "direction": "vertical",
+                      "gap": "md",
+                      "align": "center",
+                      "className": "py-12",
                       "children": [
                         {
                           "type": "spinner"
                         },
                         {
-                          "variant": "caption",
                           "color": "muted",
-                          "content": "Loading journal periods…",
-                          "type": "typography"
+                          "type": "typography",
+                          "variant": "caption",
+                          "content": "Loading journal periods…"
                         }
-                      ],
-                      "type": "stack",
-                      "gap": "md"
+                      ]
                     }
                   ]
                 ]
@@ -746,15 +746,15 @@
                     {
                       "fields": [
                         {
-                          "name": "period",
                           "variant": "h4",
-                          "icon": "calendar",
-                          "label": "Period"
+                          "label": "Period",
+                          "name": "period",
+                          "icon": "calendar"
                         },
                         {
+                          "label": "Status",
                           "name": "status",
-                          "variant": "badge",
-                          "label": "Status"
+                          "variant": "badge"
                         },
                         {
                           "label": "Total Debits",
@@ -762,32 +762,32 @@
                           "variant": "caption"
                         },
                         {
-                          "name": "totalCredits",
+                          "variant": "caption",
                           "label": "Total Credits",
-                          "variant": "caption"
+                          "name": "totalCredits"
                         }
                       ],
-                      "cols": 1.0,
+                      "entity": "@payload.data",
                       "itemActions": [
                         {
-                          "label": "View",
-                          "event": "VIEW",
-                          "variant": "ghost"
-                        },
-                        {
                           "variant": "ghost",
-                          "label": "Edit",
-                          "event": "EDIT"
+                          "label": "View",
+                          "event": "VIEW"
                         },
                         {
-                          "label": "Delete",
+                          "event": "EDIT",
+                          "variant": "ghost",
+                          "label": "Edit"
+                        },
+                        {
                           "event": "DELETE",
+                          "label": "Delete",
                           "variant": "danger"
                         }
                       ],
-                      "gap": "sm",
                       "type": "data-grid",
-                      "entity": "@payload.data"
+                      "cols": 1.0,
+                      "gap": "sm"
                     }
                   ]
                 ]
@@ -801,9 +801,9 @@
                     "render-ui",
                     "main",
                     {
-                      "type": "alert",
                       "message": "@payload.error",
-                      "variant": "error"
+                      "variant": "error",
+                      "type": "alert"
                     }
                   ]
                 ]
@@ -818,8 +818,8 @@
                     "JournalSummary",
                     {
                       "emit": {
-                        "failure": "JournalSummaryLoadFailed",
-                        "success": "JournalSummaryLoaded"
+                        "success": "JournalSummaryLoaded",
+                        "failure": "JournalSummaryLoadFailed"
                       }
                     }
                   ],
@@ -901,15 +901,15 @@
           "name": "JournalCreate",
           "linkedEntity": "JournalSummary",
           "config": {
-            "mode": "create",
             "icon": "plus-circle",
-            "title": "New Journal Period",
             "fields": [
               "period",
               "totalDebits",
               "totalCredits",
               "status"
-            ]
+            ],
+            "mode": "create",
+            "title": "New Journal Period"
           },
           "events": {
             "OPEN": "CREATE"
@@ -930,15 +930,15 @@
           "name": "JournalEdit",
           "linkedEntity": "JournalSummary",
           "config": {
+            "mode": "edit",
+            "icon": "edit",
             "fields": [
               "period",
               "totalDebits",
               "totalCredits",
               "status"
             ],
-            "title": "Edit Journal Period",
-            "icon": "edit",
-            "mode": "edit"
+            "title": "Edit Journal Period"
           },
           "events": {
             "OPEN": "EDIT"
@@ -959,15 +959,15 @@
           "name": "JournalView",
           "linkedEntity": "JournalSummary",
           "config": {
-            "title": "View Journal Period",
-            "icon": "eye",
             "mode": "edit",
             "fields": [
               "period",
               "totalDebits",
               "totalCredits",
               "status"
-            ]
+            ],
+            "title": "View Journal Period",
+            "icon": "eye"
           },
           "events": {
             "OPEN": "VIEW"
@@ -988,14 +988,14 @@
           "name": "JournalDelete",
           "linkedEntity": "JournalSummary",
           "config": {
-            "confirmLabel": "Delete",
             "icon": "alert-triangle",
+            "title": "Delete Journal Period",
             "alertMessage": "This action cannot be undone.",
-            "title": "Delete Journal Period"
+            "confirmLabel": "Delete"
           },
           "events": {
-            "REQUEST": "DELETE",
-            "CONFIRM": "CONFIRM_DELETE"
+            "CONFIRM": "CONFIRM_DELETE",
+            "REQUEST": "DELETE"
           },
           "listens": [
             {

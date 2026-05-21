@@ -31,8 +31,8 @@ const ALIAS = 'Forum';
  * without modifying its state-machine topology.
  */
 export interface StdForumConfig {
-  notifications?: TraitConfig;
   navItems?: TraitConfig;
+  notifications?: TraitConfig;
 }
 
 /**
@@ -207,32 +207,32 @@ export function stdForumQuestionOrbital(params: StdForumQuestionOrbitalParams = 
         'ref': 'AppShell.traits.AppLayout',
         'name': 'QuestionAppLayout',
         'config': {
-          'notifications': [],
-          'searchEvent': 'QUESTION_SEARCH',
-          'notificationClickEvent': 'QUESTION_NOTIFICATIONS_OPEN',
+          'appName': 'Forum',
           'navItems': [
             {
-              'href': '/questions',
-              'icon': 'help-circle',
               'label': 'Questions',
-            },
-            {
+              'icon': 'help-circle',
               'href': '/questions',
-              'label': 'Categories',
-              'icon': 'tag',
             },
             {
-              'href': '/moderation',
+              'icon': 'tag',
+              'label': 'Categories',
+              'href': '/questions',
+            },
+            {
               'label': 'Moderation',
+              'href': '/moderation',
               'icon': 'shield-alert',
             },
           ],
-          'appName': 'Forum',
+          'searchEvent': 'QUESTION_SEARCH',
           'contentTrait': '@trait.QuestionCatalog',
+          'notificationClickEvent': 'QUESTION_NOTIFICATIONS_OPEN',
+          'notifications': [],
         },
         'events': {
-          'NOTIFY_CLICK': 'QUESTION_NOTIFICATIONS_OPEN',
           'SEARCH': 'QUESTION_SEARCH',
+          'NOTIFY_CLICK': 'QUESTION_NOTIFICATIONS_OPEN',
         },
       }),
       rebindInlineTraitEntity({
@@ -315,51 +315,55 @@ export function stdForumQuestionOrbital(params: StdForumQuestionOrbitalParams = 
                   'render-ui',
                   'main',
                   {
+                    'direction': 'vertical',
+                    'gap': 'lg',
+                    'type': 'stack',
                     'children': [
                       {
-                        'justify': 'between',
-                        'gap': 'md',
-                        'direction': 'horizontal',
-                        'type': 'stack',
-                        'align': 'center',
                         'children': [
                           {
                             'type': 'stack',
                             'direction': 'horizontal',
-                            'gap': 'sm',
                             'align': 'center',
+                            'gap': 'sm',
                             'children': [
                               {
                                 'name': 'help-circle',
                                 'type': 'icon',
                               },
                               {
-                                'type': 'typography',
                                 'content': 'Questions',
                                 'variant': 'h2',
+                                'type': 'typography',
                               },
                             ],
                           },
                           {
-                            'gap': 'sm',
                             'children': [
                               {
-                                'variant': 'primary',
                                 'label': 'Ask Question',
                                 'type': 'button',
                                 'icon': 'plus',
+                                'variant': 'primary',
                                 'action': 'CREATE',
                               },
                             ],
-                            'direction': 'horizontal',
                             'type': 'stack',
+                            'direction': 'horizontal',
+                            'gap': 'sm',
                           },
                         ],
+                        'type': 'stack',
+                        'align': 'center',
+                        'gap': 'md',
+                        'direction': 'horizontal',
+                        'justify': 'between',
                       },
                       {
                         'type': 'divider',
                       },
                       {
+                        'type': 'stack',
                         'direction': 'horizontal',
                         'gap': 'md',
                         'children': [
@@ -367,7 +371,6 @@ export function stdForumQuestionOrbital(params: StdForumQuestionOrbitalParams = 
                           '@trait.QuestionFilter',
                         ],
                         'align': 'center',
-                        'type': 'stack',
                       },
                       '@trait.QuestionStats',
                       {
@@ -379,9 +382,6 @@ export function stdForumQuestionOrbital(params: StdForumQuestionOrbitalParams = 
                       },
                       '@trait.QuestionBrowseList',
                     ],
-                    'gap': 'lg',
-                    'direction': 'vertical',
-                    'type': 'stack',
                   },
                 ],
               ],
@@ -400,34 +400,34 @@ export function stdForumQuestionOrbital(params: StdForumQuestionOrbitalParams = 
                   'render-ui',
                   'main',
                   {
-                    'gap': 'md',
-                    'className': 'py-8',
+                    'direction': 'vertical',
                     'children': [
                       {
-                        'name': 'bell',
                         'type': 'icon',
+                        'name': 'bell',
                       },
                       {
-                        'type': 'typography',
-                        'variant': 'h3',
                         'content': 'No notifications',
+                        'variant': 'h3',
+                        'type': 'typography',
                       },
                       {
-                        'type': 'typography',
                         'content': 'You\'re all caught up.',
-                        'color': 'muted',
                         'variant': 'caption',
+                        'color': 'muted',
+                        'type': 'typography',
                       },
                       {
                         'type': 'button',
-                        'label': 'Back to questions',
                         'variant': 'ghost',
+                        'label': 'Back to questions',
                         'action': 'INIT',
                       },
                     ],
-                    'type': 'stack',
                     'align': 'center',
-                    'direction': 'vertical',
+                    'type': 'stack',
+                    'gap': 'md',
+                    'className': 'py-8',
                   },
                 ],
               ],
@@ -450,7 +450,6 @@ export function stdForumQuestionOrbital(params: StdForumQuestionOrbitalParams = 
         'config': {
           'filters': [
             {
-              'filterType': 'select',
               'label': 'Status',
               'options': [
                 'open',
@@ -458,6 +457,7 @@ export function stdForumQuestionOrbital(params: StdForumQuestionOrbitalParams = 
                 'closed',
               ],
               'field': 'status',
+              'filterType': 'select',
             },
             {
               'options': [],
@@ -476,17 +476,16 @@ export function stdForumQuestionOrbital(params: StdForumQuestionOrbitalParams = 
           'title': 'Questions',
           'metrics': [
             {
-              'icon': 'help-circle',
               'label': 'Total',
-              'variant': 'primary',
               'aggregation': 'count',
+              'variant': 'primary',
               'format': 'number',
+              'icon': 'help-circle',
             },
             {
               'aggregation': 'count',
               'label': 'Open',
               'icon': 'circle',
-              'format': 'number',
               'filter': [
                 'fn',
                 'row',
@@ -496,13 +495,15 @@ export function stdForumQuestionOrbital(params: StdForumQuestionOrbitalParams = 
                   'open',
                 ],
               ],
+              'format': 'number',
               'variant': 'warning',
             },
             {
+              'variant': 'success',
+              'format': 'number',
+              'icon': 'check-circle',
               'label': 'Answered',
               'aggregation': 'count',
-              'icon': 'check-circle',
-              'format': 'number',
               'filter': [
                 'fn',
                 'row',
@@ -512,7 +513,6 @@ export function stdForumQuestionOrbital(params: StdForumQuestionOrbitalParams = 
                   'answered',
                 ],
               ],
-              'variant': 'success',
             },
           ],
         },
@@ -531,8 +531,8 @@ export function stdForumQuestionOrbital(params: StdForumQuestionOrbitalParams = 
         'ref': 'Tags.traits.TagBrowse',
         'name': 'QuestionTagTree',
         'config': {
-          'title': 'Categories',
           'allowEdit': false,
+          'title': 'Categories',
         },
       }),
       makeTraitRef({
@@ -541,24 +541,7 @@ export function stdForumQuestionOrbital(params: StdForumQuestionOrbitalParams = 
         'linkedEntity': canonicalName,
         'config': {
           'gap': 'sm',
-          'itemActions': [
-            {
-              'label': 'View',
-              'variant': 'ghost',
-              'event': 'VIEW',
-            },
-            {
-              'variant': 'ghost',
-              'label': 'Edit',
-              'event': 'EDIT',
-            },
-            {
-              'event': 'DELETE',
-              'label': 'Delete',
-              'variant': 'danger',
-            },
-          ],
-          'variant': 'card',
+          'cols': 1,
           'fields': [
             {
               'name': 'title',
@@ -566,29 +549,46 @@ export function stdForumQuestionOrbital(params: StdForumQuestionOrbitalParams = 
               'variant': 'h3',
             },
             {
-              'variant': 'body',
               'name': 'authorName',
+              'variant': 'body',
             },
             {
+              'variant': 'badge',
               'name': 'tag',
-              'variant': 'badge',
             },
             {
+              'variant': 'badge',
               'name': 'status',
-              'variant': 'badge',
             },
             {
-              'format': 'number',
               'name': 'voteCount',
+              'format': 'number',
               'variant': 'caption',
             },
             {
-              'format': 'number',
-              'name': 'replyCount',
               'variant': 'caption',
+              'name': 'replyCount',
+              'format': 'number',
             },
           ],
-          'cols': 1,
+          'itemActions': [
+            {
+              'label': 'View',
+              'variant': 'ghost',
+              'event': 'VIEW',
+            },
+            {
+              'event': 'EDIT',
+              'variant': 'ghost',
+              'label': 'Edit',
+            },
+            {
+              'label': 'Delete',
+              'event': 'DELETE',
+              'variant': 'danger',
+            },
+          ],
+          'variant': 'card',
         },
         'listens': [
           {
@@ -653,9 +653,9 @@ export function stdForumQuestionOrbital(params: StdForumQuestionOrbitalParams = 
         'name': 'QuestionCreate',
         'linkedEntity': canonicalName,
         'config': {
+          'icon': 'plus-circle',
           'mode': 'create',
           'title': 'Ask Question',
-          'icon': 'plus-circle',
           'fields': [
             'title',
             'body',
@@ -683,8 +683,6 @@ export function stdForumQuestionOrbital(params: StdForumQuestionOrbitalParams = 
         'name': 'QuestionEdit',
         'linkedEntity': canonicalName,
         'config': {
-          'mode': 'edit',
-          'icon': 'edit',
           'title': 'Edit Question',
           'fields': [
             'title',
@@ -693,6 +691,8 @@ export function stdForumQuestionOrbital(params: StdForumQuestionOrbitalParams = 
             'tag',
             'status',
           ],
+          'icon': 'edit',
+          'mode': 'edit',
         },
         'events': {
           'OPEN': 'EDIT',
@@ -713,6 +713,8 @@ export function stdForumQuestionOrbital(params: StdForumQuestionOrbitalParams = 
         'name': 'QuestionView',
         'linkedEntity': canonicalName,
         'config': {
+          'title': 'View Question',
+          'mode': 'edit',
           'fields': [
             'title',
             'body',
@@ -723,8 +725,6 @@ export function stdForumQuestionOrbital(params: StdForumQuestionOrbitalParams = 
             'replyCount',
           ],
           'icon': 'eye',
-          'title': 'View Question',
-          'mode': 'edit',
         },
         'events': {
           'OPEN': 'VIEW',
@@ -746,13 +746,13 @@ export function stdForumQuestionOrbital(params: StdForumQuestionOrbitalParams = 
         'linkedEntity': canonicalName,
         'config': {
           'alertMessage': 'This action cannot be undone. The question and all its replies will be removed.',
-          'icon': 'alert-triangle',
           'title': 'Delete Question',
+          'icon': 'alert-triangle',
           'confirmLabel': 'Delete',
         },
         'events': {
-          'CONFIRM': 'CONFIRM_DELETE',
           'REQUEST': 'DELETE',
+          'CONFIRM': 'CONFIRM_DELETE',
         },
         'listens': [
           {
@@ -1222,32 +1222,32 @@ export function stdForumModQueueOrbital(params: StdForumModQueueOrbitalParams = 
         'ref': 'AppShell.traits.AppLayout',
         'name': 'ModerationAppLayout',
         'config': {
-          'contentTrait': '@trait.ModerationDisplay',
-          'appName': 'Forum',
-          'searchEvent': 'MODERATION_SEARCH',
-          'notificationClickEvent': 'MODERATION_NOTIFICATIONS_OPEN',
           'navItems': [
             {
+              'href': '/questions',
               'icon': 'help-circle',
               'label': 'Questions',
-              'href': '/questions',
             },
             {
-              'label': 'Categories',
               'href': '/questions',
               'icon': 'tag',
+              'label': 'Categories',
             },
             {
-              'label': 'Moderation',
               'href': '/moderation',
               'icon': 'shield-alert',
+              'label': 'Moderation',
             },
           ],
+          'contentTrait': '@trait.ModerationDisplay',
+          'searchEvent': 'MODERATION_SEARCH',
+          'notificationClickEvent': 'MODERATION_NOTIFICATIONS_OPEN',
+          'appName': 'Forum',
           'notifications': [],
         },
         'events': {
-          'SEARCH': 'MODERATION_SEARCH',
           'NOTIFY_CLICK': 'MODERATION_NOTIFICATIONS_OPEN',
+          'SEARCH': 'MODERATION_SEARCH',
         },
       }),
       rebindInlineTraitEntity({
@@ -1314,23 +1314,23 @@ export function stdForumModQueueOrbital(params: StdForumModQueueOrbitalParams = 
                   'render-ui',
                   'main',
                   {
-                    'direction': 'vertical',
+                    'gap': 'lg',
                     'children': [
                       {
-                        'type': 'stack',
                         'gap': 'sm',
                         'children': [
                           {
-                            'name': 'shield-alert',
                             'type': 'icon',
+                            'name': 'shield-alert',
                           },
                           {
-                            'variant': 'h2',
                             'content': 'Moderation Queue',
                             'type': 'typography',
+                            'variant': 'h2',
                           },
                         ],
                         'direction': 'horizontal',
+                        'type': 'stack',
                         'align': 'center',
                       },
                       {
@@ -1341,9 +1341,9 @@ export function stdForumModQueueOrbital(params: StdForumModQueueOrbitalParams = 
                         'type': 'divider',
                       },
                       {
-                        'variant': 'h3',
                         'content': 'Recent Flags',
                         'type': 'typography',
+                        'variant': 'h3',
                       },
                       '@trait.ModerationFlagBrowse',
                       {
@@ -1356,9 +1356,9 @@ export function stdForumModQueueOrbital(params: StdForumModQueueOrbitalParams = 
                       },
                       '@trait.ModerationDecisionBrowse',
                     ],
-                    'type': 'stack',
-                    'gap': 'lg',
+                    'direction': 'vertical',
                     'className': 'max-w-6xl mx-auto w-full p-4',
+                    'type': 'stack',
                   },
                 ],
               ],
@@ -1377,34 +1377,34 @@ export function stdForumModQueueOrbital(params: StdForumModQueueOrbitalParams = 
                   'render-ui',
                   'main',
                   {
-                    'className': 'py-8',
-                    'gap': 'md',
-                    'type': 'stack',
                     'direction': 'vertical',
+                    'className': 'py-8',
                     'children': [
                       {
                         'type': 'icon',
                         'name': 'bell',
                       },
                       {
-                        'variant': 'h3',
                         'type': 'typography',
+                        'variant': 'h3',
                         'content': 'No notifications',
                       },
                       {
-                        'content': 'You\'re all caught up.',
-                        'type': 'typography',
                         'color': 'muted',
                         'variant': 'caption',
+                        'type': 'typography',
+                        'content': 'You\'re all caught up.',
                       },
                       {
                         'action': 'INIT',
-                        'type': 'button',
                         'variant': 'ghost',
                         'label': 'Back to moderation',
+                        'type': 'button',
                       },
                     ],
                     'align': 'center',
+                    'gap': 'md',
+                    'type': 'stack',
                   },
                 ],
               ],
@@ -1442,27 +1442,26 @@ export function stdForumModQueueOrbital(params: StdForumModQueueOrbitalParams = 
         'linkedEntity': canonicalName,
         'config': {
           'gap': 'sm',
-          'cols': 1,
           'fields': [
             {
               'label': 'Target',
-              'variant': 'badge',
               'name': 'targetType',
-            },
-            {
-              'label': 'Verdict',
-              'name': 'verdict',
               'variant': 'badge',
             },
             {
-              'variant': 'caption',
-              'label': 'Reviewer',
-              'name': 'reviewerId',
+              'variant': 'badge',
+              'name': 'verdict',
+              'label': 'Verdict',
             },
             {
-              'variant': 'body',
-              'label': 'Notes',
+              'name': 'reviewerId',
+              'label': 'Reviewer',
+              'variant': 'caption',
+            },
+            {
               'name': 'notes',
+              'label': 'Notes',
+              'variant': 'body',
             },
             {
               'variant': 'caption',
@@ -1471,11 +1470,12 @@ export function stdForumModQueueOrbital(params: StdForumModQueueOrbitalParams = 
               'format': 'date',
             },
           ],
+          'cols': 1,
           'itemActions': [
             {
-              'label': 'Revert',
-              'variant': 'danger',
               'event': 'DELETE',
+              'variant': 'danger',
+              'label': 'Revert',
             },
           ],
         },
@@ -1504,8 +1504,8 @@ export function stdForumModQueueOrbital(params: StdForumModQueueOrbitalParams = 
         'linkedEntity': canonicalName,
         'config': {
           'icon': 'rotate-ccw',
-          'title': 'Revert Decision',
           'confirmLabel': 'Revert',
+          'title': 'Revert Decision',
           'alertMessage': 'This will undo the recorded moderation verdict.',
         },
         'events': {

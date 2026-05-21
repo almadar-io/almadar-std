@@ -1,6 +1,9 @@
 app std-email-broadcast "1.1.0"
 "std-email-broadcast — send an email blast to a segment of contacts using a chosen template. Lists broadcasts in `browsing`; opens detail in `viewing_single` with Send / Cancel actions. Agents tune the list shape via `config.fields` + `config.itemActions`."
 
+type FieldSpec = { name : string!, label : string, variant : string, icon : string, format : string, key : string, header : string }
+type ItemAction = { label : string!, event : string!, variant : string, icon : string }
+
 orbital EmailBroadcastOrbital {
   entity EmailBroadcast [persistent: emailbroadcasts] {
     id              : string!
@@ -22,7 +25,7 @@ orbital EmailBroadcastOrbital {
       title       : string   = "Email Broadcasts"
         @label "Section title"
         @description "Heading shown above the email blast list"
-      fields      : [object] = [
+      fields      : [FieldSpec] = [
         { name: "name",           label: "Name",       variant: "caption" },
         { name: "subject",        label: "Subject",    variant: "caption" },
         { name: "status",         label: "Status",     variant: "badge"   },
@@ -32,7 +35,7 @@ orbital EmailBroadcastOrbital {
       ]
         @label "Columns to show"
         @description "Each column maps to one field on the Email Broadcast entity"
-      itemActions : [object] = [
+      itemActions : [ItemAction] = [
         { label: "Open",   event: "OPEN_BROADCAST",   variant: "primary", icon: "arrow-right" },
         { label: "Cancel", event: "CANCEL_BROADCAST", variant: "danger" }
       ]

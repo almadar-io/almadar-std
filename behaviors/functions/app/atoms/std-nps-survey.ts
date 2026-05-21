@@ -82,12 +82,12 @@ export interface StdNpsSurveyNpsSurveyLoadFailedPayload {
  * without modifying its state-machine topology.
  */
 export interface StdNpsSurveyConfig {
-  /** Default: `[{"label":"Open","event":"OPEN_SURVEY","icon":"arrow-right","variant":"primary"},{"event":"MARK_FOLLOWED_UP","label":"Mark Followed Up","variant":"danger"}]` */
-  itemActions?: TraitConfig[];
+  /** Default: `[{"label":"Open","variant":"primary","icon":"arrow-right","event":"OPEN_SURVEY"},{"label":"Mark Followed Up","event":"MARK_FOLLOWED_UP","variant":"danger"}]` */
+  itemActions?: EntityRow[];
   /** Default: `"NPS Surveys"` */
   title?: string;
-  /** Default: `[{"label":"Customer","variant":"caption","name":"customerName"},{"label":"Score","name":"score","variant":"caption"},{"label":"Category","variant":"badge","name":"category"},{"name":"surveyedAt","label":"Surveyed","variant":"caption"},{"name":"channel","label":"Channel","variant":"caption"},{"variant":"badge","label":"Status","name":"status"}]` */
-  fields?: TraitConfig[];
+  /** Default: `[{"variant":"caption","name":"customerName","label":"Customer"},{"name":"score","label":"Score","variant":"caption"},{"variant":"badge","label":"Category","name":"category"},{"name":"surveyedAt","label":"Surveyed","variant":"caption"},{"name":"channel","label":"Channel","variant":"caption"},{"name":"status","label":"Status","variant":"badge"}]` */
+  fields?: EntityRow[];
 }
 
 /**

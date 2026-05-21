@@ -1,6 +1,9 @@
 app std-rent-charge "1.1.0"
 "std-rent-charge — monthly rent charge ledger. Lists charges in `browsing`; opens detail in `viewing_single` with Mark Paid / Late Fee / Waive actions. Agents tune the list shape via `config.fields` + `config.itemActions`."
 
+type FieldSpec = { name : string!, label : string, variant : string, icon : string, format : string, key : string, header : string }
+type ItemAction = { label : string!, event : string!, variant : string, icon : string }
+
 orbital RentChargeOrbital {
   entity RentCharge [persistent: rentcharges] {
     id       : string!
@@ -22,7 +25,7 @@ orbital RentChargeOrbital {
       title       : string   = "Rent Charges"
         @label "Section title"
         @description "Heading shown above the rent charge ledger"
-      fields      : [object] = [
+      fields      : [FieldSpec] = [
         { name: "tenantId", label: "Tenant",   variant: "caption" },
         { name: "amount",   label: "Amount",   variant: "caption" },
         { name: "dueDate",  label: "Due",      variant: "caption" },
@@ -32,7 +35,7 @@ orbital RentChargeOrbital {
       ]
         @label "Columns to show"
         @description "Each column maps to one field on the Rent Charge entity"
-      itemActions : [object] = [
+      itemActions : [ItemAction] = [
         { label: "Open",  event: "OPEN_CHARGE",  variant: "primary", icon: "arrow-right" },
         { label: "Waive", event: "WAIVE_CHARGE", variant: "danger" }
       ]

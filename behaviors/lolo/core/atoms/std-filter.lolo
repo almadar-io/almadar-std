@@ -1,6 +1,8 @@
 app std-filter "1.0.0"
 "std-filter — single primitive: filter-group. Owns a FilterTarget runtime entity; every FILTER transition persists field/value so cross-trait listeners can route the latest selection into data atoms."
 
+type FilterSpec = { field : string!, label : string, filterType : string, options : [string] }
+
 orbital FilterTargetOrbital {
   entity FilterTarget [runtime] {
     id    : string!
@@ -11,7 +13,7 @@ orbital FilterTargetOrbital {
   trait FilterTargetFilter -> FilterTarget [interaction, instance] {
     initial: idle
     config {
-      filters : [object] = [
+      filters : [FilterSpec] = [
         { field: "status", label: "Status", filterType: "select", options: ["active", "inactive", "pending"] }
       ]
         @label "Filter controls"

@@ -1,6 +1,9 @@
 app std-receipt "1.1.0"
 "std-receipt — receipt primitive. Lists receipts in `browsing`; opens detail in `viewing_single` with Email / Reprint actions. Agents tune the list shape via `config.fields` + `config.itemActions`."
 
+type FieldSpec = { name : string!, label : string, variant : string, icon : string, format : string, key : string, header : string }
+type ItemAction = { label : string!, event : string!, variant : string, icon : string }
+
 orbital ReceiptOrbital {
   entity Receipt [persistent: receipts] {
     id              : string!
@@ -25,7 +28,7 @@ orbital ReceiptOrbital {
       title       : string   = "Receipts"
         @label "Section title"
         @description "Heading shown above the receipts list"
-      fields      : [object] = [
+      fields      : [FieldSpec] = [
         { name: "receiptNumber",   label: "Receipt #", variant: "caption" },
         { name: "recipientName",   label: "Recipient", variant: "caption" },
         { name: "transactionType", label: "Type",      variant: "badge"   },
@@ -34,7 +37,7 @@ orbital ReceiptOrbital {
       ]
         @label "Columns to show"
         @description "Each column maps to one field on the Receipt entity"
-      itemActions : [object] = [
+      itemActions : [ItemAction] = [
         { label: "Open",    event: "OPEN_RECEIPT",    variant: "primary", icon: "arrow-right" },
         { label: "Reprint", event: "REPRINT_RECEIPT", variant: "danger" }
       ]

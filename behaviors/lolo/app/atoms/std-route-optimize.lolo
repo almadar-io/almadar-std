@@ -1,6 +1,9 @@
 app std-route-optimize "1.1.0"
 "std-route-optimize — multi-stop route ordering for technician dispatch. Lists routes in `browsing`; opens detail in `viewing_single` with Optimize / Reset actions. Agents tune the list shape via `config.fields` + `config.itemActions`."
 
+type FieldSpec = { name : string!, label : string, variant : string, icon : string, format : string, key : string, header : string }
+type ItemAction = { label : string!, event : string!, variant : string, icon : string }
+
 orbital RouteOptimizeOrbital {
   entity Route [persistent: routes] {
     id                   : string!
@@ -21,7 +24,7 @@ orbital RouteOptimizeOrbital {
       title       : string   = "Routes"
         @label "Section title"
         @description "Heading shown above the technician route list"
-      fields      : [object] = [
+      fields      : [FieldSpec] = [
         { name: "technicianId",         label: "Technician",     variant: "caption" },
         { name: "totalDistanceKm",      label: "Distance (km)",  variant: "caption" },
         { name: "totalDurationMinutes", label: "Duration (min)", variant: "caption" },
@@ -29,7 +32,7 @@ orbital RouteOptimizeOrbital {
       ]
         @label "Columns to show"
         @description "Each column maps to one field on the Route entity"
-      itemActions : [object] = [
+      itemActions : [ItemAction] = [
         { label: "Open",     event: "OPEN_ROUTE", variant: "primary", icon: "arrow-right" },
         { label: "Optimize", event: "OPTIMIZE",   variant: "danger" }
       ]

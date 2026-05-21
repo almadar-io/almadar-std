@@ -116,11 +116,9 @@
                     "render-ui",
                     "main",
                     {
-                      "gap": "lg",
                       "align": "center",
                       "children": [
                         {
-                          "type": "stack",
                           "children": [
                             {
                               "type": "icon",
@@ -132,19 +130,20 @@
                               "variant": "h2"
                             }
                           ],
+                          "gap": "md",
                           "direction": "horizontal",
                           "align": "center",
-                          "gap": "md"
+                          "type": "stack"
                         },
                         {
                           "type": "divider"
                         },
                         {
-                          "direction": "vertical",
+                          "type": "stack",
                           "gap": "md",
+                          "direction": "vertical",
                           "children": [
                             {
-                              "type": "select",
                               "options": [
                                 {
                                   "value": "getFile",
@@ -155,10 +154,11 @@
                                   "label": "List Commits"
                                 },
                                 {
-                                  "value": "createIssue",
-                                  "label": "Create Issue"
+                                  "label": "Create Issue",
+                                  "value": "createIssue"
                                 }
-                              ]
+                              ],
+                              "type": "select"
                             },
                             {
                               "placeholder": "owner",
@@ -176,19 +176,19 @@
                               "placeholder": "ref (default: main)",
                               "type": "input"
                             }
-                          ],
-                          "type": "stack"
+                          ]
                         },
                         {
-                          "label": "Run",
-                          "action": "RUN",
-                          "variant": "primary",
                           "icon": "play",
-                          "type": "button"
+                          "type": "button",
+                          "variant": "primary",
+                          "label": "Run",
+                          "action": "RUN"
                         }
                       ],
+                      "type": "stack",
                       "direction": "vertical",
-                      "type": "stack"
+                      "gap": "lg"
                     }
                   ]
                 ]
@@ -404,12 +404,12 @@
                     "render-ui",
                     "main",
                     {
+                      "direction": "vertical",
+                      "type": "stack",
+                      "gap": "md",
                       "children": [
                         "@config.uiTrait"
-                      ],
-                      "gap": "md",
-                      "type": "stack",
-                      "direction": "vertical"
+                      ]
                     }
                   ]
                 ]
@@ -424,8 +424,8 @@
                     "main",
                     {
                       "message": "Calling the GitHub service.",
-                      "type": "loading-state",
-                      "title": "Running GitHub operation..."
+                      "title": "Running GitHub operation...",
+                      "type": "loading-state"
                     }
                   ],
                   [
@@ -433,15 +433,15 @@
                     "github",
                     "@config.op",
                     {
-                      "repo": "@config.repo",
                       "path": "@config.path",
+                      "owner": "@config.owner",
                       "ref": "@config.ref",
-                      "owner": "@config.owner"
+                      "repo": "@config.repo"
                     },
                     {
                       "emit": {
-                        "failure": "FAILED",
-                        "success": "GithubDone"
+                        "success": "GithubDone",
+                        "failure": "FAILED"
                       }
                     }
                   ]
@@ -476,42 +476,42 @@
                     "emit",
                     "GithubDone",
                     {
-                      "id": "@entity.id",
-                      "result": "@payload.result"
+                      "result": "@payload.result",
+                      "id": "@entity.id"
                     }
                   ],
                   [
                     "render-ui",
                     "main",
                     {
+                      "type": "stack",
                       "align": "center",
-                      "gap": "lg",
                       "children": [
                         {
-                          "name": "check-circle",
-                          "type": "icon"
+                          "type": "icon",
+                          "name": "check-circle"
                         },
                         {
-                          "variant": "success",
                           "message": "GitHub operation completed!",
+                          "variant": "success",
                           "type": "alert"
                         },
                         {
-                          "type": "typography",
                           "color": "muted",
                           "variant": "body",
-                          "content": "@entity.id"
+                          "content": "@entity.id",
+                          "type": "typography"
                         },
                         {
+                          "type": "button",
                           "icon": "rotate-ccw",
                           "action": "RESET",
-                          "type": "button",
-                          "variant": "ghost",
-                          "label": "Run Again"
+                          "label": "Run Again",
+                          "variant": "ghost"
                         }
                       ],
                       "direction": "vertical",
-                      "type": "stack"
+                      "gap": "lg"
                     }
                   ]
                 ]
@@ -530,18 +530,18 @@
                     "emit",
                     "ServiceGithubGithubFailed",
                     {
-                      "error": "@entity.error",
-                      "code": "github_op_failed"
+                      "code": "github_op_failed",
+                      "error": "@entity.error"
                     }
                   ],
                   [
                     "render-ui",
                     "main",
                     {
-                      "message": "@entity.error",
+                      "type": "error-state",
                       "title": "GitHub Operation Failed",
-                      "onRetry": "RETRY",
-                      "type": "error-state"
+                      "message": "@entity.error",
+                      "onRetry": "RETRY"
                     }
                   ]
                 ]
@@ -555,12 +555,12 @@
                     "render-ui",
                     "main",
                     {
+                      "gap": "md",
                       "type": "stack",
                       "children": [
                         "@config.uiTrait"
                       ],
-                      "direction": "vertical",
-                      "gap": "md"
+                      "direction": "vertical"
                     }
                   ]
                 ]
@@ -584,12 +584,12 @@
                     "render-ui",
                     "main",
                     {
-                      "direction": "vertical",
                       "type": "stack",
+                      "direction": "vertical",
+                      "gap": "md",
                       "children": [
                         "@config.uiTrait"
-                      ],
-                      "gap": "md"
+                      ]
                     }
                   ]
                 ]
@@ -603,11 +603,11 @@
                     "render-ui",
                     "main",
                     {
+                      "type": "stack",
                       "direction": "vertical",
                       "children": [
                         "@config.uiTrait"
                       ],
-                      "type": "stack",
                       "gap": "md"
                     }
                   ]
@@ -616,23 +616,22 @@
             ]
           },
           "config": {
+            "op": {
+              "type": "string",
+              "default": "getFile",
+              "label": "Operation",
+              "description": "Which GitHub action to perform: get file, list commits, or create issue",
+              "values": [
+                "getFile",
+                "listCommits",
+                "createIssue"
+              ]
+            },
             "uiTrait": {
               "type": "trait",
               "default": "@trait.ServiceGithubDefaultForm",
               "label": "Operation form",
               "description": "Trait that renders the GitHub action UI"
-            },
-            "ref": {
-              "type": "string",
-              "default": "main",
-              "label": "Branch or ref",
-              "description": "Branch, tag, or commit SHA the operation runs against"
-            },
-            "path": {
-              "type": "string",
-              "default": "",
-              "label": "File path",
-              "description": "Path within the repo for file or content operations"
             },
             "owner": {
               "type": "string",
@@ -646,16 +645,17 @@
               "label": "Repository",
               "description": "GitHub repository name the operation targets"
             },
-            "op": {
+            "path": {
               "type": "string",
-              "default": "getFile",
-              "label": "Operation",
-              "description": "Which GitHub action to perform: get file, list commits, or create issue",
-              "values": [
-                "getFile",
-                "listCommits",
-                "createIssue"
-              ]
+              "default": "",
+              "label": "File path",
+              "description": "Path within the repo for file or content operations"
+            },
+            "ref": {
+              "type": "string",
+              "default": "main",
+              "label": "Branch or ref",
+              "description": "Branch, tag, or commit SHA the operation runs against"
             }
           },
           "scope": "instance"

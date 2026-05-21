@@ -1,6 +1,9 @@
 app std-ledger-entry "1.1.0"
 "std-ledger-entry — general-ledger journal entry (double-entry debit/credit). Lists entries in `browsing`; opens entry detail in `viewing_single` with Reconcile / Reverse actions. Agents tune the list shape via `config.fields` + `config.itemActions`."
 
+type FieldSpec = { name : string!, label : string, variant : string, icon : string, format : string, key : string, header : string }
+type ItemAction = { label : string!, event : string!, variant : string, icon : string }
+
 orbital LedgerEntryOrbital {
   entity LedgerEntry [persistent: ledgerentries] {
     id            : string!
@@ -23,7 +26,7 @@ orbital LedgerEntryOrbital {
       title       : string   = "Journal Entries"
         @label "Section title"
         @description "Heading shown above the general ledger entries"
-      fields      : [object] = [
+      fields      : [FieldSpec] = [
         { name: "entryDate",    label: "Date",        variant: "caption" },
         { name: "accountName",  label: "Account",     variant: "caption" },
         { name: "description",  label: "Description", variant: "caption" },
@@ -33,7 +36,7 @@ orbital LedgerEntryOrbital {
       ]
         @label "Columns to show"
         @description "Each column maps to one field on the Ledger Entry"
-      itemActions : [object] = [
+      itemActions : [ItemAction] = [
         { label: "Open",    event: "OPEN_ENTRY",    variant: "primary", icon: "arrow-right" },
         { label: "Reverse", event: "REVERSE_ENTRY", variant: "danger" }
       ]

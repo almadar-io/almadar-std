@@ -138,12 +138,12 @@ export interface StdFormBuilderSurveyPublishedPayload {
  * without modifying its state-machine topology.
  */
 export interface StdFormBuilderConfig {
-  /** Default: `[{"event":"OPEN_SURVEY","variant":"primary","label":"Open","icon":"arrow-right"},{"label":"Publish","variant":"secondary","event":"PUBLISH","icon":"send"}]` */
-  itemActions?: TraitConfig[];
+  /** Default: `[{"name":"title","variant":"caption","label":"Title"},{"label":"Description","variant":"caption","name":"description"},{"label":"Status","name":"status","variant":"badge"},{"variant":"caption","name":"createdAt","label":"Created"}]` */
+  fields?: EntityRow[];
+  /** Default: `[{"event":"OPEN_SURVEY","icon":"arrow-right","variant":"primary","label":"Open"},{"icon":"send","label":"Publish","event":"PUBLISH","variant":"secondary"}]` */
+  itemActions?: EntityRow[];
   /** Default: `"Survey Builder"` */
   title?: string;
-  /** Default: `[{"name":"title","label":"Title","variant":"caption"},{"name":"description","variant":"caption","label":"Description"},{"label":"Status","name":"status","variant":"badge"},{"label":"Created","name":"createdAt","variant":"caption"}]` */
-  fields?: TraitConfig[];
 }
 
 /**

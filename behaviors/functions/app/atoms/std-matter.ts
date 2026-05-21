@@ -94,12 +94,12 @@ export interface StdMatterMatterLoadFailedPayload {
  * without modifying its state-machine topology.
  */
 export interface StdMatterConfig {
-  /** Default: `[{"event":"OPEN_MATTER","icon":"arrow-right","label":"Open","variant":"primary"},{"label":"Close","event":"CLOSE_MATTER","variant":"danger"}]` */
-  itemActions?: TraitConfig[];
   /** Default: `"Matters"` */
   title?: string;
-  /** Default: `[{"label":"Matter #","variant":"caption","name":"matterNumber"},{"variant":"caption","label":"Title","name":"title"},{"name":"clientName","label":"Client","variant":"caption"},{"label":"Practice","variant":"badge","name":"practiceArea"},{"variant":"caption","name":"leadAttorney","label":"Lead"},{"variant":"badge","label":"Status","name":"status"}]` */
-  fields?: TraitConfig[];
+  /** Default: `[{"name":"matterNumber","variant":"caption","label":"Matter #"},{"name":"title","label":"Title","variant":"caption"},{"label":"Client","variant":"caption","name":"clientName"},{"name":"practiceArea","label":"Practice","variant":"badge"},{"label":"Lead","variant":"caption","name":"leadAttorney"},{"name":"status","variant":"badge","label":"Status"}]` */
+  fields?: EntityRow[];
+  /** Default: `[{"icon":"arrow-right","event":"OPEN_MATTER","label":"Open","variant":"primary"},{"event":"CLOSE_MATTER","label":"Close","variant":"danger"}]` */
+  itemActions?: EntityRow[];
 }
 
 /**

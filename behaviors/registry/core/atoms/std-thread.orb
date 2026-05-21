@@ -302,8 +302,8 @@
                     "ThreadPost",
                     {
                       "emit": {
-                        "failure": "ThreadPostLoadFailed",
-                        "success": "ThreadPostLoaded"
+                        "success": "ThreadPostLoaded",
+                        "failure": "ThreadPostLoadFailed"
                       }
                     }
                   ],
@@ -326,27 +326,24 @@
                     "render-ui",
                     "main",
                     {
+                      "direction": "vertical",
+                      "type": "stack",
+                      "gap": "md",
                       "children": [
                         {
-                          "type": "data-list",
+                          "entity": "@payload.data",
                           "gap": "sm",
-                          "itemActions": [
-                            {
-                              "icon": "message-square",
-                              "event": "REPLY",
-                              "label": "Reply"
-                            }
-                          ],
                           "variant": "card",
+                          "type": "data-list",
                           "fields": [
                             {
                               "label": "Author",
-                              "name": "authorName",
-                              "variant": "h4"
+                              "variant": "h4",
+                              "name": "authorName"
                             },
                             {
-                              "label": "",
                               "name": "content",
+                              "label": "",
                               "variant": "body"
                             },
                             {
@@ -355,12 +352,15 @@
                               "name": "voteCount"
                             }
                           ],
-                          "entity": "@payload.data"
+                          "itemActions": [
+                            {
+                              "event": "REPLY",
+                              "icon": "message-square",
+                              "label": "Reply"
+                            }
+                          ]
                         }
-                      ],
-                      "gap": "md",
-                      "type": "stack",
-                      "direction": "vertical"
+                      ]
                     }
                   ]
                 ]
@@ -374,9 +374,9 @@
                     "render-ui",
                     "main",
                     {
-                      "message": "@payload.error",
+                      "variant": "error",
                       "type": "alert",
-                      "variant": "error"
+                      "message": "@payload.error"
                     }
                   ]
                 ]
@@ -420,34 +420,34 @@
                       "type": "stack",
                       "children": [
                         {
+                          "itemActions": [
+                            {
+                              "label": "Reply",
+                              "event": "REPLY",
+                              "icon": "message-square"
+                            }
+                          ],
                           "variant": "card",
                           "fields": [
                             {
-                              "variant": "h4",
                               "label": "Author",
-                              "name": "authorName"
+                              "name": "authorName",
+                              "variant": "h4"
                             },
                             {
                               "variant": "body",
-                              "label": "",
-                              "name": "content"
+                              "name": "content",
+                              "label": ""
                             },
                             {
+                              "name": "voteCount",
                               "label": "Votes",
-                              "variant": "caption",
-                              "name": "voteCount"
+                              "variant": "caption"
                             }
                           ],
                           "entity": "@payload.data",
                           "gap": "sm",
-                          "type": "data-list",
-                          "itemActions": [
-                            {
-                              "event": "REPLY",
-                              "label": "Reply",
-                              "icon": "message-square"
-                            }
-                          ]
+                          "type": "data-list"
                         }
                       ]
                     }
@@ -468,41 +468,41 @@
                     "render-ui",
                     "main",
                     {
-                      "direction": "vertical",
                       "children": [
                         {
                           "content": "Write a reply",
-                          "variant": "h4",
-                          "type": "typography"
+                          "type": "typography",
+                          "variant": "h4"
                         },
                         {
-                          "type": "textarea",
                           "placeholder": "Your reply…",
-                          "action": "EDIT_REPLY"
+                          "action": "EDIT_REPLY",
+                          "type": "textarea"
                         },
                         {
-                          "type": "stack",
                           "gap": "sm",
                           "direction": "horizontal",
+                          "type": "stack",
                           "children": [
                             {
                               "type": "button",
-                              "label": "Submit",
                               "action": "SUBMIT_REPLY",
-                              "icon": "send",
-                              "variant": "primary"
+                              "label": "Submit",
+                              "variant": "primary",
+                              "icon": "send"
                             },
                             {
                               "type": "button",
-                              "label": "Cancel",
                               "action": "CANCEL_REPLY",
-                              "variant": "secondary"
+                              "variant": "secondary",
+                              "label": "Cancel"
                             }
                           ]
                         }
                       ],
-                      "gap": "md",
-                      "type": "stack"
+                      "direction": "vertical",
+                      "type": "stack",
+                      "gap": "md"
                     }
                   ]
                 ]
@@ -591,9 +591,9 @@
                     "render-ui",
                     "main",
                     {
-                      "variant": "error",
+                      "type": "alert",
                       "message": "@payload.error",
-                      "type": "alert"
+                      "variant": "error"
                     }
                   ]
                 ]
@@ -626,17 +626,17 @@
             ]
           },
           "config": {
-            "flat": {
-              "type": "boolean",
-              "default": false,
-              "label": "Flat thread",
-              "description": "Render replies as a linear list instead of nested tree"
-            },
             "threadRootId": {
               "type": "string",
               "default": "",
               "label": "Root post id",
               "description": "Top-level post whose descendants are loaded (blank = all roots)"
+            },
+            "flat": {
+              "type": "boolean",
+              "default": false,
+              "label": "Flat thread",
+              "description": "Render replies as a linear list instead of nested tree"
             }
           },
           "scope": "collection"

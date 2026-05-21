@@ -292,8 +292,8 @@ export function stdLogicTrainingDebugChallengeOrbital(params: StdLogicTrainingDe
                   'DebugChallenge',
                   {
                     'emit': {
-                      'failure': 'DebugChallengeLoadFailed',
                       'success': 'DebugChallengeLoaded',
+                      'failure': 'DebugChallengeLoadFailed',
                     },
                   },
                 ],
@@ -301,22 +301,22 @@ export function stdLogicTrainingDebugChallengeOrbital(params: StdLogicTrainingDe
                   'render-ui',
                   'main',
                   {
-                    'type': 'game-shell',
-                    'appName': 'Logic Training',
-                    'showTopBar': true,
                     'children': [
                       {
-                        'type': 'game-menu',
                         'title': 'Debug Challenge',
+                        'type': 'game-menu',
                         'menuItems': [
                           {
-                            'event': 'START',
                             'label': 'Start',
+                            'event': 'START',
                             'variant': 'primary',
                           },
                         ],
                       },
                     ],
+                    'type': 'game-shell',
+                    'showTopBar': true,
+                    'appName': 'Logic Training',
                   },
                 ],
               ],
@@ -330,12 +330,11 @@ export function stdLogicTrainingDebugChallengeOrbital(params: StdLogicTrainingDe
                   'render-ui',
                   'main',
                   {
-                    'appName': 'Logic Training',
                     'showTopBar': true,
+                    'appName': 'Logic Training',
                     'children': [
                       {
                         'direction': 'vertical',
-                        'type': 'stack',
                         'gap': 'md',
                         'children': [
                           {
@@ -346,17 +345,18 @@ export function stdLogicTrainingDebugChallengeOrbital(params: StdLogicTrainingDe
                                 'value': '@entity.score',
                               },
                               {
-                                'value': '@entity.level',
                                 'label': 'Level',
+                                'value': '@entity.level',
                               },
                             ],
                           },
                           {
-                            'type': 'debugger-board',
                             'entity': 'DebugChallenge',
+                            'type': 'debugger-board',
                             'completeEvent': 'COMPLETE',
                           },
                         ],
+                        'type': 'stack',
                       },
                     ],
                     'type': 'game-shell',
@@ -378,22 +378,22 @@ export function stdLogicTrainingDebugChallengeOrbital(params: StdLogicTrainingDe
                   'render-ui',
                   'main',
                   {
+                    'type': 'game-shell',
                     'appName': 'Logic Training',
                     'showTopBar': true,
                     'children': [
                       {
                         'type': 'game-over-screen',
-                        'title': 'Well Done!',
                         'menuItems': [
                           {
+                            'variant': 'primary',
                             'event': 'RESTART',
                             'label': 'Play Again',
-                            'variant': 'primary',
                           },
                         ],
+                        'title': 'Well Done!',
                       },
                     ],
-                    'type': 'game-shell',
                   },
                 ],
               ],
@@ -407,21 +407,21 @@ export function stdLogicTrainingDebugChallengeOrbital(params: StdLogicTrainingDe
                   'render-ui',
                   'main',
                   {
-                    'showTopBar': true,
                     'children': [
                       {
+                        'title': 'Debug Challenge',
                         'menuItems': [
                           {
-                            'variant': 'primary',
                             'label': 'Start',
                             'event': 'START',
+                            'variant': 'primary',
                           },
                         ],
                         'type': 'game-menu',
-                        'title': 'Debug Challenge',
                       },
                     ],
                     'type': 'game-shell',
+                    'showTopBar': true,
                     'appName': 'Logic Training',
                   },
                 ],
@@ -765,22 +765,22 @@ export function stdLogicTrainingNegotiateChallengeOrbital(params: StdLogicTraini
                   'render-ui',
                   'main',
                   {
+                    'type': 'game-shell',
                     'children': [
                       {
-                        'menuItems': [
-                          {
-                            'variant': 'primary',
-                            'event': 'START',
-                            'label': 'Start',
-                          },
-                        ],
                         'type': 'game-menu',
                         'title': 'Negotiate Challenge',
+                        'menuItems': [
+                          {
+                            'label': 'Start',
+                            'event': 'START',
+                            'variant': 'primary',
+                          },
+                        ],
                       },
                     ],
-                    'type': 'game-shell',
-                    'appName': 'Logic Training',
                     'showTopBar': true,
+                    'appName': 'Logic Training',
                   },
                 ],
               ],
@@ -794,35 +794,35 @@ export function stdLogicTrainingNegotiateChallengeOrbital(params: StdLogicTraini
                   'render-ui',
                   'main',
                   {
-                    'type': 'game-shell',
                     'children': [
                       {
+                        'direction': 'vertical',
                         'children': [
                           {
-                            'type': 'game-hud',
                             'stats': [
                               {
                                 'label': 'Score',
                                 'value': '@entity.score',
                               },
                               {
-                                'label': 'Level',
                                 'value': '@entity.level',
+                                'label': 'Level',
                               },
                             ],
+                            'type': 'game-hud',
                           },
                           {
-                            'completeEvent': 'COMPLETE',
-                            'entity': 'NegotiateChallenge',
                             'type': 'negotiator-board',
+                            'entity': 'NegotiateChallenge',
+                            'completeEvent': 'COMPLETE',
                           },
                         ],
-                        'type': 'stack',
-                        'direction': 'vertical',
                         'gap': 'md',
+                        'type': 'stack',
                       },
                     ],
                     'showTopBar': true,
+                    'type': 'game-shell',
                     'appName': 'Logic Training',
                   },
                 ],
@@ -842,22 +842,22 @@ export function stdLogicTrainingNegotiateChallengeOrbital(params: StdLogicTraini
                   'render-ui',
                   'main',
                   {
-                    'appName': 'Logic Training',
                     'showTopBar': true,
                     'children': [
                       {
-                        'title': 'Well Done!',
                         'type': 'game-over-screen',
+                        'title': 'Well Done!',
                         'menuItems': [
                           {
-                            'event': 'RESTART',
-                            'label': 'Play Again',
                             'variant': 'primary',
+                            'label': 'Play Again',
+                            'event': 'RESTART',
                           },
                         ],
                       },
                     ],
                     'type': 'game-shell',
+                    'appName': 'Logic Training',
                   },
                 ],
               ],
@@ -871,22 +871,22 @@ export function stdLogicTrainingNegotiateChallengeOrbital(params: StdLogicTraini
                   'render-ui',
                   'main',
                   {
-                    'type': 'game-shell',
                     'appName': 'Logic Training',
-                    'showTopBar': true,
                     'children': [
                       {
                         'title': 'Negotiate Challenge',
-                        'type': 'game-menu',
                         'menuItems': [
                           {
-                            'event': 'START',
                             'variant': 'primary',
                             'label': 'Start',
+                            'event': 'START',
                           },
                         ],
+                        'type': 'game-menu',
                       },
                     ],
+                    'showTopBar': true,
+                    'type': 'game-shell',
                   },
                 ],
               ],
@@ -1270,19 +1270,19 @@ export function stdLogicTrainingTrainingScoreOrbital(params: StdLogicTrainingTra
                   'render-ui',
                   'main',
                   {
-                    'type': 'game-shell',
+                    'appName': 'Logic Training',
                     'children': [
                       {
-                        'highScore': '@entity.highScore',
-                        'multiplier': '@entity.multiplier',
-                        'type': 'score-board',
                         'score': '@entity.score',
+                        'multiplier': '@entity.multiplier',
                         'combo': '@entity.combo',
                         'level': '@entity.level',
+                        'type': 'score-board',
+                        'highScore': '@entity.highScore',
                       },
                     ],
-                    'appName': 'Logic Training',
                     'showTopBar': true,
+                    'type': 'game-shell',
                   },
                 ],
               ],
@@ -1314,19 +1314,19 @@ export function stdLogicTrainingTrainingScoreOrbital(params: StdLogicTrainingTra
                   'render-ui',
                   'main',
                   {
+                    'type': 'game-shell',
                     'appName': 'Logic Training',
                     'children': [
                       {
                         'level': '@entity.level',
-                        'score': '@entity.score',
                         'multiplier': '@entity.multiplier',
-                        'combo': '@entity.combo',
                         'highScore': '@entity.highScore',
+                        'score': '@entity.score',
                         'type': 'score-board',
+                        'combo': '@entity.combo',
                       },
                     ],
                     'showTopBar': true,
-                    'type': 'game-shell',
                   },
                 ],
               ],
@@ -1348,12 +1348,12 @@ export function stdLogicTrainingTrainingScoreOrbital(params: StdLogicTrainingTra
                     'appName': 'Logic Training',
                     'children': [
                       {
+                        'score': '@entity.score',
+                        'highScore': '@entity.highScore',
                         'combo': '@entity.combo',
                         'multiplier': '@entity.multiplier',
-                        'level': '@entity.level',
-                        'highScore': '@entity.highScore',
                         'type': 'score-board',
-                        'score': '@entity.score',
+                        'level': '@entity.level',
                       },
                     ],
                     'showTopBar': true,
@@ -1386,19 +1386,19 @@ export function stdLogicTrainingTrainingScoreOrbital(params: StdLogicTrainingTra
                   'render-ui',
                   'main',
                   {
-                    'type': 'game-shell',
-                    'showTopBar': true,
-                    'appName': 'Logic Training',
                     'children': [
                       {
-                        'multiplier': '@entity.multiplier',
                         'combo': '@entity.combo',
+                        'type': 'score-board',
                         'highScore': '@entity.highScore',
                         'level': '@entity.level',
-                        'type': 'score-board',
                         'score': '@entity.score',
+                        'multiplier': '@entity.multiplier',
                       },
                     ],
+                    'showTopBar': true,
+                    'type': 'game-shell',
+                    'appName': 'Logic Training',
                   },
                 ],
               ],

@@ -1,6 +1,9 @@
 app std-wizard "3.0.0"
 "std-wizard — generic N-step data-collection wizard (Vercel deploy / GitHub repo create / Stripe Connect onboarding style). Each step has its own form fields. Topology = loading / running / completed / cancelled / error. ADVANCE is guard-routed: not-last-step advances; last-step transitions to completed. Distinct from std-step-flow (approval-decision) — wizard collects data via form-section per step, step-flow collects yes/no decisions."
 
+type ObjectSpec = { id : string, label : string, value : string }
+type StepSpec = { label : string!, key : string, icon : string }
+
 orbital WizardOrbital {
   type WizardStep = {
     id          : string!
@@ -31,7 +34,7 @@ orbital WizardOrbital {
     errorMessage          : string = ""
   }
 
-  type WizardLoaded     = Event { data : [object] }                "Fired when wizard context finishes loading"
+  type WizardLoaded     = Event { data : [ObjectSpec] }                "Fired when wizard context finishes loading"
   type WizardLoadFailed = Event { error : string, code : string }  "Fired when fetch fails"
   type WizardSaved      = Event { row : object }                   "Fired when a wizard step has been persisted"
   type WizardSaveFailed = Event { error : string, code : string }  "Fired when persist fails"
@@ -41,7 +44,7 @@ orbital WizardOrbital {
       title    : string   = "Wizard"
         @label "Wizard title"
         @description "Heading shown across all wizard steps"
-      steps    : [object] = [
+      steps    : [StepSpec] = [
         { key: "details", label: "Details", description: "Basic information",     icon: "file-text",    fields: ["title", "description"] },
         { key: "options", label: "Options", description: "Configure preferences", icon: "settings",     fields: ["category", "priority"] },
         { key: "review",  label: "Review",  description: "Confirm and submit",    icon: "check-circle", fields: ["notes"] }
@@ -135,7 +138,7 @@ orbital WizardOrbital {
       RETREAT                { }
       CANCEL                 { reason : string }
       RESTART                { }
-      WizardLoaded           { data : [object] }
+      WizardLoaded           { data : [ObjectSpec] }
       WizardLoadFailed       { error : string, code : string }
       WizardSaved            { row : object }
       WizardSaveFailed       { error : string, code : string }
@@ -145,7 +148,7 @@ orbital WizardOrbital {
       RETREAT                { }
       CANCEL                 { reason : string }
       RESTART                { }
-      WizardLoaded           { data : [object] }
+      WizardLoaded           { data : [ObjectSpec] }
       WizardLoadFailed       { error : string, code : string }
       WizardSaved            { row : object }
       WizardSaveFailed       { error : string, code : string }

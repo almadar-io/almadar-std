@@ -91,12 +91,12 @@ export interface StdTemplateEditorMessageTemplateLoadFailedPayload {
  * without modifying its state-machine topology.
  */
 export interface StdTemplateEditorConfig {
-  /** Default: `[{"label":"Open","event":"OPEN_TEMPLATE","variant":"primary","icon":"arrow-right"},{"event":"DELETE_TEMPLATE","variant":"danger","label":"Delete"}]` */
-  itemActions?: TraitConfig[];
+  /** Default: `[{"variant":"caption","label":"Name","name":"name"},{"label":"Channel","name":"channel","variant":"badge"},{"name":"subject","variant":"caption","label":"Subject"},{"name":"lastEditedAt","label":"Updated","variant":"caption"}]` */
+  fields?: EntityRow[];
+  /** Default: `[{"variant":"primary","event":"OPEN_TEMPLATE","label":"Open","icon":"arrow-right"},{"event":"DELETE_TEMPLATE","variant":"danger","label":"Delete"}]` */
+  itemActions?: EntityRow[];
   /** Default: `"Templates"` */
   title?: string;
-  /** Default: `[{"name":"name","variant":"caption","label":"Name"},{"variant":"badge","label":"Channel","name":"channel"},{"name":"subject","variant":"caption","label":"Subject"},{"label":"Updated","name":"lastEditedAt","variant":"caption"}]` */
-  fields?: TraitConfig[];
 }
 
 /**

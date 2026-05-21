@@ -1,6 +1,9 @@
 app std-browse "2.1.0"
 "std-browse as a Function — single primitive: data-grid. Owns the fetch + REFETCH (query/filter/page) state machine. Consumers configure fields/imageField/itemActions/cols/gap/variant; the atom renders the grid. Each `fields[]` entry accepts `{ name, label, variant }` plus optional `referenceEntity` + `displayField` to render a foreign-key column as the joined entity's display value (data-grid resolves @list[referenceEntity] at render time when both keys are present)."
 
+type FieldSpec = { name : string!, label : string, variant : string, icon : string, format : string, key : string, header : string }
+type ItemAction = { label : string!, event : string!, variant : string, icon : string }
+
 orbital BrowseItemOrbital {
   entity BrowseItem [runtime] {
     id          : string!
@@ -16,7 +19,7 @@ orbital BrowseItemOrbital {
   trait BrowseItemBrowse -> BrowseItem [interaction, collection] {
     initial: loading
     config {
-      fields : [object] = [
+      fields : [FieldSpec] = [
         { name: "name", label: "Name", variant: "h4" },
         { name: "description", label: "Description", variant: "caption" },
         { name: "status", label: "Status", variant: "badge" }
@@ -26,7 +29,7 @@ orbital BrowseItemOrbital {
       imageField : string = ""
         @label "Image field"
         @description "Entity field that holds the row thumbnail URL"
-      itemActions : [object] = []
+      itemActions : [ItemAction] = []
         @label "Row actions"
         @description "Buttons users can click on each row"
       cols : number = 1

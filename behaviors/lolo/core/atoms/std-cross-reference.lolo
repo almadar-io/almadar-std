@@ -1,13 +1,16 @@
 app std-cross-reference "1.0.0"
 "std-cross-reference — join-table primitive for N:M relationships. Listens for LinkRequested/UnlinkRequested/FETCH_LINKS_FOR and manages the junction collection (default CrossRefLink [persistent: cross_ref_links]). Rebind via linkedEntity to your consumer junction. Emits LinkCreated, LinkRemoved, LinksLoaded as external broadcasts for downstream consumers."
 
+type LinkSpec = { label : string!, href : string!, icon : string }
+type ObjectSpec = { id : string, label : string, value : string }
+
 orbital CrossReferenceOrbital {
   entity CrossRefLink [persistent: cross_ref_links] {
     id            : string!
     leftId        : string   = ""
     rightId       : string   = ""
     createdAt     : string   = ""
-    filteredLinks : [object] = []
+    filteredLinks : [LinkSpec] = []
   }
 
   type LinkRequested      = Event { leftId : string, rightId : string }                 "Request to create a link between leftId and rightId."
@@ -15,9 +18,9 @@ orbital CrossReferenceOrbital {
   type FETCH_LINKS_FOR    = Event { leftId : string }                                   "Request the link set for a given leftId."
   type LinkCreated        = Event { row : object }                                      "Fired after a junction row is persisted."
   type LinkRemoved        = Event { leftId : string, rightId : string }                 "Fired after a junction row is deleted."
-  type LinksLoaded        = Event { leftId : string, data : [object] }                  "Fired after junction rows for leftId are fetched."
+  type LinksLoaded        = Event { leftId : string, data : [ObjectSpec] }                  "Fired after junction rows for leftId are fetched."
   type LinkOpFailed       = Event { error : string, code : string }                     "Fired when a junction persist or fetch fails."
-  type LinksFetched       = Event { data : [object] }                                   "Internal: raw fetch result before filtering by leftId."
+  type LinksFetched       = Event { data : [ObjectSpec] }                                   "Internal: raw fetch result before filtering by leftId."
 
   trait CrossReferenceGate -> CrossRefLink [lifecycle, instance] {
     config {
@@ -53,15 +56,15 @@ orbital CrossReferenceOrbital {
     emits {
       LinkCreated  -> external { row : object }
       LinkRemoved  -> external { leftId : string, rightId : string }
-      LinksLoaded  -> external { leftId : string, data : [object] }
-      LinksFetched -> external { data : [object] }
+      LinksLoaded  -> external { leftId : string, data : [ObjectSpec] }
+      LinksFetched -> external { data : [ObjectSpec] }
       LinkOpFailed -> external { error : string, code : string }
     }
     listens {
       LinkRequested   { leftId : string, rightId : string }
       UnlinkRequested { leftId : string, rightId : string }
       FETCH_LINKS_FOR { leftId : string }
-      LinksFetched    { data : [object] }
+      LinksFetched    { data : [ObjectSpec] }
     }
   }
   page "/cross-reference" as CrossReferencePage -> CrossReferenceGate

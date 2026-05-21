@@ -202,13 +202,14 @@ export function stdPublicHelpCenterHelpCenterOrbital(params: StdPublicHelpCenter
         'ref': 'AppShell.traits.AppLayout',
         'name': 'HelpCenterAppLayout',
         'config': {
-          'appName': 'Help Center',
+          'notificationClickEvent': 'HELP_CENTER_NOTIFICATIONS_OPEN',
           'contentTrait': '@trait.HelpCenterCatalog',
+          'appName': 'Help Center',
           'navItems': [
             {
-              'icon': 'life-buoy',
               'label': 'Help Centers',
               'href': '/help-centers',
+              'icon': 'life-buoy',
             },
             {
               'icon': 'book',
@@ -216,14 +217,13 @@ export function stdPublicHelpCenterHelpCenterOrbital(params: StdPublicHelpCenter
               'href': '/articles',
             },
             {
-              'href': '/categories',
               'icon': 'folder',
+              'href': '/categories',
               'label': 'Categories',
             },
           ],
-          'notifications': [],
-          'notificationClickEvent': 'HELP_CENTER_NOTIFICATIONS_OPEN',
           'searchEvent': 'HELP_CENTER_SEARCH',
+          'notifications': [],
         },
         'events': {
           'NOTIFY_CLICK': 'HELP_CENTER_NOTIFICATIONS_OPEN',
@@ -310,62 +310,61 @@ export function stdPublicHelpCenterHelpCenterOrbital(params: StdPublicHelpCenter
                   'render-ui',
                   'main',
                   {
-                    'direction': 'vertical',
-                    'gap': 'lg',
                     'type': 'stack',
+                    'direction': 'vertical',
                     'children': [
                       {
                         'type': 'stack',
-                        'children': [
-                          {
-                            'direction': 'horizontal',
-                            'children': [
-                              {
-                                'name': 'life-buoy',
-                                'type': 'icon',
-                              },
-                              {
-                                'content': 'Help Centers',
-                                'type': 'typography',
-                                'variant': 'h2',
-                              },
-                            ],
-                            'align': 'center',
-                            'gap': 'sm',
-                            'type': 'stack',
-                          },
-                          {
-                            'type': 'stack',
-                            'direction': 'horizontal',
-                            'children': [
-                              {
-                                'action': 'CREATE',
-                                'icon': 'plus',
-                                'label': 'New Help Center',
-                                'type': 'button',
-                                'variant': 'primary',
-                              },
-                            ],
-                            'gap': 'sm',
-                          },
-                        ],
                         'justify': 'between',
                         'align': 'center',
                         'gap': 'md',
                         'direction': 'horizontal',
+                        'children': [
+                          {
+                            'align': 'center',
+                            'gap': 'sm',
+                            'children': [
+                              {
+                                'type': 'icon',
+                                'name': 'life-buoy',
+                              },
+                              {
+                                'variant': 'h2',
+                                'type': 'typography',
+                                'content': 'Help Centers',
+                              },
+                            ],
+                            'direction': 'horizontal',
+                            'type': 'stack',
+                          },
+                          {
+                            'type': 'stack',
+                            'gap': 'sm',
+                            'children': [
+                              {
+                                'action': 'CREATE',
+                                'icon': 'plus',
+                                'variant': 'primary',
+                                'type': 'button',
+                                'label': 'New Help Center',
+                              },
+                            ],
+                            'direction': 'horizontal',
+                          },
+                        ],
                       },
                       {
                         'type': 'divider',
                       },
                       {
+                        'gap': 'md',
+                        'align': 'center',
                         'children': [
                           '@trait.HelpCenterSearch',
                           '@trait.HelpCenterFilter',
                         ],
                         'type': 'stack',
                         'direction': 'horizontal',
-                        'gap': 'md',
-                        'align': 'center',
                       },
                       '@trait.HelpCenterStats',
                       '@trait.HelpCenterGraphs',
@@ -374,6 +373,7 @@ export function stdPublicHelpCenterHelpCenterOrbital(params: StdPublicHelpCenter
                       },
                       '@trait.HelpCenterBrowseList',
                     ],
+                    'gap': 'lg',
                   },
                 ],
               ],
@@ -392,34 +392,34 @@ export function stdPublicHelpCenterHelpCenterOrbital(params: StdPublicHelpCenter
                   'render-ui',
                   'main',
                   {
-                    'className': 'py-8',
+                    'align': 'center',
                     'children': [
                       {
-                        'type': 'icon',
                         'name': 'bell',
+                        'type': 'icon',
                       },
                       {
+                        'content': 'No notifications',
                         'variant': 'h3',
                         'type': 'typography',
-                        'content': 'No notifications',
                       },
                       {
-                        'color': 'muted',
-                        'type': 'typography',
                         'content': 'You\'re all caught up.',
                         'variant': 'caption',
+                        'type': 'typography',
+                        'color': 'muted',
                       },
                       {
                         'type': 'button',
-                        'action': 'INIT',
                         'label': 'Back to help centers',
                         'variant': 'ghost',
+                        'action': 'INIT',
                       },
                     ],
-                    'gap': 'md',
                     'type': 'stack',
+                    'className': 'py-8',
                     'direction': 'vertical',
-                    'align': 'center',
+                    'gap': 'md',
                   },
                 ],
               ],
@@ -440,39 +440,36 @@ export function stdPublicHelpCenterHelpCenterOrbital(params: StdPublicHelpCenter
         'ref': 'Filter.traits.FilterTargetFilter',
         'name': 'HelpCenterFilter',
         'config': {
-          'event': 'HELP_CENTER_FILTER',
           'filters': [
             {
-              'filterType': 'select',
-              'field': 'status',
               'label': 'Status',
+              'field': 'status',
               'options': [
                 'draft',
                 'published',
                 'private',
               ],
+              'filterType': 'select',
             },
           ],
+          'event': 'HELP_CENTER_FILTER',
         },
       }),
       makeTraitRef({
         'ref': 'Stats.traits.StatsItemStats',
         'name': 'HelpCenterStats',
         'config': {
-          'title': 'Help Centers',
           'metrics': [
             {
-              'variant': 'primary',
-              'aggregation': 'count',
-              'icon': 'life-buoy',
-              'format': 'number',
               'label': 'Total',
+              'format': 'number',
+              'aggregation': 'count',
+              'variant': 'primary',
+              'icon': 'life-buoy',
             },
             {
               'icon': 'check-circle',
               'format': 'number',
-              'label': 'Published',
-              'aggregation': 'count',
               'filter': [
                 'fn',
                 'row',
@@ -482,7 +479,9 @@ export function stdPublicHelpCenterHelpCenterOrbital(params: StdPublicHelpCenter
                   'published',
                 ],
               ],
+              'aggregation': 'count',
               'variant': 'success',
+              'label': 'Published',
             },
             {
               'label': 'Draft',
@@ -496,19 +495,20 @@ export function stdPublicHelpCenterHelpCenterOrbital(params: StdPublicHelpCenter
                   'draft',
                 ],
               ],
-              'icon': 'edit',
               'variant': 'warning',
+              'icon': 'edit',
               'aggregation': 'count',
             },
             {
-              'variant': 'info',
-              'field': 'totalArticles',
               'aggregation': 'sum',
-              'label': 'Articles',
               'icon': 'book-open',
+              'field': 'totalArticles',
+              'variant': 'info',
+              'label': 'Articles',
               'format': 'number',
             },
           ],
+          'title': 'Help Centers',
         },
         'listens': [
           {
@@ -526,12 +526,12 @@ export function stdPublicHelpCenterHelpCenterOrbital(params: StdPublicHelpCenter
         'name': 'HelpCenterGraphs',
         'config': {
           'chartType': 'bar',
-          'subtitle': 'Publication state across managed help centers',
-          'height': 240,
-          'title': 'Help Centers by Status',
           'categoryField': 'status',
-          'showLegend': false,
+          'title': 'Help Centers by Status',
+          'subtitle': 'Publication state across managed help centers',
           'aggregation': 'count',
+          'height': 240,
+          'showLegend': false,
         },
         'listens': [
           {
@@ -550,49 +550,16 @@ export function stdPublicHelpCenterHelpCenterOrbital(params: StdPublicHelpCenter
         'linkedEntity': canonicalName,
         'config': {
           'gap': 'sm',
-          'fields': [
-            {
-              'name': 'name',
-              'variant': 'h3',
-              'icon': 'life-buoy',
-            },
-            {
-              'name': 'slug',
-              'variant': 'caption',
-            },
-            {
-              'name': 'domain',
-              'variant': 'caption',
-            },
-            {
-              'variant': 'badge',
-              'name': 'status',
-            },
-            {
-              'name': 'totalArticles',
-              'format': 'number',
-              'variant': 'badge',
-            },
-            {
-              'format': 'number',
-              'variant': 'caption',
-              'name': 'totalCategories',
-            },
-            {
-              'name': 'lastUpdatedAt',
-              'variant': 'caption',
-            },
-          ],
           'itemActions': [
             {
-              'variant': 'ghost',
               'label': 'View',
               'event': 'VIEW',
+              'variant': 'ghost',
             },
             {
-              'label': 'Edit',
               'event': 'EDIT',
               'variant': 'ghost',
+              'label': 'Edit',
             },
             {
               'event': 'DELETE',
@@ -601,6 +568,39 @@ export function stdPublicHelpCenterHelpCenterOrbital(params: StdPublicHelpCenter
             },
           ],
           'cols': 1,
+          'fields': [
+            {
+              'icon': 'life-buoy',
+              'variant': 'h3',
+              'name': 'name',
+            },
+            {
+              'name': 'slug',
+              'variant': 'caption',
+            },
+            {
+              'variant': 'caption',
+              'name': 'domain',
+            },
+            {
+              'name': 'status',
+              'variant': 'badge',
+            },
+            {
+              'name': 'totalArticles',
+              'variant': 'badge',
+              'format': 'number',
+            },
+            {
+              'name': 'totalCategories',
+              'variant': 'caption',
+              'format': 'number',
+            },
+            {
+              'variant': 'caption',
+              'name': 'lastUpdatedAt',
+            },
+          ],
         },
         'listens': [
           {
@@ -650,15 +650,15 @@ export function stdPublicHelpCenterHelpCenterOrbital(params: StdPublicHelpCenter
         'name': 'HelpCenterCreate',
         'linkedEntity': canonicalName,
         'config': {
-          'title': 'New Help Center',
           'mode': 'create',
-          'icon': 'plus-circle',
           'fields': [
             'name',
             'slug',
             'domain',
             'status',
           ],
+          'icon': 'plus-circle',
+          'title': 'New Help Center',
         },
         'events': {
           'OPEN': 'CREATE',
@@ -679,9 +679,9 @@ export function stdPublicHelpCenterHelpCenterOrbital(params: StdPublicHelpCenter
         'name': 'HelpCenterEdit',
         'linkedEntity': canonicalName,
         'config': {
-          'title': 'Edit Help Center',
           'icon': 'edit',
           'mode': 'edit',
+          'title': 'Edit Help Center',
           'fields': [
             'name',
             'slug',
@@ -708,8 +708,8 @@ export function stdPublicHelpCenterHelpCenterOrbital(params: StdPublicHelpCenter
         'name': 'HelpCenterView',
         'linkedEntity': canonicalName,
         'config': {
-          'mode': 'edit',
           'title': 'View Help Center',
+          'mode': 'edit',
           'icon': 'eye',
           'fields': [
             'name',
@@ -737,9 +737,9 @@ export function stdPublicHelpCenterHelpCenterOrbital(params: StdPublicHelpCenter
         'name': 'HelpCenterDelete',
         'linkedEntity': canonicalName,
         'config': {
-          'alertMessage': 'This action cannot be undone.',
-          'icon': 'alert-triangle',
           'title': 'Delete Help Center',
+          'icon': 'alert-triangle',
+          'alertMessage': 'This action cannot be undone.',
           'confirmLabel': 'Delete',
         },
         'events': {
@@ -1230,32 +1230,32 @@ export function stdPublicHelpCenterHelpArticlePanelOrbital(params: StdPublicHelp
         'ref': 'AppShell.traits.AppLayout',
         'name': 'HelpArticleAppLayout',
         'config': {
-          'appName': 'Help Center',
-          'notifications': [],
-          'searchEvent': 'HELP_ARTICLE_SEARCH',
+          'contentTrait': '@trait.HelpArticlePanel',
           'navItems': [
             {
-              'label': 'Articles',
               'href': '/articles',
+              'label': 'Articles',
               'icon': 'book',
             },
             {
-              'href': '/help-centers',
-              'label': 'Help Centers',
               'icon': 'life-buoy',
+              'label': 'Help Centers',
+              'href': '/help-centers',
             },
             {
-              'href': '/categories',
               'icon': 'folder',
               'label': 'Categories',
+              'href': '/categories',
             },
           ],
+          'appName': 'Help Center',
+          'searchEvent': 'HELP_ARTICLE_SEARCH',
+          'notifications': [],
           'notificationClickEvent': 'HELP_ARTICLE_NOTIFICATIONS_OPEN',
-          'contentTrait': '@trait.HelpArticlePanel',
         },
         'events': {
-          'SEARCH': 'HELP_ARTICLE_SEARCH',
           'NOTIFY_CLICK': 'HELP_ARTICLE_NOTIFICATIONS_OPEN',
+          'SEARCH': 'HELP_ARTICLE_SEARCH',
         },
       }),
       rebindInlineTraitEntity({
@@ -1284,32 +1284,32 @@ export function stdPublicHelpCenterHelpArticlePanelOrbital(params: StdPublicHelp
                   'render-ui',
                   'main',
                   {
+                    'type': 'stack',
+                    'direction': 'vertical',
+                    'className': 'max-w-6xl mx-auto w-full p-4',
                     'children': [
                       {
-                        'direction': 'horizontal',
                         'type': 'stack',
+                        'gap': 'sm',
                         'children': [
                           {
                             'type': 'icon',
                             'name': 'book',
                           },
                           {
-                            'type': 'typography',
                             'variant': 'h2',
                             'content': 'Help Articles',
+                            'type': 'typography',
                           },
                         ],
                         'align': 'center',
-                        'gap': 'sm',
+                        'direction': 'horizontal',
                       },
                       {
                         'type': 'divider',
                       },
                       '@trait.HelpArticleView',
                     ],
-                    'direction': 'vertical',
-                    'className': 'max-w-6xl mx-auto w-full p-4',
-                    'type': 'stack',
                     'gap': 'lg',
                   },
                 ],
@@ -1556,9 +1556,9 @@ export function stdPublicHelpCenterHelpCategoryPanelOrbital(params: StdPublicHel
         'config': {
           'navItems': [
             {
-              'icon': 'folder',
-              'label': 'Categories',
               'href': '/categories',
+              'label': 'Categories',
+              'icon': 'folder',
             },
             {
               'icon': 'life-buoy',
@@ -1571,15 +1571,15 @@ export function stdPublicHelpCenterHelpCategoryPanelOrbital(params: StdPublicHel
               'icon': 'book',
             },
           ],
-          'contentTrait': '@trait.HelpCategoryPanel',
+          'notifications': [],
+          'notificationClickEvent': 'HELP_CATEGORY_NOTIFICATIONS_OPEN',
           'appName': 'Help Center',
           'searchEvent': 'HELP_CATEGORY_SEARCH',
-          'notificationClickEvent': 'HELP_CATEGORY_NOTIFICATIONS_OPEN',
-          'notifications': [],
+          'contentTrait': '@trait.HelpCategoryPanel',
         },
         'events': {
-          'SEARCH': 'HELP_CATEGORY_SEARCH',
           'NOTIFY_CLICK': 'HELP_CATEGORY_NOTIFICATIONS_OPEN',
+          'SEARCH': 'HELP_CATEGORY_SEARCH',
         },
       }),
       rebindInlineTraitEntity({
@@ -1608,12 +1608,12 @@ export function stdPublicHelpCenterHelpCategoryPanelOrbital(params: StdPublicHel
                   'render-ui',
                   'main',
                   {
-                    'className': 'max-w-6xl mx-auto w-full p-4',
                     'direction': 'vertical',
                     'children': [
                       {
-                        'gap': 'sm',
                         'type': 'stack',
+                        'direction': 'horizontal',
+                        'gap': 'sm',
                         'children': [
                           {
                             'name': 'folder',
@@ -1621,20 +1621,20 @@ export function stdPublicHelpCenterHelpCategoryPanelOrbital(params: StdPublicHel
                           },
                           {
                             'variant': 'h2',
-                            'content': 'Help Categories',
                             'type': 'typography',
+                            'content': 'Help Categories',
                           },
                         ],
                         'align': 'center',
-                        'direction': 'horizontal',
                       },
                       {
                         'type': 'divider',
                       },
                       '@trait.HelpCategoryView',
                     ],
-                    'gap': 'lg',
+                    'className': 'max-w-6xl mx-auto w-full p-4',
                     'type': 'stack',
+                    'gap': 'lg',
                   },
                 ],
               ],

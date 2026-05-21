@@ -85,10 +85,10 @@ export interface StdEventLogEventLogSaveFailedPayload {
 export interface StdEventLogConfig {
   /** Default: `"Activity"` */
   title?: string;
+  /** Default: `[{"status":"active","icon":"plus-circle","label":"Created","key":"created"},{"status":"pending","icon":"edit-3","key":"updated","label":"Updated"},{"status":"complete","key":"approved","label":"Approved","icon":"check-circle"},{"key":"rejected","label":"Rejected","status":"error","icon":"x-circle"}]` */
+  kindOptions?: EntityRow[];
   /** Default: `["backfillTitle","backfillDescription","backfillKind","backfillDate"]` */
   formFields?: string[];
-  /** Default: `[{"label":"Created","status":"active","key":"created","icon":"plus-circle"},{"icon":"edit-3","status":"pending","key":"updated","label":"Updated"},{"label":"Approved","icon":"check-circle","key":"approved","status":"complete"},{"key":"rejected","label":"Rejected","icon":"x-circle","status":"error"}]` */
-  kindOptions?: TraitConfig[];
 }
 
 /**

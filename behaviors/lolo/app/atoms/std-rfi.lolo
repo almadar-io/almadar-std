@@ -1,6 +1,9 @@
 app std-rfi "1.1.0"
 "std-rfi — Request For Information primitive for construction projects. Lists RFIs in `browsing`; opens detail in `viewing_single` with Submit / Answer / Close actions. Agents tune the list shape via `config.fields` + `config.itemActions`."
 
+type FieldSpec = { name : string!, label : string, variant : string, icon : string, format : string, key : string, header : string }
+type ItemAction = { label : string!, event : string!, variant : string, icon : string }
+
 orbital RfiOrbital {
   entity Rfi [persistent: rfis] {
     id          : string!
@@ -25,7 +28,7 @@ orbital RfiOrbital {
       title       : string   = "RFIs"
         @label "Section title"
         @description "Heading shown above the RFI pipeline"
-      fields      : [object] = [
+      fields      : [FieldSpec] = [
         { name: "rfiNumber",  label: "RFI #",     variant: "caption" },
         { name: "subject",    label: "Subject",   variant: "caption" },
         { name: "status",     label: "Status",    variant: "badge"   },
@@ -35,7 +38,7 @@ orbital RfiOrbital {
       ]
         @label "Columns to show"
         @description "Each column maps to one field on the RFI entity"
-      itemActions : [object] = [
+      itemActions : [ItemAction] = [
         { label: "Open",  event: "OPEN_RFI", variant: "primary", icon: "arrow-right" },
         { label: "Close", event: "CLOSE",    variant: "danger" }
       ]

@@ -1,6 +1,9 @@
 app std-help-article "1.1.0"
 "std-help-article — Public help center article primitive with title, body, category, view count, and published/draft status. Agents tune the list shape via `config.fields` + `config.itemActions`."
 
+type FieldSpec = { name : string!, label : string, variant : string, icon : string, format : string, key : string, header : string }
+type ItemAction = { label : string!, event : string!, variant : string, icon : string }
+
 orbital HelpArticleOrbital {
   entity HelpArticle [persistent: helparticles] {
     id               : string!
@@ -28,7 +31,7 @@ orbital HelpArticleOrbital {
       title       : string   = "Help Articles"
         @label "Section title"
         @description "Heading shown above the help articles list"
-      fields      : [object] = [
+      fields      : [FieldSpec] = [
         { name: "title",        label: "Title",     variant: "caption" },
         { name: "slug",         label: "Slug",      variant: "caption" },
         { name: "categoryName", label: "Category",  variant: "caption" },
@@ -39,7 +42,7 @@ orbital HelpArticleOrbital {
       ]
         @label "Columns to show"
         @description "Each column maps to one field on the Help Article entity"
-      itemActions : [object] = [
+      itemActions : [ItemAction] = [
         { label: "Open",    event: "OPEN_ARTICLE", variant: "primary", icon: "arrow-right" },
         { label: "Archive", event: "ARCHIVE",      variant: "danger" }
       ]

@@ -70,35 +70,52 @@
         "overridableConfigKeys": [
           {
             "key": "fieldValidation",
-            "type": "[object]",
+            "type": "[ValidationSpec]",
             "default": [],
             "label": "Field validation",
             "description": "Per-field rules (format, regex, length) shown inline on submit",
             "items": {
-              "type": "object"
+              "type": "object",
+              "properties": {
+                "message": {
+                  "type": "string",
+                  "name": "message",
+                  "required": false
+                },
+                "rule": {
+                  "type": "string",
+                  "name": "rule",
+                  "required": false
+                },
+                "field": {
+                  "type": "string",
+                  "name": "field",
+                  "required": true
+                }
+              }
             }
           },
           {
             "key": "fields",
-            "type": "[object]",
+            "type": "[FieldSpec]",
             "default": [
               {
-                "name": "name",
-                "label": "Name"
+                "label": "Name",
+                "name": "name"
               },
               {
                 "name": "description",
                 "label": "Description"
               },
               {
-                "label": "Status",
-                "name": "status",
+                "type": "enum",
                 "values": [
                   "active",
                   "inactive",
                   "pending"
                 ],
-                "type": "enum"
+                "label": "Status",
+                "name": "status"
               },
               {
                 "name": "notes",
@@ -106,23 +123,23 @@
                 "type": "textarea"
               },
               {
+                "type": "number",
                 "name": "age",
-                "label": "Age",
-                "type": "number"
+                "label": "Age"
               },
               {
-                "type": "boolean",
                 "name": "isActive",
+                "type": "boolean",
                 "label": "Is Active"
               },
               {
-                "name": "birthDate",
                 "label": "Birth Date",
+                "name": "birthDate",
                 "type": "date"
               },
               {
-                "type": "enum",
                 "name": "priority",
+                "type": "enum",
                 "values": [
                   "low",
                   "medium",
@@ -132,19 +149,56 @@
                 "label": "Priority"
               },
               {
-                "name": "categoryId",
-                "label": "Category ID",
-                "type": "relation",
                 "relation": {
-                  "cardinality": "one",
-                  "entity": "FormEntry"
-                }
+                  "entity": "FormEntry",
+                  "cardinality": "one"
+                },
+                "type": "relation",
+                "label": "Category ID",
+                "name": "categoryId"
               }
             ],
             "label": "Form fields",
             "description": "Inputs to render; each entry follows the form-section field schema",
             "items": {
-              "type": "object"
+              "type": "object",
+              "properties": {
+                "name": {
+                  "type": "string",
+                  "name": "name",
+                  "required": true
+                },
+                "label": {
+                  "type": "string",
+                  "name": "label",
+                  "required": false
+                },
+                "variant": {
+                  "type": "string",
+                  "name": "variant",
+                  "required": false
+                },
+                "icon": {
+                  "type": "string",
+                  "name": "icon",
+                  "required": false
+                },
+                "format": {
+                  "type": "string",
+                  "name": "format",
+                  "required": false
+                },
+                "key": {
+                  "type": "string",
+                  "name": "key",
+                  "required": false
+                },
+                "header": {
+                  "type": "string",
+                  "name": "header",
+                  "required": false
+                }
+              }
             }
           }
         ],

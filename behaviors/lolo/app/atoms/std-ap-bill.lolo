@@ -1,6 +1,9 @@
 app std-ap-bill "1.1.0"
 "std-ap-bill — accounts-payable bill (vendor bills we owe). Lists bills in `browsing`; opens bill detail in `viewing_single` with Pay / Void actions. Counterpart to std-invoice on the payables side. Agents tune the list shape via `config.fields` + `config.itemActions`."
 
+type FieldSpec = { name : string!, label : string, variant : string, icon : string, format : string, key : string, header : string }
+type ItemAction = { label : string!, event : string!, variant : string, icon : string }
+
 orbital ApBillOrbital {
   entity ApBill [persistent: apbills] {
     id           : string!
@@ -22,7 +25,7 @@ orbital ApBillOrbital {
       title       : string   = "Bills Payable"
         @label "Section title"
         @description "Heading shown above the vendor bills list"
-      fields      : [object] = [
+      fields      : [FieldSpec] = [
         { name: "vendor",      label: "Vendor",    variant: "caption" },
         { name: "billNumber",  label: "Bill #",    variant: "caption" },
         { name: "billDate",    label: "Bill Date", variant: "caption" },
@@ -32,7 +35,7 @@ orbital ApBillOrbital {
       ]
         @label "Columns to show"
         @description "Each column maps to one field on the Bill entity"
-      itemActions : [object] = [
+      itemActions : [ItemAction] = [
         { label: "Open", event: "OPEN_BILL", variant: "primary", icon: "arrow-right" },
         { label: "Void", event: "VOID_BILL", variant: "danger" }
       ]

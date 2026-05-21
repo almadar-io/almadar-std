@@ -1,6 +1,9 @@
 app std-help-category "1.1.0"
 "std-help-category — Help center category directory grouping articles into sections like Getting Started, Billing, API Reference. Agents tune the list shape via `config.fields` + `config.itemActions`."
 
+type FieldSpec = { name : string!, label : string, variant : string, icon : string, format : string, key : string, header : string }
+type ItemAction = { label : string!, event : string!, variant : string, icon : string }
+
 orbital HelpCategoryOrbital {
   entity HelpCategory [persistent: helpcategories] {
     id           : string!
@@ -23,7 +26,7 @@ orbital HelpCategoryOrbital {
       title       : string   = "Help Categories"
         @label "Section title"
         @description "Heading shown above the help center categories"
-      fields      : [object] = [
+      fields      : [FieldSpec] = [
         { name: "name",         label: "Name",     variant: "caption" },
         { name: "slug",         label: "Slug",     variant: "caption" },
         { name: "articleCount", label: "Articles", variant: "caption" },
@@ -33,7 +36,7 @@ orbital HelpCategoryOrbital {
       ]
         @label "Columns to show"
         @description "Each column maps to one field on the Help Category entity"
-      itemActions : [object] = [
+      itemActions : [ItemAction] = [
         { label: "Open",    event: "OPEN_CATEGORY", variant: "primary", icon: "arrow-right" },
         { label: "Archive", event: "ARCHIVE",       variant: "danger" }
       ]

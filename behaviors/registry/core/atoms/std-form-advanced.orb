@@ -292,8 +292,8 @@
                     "FormEntry",
                     {
                       "emit": {
-                        "failure": "FormEntryLoadFailed",
-                        "success": "FormEntryLoaded"
+                        "success": "FormEntryLoaded",
+                        "failure": "FormEntryLoadFailed"
                       }
                     }
                   ],
@@ -311,23 +311,24 @@
                     "render-ui",
                     "main",
                     {
-                      "gap": "lg",
                       "type": "stack",
+                      "direction": "vertical",
+                      "gap": "lg",
                       "children": [
                         {
+                          "gap": "sm",
                           "type": "stack",
                           "direction": "horizontal",
-                          "gap": "sm",
                           "align": "center",
                           "children": [
                             {
-                              "type": "icon",
-                              "name": "file-text"
+                              "name": "file-text",
+                              "type": "icon"
                             },
                             {
+                              "type": "typography",
                               "content": "FormEntry Form",
-                              "variant": "h2",
-                              "type": "typography"
+                              "variant": "h2"
                             }
                           ]
                         },
@@ -335,14 +336,13 @@
                           "type": "divider"
                         },
                         {
-                          "type": "form-section",
                           "cancelEvent": "INIT",
-                          "fields": "@config.fields",
+                          "type": "form-section",
                           "submitEvent": "SUBMIT",
+                          "fields": "@config.fields",
                           "mode": "create"
                         }
-                      ],
-                      "direction": "vertical"
+                      ]
                     }
                   ]
                 ]
@@ -404,8 +404,8 @@
                     "@payload.data",
                     {
                       "emit": {
-                        "success": "FormEntrySaved",
-                        "failure": "FormEntrySaveFailed"
+                        "failure": "FormEntrySaveFailed",
+                        "success": "FormEntrySaved"
                       }
                     }
                   ],
@@ -413,31 +413,31 @@
                     "render-ui",
                     "main",
                     {
+                      "align": "center",
                       "gap": "lg",
                       "children": [
                         {
-                          "name": "check-circle",
-                          "type": "icon"
+                          "type": "icon",
+                          "name": "check-circle"
                         },
                         {
+                          "variant": "h2",
                           "type": "typography",
-                          "content": "Form Submitted",
-                          "variant": "h2"
+                          "content": "Form Submitted"
                         },
                         {
+                          "variant": "success",
                           "message": "Your form has been submitted successfully.",
-                          "type": "alert",
-                          "variant": "success"
+                          "type": "alert"
                         },
                         {
-                          "action": "RESET",
                           "label": "New Entry",
                           "variant": "primary",
+                          "action": "RESET",
                           "type": "button",
                           "icon": "plus"
                         }
                       ],
-                      "align": "center",
                       "direction": "vertical",
                       "type": "stack"
                     }
@@ -473,38 +473,38 @@
                     "render-ui",
                     "main",
                     {
-                      "direction": "vertical",
-                      "type": "stack",
                       "gap": "lg",
                       "children": [
                         {
+                          "align": "center",
+                          "gap": "sm",
                           "direction": "horizontal",
                           "type": "stack",
                           "children": [
                             {
-                              "type": "icon",
-                              "name": "file-text"
+                              "name": "file-text",
+                              "type": "icon"
                             },
                             {
                               "type": "typography",
                               "variant": "h2",
                               "content": "FormEntry Form"
                             }
-                          ],
-                          "gap": "sm",
-                          "align": "center"
+                          ]
                         },
                         {
                           "type": "divider"
                         },
                         {
-                          "mode": "create",
-                          "fields": "@config.fields",
-                          "submitEvent": "SUBMIT",
                           "cancelEvent": "INIT",
-                          "type": "form-section"
+                          "fields": "@config.fields",
+                          "mode": "create",
+                          "type": "form-section",
+                          "submitEvent": "SUBMIT"
                         }
-                      ]
+                      ],
+                      "type": "stack",
+                      "direction": "vertical"
                     }
                   ]
                 ]
@@ -512,26 +512,52 @@
             ]
           },
           "config": {
+            "fieldValidation": {
+              "type": "[ValidationSpec]",
+              "default": [],
+              "label": "Field validation",
+              "description": "Per-field rules (format, regex, length) shown inline on submit",
+              "items": {
+                "type": "object",
+                "properties": {
+                  "message": {
+                    "name": "message",
+                    "type": "string",
+                    "required": false
+                  },
+                  "rule": {
+                    "name": "rule",
+                    "type": "string",
+                    "required": false
+                  },
+                  "field": {
+                    "name": "field",
+                    "type": "string",
+                    "required": true
+                  }
+                }
+              }
+            },
             "fields": {
-              "type": "[object]",
+              "type": "[FieldSpec]",
               "default": [
                 {
-                  "name": "name",
-                  "label": "Name"
+                  "label": "Name",
+                  "name": "name"
                 },
                 {
                   "name": "description",
                   "label": "Description"
                 },
                 {
-                  "label": "Status",
-                  "name": "status",
+                  "type": "enum",
                   "values": [
                     "active",
                     "inactive",
                     "pending"
                   ],
-                  "type": "enum"
+                  "label": "Status",
+                  "name": "status"
                 },
                 {
                   "name": "notes",
@@ -539,23 +565,23 @@
                   "type": "textarea"
                 },
                 {
+                  "type": "number",
                   "name": "age",
-                  "label": "Age",
-                  "type": "number"
+                  "label": "Age"
                 },
                 {
-                  "type": "boolean",
                   "name": "isActive",
+                  "type": "boolean",
                   "label": "Is Active"
                 },
                 {
-                  "name": "birthDate",
                   "label": "Birth Date",
+                  "name": "birthDate",
                   "type": "date"
                 },
                 {
-                  "type": "enum",
                   "name": "priority",
+                  "type": "enum",
                   "values": [
                     "low",
                     "medium",
@@ -565,28 +591,56 @@
                   "label": "Priority"
                 },
                 {
-                  "name": "categoryId",
-                  "label": "Category ID",
-                  "type": "relation",
                   "relation": {
-                    "cardinality": "one",
-                    "entity": "FormEntry"
-                  }
+                    "entity": "FormEntry",
+                    "cardinality": "one"
+                  },
+                  "type": "relation",
+                  "label": "Category ID",
+                  "name": "categoryId"
                 }
               ],
               "label": "Form fields",
               "description": "Inputs to render; each entry follows the form-section field schema",
               "items": {
-                "type": "object"
-              }
-            },
-            "fieldValidation": {
-              "type": "[object]",
-              "default": [],
-              "label": "Field validation",
-              "description": "Per-field rules (format, regex, length) shown inline on submit",
-              "items": {
-                "type": "object"
+                "type": "object",
+                "properties": {
+                  "name": {
+                    "name": "name",
+                    "type": "string",
+                    "required": true
+                  },
+                  "label": {
+                    "name": "label",
+                    "type": "string",
+                    "required": false
+                  },
+                  "variant": {
+                    "name": "variant",
+                    "type": "string",
+                    "required": false
+                  },
+                  "icon": {
+                    "name": "icon",
+                    "type": "string",
+                    "required": false
+                  },
+                  "format": {
+                    "name": "format",
+                    "type": "string",
+                    "required": false
+                  },
+                  "key": {
+                    "name": "key",
+                    "type": "string",
+                    "required": false
+                  },
+                  "header": {
+                    "name": "header",
+                    "type": "string",
+                    "required": false
+                  }
+                }
               }
             }
           },

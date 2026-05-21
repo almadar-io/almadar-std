@@ -21,6 +21,11 @@
             "items": {
               "type": "object",
               "properties": {
+                "y": {
+                  "name": "y",
+                  "type": "number",
+                  "required": true
+                },
                 "size": {
                   "name": "size",
                   "type": "number",
@@ -28,11 +33,6 @@
                 },
                 "x": {
                   "name": "x",
-                  "type": "number",
-                  "required": true
-                },
-                "y": {
-                  "name": "y",
                   "type": "number",
                   "required": true
                 },
@@ -74,7 +74,7 @@
                 "payloadSchema": [
                   {
                     "name": "data",
-                    "type": "[object]"
+                    "type": "[ObjectSpec]"
                   },
                   {
                     "name": "totalCount",
@@ -94,38 +94,38 @@
                     "@entity.points",
                     [
                       {
-                        "color": "",
-                        "label": "A",
+                        "size": 8.0,
                         "x": 12.0,
                         "y": 24.0,
-                        "size": 8.0
+                        "color": "",
+                        "label": "A"
                       },
                       {
                         "y": 42.0,
-                        "x": 28.0,
-                        "label": "B",
                         "size": 6.0,
-                        "color": ""
+                        "x": 28.0,
+                        "color": "",
+                        "label": "B"
                       },
                       {
                         "y": 18.0,
-                        "size": 10.0,
-                        "x": 45.0,
-                        "label": "C",
-                        "color": ""
-                      },
-                      {
-                        "size": 7.0,
                         "color": "",
-                        "label": "D",
-                        "y": 55.0,
-                        "x": 60.0
+                        "x": 45.0,
+                        "size": 10.0,
+                        "label": "C"
                       },
                       {
+                        "y": 55.0,
+                        "x": 60.0,
+                        "label": "D",
+                        "color": "",
+                        "size": 7.0
+                      },
+                      {
+                        "x": 78.0,
                         "y": 38.0,
                         "color": "",
                         "label": "E",
-                        "x": 78.0,
                         "size": 9.0
                       }
                     ]
@@ -134,11 +134,11 @@
                     "render-ui",
                     "main",
                     {
+                      "subtitle": "@config.subtitle",
+                      "title": "@config.title",
+                      "scatterData": "@entity.points",
                       "height": "@config.height",
                       "type": "chart",
-                      "title": "@config.title",
-                      "subtitle": "@config.subtitle",
-                      "scatterData": "@entity.points",
                       "chartType": "scatter",
                       "drillEvent": "@config.drillEvent"
                     }
@@ -160,6 +160,18 @@
                         "fn",
                         "row",
                         {
+                          "x": [
+                            "object/get",
+                            "@row",
+                            "@config.xField",
+                            0.0
+                          ],
+                          "color": [
+                            "object/get",
+                            "@row",
+                            "@config.colorField",
+                            ""
+                          ],
                           "label": [
                             "object/get",
                             "@row",
@@ -170,18 +182,6 @@
                             "object/get",
                             "@row",
                             "@config.yField",
-                            0.0
-                          ],
-                          "color": [
-                            "object/get",
-                            "@row",
-                            "@config.colorField",
-                            ""
-                          ],
-                          "x": [
-                            "object/get",
-                            "@row",
-                            "@config.xField",
                             0.0
                           ],
                           "size": [
@@ -198,13 +198,13 @@
                     "render-ui",
                     "main",
                     {
-                      "drillEvent": "@config.drillEvent",
-                      "height": "@config.height",
-                      "chartType": "scatter",
-                      "title": "@config.title",
                       "type": "chart",
-                      "subtitle": "@config.subtitle",
-                      "scatterData": "@entity.points"
+                      "chartType": "scatter",
+                      "height": "@config.height",
+                      "drillEvent": "@config.drillEvent",
+                      "title": "@config.title",
+                      "scatterData": "@entity.points",
+                      "subtitle": "@config.subtitle"
                     }
                   ]
                 ]
@@ -212,6 +212,24 @@
             ]
           },
           "config": {
+            "subtitle": {
+              "type": "string",
+              "default": "x vs y",
+              "label": "Subtitle",
+              "description": "Secondary line below the title"
+            },
+            "title": {
+              "type": "string",
+              "default": "Correlation",
+              "label": "Title",
+              "description": "Heading shown above the chart"
+            },
+            "height": {
+              "type": "number",
+              "default": 280.0,
+              "label": "Chart height",
+              "description": "Pixel height of the rendered scatter plot"
+            },
             "labelField": {
               "type": "string",
               "default": "",
@@ -224,35 +242,17 @@
               "label": "X-axis field",
               "description": "Entity field mapped to the horizontal axis"
             },
-            "sizeField": {
-              "type": "string",
-              "default": "",
-              "label": "Size field",
-              "description": "Numeric field that scales bubble size (blank = uniform)"
-            },
             "yField": {
               "type": "string",
               "default": "y",
               "label": "Y-axis field",
               "description": "Entity field mapped to the vertical axis"
             },
-            "height": {
-              "type": "number",
-              "default": 280.0,
-              "label": "Chart height",
-              "description": "Pixel height of the rendered scatter plot"
-            },
-            "title": {
+            "sizeField": {
               "type": "string",
-              "default": "Correlation",
-              "label": "Title",
-              "description": "Heading shown above the chart"
-            },
-            "subtitle": {
-              "type": "string",
-              "default": "x vs y",
-              "label": "Subtitle",
-              "description": "Secondary line below the title"
+              "default": "",
+              "label": "Size field",
+              "description": "Numeric field that scales bubble size (blank = uniform)"
             },
             "colorField": {
               "type": "string",

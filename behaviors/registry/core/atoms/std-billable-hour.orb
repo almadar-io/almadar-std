@@ -289,22 +289,22 @@
                     "render-ui",
                     "main",
                     {
+                      "className": "py-12",
+                      "direction": "vertical",
+                      "gap": "md",
+                      "type": "stack",
+                      "align": "center",
                       "children": [
                         {
                           "type": "spinner"
                         },
                         {
-                          "color": "muted",
+                          "content": "Loading time entries…",
                           "type": "typography",
                           "variant": "caption",
-                          "content": "Loading time entries…"
+                          "color": "muted"
                         }
-                      ],
-                      "direction": "vertical",
-                      "gap": "md",
-                      "type": "stack",
-                      "align": "center",
-                      "className": "py-12"
+                      ]
                     }
                   ]
                 ]
@@ -318,82 +318,98 @@
                     "render-ui",
                     "main",
                     {
-                      "type": "stack",
+                      "direction": "vertical",
                       "gap": "md",
+                      "type": "stack",
                       "children": [
                         {
-                          "align": "center",
                           "direction": "horizontal",
+                          "type": "stack",
+                          "align": "center",
                           "children": [
                             {
-                              "type": "icon",
-                              "name": "clock"
+                              "name": "clock",
+                              "type": "icon"
                             },
                             {
-                              "variant": "h3",
                               "type": "typography",
-                              "content": "@config.title"
+                              "content": "@config.title",
+                              "variant": "h3"
                             }
                           ],
-                          "type": "stack",
                           "gap": "sm"
                         },
                         {
+                          "cols": 4.0,
                           "type": "simple-grid",
                           "children": [
                             {
                               "value": "@payload.data.length",
-                              "type": "stat-display",
                               "label": "Total entries",
+                              "type": "stat-display",
                               "icon": "clock"
                             },
                             {
                               "value": "248",
                               "icon": "hourglass",
-                              "label": "Unbilled hours",
-                              "type": "stat-display"
-                            },
-                            {
-                              "value": "32",
-                              "label": "Invoiced this month",
-                              "icon": "file-text",
-                              "type": "stat-display"
-                            },
-                            {
-                              "value": "4",
-                              "label": "Written off",
                               "type": "stat-display",
-                              "icon": "x-circle"
+                              "label": "Unbilled hours"
+                            },
+                            {
+                              "label": "Invoiced this month",
+                              "type": "stat-display",
+                              "value": "32",
+                              "icon": "file-text"
+                            },
+                            {
+                              "type": "stat-display",
+                              "icon": "x-circle",
+                              "value": "4",
+                              "label": "Written off"
                             }
-                          ],
-                          "cols": 4.0
+                          ]
                         },
                         {
                           "type": "divider"
                         },
                         {
-                          "type": "data-grid",
                           "cols": 1.0,
-                          "fields": [
+                          "type": "data-grid",
+                          "gap": "sm",
+                          "entity": "@payload.data",
+                          "itemActions": [
                             {
-                              "variant": "caption",
-                              "name": "workerName",
-                              "label": "Worker"
+                              "variant": "primary",
+                              "event": "OPEN_HOURS",
+                              "icon": "arrow-right",
+                              "label": "Open"
                             },
                             {
-                              "name": "matterId",
+                              "variant": "danger",
+                              "label": "Write Off",
+                              "event": "WRITE_OFF_HOURS"
+                            }
+                          ],
+                          "fields": [
+                            {
+                              "label": "Worker",
                               "variant": "caption",
-                              "label": "Matter"
+                              "name": "workerName"
+                            },
+                            {
+                              "label": "Matter",
+                              "variant": "caption",
+                              "name": "matterId"
                             },
                             {
                               "name": "workDate",
-                              "label": "Date",
-                              "variant": "caption"
+                              "variant": "caption",
+                              "label": "Date"
                             },
                             {
                               "label": "Hours",
-                              "variant": "caption",
-                              "name": "hours"
+                              "name": "hours",
+                              "variant": "caption"
                             },
                             {
                               "label": "Rate",
@@ -402,28 +418,12 @@
                             },
                             {
                               "name": "invoiceStatus",
-                              "variant": "badge",
-                              "label": "Status"
+                              "label": "Status",
+                              "variant": "badge"
                             }
-                          ],
-                          "gap": "sm",
-                          "itemActions": [
-                            {
-                              "label": "Open",
-                              "variant": "primary",
-                              "icon": "arrow-right",
-                              "event": "OPEN_HOURS"
-                            },
-                            {
-                              "label": "Write Off",
-                              "event": "WRITE_OFF_HOURS",
-                              "variant": "danger"
-                            }
-                          ],
-                          "entity": "@payload.data"
+                          ]
                         }
-                      ],
-                      "direction": "vertical"
+                      ]
                     }
                   ]
                 ]
@@ -437,9 +437,9 @@
                     "render-ui",
                     "main",
                     {
-                      "message": "@payload.error",
+                      "type": "alert",
                       "variant": "error",
-                      "type": "alert"
+                      "message": "@payload.error"
                     }
                   ]
                 ]
@@ -508,97 +508,98 @@
                     "render-ui",
                     "main",
                     {
+                      "gap": "md",
                       "direction": "vertical",
                       "children": [
                         {
-                          "direction": "horizontal",
-                          "type": "stack",
-                          "align": "center",
-                          "gap": "sm",
                           "children": [
                             {
                               "action": "CLOSE_VIEW",
+                              "variant": "ghost",
                               "type": "button",
-                              "label": "Back",
-                              "variant": "ghost"
+                              "label": "Back"
                             },
                             {
                               "type": "icon",
                               "name": "clock"
                             },
                             {
-                              "variant": "h3",
                               "content": "@entity.workerName",
+                              "variant": "h3",
                               "type": "typography"
                             },
                             {
-                              "label": "@entity.invoiceStatus",
+                              "variant": "default",
                               "type": "badge",
-                              "variant": "default"
+                              "label": "@entity.invoiceStatus"
                             }
-                          ]
+                          ],
+                          "gap": "sm",
+                          "align": "center",
+                          "type": "stack",
+                          "direction": "horizontal"
                         },
                         {
                           "type": "divider"
                         },
                         {
                           "direction": "vertical",
-                          "type": "stack",
                           "gap": "sm",
+                          "type": "stack",
                           "children": [
                             {
+                              "direction": "horizontal",
+                              "gap": "md",
+                              "type": "stack",
                               "children": [
                                 {
-                                  "variant": "caption",
+                                  "type": "typography",
                                   "color": "muted",
                                   "content": "Matter",
-                                  "type": "typography"
+                                  "variant": "caption"
                                 },
                                 {
                                   "type": "typography",
                                   "variant": "body",
                                   "content": "@entity.matterId"
                                 }
-                              ],
-                              "direction": "horizontal",
-                              "gap": "md",
-                              "type": "stack"
+                              ]
                             },
                             {
-                              "gap": "md",
                               "direction": "horizontal",
+                              "type": "stack",
+                              "gap": "md",
                               "children": [
                                 {
-                                  "type": "typography",
                                   "variant": "caption",
-                                  "color": "muted",
-                                  "content": "Project"
+                                  "content": "Project",
+                                  "type": "typography",
+                                  "color": "muted"
                                 },
                                 {
                                   "variant": "body",
                                   "type": "typography",
                                   "content": "@entity.projectId"
                                 }
-                              ],
-                              "type": "stack"
+                              ]
                             },
                             {
-                              "gap": "md",
                               "type": "stack",
                               "direction": "horizontal",
                               "children": [
                                 {
-                                  "type": "typography",
-                                  "color": "muted",
                                   "content": "Description",
-                                  "variant": "caption"
+                                  "color": "muted",
+                                  "variant": "caption",
+                                  "type": "typography"
                                 },
                                 {
+                                  "variant": "body",
                                   "content": "@entity.description",
-                                  "type": "typography",
-                                  "variant": "body"
+                                  "type": "typography"
                                 }
-                              ]
+                              ],
+                              "gap": "md"
                             }
                           ]
                         },
@@ -606,58 +607,57 @@
                           "type": "divider"
                         },
                         {
-                          "cols": 3.0,
-                          "type": "simple-grid",
                           "children": [
                             {
-                              "value": "@entity.hours",
+                              "label": "Hours",
                               "icon": "clock",
-                              "type": "stat-display",
-                              "label": "Hours"
+                              "value": "@entity.hours",
+                              "type": "stat-display"
                             },
                             {
-                              "value": "@entity.rate",
-                              "type": "stat-display",
                               "label": "Rate",
-                              "icon": "dollar-sign"
+                              "icon": "dollar-sign",
+                              "value": "@entity.rate",
+                              "type": "stat-display"
                             },
                             {
-                              "value": "@entity.workDate",
                               "type": "stat-display",
+                              "icon": "calendar",
                               "label": "Date",
-                              "icon": "calendar"
+                              "value": "@entity.workDate"
                             }
-                          ]
+                          ],
+                          "type": "simple-grid",
+                          "cols": 3.0
                         },
                         {
-                          "direction": "horizontal",
-                          "type": "stack",
-                          "align": "center",
                           "children": [
                             {
-                              "action": "INVOICE_HOURS",
-                              "type": "button",
-                              "label": "Invoice",
                               "actionPayload": {
                                 "id": "@entity.id"
                               },
-                              "variant": "primary"
+                              "type": "button",
+                              "label": "Invoice",
+                              "variant": "primary",
+                              "action": "INVOICE_HOURS"
                             },
                             {
                               "actionPayload": {
                                 "id": "@entity.id"
                               },
-                              "label": "Write Off",
                               "type": "button",
+                              "label": "Write Off",
                               "variant": "danger",
                               "action": "WRITE_OFF_HOURS"
                             }
                           ],
-                          "gap": "sm"
+                          "gap": "sm",
+                          "direction": "horizontal",
+                          "align": "center",
+                          "type": "stack"
                         }
                       ],
-                      "type": "stack",
-                      "gap": "md"
+                      "type": "stack"
                     }
                   ]
                 ]
@@ -686,7 +686,11 @@
                     "render-ui",
                     "main",
                     {
+                      "type": "stack",
+                      "direction": "vertical",
+                      "gap": "md",
                       "align": "center",
+                      "className": "py-12",
                       "children": [
                         {
                           "type": "spinner"
@@ -694,14 +698,10 @@
                         {
                           "variant": "caption",
                           "color": "muted",
-                          "type": "typography",
-                          "content": "Writing off hours…"
+                          "content": "Writing off hours…",
+                          "type": "typography"
                         }
-                      ],
-                      "className": "py-12",
-                      "type": "stack",
-                      "direction": "vertical",
-                      "gap": "md"
+                      ]
                     }
                   ]
                 ]
@@ -726,20 +726,20 @@
                     "main",
                     {
                       "align": "center",
-                      "type": "stack",
                       "children": [
                         {
                           "type": "spinner"
                         },
                         {
                           "content": "Loading time entries…",
-                          "type": "typography",
                           "variant": "caption",
-                          "color": "muted"
+                          "color": "muted",
+                          "type": "typography"
                         }
                       ],
-                      "direction": "vertical",
                       "gap": "md",
+                      "direction": "vertical",
+                      "type": "stack",
                       "className": "py-12"
                     }
                   ]
@@ -760,8 +760,8 @@
                     "BillableHour",
                     {
                       "emit": {
-                        "failure": "BillableHourLoadFailed",
-                        "success": "BillableHourLoaded"
+                        "success": "BillableHourLoaded",
+                        "failure": "BillableHourLoadFailed"
                       }
                     }
                   ],
@@ -770,19 +770,19 @@
                     "main",
                     {
                       "type": "stack",
+                      "align": "center",
                       "direction": "vertical",
                       "children": [
                         {
                           "type": "spinner"
                         },
                         {
-                          "content": "Invoicing hours…",
-                          "type": "typography",
+                          "variant": "caption",
                           "color": "muted",
-                          "variant": "caption"
+                          "type": "typography",
+                          "content": "Invoicing hours…"
                         }
                       ],
-                      "align": "center",
                       "className": "py-12",
                       "gap": "md"
                     }
@@ -813,22 +813,22 @@
                     "render-ui",
                     "main",
                     {
+                      "align": "center",
+                      "direction": "vertical",
+                      "className": "py-12",
+                      "gap": "md",
                       "children": [
                         {
                           "type": "spinner"
                         },
                         {
-                          "variant": "caption",
-                          "color": "muted",
                           "type": "typography",
-                          "content": "Writing off hours…"
+                          "color": "muted",
+                          "content": "Writing off hours…",
+                          "variant": "caption"
                         }
                       ],
-                      "gap": "md",
-                      "direction": "vertical",
-                      "type": "stack",
-                      "className": "py-12",
-                      "align": "center"
+                      "type": "stack"
                     }
                   ]
                 ]
@@ -843,8 +843,8 @@
                     "BillableHour",
                     {
                       "emit": {
-                        "success": "BillableHourLoaded",
-                        "failure": "BillableHourLoadFailed"
+                        "failure": "BillableHourLoadFailed",
+                        "success": "BillableHourLoaded"
                       }
                     }
                   ],

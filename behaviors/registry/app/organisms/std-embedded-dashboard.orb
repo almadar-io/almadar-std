@@ -89,7 +89,7 @@
               "payloadSchema": [
                 {
                   "name": "data",
-                  "type": "[object]"
+                  "type": "[ObjectSpec]"
                 },
                 {
                   "name": "totalCount",
@@ -205,32 +205,36 @@
           "ref": "Stats.traits.StatsItemStats",
           "name": "DefaultKpiStats",
           "config": {
+            "viewPattern": "data-grid",
             "metrics": [
               {
-                "value": 142000.0,
-                "trendFormat": "percent",
-                "variant": "success",
-                "format": "currency",
                 "icon": "trending-up",
+                "trend": 8.0,
                 "label": "Revenue",
                 "trendPolarity": "higher-is-better",
-                "trend": 8.0
-              },
-              {
+                "variant": "success",
+                "value": 142000.0,
                 "format": "currency",
-                "icon": "repeat",
-                "variant": "primary",
-                "trendFormat": "percent",
-                "label": "MRR",
-                "trendPolarity": "higher-is-better",
-                "trend": 5.0,
-                "value": 11833.0
+                "trendFormat": "percent"
               },
               {
-                "icon": "users",
-                "variant": "info",
+                "value": 11833.0,
+                "format": "currency",
+                "label": "MRR",
+                "variant": "primary",
+                "icon": "repeat",
+                "trendFormat": "percent",
                 "trendPolarity": "higher-is-better",
+                "trend": 5.0
+              },
+              {
+                "trendPolarity": "higher-is-better",
+                "value": 248.0,
+                "label": "Customers",
+                "variant": "info",
+                "icon": "users",
                 "trend": 12.0,
+                "format": "number",
                 "sparklineData": [
                   180.0,
                   195.0,
@@ -240,49 +244,45 @@
                   238.0,
                   248.0
                 ],
-                "format": "number",
-                "label": "Customers",
-                "trendFormat": "percent",
-                "value": 248.0
+                "trendFormat": "percent"
               },
               {
-                "trendPolarity": "lower-is-better",
-                "label": "Churn",
-                "trend": 1.0,
-                "value": 2.0,
                 "trendFormat": "percent",
                 "icon": "trending-down",
+                "trend": 1.0,
                 "format": "percent",
+                "value": 2.0,
+                "label": "Churn",
+                "trendPolarity": "lower-is-better",
                 "variant": "warning"
               }
             ],
-            "title": "Key Metrics",
-            "viewPattern": "data-grid"
+            "title": "Key Metrics"
           }
         },
         {
           "ref": "Graphs.traits.GraphItemGraph",
           "name": "DefaultRevenueChart",
           "config": {
-            "aggregation": "sum",
+            "limit": 0.0,
+            "timeAxis": false,
+            "sortField": "none",
+            "showValues": false,
             "period": "quarter",
+            "categoryField": "quarter",
+            "aggregation": "sum",
+            "title": "Revenue by Quarter",
+            "chartType": "bar",
+            "timeField": "date",
+            "series": [],
             "stack": "none",
+            "sortDir": "desc",
             "subtitle": "Last 4 quarters",
             "valueField": "revenue",
-            "sortField": "none",
-            "timeField": "date",
-            "limit": 0.0,
-            "height": 240.0,
-            "showValues": false,
-            "categoryField": "quarter",
-            "viewPattern": "chart",
-            "chartType": "bar",
-            "series": [],
             "drillEvent": "REVENUE_TILE_CLICKED",
-            "sortDir": "desc",
-            "title": "Revenue by Quarter",
             "showLegend": false,
-            "timeAxis": false
+            "viewPattern": "chart",
+            "height": 240.0
           }
         },
         {
@@ -290,163 +290,163 @@
           "name": "DefaultDistributionChart",
           "config": {
             "limit": 0.0,
-            "subtitle": "By segment",
-            "categoryField": "segment",
-            "drillEvent": "DISTRIBUTION_TILE_CLICKED",
-            "aggregation": "sum",
-            "timeField": "date",
-            "sortField": "value",
-            "timeAxis": false,
-            "period": "month",
-            "height": 240.0,
-            "stack": "none",
-            "showValues": false,
             "viewPattern": "chart",
-            "showLegend": true,
+            "timeField": "date",
+            "subtitle": "By segment",
+            "stack": "none",
+            "period": "month",
+            "aggregation": "sum",
+            "sortField": "value",
+            "categoryField": "segment",
             "valueField": "revenue",
+            "height": 240.0,
             "title": "Revenue Distribution",
-            "chartType": "pie",
+            "timeAxis": false,
+            "drillEvent": "DISTRIBUTION_TILE_CLICKED",
             "series": [],
-            "sortDir": "desc"
+            "chartType": "pie",
+            "showLegend": true,
+            "sortDir": "desc",
+            "showValues": false
           }
         },
         {
           "ref": "Graphs.traits.GraphItemGraph",
           "name": "DefaultGrowthChart",
           "config": {
-            "sortField": "label",
-            "sortDir": "desc",
-            "timeField": "date",
-            "series": [],
-            "chartType": "line",
-            "aggregation": "sum",
-            "stack": "none",
-            "viewPattern": "chart",
-            "title": "Growth Over Time",
-            "timeAxis": true,
-            "drillEvent": "GROWTH_TILE_CLICKED",
             "limit": 0.0,
-            "categoryField": "month",
+            "timeAxis": true,
+            "chartType": "line",
+            "timeField": "date",
             "valueField": "value",
+            "drillEvent": "GROWTH_TILE_CLICKED",
+            "sortField": "label",
             "height": 240.0,
-            "showValues": false,
             "showLegend": false,
-            "subtitle": "Monthly trend",
-            "period": "month"
+            "aggregation": "sum",
+            "showValues": false,
+            "sortDir": "desc",
+            "title": "Growth Over Time",
+            "viewPattern": "chart",
+            "categoryField": "month",
+            "period": "month",
+            "series": [],
+            "stack": "none",
+            "subtitle": "Monthly trend"
           }
         },
         {
           "ref": "Graphs.traits.GraphItemGraph",
           "name": "DefaultTopProductsChart",
           "config": {
-            "valueField": "revenue",
+            "limit": 5.0,
+            "timeAxis": false,
+            "subtitle": "Top 5 by revenue",
+            "period": "month",
             "timeField": "date",
-            "height": 240.0,
+            "valueField": "revenue",
             "aggregation": "sum",
             "stack": "none",
-            "sortField": "value",
-            "limit": 5.0,
-            "period": "month",
-            "sortDir": "desc",
+            "series": [],
             "chartType": "bar",
+            "viewPattern": "chart",
+            "height": 240.0,
             "showValues": true,
             "showLegend": false,
-            "categoryField": "product",
-            "viewPattern": "chart",
-            "timeAxis": false,
             "title": "Top Products",
-            "subtitle": "Top 5 by revenue",
-            "series": [],
-            "drillEvent": "PRODUCT_TILE_CLICKED"
+            "drillEvent": "PRODUCT_TILE_CLICKED",
+            "categoryField": "product",
+            "sortField": "value",
+            "sortDir": "desc"
           }
         },
         {
           "ref": "Graphs.traits.GraphItemGraph",
           "name": "DefaultAreaChart",
           "config": {
-            "sortDir": "desc",
-            "chartType": "area",
-            "timeAxis": true,
             "timeField": "date",
-            "period": "month",
-            "stack": "none",
-            "categoryField": "month",
             "sortField": "label",
-            "drillEvent": "AREA_TILE_CLICKED",
-            "viewPattern": "chart",
-            "subtitle": "Year-to-date",
-            "title": "Cumulative Sales",
-            "series": [],
-            "limit": 0.0,
-            "height": 240.0,
-            "showLegend": false,
-            "aggregation": "sum",
             "valueField": "amount",
-            "showValues": false
+            "title": "Cumulative Sales",
+            "stack": "none",
+            "limit": 0.0,
+            "sortDir": "desc",
+            "height": 240.0,
+            "viewPattern": "chart",
+            "chartType": "area",
+            "series": [],
+            "subtitle": "Year-to-date",
+            "aggregation": "sum",
+            "showValues": false,
+            "timeAxis": true,
+            "period": "month",
+            "drillEvent": "AREA_TILE_CLICKED",
+            "categoryField": "month",
+            "showLegend": false
           }
         },
         {
           "ref": "Graphs.traits.GraphItemGraph",
           "name": "DefaultDonutChart",
           "config": {
-            "timeField": "date",
-            "categoryField": "channel",
             "valueField": "value",
-            "showValues": false,
-            "subtitle": "By marketing channel",
-            "aggregation": "sum",
-            "timeAxis": false,
-            "stack": "none",
-            "sortField": "value",
-            "height": 240.0,
-            "title": "Channel Mix",
-            "limit": 0.0,
-            "viewPattern": "chart",
-            "period": "month",
-            "showLegend": true,
-            "drillEvent": "DONUT_TILE_CLICKED",
-            "series": [],
             "chartType": "donut",
-            "sortDir": "desc"
+            "categoryField": "channel",
+            "timeField": "date",
+            "sortField": "value",
+            "sortDir": "desc",
+            "drillEvent": "DONUT_TILE_CLICKED",
+            "limit": 0.0,
+            "timeAxis": false,
+            "height": 240.0,
+            "showValues": false,
+            "viewPattern": "chart",
+            "series": [],
+            "subtitle": "By marketing channel",
+            "title": "Channel Mix",
+            "aggregation": "sum",
+            "stack": "none",
+            "showLegend": true,
+            "period": "month"
           }
         },
         {
           "ref": "Graphs.traits.GraphItemGraph",
           "name": "DefaultActivityHistogram",
           "config": {
-            "aggregation": "count",
-            "showLegend": false,
-            "series": [],
-            "drillEvent": "HISTOGRAM_TILE_CLICKED",
-            "subtitle": "Order count per bucket",
-            "stack": "none",
-            "period": "day",
-            "sortDir": "desc",
-            "limit": 0.0,
-            "valueField": "count",
-            "viewPattern": "chart",
-            "timeAxis": false,
             "chartType": "histogram",
+            "aggregation": "count",
             "sortField": "label",
-            "timeField": "date",
-            "height": 240.0,
-            "title": "Activity Distribution",
             "categoryField": "bucket",
-            "showValues": false
+            "limit": 0.0,
+            "showLegend": false,
+            "showValues": false,
+            "valueField": "count",
+            "period": "day",
+            "title": "Activity Distribution",
+            "series": [],
+            "viewPattern": "chart",
+            "height": 240.0,
+            "stack": "none",
+            "drillEvent": "HISTOGRAM_TILE_CLICKED",
+            "sortDir": "desc",
+            "timeField": "date",
+            "timeAxis": false,
+            "subtitle": "Order count per bucket"
           }
         },
         {
           "ref": "Scatter.traits.ScatterItemPlot",
           "name": "DefaultScatter",
           "config": {
-            "yField": "revenue",
             "sizeField": "ltv",
-            "drillEvent": "SCATTER_TILE_CLICKED",
             "colorField": "segment",
             "subtitle": "Per customer",
-            "xField": "spend",
-            "labelField": "customer",
             "height": 240.0,
+            "xField": "spend",
+            "yField": "revenue",
+            "labelField": "customer",
+            "drillEvent": "SCATTER_TILE_CLICKED",
             "title": "Spend vs Revenue"
           }
         },
@@ -455,38 +455,38 @@
           "name": "DefaultDateRange",
           "config": {
             "fromLabel": "From",
+            "toLabel": "To",
             "buttonLabel": "Date range",
-            "event": "DATE_RANGE_CHANGED",
-            "toLabel": "To"
+            "event": "DATE_RANGE_CHANGED"
           }
         },
         {
           "ref": "Export.traits.ExportMenu",
           "name": "DefaultExport",
           "config": {
+            "tileId": "dashboard",
             "formats": [
               {
                 "label": "CSV",
-                "id": "csv",
-                "format": "csv"
+                "format": "csv",
+                "id": "csv"
               },
               {
+                "format": "xlsx",
                 "label": "Excel",
-                "id": "xlsx",
-                "format": "xlsx"
+                "id": "xlsx"
               },
               {
                 "format": "pdf",
-                "id": "pdf",
-                "label": "PDF"
+                "label": "PDF",
+                "id": "pdf"
               },
               {
                 "id": "png",
-                "label": "PNG",
-                "format": "png"
+                "format": "png",
+                "label": "PNG"
               }
             ],
-            "tileId": "dashboard",
             "event": "EXPORT_REQUESTED"
           }
         },
@@ -494,26 +494,26 @@
           "ref": "Layout.traits.DashboardGridEmbedded",
           "name": "DashboardLayout",
           "config": {
-            "filter2Trait": "@trait.EmptyTile",
             "toolbar1Trait": "@trait.DefaultExport",
-            "tile4Trait": "@trait.DefaultScatter",
-            "tile8Trait": "@trait.DefaultAreaChart",
+            "filter1Trait": "@trait.DefaultDateRange",
             "filter3Trait": "@trait.EmptyTile",
-            "tile2Trait": "@trait.DefaultRevenueChart",
-            "tile5Trait": "@trait.DefaultGrowthChart",
-            "tile9Trait": "@trait.DefaultActivityHistogram",
-            "filter4Trait": "@trait.EmptyTile",
-            "tile6Trait": "@trait.DefaultTopProductsChart",
-            "toolbar2Trait": "@trait.EmptyTile",
-            "tile7Trait": "@trait.DefaultDonutChart",
             "tile11Trait": "@trait.EmptyTile",
             "tile10Trait": "@trait.EmptyTile",
-            "tile12Trait": "@trait.EmptyTile",
-            "toolbar3Trait": "@trait.EmptyTile",
-            "filter1Trait": "@trait.DefaultDateRange",
             "minTileWidth": 320.0,
+            "tile9Trait": "@trait.DefaultActivityHistogram",
+            "tile12Trait": "@trait.EmptyTile",
+            "filter2Trait": "@trait.EmptyTile",
+            "tile5Trait": "@trait.DefaultGrowthChart",
+            "toolbar3Trait": "@trait.EmptyTile",
+            "tile2Trait": "@trait.DefaultRevenueChart",
+            "tile3Trait": "@trait.DefaultDistributionChart",
+            "tile6Trait": "@trait.DefaultTopProductsChart",
+            "tile8Trait": "@trait.DefaultAreaChart",
+            "tile7Trait": "@trait.DefaultDonutChart",
             "tile1Trait": "@trait.DefaultKpiStats",
-            "tile3Trait": "@trait.DefaultDistributionChart"
+            "filter4Trait": "@trait.EmptyTile",
+            "tile4Trait": "@trait.DefaultScatter",
+            "toolbar2Trait": "@trait.EmptyTile"
           }
         }
       ],

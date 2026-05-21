@@ -1,6 +1,9 @@
 app std-driver "1.1.0"
 "std-driver — fleet driver primitive tracking license info, hire date, status, assigned vehicle. Lists drivers in `browsing`; opens detail in `viewing_single` with Suspend / Reinstate / Terminate / Assign Vehicle actions. Agents tune the list shape via `config.fields` + `config.itemActions`."
 
+type FieldSpec = { name : string!, label : string, variant : string, icon : string, format : string, key : string, header : string }
+type ItemAction = { label : string!, event : string!, variant : string, icon : string }
+
 orbital DriverOrbital {
   entity Driver [persistent: drivers] {
     id                : string!
@@ -24,7 +27,7 @@ orbital DriverOrbital {
       title       : string   = "Drivers"
         @label "Section title"
         @description "Heading shown above the fleet driver roster"
-      fields      : [object] = [
+      fields      : [FieldSpec] = [
         { name: "name",              label: "Name",    variant: "caption" },
         { name: "licenseNumber",     label: "License", variant: "caption" },
         { name: "licenseClass",      label: "Class",   variant: "badge"   },
@@ -34,7 +37,7 @@ orbital DriverOrbital {
       ]
         @label "Columns to show"
         @description "Each column maps to one field on the Driver entity"
-      itemActions : [object] = [
+      itemActions : [ItemAction] = [
         { label: "Open",    event: "OPEN_DRIVER", variant: "primary", icon: "arrow-right" },
         { label: "Suspend", event: "SUSPEND",     variant: "danger" }
       ]

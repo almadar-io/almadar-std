@@ -1,6 +1,8 @@
 app std-cascade-on-delete "1.0.0"
 "std-cascade-on-delete — relational `owns` cascade coordinator. Listens for a parent-deleted sentinel (`ParentDeleted` — rename via traitOverrides.events to the consumer's actual parent-deleted event), fetches dependent rows where `<foreignKeyField> === @payload.data.id` from the FIRST entry of `dependentEntities` (current operator surface has no loop primitive — multi-dependent support is a future extension), and emits `CascadeRowsLoaded` so a consumer trait can persist the deletes. Emits `CascadeCompleted` once the row list is published. Multi-dependent iteration and in-atom persist will land when the operator system supports collection iteration."
 
+type ObjectSpec = { id : string, label : string, value : string }
+
 orbital CascadeOnDeleteOrbital {
   entity CascadeLog [runtime] {
     id           : string!
@@ -10,8 +12,8 @@ orbital CascadeOnDeleteOrbital {
   }
 
   type ParentDeleted      = Event { data : object }                                "Rename via traitOverrides.events to the upstream parent-deleted event (e.g. ContactDeleted). `data.id` carries the parent's primary key."
-  type CascadeRowsFetched = Event { data : [object] }                              "Internal: raw fetch result of dependent rows before re-broadcast."
-  type CascadeRowsLoaded  = Event { parentId : string, data : [object] }           "Dependent row set for the deleted parent — consumer trait persists deletes."
+  type CascadeRowsFetched = Event { data : [ObjectSpec] }                              "Internal: raw fetch result of dependent rows before re-broadcast."
+  type CascadeRowsLoaded  = Event { parentId : string, data : [ObjectSpec] }           "Dependent row set for the deleted parent — consumer trait persists deletes."
   type CascadeCompleted   = Event { parentId : string, deletedCount : number }     "Fired once the dependent row set has been broadcast for cascade handling."
   type CascadeFailed      = Event { error : string, code : string }                "Fired when the dependent fetch fails."
 
@@ -39,14 +41,14 @@ orbital CascadeOnDeleteOrbital {
         (emit CascadeCompleted { parentId: "@entity.parentId", deletedCount: "@entity.rowCount" })
     }
     emits {
-      CascadeRowsFetched -> external { data : [object] }
-      CascadeRowsLoaded  -> external { parentId : string, data : [object] }
+      CascadeRowsFetched -> external { data : [ObjectSpec] }
+      CascadeRowsLoaded  -> external { parentId : string, data : [ObjectSpec] }
       CascadeCompleted   -> external { parentId : string, deletedCount : number }
       CascadeFailed      -> external { error : string, code : string }
     }
     listens {
       ParentDeleted      { data : object }
-      CascadeRowsFetched { data : [object] }
+      CascadeRowsFetched { data : [ObjectSpec] }
     }
   }
   page "/cascade-on-delete" as CascadeOnDeletePage -> CascadeOnDeleteGate

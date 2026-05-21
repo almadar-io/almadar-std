@@ -1,11 +1,14 @@
 app std-rich-editor "1.0.0"
 "std-rich-editor — wiki/CMS Notion-style block editor. Browses documents in `browsing`; opens the rich-block-editor on a selected row; persists block edits + publish status."
 
+type BlockSpec = { type : string!, content : string, id : string }
+type ObjectSpec = { id : string, label : string, value : string }
+
 orbital DocumentOrbital {
   entity Document [persistent: documents] {
     id         : string!
     title      : string!
-    blocksJson : [object]
+    blocksJson : [BlockSpec]
     authorId   : string
     parentId   : string
     kind       : "page" | "doc" | "post" = "page"
@@ -85,7 +88,7 @@ orbital DocumentOrbital {
     emits {
       OPEN          { id : string!, row : Document }
       CLOSE_VIEW    { }
-      BLOCKS_CHANGE { blocks : [object] }
+      BLOCKS_CHANGE { blocks : [ObjectSpec] }
       SAVE          { id : string! }
       PUBLISH       { id : string! }
       DocumentLoaded     { data : [Document] }
@@ -97,7 +100,7 @@ orbital DocumentOrbital {
     listens {
       OPEN          { id : string!, row : Document }
       CLOSE_VIEW    { }
-      BLOCKS_CHANGE { blocks : [object] }
+      BLOCKS_CHANGE { blocks : [ObjectSpec] }
       SAVE          { id : string! }
       PUBLISH       { id : string! }
       DocumentLoaded     { data : [Document] }

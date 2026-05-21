@@ -1,6 +1,8 @@
 app std-embedded-dashboard "1.4.0"
 "Use for any analytics/BI dashboard (KPIs + charts + filters + export). Every preset tile and every layout slot is config-driven; callers can swap chart types, fields, aggregations, sort, drill events, tile layout, nav, and toolbar/filter wiring without touching the .orb. DefaultDataSource fetches the (rebindable) entity and emits ITEMS_LOADED — chart traits consume it via the bus, so rebinding entityName threads through the actual data fetch."
 
+type ObjectSpec = { id : string, label : string, value : string }
+
 orbital DashboardOrbital {
   uses Layout    from "std/behaviors/std-dashboard-grid-embedded"
   uses Stats     from "std/behaviors/std-stats"
@@ -34,7 +36,7 @@ orbital DashboardOrbital {
         (render-ui main { type: "box" })
     }
     emits {
-      ITEMS_LOADED                  { data : [object], totalCount : number }
+      ITEMS_LOADED                  { data : [ObjectSpec], totalCount : number }
       ITEMS_LOAD_FAILED -> external { error : string }
     }
     listens {

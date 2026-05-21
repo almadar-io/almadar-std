@@ -73,9 +73,9 @@ export interface StdCascadeOnDeleteConfig {
   /** Default: `[]` */
   dependentEntities?: string[];
   /** Default: `""` */
-  parentEntity?: string;
-  /** Default: `""` */
   foreignKeyField?: string;
+  /** Default: `""` */
+  parentEntity?: string;
 }
 
 /**

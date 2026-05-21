@@ -1,6 +1,8 @@
 app std-recurrence "2.1.0"
 "std-recurrence — recurring-rule definition + upcoming runs (Stripe Subscriptions / Cron Hub style). The viewing state shows a plain-English rule sentence and the next N dated runs as an agenda timeline. Per-run exception modal supports skip / reschedule. Topology = loading / defining_rule / viewing / awaiting_exception_decision / cancelled / error."
 
+type ObjectSpec = { id : string, label : string, value : string }
+
 orbital RecurrenceOrbital {
   type OccurrenceItem = {
     id          : string!
@@ -31,7 +33,7 @@ orbital RecurrenceOrbital {
     errorMessage           : string = ""
   }
 
-  type RecurrenceLoaded     = Event { data : [object] }                "Fired when occurrences finish loading"
+  type RecurrenceLoaded     = Event { data : [ObjectSpec] }                "Fired when occurrences finish loading"
   type RecurrenceLoadFailed = Event { error : string, code : string }  "Fired when fetch fails"
   type RecurrenceSaved      = Event { row : object }                   "Fired when a recurrence rule has been persisted"
   type RecurrenceSaveFailed = Event { error : string, code : string }  "Fired when persist fails"
@@ -125,7 +127,7 @@ orbital RecurrenceOrbital {
       RESCHEDULE_OCCURRENCE { id : string, newDate : string }
       CANCEL_SCHEDULE       { }
       RESTART               { }
-      RecurrenceLoaded      { data : [object] }
+      RecurrenceLoaded      { data : [ObjectSpec] }
       RecurrenceLoadFailed  { error : string, code : string }
       RecurrenceSaved       { row : object }
       RecurrenceSaveFailed  { error : string, code : string }
@@ -140,7 +142,7 @@ orbital RecurrenceOrbital {
       RESCHEDULE_OCCURRENCE { id : string, newDate : string }
       CANCEL_SCHEDULE       { }
       RESTART               { }
-      RecurrenceLoaded      { data : [object] }
+      RecurrenceLoaded      { data : [ObjectSpec] }
       RecurrenceLoadFailed  { error : string, code : string }
       RecurrenceSaved       { row : object }
       RecurrenceSaveFailed  { error : string, code : string }

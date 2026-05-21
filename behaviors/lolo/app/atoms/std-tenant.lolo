@@ -1,6 +1,9 @@
 app std-tenant "1.1.0"
 "std-tenant — person/company occupying a leased unit. Lists tenants in `browsing`; opens tenant detail (name, contact, lease, move-in/out dates, status) in `viewing_single` with Activate / Move Out actions. Agents tune the list shape via `config.fields` + `config.itemActions`."
 
+type FieldSpec = { name : string!, label : string, variant : string, icon : string, format : string, key : string, header : string }
+type ItemAction = { label : string!, event : string!, variant : string, icon : string }
+
 orbital TenantOrbital {
   entity Tenant [persistent: tenants] {
     id : string!
@@ -21,10 +24,10 @@ orbital TenantOrbital {
       title : string = "Tenants"
         @label "Section title"
         @description "Heading shown above the tenant directory"
-      fields      : [object] = [{ name: "name", label: "Name", variant: "h4" }, { name: "email", label: "Email", variant: "body" }, { name: "phone", label: "Phone", variant: "caption" }, { name: "status", label: "Status", variant: "badge" }, { name: "moveInDate", label: "Move-In", variant: "caption" }]
+      fields      : [FieldSpec] = [{ name: "name", label: "Name", variant: "h4" }, { name: "email", label: "Email", variant: "body" }, { name: "phone", label: "Phone", variant: "caption" }, { name: "status", label: "Status", variant: "badge" }, { name: "moveInDate", label: "Move-In", variant: "caption" }]
         @label "Columns to show"
         @description "Each column maps to one field on the Tenant entity"
-      itemActions : [object] = [{ label: "Open", event: "OPEN_TENANT", variant: "primary", icon: "arrow-right" }, { label: "Move Out", event: "MOVE_OUT", variant: "danger" }]
+      itemActions : [ItemAction] = [{ label: "Open", event: "OPEN_TENANT", variant: "primary", icon: "arrow-right" }, { label: "Move Out", event: "MOVE_OUT", variant: "danger" }]
         @label "Row actions"
         @description "Buttons users can click on each tenant row"
     }

@@ -1,6 +1,9 @@
 app std-warehouse "1.1.0"
 "std-warehouse — physical or logical storage location. Lists warehouses in `browsing`; opens a warehouse detail view (name, code, address, type, active flag, total SKU count) in `viewing_single`. Agents tune the list shape via `config.fields` + `config.itemActions`."
 
+type FieldSpec = { name : string!, label : string, variant : string, icon : string, format : string, key : string, header : string }
+type ItemAction = { label : string!, event : string!, variant : string, icon : string }
+
 orbital WarehouseOrbital {
   entity Warehouse [persistent: warehouses] {
     id        : string!
@@ -20,10 +23,10 @@ orbital WarehouseOrbital {
       title : string = "Locations"
         @label "Section title"
         @description "Heading shown above the storage locations list"
-      fields      : [object] = [{ name: "code", label: "Code", variant: "caption" }, { name: "name", label: "Name", variant: "caption" }, { name: "type", label: "Type", variant: "badge" }, { name: "totalSkus", label: "SKUs", variant: "caption" }, { name: "isActive", label: "Active", variant: "badge" }]
+      fields      : [FieldSpec] = [{ name: "code", label: "Code", variant: "caption" }, { name: "name", label: "Name", variant: "caption" }, { name: "type", label: "Type", variant: "badge" }, { name: "totalSkus", label: "SKUs", variant: "caption" }, { name: "isActive", label: "Active", variant: "badge" }]
         @label "Columns to show"
         @description "Each column maps to one field on the Warehouse entity"
-      itemActions : [object] = [{ label: "Open", event: "OPEN_WAREHOUSE", variant: "primary", icon: "arrow-right" }]
+      itemActions : [ItemAction] = [{ label: "Open", event: "OPEN_WAREHOUSE", variant: "primary", icon: "arrow-right" }]
         @label "Row actions"
         @description "Buttons users can click on each location row"
     }

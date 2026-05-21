@@ -1,6 +1,8 @@
 app std-stats "3.0.0"
 "std-stats — embeddable analytics-card atom. ITEMS_LOADED aggregates @payload.data per @config.metrics (count|sum|avg|min|max|variance with optional filter, baselineFilter, format, icon, max, target, trend, trendPolarity, sparkline) and renders one stat-display per entry. Variance metrics compute actual - baseline using `filter` + `baselineFilter` lambdas and report the signed delta as trend. clickEvent emits UI:{clickEvent} { metricLabel } when a card is clicked. Drop into a dashboard alongside std-browse / std-search / std-filter."
 
+type ObjectSpec = { id : string, label : string, value : string }
+
 orbital StatsItemOrbital {
   type StatCard = {
     label          : string!
@@ -131,7 +133,7 @@ orbital StatsItemOrbital {
         (render-ui main { type: "@config.viewPattern", entity: "@entity.cards", fields: [], renderItem: ["fn", "card", { type: "stat-display", label: "@card.label", value: "@card.value", icon: "@card.icon", format: "@card.format", variant: "@card.variant", prefix: "@card.prefix", suffix: "@card.suffix", max: "@card.max", target: "@card.target", trend: "@card.trend", trendPolarity: "@card.trendPolarity", trendFormat: "@card.trendFormat", sparklineData: "@card.sparklineData", clickEvent: "@card.clickEvent" }] })
     }
     listens {
-      ITEMS_LOADED { data : [object], totalCount : number }
+      ITEMS_LOADED { data : [ObjectSpec], totalCount : number }
     }
   }
   page "/statsitems" as StatsItemStatsPage -> StatsItemStats

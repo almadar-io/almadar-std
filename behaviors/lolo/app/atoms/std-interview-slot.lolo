@@ -1,6 +1,9 @@
 app std-interview-slot "1.1.0"
 "std-interview-slot — scheduled interview between an applicant and one or more interviewers, with date/time, format, and status. Agents tune the list shape via `config.fields` + `config.itemActions`."
 
+type FieldSpec = { name : string!, label : string, variant : string, icon : string, format : string, key : string, header : string }
+type ItemAction = { label : string!, event : string!, variant : string, icon : string }
+
 orbital InterviewSlotOrbital {
   entity InterviewSlot [persistent: interviewslots] {
     id              : string!
@@ -22,7 +25,7 @@ orbital InterviewSlotOrbital {
       title       : string   = "Interviews"
         @label "Section title"
         @description "Heading shown above the interview schedule"
-      fields      : [object] = [
+      fields      : [FieldSpec] = [
         { name: "applicantName",   label: "Applicant",   variant: "caption" },
         { name: "interviewerName", label: "Interviewer", variant: "caption" },
         { name: "scheduledAt",     label: "Scheduled",   variant: "caption" },
@@ -31,7 +34,7 @@ orbital InterviewSlotOrbital {
       ]
         @label "Columns to show"
         @description "Each column maps to one field on the Interview Slot entity"
-      itemActions : [object] = [
+      itemActions : [ItemAction] = [
         { label: "Open",   event: "OPEN_INTERVIEW",   variant: "primary", icon: "arrow-right" },
         { label: "Cancel", event: "CANCEL_INTERVIEW", variant: "danger" }
       ]

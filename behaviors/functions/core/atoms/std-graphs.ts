@@ -39,44 +39,44 @@ export type StdGraphsEventKey = 'INIT' | 'ITEMS_LOADED';
  * without modifying its state-machine topology.
  */
 export interface StdGraphsConfig {
-  /** Default: `false` */
-  showValues?: boolean;
-  /** Default: `"none"` */
-  stack?: 'none' | 'stack' | 'normalize';
-  /** Default: `[]` */
-  series?: EntityRow[];
-  /** Default: `"desc"` */
-  sortDir?: 'asc' | 'desc';
-  /** Default: `280` */
-  height?: number;
-  /** Default: `"bar"` */
-  chartType?: 'bar' | 'line' | 'pie' | 'area' | 'donut' | 'histogram' | 'scatter';
-  /** Default: `false` */
-  timeAxis?: boolean;
-  /** Default: `"date"` */
-  timeField?: string;
-  /** Default: `"chart"` */
-  viewPattern?: unknown;
-  /** Default: `0` */
-  limit?: number;
   /** Default: `"none"` */
   sortField?: 'value' | 'label' | 'none';
-  /** Default: `"Counts per category"` */
-  subtitle?: string;
-  /** Default: `""` */
-  drillEvent?: string;
-  /** Default: `"count"` */
-  aggregation?: 'count' | 'sum' | 'avg' | 'min' | 'max';
+  /** Default: `"none"` */
+  stack?: 'none' | 'stack' | 'normalize';
+  /** Default: `"bar"` */
+  chartType?: 'bar' | 'line' | 'pie' | 'area' | 'donut' | 'histogram' | 'scatter';
   /** Default: `"Distribution"` */
   title?: string;
-  /** Default: `"month"` */
-  period?: 'day' | 'week' | 'month' | 'quarter' | 'year';
   /** Default: `""` */
-  valueField?: string;
-  /** Default: `"status"` */
-  categoryField?: string;
+  drillEvent?: string;
   /** Default: `true` */
   showLegend?: boolean;
+  /** Default: `[]` */
+  series?: EntityRow[];
+  /** Default: `"status"` */
+  categoryField?: string;
+  /** Default: `"month"` */
+  period?: 'day' | 'week' | 'month' | 'quarter' | 'year';
+  /** Default: `0` */
+  limit?: number;
+  /** Default: `false` */
+  timeAxis?: boolean;
+  /** Default: `"Counts per category"` */
+  subtitle?: string;
+  /** Default: `false` */
+  showValues?: boolean;
+  /** Default: `"chart"` */
+  viewPattern?: unknown;
+  /** Default: `"date"` */
+  timeField?: string;
+  /** Default: `280` */
+  height?: number;
+  /** Default: `""` */
+  valueField?: string;
+  /** Default: `"count"` */
+  aggregation?: 'count' | 'sum' | 'avg' | 'min' | 'max';
+  /** Default: `"desc"` */
+  sortDir?: 'asc' | 'desc';
 }
 
 /**

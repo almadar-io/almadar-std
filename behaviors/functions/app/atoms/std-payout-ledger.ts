@@ -88,12 +88,12 @@ export interface StdPayoutLedgerPayoutLoadFailedPayload {
 export interface StdPayoutLedgerConfig {
   /** Default: `"Payouts"` */
   title?: string;
-  /** Default: `[{"label":"Open","icon":"arrow-right","variant":"primary","event":"OPEN_PAYOUT"},{"label":"Withdraw","event":"REQUEST_WITHDRAW","variant":"danger"}]` */
-  itemActions?: TraitConfig[];
+  /** Default: `[{"name":"vendorId","label":"Vendor","variant":"caption"},{"name":"amount","label":"Amount","variant":"caption"},{"name":"currency","label":"Currency","variant":"badge"},{"variant":"badge","name":"status","label":"Status"},{"label":"Bank","variant":"caption","name":"bankAccountMasked"},{"name":"requestedAt","label":"Requested","variant":"caption"}]` */
+  fields?: EntityRow[];
   /** Default: `50` */
   minimumWithdrawal?: number;
-  /** Default: `[{"label":"Vendor","variant":"caption","name":"vendorId"},{"variant":"caption","name":"amount","label":"Amount"},{"name":"currency","label":"Currency","variant":"badge"},{"label":"Status","name":"status","variant":"badge"},{"name":"bankAccountMasked","variant":"caption","label":"Bank"},{"label":"Requested","variant":"caption","name":"requestedAt"}]` */
-  fields?: TraitConfig[];
+  /** Default: `[{"event":"OPEN_PAYOUT","variant":"primary","label":"Open","icon":"arrow-right"},{"event":"REQUEST_WITHDRAW","variant":"danger","label":"Withdraw"}]` */
+  itemActions?: EntityRow[];
 }
 
 /**

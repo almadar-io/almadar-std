@@ -166,14 +166,14 @@ export interface StdInvoiceInvoiceRefundFailedPayload {
  * without modifying its state-machine topology.
  */
 export interface StdInvoiceConfig {
-  /** Default: `[{"name":"invoiceNumber","label":"Invoice #","variant":"caption"},{"variant":"caption","name":"customerId","label":"Customer"},{"label":"Status","variant":"badge","name":"status"},{"variant":"caption","name":"total","label":"Total"},{"label":"Currency","name":"currency","variant":"badge"},{"variant":"caption","name":"dueAt","label":"Due"}]` */
-  fields?: TraitConfig[];
+  /** Default: `[{"label":"Invoice #","variant":"caption","name":"invoiceNumber"},{"name":"customerId","label":"Customer","variant":"caption"},{"name":"status","label":"Status","variant":"badge"},{"label":"Total","variant":"caption","name":"total"},{"name":"currency","label":"Currency","variant":"badge"},{"variant":"caption","label":"Due","name":"dueAt"}]` */
+  fields?: EntityRow[];
+  /** Default: `[{"event":"OPEN_INVOICE","icon":"arrow-right","label":"Open","variant":"primary"},{"variant":"danger","icon":"x","label":"Void","event":"VOID"}]` */
+  itemActions?: EntityRow[];
   /** Default: `"[]"` */
   refundTiersJson?: string;
   /** Default: `"Invoices"` */
   title?: string;
-  /** Default: `[{"icon":"arrow-right","label":"Open","event":"OPEN_INVOICE","variant":"primary"},{"variant":"danger","event":"VOID","icon":"x","label":"Void"}]` */
-  itemActions?: TraitConfig[];
 }
 
 /**

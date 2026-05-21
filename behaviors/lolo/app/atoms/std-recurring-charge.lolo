@@ -1,6 +1,9 @@
 app std-recurring-charge "1.1.0"
 "std-recurring-charge — subscription cycle clock. Lists subscriptions in `browsing`; opens detail in `viewing_single` with Charge / Cancel actions. Agents tune the list shape via `config.fields` + `config.itemActions`."
 
+type FieldSpec = { name : string!, label : string, variant : string, icon : string, format : string, key : string, header : string }
+type ItemAction = { label : string!, event : string!, variant : string, icon : string }
+
 orbital SubscriptionOrbital {
   entity Subscription [persistent: subscriptions] {
     id                 : string!
@@ -30,7 +33,7 @@ orbital SubscriptionOrbital {
       maxRetries  : number   = 4
         @label "Max retry attempts"
         @description "How many times a failed charge retries before going past-due"
-      fields      : [object] = [
+      fields      : [FieldSpec] = [
         { name: "customerId",    label: "Customer",  variant: "caption" },
         { name: "planId",        label: "Plan",      variant: "caption" },
         { name: "status",        label: "Status",    variant: "badge"   },
@@ -41,7 +44,7 @@ orbital SubscriptionOrbital {
       ]
         @label "Columns to show"
         @description "Each column maps to one field on the Subscription entity"
-      itemActions : [object] = [
+      itemActions : [ItemAction] = [
         { label: "Open",   event: "OPEN_SUBSCRIPTION", variant: "primary", icon: "arrow-right" },
         { label: "Cancel", event: "CANCEL",            variant: "danger" }
       ]

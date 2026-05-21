@@ -132,25 +132,25 @@
                     "render-ui",
                     "main",
                     {
-                      "notificationClickEvent": "@config.notificationClickEvent",
-                      "layoutMode": "@config.layoutMode",
-                      "navItems": "@config.navItems",
-                      "topBarActions": "@config.topBarActions",
-                      "appName": "@config.appName",
                       "type": "@config.layoutPattern",
-                      "searchEvent": "@config.searchEvent",
-                      "notifications": "@config.notifications",
+                      "notificationClickEvent": "@config.notificationClickEvent",
+                      "topBarActions": "@config.topBarActions",
                       "children": [
                         {
+                          "direction": "vertical",
+                          "className": "max-w-5xl mx-auto w-full",
+                          "type": "stack",
+                          "gap": "lg",
                           "children": [
                             "@config.contentTrait"
-                          ],
-                          "gap": "lg",
-                          "direction": "vertical",
-                          "type": "stack",
-                          "className": "max-w-5xl mx-auto w-full"
+                          ]
                         }
-                      ]
+                      ],
+                      "appName": "@config.appName",
+                      "notifications": "@config.notifications",
+                      "navItems": "@config.navItems",
+                      "searchEvent": "@config.searchEvent",
+                      "layoutMode": "@config.layoutMode"
                     }
                   ]
                 ]
@@ -179,40 +179,40 @@
           },
           "config": {
             "topBarActions": {
-              "type": "[object]",
+              "type": "[ItemAction]",
               "default": [],
               "label": "Top-bar actions",
               "description": "Icon buttons shown on the right side of the top bar",
               "items": {
-                "type": "object"
+                "type": "object",
+                "properties": {
+                  "event": {
+                    "name": "event",
+                    "type": "string",
+                    "required": true
+                  },
+                  "label": {
+                    "name": "label",
+                    "type": "string",
+                    "required": true
+                  },
+                  "variant": {
+                    "name": "variant",
+                    "type": "string",
+                    "required": false
+                  },
+                  "icon": {
+                    "name": "icon",
+                    "type": "string",
+                    "required": false
+                  }
+                }
               }
             },
-            "notifications": {
-              "type": "[object]",
-              "default": [],
-              "label": "Notifications",
-              "description": "Items shown in the notifications dropdown",
-              "items": {
-                "type": "object"
-              }
-            },
-            "searchEvent": {
-              "type": "string",
-              "default": "SEARCH",
-              "label": "Search event",
-              "description": "Event emitted when the user runs a global search"
-            },
-            "notificationClickEvent": {
-              "type": "string",
-              "default": "NOTIFY_CLICK",
-              "label": "Notification click event",
-              "description": "Event emitted when the user picks a notification"
-            },
-            "layoutPattern": {
-              "type": "pattern",
-              "default": "dashboard-layout",
-              "label": "Layout pattern",
-              "description": "UI pattern used to render the application chrome"
+            "contentTrait": {
+              "type": "trait",
+              "label": "Content trait",
+              "description": "Trait rendered inside the app layout content area"
             },
             "layoutMode": {
               "type": "string",
@@ -226,6 +226,12 @@
                 "minimal"
               ]
             },
+            "layoutPattern": {
+              "type": "pattern",
+              "default": "dashboard-layout",
+              "label": "Layout pattern",
+              "description": "UI pattern used to render the application chrome"
+            },
             "detailSlot": {
               "type": "slot",
               "default": "modal",
@@ -238,19 +244,74 @@
               "label": "App name",
               "description": "Product name shown in the chrome header"
             },
+            "searchEvent": {
+              "type": "string",
+              "default": "SEARCH",
+              "label": "Search event",
+              "description": "Event emitted when the user runs a global search"
+            },
+            "notifications": {
+              "type": "[NotificationSpec]",
+              "default": [],
+              "label": "Notifications",
+              "description": "Items shown in the notifications dropdown",
+              "items": {
+                "type": "object",
+                "properties": {
+                  "message": {
+                    "name": "message",
+                    "type": "string",
+                    "required": false
+                  },
+                  "variant": {
+                    "name": "variant",
+                    "type": "string",
+                    "required": false
+                  },
+                  "id": {
+                    "name": "id",
+                    "type": "string",
+                    "required": false
+                  }
+                }
+              }
+            },
+            "notificationClickEvent": {
+              "type": "string",
+              "default": "NOTIFY_CLICK",
+              "label": "Notification click event",
+              "description": "Event emitted when the user picks a notification"
+            },
             "navItems": {
-              "type": "[object]",
+              "type": "[NavItem]",
               "default": [],
               "label": "Sidebar links",
               "description": "Top-level nav entries on the left rail",
               "items": {
-                "type": "object"
+                "type": "object",
+                "properties": {
+                  "label": {
+                    "name": "label",
+                    "type": "string",
+                    "required": true
+                  },
+                  "icon": {
+                    "name": "icon",
+                    "type": "string",
+                    "required": false
+                  },
+                  "badge": {
+                    "name": "badge",
+                    "type": "string",
+                    "required": false
+                  },
+                  "href": {
+                    "name": "href",
+                    "type": "string",
+                    "required": true
+                  }
+                }
               }
-            },
-            "contentTrait": {
-              "type": "trait",
-              "label": "Content trait",
-              "description": "Trait rendered inside the app layout content area"
             }
           },
           "scope": "instance"

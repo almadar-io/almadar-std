@@ -1,6 +1,9 @@
 app std-template-editor "1.1.0"
 "std-template-editor — message template authoring primitive. Lists templates in `browsing`; opens detail in `viewing_single` with Edit / Save / Delete actions. Agents tune the list shape via `config.fields` + `config.itemActions`."
 
+type FieldSpec = { name : string!, label : string, variant : string, icon : string, format : string, key : string, header : string }
+type ItemAction = { label : string!, event : string!, variant : string, icon : string }
+
 orbital MessageTemplateOrbital {
   entity MessageTemplate [persistent: messagetemplates] {
     id           : string!
@@ -20,10 +23,10 @@ orbital MessageTemplateOrbital {
       title : string = "Templates"
         @label "Section title"
         @description "Heading shown above the message template list"
-      fields      : [object] = [{ name: "name", label: "Name", variant: "caption" }, { name: "channel", label: "Channel", variant: "badge" }, { name: "subject", label: "Subject", variant: "caption" }, { name: "lastEditedAt", label: "Updated", variant: "caption" }]
+      fields      : [FieldSpec] = [{ name: "name", label: "Name", variant: "caption" }, { name: "channel", label: "Channel", variant: "badge" }, { name: "subject", label: "Subject", variant: "caption" }, { name: "lastEditedAt", label: "Updated", variant: "caption" }]
         @label "Columns to show"
         @description "Each column maps to one field on the Message Template entity"
-      itemActions : [object] = [{ label: "Open", event: "OPEN_TEMPLATE", variant: "primary", icon: "arrow-right" }, { label: "Delete", event: "DELETE_TEMPLATE", variant: "danger" }]
+      itemActions : [ItemAction] = [{ label: "Open", event: "OPEN_TEMPLATE", variant: "primary", icon: "arrow-right" }, { label: "Delete", event: "DELETE_TEMPLATE", variant: "danger" }]
         @label "Row actions"
         @description "Buttons users can click on each template row"
     }

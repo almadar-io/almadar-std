@@ -1,6 +1,9 @@
 app std-modifier-group "1.1.0"
 "std-modifier-group — restaurant menu item customization groups with required/optional/multi-select constraints. Owns a ModifierGroupRecord entity (constraint type, min/max selections, serialized options) and a single manage trait that loads groups, browses them in a data-grid with Create / Update / Delete actions, and persists each verdict back to the row. Agents tune the list shape via `config.fields` + `config.itemActions`."
 
+type FieldSpec = { name : string!, label : string, variant : string, icon : string, format : string, key : string, header : string }
+type ItemAction = { label : string!, event : string!, variant : string, icon : string }
+
 orbital ModifierGroupOrbital {
   entity ModifierGroupRecord [persistent: modifiergroups] {
     id             : string!
@@ -24,7 +27,7 @@ orbital ModifierGroupOrbital {
       title       : string   = "Modifier Groups"
         @label "Section title"
         @description "Heading shown above the menu customization groups"
-      fields      : [object] = [
+      fields      : [FieldSpec] = [
         { name: "name",           label: "Group",      variant: "caption" },
         { name: "constraintType", label: "Constraint", variant: "badge"   },
         { name: "required",       label: "Required",   variant: "badge"   },
@@ -33,7 +36,7 @@ orbital ModifierGroupOrbital {
       ]
         @label "Columns to show"
         @description "Each column maps to one field on the Modifier Group entity"
-      itemActions : [object] = [
+      itemActions : [ItemAction] = [
         { label: "Open",   event: "OPEN_GROUP", variant: "primary", icon: "arrow-right" },
         { label: "Delete", event: "DELETE",     variant: "danger",  icon: "trash" }
       ]

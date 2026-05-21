@@ -1,6 +1,9 @@
 app std-segment "1.1.0"
 "std-segment — contact segment primitive. Defines a filter criteria for grouping contacts. Lists segments in `browsing`; opens segment detail in `viewing_single` with Recalculate action. Agents tune the list shape via `config.fields` + `config.itemActions`."
 
+type FieldSpec = { name : string!, label : string, variant : string, icon : string, format : string, key : string, header : string }
+type ItemAction = { label : string!, event : string!, variant : string, icon : string }
+
 orbital SegmentOrbital {
   entity Segment [persistent: segments] {
     id           : string!
@@ -19,10 +22,10 @@ orbital SegmentOrbital {
       title : string = "Segments"
         @label "Section title"
         @description "Heading shown above the segment list"
-      fields      : [object] = [{ name: "name", label: "Name", variant: "caption" }, { name: "description", label: "Description", variant: "caption" }, { name: "memberCount", label: "Members", variant: "badge" }, { name: "lastUpdated", label: "Updated", variant: "caption" }]
+      fields      : [FieldSpec] = [{ name: "name", label: "Name", variant: "caption" }, { name: "description", label: "Description", variant: "caption" }, { name: "memberCount", label: "Members", variant: "badge" }, { name: "lastUpdated", label: "Updated", variant: "caption" }]
         @label "Columns to show"
         @description "Each column maps to one field on the Segment entity"
-      itemActions : [object] = [{ label: "Open", event: "OPEN_SEGMENT", variant: "primary", icon: "arrow-right" }, { label: "Recalculate", event: "RECALCULATE", variant: "danger" }]
+      itemActions : [ItemAction] = [{ label: "Open", event: "OPEN_SEGMENT", variant: "primary", icon: "arrow-right" }, { label: "Recalculate", event: "RECALCULATE", variant: "danger" }]
         @label "Row actions"
         @description "Buttons users can click on each segment row"
     }

@@ -1,6 +1,9 @@
 app std-drip-sequence "1.1.0"
 "std-drip-sequence — ordered email drip campaign primitive. Lists sequences in `browsing`; opens detail in `viewing_single` with Activate / Pause / Archive actions. Agents tune the list shape via `config.fields` + `config.itemActions`."
 
+type FieldSpec = { name : string!, label : string, variant : string, icon : string, format : string, key : string, header : string }
+type ItemAction = { label : string!, event : string!, variant : string, icon : string }
+
 orbital DripSequenceOrbital {
   entity DripSequence [persistent: dripsequences] {
     id             : string!
@@ -21,7 +24,7 @@ orbital DripSequenceOrbital {
       title       : string   = "Drip Sequences"
         @label "Section title"
         @description "Heading shown above the drip campaign list"
-      fields      : [object] = [
+      fields      : [FieldSpec] = [
         { name: "name",           label: "Name",        variant: "caption" },
         { name: "description",    label: "Description", variant: "caption" },
         { name: "triggerEvent",   label: "Trigger",     variant: "caption" },
@@ -31,7 +34,7 @@ orbital DripSequenceOrbital {
       ]
         @label "Columns to show"
         @description "Each column maps to one field on the Drip Sequence entity"
-      itemActions : [object] = [
+      itemActions : [ItemAction] = [
         { label: "Open",  event: "OPEN_SEQUENCE", variant: "primary", icon: "arrow-right" },
         { label: "Pause", event: "PAUSE",         variant: "danger" }
       ]

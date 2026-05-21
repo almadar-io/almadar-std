@@ -1,6 +1,9 @@
 app std-multi-party-flow "3.0.1"
 "std-multi-party-flow — Escrow.com / DocuSign / Stripe Connect style multi-party transaction. Header + summary (subject/amount/reference) + named parties (avatar/role/actor) + stage progress + your-turn panel + activity feed + dispute/cancel escape hatches. Topology = loading / awaiting / capturing_dispute / capturing_cancel / funded / released / disputed / cancelled / error."
 
+type ObjectSpec = { id : string, label : string, value : string }
+type PartySpec = { id : string, name : string, role : string }
+
 orbital MultiPartyFlowOrbital {
   type PartyView = {
     id          : string!
@@ -40,7 +43,7 @@ orbital MultiPartyFlowOrbital {
     errorMessage          : string = ""
   }
 
-  type FlowLoaded     = Event { data : [object] }                "Fired when flow context finishes loading"
+  type FlowLoaded     = Event { data : [ObjectSpec] }                "Fired when flow context finishes loading"
   type FlowLoadFailed = Event { error : string, code : string }  "Fired when fetch fails"
   type FlowSaved      = Event { row : object }                   "Fired when a transition has been persisted"
   type FlowSaveFailed = Event { error : string, code : string }  "Fired when persist fails"
@@ -59,7 +62,7 @@ orbital MultiPartyFlowOrbital {
       transactionReference : string = "TXN-A8B2C-2024-001"
         @label "Reference"
         @description "External identifier shown in the summary"
-      parties              : [object] = [
+      parties              : [PartySpec] = [
         { id: "buyer",  title: "Buyer",  description: "Funds the transaction and confirms receipt of the vehicle.", icon: "user",        actionLabel: "Confirm payment",  actionIcon: "credit-card", actor: "Alice Chen",          actionDescription: "Authorize $28,500 to be held in escrow until delivery is confirmed.",            stepLabel: "Step 1 of 2" },
         { id: "seller", title: "Seller", description: "Ships the vehicle and uploads delivery proof.",              icon: "user-check",  actionLabel: "Confirm shipment", actionIcon: "package",     actor: "Bob's Auto Sales LLC", actionDescription: "Mark the vehicle as shipped. Funds will release after the buyer confirms receipt.", stepLabel: "Step 2 of 2" }
       ]
@@ -244,7 +247,7 @@ orbital MultiPartyFlowOrbital {
       CANCEL_REASON          { }
       RELEASE                { }
       RESTART                { }
-      FlowLoaded             { data : [object] }
+      FlowLoaded             { data : [ObjectSpec] }
       FlowLoadFailed         { error : string, code : string }
     }
     listens {
@@ -256,7 +259,7 @@ orbital MultiPartyFlowOrbital {
       CANCEL_REASON          { }
       RELEASE                { }
       RESTART                { }
-      FlowLoaded             { data : [object] }
+      FlowLoaded             { data : [ObjectSpec] }
       FlowLoadFailed         { error : string, code : string }
       FlowSaved              { row : object }
       FlowSaveFailed         { error : string, code : string }

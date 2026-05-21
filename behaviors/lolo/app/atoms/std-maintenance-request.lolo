@@ -1,6 +1,9 @@
 app std-maintenance-request "1.1.0"
 "std-maintenance-request — tenant-submitted request lifecycle (open → scheduled → in_progress → completed). Request-flow primitive (distinct from work-order's dispatch-flow). Agents tune the list shape via `config.fields` + `config.itemActions`."
 
+type FieldSpec = { name : string!, label : string, variant : string, icon : string, format : string, key : string, header : string }
+type ItemAction = { label : string!, event : string!, variant : string, icon : string }
+
 orbital MaintenanceRequestOrbital {
   entity MaintenanceRequest [persistent: maintenancerequests] {
     id            : string!
@@ -27,7 +30,7 @@ orbital MaintenanceRequestOrbital {
       title       : string   = "Maintenance Requests"
         @label "Section title"
         @description "Heading shown above the maintenance request queue"
-      fields      : [object] = [
+      fields      : [FieldSpec] = [
         { name: "unitId",        label: "Unit",        variant: "caption" },
         { name: "requesterName", label: "Requester",   variant: "caption" },
         { name: "description",   label: "Description", variant: "caption" },
@@ -37,7 +40,7 @@ orbital MaintenanceRequestOrbital {
       ]
         @label "Columns to show"
         @description "Each column maps to one field on the Maintenance Request entity"
-      itemActions : [object] = [
+      itemActions : [ItemAction] = [
         { label: "Open",   event: "OPEN_REQUEST",   variant: "primary", icon: "arrow-right" },
         { label: "Cancel", event: "CANCEL_REQUEST", variant: "danger",  icon: "x" }
       ]
