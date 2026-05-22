@@ -61,28 +61,100 @@
         "listenedEvents": [],
         "overridableConfigKeys": [
           {
+            "key": "anonymizeOnRejection",
+            "type": "boolean",
+            "default": false,
+            "label": "Anonymize on rejection",
+            "description": "When true, scrub member PII on no_show / removal. Pair with std-data-erasure.",
+            "tier": "customization"
+          },
+          {
+            "key": "backgroundCheckRequired",
+            "type": "boolean",
+            "default": false,
+            "label": "Background check required",
+            "description": "Block CHECK_IN until a background check is on file (e.g. youth programs).",
+            "tier": "customization"
+          },
+          {
+            "key": "blackoutDates",
+            "type": "[string]",
+            "default": [],
+            "label": "Blackout dates",
+            "description": "ISO dates blocked from booking (e.g. holidays). Compose std-lifecycle to enforce.",
+            "tier": "customization",
+            "items": {
+              "type": "string"
+            }
+          },
+          {
+            "key": "bookingHours",
+            "type": "string",
+            "default": "06:00-22:00",
+            "label": "Booking hours",
+            "description": "Daily window during which enrollments can be made (HH:MM-HH:MM).",
+            "tier": "customization"
+          },
+          {
+            "key": "bookingWindowDays",
+            "type": "number",
+            "default": 30,
+            "label": "Booking window (days)",
+            "description": "How far in advance members can enroll in a class.",
+            "tier": "customization"
+          },
+          {
+            "key": "cancellationPolicy",
+            "type": "string",
+            "default": "free",
+            "label": "Cancellation policy",
+            "description": "Refund treatment when an enrollment is cancelled inside the reschedule window.",
+            "tier": "customization",
+            "enumValues": [
+              "free",
+              "partial-refund",
+              "no-refund"
+            ]
+          },
+          {
+            "key": "eVerifyRequired",
+            "type": "boolean",
+            "default": false,
+            "label": "E-Verify required",
+            "description": "US I-9 / E-Verify gate (relevant for instructor rosters).",
+            "tier": "customization"
+          },
+          {
+            "key": "equalOpportunityTrackingEnabled",
+            "type": "boolean",
+            "default": false,
+            "label": "Equal opportunity tracking",
+            "description": "Capture demographic data separately for EEO reporting (sibling collection).",
+            "tier": "advanced"
+          },
+          {
             "key": "fields",
             "type": "[FieldSpec]",
             "default": [
               {
                 "name": "memberName",
-                "label": "Member",
-                "variant": "caption"
-              },
-              {
-                "name": "sessionId",
-                "label": "Session",
-                "variant": "caption"
-              },
-              {
-                "variant": "badge",
-                "label": "Status",
-                "name": "status"
-              },
-              {
-                "name": "checkedInAt",
                 "variant": "caption",
-                "label": "Checked In"
+                "label": "Member"
+              },
+              {
+                "label": "Session",
+                "variant": "caption",
+                "name": "sessionId"
+              },
+              {
+                "name": "status",
+                "label": "Status",
+                "variant": "badge"
+              },
+              {
+                "label": "Checked In",
+                "variant": "caption",
+                "name": "checkedInAt"
               }
             ],
             "label": "Columns to show",
@@ -90,21 +162,6 @@
             "tier": "customization",
             "items": {
               "properties": {
-                "key": {
-                  "name": "key",
-                  "required": false,
-                  "type": "string"
-                },
-                "name": {
-                  "name": "name",
-                  "required": true,
-                  "type": "string"
-                },
-                "format": {
-                  "name": "format",
-                  "required": false,
-                  "type": "string"
-                },
                 "variant": {
                   "name": "variant",
                   "required": false,
@@ -115,8 +172,23 @@
                   "required": false,
                   "type": "string"
                 },
+                "name": {
+                  "name": "name",
+                  "required": true,
+                  "type": "string"
+                },
                 "icon": {
                   "name": "icon",
+                  "required": false,
+                  "type": "string"
+                },
+                "key": {
+                  "name": "key",
+                  "required": false,
+                  "type": "string"
+                },
+                "format": {
+                  "name": "format",
                   "required": false,
                   "type": "string"
                 },
@@ -130,24 +202,32 @@
             }
           },
           {
+            "key": "i9DocumentsRequired",
+            "type": "boolean",
+            "default": false,
+            "label": "I-9 documents required",
+            "description": "Require I-9 supporting documents (instructor rosters).",
+            "tier": "customization"
+          },
+          {
             "key": "itemActions",
             "type": "[ItemAction]",
             "default": [
               {
-                "event": "OPEN_ENTRY",
                 "variant": "primary",
+                "icon": "arrow-right",
                 "label": "Open",
-                "icon": "arrow-right"
+                "event": "OPEN_ENTRY"
               },
               {
-                "label": "Check In",
                 "event": "CHECK_IN",
+                "label": "Check In",
                 "variant": "secondary"
               },
               {
+                "variant": "danger",
                 "event": "MARK_NO_SHOW",
-                "label": "No Show",
-                "variant": "danger"
+                "label": "No Show"
               }
             ],
             "label": "Row actions",
@@ -160,6 +240,11 @@
                   "required": false,
                   "type": "string"
                 },
+                "event": {
+                  "name": "event",
+                  "required": true,
+                  "type": "string"
+                },
                 "variant": {
                   "name": "variant",
                   "required": false,
@@ -169,15 +254,50 @@
                   "name": "label",
                   "required": true,
                   "type": "string"
-                },
-                "event": {
-                  "name": "event",
-                  "required": true,
-                  "type": "string"
                 }
               },
               "type": "object"
             }
+          },
+          {
+            "key": "leadTimeMinutes",
+            "type": "number",
+            "default": 15,
+            "label": "Lead time (minutes)",
+            "description": "Minimum minutes before class start that a new enrollment is accepted.",
+            "tier": "customization"
+          },
+          {
+            "key": "maxReschedules",
+            "type": "number",
+            "default": 3,
+            "label": "Max reschedules",
+            "description": "Hard cap on reschedule count per enrollment.",
+            "tier": "advanced"
+          },
+          {
+            "key": "noShowGracePeriodMinutes",
+            "type": "number",
+            "default": 10,
+            "label": "No-show grace (minutes)",
+            "description": "Minutes after class start before the entry auto-marks no_show. Wire via std-lifecycle.",
+            "tier": "customization"
+          },
+          {
+            "key": "rescheduleWindowHours",
+            "type": "number",
+            "default": 4,
+            "label": "Reschedule window (hours)",
+            "description": "Hours before class start during which the member can self-reschedule.",
+            "tier": "customization"
+          },
+          {
+            "key": "retentionAfterRejectionDays",
+            "type": "number",
+            "default": 730,
+            "label": "Retention after rejection (days)",
+            "description": "Days to keep no_show / removed roster entries.",
+            "tier": "advanced"
           },
           {
             "key": "title",

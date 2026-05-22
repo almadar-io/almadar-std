@@ -56,7 +56,9 @@
           "ACTIVATE",
           "PAUSE",
           "DripSequenceLoaded",
-          "DripSequenceLoadFailed"
+          "DripSequenceLoadFailed",
+          "DripSequenceUpdated",
+          "DripSequenceUpdateFailed"
         ],
         "listenedEvents": [],
         "overridableConfigKeys": [
@@ -65,29 +67,29 @@
             "type": "[FieldSpec]",
             "default": [
               {
-                "name": "name",
                 "variant": "caption",
-                "label": "Name"
+                "label": "Name",
+                "name": "name"
               },
               {
-                "variant": "caption",
                 "label": "Description",
-                "name": "description"
+                "name": "description",
+                "variant": "caption"
               },
               {
-                "name": "triggerEvent",
                 "label": "Trigger",
+                "name": "triggerEvent",
                 "variant": "caption"
               },
               {
+                "label": "Status",
                 "variant": "badge",
-                "name": "status",
-                "label": "Status"
+                "name": "status"
               },
               {
+                "variant": "caption",
                 "name": "totalEnrolled",
-                "label": "Enrolled",
-                "variant": "caption"
+                "label": "Enrolled"
               },
               {
                 "name": "totalCompleted",
@@ -100,21 +102,6 @@
             "tier": "customization",
             "items": {
               "properties": {
-                "format": {
-                  "name": "format",
-                  "required": false,
-                  "type": "string"
-                },
-                "label": {
-                  "name": "label",
-                  "required": false,
-                  "type": "string"
-                },
-                "key": {
-                  "name": "key",
-                  "required": false,
-                  "type": "string"
-                },
                 "icon": {
                   "name": "icon",
                   "required": false,
@@ -130,14 +117,53 @@
                   "required": true,
                   "type": "string"
                 },
+                "format": {
+                  "name": "format",
+                  "required": false,
+                  "type": "string"
+                },
+                "label": {
+                  "name": "label",
+                  "required": false,
+                  "type": "string"
+                },
                 "variant": {
                   "name": "variant",
+                  "required": false,
+                  "type": "string"
+                },
+                "key": {
+                  "name": "key",
                   "required": false,
                   "type": "string"
                 }
               },
               "type": "object"
             }
+          },
+          {
+            "key": "frequencyCapPerWeek",
+            "type": "number",
+            "default": 5,
+            "label": "Frequency cap (per week)",
+            "description": "Max drip + broadcast messages a recipient sees per 7-day window.",
+            "tier": "customization"
+          },
+          {
+            "key": "gdprConsentRequired",
+            "type": "boolean",
+            "default": true,
+            "label": "GDPR consent required",
+            "description": "Require explicit marketing consent before enrolling EU/UK recipients.",
+            "tier": "customization"
+          },
+          {
+            "key": "includeUnsubscribeLink",
+            "type": "boolean",
+            "default": true,
+            "label": "Include unsubscribe link",
+            "description": "Append a CAN-SPAM/GDPR-compliant unsubscribe link to every step.",
+            "tier": "essential"
           },
           {
             "key": "itemActions",
@@ -146,13 +172,13 @@
               {
                 "icon": "arrow-right",
                 "event": "OPEN_SEQUENCE",
-                "variant": "primary",
-                "label": "Open"
+                "label": "Open",
+                "variant": "primary"
               },
               {
-                "label": "Pause",
                 "event": "PAUSE",
-                "variant": "danger"
+                "variant": "danger",
+                "label": "Pause"
               }
             ],
             "label": "Row actions",
@@ -160,9 +186,9 @@
             "tier": "customization",
             "items": {
               "properties": {
-                "event": {
-                  "name": "event",
-                  "required": true,
+                "icon": {
+                  "name": "icon",
+                  "required": false,
                   "type": "string"
                 },
                 "label": {
@@ -170,13 +196,13 @@
                   "required": true,
                   "type": "string"
                 },
-                "variant": {
-                  "name": "variant",
-                  "required": false,
+                "event": {
+                  "name": "event",
+                  "required": true,
                   "type": "string"
                 },
-                "icon": {
-                  "name": "icon",
+                "variant": {
+                  "name": "variant",
                   "required": false,
                   "type": "string"
                 }
@@ -185,12 +211,60 @@
             }
           },
           {
+            "key": "physicalAddressFooter",
+            "type": "string",
+            "default": "",
+            "label": "Physical address footer",
+            "description": "CAN-SPAM-required postal address appended to every step.",
+            "tier": "essential"
+          },
+          {
+            "key": "respectQuietHours",
+            "type": "boolean",
+            "default": true,
+            "label": "Respect quiet hours",
+            "description": "Skip step delivery during recipient-local quiet hours.",
+            "tier": "customization"
+          },
+          {
+            "key": "sendsPerHour",
+            "type": "number",
+            "default": 500,
+            "label": "Sends per hour",
+            "description": "Cap on outbound drip messages per hour for throttling. v1.2 declarative.",
+            "tier": "customization"
+          },
+          {
+            "key": "suppressionListEnabled",
+            "type": "boolean",
+            "default": true,
+            "label": "Honor suppression list",
+            "description": "Skip enrolled contacts on the global suppression / bounce list.",
+            "tier": "customization"
+          },
+          {
             "key": "title",
             "type": "string",
             "default": "Drip Sequences",
             "label": "Section title",
             "description": "Heading shown above the drip campaign list",
             "tier": "customization"
+          },
+          {
+            "key": "trackClicks",
+            "type": "boolean",
+            "default": true,
+            "label": "Track clicks",
+            "description": "Wrap outbound links for click attribution per step.",
+            "tier": "advanced"
+          },
+          {
+            "key": "trackOpens",
+            "type": "boolean",
+            "default": true,
+            "label": "Track opens",
+            "description": "Embed a tracking pixel on each step message.",
+            "tier": "advanced"
           }
         ],
         "capabilities": []
@@ -208,6 +282,8 @@
       "CLOSE_VIEW",
       "DripSequenceLoadFailed",
       "DripSequenceLoaded",
+      "DripSequenceUpdateFailed",
+      "DripSequenceUpdated",
       "OPEN_SEQUENCE",
       "PAUSE"
     ],

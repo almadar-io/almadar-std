@@ -76,18 +76,34 @@
         "listenedEvents": [],
         "overridableConfigKeys": [
           {
+            "key": "complianceJurisdiction",
+            "type": "string",
+            "default": "US-IRS",
+            "label": "Compliance jurisdiction",
+            "description": "Drives charitable-deduction rules per locale: 'US-IRS', 'UK-HMRC', 'CA-CRA', etc. Declarative.",
+            "tier": "advanced"
+          },
+          {
+            "key": "currency",
+            "type": "string",
+            "default": "USD",
+            "label": "Default currency",
+            "description": "ISO 4217 currency code for donation amounts.",
+            "tier": "essential"
+          },
+          {
             "key": "fields",
             "type": "[FieldSpec]",
             "default": [
               {
+                "name": "receiptNumber",
                 "label": "Receipt #",
-                "variant": "caption",
-                "name": "receiptNumber"
+                "variant": "caption"
               },
               {
-                "name": "donorName",
                 "label": "Donor",
-                "variant": "caption"
+                "variant": "caption",
+                "name": "donorName"
               },
               {
                 "name": "amount",
@@ -95,19 +111,19 @@
                 "variant": "caption"
               },
               {
-                "variant": "caption",
                 "name": "donationDate",
-                "label": "Date"
+                "label": "Date",
+                "variant": "caption"
               },
               {
-                "label": "Tax Year",
                 "variant": "caption",
+                "label": "Tax Year",
                 "name": "taxYear"
               },
               {
+                "label": "Emailed",
                 "variant": "badge",
-                "name": "isEmailed",
-                "label": "Emailed"
+                "name": "isEmailed"
               }
             ],
             "label": "Columns to show",
@@ -115,13 +131,18 @@
             "tier": "customization",
             "items": {
               "properties": {
-                "label": {
-                  "name": "label",
+                "key": {
+                  "name": "key",
                   "required": false,
                   "type": "string"
                 },
                 "header": {
                   "name": "header",
+                  "required": false,
+                  "type": "string"
+                },
+                "icon": {
+                  "name": "icon",
                   "required": false,
                   "type": "string"
                 },
@@ -135,13 +156,8 @@
                   "required": false,
                   "type": "string"
                 },
-                "key": {
-                  "name": "key",
-                  "required": false,
-                  "type": "string"
-                },
-                "icon": {
-                  "name": "icon",
+                "label": {
+                  "name": "label",
                   "required": false,
                   "type": "string"
                 },
@@ -155,13 +171,21 @@
             }
           },
           {
+            "key": "gracePeriodDays",
+            "type": "number",
+            "default": 0,
+            "label": "Grace period (days)",
+            "description": "Days a receipt is editable before it locks. Declarative.",
+            "tier": "customization"
+          },
+          {
             "key": "itemActions",
             "type": "[ItemAction]",
             "default": [
               {
                 "variant": "primary",
-                "label": "Open",
                 "event": "OPEN_RECEIPT",
+                "label": "Open",
                 "icon": "arrow-right"
               },
               {
@@ -198,6 +222,61 @@
               },
               "type": "object"
             }
+          },
+          {
+            "key": "lateFeeAmount",
+            "type": "number",
+            "default": 0,
+            "label": "Late fee amount",
+            "description": "Flat cash amount or percentage (per lateFeePolicy).",
+            "tier": "customization"
+          },
+          {
+            "key": "lateFeePolicy",
+            "type": "string",
+            "default": "none",
+            "label": "Late fee policy",
+            "description": "Not typically applicable to donation receipts. Declarative; wiring deferred.",
+            "tier": "customization",
+            "enumValues": [
+              "none",
+              "flat",
+              "percent"
+            ]
+          },
+          {
+            "key": "retentionYears",
+            "type": "number",
+            "default": 7,
+            "label": "Retention (years)",
+            "description": "Years to keep donation receipts for compliance (IRS recommends 7).",
+            "tier": "advanced"
+          },
+          {
+            "key": "roundingMode",
+            "type": "string",
+            "default": "half-up",
+            "label": "Rounding mode",
+            "description": "Sub-cent rounding behavior for donation amounts.",
+            "tier": "advanced",
+            "enumValues": [
+              "bankers",
+              "half-up",
+              "down"
+            ]
+          },
+          {
+            "key": "taxStrategy",
+            "type": "string",
+            "default": "none",
+            "label": "Tax strategy",
+            "description": "Donations are usually tax-free at source. inclusive/exclusive/none.",
+            "tier": "customization",
+            "enumValues": [
+              "inclusive",
+              "exclusive",
+              "none"
+            ]
           },
           {
             "key": "title",

@@ -97,38 +97,62 @@
         "listenedEvents": [],
         "overridableConfigKeys": [
           {
+            "key": "allergenWarningsEnabled",
+            "type": "boolean",
+            "default": true,
+            "label": "Allergen warnings",
+            "description": "Surface allergen warnings on menu items with declared allergens.",
+            "tier": "customization"
+          },
+          {
+            "key": "allowSplitChecks",
+            "type": "boolean",
+            "default": true,
+            "label": "Allow split checks",
+            "description": "Permit splitting a single table check across multiple payments.",
+            "tier": "customization"
+          },
+          {
+            "key": "coursingEnabled",
+            "type": "boolean",
+            "default": false,
+            "label": "Coursing enabled",
+            "description": "Track ordered courses (apps / mains / desserts) for pacing.",
+            "tier": "customization"
+          },
+          {
             "key": "fields",
             "type": "[FieldSpec]",
             "default": [
               {
+                "name": "name",
                 "label": "Item",
-                "variant": "caption",
-                "name": "name"
+                "variant": "caption"
               },
               {
-                "name": "category",
+                "label": "Category",
                 "variant": "badge",
-                "label": "Category"
+                "name": "category"
               },
               {
-                "name": "price",
                 "label": "Price",
+                "name": "price",
                 "variant": "caption"
               },
               {
-                "name": "currency",
                 "label": "Currency",
-                "variant": "badge"
+                "variant": "badge",
+                "name": "currency"
               },
               {
-                "label": "Prep (min)",
                 "name": "prepTimeMinutes",
+                "label": "Prep (min)",
                 "variant": "caption"
               },
               {
-                "name": "available",
                 "label": "Available",
-                "variant": "badge"
+                "variant": "badge",
+                "name": "available"
               }
             ],
             "label": "Columns to show",
@@ -136,9 +160,24 @@
             "tier": "advanced",
             "items": {
               "properties": {
+                "header": {
+                  "name": "header",
+                  "required": false,
+                  "type": "string"
+                },
                 "icon": {
                   "name": "icon",
                   "required": false,
+                  "type": "string"
+                },
+                "variant": {
+                  "name": "variant",
+                  "required": false,
+                  "type": "string"
+                },
+                "name": {
+                  "name": "name",
+                  "required": true,
                   "type": "string"
                 },
                 "format": {
@@ -151,24 +190,9 @@
                   "required": false,
                   "type": "string"
                 },
-                "variant": {
-                  "name": "variant",
-                  "required": false,
-                  "type": "string"
-                },
                 "key": {
                   "name": "key",
                   "required": false,
-                  "type": "string"
-                },
-                "header": {
-                  "name": "header",
-                  "required": false,
-                  "type": "string"
-                },
-                "name": {
-                  "name": "name",
-                  "required": true,
                   "type": "string"
                 }
               },
@@ -180,16 +204,16 @@
             "type": "[ItemAction]",
             "default": [
               {
-                "label": "Open",
-                "icon": "arrow-right",
                 "event": "OPEN_ITEM",
+                "icon": "arrow-right",
+                "label": "Open",
                 "variant": "primary"
               },
               {
                 "variant": "danger",
-                "event": "DELETE",
+                "label": "Delete",
                 "icon": "trash",
-                "label": "Delete"
+                "event": "DELETE"
               }
             ],
             "label": "Row actions",
@@ -197,16 +221,6 @@
             "tier": "customization",
             "items": {
               "properties": {
-                "icon": {
-                  "name": "icon",
-                  "required": false,
-                  "type": "string"
-                },
-                "label": {
-                  "name": "label",
-                  "required": true,
-                  "type": "string"
-                },
                 "event": {
                   "name": "event",
                   "required": true,
@@ -216,9 +230,59 @@
                   "name": "variant",
                   "required": false,
                   "type": "string"
+                },
+                "label": {
+                  "name": "label",
+                  "required": true,
+                  "type": "string"
+                },
+                "icon": {
+                  "name": "icon",
+                  "required": false,
+                  "type": "string"
                 }
               },
               "type": "object"
+            }
+          },
+          {
+            "key": "kitchenAutoFire",
+            "type": "boolean",
+            "default": false,
+            "label": "Kitchen auto-fire",
+            "description": "Auto-send courses to the kitchen display without explicit fire action.",
+            "tier": "customization"
+          },
+          {
+            "key": "serviceCharge",
+            "type": "number",
+            "default": 0,
+            "label": "Service charge (%)",
+            "description": "Default service-charge percentage applied to checks. v1.2 declarative.",
+            "tier": "customization"
+          },
+          {
+            "key": "tableTurnoverTargetMinutes",
+            "type": "number",
+            "default": 60,
+            "label": "Table turnover target (min)",
+            "description": "Target minutes between seatings on a single table. v1.2 declarative.",
+            "tier": "advanced"
+          },
+          {
+            "key": "tipPresets",
+            "type": "[number]",
+            "default": [
+              15,
+              18,
+              20,
+              25
+            ],
+            "label": "Tip presets (%)",
+            "description": "Quick-select tip percentages shown on the checkout terminal.",
+            "tier": "customization",
+            "items": {
+              "type": "number"
             }
           },
           {

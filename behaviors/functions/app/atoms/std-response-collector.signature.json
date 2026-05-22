@@ -55,9 +55,9 @@
             "type": "[FieldSpec]",
             "default": [
               {
+                "label": "Question",
                 "name": "questionId",
-                "variant": "caption",
-                "label": "Question"
+                "variant": "caption"
               },
               {
                 "label": "Respondent",
@@ -65,19 +65,19 @@
                 "variant": "caption"
               },
               {
-                "variant": "caption",
                 "name": "surveyId",
+                "variant": "caption",
                 "label": "Survey"
               },
               {
+                "variant": "caption",
                 "label": "Answer",
-                "name": "answerJson",
-                "variant": "caption"
+                "name": "answerJson"
               },
               {
                 "variant": "caption",
-                "label": "Submitted",
-                "name": "submittedAt"
+                "name": "submittedAt",
+                "label": "Submitted"
               }
             ],
             "label": "Columns to show",
@@ -100,23 +100,23 @@
                   "required": false,
                   "type": "string"
                 },
-                "name": {
-                  "name": "name",
-                  "required": true,
-                  "type": "string"
-                },
-                "label": {
-                  "name": "label",
-                  "required": false,
-                  "type": "string"
-                },
                 "variant": {
                   "name": "variant",
                   "required": false,
                   "type": "string"
                 },
+                "name": {
+                  "name": "name",
+                  "required": true,
+                  "type": "string"
+                },
                 "icon": {
                   "name": "icon",
+                  "required": false,
+                  "type": "string"
+                },
+                "label": {
+                  "name": "label",
                   "required": false,
                   "type": "string"
                 }
@@ -125,18 +125,42 @@
             }
           },
           {
+            "key": "frequencyCapPerWeek",
+            "type": "number",
+            "default": 2,
+            "label": "Frequency cap (per week)",
+            "description": "Max survey-related touches per respondent per 7-day window.",
+            "tier": "customization"
+          },
+          {
+            "key": "gdprConsentRequired",
+            "type": "boolean",
+            "default": true,
+            "label": "GDPR consent required",
+            "description": "Require survey consent before recording or following up with EU/UK respondents.",
+            "tier": "customization"
+          },
+          {
+            "key": "includeUnsubscribeLink",
+            "type": "boolean",
+            "default": true,
+            "label": "Include unsubscribe link",
+            "description": "Append a CAN-SPAM/GDPR-compliant unsubscribe link to every follow-up.",
+            "tier": "essential"
+          },
+          {
             "key": "itemActions",
             "type": "[ItemAction]",
             "default": [
               {
                 "variant": "primary",
                 "label": "Open",
-                "icon": "arrow-right",
-                "event": "OPEN_RESPONSE"
+                "event": "OPEN_RESPONSE",
+                "icon": "arrow-right"
               },
               {
-                "event": "DELETE_RESPONSE",
                 "label": "Delete",
+                "event": "DELETE_RESPONSE",
                 "variant": "danger"
               }
             ],
@@ -145,16 +169,6 @@
             "tier": "customization",
             "items": {
               "properties": {
-                "variant": {
-                  "name": "variant",
-                  "required": false,
-                  "type": "string"
-                },
-                "label": {
-                  "name": "label",
-                  "required": true,
-                  "type": "string"
-                },
                 "event": {
                   "name": "event",
                   "required": true,
@@ -164,10 +178,52 @@
                   "name": "icon",
                   "required": false,
                   "type": "string"
+                },
+                "label": {
+                  "name": "label",
+                  "required": true,
+                  "type": "string"
+                },
+                "variant": {
+                  "name": "variant",
+                  "required": false,
+                  "type": "string"
                 }
               },
               "type": "object"
             }
+          },
+          {
+            "key": "physicalAddressFooter",
+            "type": "string",
+            "default": "",
+            "label": "Physical address footer",
+            "description": "CAN-SPAM-required postal address appended to every follow-up.",
+            "tier": "essential"
+          },
+          {
+            "key": "respectQuietHours",
+            "type": "boolean",
+            "default": true,
+            "label": "Respect quiet hours",
+            "description": "Suppress follow-up sends during recipient-local quiet hours.",
+            "tier": "customization"
+          },
+          {
+            "key": "sendsPerHour",
+            "type": "number",
+            "default": 500,
+            "label": "Sends per hour",
+            "description": "Cap on follow-up dispatch volume per hour. v1.2 declarative.",
+            "tier": "customization"
+          },
+          {
+            "key": "suppressionListEnabled",
+            "type": "boolean",
+            "default": true,
+            "label": "Honor suppression list",
+            "description": "Skip respondents on the global suppression / bounce list when dispatching follow-ups.",
+            "tier": "customization"
           },
           {
             "key": "title",
@@ -176,6 +232,22 @@
             "label": "Section title",
             "description": "Heading shown above the survey response list",
             "tier": "customization"
+          },
+          {
+            "key": "trackClicks",
+            "type": "boolean",
+            "default": false,
+            "label": "Track clicks",
+            "description": "Wrap survey links for click attribution on reminder mailings.",
+            "tier": "advanced"
+          },
+          {
+            "key": "trackOpens",
+            "type": "boolean",
+            "default": false,
+            "label": "Track opens",
+            "description": "Embed a tracking pixel on outbound survey reminders.",
+            "tier": "advanced"
           }
         ],
         "capabilities": []

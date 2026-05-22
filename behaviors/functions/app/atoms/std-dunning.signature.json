@@ -77,28 +77,46 @@
           "RESOLVE",
           "SUSPEND",
           "DunningCaseLoaded",
-          "DunningCaseLoadFailed"
+          "DunningCaseLoadFailed",
+          "DunningCaseUpdated",
+          "DunningCaseUpdateFailed"
         ],
         "listenedEvents": [],
         "overridableConfigKeys": [
+          {
+            "key": "complianceJurisdiction",
+            "type": "string",
+            "default": "",
+            "label": "Compliance jurisdiction",
+            "description": "Drives debt-collection regulations per locale: 'US-CA', 'EU-DE', 'UK', etc. Declarative.",
+            "tier": "advanced"
+          },
+          {
+            "key": "currency",
+            "type": "string",
+            "default": "USD",
+            "label": "Default currency",
+            "description": "ISO 4217 currency code (USD, EUR, GBP, …) for amounts displayed on dunning cases.",
+            "tier": "essential"
+          },
           {
             "key": "fields",
             "type": "[FieldSpec]",
             "default": [
               {
-                "label": "Subscription",
+                "variant": "caption",
                 "name": "subscriptionId",
-                "variant": "caption"
+                "label": "Subscription"
               },
               {
                 "name": "customerId",
-                "label": "Customer",
-                "variant": "caption"
+                "variant": "caption",
+                "label": "Customer"
               },
               {
                 "label": "Severity",
-                "variant": "badge",
-                "name": "severity"
+                "name": "severity",
+                "variant": "badge"
               },
               {
                 "label": "Attempt",
@@ -106,14 +124,14 @@
                 "variant": "caption"
               },
               {
+                "variant": "caption",
                 "name": "amountDue",
-                "label": "Amount Due",
-                "variant": "caption"
+                "label": "Amount Due"
               },
               {
-                "name": "status",
                 "label": "Status",
-                "variant": "badge"
+                "variant": "badge",
+                "name": "status"
               }
             ],
             "label": "Columns to show",
@@ -121,18 +139,13 @@
             "tier": "customization",
             "items": {
               "properties": {
-                "label": {
-                  "name": "label",
-                  "required": false,
+                "name": {
+                  "name": "name",
+                  "required": true,
                   "type": "string"
                 },
                 "icon": {
                   "name": "icon",
-                  "required": false,
-                  "type": "string"
-                },
-                "format": {
-                  "name": "format",
                   "required": false,
                   "type": "string"
                 },
@@ -146,14 +159,19 @@
                   "required": false,
                   "type": "string"
                 },
-                "variant": {
-                  "name": "variant",
+                "label": {
+                  "name": "label",
                   "required": false,
                   "type": "string"
                 },
-                "name": {
-                  "name": "name",
-                  "required": true,
+                "format": {
+                  "name": "format",
+                  "required": false,
+                  "type": "string"
+                },
+                "variant": {
+                  "name": "variant",
+                  "required": false,
                   "type": "string"
                 }
               },
@@ -161,20 +179,28 @@
             }
           },
           {
+            "key": "gracePeriodDays",
+            "type": "number",
+            "default": 7,
+            "label": "Grace period (days)",
+            "description": "Days after failure before escalation severity rises. Wire via sibling std-lifecycle rule.",
+            "tier": "customization"
+          },
+          {
             "key": "itemActions",
             "type": "[ItemAction]",
             "default": [
               {
-                "icon": "arrow-right",
                 "label": "Open",
                 "variant": "primary",
-                "event": "OPEN_CASE"
+                "event": "OPEN_CASE",
+                "icon": "arrow-right"
               },
               {
-                "event": "SUSPEND",
-                "variant": "danger",
                 "icon": "ban",
-                "label": "Suspend"
+                "label": "Suspend",
+                "event": "SUSPEND",
+                "variant": "danger"
               }
             ],
             "label": "Row actions",
@@ -182,14 +208,14 @@
             "tier": "customization",
             "items": {
               "properties": {
-                "event": {
-                  "name": "event",
-                  "required": true,
-                  "type": "string"
-                },
                 "variant": {
                   "name": "variant",
                   "required": false,
+                  "type": "string"
+                },
+                "event": {
+                  "name": "event",
+                  "required": true,
                   "type": "string"
                 },
                 "icon": {
@@ -205,6 +231,61 @@
               },
               "type": "object"
             }
+          },
+          {
+            "key": "lateFeeAmount",
+            "type": "number",
+            "default": 0,
+            "label": "Late fee amount",
+            "description": "Flat cash amount or percentage (per lateFeePolicy).",
+            "tier": "customization"
+          },
+          {
+            "key": "lateFeePolicy",
+            "type": "string",
+            "default": "none",
+            "label": "Late fee policy",
+            "description": "How late fees compute on overdue cases. Declarative; wiring deferred.",
+            "tier": "customization",
+            "enumValues": [
+              "none",
+              "flat",
+              "percent"
+            ]
+          },
+          {
+            "key": "retentionYears",
+            "type": "number",
+            "default": 7,
+            "label": "Retention (years)",
+            "description": "Years to keep dunning records for compliance.",
+            "tier": "advanced"
+          },
+          {
+            "key": "roundingMode",
+            "type": "string",
+            "default": "half-up",
+            "label": "Rounding mode",
+            "description": "Sub-cent rounding behavior for amount calculations.",
+            "tier": "advanced",
+            "enumValues": [
+              "bankers",
+              "half-up",
+              "down"
+            ]
+          },
+          {
+            "key": "taxStrategy",
+            "type": "string",
+            "default": "none",
+            "label": "Tax strategy",
+            "description": "inclusive = tax baked into amounts; exclusive = tax added on top; none = no tax.",
+            "tier": "customization",
+            "enumValues": [
+              "inclusive",
+              "exclusive",
+              "none"
+            ]
           },
           {
             "key": "title",
@@ -229,6 +310,8 @@
       "CLOSE_VIEW",
       "DunningCaseLoadFailed",
       "DunningCaseLoaded",
+      "DunningCaseUpdateFailed",
+      "DunningCaseUpdated",
       "ESCALATE",
       "OPEN_CASE",
       "RESOLVE",

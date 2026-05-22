@@ -74,6 +74,30 @@
         "listenedEvents": [],
         "overridableConfigKeys": [
           {
+            "key": "allergenWarningsEnabled",
+            "type": "boolean",
+            "default": true,
+            "label": "Allergen warnings",
+            "description": "Highlight allergen warnings on ticket items in the kitchen view.",
+            "tier": "customization"
+          },
+          {
+            "key": "allowSplitChecks",
+            "type": "boolean",
+            "default": true,
+            "label": "Allow split checks",
+            "description": "Permit splitting a check that originated from this ticket.",
+            "tier": "customization"
+          },
+          {
+            "key": "coursingEnabled",
+            "type": "boolean",
+            "default": false,
+            "label": "Coursing enabled",
+            "description": "Honor course ordering (apps → mains → dessert) when pacing tickets.",
+            "tier": "customization"
+          },
+          {
             "key": "fields",
             "type": "[FieldSpec]",
             "default": [
@@ -83,14 +107,14 @@
                 "variant": "caption"
               },
               {
-                "name": "tableLabel",
+                "variant": "caption",
                 "label": "Table",
-                "variant": "caption"
+                "name": "tableLabel"
               },
               {
                 "name": "serverName",
-                "variant": "caption",
-                "label": "Server"
+                "label": "Server",
+                "variant": "caption"
               },
               {
                 "name": "status",
@@ -98,14 +122,14 @@
                 "variant": "badge"
               },
               {
-                "name": "aging",
                 "label": "Aging",
-                "variant": "badge"
+                "variant": "badge",
+                "name": "aging"
               },
               {
+                "variant": "caption",
                 "name": "receivedAt",
-                "label": "Received",
-                "variant": "caption"
+                "label": "Received"
               }
             ],
             "label": "Columns to show",
@@ -113,18 +137,8 @@
             "tier": "customization",
             "items": {
               "properties": {
-                "format": {
-                  "name": "format",
-                  "required": false,
-                  "type": "string"
-                },
-                "name": {
-                  "name": "name",
-                  "required": true,
-                  "type": "string"
-                },
-                "label": {
-                  "name": "label",
+                "key": {
+                  "name": "key",
                   "required": false,
                   "type": "string"
                 },
@@ -138,13 +152,23 @@
                   "required": false,
                   "type": "string"
                 },
-                "key": {
-                  "name": "key",
+                "name": {
+                  "name": "name",
+                  "required": true,
+                  "type": "string"
+                },
+                "label": {
+                  "name": "label",
                   "required": false,
                   "type": "string"
                 },
                 "icon": {
                   "name": "icon",
+                  "required": false,
+                  "type": "string"
+                },
+                "format": {
+                  "name": "format",
                   "required": false,
                   "type": "string"
                 }
@@ -159,14 +183,14 @@
               {
                 "variant": "primary",
                 "event": "OPEN_TICKET",
-                "label": "Open",
-                "icon": "arrow-right"
+                "icon": "arrow-right",
+                "label": "Open"
               },
               {
                 "event": "MARK_SERVED",
-                "icon": "utensils",
+                "variant": "danger",
                 "label": "Mark Served",
-                "variant": "danger"
+                "icon": "utensils"
               }
             ],
             "label": "Row actions",
@@ -174,8 +198,18 @@
             "tier": "customization",
             "items": {
               "properties": {
+                "event": {
+                  "name": "event",
+                  "required": true,
+                  "type": "string"
+                },
                 "variant": {
                   "name": "variant",
+                  "required": false,
+                  "type": "string"
+                },
+                "icon": {
+                  "name": "icon",
                   "required": false,
                   "type": "string"
                 },
@@ -183,20 +217,18 @@
                   "name": "label",
                   "required": true,
                   "type": "string"
-                },
-                "event": {
-                  "name": "event",
-                  "required": true,
-                  "type": "string"
-                },
-                "icon": {
-                  "name": "icon",
-                  "required": false,
-                  "type": "string"
                 }
               },
               "type": "object"
             }
+          },
+          {
+            "key": "kitchenAutoFire",
+            "type": "boolean",
+            "default": false,
+            "label": "Kitchen auto-fire",
+            "description": "Auto-advance tickets from pending → preparing without manual fire.",
+            "tier": "customization"
           },
           {
             "key": "overdueMinutes",
@@ -205,6 +237,38 @@
             "label": "Overdue threshold (min)",
             "description": "Tickets older than this flip to the overdue aging tier",
             "tier": "advanced"
+          },
+          {
+            "key": "serviceCharge",
+            "type": "number",
+            "default": 0,
+            "label": "Service charge (%)",
+            "description": "Default service-charge percentage applied to ticket-resolved checks.",
+            "tier": "customization"
+          },
+          {
+            "key": "tableTurnoverTargetMinutes",
+            "type": "number",
+            "default": 60,
+            "label": "Table turnover target (min)",
+            "description": "Target minutes between seatings; influences ticket aging severity.",
+            "tier": "advanced"
+          },
+          {
+            "key": "tipPresets",
+            "type": "[number]",
+            "default": [
+              15,
+              18,
+              20,
+              25
+            ],
+            "label": "Tip presets (%)",
+            "description": "Quick-select tip percentages shown when closing related checks.",
+            "tier": "customization",
+            "items": {
+              "type": "number"
+            }
           },
           {
             "key": "title",

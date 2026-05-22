@@ -62,28 +62,46 @@
           "EXPIRE",
           "CANCEL",
           "TrialLoaded",
-          "TrialLoadFailed"
+          "TrialLoadFailed",
+          "TrialUpdated",
+          "TrialUpdateFailed"
         ],
         "listenedEvents": [],
         "overridableConfigKeys": [
+          {
+            "key": "archiveInactiveAfterDays",
+            "type": "number",
+            "default": 90,
+            "label": "Archive inactive after (days)",
+            "description": "Days post-expiration before trial record is archived. Declarative; wire via sibling std-lifecycle.",
+            "tier": "advanced"
+          },
+          {
+            "key": "consentTrackingEnabled",
+            "type": "boolean",
+            "default": true,
+            "label": "Track consent",
+            "description": "Whether to record marketing consent during trial signup. Declarative.",
+            "tier": "customization"
+          },
           {
             "key": "fields",
             "type": "[FieldSpec]",
             "default": [
               {
+                "label": "Customer",
                 "name": "customerId",
-                "variant": "caption",
-                "label": "Customer"
+                "variant": "caption"
               },
               {
-                "label": "Plan",
                 "variant": "caption",
+                "label": "Plan",
                 "name": "planId"
               },
               {
-                "name": "status",
                 "label": "Status",
-                "variant": "badge"
+                "variant": "badge",
+                "name": "status"
               },
               {
                 "name": "startedAt",
@@ -91,19 +109,19 @@
                 "variant": "caption"
               },
               {
-                "name": "expiresAt",
                 "label": "Expires",
-                "variant": "caption"
-              },
-              {
-                "name": "convertedAt",
-                "label": "Converted",
-                "variant": "caption"
-              },
-              {
-                "label": "Notified",
                 "variant": "caption",
-                "name": "notifiedAt"
+                "name": "expiresAt"
+              },
+              {
+                "variant": "caption",
+                "label": "Converted",
+                "name": "convertedAt"
+              },
+              {
+                "name": "notifiedAt",
+                "variant": "caption",
+                "label": "Notified"
               }
             ],
             "label": "Columns to show",
@@ -111,13 +129,13 @@
             "tier": "advanced",
             "items": {
               "properties": {
-                "name": {
-                  "name": "name",
-                  "required": true,
+                "format": {
+                  "name": "format",
+                  "required": false,
                   "type": "string"
                 },
-                "icon": {
-                  "name": "icon",
+                "label": {
+                  "name": "label",
                   "required": false,
                   "type": "string"
                 },
@@ -126,54 +144,8 @@
                   "required": false,
                   "type": "string"
                 },
-                "label": {
-                  "name": "label",
-                  "required": false,
-                  "type": "string"
-                },
-                "variant": {
-                  "name": "variant",
-                  "required": false,
-                  "type": "string"
-                },
-                "format": {
-                  "name": "format",
-                  "required": false,
-                  "type": "string"
-                },
                 "header": {
                   "name": "header",
-                  "required": false,
-                  "type": "string"
-                }
-              },
-              "type": "object"
-            }
-          },
-          {
-            "key": "itemActions",
-            "type": "[ItemAction]",
-            "default": [
-              {
-                "label": "Open",
-                "event": "OPEN_TRIAL",
-                "icon": "arrow-right",
-                "variant": "primary"
-              },
-              {
-                "variant": "danger",
-                "icon": "x",
-                "event": "CANCEL",
-                "label": "Cancel"
-              }
-            ],
-            "label": "Row actions",
-            "description": "Buttons users can click on each trial row",
-            "tier": "customization",
-            "items": {
-              "properties": {
-                "variant": {
-                  "name": "variant",
                   "required": false,
                   "type": "string"
                 },
@@ -182,18 +154,87 @@
                   "required": false,
                   "type": "string"
                 },
-                "event": {
-                  "name": "event",
+                "name": {
+                  "name": "name",
                   "required": true,
+                  "type": "string"
+                },
+                "variant": {
+                  "name": "variant",
+                  "required": false,
+                  "type": "string"
+                }
+              },
+              "type": "object"
+            }
+          },
+          {
+            "key": "healthScoreThresholdAlert",
+            "type": "number",
+            "default": 30,
+            "label": "Health score threshold",
+            "description": "Trial users below this engagement score get flagged for CSM outreach. Declarative; wire via sibling std-notify.",
+            "tier": "customization"
+          },
+          {
+            "key": "itemActions",
+            "type": "[ItemAction]",
+            "default": [
+              {
+                "icon": "arrow-right",
+                "label": "Open",
+                "event": "OPEN_TRIAL",
+                "variant": "primary"
+              },
+              {
+                "icon": "x",
+                "label": "Cancel",
+                "event": "CANCEL",
+                "variant": "danger"
+              }
+            ],
+            "label": "Row actions",
+            "description": "Buttons users can click on each trial row",
+            "tier": "customization",
+            "items": {
+              "properties": {
+                "icon": {
+                  "name": "icon",
+                  "required": false,
+                  "type": "string"
+                },
+                "variant": {
+                  "name": "variant",
+                  "required": false,
                   "type": "string"
                 },
                 "label": {
                   "name": "label",
                   "required": true,
                   "type": "string"
+                },
+                "event": {
+                  "name": "event",
+                  "required": true,
+                  "type": "string"
                 }
               },
               "type": "object"
+            }
+          },
+          {
+            "key": "renewalReminderDaysBefore",
+            "type": "[number]",
+            "default": [
+              7,
+              3,
+              1
+            ],
+            "label": "Trial reminder days-before",
+            "description": "Days before expiresAt to send conversion reminders. Declarative; wire via sibling std-reminder-scheduler.",
+            "tier": "customization",
+            "items": {
+              "type": "number"
             }
           },
           {
@@ -222,7 +263,9 @@
       "EXPIRE",
       "OPEN_TRIAL",
       "TrialLoadFailed",
-      "TrialLoaded"
+      "TrialLoaded",
+      "TrialUpdateFailed",
+      "TrialUpdated"
     ],
     "listenedEvents": []
   }

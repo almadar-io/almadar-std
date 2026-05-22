@@ -62,43 +62,69 @@
           "ASSESS_LATE_FEE",
           "WAIVE_CHARGE",
           "RentChargeLoaded",
-          "RentChargeLoadFailed"
+          "RentChargeLoadFailed",
+          "RentChargeUpdated",
+          "RentChargeUpdateFailed"
         ],
         "listenedEvents": [],
         "overridableConfigKeys": [
+          {
+            "key": "autoRenewEnabled",
+            "type": "boolean",
+            "default": false,
+            "label": "Auto-renew lease",
+            "description": "When true, leases auto-renew on expiry rather than going month-to-month. Declarative on rent-charge.",
+            "tier": "customization"
+          },
+          {
+            "key": "complianceJurisdiction",
+            "type": "string",
+            "default": "",
+            "label": "Compliance jurisdiction",
+            "description": "Drives rent regulations per locale: 'US-CA', 'EU-DE', 'UK', etc. Declarative.",
+            "tier": "advanced"
+          },
+          {
+            "key": "currency",
+            "type": "string",
+            "default": "USD",
+            "label": "Default currency",
+            "description": "ISO 4217 currency code (USD, EUR, GBP, …) for rent amounts.",
+            "tier": "essential"
+          },
           {
             "key": "fields",
             "type": "[FieldSpec]",
             "default": [
               {
                 "name": "tenantId",
-                "variant": "caption",
-                "label": "Tenant"
-              },
-              {
-                "name": "amount",
-                "label": "Amount",
+                "label": "Tenant",
                 "variant": "caption"
               },
               {
-                "label": "Due",
+                "label": "Amount",
                 "variant": "caption",
-                "name": "dueDate"
+                "name": "amount"
               },
               {
-                "label": "Status",
+                "name": "dueDate",
+                "variant": "caption",
+                "label": "Due"
+              },
+              {
                 "variant": "badge",
-                "name": "status"
+                "name": "status",
+                "label": "Status"
               },
               {
                 "name": "paidAt",
-                "label": "Paid",
-                "variant": "caption"
+                "variant": "caption",
+                "label": "Paid"
               },
               {
-                "variant": "caption",
                 "name": "lateFee",
-                "label": "Late Fee"
+                "label": "Late Fee",
+                "variant": "caption"
               }
             ],
             "label": "Columns to show",
@@ -111,18 +137,23 @@
                   "required": false,
                   "type": "string"
                 },
-                "key": {
-                  "name": "key",
-                  "required": false,
-                  "type": "string"
-                },
-                "header": {
-                  "name": "header",
-                  "required": false,
-                  "type": "string"
-                },
                 "variant": {
                   "name": "variant",
+                  "required": false,
+                  "type": "string"
+                },
+                "icon": {
+                  "name": "icon",
+                  "required": false,
+                  "type": "string"
+                },
+                "format": {
+                  "name": "format",
+                  "required": false,
+                  "type": "string"
+                },
+                "key": {
+                  "name": "key",
                   "required": false,
                   "type": "string"
                 },
@@ -131,8 +162,64 @@
                   "required": true,
                   "type": "string"
                 },
-                "format": {
-                  "name": "format",
+                "header": {
+                  "name": "header",
+                  "required": false,
+                  "type": "string"
+                }
+              },
+              "type": "object"
+            }
+          },
+          {
+            "key": "gracePeriodDays",
+            "type": "number",
+            "default": 5,
+            "label": "Grace period (days)",
+            "description": "Days after dueDate before the charge is treated as overdue. Wire via sibling std-lifecycle rule.",
+            "tier": "customization"
+          },
+          {
+            "key": "inspectionFrequencyMonths",
+            "type": "number",
+            "default": 12,
+            "label": "Inspection frequency (months)",
+            "description": "How often property inspections are scheduled. Declarative.",
+            "tier": "advanced"
+          },
+          {
+            "key": "itemActions",
+            "type": "[ItemAction]",
+            "default": [
+              {
+                "event": "OPEN_CHARGE",
+                "variant": "primary",
+                "icon": "arrow-right",
+                "label": "Open"
+              },
+              {
+                "variant": "danger",
+                "label": "Waive",
+                "event": "WAIVE_CHARGE"
+              }
+            ],
+            "label": "Row actions",
+            "description": "Buttons users can click on each charge row",
+            "tier": "customization",
+            "items": {
+              "properties": {
+                "event": {
+                  "name": "event",
+                  "required": true,
+                  "type": "string"
+                },
+                "label": {
+                  "name": "label",
+                  "required": true,
+                  "type": "string"
+                },
+                "variant": {
+                  "name": "variant",
                   "required": false,
                   "type": "string"
                 },
@@ -146,49 +233,97 @@
             }
           },
           {
-            "key": "itemActions",
-            "type": "[ItemAction]",
-            "default": [
-              {
-                "icon": "arrow-right",
-                "event": "OPEN_CHARGE",
-                "label": "Open",
-                "variant": "primary"
-              },
-              {
-                "event": "WAIVE_CHARGE",
-                "label": "Waive",
-                "variant": "danger"
-              }
-            ],
-            "label": "Row actions",
-            "description": "Buttons users can click on each charge row",
+            "key": "lateFeeAmount",
+            "type": "number",
+            "default": 25,
+            "label": "Late fee amount",
+            "description": "Flat cash amount or percentage (per lateFeePolicy).",
+            "tier": "customization"
+          },
+          {
+            "key": "lateFeePolicy",
+            "type": "string",
+            "default": "flat",
+            "label": "Late fee policy",
+            "description": "How late fees compute on overdue rent: none, flat (lateFeeAmount cash), or percent (% of rent). Declarative; wiring deferred.",
             "tier": "customization",
-            "items": {
-              "properties": {
-                "variant": {
-                  "name": "variant",
-                  "required": false,
-                  "type": "string"
-                },
-                "label": {
-                  "name": "label",
-                  "required": true,
-                  "type": "string"
-                },
-                "event": {
-                  "name": "event",
-                  "required": true,
-                  "type": "string"
-                },
-                "icon": {
-                  "name": "icon",
-                  "required": false,
-                  "type": "string"
-                }
-              },
-              "type": "object"
-            }
+            "enumValues": [
+              "none",
+              "flat",
+              "percent"
+            ]
+          },
+          {
+            "key": "lateRentGraceDays",
+            "type": "number",
+            "default": 5,
+            "label": "Late rent grace (days)",
+            "description": "Days after dueDate before late fee is auto-assessed. Real-estate-specific alias for gracePeriodDays. Declarative.",
+            "tier": "customization"
+          },
+          {
+            "key": "leaseRenewalNoticeDays",
+            "type": "number",
+            "default": 60,
+            "label": "Lease renewal notice (days)",
+            "description": "Days before lease end when a renewal notice should fire. Declarative on rent-charge; wired upstream by std-lease.",
+            "tier": "customization"
+          },
+          {
+            "key": "petPolicy",
+            "type": "string",
+            "default": "no-pets",
+            "label": "Pet policy",
+            "description": "Property-level pet policy. Declarative.",
+            "tier": "customization",
+            "enumValues": [
+              "no-pets",
+              "cats-only",
+              "dogs-only",
+              "all"
+            ]
+          },
+          {
+            "key": "retentionYears",
+            "type": "number",
+            "default": 7,
+            "label": "Retention (years)",
+            "description": "Years to keep rent records for compliance.",
+            "tier": "advanced"
+          },
+          {
+            "key": "roundingMode",
+            "type": "string",
+            "default": "half-up",
+            "label": "Rounding mode",
+            "description": "Sub-cent rounding behavior for rent + late fee calculations.",
+            "tier": "advanced",
+            "enumValues": [
+              "bankers",
+              "half-up",
+              "down"
+            ]
+          },
+          {
+            "key": "securityDepositMonths",
+            "type": "number",
+            "default": 1,
+            "label": "Security deposit (months of rent)",
+            "description": "How many months of rent are held as a security deposit. Declarative on rent-charge.",
+            "tier": "customization"
+          },
+          {
+            "key": "taxStrategy",
+            "type": "string",
+            "default": "none",
+            "label": "Tax strategy",
+            "description": "inclusive = tax baked into rent; exclusive = tax added on top; none = no tax.",
+            "tier": "customization",
+            "enumValues": [
+              "inclusive",
+              "exclusive",
+              "none"
+            ]
           },
           {
             "key": "title",
@@ -216,6 +351,8 @@
       "OPEN_CHARGE",
       "RentChargeLoadFailed",
       "RentChargeLoaded",
+      "RentChargeUpdateFailed",
+      "RentChargeUpdated",
       "WAIVE_CHARGE"
     ],
     "listenedEvents": []

@@ -71,33 +71,49 @@
         "listenedEvents": [],
         "overridableConfigKeys": [
           {
+            "key": "archiveInactiveAfterDays",
+            "type": "number",
+            "default": 1825,
+            "label": "Archive inactive after (days)",
+            "description": "Days since last gift before donor record auto-archives. Default 5 years. Declarative; wire via sibling std-lifecycle.",
+            "tier": "advanced"
+          },
+          {
+            "key": "consentTrackingEnabled",
+            "type": "boolean",
+            "default": true,
+            "label": "Track consent",
+            "description": "Whether to honor marketing/data-processing consent on donor outreach. Declarative.",
+            "tier": "customization"
+          },
+          {
             "key": "fields",
             "type": "[FieldSpec]",
             "default": [
               {
                 "label": "Name",
-                "name": "name",
-                "variant": "h4"
+                "variant": "h4",
+                "name": "name"
               },
               {
-                "label": "Type",
                 "variant": "badge",
-                "name": "donorType"
+                "name": "donorType",
+                "label": "Type"
               },
               {
-                "label": "Email",
+                "variant": "body",
                 "name": "email",
-                "variant": "body"
+                "label": "Email"
               },
               {
-                "name": "lifetimeAmount",
                 "variant": "caption",
+                "name": "lifetimeAmount",
                 "label": "Lifetime"
               },
               {
-                "variant": "caption",
                 "name": "lastDonationAt",
-                "label": "Last gift"
+                "label": "Last gift",
+                "variant": "caption"
               }
             ],
             "label": "Columns to show",
@@ -110,8 +126,13 @@
                   "required": true,
                   "type": "string"
                 },
-                "format": {
-                  "name": "format",
+                "variant": {
+                  "name": "variant",
+                  "required": false,
+                  "type": "string"
+                },
+                "label": {
+                  "name": "label",
                   "required": false,
                   "type": "string"
                 },
@@ -130,13 +151,8 @@
                   "required": false,
                   "type": "string"
                 },
-                "label": {
-                  "name": "label",
-                  "required": false,
-                  "type": "string"
-                },
-                "variant": {
-                  "name": "variant",
+                "format": {
+                  "name": "format",
                   "required": false,
                   "type": "string"
                 }
@@ -145,18 +161,26 @@
             }
           },
           {
+            "key": "healthScoreThresholdAlert",
+            "type": "number",
+            "default": 50,
+            "label": "Engagement threshold",
+            "description": "Donors with engagement score below this trigger re-engagement outreach. Declarative; wire via sibling std-notify.",
+            "tier": "customization"
+          },
+          {
             "key": "itemActions",
             "type": "[ItemAction]",
             "default": [
               {
-                "icon": "arrow-right",
-                "variant": "primary",
                 "event": "OPEN_DONOR",
-                "label": "Open"
+                "variant": "primary",
+                "label": "Open",
+                "icon": "arrow-right"
               },
               {
-                "event": "THANK_DONOR",
                 "label": "Thank",
+                "event": "THANK_DONOR",
                 "variant": "secondary"
               }
             ],
@@ -187,6 +211,21 @@
                 }
               },
               "type": "object"
+            }
+          },
+          {
+            "key": "renewalReminderDaysBefore",
+            "type": "[number]",
+            "default": [
+              365,
+              180,
+              30
+            ],
+            "label": "Re-solicitation cadence (days since last gift)",
+            "description": "Days since lastDonationAt at which to re-solicit. Declarative; wire via sibling std-reminder-scheduler.",
+            "tier": "customization",
+            "items": {
+              "type": "number"
             }
           },
           {

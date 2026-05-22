@@ -61,38 +61,62 @@
         "listenedEvents": [],
         "overridableConfigKeys": [
           {
+            "key": "cycleCountFrequencyDays",
+            "type": "number",
+            "default": 30,
+            "label": "Cycle count cadence (days)",
+            "description": "Days between cycle counts that may revise reorder triggers. v1.2 declarative.",
+            "tier": "advanced"
+          },
+          {
+            "key": "defaultWarehouse",
+            "type": "string",
+            "default": "",
+            "label": "Default warehouse",
+            "description": "Warehouse a reorder rule applies to by default.",
+            "tier": "customization"
+          },
+          {
+            "key": "expiryTrackingEnabled",
+            "type": "boolean",
+            "default": false,
+            "label": "Expiry tracking",
+            "description": "Reorder near-expiry SKUs more aggressively.",
+            "tier": "customization"
+          },
+          {
             "key": "fields",
             "type": "[FieldSpec]",
             "default": [
               {
-                "variant": "caption",
+                "label": "SKU",
                 "name": "sku",
-                "label": "SKU"
+                "variant": "caption"
               },
               {
                 "variant": "caption",
-                "label": "Location",
-                "name": "locationId"
+                "name": "locationId",
+                "label": "Location"
               },
               {
+                "label": "Threshold",
                 "name": "thresholdQty",
-                "variant": "caption",
-                "label": "Threshold"
+                "variant": "caption"
               },
               {
-                "variant": "caption",
                 "label": "Reorder Qty",
+                "variant": "caption",
                 "name": "reorderQty"
               },
               {
                 "variant": "caption",
-                "name": "vendor",
-                "label": "Vendor"
+                "label": "Vendor",
+                "name": "vendor"
               },
               {
-                "variant": "caption",
+                "label": "Lead (d)",
                 "name": "leadTimeDays",
-                "label": "Lead (d)"
+                "variant": "caption"
               }
             ],
             "label": "Columns to show",
@@ -100,6 +124,11 @@
             "tier": "advanced",
             "items": {
               "properties": {
+                "label": {
+                  "name": "label",
+                  "required": false,
+                  "type": "string"
+                },
                 "variant": {
                   "name": "variant",
                   "required": false,
@@ -110,13 +139,13 @@
                   "required": false,
                   "type": "string"
                 },
-                "header": {
-                  "name": "header",
+                "format": {
+                  "name": "format",
                   "required": false,
                   "type": "string"
                 },
-                "format": {
-                  "name": "format",
+                "key": {
+                  "name": "key",
                   "required": false,
                   "type": "string"
                 },
@@ -125,13 +154,8 @@
                   "required": true,
                   "type": "string"
                 },
-                "key": {
-                  "name": "key",
-                  "required": false,
-                  "type": "string"
-                },
-                "label": {
-                  "name": "label",
+                "header": {
+                  "name": "header",
                   "required": false,
                   "type": "string"
                 }
@@ -140,19 +164,27 @@
             }
           },
           {
+            "key": "hazmatEnabled",
+            "type": "boolean",
+            "default": false,
+            "label": "Hazmat reordering",
+            "description": "Apply hazmat handling/storage rules to triggered reorders.",
+            "tier": "advanced"
+          },
+          {
             "key": "itemActions",
             "type": "[ItemAction]",
             "default": [
               {
-                "icon": "arrow-right",
-                "variant": "primary",
                 "label": "Open",
-                "event": "OPEN_RULE"
+                "event": "OPEN_RULE",
+                "variant": "primary",
+                "icon": "arrow-right"
               },
               {
-                "event": "DISABLE_RULE",
+                "variant": "danger",
                 "label": "Disable",
-                "variant": "danger"
+                "event": "DISABLE_RULE"
               }
             ],
             "label": "Row actions",
@@ -165,9 +197,9 @@
                   "required": false,
                   "type": "string"
                 },
-                "event": {
-                  "name": "event",
-                  "required": true,
+                "variant": {
+                  "name": "variant",
+                  "required": false,
                   "type": "string"
                 },
                 "label": {
@@ -175,14 +207,62 @@
                   "required": true,
                   "type": "string"
                 },
-                "variant": {
-                  "name": "variant",
-                  "required": false,
+                "event": {
+                  "name": "event",
+                  "required": true,
                   "type": "string"
                 }
               },
               "type": "object"
             }
+          },
+          {
+            "key": "lotTrackingEnabled",
+            "type": "boolean",
+            "default": false,
+            "label": "Lot tracking",
+            "description": "Reorder rule honors lot-tracked SKUs distinctly. v1.2 declarative.",
+            "tier": "customization"
+          },
+          {
+            "key": "lowStockThreshold",
+            "type": "number",
+            "default": 10,
+            "label": "Default low-stock threshold",
+            "description": "Default reorder trigger applied when a rule's thresholdQty isn't set.",
+            "tier": "essential"
+          },
+          {
+            "key": "multiLocationEnabled",
+            "type": "boolean",
+            "default": false,
+            "label": "Multi-location",
+            "description": "Allow a single rule to span multiple warehouses.",
+            "tier": "customization"
+          },
+          {
+            "key": "reorderPoint",
+            "type": "number",
+            "default": 5,
+            "label": "Default reorder point",
+            "description": "Default reorder qty when not specified at the rule row level.",
+            "tier": "essential"
+          },
+          {
+            "key": "safetyStockDays",
+            "type": "number",
+            "default": 7,
+            "label": "Safety stock (days)",
+            "description": "Buffer days of expected demand to retain above the reorder threshold.",
+            "tier": "customization"
+          },
+          {
+            "key": "serialTrackingEnabled",
+            "type": "boolean",
+            "default": false,
+            "label": "Serial tracking",
+            "description": "Reorder rule honors serial-tracked SKUs distinctly. v1.2 declarative.",
+            "tier": "customization"
           },
           {
             "key": "title",

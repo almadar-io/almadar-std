@@ -74,6 +74,42 @@
         "listenedEvents": [],
         "overridableConfigKeys": [
           {
+            "key": "customerVisibleStatuses",
+            "type": "[string]",
+            "default": [
+              "assigned",
+              "en-route",
+              "completed"
+            ],
+            "label": "Customer-visible statuses",
+            "description": "Subset of statuses the customer can see in their tracking view. Internal-only statuses are filtered.",
+            "tier": "customization",
+            "items": {
+              "type": "string"
+            }
+          },
+          {
+            "key": "dispatchStrategy",
+            "type": "string",
+            "default": "nearest",
+            "label": "Dispatch strategy",
+            "description": "How techs are assigned: nearest = closest available, round-robin = even distribution, manual = dispatcher picks.",
+            "tier": "customization",
+            "enumValues": [
+              "nearest",
+              "round-robin",
+              "manual"
+            ]
+          },
+          {
+            "key": "escalationThresholdHours",
+            "type": "number",
+            "default": 48,
+            "label": "Escalation threshold (hours)",
+            "description": "Hours after which an open order auto-escalates to escalationRoles. Compose std-lifecycle for wiring.",
+            "tier": "customization"
+          },
+          {
             "key": "fields",
             "type": "[FieldSpec]",
             "default": [
@@ -83,33 +119,33 @@
                 "name": "customerName"
               },
               {
-                "variant": "caption",
+                "name": "serviceType",
                 "label": "Service",
-                "name": "serviceType"
+                "variant": "caption"
               },
               {
                 "variant": "caption",
-                "label": "Address",
-                "name": "address"
+                "name": "address",
+                "label": "Address"
               },
               {
+                "label": "Priority",
                 "name": "priority",
-                "variant": "badge",
-                "label": "Priority"
-              },
-              {
-                "label": "Status",
-                "name": "status",
                 "variant": "badge"
               },
               {
-                "name": "assignedTo",
-                "variant": "caption",
-                "label": "Assigned"
+                "label": "Status",
+                "variant": "badge",
+                "name": "status"
               },
               {
-                "variant": "caption",
+                "name": "assignedTo",
+                "label": "Assigned",
+                "variant": "caption"
+              },
+              {
                 "label": "ETA (min)",
+                "variant": "caption",
                 "name": "etaMinutes"
               }
             ],
@@ -118,8 +154,13 @@
             "tier": "advanced",
             "items": {
               "properties": {
-                "key": {
-                  "name": "key",
+                "variant": {
+                  "name": "variant",
+                  "required": false,
+                  "type": "string"
+                },
+                "format": {
+                  "name": "format",
                   "required": false,
                   "type": "string"
                 },
@@ -128,28 +169,23 @@
                   "required": false,
                   "type": "string"
                 },
-                "header": {
-                  "name": "header",
-                  "required": false,
-                  "type": "string"
-                },
-                "variant": {
-                  "name": "variant",
-                  "required": false,
-                  "type": "string"
-                },
                 "name": {
                   "name": "name",
                   "required": true,
                   "type": "string"
                 },
-                "format": {
-                  "name": "format",
+                "icon": {
+                  "name": "icon",
                   "required": false,
                   "type": "string"
                 },
-                "icon": {
-                  "name": "icon",
+                "header": {
+                  "name": "header",
+                  "required": false,
+                  "type": "string"
+                },
+                "key": {
+                  "name": "key",
                   "required": false,
                   "type": "string"
                 }
@@ -162,15 +198,15 @@
             "type": "[ItemAction]",
             "default": [
               {
+                "variant": "primary",
                 "event": "OPEN_ORDER",
                 "icon": "arrow-right",
-                "label": "Open",
-                "variant": "primary"
+                "label": "Open"
               },
               {
                 "variant": "danger",
-                "label": "Cancel",
                 "event": "CANCEL",
+                "label": "Cancel",
                 "icon": "x"
               }
             ],
@@ -179,8 +215,8 @@
             "tier": "customization",
             "items": {
               "properties": {
-                "event": {
-                  "name": "event",
+                "label": {
+                  "name": "label",
                   "required": true,
                   "type": "string"
                 },
@@ -194,13 +230,75 @@
                   "required": false,
                   "type": "string"
                 },
-                "label": {
-                  "name": "label",
+                "event": {
+                  "name": "event",
                   "required": true,
                   "type": "string"
                 }
               },
               "type": "object"
+            }
+          },
+          {
+            "key": "requirePhotoOnComplete",
+            "type": "boolean",
+            "default": false,
+            "label": "Require photo on complete",
+            "description": "Block COMPLETE action unless a completion photo is attached.",
+            "tier": "customization"
+          },
+          {
+            "key": "requireSignatureOnComplete",
+            "type": "boolean",
+            "default": false,
+            "label": "Require customer signature on complete",
+            "description": "Block COMPLETE action unless customer signature is captured (compose std-signature-capture).",
+            "tier": "customization"
+          },
+          {
+            "key": "resolutionSLAHours",
+            "type": "number",
+            "default": 24,
+            "label": "Resolution SLA (hours)",
+            "description": "Target time from order created to completed. Compose sibling std-lifecycle to auto-escalate at threshold.",
+            "tier": "essential"
+          },
+          {
+            "key": "responseTimeMinutes",
+            "type": "number",
+            "default": 60,
+            "label": "Response time SLA (min)",
+            "description": "Target time from order created to first response (assigned + acknowledged). Drives SLA dashboards and escalation.",
+            "tier": "essential"
+          },
+          {
+            "key": "serviceAreaRadius",
+            "type": "number",
+            "default": 50,
+            "label": "Service area radius (mi)",
+            "description": "Maximum distance from the service hub for dispatch eligibility.",
+            "tier": "customization"
+          },
+          {
+            "key": "serviceZones",
+            "type": "[string]",
+            "default": [],
+            "label": "Service zones",
+            "description": "Named geographic zones for dispatch grouping. Empty = no zone restriction.",
+            "tier": "customization",
+            "items": {
+              "type": "string"
+            }
+          },
+          {
+            "key": "skillsRequired",
+            "type": "[string]",
+            "default": [],
+            "label": "Required skills",
+            "description": "Capability tags a tech must have to be assigned (e.g. 'plumbing', 'electrical', 'hvac').",
+            "tier": "customization",
+            "items": {
+              "type": "string"
             }
           },
           {

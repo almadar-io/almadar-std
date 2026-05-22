@@ -61,13 +61,50 @@
         "listenedEvents": [],
         "overridableConfigKeys": [
           {
+            "key": "allowRollback",
+            "type": "boolean",
+            "default": true,
+            "label": "Allow rollback",
+            "description": "Permit reverting a question to a prior version.",
+            "tier": "customization"
+          },
+          {
+            "key": "defaultLocale",
+            "type": "string",
+            "default": "en",
+            "label": "Default locale",
+            "description": "Locale shown when no translation exists for the respondent.",
+            "tier": "customization"
+          },
+          {
+            "key": "draftAutosaveSeconds",
+            "type": "number",
+            "default": 30,
+            "label": "Draft autosave interval (s)",
+            "description": "Seconds between draft autosaves in the question editor.",
+            "tier": "advanced"
+          },
+          {
+            "key": "enabledLocales",
+            "type": "[string]",
+            "default": [
+              "en"
+            ],
+            "label": "Enabled locales",
+            "description": "Locales questions can be translated into.",
+            "tier": "customization",
+            "items": {
+              "type": "string"
+            }
+          },
+          {
             "key": "fields",
             "type": "[FieldSpec]",
             "default": [
               {
-                "variant": "caption",
+                "label": "Question",
                 "name": "label",
-                "label": "Question"
+                "variant": "caption"
               },
               {
                 "name": "kind",
@@ -81,13 +118,13 @@
               },
               {
                 "label": "Survey",
-                "variant": "caption",
-                "name": "surveyId"
+                "name": "surveyId",
+                "variant": "caption"
               },
               {
-                "variant": "caption",
+                "label": "Order",
                 "name": "order",
-                "label": "Order"
+                "variant": "caption"
               }
             ],
             "label": "Columns to show",
@@ -95,13 +132,8 @@
             "tier": "advanced",
             "items": {
               "properties": {
-                "key": {
-                  "name": "key",
-                  "required": false,
-                  "type": "string"
-                },
-                "label": {
-                  "name": "label",
+                "variant": {
+                  "name": "variant",
                   "required": false,
                   "type": "string"
                 },
@@ -110,13 +142,13 @@
                   "required": true,
                   "type": "string"
                 },
-                "header": {
-                  "name": "header",
+                "icon": {
+                  "name": "icon",
                   "required": false,
                   "type": "string"
                 },
-                "icon": {
-                  "name": "icon",
+                "label": {
+                  "name": "label",
                   "required": false,
                   "type": "string"
                 },
@@ -125,8 +157,13 @@
                   "required": false,
                   "type": "string"
                 },
-                "variant": {
-                  "name": "variant",
+                "key": {
+                  "name": "key",
+                  "required": false,
+                  "type": "string"
+                },
+                "header": {
+                  "name": "header",
                   "required": false,
                   "type": "string"
                 }
@@ -139,9 +176,9 @@
             "type": "[ItemAction]",
             "default": [
               {
+                "event": "OPEN_QUESTION",
                 "variant": "primary",
                 "label": "Open",
-                "event": "OPEN_QUESTION",
                 "icon": "arrow-right"
               },
               {
@@ -155,13 +192,13 @@
             "tier": "customization",
             "items": {
               "properties": {
-                "label": {
-                  "name": "label",
-                  "required": true,
+                "icon": {
+                  "name": "icon",
+                  "required": false,
                   "type": "string"
                 },
-                "event": {
-                  "name": "event",
+                "label": {
+                  "name": "label",
                   "required": true,
                   "type": "string"
                 },
@@ -170,14 +207,38 @@
                   "required": false,
                   "type": "string"
                 },
-                "icon": {
-                  "name": "icon",
-                  "required": false,
+                "event": {
+                  "name": "event",
+                  "required": true,
                   "type": "string"
                 }
               },
               "type": "object"
             }
+          },
+          {
+            "key": "keepVersions",
+            "type": "number",
+            "default": 5,
+            "label": "Versions to retain",
+            "description": "Number of question revisions to keep.",
+            "tier": "customization"
+          },
+          {
+            "key": "scheduledPublishEnabled",
+            "type": "boolean",
+            "default": false,
+            "label": "Scheduled publish",
+            "description": "Allow scheduling future availability of question additions. v1.2 declarative.",
+            "tier": "customization"
+          },
+          {
+            "key": "seoEnabled",
+            "type": "boolean",
+            "default": false,
+            "label": "SEO meta enabled",
+            "description": "Emit indexable metadata when questions are publicly viewable.",
+            "tier": "customization"
           },
           {
             "key": "title",
@@ -186,6 +247,19 @@
             "label": "Section title",
             "description": "Heading shown above the survey question library",
             "tier": "customization"
+          },
+          {
+            "key": "visibilityScope",
+            "type": "string",
+            "default": "internal",
+            "label": "Visibility scope",
+            "description": "Who can browse the question bank: public, internal staff, signed-in customers.",
+            "tier": "essential",
+            "enumValues": [
+              "public",
+              "internal",
+              "customer"
+            ]
           }
         ],
         "capabilities": []

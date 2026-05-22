@@ -81,23 +81,39 @@
         "listenedEvents": [],
         "overridableConfigKeys": [
           {
+            "key": "archiveInactiveAfterDays",
+            "type": "number",
+            "default": 365,
+            "label": "Archive inactive after (days)",
+            "description": "Days a health score may go without recalculation before being archived. Declarative; wire via sibling std-lifecycle.",
+            "tier": "advanced"
+          },
+          {
+            "key": "consentTrackingEnabled",
+            "type": "boolean",
+            "default": false,
+            "label": "Track consent",
+            "description": "Whether composite score includes only consented signals. Declarative.",
+            "tier": "customization"
+          },
+          {
             "key": "fields",
             "type": "[FieldSpec]",
             "default": [
               {
-                "name": "customerName",
                 "label": "Customer",
-                "variant": "caption"
+                "variant": "caption",
+                "name": "customerName"
               },
               {
-                "name": "score",
                 "variant": "badge",
+                "name": "score",
                 "label": "Score"
               },
               {
-                "variant": "badge",
                 "label": "Tier",
-                "name": "tier"
+                "name": "tier",
+                "variant": "badge"
               },
               {
                 "label": "Usage",
@@ -106,13 +122,13 @@
               },
               {
                 "label": "Support",
-                "name": "supportScore",
-                "variant": "caption"
+                "variant": "caption",
+                "name": "supportScore"
               },
               {
-                "name": "trend",
                 "label": "Trend",
-                "variant": "badge"
+                "variant": "badge",
+                "name": "trend"
               },
               {
                 "label": "CSM",
@@ -125,9 +141,24 @@
             "tier": "customization",
             "items": {
               "properties": {
+                "variant": {
+                  "name": "variant",
+                  "required": false,
+                  "type": "string"
+                },
+                "key": {
+                  "name": "key",
+                  "required": false,
+                  "type": "string"
+                },
                 "label": {
                   "name": "label",
                   "required": false,
+                  "type": "string"
+                },
+                "name": {
+                  "name": "name",
+                  "required": true,
                   "type": "string"
                 },
                 "format": {
@@ -140,21 +171,6 @@
                   "required": false,
                   "type": "string"
                 },
-                "variant": {
-                  "name": "variant",
-                  "required": false,
-                  "type": "string"
-                },
-                "key": {
-                  "name": "key",
-                  "required": false,
-                  "type": "string"
-                },
-                "name": {
-                  "name": "name",
-                  "required": true,
-                  "type": "string"
-                },
                 "icon": {
                   "name": "icon",
                   "required": false,
@@ -165,19 +181,27 @@
             }
           },
           {
+            "key": "healthScoreThresholdAlert",
+            "type": "number",
+            "default": 40,
+            "label": "Health score threshold",
+            "description": "Scores below this trigger CSM alert. Default lines up with the green/yellow/red tier transition. Declarative; wire via sibling std-notify.",
+            "tier": "customization"
+          },
+          {
             "key": "itemActions",
             "type": "[ItemAction]",
             "default": [
               {
+                "icon": "arrow-right",
                 "event": "OPEN_SCORE",
                 "variant": "primary",
-                "icon": "arrow-right",
                 "label": "Open"
               },
               {
+                "label": "Recalculate",
                 "variant": "secondary",
-                "event": "RECALCULATE",
-                "label": "Recalculate"
+                "event": "RECALCULATE"
               }
             ],
             "label": "Row actions",
@@ -185,8 +209,8 @@
             "tier": "customization",
             "items": {
               "properties": {
-                "variant": {
-                  "name": "variant",
+                "icon": {
+                  "name": "icon",
                   "required": false,
                   "type": "string"
                 },
@@ -200,13 +224,28 @@
                   "required": true,
                   "type": "string"
                 },
-                "icon": {
-                  "name": "icon",
+                "variant": {
+                  "name": "variant",
                   "required": false,
                   "type": "string"
                 }
               },
               "type": "object"
+            }
+          },
+          {
+            "key": "renewalReminderDaysBefore",
+            "type": "[number]",
+            "default": [
+              30,
+              7,
+              1
+            ],
+            "label": "Renewal reminder days-before",
+            "description": "Days before subscription renewal to send health-score-driven check-ins. Declarative; wire via sibling std-reminder-scheduler.",
+            "tier": "customization",
+            "items": {
+              "type": "number"
             }
           },
           {

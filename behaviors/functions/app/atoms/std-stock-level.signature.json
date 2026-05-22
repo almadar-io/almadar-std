@@ -61,33 +61,57 @@
         "listenedEvents": [],
         "overridableConfigKeys": [
           {
+            "key": "cycleCountFrequencyDays",
+            "type": "number",
+            "default": 30,
+            "label": "Cycle count cadence (days)",
+            "description": "Days between scheduled inventory cycle counts. v1.2 declarative; wire via sibling std-lifecycle when available.",
+            "tier": "advanced"
+          },
+          {
+            "key": "defaultWarehouse",
+            "type": "string",
+            "default": "",
+            "label": "Default warehouse",
+            "description": "Warehouse used when a row doesn't specify a location.",
+            "tier": "customization"
+          },
+          {
+            "key": "expiryTrackingEnabled",
+            "type": "boolean",
+            "default": false,
+            "label": "Expiry tracking",
+            "description": "Track expiry dates and surface near-expiry rows. v1.2 declarative.",
+            "tier": "customization"
+          },
+          {
             "key": "fields",
             "type": "[FieldSpec]",
             "default": [
               {
-                "variant": "caption",
                 "name": "sku",
-                "label": "SKU"
+                "label": "SKU",
+                "variant": "caption"
               },
               {
+                "variant": "caption",
                 "name": "productName",
-                "label": "Product",
-                "variant": "caption"
+                "label": "Product"
               },
               {
-                "label": "Location",
+                "name": "locationId",
                 "variant": "caption",
-                "name": "locationId"
+                "label": "Location"
               },
               {
-                "name": "onHand",
                 "label": "On Hand",
-                "variant": "caption"
+                "variant": "caption",
+                "name": "onHand"
               },
               {
-                "label": "Reorder At",
                 "variant": "caption",
-                "name": "reorderPoint"
+                "name": "reorderPoint",
+                "label": "Reorder At"
               }
             ],
             "label": "Columns to show",
@@ -95,11 +119,6 @@
             "tier": "advanced",
             "items": {
               "properties": {
-                "format": {
-                  "name": "format",
-                  "required": false,
-                  "type": "string"
-                },
                 "key": {
                   "name": "key",
                   "required": false,
@@ -129,25 +148,38 @@
                   "name": "label",
                   "required": false,
                   "type": "string"
+                },
+                "format": {
+                  "name": "format",
+                  "required": false,
+                  "type": "string"
                 }
               },
               "type": "object"
             }
           },
           {
+            "key": "hazmatEnabled",
+            "type": "boolean",
+            "default": false,
+            "label": "Hazmat-classified inventory",
+            "description": "Flag hazmat SKUs for handling/storage compliance.",
+            "tier": "advanced"
+          },
+          {
             "key": "itemActions",
             "type": "[ItemAction]",
             "default": [
               {
-                "icon": "arrow-right",
                 "label": "Open",
+                "variant": "primary",
                 "event": "OPEN_STOCK",
-                "variant": "primary"
+                "icon": "arrow-right"
               },
               {
                 "label": "Adjust",
-                "variant": "danger",
-                "event": "ADJUST_STOCK"
+                "event": "ADJUST_STOCK",
+                "variant": "danger"
               }
             ],
             "label": "Row actions",
@@ -160,13 +192,13 @@
                   "required": false,
                   "type": "string"
                 },
-                "label": {
-                  "name": "label",
+                "event": {
+                  "name": "event",
                   "required": true,
                   "type": "string"
                 },
-                "event": {
-                  "name": "event",
+                "label": {
+                  "name": "label",
                   "required": true,
                   "type": "string"
                 },
@@ -178,6 +210,54 @@
               },
               "type": "object"
             }
+          },
+          {
+            "key": "lotTrackingEnabled",
+            "type": "boolean",
+            "default": false,
+            "label": "Lot tracking",
+            "description": "Track lot/batch numbers per receipt. v1.2 declarative.",
+            "tier": "customization"
+          },
+          {
+            "key": "lowStockThreshold",
+            "type": "number",
+            "default": 10,
+            "label": "Low-stock threshold",
+            "description": "Default on-hand quantity below which a SKU is flagged as low. v1.2 declarative; surfaced for downstream std-notify composition.",
+            "tier": "essential"
+          },
+          {
+            "key": "multiLocationEnabled",
+            "type": "boolean",
+            "default": false,
+            "label": "Multi-location",
+            "description": "Track on-hand stock across multiple warehouses.",
+            "tier": "customization"
+          },
+          {
+            "key": "reorderPoint",
+            "type": "number",
+            "default": 5,
+            "label": "Default reorder point",
+            "description": "Default reorder trigger applied to new stock rows when their per-row reorderPoint isn't set.",
+            "tier": "essential"
+          },
+          {
+            "key": "safetyStockDays",
+            "type": "number",
+            "default": 7,
+            "label": "Safety stock (days)",
+            "description": "Days of expected demand to keep as buffer above the reorder point.",
+            "tier": "customization"
+          },
+          {
+            "key": "serialTrackingEnabled",
+            "type": "boolean",
+            "default": false,
+            "label": "Serial tracking",
+            "description": "Track individual serial numbers per unit. v1.2 declarative.",
+            "tier": "customization"
           },
           {
             "key": "title",

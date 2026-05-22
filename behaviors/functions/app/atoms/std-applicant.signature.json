@@ -66,33 +66,65 @@
         "listenedEvents": [],
         "overridableConfigKeys": [
           {
+            "key": "anonymizeOnRejection",
+            "type": "boolean",
+            "default": false,
+            "label": "Anonymize on rejection",
+            "description": "When true, scrub PII (name, email, phone, resumeUrl) on REJECT_APPLICANT. Pair with std-data-erasure.",
+            "tier": "customization"
+          },
+          {
+            "key": "backgroundCheckRequired",
+            "type": "boolean",
+            "default": false,
+            "label": "Background check required",
+            "description": "Block ADVANCE_STAGE to 'hired' until a background check is on file.",
+            "tier": "customization"
+          },
+          {
+            "key": "eVerifyRequired",
+            "type": "boolean",
+            "default": false,
+            "label": "E-Verify required",
+            "description": "US I-9 / E-Verify gate. Block ADVANCE_STAGE to 'hired' until verification passes.",
+            "tier": "customization"
+          },
+          {
+            "key": "equalOpportunityTrackingEnabled",
+            "type": "boolean",
+            "default": false,
+            "label": "Equal opportunity tracking",
+            "description": "Capture demographic data separately for EEO reporting (sibling collection, not on Applicant entity).",
+            "tier": "advanced"
+          },
+          {
             "key": "fields",
             "type": "[FieldSpec]",
             "default": [
               {
-                "variant": "caption",
+                "label": "Name",
                 "name": "name",
-                "label": "Name"
+                "variant": "caption"
               },
               {
                 "label": "Email",
-                "variant": "caption",
-                "name": "email"
+                "name": "email",
+                "variant": "caption"
               },
               {
-                "name": "jobId",
                 "variant": "caption",
+                "name": "jobId",
                 "label": "Job"
               },
               {
+                "label": "Stage",
                 "name": "stage",
-                "variant": "badge",
-                "label": "Stage"
+                "variant": "badge"
               },
               {
                 "name": "appliedAt",
-                "variant": "caption",
-                "label": "Applied"
+                "label": "Applied",
+                "variant": "caption"
               }
             ],
             "label": "Columns to show",
@@ -100,13 +132,18 @@
             "tier": "customization",
             "items": {
               "properties": {
+                "name": {
+                  "name": "name",
+                  "required": true,
+                  "type": "string"
+                },
                 "label": {
                   "name": "label",
                   "required": false,
                   "type": "string"
                 },
-                "header": {
-                  "name": "header",
+                "icon": {
+                  "name": "icon",
                   "required": false,
                   "type": "string"
                 },
@@ -115,13 +152,8 @@
                   "required": false,
                   "type": "string"
                 },
-                "name": {
-                  "name": "name",
-                  "required": true,
-                  "type": "string"
-                },
-                "icon": {
-                  "name": "icon",
+                "format": {
+                  "name": "format",
                   "required": false,
                   "type": "string"
                 },
@@ -130,8 +162,8 @@
                   "required": false,
                   "type": "string"
                 },
-                "format": {
-                  "name": "format",
+                "header": {
+                  "name": "header",
                   "required": false,
                   "type": "string"
                 }
@@ -140,19 +172,27 @@
             }
           },
           {
+            "key": "i9DocumentsRequired",
+            "type": "boolean",
+            "default": false,
+            "label": "I-9 documents required",
+            "description": "Require I-9 supporting documents at the hired stage.",
+            "tier": "customization"
+          },
+          {
             "key": "itemActions",
             "type": "[ItemAction]",
             "default": [
               {
-                "label": "Open",
                 "icon": "arrow-right",
-                "variant": "primary",
-                "event": "OPEN_APPLICANT"
+                "label": "Open",
+                "event": "OPEN_APPLICANT",
+                "variant": "primary"
               },
               {
-                "event": "REJECT_APPLICANT",
+                "variant": "danger",
                 "label": "Reject",
-                "variant": "danger"
+                "event": "REJECT_APPLICANT"
               }
             ],
             "label": "Row actions",
@@ -183,6 +223,14 @@
               },
               "type": "object"
             }
+          },
+          {
+            "key": "retentionAfterRejectionDays",
+            "type": "number",
+            "default": 730,
+            "label": "Retention after rejection (days)",
+            "description": "Days to keep rejected applicants. Default 730 (2 years) is typical EEOC retention.",
+            "tier": "advanced"
           },
           {
             "key": "title",

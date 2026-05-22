@@ -29,6 +29,16 @@
             "required": false
           },
           {
+            "name": "before",
+            "type": "object",
+            "required": false
+          },
+          {
+            "name": "after",
+            "type": "object",
+            "required": false
+          },
+          {
             "name": "recordedAt",
             "type": "number",
             "required": false
@@ -46,6 +56,14 @@
         "listenedEvents": [],
         "overridableConfigKeys": [
           {
+            "key": "captureBeforeAfter",
+            "type": "boolean",
+            "default": false,
+            "label": "Capture before/after snapshots",
+            "description": "When true, persist `before` and `after` object snapshots from @payload.data on each audit row. Default off to keep audit rows small.",
+            "tier": "advanced"
+          },
+          {
             "key": "captureEntity",
             "type": "string",
             "default": "",
@@ -56,12 +74,9 @@
           {
             "key": "captureEventTypes",
             "type": "[string]",
-            "default": [
-              "Saved",
-              "Deleted"
-            ],
-            "label": "Event suffixes",
-            "description": "Mutation suffixes (Saved, Deleted, etc.) that trigger an audit row",
+            "default": [],
+            "label": "Event-kind filter",
+            "description": "When set, only @payload.data.kind values in this list are audited. Empty list = capture every event. Requires the upstream event to include a `kind` field on its payload.",
             "tier": "advanced",
             "items": {
               "type": "string"
@@ -72,11 +87,19 @@
             "type": "[string]",
             "default": [],
             "label": "Skip fields",
-            "description": "Entity fields to omit from the audit payload",
+            "description": "Entity fields to omit from the audit payload (declarative; before/after still capture all fields in v1.1 — field exclusion lands when captureBeforeAfter wiring filters per-field).",
             "tier": "advanced",
             "items": {
               "type": "string"
             }
+          },
+          {
+            "key": "retentionDays",
+            "type": "number",
+            "default": 2555,
+            "label": "Retention (days)",
+            "description": "Days to keep audit rows. Default 2555 (7 years) for typical compliance regimes. WIRING DEFERRED: retention enforcement requires composing `std-lifecycle` against AuditEntry with a delete rule (gap — docs/Almadar_Std_Factories.md).",
+            "tier": "advanced"
           }
         ],
         "capabilities": [

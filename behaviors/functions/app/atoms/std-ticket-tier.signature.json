@@ -67,28 +67,70 @@
           "SELL",
           "CLOSE",
           "TicketTierLoaded",
-          "TicketTierLoadFailed"
+          "TicketTierLoadFailed",
+          "TicketTierUpdated",
+          "TicketTierUpdateFailed"
         ],
         "listenedEvents": [],
         "overridableConfigKeys": [
+          {
+            "key": "allergenWarningsEnabled",
+            "type": "boolean",
+            "default": true,
+            "label": "Allergen warnings",
+            "description": "Surface allergen warnings on bundled food/drink items.",
+            "tier": "customization"
+          },
+          {
+            "key": "allowSplitChecks",
+            "type": "boolean",
+            "default": false,
+            "label": "Allow split checks",
+            "description": "Permit splitting a multi-ticket order across multiple payments.",
+            "tier": "customization"
+          },
+          {
+            "key": "complianceJurisdiction",
+            "type": "string",
+            "default": "",
+            "label": "Compliance jurisdiction",
+            "description": "Drives ticket-tax + reporting rules per locale ('US-CA', 'EU-DE', …). v1.2 declarative.",
+            "tier": "advanced"
+          },
+          {
+            "key": "coursingEnabled",
+            "type": "boolean",
+            "default": false,
+            "label": "Coursing enabled",
+            "description": "Track ordered courses when tier purchases include meals.",
+            "tier": "customization"
+          },
+          {
+            "key": "currency",
+            "type": "string",
+            "default": "USD",
+            "label": "Default currency",
+            "description": "ISO 4217 currency code (USD, EUR, GBP, …) for new tier rows.",
+            "tier": "essential"
+          },
           {
             "key": "fields",
             "type": "[FieldSpec]",
             "default": [
               {
-                "name": "name",
                 "label": "Tier",
-                "variant": "badge"
+                "variant": "badge",
+                "name": "name"
               },
               {
-                "name": "price",
                 "variant": "caption",
+                "name": "price",
                 "label": "Price"
               },
               {
-                "name": "currency",
+                "variant": "badge",
                 "label": "Currency",
-                "variant": "badge"
+                "name": "currency"
               },
               {
                 "variant": "caption",
@@ -96,8 +138,8 @@
                 "label": "Total"
               },
               {
-                "label": "Sold",
                 "variant": "caption",
+                "label": "Sold",
                 "name": "quantitySold"
               },
               {
@@ -126,13 +168,13 @@
                   "required": false,
                   "type": "string"
                 },
-                "header": {
-                  "name": "header",
+                "key": {
+                  "name": "key",
                   "required": false,
                   "type": "string"
                 },
-                "key": {
-                  "name": "key",
+                "header": {
+                  "name": "header",
                   "required": false,
                   "type": "string"
                 },
@@ -151,6 +193,14 @@
             }
           },
           {
+            "key": "gracePeriodDays",
+            "type": "number",
+            "default": 0,
+            "label": "Grace period (days)",
+            "description": "Days after availability ends before the tier flips to closed.",
+            "tier": "customization"
+          },
+          {
             "key": "itemActions",
             "type": "[ItemAction]",
             "default": [
@@ -162,9 +212,9 @@
               },
               {
                 "variant": "danger",
-                "icon": "x",
+                "label": "Close",
                 "event": "CLOSE",
-                "label": "Close"
+                "icon": "x"
               }
             ],
             "label": "Row actions",
@@ -177,8 +227,8 @@
                   "required": true,
                   "type": "string"
                 },
-                "variant": {
-                  "name": "variant",
+                "icon": {
+                  "name": "icon",
                   "required": false,
                   "type": "string"
                 },
@@ -187,13 +237,105 @@
                   "required": true,
                   "type": "string"
                 },
-                "icon": {
-                  "name": "icon",
+                "variant": {
+                  "name": "variant",
                   "required": false,
                   "type": "string"
                 }
               },
               "type": "object"
+            }
+          },
+          {
+            "key": "kitchenAutoFire",
+            "type": "boolean",
+            "default": false,
+            "label": "Kitchen auto-fire",
+            "description": "Auto-fire concession orders bound to ticket tiers.",
+            "tier": "customization"
+          },
+          {
+            "key": "lateFeeAmount",
+            "type": "number",
+            "default": 0,
+            "label": "Late fee amount",
+            "description": "Flat cash amount or percentage (per lateFeePolicy).",
+            "tier": "customization"
+          },
+          {
+            "key": "lateFeePolicy",
+            "type": "string",
+            "default": "none",
+            "label": "Late fee policy",
+            "description": "Penalty applied to late ticket purchases. v1.2 declarative.",
+            "tier": "customization",
+            "enumValues": [
+              "none",
+              "flat",
+              "percent"
+            ]
+          },
+          {
+            "key": "retentionYears",
+            "type": "number",
+            "default": 7,
+            "label": "Retention (years)",
+            "description": "Years to keep ticket-tier records for accounting compliance.",
+            "tier": "advanced"
+          },
+          {
+            "key": "roundingMode",
+            "type": "string",
+            "default": "half-up",
+            "label": "Rounding mode",
+            "description": "Sub-cent rounding behavior on totals.",
+            "tier": "advanced",
+            "enumValues": [
+              "bankers",
+              "half-up",
+              "down"
+            ]
+          },
+          {
+            "key": "serviceCharge",
+            "type": "number",
+            "default": 0,
+            "label": "Service charge (%)",
+            "description": "Service-charge percentage applied to tier purchases.",
+            "tier": "customization"
+          },
+          {
+            "key": "tableTurnoverTargetMinutes",
+            "type": "number",
+            "default": 60,
+            "label": "Table turnover target (min)",
+            "description": "Used for seated/VIP tier pacing. v1.2 declarative.",
+            "tier": "advanced"
+          },
+          {
+            "key": "taxStrategy",
+            "type": "string",
+            "default": "exclusive",
+            "label": "Tax strategy",
+            "description": "How tax is applied to tier prices: inclusive / exclusive / none.",
+            "tier": "customization",
+            "enumValues": [
+              "inclusive",
+              "exclusive",
+              "none"
+            ]
+          },
+          {
+            "key": "tipPresets",
+            "type": "[number]",
+            "default": [
+              0
+            ],
+            "label": "Tip presets (%)",
+            "description": "Tip percentages exposed at ticket checkout (often 0 for events).",
+            "tier": "customization",
+            "items": {
+              "type": "number"
             }
           },
           {
@@ -222,6 +364,8 @@
       "SELL",
       "TicketTierLoadFailed",
       "TicketTierLoaded",
+      "TicketTierUpdateFailed",
+      "TicketTierUpdated",
       "UPDATE"
     ],
     "listenedEvents": []

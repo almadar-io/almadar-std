@@ -82,38 +82,78 @@
         "listenedEvents": [],
         "overridableConfigKeys": [
           {
+            "key": "blackoutDates",
+            "type": "[string]",
+            "default": [],
+            "label": "Blackout dates",
+            "description": "ISO dates blocked from booking. Compose std-lifecycle to enforce.",
+            "tier": "customization",
+            "items": {
+              "type": "string"
+            }
+          },
+          {
+            "key": "bookingHours",
+            "type": "string",
+            "default": "00:00-23:59",
+            "label": "Booking hours",
+            "description": "Daily window during which ticket purchases are allowed (HH:MM-HH:MM).",
+            "tier": "customization"
+          },
+          {
+            "key": "bookingWindowDays",
+            "type": "number",
+            "default": 180,
+            "label": "Booking window (days)",
+            "description": "How far in advance attendees can purchase tickets.",
+            "tier": "customization"
+          },
+          {
+            "key": "cancellationPolicy",
+            "type": "string",
+            "default": "partial-refund",
+            "label": "Cancellation policy",
+            "description": "Refund treatment when a ticket is cancelled inside the reschedule window.",
+            "tier": "customization",
+            "enumValues": [
+              "free",
+              "partial-refund",
+              "no-refund"
+            ]
+          },
+          {
             "key": "fields",
             "type": "[FieldSpec]",
             "default": [
               {
-                "variant": "caption",
+                "name": "name",
                 "label": "Name",
-                "name": "name"
+                "variant": "caption"
               },
               {
-                "name": "venue",
                 "label": "Venue",
-                "variant": "caption"
+                "variant": "caption",
+                "name": "venue"
               },
               {
                 "name": "startsAt",
-                "variant": "caption",
-                "label": "Starts"
-              },
-              {
-                "label": "Ends",
-                "name": "endsAt",
+                "label": "Starts",
                 "variant": "caption"
               },
               {
-                "label": "Capacity",
-                "variant": "caption",
-                "name": "capacity"
+                "name": "endsAt",
+                "label": "Ends",
+                "variant": "caption"
               },
               {
+                "name": "capacity",
+                "label": "Capacity",
+                "variant": "caption"
+              },
+              {
+                "name": "status",
                 "label": "Status",
-                "variant": "badge",
-                "name": "status"
+                "variant": "badge"
               }
             ],
             "label": "Columns to show",
@@ -121,6 +161,16 @@
             "tier": "customization",
             "items": {
               "properties": {
+                "header": {
+                  "name": "header",
+                  "required": false,
+                  "type": "string"
+                },
+                "name": {
+                  "name": "name",
+                  "required": true,
+                  "type": "string"
+                },
                 "label": {
                   "name": "label",
                   "required": false,
@@ -136,24 +186,14 @@
                   "required": false,
                   "type": "string"
                 },
-                "header": {
-                  "name": "header",
+                "variant": {
+                  "name": "variant",
                   "required": false,
                   "type": "string"
                 },
                 "icon": {
                   "name": "icon",
                   "required": false,
-                  "type": "string"
-                },
-                "variant": {
-                  "name": "variant",
-                  "required": false,
-                  "type": "string"
-                },
-                "name": {
-                  "name": "name",
-                  "required": true,
                   "type": "string"
                 }
               },
@@ -165,16 +205,16 @@
             "type": "[ItemAction]",
             "default": [
               {
-                "label": "Open",
-                "icon": "arrow-right",
+                "event": "OPEN_EVENT",
                 "variant": "primary",
-                "event": "OPEN_EVENT"
+                "icon": "arrow-right",
+                "label": "Open"
               },
               {
-                "label": "Cancel",
                 "event": "CANCEL",
                 "variant": "danger",
-                "icon": "x"
+                "icon": "x",
+                "label": "Cancel"
               }
             ],
             "label": "Row actions",
@@ -187,11 +227,6 @@
                   "required": false,
                   "type": "string"
                 },
-                "icon": {
-                  "name": "icon",
-                  "required": false,
-                  "type": "string"
-                },
                 "label": {
                   "name": "label",
                   "required": true,
@@ -201,10 +236,47 @@
                   "name": "event",
                   "required": true,
                   "type": "string"
+                },
+                "icon": {
+                  "name": "icon",
+                  "required": false,
+                  "type": "string"
                 }
               },
               "type": "object"
             }
+          },
+          {
+            "key": "leadTimeMinutes",
+            "type": "number",
+            "default": 60,
+            "label": "Lead time (minutes)",
+            "description": "Minimum minutes before startsAt that ticket sales remain open.",
+            "tier": "customization"
+          },
+          {
+            "key": "maxReschedules",
+            "type": "number",
+            "default": 1,
+            "label": "Max reschedules",
+            "description": "Hard cap on reschedule count per ticket.",
+            "tier": "advanced"
+          },
+          {
+            "key": "noShowGracePeriodMinutes",
+            "type": "number",
+            "default": 30,
+            "label": "No-show grace (minutes)",
+            "description": "Minutes after startsAt before unscanned tickets auto-mark no_show. Wire via std-lifecycle.",
+            "tier": "customization"
+          },
+          {
+            "key": "rescheduleWindowHours",
+            "type": "number",
+            "default": 48,
+            "label": "Reschedule window (hours)",
+            "description": "Hours before startsAt during which attendees can self-reschedule.",
+            "tier": "customization"
           },
           {
             "key": "title",

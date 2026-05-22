@@ -71,18 +71,58 @@
         "listenedEvents": [],
         "overridableConfigKeys": [
           {
+            "key": "blackoutDates",
+            "type": "[string]",
+            "default": [],
+            "label": "Blackout dates",
+            "description": "ISO dates blocked from check-in. Compose std-lifecycle to enforce.",
+            "tier": "customization",
+            "items": {
+              "type": "string"
+            }
+          },
+          {
+            "key": "bookingHours",
+            "type": "string",
+            "default": "06:00-23:00",
+            "label": "Booking hours",
+            "description": "Daily window during which check-ins are accepted (HH:MM-HH:MM).",
+            "tier": "customization"
+          },
+          {
+            "key": "bookingWindowDays",
+            "type": "number",
+            "default": 1,
+            "label": "Booking window (days)",
+            "description": "How far in advance attendees can pre-register a check-in.",
+            "tier": "customization"
+          },
+          {
+            "key": "cancellationPolicy",
+            "type": "string",
+            "default": "free",
+            "label": "Cancellation policy",
+            "description": "Refund treatment when a pre-registered check-in is cancelled.",
+            "tier": "customization",
+            "enumValues": [
+              "free",
+              "partial-refund",
+              "no-refund"
+            ]
+          },
+          {
             "key": "fields",
             "type": "[FieldSpec]",
             "default": [
               {
-                "label": "Type",
                 "variant": "badge",
+                "label": "Type",
                 "name": "targetType"
               },
               {
+                "name": "targetId",
                 "variant": "caption",
-                "label": "Target",
-                "name": "targetId"
+                "label": "Target"
               },
               {
                 "name": "userId",
@@ -90,9 +130,9 @@
                 "variant": "caption"
               },
               {
+                "label": "Mode",
                 "variant": "badge",
-                "name": "mode",
-                "label": "Mode"
+                "name": "mode"
               },
               {
                 "label": "When",
@@ -105,28 +145,8 @@
             "tier": "customization",
             "items": {
               "properties": {
-                "header": {
-                  "name": "header",
-                  "required": false,
-                  "type": "string"
-                },
-                "name": {
-                  "name": "name",
-                  "required": true,
-                  "type": "string"
-                },
                 "label": {
                   "name": "label",
-                  "required": false,
-                  "type": "string"
-                },
-                "variant": {
-                  "name": "variant",
-                  "required": false,
-                  "type": "string"
-                },
-                "icon": {
-                  "name": "icon",
                   "required": false,
                   "type": "string"
                 },
@@ -137,6 +157,26 @@
                 },
                 "key": {
                   "name": "key",
+                  "required": false,
+                  "type": "string"
+                },
+                "header": {
+                  "name": "header",
+                  "required": false,
+                  "type": "string"
+                },
+                "name": {
+                  "name": "name",
+                  "required": true,
+                  "type": "string"
+                },
+                "icon": {
+                  "name": "icon",
+                  "required": false,
+                  "type": "string"
+                },
+                "variant": {
+                  "name": "variant",
                   "required": false,
                   "type": "string"
                 }
@@ -151,13 +191,13 @@
               {
                 "label": "Open",
                 "event": "OPEN_CHECKIN",
-                "variant": "primary",
-                "icon": "arrow-right"
+                "icon": "arrow-right",
+                "variant": "primary"
               },
               {
                 "label": "Revoke",
-                "variant": "danger",
-                "event": "REVOKE_CHECKIN"
+                "event": "REVOKE_CHECKIN",
+                "variant": "danger"
               }
             ],
             "label": "Row actions",
@@ -165,14 +205,14 @@
             "tier": "customization",
             "items": {
               "properties": {
-                "event": {
-                  "name": "event",
-                  "required": true,
-                  "type": "string"
-                },
                 "variant": {
                   "name": "variant",
                   "required": false,
+                  "type": "string"
+                },
+                "label": {
+                  "name": "label",
+                  "required": true,
                   "type": "string"
                 },
                 "icon": {
@@ -180,8 +220,8 @@
                   "required": false,
                   "type": "string"
                 },
-                "label": {
-                  "name": "label",
+                "event": {
+                  "name": "event",
                   "required": true,
                   "type": "string"
                 }
@@ -190,11 +230,43 @@
             }
           },
           {
+            "key": "leadTimeMinutes",
+            "type": "number",
+            "default": 0,
+            "label": "Lead time (minutes)",
+            "description": "Minutes before scheduled arrival at which check-in is accepted.",
+            "tier": "customization"
+          },
+          {
+            "key": "maxReschedules",
+            "type": "number",
+            "default": 2,
+            "label": "Max reschedules",
+            "description": "Hard cap on reschedule count per pre-registered check-in.",
+            "tier": "advanced"
+          },
+          {
             "key": "mode",
             "type": "string",
             "default": "geo",
             "label": "Check-in mode",
             "description": "How attendees check in (geo location or QR code)",
+            "tier": "customization"
+          },
+          {
+            "key": "noShowGracePeriodMinutes",
+            "type": "number",
+            "default": 15,
+            "label": "No-show grace (minutes)",
+            "description": "Minutes after the scheduled arrival window before a no-show is logged.",
+            "tier": "customization"
+          },
+          {
+            "key": "rescheduleWindowHours",
+            "type": "number",
+            "default": 24,
+            "label": "Reschedule window (hours)",
+            "description": "Hours during which an attendee can amend their pre-registered check-in.",
             "tier": "customization"
           },
           {

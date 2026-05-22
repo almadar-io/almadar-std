@@ -79,43 +79,61 @@
           "REJECT",
           "EXECUTE",
           "ChangeOrderLoaded",
-          "ChangeOrderLoadFailed"
+          "ChangeOrderLoadFailed",
+          "ChangeOrderUpdated",
+          "ChangeOrderUpdateFailed"
         ],
         "listenedEvents": [],
         "overridableConfigKeys": [
+          {
+            "key": "complianceJurisdiction",
+            "type": "string",
+            "default": "",
+            "label": "Compliance jurisdiction",
+            "description": "Drives contracting + retention rules per locale: 'US-CA', 'EU-DE', 'UK', etc. Declarative.",
+            "tier": "advanced"
+          },
+          {
+            "key": "currency",
+            "type": "string",
+            "default": "USD",
+            "label": "Default currency",
+            "description": "ISO 4217 currency code (USD, EUR, GBP, …) for cost impact.",
+            "tier": "essential"
+          },
           {
             "key": "fields",
             "type": "[FieldSpec]",
             "default": [
               {
-                "label": "CO #",
+                "variant": "caption",
                 "name": "coNumber",
-                "variant": "caption"
+                "label": "CO #"
               },
               {
-                "name": "description",
                 "label": "Description",
+                "variant": "caption",
+                "name": "description"
+              },
+              {
+                "label": "Cost Impact",
+                "name": "costImpact",
                 "variant": "caption"
               },
               {
-                "variant": "caption",
-                "label": "Cost Impact",
-                "name": "costImpact"
-              },
-              {
-                "variant": "caption",
                 "name": "scheduleImpactDays",
+                "variant": "caption",
                 "label": "Days"
               },
               {
-                "name": "status",
                 "label": "Status",
-                "variant": "badge"
+                "variant": "badge",
+                "name": "status"
               },
               {
-                "name": "requestedBy",
                 "label": "Requested By",
-                "variant": "caption"
+                "variant": "caption",
+                "name": "requestedBy"
               }
             ],
             "label": "Columns to show",
@@ -123,28 +141,8 @@
             "tier": "customization",
             "items": {
               "properties": {
-                "format": {
-                  "name": "format",
-                  "required": false,
-                  "type": "string"
-                },
                 "variant": {
                   "name": "variant",
-                  "required": false,
-                  "type": "string"
-                },
-                "key": {
-                  "name": "key",
-                  "required": false,
-                  "type": "string"
-                },
-                "header": {
-                  "name": "header",
-                  "required": false,
-                  "type": "string"
-                },
-                "label": {
-                  "name": "label",
                   "required": false,
                   "type": "string"
                 },
@@ -157,24 +155,52 @@
                   "name": "icon",
                   "required": false,
                   "type": "string"
+                },
+                "label": {
+                  "name": "label",
+                  "required": false,
+                  "type": "string"
+                },
+                "format": {
+                  "name": "format",
+                  "required": false,
+                  "type": "string"
+                },
+                "key": {
+                  "name": "key",
+                  "required": false,
+                  "type": "string"
+                },
+                "header": {
+                  "name": "header",
+                  "required": false,
+                  "type": "string"
                 }
               },
               "type": "object"
             }
           },
           {
+            "key": "gracePeriodDays",
+            "type": "number",
+            "default": 7,
+            "label": "Grace period (days)",
+            "description": "Days a pending approval can sit before escalation. Wire via sibling std-lifecycle rule.",
+            "tier": "customization"
+          },
+          {
             "key": "itemActions",
             "type": "[ItemAction]",
             "default": [
               {
+                "icon": "arrow-right",
                 "variant": "primary",
                 "label": "Open",
-                "event": "OPEN_CHANGE_ORDER",
-                "icon": "arrow-right"
+                "event": "OPEN_CHANGE_ORDER"
               },
               {
-                "label": "Delete",
                 "variant": "danger",
+                "label": "Delete",
                 "event": "REQUEST_DELETE"
               }
             ],
@@ -183,8 +209,8 @@
             "tier": "customization",
             "items": {
               "properties": {
-                "label": {
-                  "name": "label",
+                "event": {
+                  "name": "event",
                   "required": true,
                   "type": "string"
                 },
@@ -193,8 +219,8 @@
                   "required": false,
                   "type": "string"
                 },
-                "event": {
-                  "name": "event",
+                "label": {
+                  "name": "label",
                   "required": true,
                   "type": "string"
                 },
@@ -206,6 +232,61 @@
               },
               "type": "object"
             }
+          },
+          {
+            "key": "lateFeeAmount",
+            "type": "number",
+            "default": 0,
+            "label": "Late fee amount",
+            "description": "Flat cash amount or percentage (per lateFeePolicy).",
+            "tier": "customization"
+          },
+          {
+            "key": "lateFeePolicy",
+            "type": "string",
+            "default": "none",
+            "label": "Late fee policy",
+            "description": "Penalty when change order execution slips past approved date. Declarative; wiring deferred.",
+            "tier": "customization",
+            "enumValues": [
+              "none",
+              "flat",
+              "percent"
+            ]
+          },
+          {
+            "key": "retentionYears",
+            "type": "number",
+            "default": 7,
+            "label": "Retention (years)",
+            "description": "Years to keep change-order records for compliance.",
+            "tier": "advanced"
+          },
+          {
+            "key": "roundingMode",
+            "type": "string",
+            "default": "half-up",
+            "label": "Rounding mode",
+            "description": "Sub-cent rounding behavior for cost impact calculations.",
+            "tier": "advanced",
+            "enumValues": [
+              "bankers",
+              "half-up",
+              "down"
+            ]
+          },
+          {
+            "key": "taxStrategy",
+            "type": "string",
+            "default": "exclusive",
+            "label": "Tax strategy",
+            "description": "inclusive = tax baked into the cost impact; exclusive = tax added on top; none = no tax.",
+            "tier": "customization",
+            "enumValues": [
+              "inclusive",
+              "exclusive",
+              "none"
+            ]
           },
           {
             "key": "title",
@@ -231,6 +312,8 @@
       "CLOSE_VIEW",
       "ChangeOrderLoadFailed",
       "ChangeOrderLoaded",
+      "ChangeOrderUpdateFailed",
+      "ChangeOrderUpdated",
       "EXECUTE",
       "OPEN_CHANGE_ORDER",
       "REJECT",

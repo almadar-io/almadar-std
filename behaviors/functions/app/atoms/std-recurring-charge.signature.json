@@ -81,18 +81,36 @@
           "CHARGE",
           "CANCEL",
           "SubscriptionLoaded",
-          "SubscriptionLoadFailed"
+          "SubscriptionLoadFailed",
+          "SubscriptionUpdated",
+          "SubscriptionUpdateFailed"
         ],
         "listenedEvents": [],
         "overridableConfigKeys": [
+          {
+            "key": "complianceJurisdiction",
+            "type": "string",
+            "default": "",
+            "label": "Compliance jurisdiction",
+            "description": "Drives subscription regulations per locale: 'US-CA', 'EU-DE', 'UK', etc. Declarative.",
+            "tier": "advanced"
+          },
+          {
+            "key": "currency",
+            "type": "string",
+            "default": "USD",
+            "label": "Default currency",
+            "description": "ISO 4217 currency code (USD, EUR, GBP, …) for new subscriptions.",
+            "tier": "essential"
+          },
           {
             "key": "fields",
             "type": "[FieldSpec]",
             "default": [
               {
-                "label": "Customer",
                 "variant": "caption",
-                "name": "customerId"
+                "name": "customerId",
+                "label": "Customer"
               },
               {
                 "label": "Plan",
@@ -100,29 +118,29 @@
                 "name": "planId"
               },
               {
+                "name": "status",
                 "label": "Status",
-                "variant": "badge",
-                "name": "status"
-              },
-              {
-                "name": "amount",
-                "label": "Amount",
-                "variant": "caption"
-              },
-              {
-                "label": "Interval",
-                "variant": "badge",
-                "name": "interval"
-              },
-              {
-                "label": "Next Bill",
-                "name": "nextBillingAt",
-                "variant": "caption"
+                "variant": "badge"
               },
               {
                 "variant": "caption",
+                "name": "amount",
+                "label": "Amount"
+              },
+              {
+                "name": "interval",
+                "label": "Interval",
+                "variant": "badge"
+              },
+              {
+                "variant": "caption",
+                "name": "nextBillingAt",
+                "label": "Next Bill"
+              },
+              {
+                "label": "Retries",
                 "name": "attemptCount",
-                "label": "Retries"
+                "variant": "caption"
               }
             ],
             "label": "Columns to show",
@@ -130,23 +148,8 @@
             "tier": "advanced",
             "items": {
               "properties": {
-                "name": {
-                  "name": "name",
-                  "required": true,
-                  "type": "string"
-                },
                 "icon": {
                   "name": "icon",
-                  "required": false,
-                  "type": "string"
-                },
-                "format": {
-                  "name": "format",
-                  "required": false,
-                  "type": "string"
-                },
-                "key": {
-                  "name": "key",
                   "required": false,
                   "type": "string"
                 },
@@ -155,8 +158,23 @@
                   "required": false,
                   "type": "string"
                 },
+                "key": {
+                  "name": "key",
+                  "required": false,
+                  "type": "string"
+                },
+                "name": {
+                  "name": "name",
+                  "required": true,
+                  "type": "string"
+                },
                 "variant": {
                   "name": "variant",
+                  "required": false,
+                  "type": "string"
+                },
+                "format": {
+                  "name": "format",
                   "required": false,
                   "type": "string"
                 },
@@ -170,18 +188,26 @@
             }
           },
           {
+            "key": "gracePeriodDays",
+            "type": "number",
+            "default": 3,
+            "label": "Grace period (days)",
+            "description": "Days after a failed charge before the subscription is marked past-due. Wire via sibling std-lifecycle rule.",
+            "tier": "customization"
+          },
+          {
             "key": "itemActions",
             "type": "[ItemAction]",
             "default": [
               {
-                "event": "OPEN_SUBSCRIPTION",
+                "icon": "arrow-right",
                 "label": "Open",
-                "variant": "primary",
-                "icon": "arrow-right"
+                "event": "OPEN_SUBSCRIPTION",
+                "variant": "primary"
               },
               {
-                "label": "Cancel",
                 "event": "CANCEL",
+                "label": "Cancel",
                 "variant": "danger"
               }
             ],
@@ -190,14 +216,14 @@
             "tier": "customization",
             "items": {
               "properties": {
-                "icon": {
-                  "name": "icon",
-                  "required": false,
-                  "type": "string"
-                },
                 "event": {
                   "name": "event",
                   "required": true,
+                  "type": "string"
+                },
+                "icon": {
+                  "name": "icon",
+                  "required": false,
                   "type": "string"
                 },
                 "variant": {
@@ -215,12 +241,67 @@
             }
           },
           {
+            "key": "lateFeeAmount",
+            "type": "number",
+            "default": 0,
+            "label": "Late fee amount",
+            "description": "Flat cash amount or percentage (per lateFeePolicy).",
+            "tier": "customization"
+          },
+          {
+            "key": "lateFeePolicy",
+            "type": "string",
+            "default": "none",
+            "label": "Late fee policy",
+            "description": "How late fees compute on overdue subscriptions. Declarative; wiring deferred.",
+            "tier": "customization",
+            "enumValues": [
+              "none",
+              "flat",
+              "percent"
+            ]
+          },
+          {
             "key": "maxRetries",
             "type": "number",
             "default": 4,
             "label": "Max retry attempts",
             "description": "How many times a failed charge retries before going past-due",
             "tier": "advanced"
+          },
+          {
+            "key": "retentionYears",
+            "type": "number",
+            "default": 7,
+            "label": "Retention (years)",
+            "description": "Years to keep subscription records for compliance.",
+            "tier": "advanced"
+          },
+          {
+            "key": "roundingMode",
+            "type": "string",
+            "default": "half-up",
+            "label": "Rounding mode",
+            "description": "Sub-cent rounding behavior for subscription amounts.",
+            "tier": "advanced",
+            "enumValues": [
+              "bankers",
+              "half-up",
+              "down"
+            ]
+          },
+          {
+            "key": "taxStrategy",
+            "type": "string",
+            "default": "exclusive",
+            "label": "Tax strategy",
+            "description": "inclusive = tax baked into the amount; exclusive = tax added on top; none = no tax.",
+            "tier": "customization",
+            "enumValues": [
+              "inclusive",
+              "exclusive",
+              "none"
+            ]
           },
           {
             "key": "title",
@@ -247,7 +328,9 @@
       "CLOSE_VIEW",
       "OPEN_SUBSCRIPTION",
       "SubscriptionLoadFailed",
-      "SubscriptionLoaded"
+      "SubscriptionLoaded",
+      "SubscriptionUpdateFailed",
+      "SubscriptionUpdated"
     ],
     "listenedEvents": []
   }

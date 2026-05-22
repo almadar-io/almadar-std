@@ -61,43 +61,82 @@
           "PUBLISH",
           "ARCHIVE",
           "HelpCategoryLoaded",
-          "HelpCategoryLoadFailed"
+          "HelpCategoryLoadFailed",
+          "HelpCategoryUpdated",
+          "HelpCategoryUpdateFailed"
         ],
         "listenedEvents": [],
         "overridableConfigKeys": [
+          {
+            "key": "allowRollback",
+            "type": "boolean",
+            "default": true,
+            "label": "Allow rollback",
+            "description": "Permit reverting a category to a prior version.",
+            "tier": "customization"
+          },
+          {
+            "key": "defaultLocale",
+            "type": "string",
+            "default": "en",
+            "label": "Default locale",
+            "description": "Locale used when no translation matches the reader's language.",
+            "tier": "customization"
+          },
+          {
+            "key": "draftAutosaveSeconds",
+            "type": "number",
+            "default": 30,
+            "label": "Draft autosave interval (s)",
+            "description": "Seconds between draft autosaves in the editor.",
+            "tier": "advanced"
+          },
+          {
+            "key": "enabledLocales",
+            "type": "[string]",
+            "default": [
+              "en"
+            ],
+            "label": "Enabled locales",
+            "description": "Locales the category name/description can be translated into.",
+            "tier": "customization",
+            "items": {
+              "type": "string"
+            }
+          },
           {
             "key": "fields",
             "type": "[FieldSpec]",
             "default": [
               {
-                "name": "name",
+                "variant": "caption",
                 "label": "Name",
-                "variant": "caption"
+                "name": "name"
+              },
+              {
+                "label": "Slug",
+                "variant": "caption",
+                "name": "slug"
               },
               {
                 "variant": "caption",
-                "name": "slug",
-                "label": "Slug"
-              },
-              {
-                "label": "Articles",
                 "name": "articleCount",
-                "variant": "caption"
+                "label": "Articles"
               },
               {
                 "label": "Order",
-                "variant": "caption",
-                "name": "sortOrder"
+                "name": "sortOrder",
+                "variant": "caption"
               },
               {
                 "name": "status",
-                "label": "Status",
-                "variant": "badge"
+                "variant": "badge",
+                "label": "Status"
               },
               {
-                "variant": "caption",
                 "name": "updatedAt",
-                "label": "Updated"
+                "label": "Updated",
+                "variant": "caption"
               }
             ],
             "label": "Columns to show",
@@ -105,8 +144,8 @@
             "tier": "customization",
             "items": {
               "properties": {
-                "format": {
-                  "name": "format",
+                "icon": {
+                  "name": "icon",
                   "required": false,
                   "type": "string"
                 },
@@ -115,9 +154,9 @@
                   "required": false,
                   "type": "string"
                 },
-                "icon": {
-                  "name": "icon",
-                  "required": false,
+                "name": {
+                  "name": "name",
+                  "required": true,
                   "type": "string"
                 },
                 "header": {
@@ -125,9 +164,9 @@
                   "required": false,
                   "type": "string"
                 },
-                "name": {
-                  "name": "name",
-                  "required": true,
+                "variant": {
+                  "name": "variant",
+                  "required": false,
                   "type": "string"
                 },
                 "label": {
@@ -135,8 +174,8 @@
                   "required": false,
                   "type": "string"
                 },
-                "variant": {
-                  "name": "variant",
+                "format": {
+                  "name": "format",
                   "required": false,
                   "type": "string"
                 }
@@ -149,10 +188,10 @@
             "type": "[ItemAction]",
             "default": [
               {
-                "event": "OPEN_CATEGORY",
-                "icon": "arrow-right",
+                "variant": "primary",
                 "label": "Open",
-                "variant": "primary"
+                "event": "OPEN_CATEGORY",
+                "icon": "arrow-right"
               },
               {
                 "event": "ARCHIVE",
@@ -165,16 +204,6 @@
             "tier": "customization",
             "items": {
               "properties": {
-                "variant": {
-                  "name": "variant",
-                  "required": false,
-                  "type": "string"
-                },
-                "icon": {
-                  "name": "icon",
-                  "required": false,
-                  "type": "string"
-                },
                 "event": {
                   "name": "event",
                   "required": true,
@@ -184,10 +213,44 @@
                   "name": "label",
                   "required": true,
                   "type": "string"
+                },
+                "icon": {
+                  "name": "icon",
+                  "required": false,
+                  "type": "string"
+                },
+                "variant": {
+                  "name": "variant",
+                  "required": false,
+                  "type": "string"
                 }
               },
               "type": "object"
             }
+          },
+          {
+            "key": "keepVersions",
+            "type": "number",
+            "default": 5,
+            "label": "Versions to retain",
+            "description": "Number of revisions to keep per category.",
+            "tier": "customization"
+          },
+          {
+            "key": "scheduledPublishEnabled",
+            "type": "boolean",
+            "default": false,
+            "label": "Scheduled publish",
+            "description": "Allow authors to schedule category publish. v1.2 declarative.",
+            "tier": "customization"
+          },
+          {
+            "key": "seoEnabled",
+            "type": "boolean",
+            "default": true,
+            "label": "SEO meta enabled",
+            "description": "Emit canonical + meta description tags on the category index page.",
+            "tier": "customization"
           },
           {
             "key": "title",
@@ -196,6 +259,19 @@
             "label": "Section title",
             "description": "Heading shown above the help center categories",
             "tier": "customization"
+          },
+          {
+            "key": "visibilityScope",
+            "type": "string",
+            "default": "public",
+            "label": "Visibility scope",
+            "description": "Who can see published categories: public web, internal staff, signed-in customers.",
+            "tier": "essential",
+            "enumValues": [
+              "public",
+              "internal",
+              "customer"
+            ]
           }
         ],
         "capabilities": []
@@ -213,6 +289,8 @@
       "CLOSE_VIEW",
       "HelpCategoryLoadFailed",
       "HelpCategoryLoaded",
+      "HelpCategoryUpdateFailed",
+      "HelpCategoryUpdated",
       "OPEN_CATEGORY",
       "PUBLISH"
     ],

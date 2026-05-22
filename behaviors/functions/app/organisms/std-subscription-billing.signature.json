@@ -78,8 +78,8 @@
                 "icon": "credit-card"
               },
               {
-                "label": "Invoices",
                 "href": "/invoices",
+                "label": "Invoices",
                 "icon": "receipt"
               },
               {
@@ -154,22 +154,22 @@
             "type": "unknown",
             "default": [
               {
-                "field": "interval",
-                "label": "Interval",
                 "filterType": "select",
                 "options": [
                   "monthly",
                   "yearly"
-                ]
+                ],
+                "label": "Interval",
+                "field": "interval"
               },
               {
-                "label": "Status",
-                "filterType": "select",
                 "options": [
                   "active",
                   "archived"
                 ],
-                "field": "status"
+                "filterType": "select",
+                "field": "status",
+                "label": "Status"
               }
             ]
           }
@@ -189,18 +189,15 @@
             "type": "unknown",
             "default": [
               {
-                "label": "Total",
                 "aggregation": "count",
-                "variant": "primary",
+                "label": "Total",
+                "icon": "credit-card",
                 "format": "number",
-                "icon": "credit-card"
+                "variant": "primary"
               },
               {
                 "format": "number",
-                "label": "Active",
-                "icon": "check-circle",
                 "variant": "success",
-                "aggregation": "count",
                 "filter": [
                   "fn",
                   "row",
@@ -209,13 +206,12 @@
                     "@row.status",
                     "active"
                   ]
-                ]
+                ],
+                "icon": "check-circle",
+                "label": "Active",
+                "aggregation": "count"
               },
               {
-                "format": "number",
-                "label": "Archived",
-                "aggregation": "count",
-                "icon": "archive",
                 "filter": [
                   "fn",
                   "row",
@@ -225,7 +221,11 @@
                     "archived"
                   ]
                 ],
-                "variant": "warning"
+                "icon": "archive",
+                "aggregation": "count",
+                "label": "Archived",
+                "variant": "warning",
+                "format": "number"
               }
             ]
           },
@@ -305,9 +305,9 @@
             "type": "unknown",
             "default": [
               {
-                "icon": "credit-card",
+                "name": "name",
                 "variant": "h3",
-                "name": "name"
+                "icon": "credit-card"
               },
               {
                 "variant": "caption",
@@ -318,8 +318,8 @@
                 "variant": "badge"
               },
               {
-                "name": "amount",
-                "variant": "body"
+                "variant": "body",
+                "name": "amount"
               },
               {
                 "name": "currency",
@@ -346,8 +346,8 @@
                 "event": "VIEW"
               },
               {
-                "event": "EDIT",
                 "label": "Edit",
+                "event": "EDIT",
                 "variant": "ghost"
               },
               {
@@ -643,13 +643,13 @@
             "default": [
               {
                 "icon": "credit-card",
-                "label": "Plans",
-                "href": "/plans"
+                "href": "/plans",
+                "label": "Plans"
               },
               {
-                "href": "/invoices",
                 "label": "Invoices",
-                "icon": "receipt"
+                "icon": "receipt",
+                "href": "/invoices"
               },
               {
                 "href": "/dunning",
@@ -695,9 +695,44 @@
         "listenedEvents": [],
         "overridableConfigKeys": [
           {
+            "key": "complianceJurisdiction",
+            "type": "unknown",
+            "default": "US"
+          },
+          {
+            "key": "currency",
+            "type": "unknown",
+            "default": "USD"
+          },
+          {
+            "key": "gracePeriodDays",
+            "type": "unknown",
+            "default": 30
+          },
+          {
+            "key": "lateFeeAmount",
+            "type": "unknown",
+            "default": 0
+          },
+          {
+            "key": "lateFeePolicy",
+            "type": "unknown",
+            "default": "none"
+          },
+          {
             "key": "refundTiersJson",
             "type": "unknown",
             "default": "[]"
+          },
+          {
+            "key": "retentionYears",
+            "type": "unknown",
+            "default": 7
+          },
+          {
+            "key": "taxStrategy",
+            "type": "unknown",
+            "default": "exclusive"
           },
           {
             "key": "title",
@@ -707,6 +742,124 @@
         ],
         "capabilities": [],
         "ref": "Inv.traits.InvoiceManage"
+      },
+      {
+        "name": "InvoiceLifecycleScan",
+        "emittedEvents": [],
+        "listenedEvents": [],
+        "overridableConfigKeys": [
+          {
+            "key": "dryRun",
+            "type": "unknown",
+            "default": false
+          },
+          {
+            "key": "rules",
+            "type": "unknown",
+            "default": [
+              {
+                "fromStatus": "sent",
+                "condition": {
+                  "value": 30,
+                  "dateField": "dueAt",
+                  "kind": "ageDays"
+                },
+                "toStatus": "overdue"
+              },
+              {
+                "toStatus": "void",
+                "fromStatus": "overdue",
+                "condition": {
+                  "kind": "ageDays",
+                  "value": 90,
+                  "dateField": "dueAt"
+                }
+              }
+            ]
+          },
+          {
+            "key": "targetEntity",
+            "type": "unknown",
+            "default": "InvoiceRecord"
+          }
+        ],
+        "capabilities": [],
+        "ref": "Lifecycle.traits.LifecycleScheduler"
+      },
+      {
+        "name": "InvoiceNotifier",
+        "emittedEvents": [],
+        "listenedEvents": [],
+        "overridableConfigKeys": [
+          {
+            "key": "listensFor",
+            "type": "unknown",
+            "default": [
+              "InvoiceUpdated"
+            ]
+          },
+          {
+            "key": "notifyChannel",
+            "type": "unknown",
+            "default": "in-app"
+          },
+          {
+            "key": "recipients",
+            "type": "unknown",
+            "default": []
+          },
+          {
+            "key": "severity",
+            "type": "unknown",
+            "default": "info"
+          },
+          {
+            "key": "suppressionList",
+            "type": "unknown",
+            "default": []
+          },
+          {
+            "key": "template",
+            "type": "unknown",
+            "default": "Invoice updated"
+          }
+        ],
+        "capabilities": [],
+        "ref": "Notify.traits.NotifyOnEventListener"
+      },
+      {
+        "name": "InvoiceAuditCapture",
+        "emittedEvents": [],
+        "listenedEvents": [],
+        "overridableConfigKeys": [
+          {
+            "key": "captureBeforeAfter",
+            "type": "unknown",
+            "default": false
+          },
+          {
+            "key": "captureEntity",
+            "type": "unknown",
+            "default": "InvoiceRecord"
+          },
+          {
+            "key": "captureEventTypes",
+            "type": "unknown",
+            "default": []
+          },
+          {
+            "key": "excludeFields",
+            "type": "unknown",
+            "default": []
+          },
+          {
+            "key": "retentionDays",
+            "type": "unknown",
+            "default": 2555
+          }
+        ],
+        "capabilities": [],
+        "ref": "Audit.traits.AuditCaptureListener"
       },
       {
         "name": "InvoiceNoteBrowseList",
@@ -726,13 +879,13 @@
             "type": "unknown",
             "default": [
               {
-                "icon": "receipt",
                 "name": "invoiceId",
+                "icon": "receipt",
                 "variant": "h4"
               },
               {
-                "variant": "body",
-                "name": "body"
+                "name": "body",
+                "variant": "body"
               },
               {
                 "name": "author",
@@ -754,9 +907,9 @@
             "type": "unknown",
             "default": [
               {
-                "label": "Delete",
                 "variant": "danger",
-                "event": "DELETE"
+                "event": "DELETE",
+                "label": "Delete"
               }
             ]
           }
@@ -889,14 +1042,14 @@
             "type": "unknown",
             "default": [
               {
-                "href": "/plans",
                 "label": "Plans",
+                "href": "/plans",
                 "icon": "credit-card"
               },
               {
                 "label": "Invoices",
-                "icon": "receipt",
-                "href": "/invoices"
+                "href": "/invoices",
+                "icon": "receipt"
               },
               {
                 "label": "Dunning",
@@ -968,9 +1121,9 @@
             "type": "unknown",
             "default": [
               {
+                "variant": "h4",
                 "icon": "alert-triangle",
-                "name": "caseId",
-                "variant": "h4"
+                "name": "caseId"
               },
               {
                 "variant": "body",
@@ -981,8 +1134,8 @@
                 "variant": "caption"
               },
               {
-                "variant": "caption",
-                "name": "createdAt"
+                "name": "createdAt",
+                "variant": "caption"
               }
             ]
           },
@@ -996,9 +1149,9 @@
             "type": "unknown",
             "default": [
               {
-                "variant": "danger",
                 "label": "Delete",
-                "event": "DELETE"
+                "event": "DELETE",
+                "variant": "danger"
               }
             ]
           }

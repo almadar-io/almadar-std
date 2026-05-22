@@ -54,18 +54,42 @@
         "listenedEvents": [],
         "overridableConfigKeys": [
           {
+            "key": "cycleCountFrequencyDays",
+            "type": "number",
+            "default": 30,
+            "label": "Cycle count cadence (days)",
+            "description": "Days between scheduled cycle counts at this warehouse. v1.2 declarative.",
+            "tier": "advanced"
+          },
+          {
+            "key": "defaultWarehouse",
+            "type": "string",
+            "default": "",
+            "label": "Default warehouse code",
+            "description": "Marks this warehouse as the system-wide default for new SKUs when set to its own code.",
+            "tier": "customization"
+          },
+          {
+            "key": "expiryTrackingEnabled",
+            "type": "boolean",
+            "default": false,
+            "label": "Expiry tracking",
+            "description": "Track expiry dates on stock at this warehouse.",
+            "tier": "customization"
+          },
+          {
             "key": "fields",
             "type": "[FieldSpec]",
             "default": [
               {
-                "name": "code",
+                "variant": "caption",
                 "label": "Code",
-                "variant": "caption"
+                "name": "code"
               },
               {
+                "name": "name",
                 "label": "Name",
-                "variant": "caption",
-                "name": "name"
+                "variant": "caption"
               },
               {
                 "label": "Type",
@@ -78,9 +102,9 @@
                 "label": "SKUs"
               },
               {
-                "name": "isActive",
                 "label": "Active",
-                "variant": "badge"
+                "variant": "badge",
+                "name": "isActive"
               }
             ],
             "label": "Columns to show",
@@ -88,23 +112,18 @@
             "tier": "advanced",
             "items": {
               "properties": {
-                "key": {
-                  "name": "key",
-                  "required": false,
-                  "type": "string"
-                },
-                "name": {
-                  "name": "name",
-                  "required": true,
-                  "type": "string"
-                },
-                "header": {
-                  "name": "header",
-                  "required": false,
-                  "type": "string"
-                },
                 "label": {
                   "name": "label",
+                  "required": false,
+                  "type": "string"
+                },
+                "format": {
+                  "name": "format",
+                  "required": false,
+                  "type": "string"
+                },
+                "key": {
+                  "name": "key",
                   "required": false,
                   "type": "string"
                 },
@@ -118,8 +137,13 @@
                   "required": false,
                   "type": "string"
                 },
-                "format": {
-                  "name": "format",
+                "name": {
+                  "name": "name",
+                  "required": true,
+                  "type": "string"
+                },
+                "header": {
+                  "name": "header",
                   "required": false,
                   "type": "string"
                 }
@@ -128,13 +152,21 @@
             }
           },
           {
+            "key": "hazmatEnabled",
+            "type": "boolean",
+            "default": false,
+            "label": "Hazmat permitted",
+            "description": "Warehouse is certified to store hazardous materials.",
+            "tier": "advanced"
+          },
+          {
             "key": "itemActions",
             "type": "[ItemAction]",
             "default": [
               {
-                "label": "Open",
                 "variant": "primary",
                 "icon": "arrow-right",
+                "label": "Open",
                 "event": "OPEN_WAREHOUSE"
               }
             ],
@@ -148,13 +180,13 @@
                   "required": false,
                   "type": "string"
                 },
-                "label": {
-                  "name": "label",
+                "event": {
+                  "name": "event",
                   "required": true,
                   "type": "string"
                 },
-                "event": {
-                  "name": "event",
+                "label": {
+                  "name": "label",
                   "required": true,
                   "type": "string"
                 },
@@ -166,6 +198,54 @@
               },
               "type": "object"
             }
+          },
+          {
+            "key": "lotTrackingEnabled",
+            "type": "boolean",
+            "default": false,
+            "label": "Lot tracking",
+            "description": "Track lot/batch numbers at this warehouse.",
+            "tier": "customization"
+          },
+          {
+            "key": "lowStockThreshold",
+            "type": "number",
+            "default": 10,
+            "label": "Low-stock threshold",
+            "description": "Default low-stock trigger across SKUs in this warehouse. v1.2 declarative.",
+            "tier": "essential"
+          },
+          {
+            "key": "multiLocationEnabled",
+            "type": "boolean",
+            "default": false,
+            "label": "Multi-location",
+            "description": "Treat as part of a multi-location inventory network.",
+            "tier": "customization"
+          },
+          {
+            "key": "reorderPoint",
+            "type": "number",
+            "default": 5,
+            "label": "Default reorder point",
+            "description": "Default reorder qty applied when SKU-level rules omit it.",
+            "tier": "essential"
+          },
+          {
+            "key": "safetyStockDays",
+            "type": "number",
+            "default": 7,
+            "label": "Safety stock (days)",
+            "description": "Buffer days of expected demand to keep above the reorder point.",
+            "tier": "customization"
+          },
+          {
+            "key": "serialTrackingEnabled",
+            "type": "boolean",
+            "default": false,
+            "label": "Serial tracking",
+            "description": "Track serial numbers on stock held at this warehouse. v1.2 declarative.",
+            "tier": "customization"
           },
           {
             "key": "title",

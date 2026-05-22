@@ -82,28 +82,64 @@
         "listenedEvents": [],
         "overridableConfigKeys": [
           {
+            "key": "customerVisibleStatuses",
+            "type": "[string]",
+            "default": [
+              "submitted",
+              "answered",
+              "closed"
+            ],
+            "label": "Customer-visible statuses",
+            "description": "Subset of statuses external collaborators see.",
+            "tier": "customization",
+            "items": {
+              "type": "string"
+            }
+          },
+          {
+            "key": "dispatchStrategy",
+            "type": "string",
+            "default": "manual",
+            "label": "Dispatch strategy",
+            "description": "How responders are picked when an RFI is raised.",
+            "tier": "customization",
+            "enumValues": [
+              "nearest",
+              "round-robin",
+              "manual"
+            ]
+          },
+          {
+            "key": "escalationThresholdHours",
+            "type": "number",
+            "default": 168,
+            "label": "Escalation threshold (hours)",
+            "description": "Hours after which a stalled RFI auto-escalates (default 7 days).",
+            "tier": "customization"
+          },
+          {
             "key": "fields",
             "type": "[FieldSpec]",
             "default": [
               {
-                "label": "RFI #",
+                "name": "rfiNumber",
                 "variant": "caption",
-                "name": "rfiNumber"
+                "label": "RFI #"
               },
               {
+                "label": "Subject",
                 "name": "subject",
-                "variant": "caption",
-                "label": "Subject"
+                "variant": "caption"
               },
               {
+                "variant": "badge",
                 "name": "status",
-                "label": "Status",
-                "variant": "badge"
+                "label": "Status"
               },
               {
-                "variant": "caption",
                 "name": "raisedBy",
-                "label": "Raised By"
+                "label": "Raised By",
+                "variant": "caption"
               },
               {
                 "name": "assignedTo",
@@ -111,9 +147,9 @@
                 "label": "Assigned"
               },
               {
+                "variant": "caption",
                 "name": "dueAt",
-                "label": "Due",
-                "variant": "caption"
+                "label": "Due"
               }
             ],
             "label": "Columns to show",
@@ -121,13 +157,13 @@
             "tier": "advanced",
             "items": {
               "properties": {
-                "icon": {
-                  "name": "icon",
-                  "required": false,
+                "name": {
+                  "name": "name",
+                  "required": true,
                   "type": "string"
                 },
-                "header": {
-                  "name": "header",
+                "icon": {
+                  "name": "icon",
                   "required": false,
                   "type": "string"
                 },
@@ -141,13 +177,13 @@
                   "required": false,
                   "type": "string"
                 },
-                "name": {
-                  "name": "name",
-                  "required": true,
-                  "type": "string"
-                },
                 "variant": {
                   "name": "variant",
+                  "required": false,
+                  "type": "string"
+                },
+                "header": {
+                  "name": "header",
                   "required": false,
                   "type": "string"
                 },
@@ -167,12 +203,12 @@
               {
                 "label": "Open",
                 "icon": "arrow-right",
-                "event": "OPEN_RFI",
-                "variant": "primary"
+                "variant": "primary",
+                "event": "OPEN_RFI"
               },
               {
-                "label": "Close",
                 "event": "CLOSE",
+                "label": "Close",
                 "variant": "danger"
               }
             ],
@@ -181,9 +217,9 @@
             "tier": "customization",
             "items": {
               "properties": {
-                "label": {
-                  "name": "label",
-                  "required": true,
+                "icon": {
+                  "name": "icon",
+                  "required": false,
                   "type": "string"
                 },
                 "event": {
@@ -191,18 +227,80 @@
                   "required": true,
                   "type": "string"
                 },
-                "variant": {
-                  "name": "variant",
-                  "required": false,
+                "label": {
+                  "name": "label",
+                  "required": true,
                   "type": "string"
                 },
-                "icon": {
-                  "name": "icon",
+                "variant": {
+                  "name": "variant",
                   "required": false,
                   "type": "string"
                 }
               },
               "type": "object"
+            }
+          },
+          {
+            "key": "requirePhotoOnComplete",
+            "type": "boolean",
+            "default": false,
+            "label": "Require photo on complete",
+            "description": "Block ANSWER unless a supporting attachment is provided.",
+            "tier": "customization"
+          },
+          {
+            "key": "requireSignatureOnComplete",
+            "type": "boolean",
+            "default": false,
+            "label": "Require responder signature on complete",
+            "description": "Block ANSWER unless responder signature is captured (compose std-signature-capture).",
+            "tier": "customization"
+          },
+          {
+            "key": "resolutionSLAHours",
+            "type": "number",
+            "default": 120,
+            "label": "Resolution SLA (hours)",
+            "description": "Target hours from raised to answered (default 5 business days). Compose std-lifecycle to escalate.",
+            "tier": "essential"
+          },
+          {
+            "key": "responseTimeMinutes",
+            "type": "number",
+            "default": 480,
+            "label": "Response time SLA (min)",
+            "description": "Target minutes from raised to first acknowledgement (default 8 business hours).",
+            "tier": "essential"
+          },
+          {
+            "key": "serviceAreaRadius",
+            "type": "number",
+            "default": 0,
+            "label": "Service area radius (mi)",
+            "description": "Project-site distance limit for assignable responders. Zero = no restriction.",
+            "tier": "customization"
+          },
+          {
+            "key": "serviceZones",
+            "type": "[string]",
+            "default": [],
+            "label": "Service zones",
+            "description": "Named project zones for routing RFIs to the right responder pool.",
+            "tier": "customization",
+            "items": {
+              "type": "string"
+            }
+          },
+          {
+            "key": "skillsRequired",
+            "type": "[string]",
+            "default": [],
+            "label": "Required skills",
+            "description": "Discipline tags a responder must hold (e.g. 'structural', 'mep', 'arch').",
+            "tier": "customization",
+            "items": {
+              "type": "string"
             }
           },
           {

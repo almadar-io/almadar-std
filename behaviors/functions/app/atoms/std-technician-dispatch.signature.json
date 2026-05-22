@@ -72,33 +72,69 @@
         "listenedEvents": [],
         "overridableConfigKeys": [
           {
+            "key": "customerVisibleStatuses",
+            "type": "[string]",
+            "default": [
+              "available",
+              "en-route",
+              "on-site"
+            ],
+            "label": "Customer-visible statuses",
+            "description": "Subset of tech statuses surfaced in the customer tracking view.",
+            "tier": "customization",
+            "items": {
+              "type": "string"
+            }
+          },
+          {
+            "key": "dispatchStrategy",
+            "type": "string",
+            "default": "nearest",
+            "label": "Dispatch strategy",
+            "description": "How techs are selected: nearest, round-robin, or manual pick.",
+            "tier": "customization",
+            "enumValues": [
+              "nearest",
+              "round-robin",
+              "manual"
+            ]
+          },
+          {
+            "key": "escalationThresholdHours",
+            "type": "number",
+            "default": 12,
+            "label": "Escalation threshold (hours)",
+            "description": "Hours after which an unacknowledged dispatch auto-escalates.",
+            "tier": "customization"
+          },
+          {
             "key": "fields",
             "type": "[FieldSpec]",
             "default": [
               {
-                "name": "name",
+                "variant": "body",
                 "label": "Technician",
-                "variant": "body"
+                "name": "name"
               },
               {
-                "name": "skills",
                 "variant": "caption",
+                "name": "skills",
                 "label": "Skills"
               },
               {
-                "label": "Available",
                 "variant": "badge",
+                "label": "Available",
                 "name": "available"
               },
               {
+                "label": "Current Order",
                 "variant": "caption",
-                "name": "currentOrderId",
-                "label": "Current Order"
+                "name": "currentOrderId"
               },
               {
+                "label": "Last Seen",
                 "name": "lastSeenAt",
-                "variant": "caption",
-                "label": "Last Seen"
+                "variant": "caption"
               }
             ],
             "label": "Columns to show",
@@ -106,6 +142,21 @@
             "tier": "advanced",
             "items": {
               "properties": {
+                "name": {
+                  "name": "name",
+                  "required": true,
+                  "type": "string"
+                },
+                "icon": {
+                  "name": "icon",
+                  "required": false,
+                  "type": "string"
+                },
+                "format": {
+                  "name": "format",
+                  "required": false,
+                  "type": "string"
+                },
                 "key": {
                   "name": "key",
                   "required": false,
@@ -116,11 +167,6 @@
                   "required": false,
                   "type": "string"
                 },
-                "name": {
-                  "name": "name",
-                  "required": true,
-                  "type": "string"
-                },
                 "label": {
                   "name": "label",
                   "required": false,
@@ -128,16 +174,6 @@
                 },
                 "variant": {
                   "name": "variant",
-                  "required": false,
-                  "type": "string"
-                },
-                "format": {
-                  "name": "format",
-                  "required": false,
-                  "type": "string"
-                },
-                "icon": {
-                  "name": "icon",
                   "required": false,
                   "type": "string"
                 }
@@ -150,15 +186,15 @@
             "type": "[ItemAction]",
             "default": [
               {
-                "icon": "arrow-right",
-                "label": "Open",
+                "variant": "primary",
                 "event": "OPEN_TECHNICIAN",
-                "variant": "primary"
+                "icon": "arrow-right",
+                "label": "Open"
               },
               {
+                "label": "Assign",
                 "variant": "danger",
-                "event": "ASSIGN",
-                "label": "Assign"
+                "event": "ASSIGN"
               }
             ],
             "label": "Row actions",
@@ -166,28 +202,90 @@
             "tier": "customization",
             "items": {
               "properties": {
-                "icon": {
-                  "name": "icon",
-                  "required": false,
-                  "type": "string"
-                },
                 "event": {
                   "name": "event",
                   "required": true,
-                  "type": "string"
-                },
-                "variant": {
-                  "name": "variant",
-                  "required": false,
                   "type": "string"
                 },
                 "label": {
                   "name": "label",
                   "required": true,
                   "type": "string"
+                },
+                "icon": {
+                  "name": "icon",
+                  "required": false,
+                  "type": "string"
+                },
+                "variant": {
+                  "name": "variant",
+                  "required": false,
+                  "type": "string"
                 }
               },
               "type": "object"
+            }
+          },
+          {
+            "key": "requirePhotoOnComplete",
+            "type": "boolean",
+            "default": false,
+            "label": "Require photo on complete",
+            "description": "Block job completion until the tech attaches a completion photo.",
+            "tier": "customization"
+          },
+          {
+            "key": "requireSignatureOnComplete",
+            "type": "boolean",
+            "default": false,
+            "label": "Require customer signature on complete",
+            "description": "Block completion unless customer signature is captured (compose std-signature-capture).",
+            "tier": "customization"
+          },
+          {
+            "key": "resolutionSLAHours",
+            "type": "number",
+            "default": 8,
+            "label": "Resolution SLA (hours)",
+            "description": "Target hours from dispatch to job completion. Compose std-lifecycle to auto-escalate.",
+            "tier": "essential"
+          },
+          {
+            "key": "responseTimeMinutes",
+            "type": "number",
+            "default": 30,
+            "label": "Response time SLA (min)",
+            "description": "Target minutes from dispatch to tech acknowledgement.",
+            "tier": "essential"
+          },
+          {
+            "key": "serviceAreaRadius",
+            "type": "number",
+            "default": 50,
+            "label": "Service area radius (mi)",
+            "description": "Maximum distance from a tech's home base for dispatch eligibility.",
+            "tier": "customization"
+          },
+          {
+            "key": "serviceZones",
+            "type": "[string]",
+            "default": [],
+            "label": "Service zones",
+            "description": "Named geographic zones for dispatch grouping. Empty = no zone restriction.",
+            "tier": "customization",
+            "items": {
+              "type": "string"
+            }
+          },
+          {
+            "key": "skillsRequired",
+            "type": "[string]",
+            "default": [],
+            "label": "Required skills",
+            "description": "Capability tags a tech must hold to be eligible for the queue.",
+            "tier": "customization",
+            "items": {
+              "type": "string"
             }
           },
           {

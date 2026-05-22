@@ -61,38 +61,56 @@
           "LAUNCH_CAMPAIGN",
           "END_CAMPAIGN",
           "CampaignGoalLoaded",
-          "CampaignGoalLoadFailed"
+          "CampaignGoalLoadFailed",
+          "CampaignGoalUpdated",
+          "CampaignGoalUpdateFailed"
         ],
         "listenedEvents": [],
         "overridableConfigKeys": [
+          {
+            "key": "archiveInactiveAfterDays",
+            "type": "number",
+            "default": 180,
+            "label": "Archive after end (days)",
+            "description": "Days after endDate before an ended campaign is archived. Declarative; wire via sibling std-lifecycle.",
+            "tier": "advanced"
+          },
+          {
+            "key": "consentTrackingEnabled",
+            "type": "boolean",
+            "default": true,
+            "label": "Track consent",
+            "description": "Whether donor outreach honors opt-in consent records. Declarative.",
+            "tier": "customization"
+          },
           {
             "key": "fields",
             "type": "[FieldSpec]",
             "default": [
               {
-                "variant": "caption",
                 "name": "name",
+                "variant": "caption",
                 "label": "Name"
               },
               {
-                "variant": "caption",
                 "name": "targetAmount",
-                "label": "Target"
-              },
-              {
-                "label": "Raised",
-                "name": "raisedAmount",
+                "label": "Target",
                 "variant": "caption"
               },
               {
-                "variant": "caption",
+                "name": "raisedAmount",
+                "label": "Raised",
+                "variant": "caption"
+              },
+              {
                 "name": "donorCount",
+                "variant": "caption",
                 "label": "Donors"
               },
               {
                 "variant": "badge",
-                "name": "status",
-                "label": "Status"
+                "label": "Status",
+                "name": "status"
               }
             ],
             "label": "Columns to show",
@@ -100,9 +118,14 @@
             "tier": "customization",
             "items": {
               "properties": {
-                "name": {
-                  "name": "name",
-                  "required": true,
+                "variant": {
+                  "name": "variant",
+                  "required": false,
+                  "type": "string"
+                },
+                "icon": {
+                  "name": "icon",
+                  "required": false,
                   "type": "string"
                 },
                 "format": {
@@ -115,6 +138,11 @@
                   "required": false,
                   "type": "string"
                 },
+                "name": {
+                  "name": "name",
+                  "required": true,
+                  "type": "string"
+                },
                 "header": {
                   "name": "header",
                   "required": false,
@@ -124,35 +152,33 @@
                   "name": "label",
                   "required": false,
                   "type": "string"
-                },
-                "variant": {
-                  "name": "variant",
-                  "required": false,
-                  "type": "string"
-                },
-                "icon": {
-                  "name": "icon",
-                  "required": false,
-                  "type": "string"
                 }
               },
               "type": "object"
             }
           },
           {
+            "key": "healthScoreThresholdAlert",
+            "type": "number",
+            "default": 25,
+            "label": "Health score threshold (% of target)",
+            "description": "Alert when raisedAmount/targetAmount drops below this with deadline approaching. Declarative; wire via sibling std-notify.",
+            "tier": "customization"
+          },
+          {
             "key": "itemActions",
             "type": "[ItemAction]",
             "default": [
               {
+                "event": "OPEN_CAMPAIGN",
                 "label": "Open",
-                "icon": "arrow-right",
                 "variant": "primary",
-                "event": "OPEN_CAMPAIGN"
+                "icon": "arrow-right"
               },
               {
-                "event": "END_CAMPAIGN",
                 "label": "End",
-                "variant": "danger"
+                "variant": "danger",
+                "event": "END_CAMPAIGN"
               }
             ],
             "label": "Row actions",
@@ -165,9 +191,9 @@
                   "required": true,
                   "type": "string"
                 },
-                "variant": {
-                  "name": "variant",
-                  "required": false,
+                "label": {
+                  "name": "label",
+                  "required": true,
                   "type": "string"
                 },
                 "icon": {
@@ -175,13 +201,28 @@
                   "required": false,
                   "type": "string"
                 },
-                "label": {
-                  "name": "label",
-                  "required": true,
+                "variant": {
+                  "name": "variant",
+                  "required": false,
                   "type": "string"
                 }
               },
               "type": "object"
+            }
+          },
+          {
+            "key": "renewalReminderDaysBefore",
+            "type": "[number]",
+            "default": [
+              30,
+              7,
+              1
+            ],
+            "label": "Reminder days-before endDate",
+            "description": "Days before campaign endDate to ping major donors / followers. Declarative; wire via sibling std-reminder-scheduler.",
+            "tier": "customization",
+            "items": {
+              "type": "number"
             }
           },
           {
@@ -207,6 +248,8 @@
       "CLOSE_VIEW",
       "CampaignGoalLoadFailed",
       "CampaignGoalLoaded",
+      "CampaignGoalUpdateFailed",
+      "CampaignGoalUpdated",
       "END_CAMPAIGN",
       "LAUNCH_CAMPAIGN",
       "OPEN_CAMPAIGN"

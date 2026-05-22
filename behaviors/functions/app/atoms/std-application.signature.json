@@ -88,34 +88,66 @@
         ],
         "overridableConfigKeys": [
           {
+            "key": "anonymizeOnRejection",
+            "type": "boolean",
+            "default": false,
+            "label": "Anonymize on rejection",
+            "description": "When true, scrub PII (applicantName, applicantEmail, coverLetter) on REJECT to retain only the audit row. Pair with sibling std-data-erasure for full Art. 17 compliance.",
+            "tier": "customization"
+          },
+          {
+            "key": "backgroundCheckRequired",
+            "type": "boolean",
+            "default": false,
+            "label": "Background check required",
+            "description": "Block ACCEPT transition until a background check is complete.",
+            "tier": "customization"
+          },
+          {
+            "key": "eVerifyRequired",
+            "type": "boolean",
+            "default": false,
+            "label": "E-Verify required",
+            "description": "US I-9 / E-Verify gate. Block ACCEPT until verification passes.",
+            "tier": "customization"
+          },
+          {
+            "key": "equalOpportunityTrackingEnabled",
+            "type": "boolean",
+            "default": false,
+            "label": "Equal opportunity tracking",
+            "description": "Capture demographic data separately for EEO reporting (stored in a sibling collection, not on the Application entity).",
+            "tier": "advanced"
+          },
+          {
             "key": "fields",
             "type": "[FieldSpec]",
             "default": [
               {
+                "label": "Applicant",
                 "name": "applicantName",
                 "icon": "user",
-                "variant": "caption",
-                "label": "Applicant"
+                "variant": "caption"
               },
               {
-                "label": "Email",
                 "variant": "caption",
-                "name": "applicantEmail"
+                "name": "applicantEmail",
+                "label": "Email"
               },
               {
+                "label": "Target",
                 "name": "targetType",
-                "variant": "caption",
-                "label": "Target"
+                "variant": "caption"
               },
               {
-                "name": "status",
                 "label": "Status",
+                "name": "status",
                 "variant": "badge"
               },
               {
-                "variant": "caption",
+                "name": "submittedAt",
                 "label": "Submitted",
-                "name": "submittedAt"
+                "variant": "caption"
               }
             ],
             "label": "Columns to show",
@@ -123,8 +155,13 @@
             "tier": "customization",
             "items": {
               "properties": {
-                "label": {
-                  "name": "label",
+                "header": {
+                  "name": "header",
+                  "required": false,
+                  "type": "string"
+                },
+                "format": {
+                  "name": "format",
                   "required": false,
                   "type": "string"
                 },
@@ -133,13 +170,13 @@
                   "required": false,
                   "type": "string"
                 },
-                "header": {
-                  "name": "header",
+                "key": {
+                  "name": "key",
                   "required": false,
                   "type": "string"
                 },
-                "variant": {
-                  "name": "variant",
+                "label": {
+                  "name": "label",
                   "required": false,
                   "type": "string"
                 },
@@ -148,13 +185,8 @@
                   "required": true,
                   "type": "string"
                 },
-                "format": {
-                  "name": "format",
-                  "required": false,
-                  "type": "string"
-                },
-                "key": {
-                  "name": "key",
+                "variant": {
+                  "name": "variant",
                   "required": false,
                   "type": "string"
                 }
@@ -163,23 +195,31 @@
             }
           },
           {
+            "key": "i9DocumentsRequired",
+            "type": "boolean",
+            "default": false,
+            "label": "I-9 documents required",
+            "description": "Require I-9 supporting documents at the accepted transition.",
+            "tier": "customization"
+          },
+          {
             "key": "itemActions",
             "type": "[ItemAction]",
             "default": [
               {
-                "label": "Edit",
                 "event": "EDIT",
-                "variant": "ghost"
+                "variant": "ghost",
+                "label": "Edit"
               },
               {
                 "label": "Submit",
-                "event": "SUBMIT",
-                "variant": "primary"
+                "variant": "primary",
+                "event": "SUBMIT"
               },
               {
+                "label": "Accept",
                 "event": "ACCEPT",
-                "variant": "primary",
-                "label": "Accept"
+                "variant": "primary"
               },
               {
                 "event": "REJECT",
@@ -192,14 +232,14 @@
             "tier": "customization",
             "items": {
               "properties": {
-                "icon": {
-                  "name": "icon",
-                  "required": false,
-                  "type": "string"
-                },
                 "event": {
                   "name": "event",
                   "required": true,
+                  "type": "string"
+                },
+                "icon": {
+                  "name": "icon",
+                  "required": false,
                   "type": "string"
                 },
                 "variant": {
@@ -215,6 +255,14 @@
               },
               "type": "object"
             }
+          },
+          {
+            "key": "retentionAfterRejectionDays",
+            "type": "number",
+            "default": 730,
+            "label": "Retention after rejection (days)",
+            "description": "Days to keep rejected applications. Default 730 (2 years) is typical EEOC retention. Wire via sibling std-lifecycle delete rule.",
+            "tier": "advanced"
           },
           {
             "key": "title",

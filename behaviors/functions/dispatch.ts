@@ -506,6 +506,11 @@ import {
   isStdMarketingCampaignCampaignOrbitalParams,
 } from './app/organisms/std-marketing-campaign.js';
 import {
+  stdMarketingSiteMarketingSiteOrbital,
+  StdMarketingSiteMarketingSiteOrbitalManifest,
+  isStdMarketingSiteMarketingSiteOrbitalParams,
+} from './marketing/organisms/std-marketing-site.js';
+import {
   stdMarketplaceVendorOrbital,
   StdMarketplaceVendorOrbitalManifest,
   isStdMarketplaceVendorOrbitalParams,
@@ -2024,6 +2029,15 @@ const REGISTRY: ReadonlyMap<string, DispatchEntry> = new Map<string, DispatchEnt
       return stdMarketingCampaignCampaignOrbital(p);
     },
     manifest: StdMarketingCampaignCampaignOrbitalManifest,
+  }],
+  ['std-marketing-site::MarketingSiteOrbital', {
+    factory: (p: object): OrbitalDefinition => {
+      if (!isStdMarketingSiteMarketingSiteOrbitalParams(p)) {
+        throw new TypeError('Invalid params for std-marketing-site::MarketingSiteOrbital');
+      }
+      return stdMarketingSiteMarketingSiteOrbital(p);
+    },
+    manifest: StdMarketingSiteMarketingSiteOrbitalManifest,
   }],
   ['std-marketplace::VendorOrbital', {
     factory: (p: object): OrbitalDefinition => {

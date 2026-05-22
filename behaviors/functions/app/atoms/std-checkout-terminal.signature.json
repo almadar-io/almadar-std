@@ -81,33 +81,97 @@
         "listenedEvents": [],
         "overridableConfigKeys": [
           {
+            "key": "allergenWarningsEnabled",
+            "type": "boolean",
+            "default": false,
+            "label": "Allergen warnings",
+            "description": "Surface allergen warnings on the cart and receipt.",
+            "tier": "customization"
+          },
+          {
+            "key": "allowSplitChecks",
+            "type": "boolean",
+            "default": false,
+            "label": "Allow split checks",
+            "description": "Permit a single session to split tender across multiple payers.",
+            "tier": "customization"
+          },
+          {
+            "key": "blackoutDates",
+            "type": "[string]",
+            "default": [],
+            "label": "Blackout dates",
+            "description": "ISO dates blocked from opening (e.g. holidays, deep cleans).",
+            "tier": "customization",
+            "items": {
+              "type": "string"
+            }
+          },
+          {
+            "key": "bookingHours",
+            "type": "string",
+            "default": "06:00-23:00",
+            "label": "Booking hours",
+            "description": "Daily window during which terminals can be opened (HH:MM-HH:MM).",
+            "tier": "customization"
+          },
+          {
+            "key": "bookingWindowDays",
+            "type": "number",
+            "default": 1,
+            "label": "Booking window (days)",
+            "description": "How far in advance terminal sessions can be opened.",
+            "tier": "customization"
+          },
+          {
+            "key": "cancellationPolicy",
+            "type": "string",
+            "default": "free",
+            "label": "Cancellation policy",
+            "description": "Refund treatment for voided sessions.",
+            "tier": "customization",
+            "enumValues": [
+              "free",
+              "partial-refund",
+              "no-refund"
+            ]
+          },
+          {
+            "key": "coursingEnabled",
+            "type": "boolean",
+            "default": false,
+            "label": "Coursing enabled",
+            "description": "Send items to kitchen in course-ordered waves.",
+            "tier": "customization"
+          },
+          {
             "key": "fields",
             "type": "[FieldSpec]",
             "default": [
               {
-                "label": "Terminal",
+                "variant": "caption",
                 "name": "terminalId",
-                "variant": "caption"
-              },
-              {
-                "label": "Cashier",
-                "name": "cashierName",
-                "variant": "caption"
-              },
-              {
-                "name": "status",
-                "label": "Status",
-                "variant": "badge"
+                "label": "Terminal"
               },
               {
                 "variant": "caption",
-                "label": "Total",
-                "name": "total"
+                "label": "Cashier",
+                "name": "cashierName"
+              },
+              {
+                "name": "status",
+                "variant": "badge",
+                "label": "Status"
+              },
+              {
+                "variant": "caption",
+                "name": "total",
+                "label": "Total"
               },
               {
                 "name": "openedAt",
-                "label": "Opened",
-                "variant": "caption"
+                "variant": "caption",
+                "label": "Opened"
               }
             ],
             "label": "Columns to show",
@@ -115,18 +179,13 @@
             "tier": "customization",
             "items": {
               "properties": {
+                "name": {
+                  "name": "name",
+                  "required": true,
+                  "type": "string"
+                },
                 "header": {
                   "name": "header",
-                  "required": false,
-                  "type": "string"
-                },
-                "key": {
-                  "name": "key",
-                  "required": false,
-                  "type": "string"
-                },
-                "label": {
-                  "name": "label",
                   "required": false,
                   "type": "string"
                 },
@@ -135,9 +194,9 @@
                   "required": false,
                   "type": "string"
                 },
-                "name": {
-                  "name": "name",
-                  "required": true,
+                "key": {
+                  "name": "key",
+                  "required": false,
                   "type": "string"
                 },
                 "format": {
@@ -147,6 +206,11 @@
                 },
                 "icon": {
                   "name": "icon",
+                  "required": false,
+                  "type": "string"
+                },
+                "label": {
+                  "name": "label",
                   "required": false,
                   "type": "string"
                 }
@@ -159,14 +223,14 @@
             "type": "[ItemAction]",
             "default": [
               {
-                "event": "OPEN_TERMINAL",
                 "label": "Open",
-                "variant": "primary"
+                "variant": "primary",
+                "event": "OPEN_TERMINAL"
               },
               {
                 "variant": "danger",
-                "event": "VOID_SESSION",
-                "label": "Void"
+                "label": "Void",
+                "event": "VOID_SESSION"
               }
             ],
             "label": "Row actions",
@@ -179,13 +243,13 @@
                   "required": false,
                   "type": "string"
                 },
-                "event": {
-                  "name": "event",
+                "label": {
+                  "name": "label",
                   "required": true,
                   "type": "string"
                 },
-                "label": {
-                  "name": "label",
+                "event": {
+                  "name": "event",
                   "required": true,
                   "type": "string"
                 },
@@ -196,6 +260,78 @@
                 }
               },
               "type": "object"
+            }
+          },
+          {
+            "key": "kitchenAutoFire",
+            "type": "boolean",
+            "default": false,
+            "label": "Kitchen auto-fire",
+            "description": "Fire kitchen order automatically once payment is tendered.",
+            "tier": "customization"
+          },
+          {
+            "key": "leadTimeMinutes",
+            "type": "number",
+            "default": 0,
+            "label": "Lead time (minutes)",
+            "description": "Minutes before openedAt that a session can be pre-staged.",
+            "tier": "customization"
+          },
+          {
+            "key": "maxReschedules",
+            "type": "number",
+            "default": 1,
+            "label": "Max reschedules",
+            "description": "Hard cap on payment reversal count per session.",
+            "tier": "advanced"
+          },
+          {
+            "key": "noShowGracePeriodMinutes",
+            "type": "number",
+            "default": 60,
+            "label": "No-show grace (minutes)",
+            "description": "Minutes of inactivity before an open session auto-voids. Wire via std-lifecycle.",
+            "tier": "customization"
+          },
+          {
+            "key": "rescheduleWindowHours",
+            "type": "number",
+            "default": 1,
+            "label": "Reschedule window (hours)",
+            "description": "Hours during which a tendered payment can be reversed without manager override.",
+            "tier": "customization"
+          },
+          {
+            "key": "serviceCharge",
+            "type": "number",
+            "default": 0,
+            "label": "Service charge (%)",
+            "description": "Automatic service charge added to every checkout (percentage).",
+            "tier": "customization"
+          },
+          {
+            "key": "tableTurnoverTargetMinutes",
+            "type": "number",
+            "default": 60,
+            "label": "Turnover target (min)",
+            "description": "Target minutes per session for FOH pacing. Drives turnover dashboards.",
+            "tier": "advanced"
+          },
+          {
+            "key": "tipPresets",
+            "type": "[number]",
+            "default": [
+              15,
+              18,
+              20,
+              25
+            ],
+            "label": "Tip presets (%)",
+            "description": "Suggested tip percentages shown at checkout.",
+            "tier": "customization",
+            "items": {
+              "type": "number"
             }
           },
           {

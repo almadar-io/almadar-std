@@ -66,6 +66,46 @@
         "listenedEvents": [],
         "overridableConfigKeys": [
           {
+            "key": "blackoutDates",
+            "type": "[string]",
+            "default": [],
+            "label": "Blackout dates",
+            "description": "ISO dates blocked from joining the waitlist.",
+            "tier": "customization",
+            "items": {
+              "type": "string"
+            }
+          },
+          {
+            "key": "bookingHours",
+            "type": "string",
+            "default": "00:00-23:59",
+            "label": "Booking hours",
+            "description": "Daily window during which waitlist joins are accepted (HH:MM-HH:MM).",
+            "tier": "customization"
+          },
+          {
+            "key": "bookingWindowDays",
+            "type": "number",
+            "default": 30,
+            "label": "Booking window (days)",
+            "description": "How far in advance users can join the waitlist.",
+            "tier": "customization"
+          },
+          {
+            "key": "cancellationPolicy",
+            "type": "string",
+            "default": "free",
+            "label": "Cancellation policy",
+            "description": "Refund treatment when a waitlist entry is cancelled after a deposit.",
+            "tier": "customization",
+            "enumValues": [
+              "free",
+              "partial-refund",
+              "no-refund"
+            ]
+          },
+          {
             "key": "fields",
             "type": "[FieldSpec]",
             "default": [
@@ -75,23 +115,23 @@
                 "variant": "badge"
               },
               {
-                "name": "userId",
+                "label": "User",
                 "variant": "caption",
-                "label": "User"
+                "name": "userId"
               },
               {
+                "name": "targetType",
                 "label": "Type",
-                "variant": "badge",
-                "name": "targetType"
-              },
-              {
-                "label": "Status",
-                "name": "status",
                 "variant": "badge"
               },
               {
-                "variant": "caption",
+                "name": "status",
+                "label": "Status",
+                "variant": "badge"
+              },
+              {
                 "name": "joinedAt",
+                "variant": "caption",
                 "label": "Joined"
               }
             ],
@@ -105,18 +145,18 @@
                   "required": false,
                   "type": "string"
                 },
-                "key": {
-                  "name": "key",
-                  "required": false,
-                  "type": "string"
-                },
                 "variant": {
                   "name": "variant",
                   "required": false,
                   "type": "string"
                 },
-                "label": {
-                  "name": "label",
+                "format": {
+                  "name": "format",
+                  "required": false,
+                  "type": "string"
+                },
+                "key": {
+                  "name": "key",
                   "required": false,
                   "type": "string"
                 },
@@ -125,13 +165,13 @@
                   "required": true,
                   "type": "string"
                 },
-                "format": {
-                  "name": "format",
+                "header": {
+                  "name": "header",
                   "required": false,
                   "type": "string"
                 },
-                "header": {
-                  "name": "header",
+                "label": {
+                  "name": "label",
                   "required": false,
                   "type": "string"
                 }
@@ -144,14 +184,14 @@
             "type": "[ItemAction]",
             "default": [
               {
+                "icon": "arrow-right",
                 "event": "OPEN_ENTRY",
                 "label": "Open",
-                "icon": "arrow-right",
                 "variant": "primary"
               },
               {
-                "label": "Cancel",
                 "event": "CANCEL",
+                "label": "Cancel",
                 "variant": "danger",
                 "icon": "x"
               }
@@ -171,19 +211,51 @@
                   "required": false,
                   "type": "string"
                 },
-                "event": {
-                  "name": "event",
-                  "required": true,
-                  "type": "string"
-                },
                 "variant": {
                   "name": "variant",
                   "required": false,
+                  "type": "string"
+                },
+                "event": {
+                  "name": "event",
+                  "required": true,
                   "type": "string"
                 }
               },
               "type": "object"
             }
+          },
+          {
+            "key": "leadTimeMinutes",
+            "type": "number",
+            "default": 0,
+            "label": "Lead time (minutes)",
+            "description": "Minutes before target availability that the waitlist still accepts joins.",
+            "tier": "customization"
+          },
+          {
+            "key": "maxReschedules",
+            "type": "number",
+            "default": 1,
+            "label": "Max reschedules",
+            "description": "Hard cap on deferral count per waitlist entry.",
+            "tier": "advanced"
+          },
+          {
+            "key": "noShowGracePeriodMinutes",
+            "type": "number",
+            "default": 60,
+            "label": "No-show grace (minutes)",
+            "description": "Minutes after promotion notice before the entry auto-expires if not claimed. Wire via std-lifecycle.",
+            "tier": "customization"
+          },
+          {
+            "key": "rescheduleWindowHours",
+            "type": "number",
+            "default": 24,
+            "label": "Reschedule window (hours)",
+            "description": "Hours during which a user can defer their promoted slot.",
+            "tier": "customization"
           },
           {
             "key": "title",

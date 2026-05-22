@@ -61,43 +61,61 @@
           "REQUEST_WITHDRAW",
           "MARK_PAID",
           "PayoutLoaded",
-          "PayoutLoadFailed"
+          "PayoutLoadFailed",
+          "PayoutUpdated",
+          "PayoutUpdateFailed"
         ],
         "listenedEvents": [],
         "overridableConfigKeys": [
+          {
+            "key": "complianceJurisdiction",
+            "type": "string",
+            "default": "",
+            "label": "Compliance jurisdiction",
+            "description": "Drives payout regulations per locale: 'US-CA', 'EU-DE', 'UK', etc. Declarative.",
+            "tier": "advanced"
+          },
+          {
+            "key": "currency",
+            "type": "string",
+            "default": "USD",
+            "label": "Default currency",
+            "description": "ISO 4217 currency code (USD, EUR, GBP, …) for payouts.",
+            "tier": "essential"
+          },
           {
             "key": "fields",
             "type": "[FieldSpec]",
             "default": [
               {
                 "variant": "caption",
-                "label": "Vendor",
-                "name": "vendorId"
+                "name": "vendorId",
+                "label": "Vendor"
               },
               {
-                "label": "Amount",
+                "name": "amount",
                 "variant": "caption",
-                "name": "amount"
+                "label": "Amount"
               },
               {
-                "name": "currency",
                 "label": "Currency",
+                "name": "currency",
                 "variant": "badge"
               },
               {
-                "name": "status",
                 "label": "Status",
+                "name": "status",
                 "variant": "badge"
               },
               {
-                "name": "bankAccountMasked",
                 "variant": "caption",
-                "label": "Bank"
+                "label": "Bank",
+                "name": "bankAccountMasked"
               },
               {
-                "label": "Requested",
+                "name": "requestedAt",
                 "variant": "caption",
-                "name": "requestedAt"
+                "label": "Requested"
               }
             ],
             "label": "Columns to show",
@@ -105,14 +123,19 @@
             "tier": "advanced",
             "items": {
               "properties": {
+                "name": {
+                  "name": "name",
+                  "required": true,
+                  "type": "string"
+                },
                 "icon": {
                   "name": "icon",
                   "required": false,
                   "type": "string"
                 },
-                "name": {
-                  "name": "name",
-                  "required": true,
+                "key": {
+                  "name": "key",
+                  "required": false,
                   "type": "string"
                 },
                 "header": {
@@ -125,11 +148,6 @@
                   "required": false,
                   "type": "string"
                 },
-                "key": {
-                  "name": "key",
-                  "required": false,
-                  "type": "string"
-                },
                 "label": {
                   "name": "label",
                   "required": false,
@@ -145,14 +163,22 @@
             }
           },
           {
+            "key": "gracePeriodDays",
+            "type": "number",
+            "default": 3,
+            "label": "Grace period (days)",
+            "description": "Days before a pending payout escalates. Wire via sibling std-lifecycle rule.",
+            "tier": "customization"
+          },
+          {
             "key": "itemActions",
             "type": "[ItemAction]",
             "default": [
               {
                 "label": "Open",
+                "event": "OPEN_PAYOUT",
                 "variant": "primary",
-                "icon": "arrow-right",
-                "event": "OPEN_PAYOUT"
+                "icon": "arrow-right"
               },
               {
                 "label": "Withdraw",
@@ -165,23 +191,23 @@
             "tier": "customization",
             "items": {
               "properties": {
-                "label": {
-                  "name": "label",
-                  "required": true,
-                  "type": "string"
-                },
                 "event": {
                   "name": "event",
                   "required": true,
                   "type": "string"
                 },
-                "variant": {
-                  "name": "variant",
-                  "required": false,
+                "label": {
+                  "name": "label",
+                  "required": true,
                   "type": "string"
                 },
                 "icon": {
                   "name": "icon",
+                  "required": false,
+                  "type": "string"
+                },
+                "variant": {
+                  "name": "variant",
                   "required": false,
                   "type": "string"
                 }
@@ -190,12 +216,67 @@
             }
           },
           {
+            "key": "lateFeeAmount",
+            "type": "number",
+            "default": 0,
+            "label": "Late fee amount",
+            "description": "Flat cash amount or percentage (per lateFeePolicy).",
+            "tier": "customization"
+          },
+          {
+            "key": "lateFeePolicy",
+            "type": "string",
+            "default": "none",
+            "label": "Late fee policy",
+            "description": "How late fees compute on late payouts. Declarative; wiring deferred.",
+            "tier": "customization",
+            "enumValues": [
+              "none",
+              "flat",
+              "percent"
+            ]
+          },
+          {
             "key": "minimumWithdrawal",
             "type": "number",
             "default": 50,
             "label": "Minimum withdrawal",
             "description": "Smallest amount a vendor can request to cash out",
             "tier": "customization"
+          },
+          {
+            "key": "retentionYears",
+            "type": "number",
+            "default": 7,
+            "label": "Retention (years)",
+            "description": "Years to keep payout records for compliance.",
+            "tier": "advanced"
+          },
+          {
+            "key": "roundingMode",
+            "type": "string",
+            "default": "half-up",
+            "label": "Rounding mode",
+            "description": "Sub-cent rounding behavior for payout amounts.",
+            "tier": "advanced",
+            "enumValues": [
+              "bankers",
+              "half-up",
+              "down"
+            ]
+          },
+          {
+            "key": "taxStrategy",
+            "type": "string",
+            "default": "none",
+            "label": "Tax strategy",
+            "description": "inclusive = tax baked into payout amount; exclusive = tax withheld separately; none = no tax.",
+            "tier": "customization",
+            "enumValues": [
+              "inclusive",
+              "exclusive",
+              "none"
+            ]
           },
           {
             "key": "title",
@@ -222,6 +303,8 @@
       "OPEN_PAYOUT",
       "PayoutLoadFailed",
       "PayoutLoaded",
+      "PayoutUpdateFailed",
+      "PayoutUpdated",
       "REQUEST_WITHDRAW"
     ],
     "listenedEvents": []

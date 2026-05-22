@@ -67,23 +67,41 @@
           "GRANT_CREDIT",
           "BAN_CUSTOMER",
           "CustomerAccountLoaded",
-          "CustomerAccountLoadFailed"
+          "CustomerAccountLoadFailed",
+          "CustomerAccountUpdated",
+          "CustomerAccountUpdateFailed"
         ],
         "listenedEvents": [],
         "overridableConfigKeys": [
+          {
+            "key": "archiveInactiveAfterDays",
+            "type": "number",
+            "default": 365,
+            "label": "Archive inactive after (days)",
+            "description": "Days of inactivity before customer is auto-archived. Declarative; wire via sibling std-lifecycle.",
+            "tier": "advanced"
+          },
+          {
+            "key": "consentTrackingEnabled",
+            "type": "boolean",
+            "default": true,
+            "label": "Track consent",
+            "description": "Whether to record marketing/data-processing consent on the customer profile. Declarative.",
+            "tier": "customization"
+          },
           {
             "key": "fields",
             "type": "[FieldSpec]",
             "default": [
               {
+                "label": "Name",
                 "variant": "caption",
-                "name": "name",
-                "label": "Name"
+                "name": "name"
               },
               {
                 "name": "email",
-                "variant": "caption",
-                "label": "Email"
+                "label": "Email",
+                "variant": "caption"
               },
               {
                 "label": "Phone",
@@ -91,19 +109,19 @@
                 "variant": "caption"
               },
               {
+                "label": "Points",
                 "variant": "caption",
-                "name": "loyaltyPoints",
-                "label": "Points"
+                "name": "loyaltyPoints"
               },
               {
                 "name": "totalSpent",
-                "label": "Total Spent",
-                "variant": "caption"
+                "variant": "caption",
+                "label": "Total Spent"
               },
               {
+                "label": "Status",
                 "variant": "badge",
-                "name": "status",
-                "label": "Status"
+                "name": "status"
               }
             ],
             "label": "Columns to show",
@@ -111,23 +129,13 @@
             "tier": "customization",
             "items": {
               "properties": {
-                "format": {
-                  "name": "format",
+                "header": {
+                  "name": "header",
                   "required": false,
                   "type": "string"
                 },
-                "key": {
-                  "name": "key",
-                  "required": false,
-                  "type": "string"
-                },
-                "label": {
-                  "name": "label",
-                  "required": false,
-                  "type": "string"
-                },
-                "variant": {
-                  "name": "variant",
+                "icon": {
+                  "name": "icon",
                   "required": false,
                   "type": "string"
                 },
@@ -136,13 +144,23 @@
                   "required": true,
                   "type": "string"
                 },
-                "icon": {
-                  "name": "icon",
+                "format": {
+                  "name": "format",
                   "required": false,
                   "type": "string"
                 },
-                "header": {
-                  "name": "header",
+                "label": {
+                  "name": "label",
+                  "required": false,
+                  "type": "string"
+                },
+                "key": {
+                  "name": "key",
+                  "required": false,
+                  "type": "string"
+                },
+                "variant": {
+                  "name": "variant",
                   "required": false,
                   "type": "string"
                 }
@@ -151,19 +169,27 @@
             }
           },
           {
+            "key": "healthScoreThresholdAlert",
+            "type": "number",
+            "default": 50,
+            "label": "Health score threshold",
+            "description": "Customers with health score below this trigger an alert. Declarative; wire via sibling std-notify.",
+            "tier": "customization"
+          },
+          {
             "key": "itemActions",
             "type": "[ItemAction]",
             "default": [
               {
                 "label": "Open",
-                "variant": "primary",
                 "event": "OPEN_CUSTOMER",
-                "icon": "arrow-right"
+                "icon": "arrow-right",
+                "variant": "primary"
               },
               {
-                "label": "Ban",
                 "variant": "danger",
-                "event": "BAN_CUSTOMER"
+                "event": "BAN_CUSTOMER",
+                "label": "Ban"
               }
             ],
             "label": "Row actions",
@@ -176,8 +202,8 @@
                   "required": false,
                   "type": "string"
                 },
-                "event": {
-                  "name": "event",
+                "label": {
+                  "name": "label",
                   "required": true,
                   "type": "string"
                 },
@@ -186,13 +212,28 @@
                   "required": false,
                   "type": "string"
                 },
-                "label": {
-                  "name": "label",
+                "event": {
+                  "name": "event",
                   "required": true,
                   "type": "string"
                 }
               },
               "type": "object"
+            }
+          },
+          {
+            "key": "renewalReminderDaysBefore",
+            "type": "[number]",
+            "default": [
+              30,
+              7,
+              1
+            ],
+            "label": "Renewal reminder days-before",
+            "description": "Days before subscription renewal to send reminders. Declarative; wire via sibling std-reminder-scheduler.",
+            "tier": "customization",
+            "items": {
+              "type": "number"
             }
           },
           {
@@ -219,6 +260,8 @@
       "CLOSE_VIEW",
       "CustomerAccountLoadFailed",
       "CustomerAccountLoaded",
+      "CustomerAccountUpdateFailed",
+      "CustomerAccountUpdated",
       "GRANT_CREDIT",
       "GRANT_POINTS",
       "OPEN_CUSTOMER"
