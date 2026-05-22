@@ -39,12 +39,12 @@ export type StdMarketingArticleEventKey = 'INIT';
  * without modifying its state-machine topology.
  */
 export interface StdMarketingArticleConfig {
-  /** Default: `"We believe building software should be as natural as describing it."` */
-  content?: string;
-  /** Default: `"Our Mission"` */
-  title?: string;
   /** Default: `"lg"` */
   maxWidth?: string;
+  /** Default: `"Our Mission"` */
+  title?: string;
+  /** Default: `"We believe building software should be as natural as describing it."` */
+  content?: string;
 }
 
 /**

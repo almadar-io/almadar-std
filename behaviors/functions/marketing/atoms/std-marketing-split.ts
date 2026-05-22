@@ -39,20 +39,20 @@ export type StdMarketingSplitEventKey = 'INIT';
  * without modifying its state-machine topology.
  */
 export interface StdMarketingSplitConfig {
-  /** Default: `"default"` */
-  background?: string;
   /** Default: `""` */
   imageAlt?: string;
-  /** Default: `""` */
-  imageSrc?: string;
-  /** Default: `"Powerful under the hood"` */
-  title?: string;
   /** Default: `"right"` */
   imagePosition?: string;
-  /** Default: `["Instant deployments","Auto-scaling","Global CDN"]` */
-  bullets?: string[];
+  /** Default: `"default"` */
+  background?: string;
   /** Default: `"Everything you need to build, deploy, and scale."` */
   description?: string;
+  /** Default: `"Powerful under the hood"` */
+  title?: string;
+  /** Default: `["Instant deployments","Auto-scaling","Global CDN"]` */
+  bullets?: string[];
+  /** Default: `""` */
+  imageSrc?: string;
 }
 
 /**

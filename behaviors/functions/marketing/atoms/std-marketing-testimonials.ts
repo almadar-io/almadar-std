@@ -39,10 +39,10 @@ export type StdMarketingTestimonialsEventKey = 'INIT';
  * without modifying its state-machine topology.
  */
 export interface StdMarketingTestimonialsConfig {
-  /** Default: `[{"quote":"Almadar cut our time-to-market by 80%.","name":"Acme Corp","logo":""},{"logo":"","quote":"The most intuitive platform we've ever used.","name":"Globex"},{"name":"Initech","quote":"We replaced three tools with one.","logo":""}]` */
-  items?: EntityRow[];
   /** Default: `"quotes"` */
   variant?: string;
+  /** Default: `[{"logo":"","name":"Acme Corp","quote":"Almadar cut our time-to-market by 80%."},{"name":"Globex","logo":"","quote":"The most intuitive platform we've ever used."},{"name":"Initech","logo":"","quote":"We replaced three tools with one."}]` */
+  items?: EntityRow[];
 }
 
 /**

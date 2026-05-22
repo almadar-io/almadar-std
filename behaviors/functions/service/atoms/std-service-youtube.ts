@@ -47,6 +47,17 @@ export interface StdServiceYoutubeReadyPayload {
 }
 
 /**
+ * Typed call-site config block for this trait — every
+ * field maps to a `config { ... }` entry in the source
+ * .lolo. The agent fills these to specialise the trait
+ * without modifying its state-machine topology.
+ */
+export interface StdServiceYoutubeConfig {
+  /** Default: `""` */
+  videoId?: string;
+}
+
+/**
  * Params for the std-service-youtube descriptor helpers.
  *
  * `entityName` binds every trait/page reference's `linkedEntity`.
@@ -70,8 +81,8 @@ export interface StdServiceYoutubeParams {
   listens?: TraitEventListener[];
   /** Set every emit's scope. */
   emitsScope?: 'internal' | 'external';
-  /** Nested config override (outer key = config field name). */
-  config?: TraitConfig;
+  /** Typed call-site config block — see the per-field interface. */
+  config?: StdServiceYoutubeConfig;
   /** URL path override for the (first) page. */
   pagePath?: string;
 }

@@ -53,22 +53,22 @@ export interface StdMarketingCtaCtaSecondaryPayload {
  * without modifying its state-machine topology.
  */
 export interface StdMarketingCtaConfig {
-  /** Default: `"#"` */
-  primaryActionHref?: string;
-  /** Default: `"primary"` */
-  background?: string;
-  /** Default: `"Ready to get started?"` */
-  title?: string;
   /** Default: `"Get Started"` */
   primaryActionLabel?: string;
-  /** Default: `""` */
-  secondaryActionHref?: string;
-  /** Default: `"Learn More"` */
-  secondaryActionLabel?: string;
   /** Default: `"center"` */
   align?: string;
+  /** Default: `"Learn More"` */
+  secondaryActionLabel?: string;
   /** Default: `"Join thousands of teams shipping faster."` */
   subtitle?: string;
+  /** Default: `"primary"` */
+  background?: string;
+  /** Default: `"#"` */
+  primaryActionHref?: string;
+  /** Default: `"Ready to get started?"` */
+  title?: string;
+  /** Default: `""` */
+  secondaryActionHref?: string;
 }
 
 /**
