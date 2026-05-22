@@ -1,6 +1,6 @@
 {
   "name": "std-pricing-page",
-  "version": "1.0.0",
+  "version": "1.1.0",
   "description": "Pricing page molecule for marketing sites. Composes hero, pricing grid, FAQ accordion, and CTA sections as a vertical stack of individual marketing patterns. Pick for SaaS pricing pages and plan comparisons.",
   "orbitals": [
     {
@@ -43,25 +43,25 @@
                     "render-ui",
                     "main",
                     {
-                      "type": "stack",
-                      "direction": "vertical",
                       "gap": "none",
+                      "direction": "vertical",
+                      "type": "stack",
                       "children": [
                         {
-                          "subtitle": "@config.heroSubtitle",
                           "type": "hero-section",
+                          "subtitle": "@config.heroSubtitle",
+                          "secondaryAction": {
+                            "href": "@config.heroSecondaryActionHref",
+                            "label": "@config.heroSecondaryActionLabel"
+                          },
+                          "titleAccent": "@config.heroTitleAccent",
                           "background": "@config.heroBackground",
-                          "align": "@config.heroAlign",
                           "primaryAction": {
                             "href": "@config.heroPrimaryActionHref",
                             "label": "@config.heroPrimaryActionLabel"
                           },
-                          "titleAccent": "@config.heroTitleAccent",
-                          "secondaryAction": {
-                            "label": "@config.heroSecondaryActionLabel",
-                            "href": "@config.heroSecondaryActionHref"
-                          },
                           "title": "@config.heroTitle",
+                          "align": "@config.heroAlign",
                           "tag": "@config.heroTag"
                         },
                         {
@@ -69,14 +69,14 @@
                           "type": "pricing-grid"
                         },
                         {
-                          "type": "accordion",
-                          "items": "@config.faq"
+                          "items": "@config.faq",
+                          "type": "accordion"
                         },
                         {
-                          "type": "cta-banner",
                           "primaryAction": "@config.ctaAction",
-                          "title": "@config.ctaTitle",
-                          "subtitle": "@config.ctaSubtitle"
+                          "type": "cta-banner",
+                          "subtitle": "@config.ctaSubtitle",
+                          "title": "@config.ctaTitle"
                         },
                         {
                           "type": "marketing-footer",
@@ -91,17 +91,156 @@
             ]
           },
           "config": {
-            "heroSubtitle": {
+            "heroSecondaryActionLabel": {
               "type": "string",
-              "default": "Start free, scale as you grow."
+              "default": "Contact Sales"
+            },
+            "heroSecondaryActionHref": {
+              "type": "string",
+              "default": "/contact"
+            },
+            "heroBackground": {
+              "type": "string",
+              "default": "subtle"
             },
             "heroPrimaryActionLabel": {
               "type": "string",
               "default": "Get Started"
             },
-            "heroBackground": {
+            "heroPrimaryActionHref": {
               "type": "string",
-              "default": "subtle"
+              "default": "/signup"
+            },
+            "ctaSubtitle": {
+              "type": "string",
+              "default": "Our team is here to help you find the right plan."
+            },
+            "heroSubtitle": {
+              "type": "string",
+              "default": "Start free, scale as you grow."
+            },
+            "heroAlign": {
+              "type": "string",
+              "default": "center"
+            },
+            "heroTag": {
+              "type": "string",
+              "default": ""
+            },
+            "plans": {
+              "type": "[PricingPlan]",
+              "default": [
+                {
+                  "action": {
+                    "label": "Get Started",
+                    "href": "#"
+                  },
+                  "price": "$0",
+                  "name": "Starter",
+                  "features": [
+                    "1 project",
+                    "Community support",
+                    "Basic analytics"
+                  ],
+                  "badge": "",
+                  "description": "For individuals and small projects.",
+                  "highlighted": false
+                },
+                {
+                  "highlighted": true,
+                  "badge": "Most Popular",
+                  "action": {
+                    "label": "Start Trial",
+                    "href": "#"
+                  },
+                  "name": "Pro",
+                  "price": "$49",
+                  "description": "For growing teams that need more power.",
+                  "features": [
+                    "Unlimited projects",
+                    "Priority support",
+                    "Advanced analytics",
+                    "Custom domains"
+                  ]
+                },
+                {
+                  "name": "Enterprise",
+                  "highlighted": false,
+                  "price": "Custom",
+                  "description": "For organizations with advanced needs.",
+                  "features": [
+                    "Dedicated infra",
+                    "SLA guarantee",
+                    "SSO & SAML",
+                    "Audit logs",
+                    "Custom contracts"
+                  ],
+                  "action": {
+                    "label": "Contact Sales",
+                    "href": "#"
+                  },
+                  "badge": ""
+                }
+              ],
+              "items": {
+                "type": "object",
+                "properties": {
+                  "action": {
+                    "name": "action",
+                    "type": "object",
+                    "required": true,
+                    "properties": {
+                      "label": {
+                        "name": "label",
+                        "type": "string",
+                        "required": true
+                      },
+                      "href": {
+                        "name": "href",
+                        "type": "string",
+                        "required": true
+                      }
+                    }
+                  },
+                  "price": {
+                    "name": "price",
+                    "type": "string",
+                    "required": true
+                  },
+                  "features": {
+                    "name": "features",
+                    "type": "array",
+                    "required": false,
+                    "items": {
+                      "type": "string"
+                    }
+                  },
+                  "name": {
+                    "name": "name",
+                    "type": "string",
+                    "required": true
+                  },
+                  "highlighted": {
+                    "name": "highlighted",
+                    "type": "boolean",
+                    "required": false
+                  },
+                  "description": {
+                    "name": "description",
+                    "type": "string",
+                    "required": false
+                  },
+                  "badge": {
+                    "name": "badge",
+                    "type": "string",
+                    "required": false
+                  }
+                }
+              }
+            },
+            "footerCopyright": {
+              "type": "string",
+              "default": "© 2026 Almadar. All rights reserved."
             },
             "ctaAction": {
               "type": "ActionCard",
@@ -110,69 +249,21 @@
                 "href": "/contact"
               },
               "properties": {
-                "href": {
-                  "name": "href",
-                  "type": "string",
-                  "required": true
-                },
                 "label": {
                   "name": "label",
                   "type": "string",
                   "required": true
+                },
+                "href": {
+                  "name": "href",
+                  "type": "string",
+                  "required": true
                 }
               }
-            },
-            "faq": {
-              "type": "[FaqItem]",
-              "default": [
-                {
-                  "answer": "Yes, you can upgrade or downgrade at any time.",
-                  "question": "Can I change plans later?"
-                },
-                {
-                  "answer": "Yes, every paid plan includes a 14-day free trial.",
-                  "question": "Is there a free trial?"
-                },
-                {
-                  "question": "What payment methods do you accept?",
-                  "answer": "We accept all major credit cards and wire transfers for Enterprise."
-                }
-              ],
-              "items": {
-                "type": "object",
-                "properties": {
-                  "answer": {
-                    "name": "answer",
-                    "type": "string",
-                    "required": true
-                  },
-                  "question": {
-                    "name": "question",
-                    "type": "string",
-                    "required": true
-                  }
-                }
-              }
-            },
-            "heroTag": {
-              "type": "string",
-              "default": ""
-            },
-            "heroTitleAccent": {
-              "type": "string",
-              "default": ""
-            },
-            "heroSecondaryActionHref": {
-              "type": "string",
-              "default": "/contact"
             },
             "heroTitle": {
               "type": "string",
               "default": "Simple, transparent pricing"
-            },
-            "heroPrimaryActionHref": {
-              "type": "string",
-              "default": "/signup"
             },
             "footerColumns": {
               "type": "[FooterColumn]",
@@ -181,12 +272,12 @@
                   "title": "Product",
                   "items": [
                     {
-                      "label": "Features",
-                      "href": "#"
+                      "href": "#",
+                      "label": "Features"
                     },
                     {
-                      "label": "Pricing",
-                      "href": "#"
+                      "href": "#",
+                      "label": "Pricing"
                     },
                     {
                       "label": "Changelog",
@@ -201,18 +292,17 @@
                       "href": "#"
                     },
                     {
-                      "href": "#",
-                      "label": "Careers"
+                      "label": "Careers",
+                      "href": "#"
                     },
                     {
-                      "label": "Blog",
-                      "href": "#"
+                      "href": "#",
+                      "label": "Blog"
                     }
                   ],
                   "title": "Company"
                 },
                 {
-                  "title": "Resources",
                   "items": [
                     {
                       "label": "Docs",
@@ -223,10 +313,11 @@
                       "href": "#"
                     },
                     {
-                      "label": "Support",
-                      "href": "#"
+                      "href": "#",
+                      "label": "Support"
                     }
-                  ]
+                  ],
+                  "title": "Resources"
                 }
               ],
               "items": {
@@ -244,13 +335,13 @@
                     "items": {
                       "type": "object",
                       "properties": {
-                        "label": {
-                          "name": "label",
+                        "href": {
+                          "name": "href",
                           "type": "string",
                           "required": true
                         },
-                        "href": {
-                          "name": "href",
+                        "label": {
+                          "name": "label",
                           "type": "string",
                           "required": true
                         }
@@ -260,136 +351,53 @@
                 }
               }
             },
-            "heroAlign": {
+            "heroTitleAccent": {
               "type": "string",
-              "default": "center"
+              "default": ""
             },
-            "footerCopyright": {
-              "type": "string",
-              "default": "© 2026 Almadar. All rights reserved."
-            },
-            "heroSecondaryActionLabel": {
-              "type": "string",
-              "default": "Contact Sales"
-            },
-            "ctaSubtitle": {
-              "type": "string",
-              "default": "Our team is here to help you find the right plan."
-            },
-            "ctaTitle": {
-              "type": "string",
-              "default": "Still have questions?"
-            },
-            "plans": {
-              "type": "[PricingPlan]",
+            "faq": {
+              "type": "[FaqItem]",
               "default": [
                 {
-                  "highlighted": false,
-                  "name": "Starter",
-                  "badge": "",
-                  "action": {
-                    "href": "#",
-                    "label": "Get Started"
-                  },
-                  "description": "For individuals and small projects.",
-                  "price": "$0",
-                  "features": [
-                    "1 project",
-                    "Community support",
-                    "Basic analytics"
-                  ]
+                  "id": "plan-changes",
+                  "title": "Can I change plans later?",
+                  "content": "Yes, you can upgrade or downgrade at any time."
                 },
                 {
-                  "price": "$49",
-                  "name": "Pro",
-                  "description": "For growing teams that need more power.",
-                  "features": [
-                    "Unlimited projects",
-                    "Priority support",
-                    "Advanced analytics",
-                    "Custom domains"
-                  ],
-                  "action": {
-                    "href": "#",
-                    "label": "Start Trial"
-                  },
-                  "highlighted": true,
-                  "badge": "Most Popular"
+                  "content": "Yes, every paid plan includes a 14-day free trial.",
+                  "id": "free-trial",
+                  "title": "Is there a free trial?"
                 },
                 {
-                  "price": "Custom",
-                  "action": {
-                    "href": "#",
-                    "label": "Contact Sales"
-                  },
-                  "description": "For organizations with advanced needs.",
-                  "name": "Enterprise",
-                  "features": [
-                    "Dedicated infra",
-                    "SLA guarantee",
-                    "SSO & SAML",
-                    "Audit logs",
-                    "Custom contracts"
-                  ],
-                  "highlighted": false,
-                  "badge": ""
+                  "title": "What payment methods do you accept?",
+                  "content": "We accept all major credit cards and wire transfers for Enterprise.",
+                  "id": "payment-methods"
                 }
               ],
               "items": {
                 "type": "object",
                 "properties": {
-                  "highlighted": {
-                    "name": "highlighted",
-                    "type": "boolean",
-                    "required": false
-                  },
-                  "price": {
-                    "name": "price",
+                  "title": {
+                    "name": "title",
                     "type": "string",
                     "required": true
                   },
-                  "name": {
-                    "name": "name",
+                  "id": {
+                    "name": "id",
                     "type": "string",
                     "required": true
                   },
-                  "action": {
-                    "name": "action",
-                    "type": "object",
-                    "required": true,
-                    "properties": {
-                      "href": {
-                        "name": "href",
-                        "type": "string",
-                        "required": true
-                      },
-                      "label": {
-                        "name": "label",
-                        "type": "string",
-                        "required": true
-                      }
-                    }
-                  },
-                  "features": {
-                    "name": "features",
-                    "type": "array",
-                    "required": false,
-                    "items": {
-                      "type": "string"
-                    }
-                  },
-                  "badge": {
-                    "name": "badge",
+                  "content": {
+                    "name": "content",
                     "type": "string",
-                    "required": false
-                  },
-                  "description": {
-                    "name": "description",
-                    "type": "string",
-                    "required": false
+                    "required": true
                   }
                 }
               }
+            },
+            "ctaTitle": {
+              "type": "string",
+              "default": "Still have questions?"
             }
           },
           "scope": "instance"
