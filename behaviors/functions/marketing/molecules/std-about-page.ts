@@ -39,46 +39,46 @@ export type StdAboutPageEventKey = 'INIT';
  * without modifying its state-machine topology.
  */
 export interface StdAboutPageConfig {
-  /** Default: `"Our Values"` */
-  article3Title?: string;
-  /** Default: `"Our Mission"` */
-  article2Title?: string;
-  /** Default: `{"href":"/careers","label":"View Open Roles"}` */
-  ctaAction?: EntityRow;
+  /** Default: `[{"title":"Acme Corp","id":"1","href":"#","category":"SaaS","linkLabel":"Read story","description":"How Acme scaled from 1K to 1M users in 6 months.","categoryColor":""},{"href":"#","linkLabel":"Read story","title":"Globex","id":"2","description":"Globex reduced infrastructure costs by 70%.","category":"Fintech","categoryColor":""}]` */
+  caseStudies?: EntityRow[];
   /** Default: `"subtle"` */
   heroBackground?: string;
-  /** Default: `"/careers"` */
-  heroPrimaryActionHref?: string;
-  /** Default: `"Want to work with us?"` */
-  ctaTitle?: string;
-  /** Default: `"Our Story"` */
-  article1Title?: string;
-  /** Default: `"Speed, simplicity, and developer joy guide every decision we make."` */
-  article3Content?: string;
-  /** Default: `[{"id":"1","name":"Jane Doe","nameAr":"","role":"CEO","avatar":"","bio":"Former VP Engineering at BigTech. Obsessed with developer experience."},{"role":"CTO","bio":"Built distributed systems at scale for a decade.","nameAr":"","id":"2","avatar":"","name":"John Smith"},{"id":"3","bio":"Believes great design is invisible.","avatar":"","nameAr":"","name":"Alice Chen","role":"Head of Design"}]` */
-  team?: EntityRow[];
-  /** Default: `"We exist to democratize software creation through natural language and AI."` */
-  article2Content?: string;
-  /** Default: `""` */
-  heroTag?: string;
   /** Default: `""` */
   heroTitleAccent?: string;
-  /** Default: `"About Almadar"` */
-  heroTitle?: string;
   /** Default: `"Almadar started with a simple belief: everyone should be able to build software."` */
   article1Content?: string;
-  /** Default: `[{"items":[{"label":"Features","href":"#"},{"href":"#","label":"Pricing"},{"href":"#","label":"Changelog"}],"title":"Product"},{"items":[{"href":"#","label":"About"},{"label":"Careers","href":"#"},{"label":"Blog","href":"#"}],"title":"Company"},{"title":"Resources","items":[{"label":"Docs","href":"#"},{"label":"Community","href":"#"},{"label":"Support","href":"#"}]}]` */
-  footerColumns?: EntityRow[];
-  /** Default: `"Join Us"` */
-  heroPrimaryActionLabel?: string;
   /** Default: `"center"` */
   heroAlign?: string;
-  /** Default: `[{"category":"SaaS","title":"Acme Corp","id":"1","categoryColor":"","href":"#","linkLabel":"Read story","description":"How Acme scaled from 1K to 1M users in 6 months."},{"href":"#","linkLabel":"Read story","title":"Globex","description":"Globex reduced infrastructure costs by 70%.","categoryColor":"","category":"Fintech","id":"2"}]` */
-  caseStudies?: EntityRow[];
+  /** Default: `"Want to work with us?"` */
+  ctaTitle?: string;
   /** Default: `"© 2026 Almadar. All rights reserved."` */
   footerCopyright?: string;
+  /** Default: `"About Almadar"` */
+  heroTitle?: string;
+  /** Default: `[{"name":"Jane Doe","id":"1","role":"CEO","bio":"Former VP Engineering at BigTech. Obsessed with developer experience.","avatar":"","nameAr":""},{"id":"2","avatar":"","name":"John Smith","role":"CTO","bio":"Built distributed systems at scale for a decade.","nameAr":""},{"bio":"Believes great design is invisible.","nameAr":"","role":"Head of Design","avatar":"","name":"Alice Chen","id":"3"}]` */
+  team?: EntityRow[];
+  /** Default: `""` */
+  heroTag?: string;
+  /** Default: `[{"items":[{"label":"Features","href":"#"},{"label":"Pricing","href":"#"},{"href":"#","label":"Changelog"}],"title":"Product"},{"title":"Company","items":[{"label":"About","href":"#"},{"href":"#","label":"Careers"},{"label":"Blog","href":"#"}]},{"items":[{"label":"Docs","href":"#"},{"href":"#","label":"Community"},{"href":"#","label":"Support"}],"title":"Resources"}]` */
+  footerColumns?: EntityRow[];
+  /** Default: `"Our Story"` */
+  article1Title?: string;
+  /** Default: `"Our Values"` */
+  article3Title?: string;
+  /** Default: `"Speed, simplicity, and developer joy guide every decision we make."` */
+  article3Content?: string;
+  /** Default: `"We exist to democratize software creation through natural language and AI."` */
+  article2Content?: string;
+  /** Default: `"Our Mission"` */
+  article2Title?: string;
   /** Default: `"We're building the future of software creation."` */
   heroSubtitle?: string;
+  /** Default: `{"href":"/careers","label":"View Open Roles"}` */
+  ctaAction?: EntityRow;
+  /** Default: `"Join Us"` */
+  heroPrimaryActionLabel?: string;
+  /** Default: `"/careers"` */
+  heroPrimaryActionHref?: string;
 }
 
 /**

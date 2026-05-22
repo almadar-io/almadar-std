@@ -39,46 +39,46 @@ export type StdLandingPageEventKey = 'INIT';
  * without modifying its state-machine topology.
  */
 export interface StdLandingPageConfig {
-  /** Default: `[{"description":"Describe your app in natural language.","number":1,"icon":"pen-tool","title":"Design"},{"number":2,"icon":"hammer","description":"Almadar generates the full stack automatically.","title":"Build"},{"icon":"rocket","title":"Ship","number":3,"description":"Deploy to production with one click."}]` */
-  steps?: EntityRow[];
-  /** Default: `""` */
-  heroTag?: string;
-  /** Default: `"From idea to production in minutes, not months."` */
-  heroSubtitle?: string;
-  /** Default: `{"label":"","href":""}` */
-  ctaSecondaryAction?: EntityRow;
-  /** Default: `"/signup"` */
-  heroPrimaryActionHref?: string;
-  /** Default: `""` */
-  heroTitleAccent?: string;
-  /** Default: `"gradient"` */
-  heroBackground?: string;
-  /** Default: `""` */
-  heroSecondaryActionHref?: string;
-  /** Default: `"Join thousands of teams shipping faster."` */
-  ctaSubtitle?: string;
-  /** Default: `""` */
-  heroSecondaryActionLabel?: string;
-  /** Default: `[{"title":"Product","items":[{"label":"Features","href":"#"},{"label":"Pricing","href":"#"},{"label":"Changelog","href":"#"}]},{"items":[{"href":"#","label":"About"},{"href":"#","label":"Careers"},{"href":"#","label":"Blog"}],"title":"Company"},{"title":"Resources","items":[{"href":"#","label":"Docs"},{"label":"Community","href":"#"},{"label":"Support","href":"#"}]}]` */
-  footerColumns?: EntityRow[];
   /** Default: `"Get Started"` */
   heroPrimaryActionLabel?: string;
+  /** Default: `"From idea to production in minutes, not months."` */
+  heroSubtitle?: string;
+  /** Default: `""` */
+  heroTag?: string;
+  /** Default: `""` */
+  heroSecondaryActionHref?: string;
   /** Default: `"center"` */
   heroAlign?: string;
-  /** Default: `[{"label":"Developers","value":"10K+"},{"value":"99.9%","label":"Uptime"},{"label":"Requests served","value":"50M+"},{"value":"4.9","label":"Average rating"}]` */
-  stats?: EntityRow[];
-  /** Default: `[{"title":"Lightning Fast","href":"","description":"Build and deploy in minutes.","icon":"zap","linkLabel":"Learn more"},{"href":"","icon":"shield","title":"Enterprise Secure","linkLabel":"Learn more","description":"SOC-2 compliant with end-to-end encryption."},{"icon":"puzzle","linkLabel":"Learn more","href":"","description":"Plug in any service, any data source, any UI pattern.","title":"Infinitely Extensible"}]` */
-  features?: EntityRow[];
-  /** Default: `"Build faster with Almadar"` */
-  heroTitle?: string;
-  /** Default: `"Ready to get started?"` */
-  ctaTitle?: string;
-  /** Default: `{"label":"Get Started","href":"/signup"}` */
-  ctaPrimaryAction?: EntityRow;
   /** Default: `"© 2026 Almadar. All rights reserved."` */
   footerCopyright?: string;
-  /** Default: `[{"image":{"src":"","alt":"Dashboard"},"description":"Real-time analytics at a glance.","badge":"New","title":"Dashboard","accentColor":"","href":""},{"image":{"src":"","alt":"API"},"accentColor":"","title":"API","href":"","badge":"","description":"GraphQL and REST in one click."},{"image":{"src":"","alt":"Mobile"},"accentColor":"","description":"Native apps without native code.","badge":"Beta","title":"Mobile","href":""}]` */
+  /** Default: `[{"image":{"alt":"Dashboard","src":""},"href":"","badge":"New","accentColor":"","title":"Dashboard","description":"Real-time analytics at a glance."},{"description":"GraphQL and REST in one click.","badge":"","title":"API","image":{"alt":"API","src":""},"accentColor":"","href":""},{"title":"Mobile","image":{"alt":"Mobile","src":""},"badge":"Beta","description":"Native apps without native code.","href":"","accentColor":""}]` */
   showcase?: EntityRow[];
+  /** Default: `[{"description":"Build and deploy in minutes.","linkLabel":"Learn more","title":"Lightning Fast","href":"","icon":"zap"},{"linkLabel":"Learn more","href":"","icon":"shield","title":"Enterprise Secure","description":"SOC-2 compliant with end-to-end encryption."},{"linkLabel":"Learn more","icon":"puzzle","title":"Infinitely Extensible","description":"Plug in any service, any data source, any UI pattern.","href":""}]` */
+  features?: EntityRow[];
+  /** Default: `""` */
+  heroSecondaryActionLabel?: string;
+  /** Default: `"Build faster with Almadar"` */
+  heroTitle?: string;
+  /** Default: `[{"title":"Product","items":[{"label":"Features","href":"#"},{"label":"Pricing","href":"#"},{"label":"Changelog","href":"#"}]},{"title":"Company","items":[{"href":"#","label":"About"},{"href":"#","label":"Careers"},{"label":"Blog","href":"#"}]},{"items":[{"label":"Docs","href":"#"},{"label":"Community","href":"#"},{"href":"#","label":"Support"}],"title":"Resources"}]` */
+  footerColumns?: EntityRow[];
+  /** Default: `{"href":"/signup","label":"Get Started"}` */
+  ctaPrimaryAction?: EntityRow;
+  /** Default: `[{"number":1,"title":"Design","description":"Describe your app in natural language.","icon":"pen-tool"},{"title":"Build","icon":"hammer","number":2,"description":"Almadar generates the full stack automatically."},{"description":"Deploy to production with one click.","icon":"rocket","number":3,"title":"Ship"}]` */
+  steps?: EntityRow[];
+  /** Default: `"Ready to get started?"` */
+  ctaTitle?: string;
+  /** Default: `""` */
+  heroTitleAccent?: string;
+  /** Default: `[{"value":"10K+","label":"Developers"},{"label":"Uptime","value":"99.9%"},{"value":"50M+","label":"Requests served"},{"label":"Average rating","value":"4.9"}]` */
+  stats?: EntityRow[];
+  /** Default: `"/signup"` */
+  heroPrimaryActionHref?: string;
+  /** Default: `"Join thousands of teams shipping faster."` */
+  ctaSubtitle?: string;
+  /** Default: `{"label":"","href":""}` */
+  ctaSecondaryAction?: EntityRow;
+  /** Default: `"gradient"` */
+  heroBackground?: string;
 }
 
 /**

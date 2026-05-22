@@ -39,7 +39,7 @@ export type StdMarketingTeamEventKey = 'INIT';
  * without modifying its state-machine topology.
  */
 export interface StdMarketingTeamConfig {
-  /** Default: `[{"id":"1","name":"Jane Doe","nameAr":"","bio":"Former VP Engineering at BigTech. Obsessed with developer experience.","avatar":"","role":"CEO"},{"role":"CTO","id":"2","nameAr":"","avatar":"","name":"John Smith","bio":"Built distributed systems at scale for a decade."},{"id":"3","name":"Alice Chen","bio":"Believes great design is invisible.","nameAr":"","avatar":"","role":"Head of Design"}]` */
+  /** Default: `[{"name":"Jane Doe","bio":"Former VP Engineering at BigTech. Obsessed with developer experience.","id":"1","role":"CEO","nameAr":"","avatar":""},{"avatar":"","id":"2","bio":"Built distributed systems at scale for a decade.","nameAr":"","role":"CTO","name":"John Smith"},{"id":"3","name":"Alice Chen","role":"Head of Design","bio":"Believes great design is invisible.","avatar":"","nameAr":""}]` */
   members?: EntityRow[];
   /** Default: `3` */
   columns?: number;

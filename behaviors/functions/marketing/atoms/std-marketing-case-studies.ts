@@ -47,7 +47,7 @@ export interface StdMarketingCaseStudiesCaseStudyClickPayload {
  * without modifying its state-machine topology.
  */
 export interface StdMarketingCaseStudiesConfig {
-  /** Default: `[{"description":"How Acme scaled from 1K to 1M users in 6 months.","id":"1","href":"#","category":"SaaS","categoryColor":"","linkLabel":"Read story","title":"Acme Corp"},{"href":"#","linkLabel":"Read story","description":"Globex reduced infrastructure costs by 70%.","id":"2","title":"Globex","category":"Fintech","categoryColor":""},{"description":"Initech shipped their mobile app 3x faster.","category":"Healthtech","id":"3","categoryColor":"","href":"#","linkLabel":"Read story","title":"Initech"}]` */
+  /** Default: `[{"linkLabel":"Read story","id":"1","description":"How Acme scaled from 1K to 1M users in 6 months.","title":"Acme Corp","categoryColor":"","href":"#","category":"SaaS"},{"id":"2","title":"Globex","category":"Fintech","categoryColor":"","href":"#","description":"Globex reduced infrastructure costs by 70%.","linkLabel":"Read story"},{"categoryColor":"","href":"#","description":"Initech shipped their mobile app 3x faster.","title":"Initech","id":"3","category":"Healthtech","linkLabel":"Read story"}]` */
   items?: EntityRow[];
 }
 

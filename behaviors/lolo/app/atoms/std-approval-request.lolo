@@ -1,5 +1,5 @@
-app std-approval-request "1.4.0"
-"std-approval-request — approver inbox/triage queue (use std-approval-chain for sequential single-item approvals). Listens for SET_STATUS so std-lifecycle can auto-withdraw stale requests. Exposes Service/Operations knobs (responseTimeMinutes, resolutionSLAHours, …)."
+app std-approval-request "1.4.1"
+"std-approval-request — approver inbox / triage queue for approval workflows. Use when the user voices a multi-target approval system (timesheets, expenses, POs, change orders, time-off, etc. routed to a single approver inbox). Each request is reviewed and either approved or rejected. Use std-approval-chain for sequential single-item approvals across multiple approvers. Listens for SET_STATUS so std-lifecycle can auto-withdraw stale requests. Exposes Service/Operations knobs (responseTimeMinutes, resolutionSLAHours, …)."
 
 type FieldSpec = { name : string!, label : string, variant : string, icon : string, format : string, key : string, header : string }
 type ItemAction = { label : string!, event : string!, variant : string, icon : string }
@@ -23,7 +23,7 @@ orbital ApprovalRequestOrbital {
   type ApprovalRequestLoaded     = Event { data : [ApprovalRequest], totalCount : number } "Fired when the approval request collection finishes loading"
   type ApprovalRequestLoadFailed = Event { message : string }                                "Fired when the approval request collection fails to load"
 
-  trait ApprovalRequestPipeline -> ApprovalRequest [interaction, collection] {
+  trait ApprovalRequestPipeline -> ApprovalRequest [interaction, collection, approval] {
     config {
       title                  : string   = "Approval Requests"
         @label "Section title"

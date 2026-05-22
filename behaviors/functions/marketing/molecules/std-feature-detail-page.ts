@@ -39,36 +39,36 @@ export type StdFeatureDetailPageEventKey = 'INIT';
  * without modifying its state-machine topology.
  */
 export interface StdFeatureDetailPageConfig {
-  /** Default: `"/signup"` */
-  heroPrimaryActionHref?: string;
-  /** Default: `"Feature"` */
-  heroTag?: string;
-  /** Default: `"© 2026 Almadar. All rights reserved."` */
-  footerCopyright?: string;
-  /** Default: `"Everything you need to ship"` */
-  heroTitle?: string;
-  /** Default: `{"href":"/signup","label":"Get Started"}` */
-  ctaAction?: EntityRow;
-  /** Default: `"center"` */
-  heroAlign?: string;
-  /** Default: `"#"` */
-  heroSecondaryActionHref?: string;
-  /** Default: `""` */
-  heroTitleAccent?: string;
-  /** Default: `"Get Started"` */
-  heroPrimaryActionLabel?: string;
-  /** Default: `"Ready to experience the future?"` */
-  ctaTitle?: string;
-  /** Default: `"gradient"` */
-  heroBackground?: string;
   /** Default: `"From design to deployment, Almadar handles the entire stack."` */
   heroSubtitle?: string;
+  /** Default: `"center"` */
+  heroAlign?: string;
+  /** Default: `"Ready to experience the future?"` */
+  ctaTitle?: string;
   /** Default: `"Watch Demo"` */
   heroSecondaryActionLabel?: string;
-  /** Default: `[{"bullets":["No-code visual editor","AI-assisted schema generation","Real-time preview"],"title":"Design in Natural Language","description":"Describe what you want. Almadar translates your words into a complete application schema.","image":{"alt":"Design interface","src":""},"imagePosition":"right"},{"bullets":["Type-safe APIs","Auto-generated database schema","Instant deployments"],"image":{"src":"","alt":"Generated code"},"imagePosition":"left","description":"Get a production-ready TypeScript backend and React frontend in seconds.","title":"Full-Stack Generation"},{"bullets":["SOC-2 ready","RBAC & SSO","End-to-end encryption"],"image":{"alt":"Security dashboard","src":""},"imagePosition":"right","description":"Built-in auth, audit logs, and compliance from day one.","title":"Enterprise-Grade Security"}]` */
+  /** Default: `"Feature"` */
+  heroTag?: string;
+  /** Default: `"#"` */
+  heroSecondaryActionHref?: string;
+  /** Default: `"/signup"` */
+  heroPrimaryActionHref?: string;
+  /** Default: `"gradient"` */
+  heroBackground?: string;
+  /** Default: `[{"bullets":["No-code visual editor","AI-assisted schema generation","Real-time preview"],"description":"Describe what you want. Almadar translates your words into a complete application schema.","title":"Design in Natural Language","image":{"alt":"Design interface","src":""},"imagePosition":"right"},{"imagePosition":"left","title":"Full-Stack Generation","image":{"src":"","alt":"Generated code"},"bullets":["Type-safe APIs","Auto-generated database schema","Instant deployments"],"description":"Get a production-ready TypeScript backend and React frontend in seconds."},{"bullets":["SOC-2 ready","RBAC & SSO","End-to-end encryption"],"title":"Enterprise-Grade Security","image":{"alt":"Security dashboard","src":""},"description":"Built-in auth, audit logs, and compliance from day one.","imagePosition":"right"}]` */
   sections?: EntityRow[];
-  /** Default: `[{"title":"Product","items":[{"label":"Features","href":"#"},{"label":"Pricing","href":"#"},{"label":"Changelog","href":"#"}]},{"title":"Company","items":[{"label":"About","href":"#"},{"label":"Careers","href":"#"},{"href":"#","label":"Blog"}]},{"items":[{"label":"Docs","href":"#"},{"label":"Community","href":"#"},{"label":"Support","href":"#"}],"title":"Resources"}]` */
+  /** Default: `""` */
+  heroTitleAccent?: string;
+  /** Default: `"© 2026 Almadar. All rights reserved."` */
+  footerCopyright?: string;
+  /** Default: `[{"title":"Product","items":[{"label":"Features","href":"#"},{"label":"Pricing","href":"#"},{"href":"#","label":"Changelog"}]},{"title":"Company","items":[{"label":"About","href":"#"},{"href":"#","label":"Careers"},{"label":"Blog","href":"#"}]},{"title":"Resources","items":[{"href":"#","label":"Docs"},{"href":"#","label":"Community"},{"label":"Support","href":"#"}]}]` */
   footerColumns?: EntityRow[];
+  /** Default: `{"label":"Get Started","href":"/signup"}` */
+  ctaAction?: EntityRow;
+  /** Default: `"Get Started"` */
+  heroPrimaryActionLabel?: string;
+  /** Default: `"Everything you need to ship"` */
+  heroTitle?: string;
 }
 
 /**
