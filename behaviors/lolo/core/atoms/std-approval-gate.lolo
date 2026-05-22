@@ -1,5 +1,5 @@
-app std-approval-gate "1.0.0"
-"std-approval-gate — generic approval workflow. Persists ApprovalRequest rows + surfaces them in a review queue with Approve / Deny actions. On approval emits ApprovalGranted; on denial emits ApprovalDenied. Differs from std-mod-queue, which is content-moderation-specific. v1.0 ships the queue + review UI; sentinel-event-driven auto-approval threshold lands in v1.1 (gap)."
+app std-approval-gate "1.0.1"
+"std-approval-gate — generic admin-approval gate / approver workflow. Use when a user voices that an action must be reviewed, signed off, or authorized by a privileged role before it proceeds (admin approval, supervisor sign-off, manager approval, gatekeeper review). Persists ApprovalRequest rows + surfaces them in a review queue with Approve / Deny actions. On approval emits ApprovalGranted; on denial emits ApprovalDenied. Compose onto any orbital whose action you want to gate: the target orbital emits an external event, an ApprovalRequest row is created, and downstream effects wait on ApprovalGranted. Differs from std-mod-queue, which is content-moderation-specific."
 
 orbital ApprovalGateOrbital {
   entity ApprovalRequest [persistent: approval_requests] {
@@ -20,7 +20,7 @@ orbital ApprovalGateOrbital {
   type ApprovalGranted           = Event { requestId : string }                  "Re-emitted on approval; downstream listener fetches the ApprovalRequest by id and proceeds with the gated action."
   type ApprovalDenied            = Event { requestId : string }                  "Emitted on denial; downstream listeners can log or notify."
 
-  trait ApprovalGateReview -> ApprovalRequest [interaction, collection] {
+  trait ApprovalGateReview -> ApprovalRequest [interaction, collection, approval] {
     config {
       approverRoles  : [string] = []
         @label "Approver roles"

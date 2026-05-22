@@ -1,7 +1,7 @@
 {
   "name": "std-approval-gate",
-  "version": "1.0.0",
-  "description": "std-approval-gate — generic approval workflow. Persists ApprovalRequest rows + surfaces them in a review queue with Approve / Deny actions. On approval emits ApprovalGranted; on denial emits ApprovalDenied. Differs from std-mod-queue, which is content-moderation-specific. v1.0 ships the queue + review UI; sentinel-event-driven auto-approval threshold lands in v1.1 (gap).",
+  "version": "1.0.1",
+  "description": "std-approval-gate — generic admin-approval gate / approver workflow. Use when a user voices that an action must be reviewed, signed off, or authorized by a privileged role before it proceeds (admin approval, supervisor sign-off, manager approval, gatekeeper review). Persists ApprovalRequest rows + surfaces them in a review queue with Approve / Deny actions. On approval emits ApprovalGranted; on denial emits ApprovalDenied. Compose onto any orbital whose action you want to gate: the target orbital emits an external event, an ApprovalRequest row is created, and downstream effects wait on ApprovalGranted. Differs from std-mod-queue, which is content-moderation-specific.",
   "orbitals": [
     {
       "name": "ApprovalGateOrbital",
@@ -62,6 +62,9 @@
         {
           "name": "ApprovalGateReview",
           "category": "interaction",
+          "capabilities": [
+            "approval"
+          ],
           "linkedEntity": "ApprovalRequest",
           "emits": [
             {
@@ -372,8 +375,8 @@
                     "ApprovalRequest",
                     {
                       "emit": {
-                        "success": "ApprovalRequestLoaded",
-                        "failure": "ApprovalRequestLoadFailed"
+                        "failure": "ApprovalRequestLoadFailed",
+                        "success": "ApprovalRequestLoaded"
                       }
                     }
                   ],
@@ -381,22 +384,22 @@
                     "render-ui",
                     "main",
                     {
-                      "className": "py-12",
-                      "gap": "md",
+                      "type": "stack",
                       "direction": "vertical",
+                      "gap": "md",
+                      "align": "center",
+                      "className": "py-12",
                       "children": [
                         {
                           "type": "spinner"
                         },
                         {
-                          "color": "muted",
-                          "content": "Loading approval queue…",
                           "variant": "caption",
-                          "type": "typography"
+                          "type": "typography",
+                          "color": "muted",
+                          "content": "Loading approval queue…"
                         }
-                      ],
-                      "align": "center",
-                      "type": "stack"
+                      ]
                     }
                   ]
                 ]
@@ -410,11 +413,10 @@
                     "render-ui",
                     "main",
                     {
-                      "direction": "vertical",
                       "gap": "md",
-                      "type": "stack",
                       "children": [
                         {
+                          "type": "stack",
                           "align": "center",
                           "children": [
                             {
@@ -422,14 +424,13 @@
                               "type": "icon"
                             },
                             {
-                              "type": "typography",
+                              "content": "Approval queue",
                               "variant": "h3",
-                              "content": "Approval queue"
+                              "type": "typography"
                             }
                           ],
-                          "gap": "sm",
                           "direction": "horizontal",
-                          "type": "stack"
+                          "gap": "sm"
                         },
                         {
                           "type": "divider"
@@ -438,40 +439,42 @@
                           "entity": "@payload.data",
                           "itemActions": [
                             {
-                              "label": "Approve",
                               "event": "APPROVE",
                               "variant": "primary",
+                              "label": "Approve",
                               "icon": "check"
                             },
                             {
-                              "icon": "x",
+                              "label": "Deny",
                               "variant": "danger",
-                              "event": "DENY",
-                              "label": "Deny"
+                              "icon": "x",
+                              "event": "DENY"
                             }
                           ],
-                          "type": "data-grid",
                           "fields": [
                             {
-                              "name": "gatedEvent",
                               "variant": "badge",
+                              "name": "gatedEvent",
                               "label": "Action"
                             },
                             {
-                              "name": "requestedAt",
                               "label": "Requested",
+                              "name": "requestedAt",
                               "variant": "caption"
                             },
                             {
+                              "name": "status",
                               "variant": "badge",
-                              "label": "Status",
-                              "name": "status"
+                              "label": "Status"
                             }
                           ],
                           "cols": 1.0,
-                          "gap": "sm"
+                          "gap": "sm",
+                          "type": "data-grid"
                         }
-                      ]
+                      ],
+                      "type": "stack",
+                      "direction": "vertical"
                     }
                   ]
                 ]
@@ -600,9 +603,9 @@
                     "render-ui",
                     "main",
                     {
-                      "message": "@payload.error",
+                      "type": "alert",
                       "variant": "error",
-                      "type": "alert"
+                      "message": "@payload.error"
                     }
                   ]
                 ]
@@ -617,8 +620,8 @@
                     "ApprovalRequest",
                     {
                       "emit": {
-                        "failure": "ApprovalRequestLoadFailed",
-                        "success": "ApprovalRequestLoaded"
+                        "success": "ApprovalRequestLoaded",
+                        "failure": "ApprovalRequestLoadFailed"
                       }
                     }
                   ],
@@ -626,8 +629,8 @@
                     "render-ui",
                     "main",
                     {
-                      "size": "sm",
-                      "type": "spinner"
+                      "type": "spinner",
+                      "size": "sm"
                     }
                   ]
                 ]
@@ -635,13 +638,6 @@
             ]
           },
           "config": {
-            "escalationHours": {
-              "type": "number",
-              "default": 0.0,
-              "label": "Escalation hours",
-              "description": "Hours a request can sit pending before escalating. v1.0 declarative only; per-row escalation needs loop-with-emit primitive (gap).",
-              "tier": "customization"
-            },
             "autoApproveBelowThreshold": {
               "type": "boolean",
               "default": true,
@@ -649,15 +645,12 @@
               "description": "Skip the review queue when the gated event's value is below the threshold. v1.0 declarative only.",
               "tier": "customization"
             },
-            "approverRoles": {
-              "type": "[string]",
-              "default": [],
-              "label": "Approver roles",
-              "description": "Roles eligible to approve. The host application enforces role-gating on the page.",
-              "tier": "essential",
-              "items": {
-                "type": "string"
-              }
+            "threshold": {
+              "type": "number",
+              "default": 0.0,
+              "label": "Auto-approve threshold",
+              "description": "Below this value, requests should be auto-approved. v1.0 declarative only; wiring lands in v1.1 (gap).",
+              "tier": "customization"
             },
             "valueField": {
               "type": "string",
@@ -676,12 +669,22 @@
                 "type": "string"
               }
             },
-            "threshold": {
+            "escalationHours": {
               "type": "number",
               "default": 0.0,
-              "label": "Auto-approve threshold",
-              "description": "Below this value, requests should be auto-approved. v1.0 declarative only; wiring lands in v1.1 (gap).",
+              "label": "Escalation hours",
+              "description": "Hours a request can sit pending before escalating. v1.0 declarative only; per-row escalation needs loop-with-emit primitive (gap).",
               "tier": "customization"
+            },
+            "approverRoles": {
+              "type": "[string]",
+              "default": [],
+              "label": "Approver roles",
+              "description": "Roles eligible to approve. The host application enforces role-gating on the page.",
+              "tier": "essential",
+              "items": {
+                "type": "string"
+              }
             }
           },
           "scope": "collection"

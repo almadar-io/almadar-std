@@ -52,8 +52,8 @@
             "type": "[FaqItem]",
             "default": [
               {
-                "question": "Can I change plans later?",
-                "answer": "Yes, you can upgrade or downgrade at any time."
+                "answer": "Yes, you can upgrade or downgrade at any time.",
+                "question": "Can I change plans later?"
               },
               {
                 "answer": "Yes, every paid plan includes a 14-day free trial.",
@@ -85,6 +85,7 @@
             "type": "[FooterColumn]",
             "default": [
               {
+                "title": "Product",
                 "items": [
                   {
                     "label": "Features",
@@ -98,70 +99,69 @@
                     "label": "Changelog",
                     "href": "#"
                   }
-                ],
-                "title": "Product"
+                ]
               },
               {
-                "title": "Company",
                 "items": [
                   {
                     "label": "About",
                     "href": "#"
                   },
                   {
-                    "label": "Careers",
-                    "href": "#"
+                    "href": "#",
+                    "label": "Careers"
                   },
                   {
                     "label": "Blog",
                     "href": "#"
                   }
-                ]
+                ],
+                "title": "Company"
               },
               {
+                "title": "Resources",
                 "items": [
                   {
-                    "href": "#",
-                    "label": "Docs"
+                    "label": "Docs",
+                    "href": "#"
                   },
                   {
-                    "href": "#",
-                    "label": "Community"
+                    "label": "Community",
+                    "href": "#"
                   },
                   {
-                    "href": "#",
-                    "label": "Support"
+                    "label": "Support",
+                    "href": "#"
                   }
-                ],
-                "title": "Resources"
+                ]
               }
             ],
             "items": {
               "properties": {
+                "title": {
+                  "name": "title",
+                  "required": true,
+                  "type": "string"
+                },
                 "items": {
                   "name": "items",
                   "required": false,
                   "type": "array",
                   "items": {
                     "properties": {
-                      "href": {
-                        "name": "href",
+                      "label": {
+                        "name": "label",
                         "required": true,
                         "type": "string"
                       },
-                      "label": {
-                        "name": "label",
+                      "href": {
+                        "name": "href",
                         "required": true,
                         "type": "string"
                       }
                     },
                     "type": "object"
                   }
-                },
-                "title": {
-                  "name": "title",
-                  "required": true,
-                  "type": "string"
                 }
               },
               "type": "object"
@@ -227,26 +227,24 @@
             "type": "[PricingPlan]",
             "default": [
               {
+                "highlighted": false,
                 "name": "Starter",
-                "actionLabel": "Get Started",
-                "actionHref": "#",
+                "badge": "",
+                "action": {
+                  "href": "#",
+                  "label": "Get Started"
+                },
                 "description": "For individuals and small projects.",
+                "price": "$0",
                 "features": [
                   "1 project",
                   "Community support",
                   "Basic analytics"
-                ],
-                "price": "$0",
-                "id": "starter",
-                "highlighted": false,
-                "badge": ""
+                ]
               },
               {
-                "id": "pro",
-                "highlighted": true,
-                "actionHref": "#",
                 "price": "$49",
-                "actionLabel": "Start Trial",
+                "name": "Pro",
                 "description": "For growing teams that need more power.",
                 "features": [
                   "Unlimited projects",
@@ -254,14 +252,21 @@
                   "Advanced analytics",
                   "Custom domains"
                 ],
-                "badge": "Most Popular",
-                "name": "Pro"
+                "action": {
+                  "href": "#",
+                  "label": "Start Trial"
+                },
+                "highlighted": true,
+                "badge": "Most Popular"
               },
               {
-                "badge": "",
-                "id": "enterprise",
+                "price": "Custom",
+                "action": {
+                  "href": "#",
+                  "label": "Contact Sales"
+                },
                 "description": "For organizations with advanced needs.",
-                "actionLabel": "Contact Sales",
+                "name": "Enterprise",
                 "features": [
                   "Dedicated infra",
                   "SLA guarantee",
@@ -270,47 +275,42 @@
                   "Custom contracts"
                 ],
                 "highlighted": false,
-                "actionHref": "#",
-                "price": "Custom",
-                "name": "Enterprise"
+                "badge": ""
               }
             ],
             "items": {
               "properties": {
-                "badge": {
-                  "name": "badge",
-                  "required": false,
-                  "type": "string"
-                },
                 "highlighted": {
                   "name": "highlighted",
                   "required": false,
                   "type": "boolean"
+                },
+                "price": {
+                  "name": "price",
+                  "required": true,
+                  "type": "string"
                 },
                 "name": {
                   "name": "name",
                   "required": true,
                   "type": "string"
                 },
-                "description": {
-                  "name": "description",
-                  "required": false,
-                  "type": "string"
-                },
-                "actionLabel": {
-                  "name": "actionLabel",
+                "action": {
+                  "name": "action",
                   "required": true,
-                  "type": "string"
-                },
-                "id": {
-                  "name": "id",
-                  "required": false,
-                  "type": "string"
-                },
-                "price": {
-                  "name": "price",
-                  "required": true,
-                  "type": "string"
+                  "properties": {
+                    "href": {
+                      "name": "href",
+                      "required": true,
+                      "type": "string"
+                    },
+                    "label": {
+                      "name": "label",
+                      "required": true,
+                      "type": "string"
+                    }
+                  },
+                  "type": "object"
                 },
                 "features": {
                   "name": "features",
@@ -320,9 +320,14 @@
                     "type": "string"
                   }
                 },
-                "actionHref": {
-                  "name": "actionHref",
-                  "required": true,
+                "badge": {
+                  "name": "badge",
+                  "required": false,
+                  "type": "string"
+                },
+                "description": {
+                  "name": "description",
+                  "required": false,
                   "type": "string"
                 }
               },

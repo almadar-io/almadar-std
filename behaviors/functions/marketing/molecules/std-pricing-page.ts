@@ -39,40 +39,40 @@ export type StdPricingPageEventKey = 'INIT';
  * without modifying its state-machine topology.
  */
 export interface StdPricingPageConfig {
-  /** Default: `"subtle"` */
-  heroBackground?: string;
-  /** Default: `"/contact"` */
-  heroSecondaryActionHref?: string;
-  /** Default: `""` */
-  heroTitleAccent?: string;
-  /** Default: `"/signup"` */
-  heroPrimaryActionHref?: string;
-  /** Default: `"Contact Sales"` */
-  heroSecondaryActionLabel?: string;
-  /** Default: `[{"name":"Starter","actionLabel":"Get Started","actionHref":"#","description":"For individuals and small projects.","features":["1 project","Community support","Basic analytics"],"price":"$0","id":"starter","highlighted":false,"badge":""},{"id":"pro","highlighted":true,"actionHref":"#","price":"$49","actionLabel":"Start Trial","description":"For growing teams that need more power.","features":["Unlimited projects","Priority support","Advanced analytics","Custom domains"],"badge":"Most Popular","name":"Pro"},{"badge":"","id":"enterprise","description":"For organizations with advanced needs.","actionLabel":"Contact Sales","features":["Dedicated infra","SLA guarantee","SSO & SAML","Audit logs","Custom contracts"],"highlighted":false,"actionHref":"#","price":"Custom","name":"Enterprise"}]` */
-  plans?: EntityRow[];
-  /** Default: `"center"` */
-  heroAlign?: string;
-  /** Default: `"Simple, transparent pricing"` */
-  heroTitle?: string;
-  /** Default: `{"label":"Contact Sales","href":"/contact"}` */
-  ctaAction?: EntityRow;
-  /** Default: `"Get Started"` */
-  heroPrimaryActionLabel?: string;
   /** Default: `"Start free, scale as you grow."` */
   heroSubtitle?: string;
-  /** Default: `[{"items":[{"label":"Features","href":"#"},{"label":"Pricing","href":"#"},{"label":"Changelog","href":"#"}],"title":"Product"},{"title":"Company","items":[{"label":"About","href":"#"},{"label":"Careers","href":"#"},{"label":"Blog","href":"#"}]},{"items":[{"href":"#","label":"Docs"},{"href":"#","label":"Community"},{"href":"#","label":"Support"}],"title":"Resources"}]` */
-  footerColumns?: EntityRow[];
-  /** Default: `"© 2026 Almadar. All rights reserved."` */
-  footerCopyright?: string;
-  /** Default: `"Still have questions?"` */
-  ctaTitle?: string;
+  /** Default: `"Get Started"` */
+  heroPrimaryActionLabel?: string;
+  /** Default: `"subtle"` */
+  heroBackground?: string;
+  /** Default: `{"label":"Contact Sales","href":"/contact"}` */
+  ctaAction?: EntityRow;
+  /** Default: `[{"answer":"Yes, you can upgrade or downgrade at any time.","question":"Can I change plans later?"},{"answer":"Yes, every paid plan includes a 14-day free trial.","question":"Is there a free trial?"},{"question":"What payment methods do you accept?","answer":"We accept all major credit cards and wire transfers for Enterprise."}]` */
+  faq?: EntityRow[];
   /** Default: `""` */
   heroTag?: string;
-  /** Default: `[{"question":"Can I change plans later?","answer":"Yes, you can upgrade or downgrade at any time."},{"answer":"Yes, every paid plan includes a 14-day free trial.","question":"Is there a free trial?"},{"question":"What payment methods do you accept?","answer":"We accept all major credit cards and wire transfers for Enterprise."}]` */
-  faq?: EntityRow[];
+  /** Default: `""` */
+  heroTitleAccent?: string;
+  /** Default: `"/contact"` */
+  heroSecondaryActionHref?: string;
+  /** Default: `"Simple, transparent pricing"` */
+  heroTitle?: string;
+  /** Default: `"/signup"` */
+  heroPrimaryActionHref?: string;
+  /** Default: `[{"title":"Product","items":[{"label":"Features","href":"#"},{"label":"Pricing","href":"#"},{"label":"Changelog","href":"#"}]},{"items":[{"label":"About","href":"#"},{"href":"#","label":"Careers"},{"label":"Blog","href":"#"}],"title":"Company"},{"title":"Resources","items":[{"label":"Docs","href":"#"},{"label":"Community","href":"#"},{"label":"Support","href":"#"}]}]` */
+  footerColumns?: EntityRow[];
+  /** Default: `"center"` */
+  heroAlign?: string;
+  /** Default: `"© 2026 Almadar. All rights reserved."` */
+  footerCopyright?: string;
+  /** Default: `"Contact Sales"` */
+  heroSecondaryActionLabel?: string;
   /** Default: `"Our team is here to help you find the right plan."` */
   ctaSubtitle?: string;
+  /** Default: `"Still have questions?"` */
+  ctaTitle?: string;
+  /** Default: `[{"highlighted":false,"name":"Starter","badge":"","action":{"href":"#","label":"Get Started"},"description":"For individuals and small projects.","price":"$0","features":["1 project","Community support","Basic analytics"]},{"price":"$49","name":"Pro","description":"For growing teams that need more power.","features":["Unlimited projects","Priority support","Advanced analytics","Custom domains"],"action":{"href":"#","label":"Start Trial"},"highlighted":true,"badge":"Most Popular"},{"price":"Custom","action":{"href":"#","label":"Contact Sales"},"description":"For organizations with advanced needs.","name":"Enterprise","features":["Dedicated infra","SLA guarantee","SSO & SAML","Audit logs","Custom contracts"],"highlighted":false,"badge":""}]` */
+  plans?: EntityRow[];
 }
 
 /**
