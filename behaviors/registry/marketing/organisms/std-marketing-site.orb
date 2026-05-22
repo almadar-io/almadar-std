@@ -73,17 +73,16 @@
                     "render-ui",
                     "main",
                     {
-                      "logoSrc": "@config.logoSrc",
-                      "brandName": "@config.brandName",
                       "type": "header",
+                      "brandName": "@config.brandName",
                       "navigationItems": "@config.navItems",
-                      "actions": [
-                        {
-                          "variant": "primary",
-                          "href": "@config.primaryActionHref",
-                          "label": "@config.primaryActionLabel"
-                        }
-                      ]
+                      "actions": {
+                        "type": "button",
+                        "label": "@config.primaryActionLabel",
+                        "action": "NAV_CLICK",
+                        "variant": "primary"
+                      },
+                      "logoSrc": "@config.logoSrc"
                     }
                   ]
                 ]
@@ -106,11 +105,11 @@
             ]
           },
           "config": {
-            "brandName": {
+            "primaryActionLabel": {
               "type": "string",
-              "default": "Almadar",
-              "label": "Brand Name",
-              "tier": "essential"
+              "default": "Get Started",
+              "label": "Primary Action Label",
+              "tier": "customization"
             },
             "primaryActionHref": {
               "type": "string",
@@ -124,26 +123,26 @@
               "label": "Logo Source",
               "tier": "customization"
             },
-            "primaryActionLabel": {
+            "brandName": {
               "type": "string",
-              "default": "Get Started",
-              "label": "Primary Action Label",
-              "tier": "customization"
+              "default": "Almadar",
+              "label": "Brand Name",
+              "tier": "essential"
             },
             "navItems": {
               "type": "[NavLink]",
               "default": [
                 {
-                  "href": "/",
-                  "label": "Product"
+                  "label": "Product",
+                  "href": "/"
                 },
                 {
-                  "href": "/pricing",
-                  "label": "Pricing"
+                  "label": "Pricing",
+                  "href": "/pricing"
                 },
                 {
-                  "label": "About",
-                  "href": "/about"
+                  "href": "/about",
+                  "label": "About"
                 },
                 {
                   "label": "Features",
@@ -198,18 +197,17 @@
                     "render-ui",
                     "main",
                     {
-                      "gap": "none",
                       "children": [
                         {
-                          "background": "gradient",
-                          "align": "center",
                           "subtitle": "@config.heroSubtitle",
-                          "type": "hero-section",
                           "title": "@config.heroTitle",
                           "primaryAction": {
                             "href": "@config.heroPrimaryActionHref",
                             "label": "@config.heroPrimaryActionLabel"
-                          }
+                          },
+                          "background": "gradient",
+                          "align": "center",
+                          "type": "hero-section"
                         },
                         {
                           "items": "@config.features",
@@ -220,27 +218,28 @@
                           "stats": "@config.stats"
                         },
                         {
-                          "type": "step-flow-organism",
-                          "entity": "@config.steps"
+                          "entity": "@config.steps",
+                          "type": "step-flow-organism"
                         },
                         {
-                          "type": "showcase-organism",
-                          "entity": "@config.showcase"
+                          "entity": "@config.showcase",
+                          "type": "showcase-organism"
                         },
                         {
+                          "title": "@config.ctaTitle",
                           "subtitle": "@config.ctaSubtitle",
-                          "primaryAction": "@config.ctaPrimaryAction",
                           "type": "cta-banner",
-                          "title": "@config.ctaTitle"
+                          "primaryAction": "@config.ctaPrimaryAction"
                         },
                         {
+                          "type": "marketing-footer",
                           "columns": "@config.footerColumns",
-                          "copyright": "@config.footerCopyright",
-                          "type": "marketing-footer"
+                          "copyright": "@config.footerCopyright"
                         }
                       ],
                       "direction": "vertical",
-                      "type": "stack"
+                      "type": "stack",
+                      "gap": "none"
                     }
                   ]
                 ]
@@ -248,13 +247,98 @@
             ]
           },
           "config": {
-            "ctaSubtitle": {
-              "type": "string",
-              "default": "Join thousands of teams shipping faster."
-            },
-            "heroPrimaryActionHref": {
-              "type": "string",
-              "default": "/signup"
+            "showcase": {
+              "type": "[ShowcaseCard]",
+              "default": [
+                {
+                  "title": "Dashboard",
+                  "badge": "New",
+                  "accentColor": "",
+                  "description": "Real-time analytics at a glance.",
+                  "image": {
+                    "src": "",
+                    "alt": "Dashboard"
+                  },
+                  "href": "",
+                  "id": "dashboard"
+                },
+                {
+                  "description": "GraphQL and REST in one click.",
+                  "accentColor": "",
+                  "id": "api",
+                  "image": {
+                    "src": "",
+                    "alt": "API"
+                  },
+                  "href": "",
+                  "badge": "",
+                  "title": "API"
+                },
+                {
+                  "title": "Mobile",
+                  "id": "mobile",
+                  "description": "Native apps without native code.",
+                  "image": {
+                    "alt": "Mobile",
+                    "src": ""
+                  },
+                  "href": "",
+                  "badge": "Beta",
+                  "accentColor": ""
+                }
+              ],
+              "items": {
+                "type": "object",
+                "properties": {
+                  "href": {
+                    "name": "href",
+                    "type": "string",
+                    "required": false
+                  },
+                  "id": {
+                    "name": "id",
+                    "type": "string",
+                    "required": true
+                  },
+                  "accentColor": {
+                    "name": "accentColor",
+                    "type": "string",
+                    "required": false
+                  },
+                  "image": {
+                    "name": "image",
+                    "type": "object",
+                    "required": true,
+                    "properties": {
+                      "alt": {
+                        "name": "alt",
+                        "type": "string",
+                        "required": true
+                      },
+                      "src": {
+                        "name": "src",
+                        "type": "string",
+                        "required": true
+                      }
+                    }
+                  },
+                  "badge": {
+                    "name": "badge",
+                    "type": "string",
+                    "required": false
+                  },
+                  "title": {
+                    "name": "title",
+                    "type": "string",
+                    "required": true
+                  },
+                  "description": {
+                    "name": "description",
+                    "type": "string",
+                    "required": false
+                  }
+                }
+              }
             },
             "ctaPrimaryAction": {
               "type": "ActionCard",
@@ -263,17 +347,69 @@
                 "href": "/signup"
               },
               "properties": {
-                "label": {
-                  "name": "label",
-                  "type": "string",
-                  "required": true
-                },
                 "href": {
                   "name": "href",
                   "type": "string",
                   "required": true
+                },
+                "label": {
+                  "name": "label",
+                  "type": "string",
+                  "required": true
                 }
               }
+            },
+            "heroSubtitle": {
+              "type": "string",
+              "default": "From idea to production in minutes, not months."
+            },
+            "heroPrimaryActionLabel": {
+              "type": "string",
+              "default": "Get Started"
+            },
+            "ctaSubtitle": {
+              "type": "string",
+              "default": "Join thousands of teams shipping faster."
+            },
+            "stats": {
+              "type": "[StatCard]",
+              "default": [
+                {
+                  "value": "10K+",
+                  "label": "Developers"
+                },
+                {
+                  "label": "Uptime",
+                  "value": "99.9%"
+                },
+                {
+                  "label": "Requests served",
+                  "value": "50M+"
+                },
+                {
+                  "value": "4.9",
+                  "label": "Average rating"
+                }
+              ],
+              "items": {
+                "type": "object",
+                "properties": {
+                  "value": {
+                    "name": "value",
+                    "type": "string",
+                    "required": true
+                  },
+                  "label": {
+                    "name": "label",
+                    "type": "string",
+                    "required": true
+                  }
+                }
+              }
+            },
+            "ctaTitle": {
+              "type": "string",
+              "default": "Ready to get started?"
             },
             "footerColumns": {
               "type": "[FooterColumn]",
@@ -290,27 +426,27 @@
                       "href": "#"
                     },
                     {
-                      "href": "#",
-                      "label": "Changelog"
+                      "label": "Changelog",
+                      "href": "#"
                     }
                   ]
                 },
                 {
+                  "title": "Company",
                   "items": [
                     {
                       "label": "About",
                       "href": "#"
                     },
                     {
-                      "href": "#",
-                      "label": "Careers"
+                      "label": "Careers",
+                      "href": "#"
                     },
                     {
                       "label": "Blog",
                       "href": "#"
                     }
-                  ],
-                  "title": "Company"
+                  ]
                 },
                 {
                   "title": "Resources",
@@ -361,70 +497,86 @@
                 }
               }
             },
-            "ctaTitle": {
+            "heroTitle": {
               "type": "string",
-              "default": "Ready to get started?"
+              "default": "Build faster with Almadar"
             },
-            "stats": {
-              "type": "[StatCard]",
+            "steps": {
+              "type": "[StepCard]",
               "default": [
                 {
-                  "label": "Developers",
-                  "value": "10K+"
+                  "icon": "pen-tool",
+                  "title": "Design",
+                  "id": "1",
+                  "number": 1.0,
+                  "description": "Describe your app in natural language."
                 },
                 {
-                  "value": "99.9%",
-                  "label": "Uptime"
+                  "description": "Almadar generates the full stack automatically.",
+                  "title": "Build",
+                  "id": "2",
+                  "number": 2.0,
+                  "icon": "hammer"
                 },
                 {
-                  "value": "50M+",
-                  "label": "Requests served"
-                },
-                {
-                  "value": "4.9",
-                  "label": "Average rating"
+                  "number": 3.0,
+                  "icon": "rocket",
+                  "id": "3",
+                  "description": "Deploy to production with one click.",
+                  "title": "Ship"
                 }
               ],
               "items": {
                 "type": "object",
                 "properties": {
-                  "label": {
-                    "name": "label",
+                  "title": {
+                    "name": "title",
                     "type": "string",
                     "required": true
                   },
-                  "value": {
-                    "name": "value",
+                  "icon": {
+                    "name": "icon",
+                    "type": "string",
+                    "required": false
+                  },
+                  "number": {
+                    "name": "number",
+                    "type": "number",
+                    "required": false
+                  },
+                  "description": {
+                    "name": "description",
+                    "type": "string",
+                    "required": true
+                  },
+                  "id": {
+                    "name": "id",
                     "type": "string",
                     "required": true
                   }
                 }
               }
             },
-            "heroPrimaryActionLabel": {
+            "heroPrimaryActionHref": {
               "type": "string",
-              "default": "Get Started"
-            },
-            "heroTitle": {
-              "type": "string",
-              "default": "Build faster with Almadar"
+              "default": "/signup"
             },
             "features": {
               "type": "[FeatureCard]",
               "default": [
                 {
+                  "icon": "zap",
                   "description": "Build and deploy in minutes.",
-                  "href": "",
-                  "title": "Lightning Fast",
                   "linkLabel": "Learn more",
-                  "icon": "zap"
+                  "title": "Lightning Fast",
+                  "href": ""
                 },
                 {
-                  "title": "Enterprise Secure",
                   "description": "SOC-2 compliant with end-to-end encryption.",
+                  "icon": "shield",
+                  "title": "Enterprise Secure",
                   "href": "",
-                  "linkLabel": "Learn more",
-                  "icon": "shield"
+                  "linkLabel": "Learn more"
                 },
                 {
                   "description": "Plug in any service, any data source, any UI pattern.",
@@ -437,11 +589,6 @@
               "items": {
                 "type": "object",
                 "properties": {
-                  "href": {
-                    "name": "href",
-                    "type": "string",
-                    "required": false
-                  },
                   "description": {
                     "name": "description",
                     "type": "string",
@@ -451,163 +598,19 @@
                     "name": "icon",
                     "type": "string",
                     "required": false
+                  },
+                  "href": {
+                    "name": "href",
+                    "type": "string",
+                    "required": false
+                  },
+                  "title": {
+                    "name": "title",
+                    "type": "string",
+                    "required": true
                   },
                   "linkLabel": {
                     "name": "linkLabel",
-                    "type": "string",
-                    "required": false
-                  },
-                  "title": {
-                    "name": "title",
-                    "type": "string",
-                    "required": true
-                  }
-                }
-              }
-            },
-            "steps": {
-              "type": "[StepCard]",
-              "default": [
-                {
-                  "icon": "pen-tool",
-                  "title": "Design",
-                  "description": "Describe your app in natural language.",
-                  "number": 1.0,
-                  "id": "1"
-                },
-                {
-                  "description": "Almadar generates the full stack automatically.",
-                  "id": "2",
-                  "number": 2.0,
-                  "title": "Build",
-                  "icon": "hammer"
-                },
-                {
-                  "icon": "rocket",
-                  "id": "3",
-                  "description": "Deploy to production with one click.",
-                  "number": 3.0,
-                  "title": "Ship"
-                }
-              ],
-              "items": {
-                "type": "object",
-                "properties": {
-                  "id": {
-                    "name": "id",
-                    "type": "string",
-                    "required": true
-                  },
-                  "description": {
-                    "name": "description",
-                    "type": "string",
-                    "required": true
-                  },
-                  "number": {
-                    "name": "number",
-                    "type": "number",
-                    "required": false
-                  },
-                  "title": {
-                    "name": "title",
-                    "type": "string",
-                    "required": true
-                  },
-                  "icon": {
-                    "name": "icon",
-                    "type": "string",
-                    "required": false
-                  }
-                }
-              }
-            },
-            "showcase": {
-              "type": "[ShowcaseCard]",
-              "default": [
-                {
-                  "badge": "New",
-                  "accentColor": "",
-                  "title": "Dashboard",
-                  "id": "dashboard",
-                  "description": "Real-time analytics at a glance.",
-                  "image": {
-                    "alt": "Dashboard",
-                    "src": ""
-                  },
-                  "href": ""
-                },
-                {
-                  "id": "api",
-                  "title": "API",
-                  "badge": "",
-                  "image": {
-                    "alt": "API",
-                    "src": ""
-                  },
-                  "href": "",
-                  "accentColor": "",
-                  "description": "GraphQL and REST in one click."
-                },
-                {
-                  "accentColor": "",
-                  "image": {
-                    "src": "",
-                    "alt": "Mobile"
-                  },
-                  "badge": "Beta",
-                  "description": "Native apps without native code.",
-                  "id": "mobile",
-                  "title": "Mobile",
-                  "href": ""
-                }
-              ],
-              "items": {
-                "type": "object",
-                "properties": {
-                  "id": {
-                    "name": "id",
-                    "type": "string",
-                    "required": true
-                  },
-                  "title": {
-                    "name": "title",
-                    "type": "string",
-                    "required": true
-                  },
-                  "badge": {
-                    "name": "badge",
-                    "type": "string",
-                    "required": false
-                  },
-                  "image": {
-                    "name": "image",
-                    "type": "object",
-                    "required": false,
-                    "properties": {
-                      "alt": {
-                        "name": "alt",
-                        "type": "string",
-                        "required": false
-                      },
-                      "src": {
-                        "name": "src",
-                        "type": "string",
-                        "required": true
-                      }
-                    }
-                  },
-                  "href": {
-                    "name": "href",
-                    "type": "string",
-                    "required": false
-                  },
-                  "description": {
-                    "name": "description",
-                    "type": "string",
-                    "required": false
-                  },
-                  "accentColor": {
-                    "name": "accentColor",
                     "type": "string",
                     "required": false
                   }
@@ -617,10 +620,6 @@
             "footerCopyright": {
               "type": "string",
               "default": "© 2026 Almadar. All rights reserved."
-            },
-            "heroSubtitle": {
-              "type": "string",
-              "default": "From idea to production in minutes, not months."
             }
           },
           "scope": "instance"
@@ -652,37 +651,37 @@
                     "render-ui",
                     "main",
                     {
+                      "direction": "vertical",
+                      "type": "stack",
+                      "gap": "none",
                       "children": [
                         {
+                          "title": "@config.heroTitle",
                           "type": "hero-section",
-                          "align": "center",
-                          "background": "subtle",
                           "subtitle": "@config.heroSubtitle",
-                          "title": "@config.heroTitle"
+                          "background": "subtle",
+                          "align": "center"
                         },
                         {
                           "type": "pricing-grid",
                           "plans": "@config.plans"
                         },
                         {
-                          "items": "@config.faq",
-                          "type": "accordion"
+                          "type": "accordion",
+                          "items": "@config.faq"
                         },
                         {
-                          "primaryAction": "@config.ctaAction",
-                          "type": "cta-banner",
                           "title": "@config.ctaTitle",
-                          "subtitle": "@config.ctaSubtitle"
+                          "subtitle": "@config.ctaSubtitle",
+                          "primaryAction": "@config.ctaAction",
+                          "type": "cta-banner"
                         },
                         {
                           "columns": "@config.footerColumns",
-                          "type": "marketing-footer",
-                          "copyright": "@config.footerCopyright"
+                          "copyright": "@config.footerCopyright",
+                          "type": "marketing-footer"
                         }
-                      ],
-                      "type": "stack",
-                      "direction": "vertical",
-                      "gap": "none"
+                      ]
                     }
                   ]
                 ]
@@ -694,6 +693,180 @@
               "type": "string",
               "default": "Still have questions?"
             },
+            "heroTitle": {
+              "type": "string",
+              "default": "Simple, transparent pricing"
+            },
+            "plans": {
+              "type": "[PricingPlan]",
+              "default": [
+                {
+                  "badge": "",
+                  "price": "$0",
+                  "features": [
+                    "1 project",
+                    "Community support",
+                    "Basic analytics"
+                  ],
+                  "name": "Starter",
+                  "description": "For individuals and small projects.",
+                  "action": {
+                    "label": "Get Started",
+                    "href": "#"
+                  },
+                  "highlighted": false
+                },
+                {
+                  "badge": "Most Popular",
+                  "price": "$49",
+                  "highlighted": true,
+                  "features": [
+                    "Unlimited projects",
+                    "Priority support",
+                    "Advanced analytics",
+                    "Custom domains"
+                  ],
+                  "action": {
+                    "label": "Start Trial",
+                    "href": "#"
+                  },
+                  "name": "Pro",
+                  "description": "For growing teams that need more power."
+                },
+                {
+                  "price": "Custom",
+                  "action": {
+                    "href": "#",
+                    "label": "Contact Sales"
+                  },
+                  "name": "Enterprise",
+                  "features": [
+                    "Dedicated infra",
+                    "SLA guarantee",
+                    "SSO & SAML",
+                    "Audit logs",
+                    "Custom contracts"
+                  ],
+                  "badge": "",
+                  "description": "For organizations with advanced needs.",
+                  "highlighted": false
+                }
+              ],
+              "items": {
+                "type": "object",
+                "properties": {
+                  "features": {
+                    "name": "features",
+                    "type": "array",
+                    "required": true,
+                    "items": {
+                      "type": "string"
+                    }
+                  },
+                  "action": {
+                    "name": "action",
+                    "type": "object",
+                    "required": true,
+                    "properties": {
+                      "href": {
+                        "name": "href",
+                        "type": "string",
+                        "required": true
+                      },
+                      "label": {
+                        "name": "label",
+                        "type": "string",
+                        "required": true
+                      }
+                    }
+                  },
+                  "highlighted": {
+                    "name": "highlighted",
+                    "type": "boolean",
+                    "required": false
+                  },
+                  "badge": {
+                    "name": "badge",
+                    "type": "string",
+                    "required": false
+                  },
+                  "name": {
+                    "name": "name",
+                    "type": "string",
+                    "required": true
+                  },
+                  "price": {
+                    "name": "price",
+                    "type": "string",
+                    "required": true
+                  },
+                  "description": {
+                    "name": "description",
+                    "type": "string",
+                    "required": false
+                  }
+                }
+              }
+            },
+            "ctaAction": {
+              "type": "ActionCard",
+              "default": {
+                "label": "Contact Sales",
+                "href": "/contact"
+              },
+              "properties": {
+                "href": {
+                  "name": "href",
+                  "type": "string",
+                  "required": true
+                },
+                "label": {
+                  "name": "label",
+                  "type": "string",
+                  "required": true
+                }
+              }
+            },
+            "faq": {
+              "type": "[FaqItem]",
+              "default": [
+                {
+                  "content": "Yes, you can upgrade or downgrade at any time.",
+                  "id": "plan-changes",
+                  "title": "Can I change plans later?"
+                },
+                {
+                  "content": "Yes, every paid plan includes a 14-day free trial.",
+                  "title": "Is there a free trial?",
+                  "id": "free-trial"
+                },
+                {
+                  "content": "We accept all major credit cards and wire transfers for Enterprise.",
+                  "id": "payment-methods",
+                  "title": "What payment methods do you accept?"
+                }
+              ],
+              "items": {
+                "type": "object",
+                "properties": {
+                  "id": {
+                    "name": "id",
+                    "type": "string",
+                    "required": true
+                  },
+                  "title": {
+                    "name": "title",
+                    "type": "string",
+                    "required": true
+                  },
+                  "content": {
+                    "name": "content",
+                    "type": "string",
+                    "required": true
+                  }
+                }
+              }
+            },
             "footerColumns": {
               "type": "[FooterColumn]",
               "default": [
@@ -701,8 +874,8 @@
                   "title": "Product",
                   "items": [
                     {
-                      "href": "#",
-                      "label": "Features"
+                      "label": "Features",
+                      "href": "#"
                     },
                     {
                       "href": "#",
@@ -717,8 +890,8 @@
                 {
                   "items": [
                     {
-                      "label": "About",
-                      "href": "#"
+                      "href": "#",
+                      "label": "About"
                     },
                     {
                       "href": "#",
@@ -732,6 +905,7 @@
                   "title": "Company"
                 },
                 {
+                  "title": "Resources",
                   "items": [
                     {
                       "href": "#",
@@ -745,13 +919,17 @@
                       "label": "Support",
                       "href": "#"
                     }
-                  ],
-                  "title": "Resources"
+                  ]
                 }
               ],
               "items": {
                 "type": "object",
                 "properties": {
+                  "title": {
+                    "name": "title",
+                    "type": "string",
+                    "required": true
+                  },
                   "items": {
                     "name": "items",
                     "type": "array",
@@ -771,150 +949,7 @@
                         }
                       }
                     }
-                  },
-                  "title": {
-                    "name": "title",
-                    "type": "string",
-                    "required": true
                   }
-                }
-              }
-            },
-            "plans": {
-              "type": "[PricingPlan]",
-              "default": [
-                {
-                  "description": "For individuals and small projects.",
-                  "name": "Starter",
-                  "id": "starter",
-                  "features": [
-                    "1 project",
-                    "Community support",
-                    "Basic analytics"
-                  ],
-                  "highlighted": false,
-                  "price": "$0",
-                  "action": {
-                    "href": "#",
-                    "label": "Get Started"
-                  },
-                  "badge": ""
-                },
-                {
-                  "features": [
-                    "Unlimited projects",
-                    "Priority support",
-                    "Advanced analytics",
-                    "Custom domains"
-                  ],
-                  "description": "For growing teams that need more power.",
-                  "highlighted": true,
-                  "price": "$49",
-                  "action": {
-                    "href": "#",
-                    "label": "Start Trial"
-                  },
-                  "name": "Pro",
-                  "id": "pro",
-                  "badge": "Most Popular"
-                },
-                {
-                  "id": "enterprise",
-                  "name": "Enterprise",
-                  "description": "For organizations with advanced needs.",
-                  "action": {
-                    "label": "Contact Sales",
-                    "href": "#"
-                  },
-                  "price": "Custom",
-                  "highlighted": false,
-                  "features": [
-                    "Dedicated infra",
-                    "SLA guarantee",
-                    "SSO & SAML",
-                    "Audit logs",
-                    "Custom contracts"
-                  ],
-                  "badge": ""
-                }
-              ],
-              "items": {
-                "type": "object",
-                "properties": {
-                  "name": {
-                    "name": "name",
-                    "type": "string",
-                    "required": true
-                  },
-                  "features": {
-                    "name": "features",
-                    "type": "array",
-                    "required": true,
-                    "items": {
-                      "type": "string"
-                    }
-                  },
-                  "action": {
-                    "name": "action",
-                    "type": "object",
-                    "required": true,
-                    "properties": {
-                      "label": {
-                        "name": "label",
-                        "type": "string",
-                        "required": true
-                      },
-                      "href": {
-                        "name": "href",
-                        "type": "string",
-                        "required": true
-                      }
-                    }
-                  },
-                  "price": {
-                    "name": "price",
-                    "type": "string",
-                    "required": true
-                  },
-                  "id": {
-                    "name": "id",
-                    "type": "string",
-                    "required": false
-                  },
-                  "badge": {
-                    "name": "badge",
-                    "type": "string",
-                    "required": false
-                  },
-                  "highlighted": {
-                    "name": "highlighted",
-                    "type": "boolean",
-                    "required": false
-                  },
-                  "description": {
-                    "name": "description",
-                    "type": "string",
-                    "required": false
-                  }
-                }
-              }
-            },
-            "ctaAction": {
-              "type": "ActionCard",
-              "default": {
-                "label": "Contact Sales",
-                "href": "/contact"
-              },
-              "properties": {
-                "label": {
-                  "name": "label",
-                  "type": "string",
-                  "required": true
-                },
-                "href": {
-                  "name": "href",
-                  "type": "string",
-                  "required": true
                 }
               }
             },
@@ -922,57 +957,13 @@
               "type": "string",
               "default": "Start free, scale as you grow."
             },
-            "footerCopyright": {
-              "type": "string",
-              "default": "© 2026 Almadar. All rights reserved."
-            },
-            "heroTitle": {
-              "type": "string",
-              "default": "Simple, transparent pricing"
-            },
-            "faq": {
-              "type": "[FaqItem]",
-              "default": [
-                {
-                  "content": "Yes, you can upgrade or downgrade at any time.",
-                  "title": "Can I change plans later?",
-                  "id": "plan-changes"
-                },
-                {
-                  "id": "free-trial",
-                  "title": "Is there a free trial?",
-                  "content": "Yes, every paid plan includes a 14-day free trial."
-                },
-                {
-                  "title": "What payment methods do you accept?",
-                  "id": "payment-methods",
-                  "content": "We accept all major credit cards and wire transfers for Enterprise."
-                }
-              ],
-              "items": {
-                "type": "object",
-                "properties": {
-                  "content": {
-                    "name": "content",
-                    "type": "string",
-                    "required": true
-                  },
-                  "id": {
-                    "name": "id",
-                    "type": "string",
-                    "required": true
-                  },
-                  "title": {
-                    "name": "title",
-                    "type": "string",
-                    "required": true
-                  }
-                }
-              }
-            },
             "ctaSubtitle": {
               "type": "string",
               "default": "Our team is here to help you find the right plan."
+            },
+            "footerCopyright": {
+              "type": "string",
+              "default": "© 2026 Almadar. All rights reserved."
             }
           },
           "scope": "instance"
@@ -1008,33 +999,33 @@
                       "children": [
                         {
                           "align": "center",
-                          "type": "hero-section",
-                          "background": "subtle",
                           "subtitle": "@config.heroSubtitle",
-                          "title": "@config.heroTitle"
+                          "type": "hero-section",
+                          "title": "@config.heroTitle",
+                          "background": "subtle"
                         },
                         {
-                          "children": "@config.articles[0].content",
                           "type": "article-section",
-                          "title": "@config.articles[0].title"
+                          "title": "@config.articles[0].title",
+                          "children": "@config.articles[0].content"
                         },
                         {
+                          "type": "article-section",
                           "title": "@config.articles[1].title",
-                          "type": "article-section",
                           "children": "@config.articles[1].content"
                         },
                         {
                           "title": "@config.articles[2].title",
-                          "children": "@config.articles[2].content",
-                          "type": "article-section"
+                          "type": "article-section",
+                          "children": "@config.articles[2].content"
                         },
                         {
                           "type": "team-organism",
                           "entity": "@config.team"
                         },
                         {
-                          "type": "case-study-organism",
-                          "entity": "@config.caseStudies"
+                          "entity": "@config.caseStudies",
+                          "type": "case-study-organism"
                         },
                         {
                           "type": "cta-banner",
@@ -1042,8 +1033,8 @@
                           "title": "@config.ctaTitle"
                         },
                         {
-                          "columns": "@config.footerColumns",
                           "copyright": "@config.footerCopyright",
+                          "columns": "@config.footerColumns",
                           "type": "marketing-footer"
                         }
                       ],
@@ -1056,16 +1047,107 @@
             ]
           },
           "config": {
-            "ctaTitle": {
+            "heroSubtitle": {
               "type": "string",
-              "default": "Want to work with us?"
+              "default": "We're building the future of software creation."
+            },
+            "ctaAction": {
+              "type": "ActionCard",
+              "default": {
+                "href": "/careers",
+                "label": "View Open Roles"
+              },
+              "properties": {
+                "label": {
+                  "name": "label",
+                  "type": "string",
+                  "required": true
+                },
+                "href": {
+                  "name": "href",
+                  "type": "string",
+                  "required": true
+                }
+              }
+            },
+            "heroTitle": {
+              "type": "string",
+              "default": "About Almadar"
+            },
+            "footerCopyright": {
+              "type": "string",
+              "default": "© 2026 Almadar. All rights reserved."
+            },
+            "team": {
+              "type": "[TeamMemberCard]",
+              "default": [
+                {
+                  "bio": "Former VP Engineering at BigTech. Obsessed with developer experience.",
+                  "nameAr": "",
+                  "id": "1",
+                  "name": "Jane Doe",
+                  "role": "CEO",
+                  "avatar": ""
+                },
+                {
+                  "name": "John Smith",
+                  "nameAr": "",
+                  "id": "2",
+                  "role": "CTO",
+                  "avatar": "",
+                  "bio": "Built distributed systems at scale for a decade."
+                },
+                {
+                  "id": "3",
+                  "role": "Head of Design",
+                  "nameAr": "",
+                  "name": "Alice Chen",
+                  "bio": "Believes great design is invisible.",
+                  "avatar": ""
+                }
+              ],
+              "items": {
+                "type": "object",
+                "properties": {
+                  "name": {
+                    "name": "name",
+                    "type": "string",
+                    "required": true
+                  },
+                  "role": {
+                    "name": "role",
+                    "type": "string",
+                    "required": true
+                  },
+                  "nameAr": {
+                    "name": "nameAr",
+                    "type": "string",
+                    "required": false
+                  },
+                  "bio": {
+                    "name": "bio",
+                    "type": "string",
+                    "required": true
+                  },
+                  "avatar": {
+                    "name": "avatar",
+                    "type": "string",
+                    "required": false
+                  },
+                  "id": {
+                    "name": "id",
+                    "type": "string",
+                    "required": false
+                  }
+                }
+              }
             },
             "articles": {
               "type": "[ArticleCard]",
               "default": [
                 {
-                  "title": "Our Story",
-                  "content": "Almadar started with a simple belief: everyone should be able to build software."
+                  "content": "Almadar started with a simple belief: everyone should be able to build software.",
+                  "title": "Our Story"
                 },
                 {
                   "title": "Our Mission",
@@ -1079,77 +1161,13 @@
               "items": {
                 "type": "object",
                 "properties": {
-                  "title": {
-                    "name": "title",
-                    "type": "string",
-                    "required": true
-                  },
                   "content": {
                     "name": "content",
                     "type": "string",
                     "required": true
-                  }
-                }
-              }
-            },
-            "team": {
-              "type": "[TeamMemberCard]",
-              "default": [
-                {
-                  "avatar": "",
-                  "bio": "Former VP Engineering at BigTech. Obsessed with developer experience.",
-                  "name": "Jane Doe",
-                  "role": "CEO",
-                  "id": "1",
-                  "nameAr": ""
-                },
-                {
-                  "avatar": "",
-                  "nameAr": "",
-                  "name": "John Smith",
-                  "id": "2",
-                  "role": "CTO",
-                  "bio": "Built distributed systems at scale for a decade."
-                },
-                {
-                  "avatar": "",
-                  "nameAr": "",
-                  "id": "3",
-                  "name": "Alice Chen",
-                  "role": "Head of Design",
-                  "bio": "Believes great design is invisible."
-                }
-              ],
-              "items": {
-                "type": "object",
-                "properties": {
-                  "avatar": {
-                    "name": "avatar",
-                    "type": "string",
-                    "required": false
                   },
-                  "nameAr": {
-                    "name": "nameAr",
-                    "type": "string",
-                    "required": false
-                  },
-                  "bio": {
-                    "name": "bio",
-                    "type": "string",
-                    "required": true
-                  },
-                  "id": {
-                    "name": "id",
-                    "type": "string",
-                    "required": false
-                  },
-                  "name": {
-                    "name": "name",
-                    "type": "string",
-                    "required": true
-                  },
-                  "role": {
-                    "name": "role",
+                  "title": {
+                    "name": "title",
                     "type": "string",
                     "required": true
                   }
@@ -1160,22 +1178,22 @@
               "type": "[CaseStudyCard]",
               "default": [
                 {
-                  "title": "Acme Corp",
-                  "id": "1",
+                  "linkLabel": "Read story",
                   "description": "How Acme scaled from 1K to 1M users in 6 months.",
-                  "categoryColor": "",
-                  "href": "#",
+                  "id": "1",
                   "category": "SaaS",
-                  "linkLabel": "Read story"
+                  "href": "#",
+                  "categoryColor": "",
+                  "title": "Acme Corp"
                 },
                 {
+                  "category": "Fintech",
+                  "title": "Globex",
                   "categoryColor": "",
-                  "id": "2",
                   "href": "#",
                   "linkLabel": "Read story",
-                  "description": "Globex reduced infrastructure costs by 70%.",
-                  "title": "Globex",
-                  "category": "Fintech"
+                  "id": "2",
+                  "description": "Globex reduced infrastructure costs by 70%."
                 }
               ],
               "items": {
@@ -1186,23 +1204,13 @@
                     "type": "string",
                     "required": true
                   },
-                  "id": {
-                    "name": "id",
-                    "type": "string",
-                    "required": false
-                  },
-                  "description": {
-                    "name": "description",
-                    "type": "string",
-                    "required": true
-                  },
                   "title": {
                     "name": "title",
                     "type": "string",
                     "required": true
                   },
-                  "category": {
-                    "name": "category",
+                  "description": {
+                    "name": "description",
                     "type": "string",
                     "required": true
                   },
@@ -1211,21 +1219,27 @@
                     "type": "string",
                     "required": false
                   },
+                  "category": {
+                    "name": "category",
+                    "type": "string",
+                    "required": true
+                  },
                   "linkLabel": {
                     "name": "linkLabel",
+                    "type": "string",
+                    "required": false
+                  },
+                  "id": {
+                    "name": "id",
                     "type": "string",
                     "required": false
                   }
                 }
               }
             },
-            "footerCopyright": {
+            "ctaTitle": {
               "type": "string",
-              "default": "© 2026 Almadar. All rights reserved."
-            },
-            "heroTitle": {
-              "type": "string",
-              "default": "About Almadar"
+              "default": "Want to work with us?"
             },
             "footerColumns": {
               "type": "[FooterColumn]",
@@ -1248,21 +1262,21 @@
                   "title": "Product"
                 },
                 {
+                  "title": "Company",
                   "items": [
                     {
-                      "label": "About",
-                      "href": "#"
+                      "href": "#",
+                      "label": "About"
                     },
                     {
                       "label": "Careers",
                       "href": "#"
                     },
                     {
-                      "label": "Blog",
-                      "href": "#"
+                      "href": "#",
+                      "label": "Blog"
                     }
-                  ],
-                  "title": "Company"
+                  ]
                 },
                 {
                   "title": "Resources",
@@ -1276,8 +1290,8 @@
                       "href": "#"
                     },
                     {
-                      "href": "#",
-                      "label": "Support"
+                      "label": "Support",
+                      "href": "#"
                     }
                   ]
                 }
@@ -1285,11 +1299,6 @@
               "items": {
                 "type": "object",
                 "properties": {
-                  "title": {
-                    "name": "title",
-                    "type": "string",
-                    "required": true
-                  },
                   "items": {
                     "name": "items",
                     "type": "array",
@@ -1309,32 +1318,14 @@
                         }
                       }
                     }
+                  },
+                  "title": {
+                    "name": "title",
+                    "type": "string",
+                    "required": true
                   }
                 }
               }
-            },
-            "ctaAction": {
-              "type": "ActionCard",
-              "default": {
-                "href": "/careers",
-                "label": "View Open Roles"
-              },
-              "properties": {
-                "label": {
-                  "name": "label",
-                  "type": "string",
-                  "required": true
-                },
-                "href": {
-                  "name": "href",
-                  "type": "string",
-                  "required": true
-                }
-              }
-            },
-            "heroSubtitle": {
-              "type": "string",
-              "default": "We're building the future of software creation."
             }
           },
           "scope": "instance"
@@ -1366,8 +1357,8 @@
                     "render-ui",
                     "main",
                     {
-                      "type": "stack",
                       "direction": "vertical",
+                      "type": "stack",
                       "gap": "none",
                       "children": [
                         {
@@ -1378,38 +1369,38 @@
                           "title": "@config.heroTitle"
                         },
                         {
-                          "bullets": "@config.sections[0].bullets",
-                          "image": "@config.sections[0].image",
+                          "type": "split-section",
                           "title": "@config.sections[0].title",
-                          "imagePosition": "@config.sections[0].imagePosition",
-                          "type": "split-section",
-                          "description": "@config.sections[0].description"
+                          "image": "@config.sections[0].image",
+                          "bullets": "@config.sections[0].bullets",
+                          "description": "@config.sections[0].description",
+                          "imagePosition": "@config.sections[0].imagePosition"
                         },
                         {
-                          "imagePosition": "@config.sections[1].imagePosition",
-                          "title": "@config.sections[1].title",
-                          "type": "split-section",
                           "image": "@config.sections[1].image",
-                          "bullets": "@config.sections[1].bullets",
-                          "description": "@config.sections[1].description"
-                        },
-                        {
-                          "description": "@config.sections[2].description",
-                          "imagePosition": "@config.sections[2].imagePosition",
-                          "title": "@config.sections[2].title",
-                          "bullets": "@config.sections[2].bullets",
+                          "imagePosition": "@config.sections[1].imagePosition",
+                          "description": "@config.sections[1].description",
                           "type": "split-section",
-                          "image": "@config.sections[2].image"
+                          "title": "@config.sections[1].title",
+                          "bullets": "@config.sections[1].bullets"
                         },
                         {
-                          "primaryAction": "@config.ctaAction",
+                          "title": "@config.sections[2].title",
+                          "imagePosition": "@config.sections[2].imagePosition",
+                          "type": "split-section",
+                          "image": "@config.sections[2].image",
+                          "description": "@config.sections[2].description",
+                          "bullets": "@config.sections[2].bullets"
+                        },
+                        {
+                          "title": "@config.ctaTitle",
                           "type": "cta-banner",
-                          "title": "@config.ctaTitle"
+                          "primaryAction": "@config.ctaAction"
                         },
                         {
-                          "columns": "@config.footerColumns",
+                          "copyright": "@config.footerCopyright",
                           "type": "marketing-footer",
-                          "copyright": "@config.footerCopyright"
+                          "columns": "@config.footerColumns"
                         }
                       ]
                     }
@@ -1419,78 +1410,101 @@
             ]
           },
           "config": {
-            "ctaTitle": {
-              "type": "string",
-              "default": "Ready to experience the future?"
+            "ctaAction": {
+              "type": "ActionCard",
+              "default": {
+                "label": "Get Started",
+                "href": "/signup"
+              },
+              "properties": {
+                "href": {
+                  "name": "href",
+                  "type": "string",
+                  "required": true
+                },
+                "label": {
+                  "name": "label",
+                  "type": "string",
+                  "required": true
+                }
+              }
             },
             "sections": {
               "type": "[SectionCard]",
               "default": [
                 {
-                  "description": "Describe what you want. Almadar translates your words into a complete application schema.",
                   "image": {
-                    "alt": "Design interface",
-                    "src": ""
+                    "src": "",
+                    "alt": "Design interface"
                   },
-                  "imagePosition": "right",
-                  "title": "Design in Natural Language",
                   "bullets": [
                     "No-code visual editor",
                     "AI-assisted schema generation",
                     "Real-time preview"
-                  ]
+                  ],
+                  "imagePosition": "right",
+                  "title": "Design in Natural Language",
+                  "description": "Describe what you want. Almadar translates your words into a complete application schema."
                 },
                 {
                   "title": "Full-Stack Generation",
-                  "description": "Get a production-ready TypeScript backend and React frontend in seconds.",
-                  "image": {
-                    "alt": "Generated code",
-                    "src": ""
-                  },
-                  "imagePosition": "left",
                   "bullets": [
                     "Type-safe APIs",
                     "Auto-generated database schema",
                     "Instant deployments"
-                  ]
+                  ],
+                  "imagePosition": "left",
+                  "description": "Get a production-ready TypeScript backend and React frontend in seconds.",
+                  "image": {
+                    "alt": "Generated code",
+                    "src": ""
+                  }
                 },
                 {
-                  "title": "Enterprise-Grade Security",
-                  "image": {
-                    "src": "",
-                    "alt": "Security dashboard"
-                  },
-                  "description": "Built-in auth, audit logs, and compliance from day one.",
                   "imagePosition": "right",
                   "bullets": [
                     "SOC-2 ready",
                     "RBAC & SSO",
                     "End-to-end encryption"
-                  ]
+                  ],
+                  "description": "Built-in auth, audit logs, and compliance from day one.",
+                  "title": "Enterprise-Grade Security",
+                  "image": {
+                    "src": "",
+                    "alt": "Security dashboard"
+                  }
                 }
               ],
               "items": {
                 "type": "object",
                 "properties": {
-                  "imagePosition": {
-                    "name": "imagePosition",
+                  "bullets": {
+                    "name": "bullets",
+                    "type": "array",
+                    "required": true,
+                    "items": {
+                      "type": "string"
+                    }
+                  },
+                  "title": {
+                    "name": "title",
                     "type": "string",
-                    "required": false
+                    "required": true
                   },
                   "image": {
                     "name": "image",
                     "type": "object",
-                    "required": false,
+                    "required": true,
                     "properties": {
                       "alt": {
                         "name": "alt",
                         "type": "string",
-                        "required": false
+                        "required": true
                       },
                       "src": {
                         "name": "src",
                         "type": "string",
-                        "required": false
+                        "required": true
                       }
                     }
                   },
@@ -1499,25 +1513,17 @@
                     "type": "string",
                     "required": true
                   },
-                  "title": {
-                    "name": "title",
+                  "imagePosition": {
+                    "name": "imagePosition",
                     "type": "string",
-                    "required": true
-                  },
-                  "bullets": {
-                    "name": "bullets",
-                    "type": "array",
                     "required": false,
-                    "items": {
-                      "type": "string"
-                    }
+                    "values": [
+                      "left",
+                      "right"
+                    ]
                   }
                 }
               }
-            },
-            "heroSubtitle": {
-              "type": "string",
-              "default": "From design to deployment, Almadar handles the entire stack."
             },
             "footerColumns": {
               "type": "[FooterColumn]",
@@ -1540,7 +1546,6 @@
                   ]
                 },
                 {
-                  "title": "Company",
                   "items": [
                     {
                       "label": "About",
@@ -1554,7 +1559,8 @@
                       "label": "Blog",
                       "href": "#"
                     }
-                  ]
+                  ],
+                  "title": "Company"
                 },
                 {
                   "items": [
@@ -1577,11 +1583,6 @@
               "items": {
                 "type": "object",
                 "properties": {
-                  "title": {
-                    "name": "title",
-                    "type": "string",
-                    "required": true
-                  },
                   "items": {
                     "name": "items",
                     "type": "array",
@@ -1589,48 +1590,42 @@
                     "items": {
                       "type": "object",
                       "properties": {
-                        "label": {
-                          "name": "label",
+                        "href": {
+                          "name": "href",
                           "type": "string",
                           "required": true
                         },
-                        "href": {
-                          "name": "href",
+                        "label": {
+                          "name": "label",
                           "type": "string",
                           "required": true
                         }
                       }
                     }
+                  },
+                  "title": {
+                    "name": "title",
+                    "type": "string",
+                    "required": true
                   }
                 }
               }
             },
-            "ctaAction": {
-              "type": "ActionCard",
-              "default": {
-                "href": "/signup",
-                "label": "Get Started"
-              },
-              "properties": {
-                "label": {
-                  "name": "label",
-                  "type": "string",
-                  "required": true
-                },
-                "href": {
-                  "name": "href",
-                  "type": "string",
-                  "required": true
-                }
-              }
-            },
-            "footerCopyright": {
+            "heroSubtitle": {
               "type": "string",
-              "default": "© 2026 Almadar. All rights reserved."
+              "default": "From design to deployment, Almadar handles the entire stack."
+            },
+            "ctaTitle": {
+              "type": "string",
+              "default": "Ready to experience the future?"
             },
             "heroTitle": {
               "type": "string",
               "default": "Everything you need to ship"
+            },
+            "footerCopyright": {
+              "type": "string",
+              "default": "© 2026 Almadar. All rights reserved."
             }
           },
           "scope": "instance"
