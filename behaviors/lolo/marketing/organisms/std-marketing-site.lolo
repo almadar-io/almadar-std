@@ -1,4 +1,4 @@
-app std-marketing-site "1.0.0"
+app std-marketing-site "1.1.0"
 "Full marketing site organism with landing, pricing, about, and feature detail pages. Pick for product websites, SaaS frontends, and campaign microsites that need beautiful static pages."
 ;; Composes four marketing page layouts into a multi-page site with shared navigation.
 ;; Each page trait renders a vertical stack of individual marketing patterns.
@@ -12,10 +12,10 @@ orbital MarketingSiteOrbital {
   type ActionCard = { label : string!, href : string! }
   type FeatureCard = { icon : string, title : string!, description : string!, href : string, linkLabel : string }
   type StatCard = { value : string!, label : string! }
-  type StepCard = { number : number, title : string!, description : string!, icon : string }
-  type ShowcaseCard = { title : string!, description : string, image : { src : string!, alt : string }, href : string, badge : string, accentColor : string }
-  type PricingPlan = { id : string, name : string!, price : string!, description : string, features : [string], actionLabel : string!, actionHref : string!, highlighted : boolean, badge : string }
-  type FaqItem = { question : string!, answer : string! }
+  type StepCard = { id : string!, number : number, title : string!, description : string!, icon : string }
+  type ShowcaseCard = { id : string!, title : string!, description : string, image : { src : string!, alt : string }, href : string, badge : string, accentColor : string }
+  type PricingPlan = { id : string, name : string!, price : string!, description : string, features : [string]!, action : { label : string!, href : string! }!, highlighted : boolean, badge : string }
+  type FaqItem = { id : string!, title : string!, content : string! }
   type TeamMemberCard = { id : string, name : string!, nameAr : string, role : string!, bio : string!, avatar : string }
   type CaseStudyCard = { id : string, title : string!, description : string!, category : string!, categoryColor : string, href : string!, linkLabel : string }
   type ArticleCard = { title : string!, content : string! }
@@ -81,14 +81,14 @@ orbital MarketingSiteOrbital {
         { value: "4.9", label: "Average rating" }
       ]
       steps : [StepCard] = [
-        { number: 1, title: "Design", description: "Describe your app in natural language.", icon: "pen-tool" },
-        { number: 2, title: "Build", description: "Almadar generates the full stack automatically.", icon: "hammer" },
-        { number: 3, title: "Ship", description: "Deploy to production with one click.", icon: "rocket" }
+        { id: "1", number: 1, title: "Design", description: "Describe your app in natural language.", icon: "pen-tool" },
+        { id: "2", number: 2, title: "Build", description: "Almadar generates the full stack automatically.", icon: "hammer" },
+        { id: "3", number: 3, title: "Ship", description: "Deploy to production with one click.", icon: "rocket" }
       ]
       showcase : [ShowcaseCard] = [
-        { title: "Dashboard", description: "Real-time analytics at a glance.", image: { src: "", alt: "Dashboard" }, href: "", badge: "New", accentColor: "" },
-        { title: "API", description: "GraphQL and REST in one click.", image: { src: "", alt: "API" }, href: "", badge: "", accentColor: "" },
-        { title: "Mobile", description: "Native apps without native code.", image: { src: "", alt: "Mobile" }, href: "", badge: "Beta", accentColor: "" }
+        { id: "dashboard", title: "Dashboard", description: "Real-time analytics at a glance.", image: { src: "", alt: "Dashboard" }, href: "", badge: "New", accentColor: "" },
+        { id: "api", title: "API", description: "GraphQL and REST in one click.", image: { src: "", alt: "API" }, href: "", badge: "", accentColor: "" },
+        { id: "mobile", title: "Mobile", description: "Native apps without native code.", image: { src: "", alt: "Mobile" }, href: "", badge: "Beta", accentColor: "" }
       ]
       ctaTitle : string = "Ready to get started?"
       ctaSubtitle : string = "Join thousands of teams shipping faster."
@@ -121,14 +121,14 @@ orbital MarketingSiteOrbital {
       heroTitle : string = "Simple, transparent pricing"
       heroSubtitle : string = "Start free, scale as you grow."
       plans : [PricingPlan] = [
-        { id: "starter", name: "Starter", price: "$0", description: "For individuals and small projects.", features: ["1 project", "Community support", "Basic analytics"], actionLabel: "Get Started", actionHref: "#", highlighted: false, badge: "" },
-        { id: "pro", name: "Pro", price: "$49", description: "For growing teams that need more power.", features: ["Unlimited projects", "Priority support", "Advanced analytics", "Custom domains"], actionLabel: "Start Trial", actionHref: "#", highlighted: true, badge: "Most Popular" },
-        { id: "enterprise", name: "Enterprise", price: "Custom", description: "For organizations with advanced needs.", features: ["Dedicated infra", "SLA guarantee", "SSO & SAML", "Audit logs", "Custom contracts"], actionLabel: "Contact Sales", actionHref: "#", highlighted: false, badge: "" }
+        { id: "starter", name: "Starter", price: "$0", description: "For individuals and small projects.", features: ["1 project", "Community support", "Basic analytics"], action: { label: "Get Started", href: "#" }, highlighted: false, badge: "" },
+        { id: "pro", name: "Pro", price: "$49", description: "For growing teams that need more power.", features: ["Unlimited projects", "Priority support", "Advanced analytics", "Custom domains"], action: { label: "Start Trial", href: "#" }, highlighted: true, badge: "Most Popular" },
+        { id: "enterprise", name: "Enterprise", price: "Custom", description: "For organizations with advanced needs.", features: ["Dedicated infra", "SLA guarantee", "SSO & SAML", "Audit logs", "Custom contracts"], action: { label: "Contact Sales", href: "#" }, highlighted: false, badge: "" }
       ]
       faq : [FaqItem] = [
-        { question: "Can I change plans later?", answer: "Yes, you can upgrade or downgrade at any time." },
-        { question: "Is there a free trial?", answer: "Yes, every paid plan includes a 14-day free trial." },
-        { question: "What payment methods do you accept?", answer: "We accept all major credit cards and wire transfers for Enterprise." }
+        { id: "plan-changes", title: "Can I change plans later?", content: "Yes, you can upgrade or downgrade at any time." },
+        { id: "free-trial", title: "Is there a free trial?", content: "Yes, every paid plan includes a 14-day free trial." },
+        { id: "payment-methods", title: "What payment methods do you accept?", content: "We accept all major credit cards and wire transfers for Enterprise." }
       ]
       ctaTitle : string = "Still have questions?"
       ctaSubtitle : string = "Our team is here to help you find the right plan."
