@@ -1,0 +1,237 @@
+app std-marketing-site "1.0.0"
+"Full marketing site organism with landing, pricing, about, and feature detail pages. Pick for product websites, SaaS frontends, and campaign microsites that need beautiful static pages."
+;; Composes four marketing page layouts into a multi-page site with shared navigation.
+;; Each page trait renders a vertical stack of individual marketing patterns.
+
+orbital MarketingSiteOrbital {
+  entity MarketingSite [runtime] {
+    id : string
+  }
+
+  type NavLink = { label : string!, href : string! }
+  type ActionCard = { label : string!, href : string! }
+  type FeatureCard = { icon : string, title : string!, description : string!, href : string, linkLabel : string }
+  type StatCard = { value : string!, label : string! }
+  type StepCard = { number : number, title : string!, description : string!, icon : string }
+  type ShowcaseCard = { title : string!, description : string, image : { src : string!, alt : string }, href : string, badge : string, accentColor : string }
+  type PricingPlan = { id : string, name : string!, price : string!, description : string, features : [string], actionLabel : string!, actionHref : string!, highlighted : boolean, badge : string }
+  type FaqItem = { question : string!, answer : string! }
+  type TeamMemberCard = { id : string, name : string!, nameAr : string, role : string!, bio : string!, avatar : string }
+  type CaseStudyCard = { id : string, title : string!, description : string!, category : string!, categoryColor : string, href : string!, linkLabel : string }
+  type ArticleCard = { title : string!, content : string! }
+  type SectionCard = { title : string!, description : string!, bullets : [string], image : { src : string, alt : string }, imagePosition : string }
+  type FooterLink = { label : string!, href : string! }
+  type FooterColumn = { title : string!, items : [FooterLink] }
+
+  ;; Shared nav trait used on every page
+  trait MarketingSiteNav -> MarketingSite [interaction, instance] {
+    config {
+      brandName : string = "Almadar"
+        @label "Brand Name"
+        @tier "essential"
+      logoSrc : string = ""
+        @label "Logo Source"
+        @tier "customization"
+      navItems : [NavLink] = [
+        { label: "Product", href: "/" },
+        { label: "Pricing", href: "/pricing" },
+        { label: "About", href: "/about" },
+        { label: "Features", href: "/features" }
+      ]
+        @label "Navigation Items"
+        @tier "essential"
+      primaryActionLabel : string = "Get Started"
+        @label "Primary Action Label"
+        @tier "customization"
+      primaryActionHref : string = "/signup"
+        @label "Primary Action Link"
+        @tier "customization"
+    }
+    initial: idle
+    state idle {
+      INIT -> idle
+        (render-ui main { type: "header", brandName: "@config.brandName", logoSrc: "@config.logoSrc", navigationItems: "@config.navItems", actions: [{ label: "@config.primaryActionLabel", href: "@config.primaryActionHref", variant: "primary" }] })
+      NAV_CLICK -> idle
+        (emit NAV_CLICK { href: "@payload.href", label: "@payload.label" })
+    }
+    emits {
+      NAV_CLICK -> external { href : string, label : string }
+    }
+    listens {
+      NAV_CLICK { href : string, label : string }
+    }
+  }
+
+  ;; Landing page trait
+  trait MarketingSiteLanding -> MarketingSite [interaction, instance] {
+    config {
+      heroTitle : string = "Build faster with Almadar"
+      heroSubtitle : string = "From idea to production in minutes, not months."
+      heroPrimaryActionLabel : string = "Get Started"
+      heroPrimaryActionHref : string = "/signup"
+      features : [FeatureCard] = [
+        { icon: "zap", title: "Lightning Fast", description: "Build and deploy in minutes.", href: "", linkLabel: "Learn more" },
+        { icon: "shield", title: "Enterprise Secure", description: "SOC-2 compliant with end-to-end encryption.", href: "", linkLabel: "Learn more" },
+        { icon: "puzzle", title: "Infinitely Extensible", description: "Plug in any service, any data source, any UI pattern.", href: "", linkLabel: "Learn more" }
+      ]
+      stats : [StatCard] = [
+        { value: "10K+", label: "Developers" },
+        { value: "99.9%", label: "Uptime" },
+        { value: "50M+", label: "Requests served" },
+        { value: "4.9", label: "Average rating" }
+      ]
+      steps : [StepCard] = [
+        { number: 1, title: "Design", description: "Describe your app in natural language.", icon: "pen-tool" },
+        { number: 2, title: "Build", description: "Almadar generates the full stack automatically.", icon: "hammer" },
+        { number: 3, title: "Ship", description: "Deploy to production with one click.", icon: "rocket" }
+      ]
+      showcase : [ShowcaseCard] = [
+        { title: "Dashboard", description: "Real-time analytics at a glance.", image: { src: "", alt: "Dashboard" }, href: "", badge: "New", accentColor: "" },
+        { title: "API", description: "GraphQL and REST in one click.", image: { src: "", alt: "API" }, href: "", badge: "", accentColor: "" },
+        { title: "Mobile", description: "Native apps without native code.", image: { src: "", alt: "Mobile" }, href: "", badge: "Beta", accentColor: "" }
+      ]
+      ctaTitle : string = "Ready to get started?"
+      ctaSubtitle : string = "Join thousands of teams shipping faster."
+      ctaPrimaryAction : ActionCard = { label: "Get Started", href: "/signup" }
+      footerColumns : [FooterColumn] = [
+        { title: "Product", items: [{ label: "Features", href: "#" }, { label: "Pricing", href: "#" }, { label: "Changelog", href: "#" }] },
+        { title: "Company", items: [{ label: "About", href: "#" }, { label: "Careers", href: "#" }, { label: "Blog", href: "#" }] },
+        { title: "Resources", items: [{ label: "Docs", href: "#" }, { label: "Community", href: "#" }, { label: "Support", href: "#" }] }
+      ]
+      footerCopyright : string = "© 2026 Almadar. All rights reserved."
+    }
+    initial: composing
+    state composing {
+      INIT -> composing
+        (render-ui main { type: "stack", direction: "vertical", gap: "none", children: [
+          { type: "hero-section", title: "@config.heroTitle", subtitle: "@config.heroSubtitle", primaryAction: { label: "@config.heroPrimaryActionLabel", href: "@config.heroPrimaryActionHref" }, background: "gradient", align: "center" },
+          { type: "feature-grid", items: "@config.features" },
+          { type: "stats-grid", stats: "@config.stats" },
+          { type: "step-flow-organism", entity: "@config.steps" },
+          { type: "showcase-organism", entity: "@config.showcase" },
+          { type: "cta-banner", title: "@config.ctaTitle", subtitle: "@config.ctaSubtitle", primaryAction: "@config.ctaPrimaryAction" },
+          { type: "marketing-footer", columns: "@config.footerColumns", copyright: "@config.footerCopyright" }
+        ]})
+    }
+  }
+
+  ;; Pricing page trait
+  trait MarketingSitePricing -> MarketingSite [interaction, instance] {
+    config {
+      heroTitle : string = "Simple, transparent pricing"
+      heroSubtitle : string = "Start free, scale as you grow."
+      plans : [PricingPlan] = [
+        { id: "starter", name: "Starter", price: "$0", description: "For individuals and small projects.", features: ["1 project", "Community support", "Basic analytics"], actionLabel: "Get Started", actionHref: "#", highlighted: false, badge: "" },
+        { id: "pro", name: "Pro", price: "$49", description: "For growing teams that need more power.", features: ["Unlimited projects", "Priority support", "Advanced analytics", "Custom domains"], actionLabel: "Start Trial", actionHref: "#", highlighted: true, badge: "Most Popular" },
+        { id: "enterprise", name: "Enterprise", price: "Custom", description: "For organizations with advanced needs.", features: ["Dedicated infra", "SLA guarantee", "SSO & SAML", "Audit logs", "Custom contracts"], actionLabel: "Contact Sales", actionHref: "#", highlighted: false, badge: "" }
+      ]
+      faq : [FaqItem] = [
+        { question: "Can I change plans later?", answer: "Yes, you can upgrade or downgrade at any time." },
+        { question: "Is there a free trial?", answer: "Yes, every paid plan includes a 14-day free trial." },
+        { question: "What payment methods do you accept?", answer: "We accept all major credit cards and wire transfers for Enterprise." }
+      ]
+      ctaTitle : string = "Still have questions?"
+      ctaSubtitle : string = "Our team is here to help you find the right plan."
+      ctaAction : ActionCard = { label: "Contact Sales", href: "/contact" }
+      footerColumns : [FooterColumn] = [
+        { title: "Product", items: [{ label: "Features", href: "#" }, { label: "Pricing", href: "#" }, { label: "Changelog", href: "#" }] },
+        { title: "Company", items: [{ label: "About", href: "#" }, { label: "Careers", href: "#" }, { label: "Blog", href: "#" }] },
+        { title: "Resources", items: [{ label: "Docs", href: "#" }, { label: "Community", href: "#" }, { label: "Support", href: "#" }] }
+      ]
+      footerCopyright : string = "© 2026 Almadar. All rights reserved."
+    }
+    initial: composing
+    state composing {
+      INIT -> composing
+        (render-ui main { type: "stack", direction: "vertical", gap: "none", children: [
+          { type: "hero-section", title: "@config.heroTitle", subtitle: "@config.heroSubtitle", background: "subtle", align: "center" },
+          { type: "pricing-grid", plans: "@config.plans" },
+          { type: "accordion", items: "@config.faq" },
+          { type: "cta-banner", title: "@config.ctaTitle", subtitle: "@config.ctaSubtitle", primaryAction: "@config.ctaAction" },
+          { type: "marketing-footer", columns: "@config.footerColumns", copyright: "@config.footerCopyright" }
+        ]})
+    }
+  }
+
+  ;; About page trait
+  trait MarketingSiteAbout -> MarketingSite [interaction, instance] {
+    config {
+      heroTitle : string = "About Almadar"
+      heroSubtitle : string = "We're building the future of software creation."
+      articles : [ArticleCard] = [
+        { title: "Our Story", content: "Almadar started with a simple belief: everyone should be able to build software." },
+        { title: "Our Mission", content: "We exist to democratize software creation through natural language and AI." },
+        { title: "Our Values", content: "Speed, simplicity, and developer joy guide every decision we make." }
+      ]
+      team : [TeamMemberCard] = [
+        { id: "1", name: "Jane Doe", nameAr: "", role: "CEO", bio: "Former VP Engineering at BigTech. Obsessed with developer experience.", avatar: "" },
+        { id: "2", name: "John Smith", nameAr: "", role: "CTO", bio: "Built distributed systems at scale for a decade.", avatar: "" },
+        { id: "3", name: "Alice Chen", nameAr: "", role: "Head of Design", bio: "Believes great design is invisible.", avatar: "" }
+      ]
+      caseStudies : [CaseStudyCard] = [
+        { id: "1", title: "Acme Corp", description: "How Acme scaled from 1K to 1M users in 6 months.", category: "SaaS", categoryColor: "", href: "#", linkLabel: "Read story" },
+        { id: "2", title: "Globex", description: "Globex reduced infrastructure costs by 70%.", category: "Fintech", categoryColor: "", href: "#", linkLabel: "Read story" }
+      ]
+      ctaTitle : string = "Want to work with us?"
+      ctaAction : ActionCard = { label: "View Open Roles", href: "/careers" }
+      footerColumns : [FooterColumn] = [
+        { title: "Product", items: [{ label: "Features", href: "#" }, { label: "Pricing", href: "#" }, { label: "Changelog", href: "#" }] },
+        { title: "Company", items: [{ label: "About", href: "#" }, { label: "Careers", href: "#" }, { label: "Blog", href: "#" }] },
+        { title: "Resources", items: [{ label: "Docs", href: "#" }, { label: "Community", href: "#" }, { label: "Support", href: "#" }] }
+      ]
+      footerCopyright : string = "© 2026 Almadar. All rights reserved."
+    }
+    initial: composing
+    state composing {
+      INIT -> composing
+        (render-ui main { type: "stack", direction: "vertical", gap: "none", children: [
+          { type: "hero-section", title: "@config.heroTitle", subtitle: "@config.heroSubtitle", background: "subtle", align: "center" },
+          { type: "article-section", title: "@config.articles[0].title", children: "@config.articles[0].content" },
+          { type: "article-section", title: "@config.articles[1].title", children: "@config.articles[1].content" },
+          { type: "article-section", title: "@config.articles[2].title", children: "@config.articles[2].content" },
+          { type: "team-organism", entity: "@config.team" },
+          { type: "case-study-organism", entity: "@config.caseStudies" },
+          { type: "cta-banner", title: "@config.ctaTitle", primaryAction: "@config.ctaAction" },
+          { type: "marketing-footer", columns: "@config.footerColumns", copyright: "@config.footerCopyright" }
+        ]})
+    }
+  }
+
+  ;; Feature detail page trait
+  trait MarketingSiteFeatures -> MarketingSite [interaction, instance] {
+    config {
+      heroTitle : string = "Everything you need to ship"
+      heroSubtitle : string = "From design to deployment, Almadar handles the entire stack."
+      sections : [SectionCard] = [
+        { title: "Design in Natural Language", description: "Describe what you want. Almadar translates your words into a complete application schema.", bullets: ["No-code visual editor", "AI-assisted schema generation", "Real-time preview"], image: { src: "", alt: "Design interface" }, imagePosition: "right" },
+        { title: "Full-Stack Generation", description: "Get a production-ready TypeScript backend and React frontend in seconds.", bullets: ["Type-safe APIs", "Auto-generated database schema", "Instant deployments"], image: { src: "", alt: "Generated code" }, imagePosition: "left" },
+        { title: "Enterprise-Grade Security", description: "Built-in auth, audit logs, and compliance from day one.", bullets: ["SOC-2 ready", "RBAC & SSO", "End-to-end encryption"], image: { src: "", alt: "Security dashboard" }, imagePosition: "right" }
+      ]
+      ctaTitle : string = "Ready to experience the future?"
+      ctaAction : ActionCard = { label: "Get Started", href: "/signup" }
+      footerColumns : [FooterColumn] = [
+        { title: "Product", items: [{ label: "Features", href: "#" }, { label: "Pricing", href: "#" }, { label: "Changelog", href: "#" }] },
+        { title: "Company", items: [{ label: "About", href: "#" }, { label: "Careers", href: "#" }, { label: "Blog", href: "#" }] },
+        { title: "Resources", items: [{ label: "Docs", href: "#" }, { label: "Community", href: "#" }, { label: "Support", href: "#" }] }
+      ]
+      footerCopyright : string = "© 2026 Almadar. All rights reserved."
+    }
+    initial: composing
+    state composing {
+      INIT -> composing
+        (render-ui main { type: "stack", direction: "vertical", gap: "none", children: [
+          { type: "hero-section", title: "@config.heroTitle", subtitle: "@config.heroSubtitle", background: "gradient", align: "center" },
+          { type: "split-section", title: "@config.sections[0].title", description: "@config.sections[0].description", bullets: "@config.sections[0].bullets", image: "@config.sections[0].image", imagePosition: "@config.sections[0].imagePosition" },
+          { type: "split-section", title: "@config.sections[1].title", description: "@config.sections[1].description", bullets: "@config.sections[1].bullets", image: "@config.sections[1].image", imagePosition: "@config.sections[1].imagePosition" },
+          { type: "split-section", title: "@config.sections[2].title", description: "@config.sections[2].description", bullets: "@config.sections[2].bullets", image: "@config.sections[2].image", imagePosition: "@config.sections[2].imagePosition" },
+          { type: "cta-banner", title: "@config.ctaTitle", primaryAction: "@config.ctaAction" },
+          { type: "marketing-footer", columns: "@config.footerColumns", copyright: "@config.footerCopyright" }
+        ]})
+    }
+  }
+
+  page "/" as MarketingSiteLandingPage -> MarketingSiteNav, MarketingSiteLanding
+  page "/pricing" as MarketingSitePricingPage -> MarketingSiteNav, MarketingSitePricing
+  page "/about" as MarketingSiteAboutPage -> MarketingSiteNav, MarketingSiteAbout
+  page "/features" as MarketingSiteFeaturesPage -> MarketingSiteNav, MarketingSiteFeatures
+}

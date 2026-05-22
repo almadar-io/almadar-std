@@ -1,7 +1,7 @@
 {
   "name": "std-drip-sequence",
-  "version": "1.1.0",
-  "description": "std-drip-sequence — ordered email drip campaign primitive. Lists sequences in `browsing`; opens detail in `viewing_single` with Activate / Pause / Archive actions. Agents tune the list shape via `config.fields` + `config.itemActions`.",
+  "version": "1.2.0",
+  "description": "std-drip-sequence — ordered email drip campaign primitive. Lists sequences; detail offers Activate / Pause / Archive. Listens for SET_STATUS so std-lifecycle can drive transitions. Exposes Communication knobs (sendsPerHour, gdprConsentRequired, unsubscribe link, …).",
   "orbitals": [
     {
       "name": "DripSequenceOrbital",
@@ -152,6 +152,58 @@
                   "type": "string"
                 }
               ]
+            },
+            {
+              "event": "DripSequenceUpdated",
+              "payloadSchema": [
+                {
+                  "name": "row.id",
+                  "type": "string",
+                  "required": true
+                },
+                {
+                  "name": "row.name",
+                  "type": "string",
+                  "required": true
+                },
+                {
+                  "name": "row.description",
+                  "type": "string"
+                },
+                {
+                  "name": "row.triggerEvent",
+                  "type": "string"
+                },
+                {
+                  "name": "row.stepsJson",
+                  "type": "string"
+                },
+                {
+                  "name": "row.status",
+                  "type": "string"
+                },
+                {
+                  "name": "row.totalEnrolled",
+                  "type": "number"
+                },
+                {
+                  "name": "row.totalCompleted",
+                  "type": "number"
+                }
+              ]
+            },
+            {
+              "event": "DripSequenceUpdateFailed",
+              "payloadSchema": [
+                {
+                  "name": "error",
+                  "type": "string"
+                },
+                {
+                  "name": "code",
+                  "type": "string"
+                }
+              ]
             }
           ],
           "stateMachine": {
@@ -226,6 +278,46 @@
                 ]
               },
               {
+                "key": "SET_STATUS",
+                "name": "Set Status",
+                "payloadSchema": [
+                  {
+                    "name": "entityId",
+                    "type": "string",
+                    "required": true
+                  },
+                  {
+                    "name": "newStatus",
+                    "type": "string",
+                    "required": true
+                  }
+                ]
+              },
+              {
+                "key": "DripSequenceUpdated",
+                "name": "DripSequence updated",
+                "payloadSchema": [
+                  {
+                    "name": "row",
+                    "type": "DripSequence"
+                  }
+                ]
+              },
+              {
+                "key": "DripSequenceUpdateFailed",
+                "name": "DripSequence update failed",
+                "payloadSchema": [
+                  {
+                    "name": "error",
+                    "type": "string"
+                  },
+                  {
+                    "name": "code",
+                    "type": "string"
+                  }
+                ]
+              },
+              {
                 "key": "CLOSE_VIEW",
                 "name": "Close View"
               },
@@ -261,22 +353,22 @@
                     "render-ui",
                     "main",
                     {
-                      "align": "center",
-                      "className": "py-12",
-                      "gap": "md",
-                      "type": "stack",
-                      "direction": "vertical",
                       "children": [
                         {
                           "type": "spinner"
                         },
                         {
-                          "type": "typography",
                           "variant": "caption",
                           "color": "muted",
-                          "content": "Loading drip sequences…"
+                          "content": "Loading drip sequences…",
+                          "type": "typography"
                         }
-                      ]
+                      ],
+                      "direction": "vertical",
+                      "align": "center",
+                      "className": "py-12",
+                      "type": "stack",
+                      "gap": "md"
                     }
                   ]
                 ]
@@ -292,67 +384,67 @@
                     {
                       "children": [
                         {
+                          "gap": "sm",
+                          "align": "center",
+                          "direction": "horizontal",
                           "children": [
                             {
-                              "type": "icon",
-                              "name": "mail"
+                              "name": "mail",
+                              "type": "icon"
                             },
                             {
                               "type": "typography",
-                              "content": "@config.title",
-                              "variant": "h3"
+                              "variant": "h3",
+                              "content": "@config.title"
                             }
                           ],
-                          "direction": "horizontal",
-                          "type": "stack",
-                          "gap": "sm",
-                          "align": "center"
+                          "type": "stack"
                         },
                         {
+                          "type": "simple-grid",
                           "cols": 4.0,
                           "children": [
                             {
-                              "label": "Total sequences",
-                              "type": "stat-display",
+                              "icon": "mail",
                               "value": "@payload.data.length",
-                              "icon": "mail"
+                              "type": "stat-display",
+                              "label": "Total sequences"
                             },
                             {
                               "value": "14",
-                              "type": "stat-display",
                               "icon": "play-circle",
-                              "label": "Active"
+                              "label": "Active",
+                              "type": "stat-display"
                             },
                             {
-                              "value": "8,420",
                               "type": "stat-display",
                               "label": "Enrolled",
+                              "value": "8,420",
                               "icon": "users"
                             },
                             {
                               "value": "67%",
+                              "icon": "check-circle",
                               "type": "stat-display",
-                              "label": "Completion rate",
-                              "icon": "check-circle"
+                              "label": "Completion rate"
                             }
-                          ],
-                          "type": "simple-grid"
+                          ]
                         },
                         {
                           "type": "divider"
                         },
                         {
-                          "fields": "@config.fields",
+                          "gap": "sm",
+                          "entity": "@payload.data",
+                          "cols": 1.0,
                           "type": "data-grid",
                           "itemActions": "@config.itemActions",
-                          "entity": "@payload.data",
-                          "gap": "sm",
-                          "cols": 1.0
+                          "fields": "@config.fields"
                         }
                       ],
+                      "direction": "vertical",
                       "gap": "md",
-                      "type": "stack",
-                      "direction": "vertical"
+                      "type": "stack"
                     }
                   ]
                 ]
@@ -366,9 +458,9 @@
                     "render-ui",
                     "main",
                     {
-                      "message": "@payload.error",
                       "type": "alert",
-                      "variant": "error"
+                      "variant": "error",
+                      "message": "@payload.error"
                     }
                   ]
                 ]
@@ -423,21 +515,22 @@
                     "main",
                     {
                       "gap": "md",
-                      "type": "stack",
                       "direction": "vertical",
+                      "type": "stack",
                       "children": [
                         {
-                          "direction": "horizontal",
+                          "align": "center",
+                          "gap": "sm",
                           "children": [
                             {
-                              "label": "Back",
                               "variant": "ghost",
-                              "action": "CLOSE_VIEW",
-                              "type": "button"
+                              "type": "button",
+                              "label": "Back",
+                              "action": "CLOSE_VIEW"
                             },
                             {
-                              "type": "icon",
-                              "name": "mail"
+                              "name": "mail",
+                              "type": "icon"
                             },
                             {
                               "variant": "h3",
@@ -445,14 +538,13 @@
                               "content": "@entity.name"
                             },
                             {
+                              "type": "badge",
                               "variant": "primary",
-                              "label": "@entity.status",
-                              "type": "badge"
+                              "label": "@entity.status"
                             }
                           ],
                           "type": "stack",
-                          "align": "center",
-                          "gap": "sm"
+                          "direction": "horizontal"
                         },
                         {
                           "type": "divider"
@@ -460,40 +552,40 @@
                         {
                           "children": [
                             {
-                              "type": "stack",
                               "children": [
                                 {
-                                  "type": "typography",
-                                  "content": "Description",
                                   "color": "muted",
-                                  "variant": "caption"
+                                  "variant": "caption",
+                                  "content": "Description",
+                                  "type": "typography"
                                 },
                                 {
-                                  "variant": "body",
                                   "type": "typography",
+                                  "variant": "body",
                                   "content": "@entity.description"
                                 }
                               ],
-                              "gap": "md",
-                              "direction": "horizontal"
+                              "type": "stack",
+                              "direction": "horizontal",
+                              "gap": "md"
                             },
                             {
+                              "direction": "horizontal",
                               "gap": "md",
                               "type": "stack",
                               "children": [
                                 {
-                                  "content": "Trigger",
-                                  "type": "typography",
                                   "variant": "caption",
-                                  "color": "muted"
+                                  "color": "muted",
+                                  "content": "Trigger",
+                                  "type": "typography"
                                 },
                                 {
-                                  "type": "typography",
                                   "variant": "body",
+                                  "type": "typography",
                                   "content": "@entity.triggerEvent"
                                 }
-                              ],
-                              "direction": "horizontal"
+                              ]
                             }
                           ],
                           "gap": "sm",
@@ -504,48 +596,48 @@
                           "type": "divider"
                         },
                         {
-                          "type": "simple-grid",
                           "cols": 2.0,
+                          "type": "simple-grid",
                           "children": [
                             {
-                              "type": "stat-display",
                               "label": "Enrolled",
-                              "value": "@entity.totalEnrolled",
-                              "icon": "users"
+                              "icon": "users",
+                              "type": "stat-display",
+                              "value": "@entity.totalEnrolled"
                             },
                             {
-                              "type": "stat-display",
                               "label": "Completed",
-                              "value": "@entity.totalCompleted",
-                              "icon": "check-circle"
+                              "icon": "check-circle",
+                              "type": "stat-display",
+                              "value": "@entity.totalCompleted"
                             }
                           ]
                         },
                         {
-                          "align": "center",
                           "type": "stack",
-                          "direction": "horizontal",
                           "gap": "sm",
+                          "align": "center",
                           "children": [
                             {
+                              "type": "button",
                               "actionPayload": {
                                 "id": "@entity.id"
                               },
-                              "type": "button",
+                              "label": "Activate",
                               "variant": "primary",
-                              "action": "ACTIVATE",
-                              "label": "Activate"
+                              "action": "ACTIVATE"
                             },
                             {
-                              "label": "Pause",
-                              "variant": "danger",
                               "action": "PAUSE",
+                              "type": "button",
+                              "variant": "danger",
+                              "label": "Pause",
                               "actionPayload": {
                                 "id": "@entity.id"
-                              },
-                              "type": "button"
+                              }
                             }
-                          ]
+                          ],
+                          "direction": "horizontal"
                         }
                       ]
                     }
@@ -567,8 +659,59 @@
                     "DripSequence",
                     {
                       "emit": {
-                        "failure": "DripSequenceLoadFailed",
-                        "success": "DripSequenceLoaded"
+                        "success": "DripSequenceLoaded",
+                        "failure": "DripSequenceLoadFailed"
+                      }
+                    }
+                  ],
+                  [
+                    "render-ui",
+                    "main",
+                    {
+                      "type": "stack",
+                      "gap": "md",
+                      "direction": "vertical",
+                      "align": "center",
+                      "className": "py-12",
+                      "children": [
+                        {
+                          "type": "spinner"
+                        },
+                        {
+                          "color": "muted",
+                          "content": "Pausing sequence…",
+                          "type": "typography",
+                          "variant": "caption"
+                        }
+                      ]
+                    }
+                  ]
+                ]
+              },
+              {
+                "from": "browsing",
+                "to": "loading",
+                "event": "SET_STATUS",
+                "effects": [
+                  [
+                    "set",
+                    "@entity.id",
+                    "@payload.entityId"
+                  ],
+                  [
+                    "set",
+                    "@entity.status",
+                    "@payload.newStatus"
+                  ],
+                  [
+                    "persist",
+                    "update",
+                    "DripSequence",
+                    "@entity",
+                    {
+                      "emit": {
+                        "success": "DripSequenceUpdated",
+                        "failure": "DripSequenceUpdateFailed"
                       }
                     }
                   ],
@@ -579,19 +722,52 @@
                       "align": "center",
                       "gap": "md",
                       "className": "py-12",
-                      "type": "stack",
-                      "direction": "vertical",
                       "children": [
                         {
                           "type": "spinner"
                         },
                         {
-                          "color": "muted",
                           "variant": "caption",
-                          "type": "typography",
-                          "content": "Pausing sequence…"
+                          "color": "muted",
+                          "content": "Updating sequence status…",
+                          "type": "typography"
                         }
-                      ]
+                      ],
+                      "type": "stack",
+                      "direction": "vertical"
+                    }
+                  ]
+                ]
+              },
+              {
+                "from": "browsing",
+                "to": "loading",
+                "event": "DripSequenceUpdated",
+                "effects": [
+                  [
+                    "fetch",
+                    "DripSequence",
+                    {
+                      "emit": {
+                        "failure": "DripSequenceLoadFailed",
+                        "success": "DripSequenceLoaded"
+                      }
+                    }
+                  ]
+                ]
+              },
+              {
+                "from": "browsing",
+                "to": "browsing",
+                "event": "DripSequenceUpdateFailed",
+                "effects": [
+                  [
+                    "render-ui",
+                    "main",
+                    {
+                      "variant": "error",
+                      "message": "@payload.error",
+                      "type": "alert"
                     }
                   ]
                 ]
@@ -616,21 +792,21 @@
                     "main",
                     {
                       "gap": "md",
-                      "direction": "vertical",
+                      "align": "center",
                       "type": "stack",
+                      "className": "py-12",
                       "children": [
                         {
                           "type": "spinner"
                         },
                         {
-                          "variant": "caption",
-                          "type": "typography",
+                          "color": "muted",
                           "content": "Loading drip sequences…",
-                          "color": "muted"
+                          "type": "typography",
+                          "variant": "caption"
                         }
                       ],
-                      "className": "py-12",
-                      "align": "center"
+                      "direction": "vertical"
                     }
                   ]
                 ]
@@ -650,8 +826,8 @@
                     "DripSequence",
                     {
                       "emit": {
-                        "success": "DripSequenceLoaded",
-                        "failure": "DripSequenceLoadFailed"
+                        "failure": "DripSequenceLoadFailed",
+                        "success": "DripSequenceLoaded"
                       }
                     }
                   ],
@@ -660,8 +836,6 @@
                     "main",
                     {
                       "align": "center",
-                      "gap": "md",
-                      "className": "py-12",
                       "direction": "vertical",
                       "type": "stack",
                       "children": [
@@ -669,12 +843,14 @@
                           "type": "spinner"
                         },
                         {
-                          "type": "typography",
-                          "content": "Activating sequence…",
                           "color": "muted",
-                          "variant": "caption"
+                          "type": "typography",
+                          "variant": "caption",
+                          "content": "Activating sequence…"
                         }
-                      ]
+                      ],
+                      "className": "py-12",
+                      "gap": "md"
                     }
                   ]
                 ]
@@ -703,22 +879,22 @@
                     "render-ui",
                     "main",
                     {
-                      "type": "stack",
-                      "align": "center",
-                      "gap": "md",
                       "children": [
                         {
                           "type": "spinner"
                         },
                         {
+                          "type": "typography",
                           "variant": "caption",
-                          "color": "muted",
                           "content": "Pausing sequence…",
-                          "type": "typography"
+                          "color": "muted"
                         }
                       ],
                       "className": "py-12",
-                      "direction": "vertical"
+                      "direction": "vertical",
+                      "type": "stack",
+                      "gap": "md",
+                      "align": "center"
                     }
                   ]
                 ]
@@ -742,8 +918,8 @@
                     "render-ui",
                     "main",
                     {
-                      "type": "spinner",
-                      "size": "sm"
+                      "size": "sm",
+                      "type": "spinner"
                     }
                   ]
                 ]
@@ -751,84 +927,61 @@
             ]
           },
           "config": {
-            "itemActions": {
-              "type": "[ItemAction]",
-              "default": [
-                {
-                  "icon": "arrow-right",
-                  "event": "OPEN_SEQUENCE",
-                  "variant": "primary",
-                  "label": "Open"
-                },
-                {
-                  "label": "Pause",
-                  "event": "PAUSE",
-                  "variant": "danger"
-                }
-              ],
-              "label": "Row actions",
-              "description": "Buttons users can click on each sequence row",
-              "tier": "customization",
-              "items": {
-                "type": "object",
-                "properties": {
-                  "event": {
-                    "name": "event",
-                    "type": "string",
-                    "required": true
-                  },
-                  "label": {
-                    "name": "label",
-                    "type": "string",
-                    "required": true
-                  },
-                  "variant": {
-                    "name": "variant",
-                    "type": "string",
-                    "required": false
-                  },
-                  "icon": {
-                    "name": "icon",
-                    "type": "string",
-                    "required": false
-                  }
-                }
-              }
+            "includeUnsubscribeLink": {
+              "type": "boolean",
+              "default": true,
+              "label": "Include unsubscribe link",
+              "description": "Append a CAN-SPAM/GDPR-compliant unsubscribe link to every step.",
+              "tier": "essential"
             },
-            "title": {
-              "type": "string",
-              "default": "Drip Sequences",
-              "label": "Section title",
-              "description": "Heading shown above the drip campaign list",
+            "suppressionListEnabled": {
+              "type": "boolean",
+              "default": true,
+              "label": "Honor suppression list",
+              "description": "Skip enrolled contacts on the global suppression / bounce list.",
               "tier": "customization"
+            },
+            "trackClicks": {
+              "type": "boolean",
+              "default": true,
+              "label": "Track clicks",
+              "description": "Wrap outbound links for click attribution per step.",
+              "tier": "advanced"
+            },
+            "physicalAddressFooter": {
+              "type": "string",
+              "default": "",
+              "label": "Physical address footer",
+              "description": "CAN-SPAM-required postal address appended to every step.",
+              "tier": "essential"
             },
             "fields": {
               "type": "[FieldSpec]",
               "default": [
                 {
-                  "name": "name",
                   "variant": "caption",
-                  "label": "Name"
+                  "label": "Name",
+                  "name": "name"
                 },
                 {
-                  "variant": "caption",
                   "label": "Description",
-                  "name": "description"
+                  "name": "description",
+                  "variant": "caption"
                 },
                 {
-                  "name": "triggerEvent",
                   "label": "Trigger",
+                  "name": "triggerEvent",
                   "variant": "caption"
                 },
                 {
+                  "label": "Status",
                   "variant": "badge",
-                  "name": "status",
-                  "label": "Status"
+                  "name": "status"
                 },
                 {
+                  "variant": "caption",
                   "name": "totalEnrolled",
-                  "label": "Enrolled",
-                  "variant": "caption"
+                  "label": "Enrolled"
                 },
                 {
                   "name": "totalCompleted",
@@ -842,21 +995,6 @@
               "items": {
                 "type": "object",
                 "properties": {
-                  "format": {
-                    "name": "format",
-                    "type": "string",
-                    "required": false
-                  },
-                  "label": {
-                    "name": "label",
-                    "type": "string",
-                    "required": false
-                  },
-                  "key": {
-                    "name": "key",
-                    "type": "string",
-                    "required": false
-                  },
                   "icon": {
                     "name": "icon",
                     "type": "string",
@@ -872,6 +1010,100 @@
                     "type": "string",
                     "required": true
                   },
+                  "format": {
+                    "name": "format",
+                    "type": "string",
+                    "required": false
+                  },
+                  "label": {
+                    "name": "label",
+                    "type": "string",
+                    "required": false
+                  },
+                  "variant": {
+                    "name": "variant",
+                    "type": "string",
+                    "required": false
+                  },
+                  "key": {
+                    "name": "key",
+                    "type": "string",
+                    "required": false
+                  }
+                }
+              }
+            },
+            "trackOpens": {
+              "type": "boolean",
+              "default": true,
+              "label": "Track opens",
+              "description": "Embed a tracking pixel on each step message.",
+              "tier": "advanced"
+            },
+            "frequencyCapPerWeek": {
+              "type": "number",
+              "default": 5.0,
+              "label": "Frequency cap (per week)",
+              "description": "Max drip + broadcast messages a recipient sees per 7-day window.",
+              "tier": "customization"
+            },
+            "title": {
+              "type": "string",
+              "default": "Drip Sequences",
+              "label": "Section title",
+              "description": "Heading shown above the drip campaign list",
+              "tier": "customization"
+            },
+            "sendsPerHour": {
+              "type": "number",
+              "default": 500.0,
+              "label": "Sends per hour",
+              "description": "Cap on outbound drip messages per hour for throttling. v1.2 declarative.",
+              "tier": "customization"
+            },
+            "gdprConsentRequired": {
+              "type": "boolean",
+              "default": true,
+              "label": "GDPR consent required",
+              "description": "Require explicit marketing consent before enrolling EU/UK recipients.",
+              "tier": "customization"
+            },
+            "itemActions": {
+              "type": "[ItemAction]",
+              "default": [
+                {
+                  "icon": "arrow-right",
+                  "event": "OPEN_SEQUENCE",
+                  "label": "Open",
+                  "variant": "primary"
+                },
+                {
+                  "event": "PAUSE",
+                  "variant": "danger",
+                  "label": "Pause"
+                }
+              ],
+              "label": "Row actions",
+              "description": "Buttons users can click on each sequence row",
+              "tier": "customization",
+              "items": {
+                "type": "object",
+                "properties": {
+                  "icon": {
+                    "name": "icon",
+                    "type": "string",
+                    "required": false
+                  },
+                  "label": {
+                    "name": "label",
+                    "type": "string",
+                    "required": true
+                  },
+                  "event": {
+                    "name": "event",
+                    "type": "string",
+                    "required": true
+                  },
                   "variant": {
                     "name": "variant",
                     "type": "string",
@@ -879,6 +1111,13 @@
                   }
                 }
               }
+            },
+            "respectQuietHours": {
+              "type": "boolean",
+              "default": true,
+              "label": "Respect quiet hours",
+              "description": "Skip step delivery during recipient-local quiet hours.",
+              "tier": "customization"
             }
           },
           "scope": "collection"

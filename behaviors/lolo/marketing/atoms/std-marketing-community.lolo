@@ -1,0 +1,45 @@
+app std-marketing-community "1.0.0"
+"Community links atom for marketing pages. Renders GitHub, Discord, and Twitter links with follower counts. Pick for open-source projects and community-driven products."
+;; Config-driven community section using the `community-links` marketing pattern.
+;; The atom renders immediately on INIT with no fetch required.
+
+orbital CommunityItemOrbital {
+  entity CommunityItem [runtime] {
+    id : string!
+  }
+
+  trait CommunityItemCommunity -> CommunityItem [interaction, instance] {
+    config {
+      heading : string = "Join the community"
+        @label "Heading"
+        @tier "essential"
+      subtitle : string = "Connect with thousands of builders."
+        @label "Subtitle"
+        @tier "essential"
+      githubUrl : string = ""
+        @label "GitHub URL"
+        @tier "customization"
+      githubStars : string = ""
+        @label "GitHub Stars"
+        @tier "customization"
+      discordUrl : string = ""
+        @label "Discord URL"
+        @tier "customization"
+      discordMembers : string = ""
+        @label "Discord Members"
+        @tier "customization"
+      twitterUrl : string = ""
+        @label "Twitter URL"
+        @tier "customization"
+      twitterFollowers : string = ""
+        @label "Twitter Followers"
+        @tier "customization"
+    }
+    initial: idle
+    state idle {
+      INIT -> idle
+        (render-ui main { type: "community-links", heading: "@config.heading", subtitle: "@config.subtitle", github: { url: "@config.githubUrl", label: "@config.githubStars" }, discord: { url: "@config.discordUrl", label: "@config.discordMembers" }, twitter: { url: "@config.twitterUrl", label: "@config.twitterFollowers" } })
+    }
+  }
+  page "/community" as CommunityItemCommunityPage -> CommunityItemCommunity
+}

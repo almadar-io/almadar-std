@@ -1,0 +1,38 @@
+app std-marketing-team "1.0.0"
+"Team grid atom for marketing pages. Renders a responsive grid of team member cards with avatars, names, roles, and bios. Pick for about pages and company culture sections."
+;; Config-driven team grid using the `team-organism` marketing pattern.
+;; Members are declared as an array of { name, nameAr, role, bio, avatar } objects.
+;; The atom renders immediately on INIT with no fetch required.
+
+orbital TeamItemOrbital {
+  type TeamMemberCard = { id : string!, name : string!, nameAr : string, role : string!, bio : string!, avatar : string }
+
+  entity TeamItem [runtime] {
+    id : string!
+    members : [TeamMemberCard] = []
+  }
+
+  trait TeamItemTeam -> TeamItem [interaction, instance] {
+    config {
+      members : [TeamMemberCard] = [
+        { id: "1", name: "Jane Doe", nameAr: "", role: "CEO", bio: "Former VP Engineering at BigTech. Obsessed with developer experience.", avatar: "" },
+        { id: "2", name: "John Smith", nameAr: "", role: "CTO", bio: "Built distributed systems at scale for a decade.", avatar: "" },
+        { id: "3", name: "Alice Chen", nameAr: "", role: "Head of Design", bio: "Believes great design is invisible.", avatar: "" }
+      ]
+        @label "Team Members"
+        @description "Array of team member cards"
+        @tier "essential"
+      columns : number = 3
+        @label "Columns"
+        @description "Number of grid columns"
+        @tier "customization"
+    }
+    initial: idle
+    state idle {
+      INIT -> idle
+        (set @entity.members @config.members)
+        (render-ui main { type: "team-organism", entity: "@entity.members" })
+    }
+  }
+  page "/team" as TeamItemTeamPage -> TeamItemTeam
+}

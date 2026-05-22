@@ -1,7 +1,7 @@
 {
   "name": "std-template-editor",
-  "version": "1.1.0",
-  "description": "std-template-editor — message template authoring primitive. Lists templates in `browsing`; opens detail in `viewing_single` with Edit / Save / Delete actions. Agents tune the list shape via `config.fields` + `config.itemActions`.",
+  "version": "1.2.0",
+  "description": "std-template-editor — message template authoring primitive. Lists templates; detail offers Edit / Save / Delete. Exposes Content/Knowledge knobs (visibilityScope, enabledLocales, keepVersions, …).",
   "orbitals": [
     {
       "name": "MessageTemplateOrbital",
@@ -271,22 +271,22 @@
                     "render-ui",
                     "main",
                     {
+                      "type": "stack",
                       "className": "py-12",
+                      "gap": "md",
+                      "align": "center",
+                      "direction": "vertical",
                       "children": [
                         {
                           "type": "spinner"
                         },
                         {
-                          "type": "typography",
-                          "variant": "caption",
                           "content": "Loading templates…",
-                          "color": "muted"
+                          "type": "typography",
+                          "color": "muted",
+                          "variant": "caption"
                         }
-                      ],
-                      "align": "center",
-                      "type": "stack",
-                      "gap": "md",
-                      "direction": "vertical"
+                      ]
                     }
                   ]
                 ]
@@ -300,29 +300,29 @@
                     "render-ui",
                     "main",
                     {
-                      "direction": "vertical",
                       "gap": "md",
-                      "type": "stack",
+                      "direction": "vertical",
                       "children": [
                         {
-                          "gap": "sm",
+                          "type": "stack",
                           "children": [
                             {
                               "name": "file-text",
                               "type": "icon"
                             },
                             {
+                              "content": "@config.title",
                               "variant": "h3",
-                              "type": "typography",
-                              "content": "@config.title"
+                              "type": "typography"
                             }
                           ],
-                          "type": "stack",
+                          "gap": "sm",
                           "align": "center",
                           "direction": "horizontal"
                         },
                         {
                           "type": "simple-grid",
+                          "cols": 4.0,
                           "children": [
                             {
                               "label": "Total templates",
@@ -331,38 +331,38 @@
                               "value": "@payload.data.length"
                             },
                             {
-                              "type": "stat-display",
                               "value": "32",
+                              "label": "Email",
                               "icon": "mail",
-                              "label": "Email"
+                              "type": "stat-display"
                             },
                             {
                               "type": "stat-display",
-                              "value": "14",
                               "label": "SMS",
+                              "value": "14",
                               "icon": "message-square"
                             },
                             {
-                              "value": "9",
-                              "label": "Edited 7d",
                               "icon": "edit",
-                              "type": "stat-display"
+                              "type": "stat-display",
+                              "label": "Edited 7d",
+                              "value": "9"
                             }
-                          ],
-                          "cols": 4.0
+                          ]
                         },
                         {
                           "type": "divider"
                         },
                         {
-                          "itemActions": "@config.itemActions",
                           "type": "data-grid",
-                          "cols": 1.0,
                           "entity": "@payload.data",
                           "fields": "@config.fields",
-                          "gap": "sm"
+                          "cols": 1.0,
+                          "gap": "sm",
+                          "itemActions": "@config.itemActions"
                         }
-                      ]
+                      ],
+                      "type": "stack"
                     }
                   ]
                 ]
@@ -376,9 +376,9 @@
                     "render-ui",
                     "main",
                     {
-                      "message": "@payload.error",
                       "type": "alert",
-                      "variant": "error"
+                      "variant": "error",
+                      "message": "@payload.error"
                     }
                   ]
                 ]
@@ -427,100 +427,100 @@
                     "render-ui",
                     "main",
                     {
-                      "gap": "md",
                       "type": "stack",
+                      "gap": "md",
                       "direction": "vertical",
                       "children": [
                         {
+                          "type": "stack",
+                          "align": "center",
+                          "direction": "horizontal",
                           "children": [
                             {
+                              "type": "button",
                               "action": "CLOSE_VIEW",
                               "label": "Back",
-                              "variant": "ghost",
-                              "type": "button"
+                              "variant": "ghost"
                             },
                             {
                               "type": "icon",
                               "name": "file-text"
                             },
                             {
-                              "type": "typography",
                               "content": "@entity.name",
-                              "variant": "h3"
+                              "variant": "h3",
+                              "type": "typography"
                             },
                             {
-                              "label": "@entity.channel",
                               "variant": "primary",
+                              "label": "@entity.channel",
                               "type": "badge"
                             }
                           ],
-                          "gap": "sm",
-                          "type": "stack",
-                          "align": "center",
-                          "direction": "horizontal"
+                          "gap": "sm"
                         },
                         {
                           "type": "divider"
                         },
                         {
+                          "type": "stack",
+                          "direction": "vertical",
                           "children": [
                             {
                               "gap": "md",
-                              "direction": "horizontal",
                               "children": [
                                 {
+                                  "type": "typography",
                                   "color": "muted",
                                   "content": "Subject",
-                                  "type": "typography",
                                   "variant": "caption"
                                 },
                                 {
                                   "type": "typography",
-                                  "content": "@entity.subject",
+                                  "variant": "body",
+                                  "content": "@entity.subject"
+                                }
+                              ],
+                              "type": "stack",
+                              "direction": "horizontal"
+                            },
+                            {
+                              "direction": "horizontal",
+                              "children": [
+                                {
+                                  "variant": "caption",
+                                  "content": "Body",
+                                  "color": "muted",
+                                  "type": "typography"
+                                },
+                                {
+                                  "type": "typography",
+                                  "content": "@entity.body",
                                   "variant": "body"
                                 }
                               ],
-                              "type": "stack"
+                              "type": "stack",
+                              "gap": "md"
                             },
                             {
                               "children": [
                                 {
-                                  "type": "typography",
-                                  "content": "Body",
+                                  "variant": "caption",
+                                  "content": "Variables",
                                   "color": "muted",
-                                  "variant": "caption"
+                                  "type": "typography"
                                 },
                                 {
                                   "type": "typography",
                                   "variant": "body",
-                                  "content": "@entity.body"
+                                  "content": "@entity.variables"
                                 }
                               ],
-                              "direction": "horizontal",
-                              "gap": "md",
-                              "type": "stack"
-                            },
-                            {
-                              "direction": "horizontal",
                               "type": "stack",
-                              "gap": "md",
-                              "children": [
-                                {
-                                  "content": "Variables",
-                                  "type": "typography",
-                                  "variant": "caption",
-                                  "color": "muted"
-                                },
-                                {
-                                  "variant": "body",
-                                  "content": "@entity.variables",
-                                  "type": "typography"
-                                }
-                              ]
+                              "direction": "horizontal",
+                              "gap": "md"
                             }
                           ],
-                          "type": "stack",
-                          "direction": "vertical",
                           "gap": "sm"
                         },
                         {
@@ -528,56 +528,56 @@
                         },
                         {
                           "cols": 2.0,
-                          "type": "simple-grid",
                           "children": [
                             {
+                              "label": "Channel",
                               "type": "stat-display",
-                              "value": "@entity.channel",
                               "icon": "send",
-                              "label": "Channel"
+                              "value": "@entity.channel"
                             },
                             {
                               "type": "stat-display",
-                              "icon": "calendar",
+                              "value": "@entity.lastEditedAt",
                               "label": "Last edited",
-                              "value": "@entity.lastEditedAt"
+                              "icon": "calendar"
                             }
-                          ]
+                          ],
+                          "type": "simple-grid"
                         },
                         {
-                          "direction": "horizontal",
                           "align": "center",
+                          "gap": "sm",
                           "children": [
                             {
-                              "label": "Edit",
-                              "type": "button",
-                              "action": "EDIT_TEMPLATE",
                               "actionPayload": {
                                 "id": "@entity.id"
                               },
-                              "variant": "primary"
+                              "label": "Edit",
+                              "variant": "primary",
+                              "type": "button",
+                              "action": "EDIT_TEMPLATE"
                             },
                             {
-                              "type": "button",
                               "label": "Save",
-                              "variant": "secondary",
+                              "type": "button",
                               "action": "SAVE_TEMPLATE",
+                              "variant": "secondary",
                               "actionPayload": {
                                 "id": "@entity.id"
                               }
                             },
                             {
-                              "action": "DELETE_TEMPLATE",
+                              "label": "Delete",
                               "variant": "danger",
+                              "type": "button",
+                              "action": "DELETE_TEMPLATE",
                               "actionPayload": {
                                 "id": "@entity.id"
-                              },
-                              "label": "Delete",
-                              "type": "button"
+                              }
                             }
                           ],
                           "type": "stack",
-                          "gap": "sm"
+                          "direction": "horizontal"
                         }
                       ]
                     }
@@ -608,22 +608,22 @@
                     "render-ui",
                     "main",
                     {
+                      "direction": "vertical",
+                      "gap": "md",
+                      "align": "center",
+                      "type": "stack",
+                      "className": "py-12",
                       "children": [
                         {
                           "type": "spinner"
                         },
                         {
-                          "content": "Deleting template…",
-                          "color": "muted",
                           "type": "typography",
-                          "variant": "caption"
+                          "content": "Deleting template…",
+                          "variant": "caption",
+                          "color": "muted"
                         }
-                      ],
-                      "className": "py-12",
-                      "type": "stack",
-                      "align": "center",
-                      "direction": "vertical",
-                      "gap": "md"
+                      ]
                     }
                   ]
                 ]
@@ -638,8 +638,8 @@
                     "MessageTemplate",
                     {
                       "emit": {
-                        "success": "MessageTemplateLoaded",
-                        "failure": "MessageTemplateLoadFailed"
+                        "failure": "MessageTemplateLoadFailed",
+                        "success": "MessageTemplateLoaded"
                       }
                     }
                   ],
@@ -647,22 +647,22 @@
                     "render-ui",
                     "main",
                     {
+                      "align": "center",
+                      "direction": "vertical",
+                      "gap": "md",
+                      "className": "py-12",
+                      "type": "stack",
                       "children": [
                         {
                           "type": "spinner"
                         },
                         {
-                          "type": "typography",
+                          "variant": "caption",
                           "content": "Loading templates…",
-                          "color": "muted",
-                          "variant": "caption"
+                          "type": "typography",
+                          "color": "muted"
                         }
-                      ],
-                      "gap": "md",
-                      "align": "center",
-                      "className": "py-12",
-                      "direction": "vertical",
-                      "type": "stack"
+                      ]
                     }
                   ]
                 ]
@@ -682,8 +682,8 @@
                     "MessageTemplate",
                     {
                       "emit": {
-                        "success": "MessageTemplateLoaded",
-                        "failure": "MessageTemplateLoadFailed"
+                        "failure": "MessageTemplateLoadFailed",
+                        "success": "MessageTemplateLoaded"
                       }
                     }
                   ],
@@ -691,22 +691,22 @@
                     "render-ui",
                     "main",
                     {
+                      "gap": "md",
+                      "className": "py-12",
+                      "type": "stack",
+                      "direction": "vertical",
+                      "align": "center",
                       "children": [
                         {
                           "type": "spinner"
                         },
                         {
-                          "color": "muted",
-                          "type": "typography",
                           "variant": "caption",
+                          "type": "typography",
+                          "color": "muted",
                           "content": "Loading editor…"
                         }
-                      ],
-                      "gap": "md",
-                      "align": "center",
-                      "className": "py-12",
-                      "type": "stack",
-                      "direction": "vertical"
+                      ]
                     }
                   ]
                 ]
@@ -735,22 +735,22 @@
                     "render-ui",
                     "main",
                     {
+                      "className": "py-12",
                       "gap": "md",
-                      "direction": "vertical",
-                      "type": "stack",
                       "children": [
                         {
                           "type": "spinner"
                         },
                         {
-                          "variant": "caption",
-                          "content": "Saving template…",
                           "color": "muted",
-                          "type": "typography"
+                          "content": "Saving template…",
+                          "type": "typography",
+                          "variant": "caption"
                         }
                       ],
-                      "align": "center",
-                      "className": "py-12"
+                      "direction": "vertical",
+                      "type": "stack",
+                      "align": "center"
                     }
                   ]
                 ]
@@ -779,22 +779,22 @@
                     "render-ui",
                     "main",
                     {
-                      "className": "py-12",
                       "children": [
                         {
                           "type": "spinner"
                         },
                         {
-                          "content": "Deleting template…",
                           "variant": "caption",
                           "color": "muted",
-                          "type": "typography"
+                          "type": "typography",
+                          "content": "Deleting template…"
                         }
                       ],
                       "gap": "md",
-                      "align": "center",
                       "type": "stack",
-                      "direction": "vertical"
+                      "className": "py-12",
+                      "direction": "vertical",
+                      "align": "center"
                     }
                   ]
                 ]
@@ -818,8 +818,8 @@
                     "render-ui",
                     "main",
                     {
-                      "size": "sm",
-                      "type": "spinner"
+                      "type": "spinner",
+                      "size": "sm"
                     }
                   ]
                 ]
@@ -827,87 +827,78 @@
             ]
           },
           "config": {
-            "fields": {
-              "type": "[FieldSpec]",
+            "seoEnabled": {
+              "type": "boolean",
+              "default": false,
+              "label": "SEO meta enabled",
+              "description": "Emit indexable metadata when templates appear on public surfaces.",
+              "tier": "customization"
+            },
+            "enabledLocales": {
+              "type": "[string]",
               "default": [
-                {
-                  "variant": "caption",
-                  "name": "name",
-                  "label": "Name"
-                },
-                {
-                  "name": "channel",
-                  "variant": "badge",
-                  "label": "Channel"
-                },
-                {
-                  "label": "Subject",
-                  "variant": "caption",
-                  "name": "subject"
-                },
-                {
-                  "name": "lastEditedAt",
-                  "label": "Updated",
-                  "variant": "caption"
-                }
+                "en"
               ],
-              "label": "Columns to show",
-              "description": "Each column maps to one field on the Message Template entity",
-              "tier": "advanced",
+              "label": "Enabled locales",
+              "description": "Locales the template subject + body can be translated into.",
+              "tier": "customization",
               "items": {
-                "type": "object",
-                "properties": {
-                  "format": {
-                    "name": "format",
-                    "type": "string",
-                    "required": false
-                  },
-                  "key": {
-                    "name": "key",
-                    "type": "string",
-                    "required": false
-                  },
-                  "header": {
-                    "name": "header",
-                    "type": "string",
-                    "required": false
-                  },
-                  "icon": {
-                    "name": "icon",
-                    "type": "string",
-                    "required": false
-                  },
-                  "variant": {
-                    "name": "variant",
-                    "type": "string",
-                    "required": false
-                  },
-                  "label": {
-                    "name": "label",
-                    "type": "string",
-                    "required": false
-                  },
-                  "name": {
-                    "name": "name",
-                    "type": "string",
-                    "required": true
-                  }
-                }
+                "type": "string"
               }
+            },
+            "visibilityScope": {
+              "type": "string",
+              "default": "internal",
+              "label": "Visibility scope",
+              "description": "Who can use templates: internal staff, signed-in customers, public.",
+              "tier": "essential",
+              "values": [
+                "public",
+                "internal",
+                "customer"
+              ]
+            },
+            "scheduledPublishEnabled": {
+              "type": "boolean",
+              "default": false,
+              "label": "Scheduled publish",
+              "description": "Allow scheduling activation of edited templates. v1.2 declarative.",
+              "tier": "customization"
+            },
+            "defaultLocale": {
+              "type": "string",
+              "default": "en",
+              "label": "Default locale",
+              "description": "Locale used when no translation matches the recipient's language.",
+              "tier": "customization"
+            },
+            "draftAutosaveSeconds": {
+              "type": "number",
+              "default": 15.0,
+              "label": "Draft autosave interval (s)",
+              "description": "Seconds between draft autosaves in the template editor.",
+              "tier": "advanced"
+            },
+            "allowRollback": {
+              "type": "boolean",
+              "default": true,
+              "label": "Allow rollback",
+              "description": "Permit reverting a template to a prior version.",
+              "tier": "customization"
             },
             "itemActions": {
               "type": "[ItemAction]",
               "default": [
                 {
-                  "icon": "arrow-right",
-                  "label": "Open",
+                  "variant": "primary",
                   "event": "OPEN_TEMPLATE",
-                  "variant": "primary"
+                  "label": "Open",
+                  "icon": "arrow-right"
                 },
                 {
-                  "event": "DELETE_TEMPLATE",
+                  "label": "Delete",
                   "variant": "danger",
-                  "label": "Delete"
+                  "event": "DELETE_TEMPLATE"
                 }
               ],
               "label": "Row actions",
@@ -916,15 +907,15 @@
               "items": {
                 "type": "object",
                 "properties": {
-                  "icon": {
-                    "name": "icon",
-                    "type": "string",
-                    "required": false
-                  },
                   "label": {
                     "name": "label",
                     "type": "string",
                     "required": true
+                  },
+                  "icon": {
+                    "name": "icon",
+                    "type": "string",
+                    "required": false
                   },
                   "event": {
                     "name": "event",
@@ -945,6 +936,81 @@
               "label": "Section title",
               "description": "Heading shown above the message template list",
               "tier": "customization"
+            },
+            "keepVersions": {
+              "type": "number",
+              "default": 10.0,
+              "label": "Versions to retain",
+              "description": "Number of template revisions to keep.",
+              "tier": "customization"
+            },
+            "fields": {
+              "type": "[FieldSpec]",
+              "default": [
+                {
+                  "variant": "caption",
+                  "name": "name",
+                  "label": "Name"
+                },
+                {
+                  "variant": "badge",
+                  "name": "channel",
+                  "label": "Channel"
+                },
+                {
+                  "label": "Subject",
+                  "name": "subject",
+                  "variant": "caption"
+                },
+                {
+                  "label": "Updated",
+                  "name": "lastEditedAt",
+                  "variant": "caption"
+                }
+              ],
+              "label": "Columns to show",
+              "description": "Each column maps to one field on the Message Template entity",
+              "tier": "advanced",
+              "items": {
+                "type": "object",
+                "properties": {
+                  "icon": {
+                    "name": "icon",
+                    "type": "string",
+                    "required": false
+                  },
+                  "key": {
+                    "name": "key",
+                    "type": "string",
+                    "required": false
+                  },
+                  "label": {
+                    "name": "label",
+                    "type": "string",
+                    "required": false
+                  },
+                  "header": {
+                    "name": "header",
+                    "type": "string",
+                    "required": false
+                  },
+                  "variant": {
+                    "name": "variant",
+                    "type": "string",
+                    "required": false
+                  },
+                  "name": {
+                    "name": "name",
+                    "type": "string",
+                    "required": true
+                  },
+                  "format": {
+                    "name": "format",
+                    "type": "string",
+                    "required": false
+                  }
+                }
+              }
             }
           },
           "scope": "collection"

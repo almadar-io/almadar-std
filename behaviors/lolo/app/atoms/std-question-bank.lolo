@@ -1,5 +1,5 @@
-app std-question-bank "1.1.0"
-"std-question-bank — typed question library for surveys. Lists questions in `browsing`; opens detail in `viewing_single` with Update / Delete actions. Agents tune the list shape via `config.fields` + `config.itemActions`."
+app std-question-bank "1.2.0"
+"std-question-bank — typed question library for surveys. Lists questions; detail offers Update / Delete. Exposes Content/Knowledge knobs (visibilityScope, enabledLocales, keepVersions, …)."
 
 type FieldSpec = { name : string!, label : string, variant : string, icon : string, format : string, key : string, header : string }
 type ItemAction = { label : string!, event : string!, variant : string, icon : string }
@@ -42,6 +42,38 @@ orbital QuestionBankOrbital {
         @label "Row actions"
         @description "Buttons users can click on each question row"
         @tier "customization"
+      visibilityScope          : "public" | "internal" | "customer" = "internal"
+        @label "Visibility scope"
+        @description "Who can browse the question bank: public, internal staff, signed-in customers."
+        @tier "essential"
+      scheduledPublishEnabled  : boolean = false
+        @label "Scheduled publish"
+        @description "Allow scheduling future availability of question additions. v1.2 declarative."
+        @tier "customization"
+      keepVersions             : number  = 5
+        @label "Versions to retain"
+        @description "Number of question revisions to keep."
+        @tier "customization"
+      allowRollback            : boolean = true
+        @label "Allow rollback"
+        @description "Permit reverting a question to a prior version."
+        @tier "customization"
+      seoEnabled               : boolean = false
+        @label "SEO meta enabled"
+        @description "Emit indexable metadata when questions are publicly viewable."
+        @tier "customization"
+      enabledLocales           : [string] = ["en"]
+        @label "Enabled locales"
+        @description "Locales questions can be translated into."
+        @tier "customization"
+      defaultLocale            : string  = "en"
+        @label "Default locale"
+        @description "Locale shown when no translation exists for the respondent."
+        @tier "customization"
+      draftAutosaveSeconds     : number  = 30
+        @label "Draft autosave interval (s)"
+        @description "Seconds between draft autosaves in the question editor."
+        @tier "advanced"
     }
     initial: loading
     state loading {

@@ -1,5 +1,5 @@
-app std-segment "1.1.0"
-"std-segment — contact segment primitive. Defines a filter criteria for grouping contacts. Lists segments in `browsing`; opens segment detail in `viewing_single` with Recalculate action. Agents tune the list shape via `config.fields` + `config.itemActions`."
+app std-segment "1.2.0"
+"std-segment — contact segment primitive grouping contacts by criteria with Recalculate action. Exposes CRM-pattern knobs (health-score threshold, reminder cadence, archive policy, consent)."
 
 type FieldSpec = { name : string!, label : string, variant : string, icon : string, format : string, key : string, header : string }
 type ItemAction = { label : string!, event : string!, variant : string, icon : string }
@@ -30,6 +30,22 @@ orbital SegmentOrbital {
       itemActions : [ItemAction] = [{ label: "Open", event: "OPEN_SEGMENT", variant: "primary", icon: "arrow-right" }, { label: "Recalculate", event: "RECALCULATE", variant: "danger" }]
         @label "Row actions"
         @description "Buttons users can click on each segment row"
+        @tier "customization"
+      healthScoreThresholdAlert : number = 50
+        @label "Health score threshold"
+        @description "Trigger alert when segment-average health score drops below this. Declarative; wire via sibling std-notify."
+        @tier "customization"
+      renewalReminderDaysBefore : [number] = [30, 7]
+        @label "Reminder cadence (days)"
+        @description "Days ahead of any segment-wide deadline to send reminders. Declarative; wire via sibling std-reminder-scheduler."
+        @tier "customization"
+      archiveInactiveAfterDays : number = 365
+        @label "Archive inactive after (days)"
+        @description "Days a segment may go unrecalculated before being archived. Declarative; wire via sibling std-lifecycle."
+        @tier "advanced"
+      consentTrackingEnabled : boolean = true
+        @label "Track consent"
+        @description "Whether membership in this segment honors recorded consent. Declarative."
         @tier "customization"
     }
     initial: loading

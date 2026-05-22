@@ -1,7 +1,7 @@
 {
   "name": "std-table-map",
-  "version": "1.0.0",
-  "description": "std-table-map — restaurant POS interactive floor plan: TableNode entities rendered as draggable nodes (round/rectangle/square) with status (empty/seated/ordered/awaiting-bill/cleaning). Owns a TableNode entity and a single manage trait that loads tables, renders them on a TableFloorPlan canvas, and persists select / move / seat / clear actions back to the row.",
+  "version": "1.1.0",
+  "description": "std-table-map — restaurant POS interactive floor plan: TableNode draggable nodes with seat/clear/select/move actions. Listens for SET_STATUS so std-lifecycle can drive table-status transitions. Exposes Restaurant/POS knobs (allowSplitChecks, allergenWarningsEnabled, …).",
   "orbitals": [
     {
       "name": "TableMapOrbital",
@@ -335,6 +335,22 @@
                 ]
               },
               {
+                "key": "SET_STATUS",
+                "name": "Set Status",
+                "payloadSchema": [
+                  {
+                    "name": "entityId",
+                    "type": "string",
+                    "required": true
+                  },
+                  {
+                    "name": "newStatus",
+                    "type": "string",
+                    "required": true
+                  }
+                ]
+              },
+              {
                 "key": "TableUpdated",
                 "name": "Table updated",
                 "payloadSchema": [
@@ -390,8 +406,10 @@
                     "render-ui",
                     "main",
                     {
-                      "className": "py-12",
+                      "gap": "md",
+                      "type": "stack",
                       "direction": "vertical",
+                      "align": "center",
                       "children": [
                         {
                           "type": "spinner"
@@ -399,13 +417,11 @@
                         {
                           "color": "muted",
                           "type": "typography",
-                          "content": "Loading floor plan…",
-                          "variant": "caption"
+                          "variant": "caption",
+                          "content": "Loading floor plan…"
                         }
                       ],
-                      "gap": "md",
-                      "type": "stack",
-                      "align": "center"
+                      "className": "py-12"
                     }
                   ]
                 ]
@@ -420,98 +436,98 @@
                     "main",
                     {
                       "type": "stack",
-                      "gap": "md",
-                      "direction": "vertical",
                       "children": [
                         {
-                          "direction": "horizontal",
-                          "type": "stack",
                           "gap": "sm",
+                          "type": "stack",
+                          "direction": "horizontal",
                           "align": "center",
                           "children": [
                             {
-                              "type": "icon",
-                              "name": "layout-grid"
+                              "name": "layout-grid",
+                              "type": "icon"
                             },
                             {
-                              "content": "@config.title",
                               "variant": "h3",
-                              "type": "typography"
+                              "type": "typography",
+                              "content": "@config.title"
                             }
                           ]
                         },
                         {
-                          "type": "simple-grid",
-                          "cols": 4.0,
                           "children": [
                             {
-                              "icon": "grid",
-                              "value": "@payload.data.length",
+                              "label": "Tables",
                               "type": "stat-display",
-                              "label": "Tables"
+                              "icon": "grid",
+                              "value": "@payload.data.length"
                             },
                             {
                               "label": "Seated",
-                              "icon": "users",
+                              "value": "18",
                               "type": "stat-display",
-                              "value": "18"
+                              "icon": "users"
                             },
                             {
                               "type": "stat-display",
-                              "value": "4",
+                              "label": "Awaiting bill",
                               "icon": "receipt",
-                              "label": "Awaiting bill"
+                              "value": "4"
                             },
                             {
-                              "icon": "user-plus",
-                              "label": "Avg party size",
+                              "value": "3.2",
                               "type": "stat-display",
-                              "value": "3.2"
+                              "icon": "user-plus",
+                              "label": "Avg party size"
                             }
-                          ]
+                          ],
+                          "cols": 4.0,
+                          "type": "simple-grid"
                         },
                         {
                           "type": "divider"
                         },
                         {
+                          "width": "@config.canvasWidth",
                           "onMove": "MOVE_TABLE",
-                          "items": "@payload.data",
+                          "selectedId": "@entity.id",
                           "onSelect": "SELECT_TABLE",
                           "editable": true,
-                          "width": "@config.canvasWidth",
-                          "selectedId": "@entity.id",
+                          "type": "positioned-canvas",
                           "height": "@config.canvasHeight",
-                          "type": "positioned-canvas"
+                          "items": "@payload.data"
                         },
                         {
+                          "direction": "horizontal",
                           "type": "stack",
-                          "justify": "end",
+                          "gap": "sm",
                           "children": [
                             {
-                              "variant": "primary",
-                              "action": "SEAT",
-                              "label": "Seat Party",
-                              "icon": "users",
                               "actionPayload": {
                                 "id": "@entity.id"
                               },
-                              "type": "button"
+                              "label": "Seat Party",
+                              "type": "button",
+                              "icon": "users",
+                              "action": "SEAT",
+                              "variant": "primary"
                             },
                             {
+                              "label": "Clear Table",
+                              "type": "button",
+                              "variant": "secondary",
                               "actionPayload": {
                                 "id": "@entity.id"
                               },
-                              "label": "Clear Table",
-                              "type": "button",
-                              "action": "CLEAR_TABLE",
-                              "variant": "secondary",
-                              "icon": "eraser"
+                              "icon": "eraser",
+                              "action": "CLEAR_TABLE"
                             }
                           ],
-                          "gap": "sm",
-                          "direction": "horizontal"
+                          "justify": "end"
                         }
-                      ]
+                      ],
+                      "direction": "vertical",
+                      "gap": "md"
                     }
                   ]
                 ]
@@ -525,9 +541,9 @@
                     "render-ui",
                     "main",
                     {
-                      "message": "@payload.error",
                       "variant": "error",
-                      "type": "alert"
+                      "type": "alert",
+                      "message": "@payload.error"
                     }
                   ]
                 ]
@@ -619,10 +635,10 @@
                     "update",
                     "TableNode",
                     {
+                      "status": "seated",
                       "serverName": "@payload.serverName",
                       "partySize": "@payload.partySize",
-                      "id": "@payload.id",
-                      "status": "seated"
+                      "id": "@payload.id"
                     },
                     {
                       "emit": {
@@ -658,15 +674,66 @@
                     "update",
                     "TableNode",
                     {
-                      "partySize": 0.0,
+                      "id": "@payload.id",
                       "status": "empty",
-                      "id": "@payload.id"
+                      "partySize": 0.0
                     },
                     {
                       "emit": {
                         "success": "TableUpdated",
                         "failure": "TableWriteFailed"
                       }
+                    }
+                  ]
+                ]
+              },
+              {
+                "from": "browsing",
+                "to": "loading",
+                "event": "SET_STATUS",
+                "effects": [
+                  [
+                    "set",
+                    "@entity.id",
+                    "@payload.entityId"
+                  ],
+                  [
+                    "set",
+                    "@entity.status",
+                    "@payload.newStatus"
+                  ],
+                  [
+                    "persist",
+                    "update",
+                    "TableNode",
+                    "@entity",
+                    {
+                      "emit": {
+                        "failure": "TableWriteFailed",
+                        "success": "TableUpdated"
+                      }
+                    }
+                  ],
+                  [
+                    "render-ui",
+                    "main",
+                    {
+                      "gap": "md",
+                      "type": "stack",
+                      "align": "center",
+                      "direction": "vertical",
+                      "className": "py-12",
+                      "children": [
+                        {
+                          "type": "spinner"
+                        },
+                        {
+                          "content": "Updating table status…",
+                          "color": "muted",
+                          "variant": "caption",
+                          "type": "typography"
+                        }
+                      ]
                     }
                   ]
                 ]
@@ -681,8 +748,8 @@
                     "TableNode",
                     {
                       "emit": {
-                        "success": "TableLoaded",
-                        "failure": "TableLoadFailed"
+                        "failure": "TableLoadFailed",
+                        "success": "TableLoaded"
                       }
                     }
                   ]
@@ -709,9 +776,9 @@
                     "render-ui",
                     "main",
                     {
+                      "type": "alert",
                       "message": "@payload.error",
-                      "variant": "error",
-                      "type": "alert"
+                      "variant": "error"
                     }
                   ]
                 ]
@@ -744,12 +811,62 @@
             ]
           },
           "config": {
+            "allowSplitChecks": {
+              "type": "boolean",
+              "default": true,
+              "label": "Allow split checks",
+              "description": "Permit splitting a table check across multiple payments.",
+              "tier": "customization"
+            },
+            "tableTurnoverTargetMinutes": {
+              "type": "number",
+              "default": 60.0,
+              "label": "Table turnover target (min)",
+              "description": "Target minutes between seatings on a single table. v1.1 declarative.",
+              "tier": "advanced"
+            },
+            "coursingEnabled": {
+              "type": "boolean",
+              "default": false,
+              "label": "Coursing enabled",
+              "description": "Track courses for table pacing.",
+              "tier": "customization"
+            },
             "title": {
               "type": "string",
               "default": "Floor Plan",
               "label": "Section title",
               "description": "Heading shown above the restaurant floor plan",
               "tier": "customization"
+            },
+            "canvasHeight": {
+              "type": "number",
+              "default": 600.0,
+              "label": "Canvas height",
+              "description": "Floor plan canvas height in pixels",
+              "tier": "advanced"
+            },
+            "allergenWarningsEnabled": {
+              "type": "boolean",
+              "default": true,
+              "label": "Allergen warnings",
+              "description": "Surface allergen warnings on items selected for a seated table.",
+              "tier": "customization"
+            },
+            "tipPresets": {
+              "type": "[number]",
+              "default": [
+                15.0,
+                18.0,
+                20.0,
+                25.0
+              ],
+              "label": "Tip presets (%)",
+              "description": "Quick-select tip percentages shown when closing a table check.",
+              "tier": "customization",
+              "items": {
+                "type": "number"
+              }
             },
             "canvasWidth": {
               "type": "number",
@@ -758,12 +875,19 @@
               "description": "Floor plan canvas width in pixels",
               "tier": "advanced"
             },
-            "canvasHeight": {
+            "kitchenAutoFire": {
+              "type": "boolean",
+              "default": false,
+              "label": "Kitchen auto-fire",
+              "description": "Auto-fire courses to the kitchen display when a table moves to ordered.",
+              "tier": "customization"
+            },
+            "serviceCharge": {
               "type": "number",
-              "default": 600.0,
-              "label": "Canvas height",
-              "description": "Floor plan canvas height in pixels",
-              "tier": "advanced"
+              "default": 0.0,
+              "label": "Service charge (%)",
+              "description": "Default service-charge percentage applied to checks for these tables.",
+              "tier": "customization"
             }
           },
           "scope": "collection"

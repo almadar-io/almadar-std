@@ -1,7 +1,7 @@
 {
   "name": "std-membership",
-  "version": "1.1.0",
-  "description": "std-membership — recurring gym/fitness/club membership with tier, renewal, freeze, and self-managed cancel. Lists memberships in `browsing`; opens membership detail in `viewing_single` with Upgrade / Freeze / Cancel actions. Agents tune the list shape via `config.fields` + `config.itemActions`.",
+  "version": "1.2.0",
+  "description": "std-membership — gym/club membership with tier, renewal, freeze, cancel. Listens for SET_STATUS so std-lifecycle can drive automated transitions. Exposes CRM-pattern knobs.",
   "orbitals": [
     {
       "name": "MembershipOrbital",
@@ -190,6 +190,67 @@
                   "type": "string"
                 }
               ]
+            },
+            {
+              "event": "MembershipUpdated",
+              "payloadSchema": [
+                {
+                  "name": "row.id",
+                  "type": "string",
+                  "required": true
+                },
+                {
+                  "name": "row.memberId",
+                  "type": "string",
+                  "required": true
+                },
+                {
+                  "name": "row.memberName",
+                  "type": "string"
+                },
+                {
+                  "name": "row.tier",
+                  "type": "string"
+                },
+                {
+                  "name": "row.monthlyDues",
+                  "type": "number"
+                },
+                {
+                  "name": "row.startDate",
+                  "type": "string",
+                  "required": true
+                },
+                {
+                  "name": "row.renewalDate",
+                  "type": "string"
+                },
+                {
+                  "name": "row.status",
+                  "type": "string"
+                },
+                {
+                  "name": "row.accessLevel",
+                  "type": "string"
+                },
+                {
+                  "name": "row.notes",
+                  "type": "string"
+                }
+              ]
+            },
+            {
+              "event": "MembershipUpdateFailed",
+              "payloadSchema": [
+                {
+                  "name": "error",
+                  "type": "string"
+                },
+                {
+                  "name": "code",
+                  "type": "string"
+                }
+              ]
             }
           ],
           "stateMachine": {
@@ -264,6 +325,46 @@
                 ]
               },
               {
+                "key": "SET_STATUS",
+                "name": "Set Status",
+                "payloadSchema": [
+                  {
+                    "name": "entityId",
+                    "type": "string",
+                    "required": true
+                  },
+                  {
+                    "name": "newStatus",
+                    "type": "string",
+                    "required": true
+                  }
+                ]
+              },
+              {
+                "key": "MembershipUpdated",
+                "name": "Membership updated",
+                "payloadSchema": [
+                  {
+                    "name": "row",
+                    "type": "Membership"
+                  }
+                ]
+              },
+              {
+                "key": "MembershipUpdateFailed",
+                "name": "Membership update failed",
+                "payloadSchema": [
+                  {
+                    "name": "error",
+                    "type": "string"
+                  },
+                  {
+                    "name": "code",
+                    "type": "string"
+                  }
+                ]
+              },
+              {
                 "key": "CLOSE_MEMBERSHIP",
                 "name": "Close Membership"
               },
@@ -310,22 +411,22 @@
                     "render-ui",
                     "main",
                     {
-                      "align": "center",
+                      "gap": "md",
                       "type": "stack",
+                      "align": "center",
+                      "className": "py-12",
+                      "direction": "vertical",
                       "children": [
                         {
                           "type": "spinner"
                         },
                         {
-                          "variant": "caption",
                           "content": "Loading memberships…",
-                          "color": "muted",
-                          "type": "typography"
+                          "type": "typography",
+                          "variant": "caption",
+                          "color": "muted"
                         }
-                      ],
-                      "className": "py-12",
-                      "gap": "md",
-                      "direction": "vertical"
+                      ]
                     }
                   ]
                 ]
@@ -339,12 +440,10 @@
                     "render-ui",
                     "main",
                     {
+                      "direction": "vertical",
+                      "type": "stack",
                       "children": [
                         {
-                          "gap": "sm",
-                          "align": "center",
-                          "type": "stack",
-                          "direction": "horizontal",
                           "children": [
                             {
                               "type": "icon",
@@ -352,56 +451,58 @@
                             },
                             {
                               "variant": "h3",
-                              "content": "@config.title",
-                              "type": "typography"
+                              "type": "typography",
+                              "content": "@config.title"
                             }
-                          ]
+                          ],
+                          "direction": "horizontal",
+                          "gap": "sm",
+                          "type": "stack",
+                          "align": "center"
                         },
                         {
+                          "cols": 4.0,
                           "children": [
                             {
-                              "icon": "credit-card",
-                              "label": "Total memberships",
                               "value": "@payload.data.length",
-                              "type": "stat-display"
+                              "icon": "credit-card",
+                              "type": "stat-display",
+                              "label": "Total memberships"
                             },
                             {
-                              "label": "Active",
+                              "type": "stat-display",
                               "value": "112",
                               "icon": "check-circle",
-                              "type": "stat-display"
+                              "label": "Active"
                             },
                             {
-                              "value": "8",
+                              "type": "stat-display",
                               "icon": "pause-circle",
                               "label": "Frozen",
-                              "type": "stat-display"
+                              "value": "8"
                             },
                             {
                               "label": "MRR",
+                              "icon": "dollar-sign",
                               "type": "stat-display",
-                              "value": "$14,820",
-                              "icon": "dollar-sign"
+                              "value": "$14,820"
                             }
                           ],
-                          "type": "simple-grid",
-                          "cols": 4.0
+                          "type": "simple-grid"
                         },
                         {
                           "type": "divider"
                         },
                         {
-                          "entity": "@payload.data",
                           "cols": 1.0,
-                          "type": "data-grid",
+                          "fields": "@config.fields",
                           "gap": "sm",
                           "itemActions": "@config.itemActions",
-                          "fields": "@config.fields"
+                          "type": "data-grid",
+                          "entity": "@payload.data"
                         }
                       ],
-                      "gap": "md",
-                      "type": "stack",
-                      "direction": "vertical"
+                      "gap": "md"
                     }
                   ]
                 ]
@@ -416,8 +517,8 @@
                     "main",
                     {
                       "type": "alert",
-                      "variant": "error",
-                      "message": "@payload.error"
+                      "message": "@payload.error",
+                      "variant": "error"
                     }
                   ]
                 ]
@@ -481,150 +582,150 @@
                     "render-ui",
                     "main",
                     {
-                      "direction": "vertical",
                       "gap": "md",
                       "type": "stack",
+                      "direction": "vertical",
                       "children": [
                         {
-                          "direction": "horizontal",
-                          "align": "center",
-                          "type": "stack",
-                          "gap": "sm",
                           "children": [
                             {
-                              "variant": "ghost",
                               "type": "button",
-                              "label": "Back",
-                              "action": "CLOSE_MEMBERSHIP"
+                              "action": "CLOSE_MEMBERSHIP",
+                              "variant": "ghost",
+                              "label": "Back"
                             },
                             {
                               "type": "icon",
                               "name": "credit-card"
                             },
                             {
+                              "content": "@entity.memberName",
                               "type": "typography",
-                              "variant": "h3",
-                              "content": "@entity.memberName"
+                              "variant": "h3"
                             },
                             {
-                              "variant": "primary",
                               "type": "badge",
-                              "label": "@entity.tier"
+                              "label": "@entity.tier",
+                              "variant": "primary"
                             },
                             {
                               "type": "badge",
                               "label": "@entity.status",
                               "variant": "default"
                             }
-                          ]
+                          ],
+                          "gap": "sm",
+                          "type": "stack",
+                          "direction": "horizontal",
+                          "align": "center"
                         },
                         {
                           "type": "divider"
                         },
                         {
-                          "type": "stack",
-                          "direction": "vertical",
                           "children": [
                             {
+                              "type": "stack",
+                              "direction": "horizontal",
                               "children": [
                                 {
                                   "color": "muted",
-                                  "content": "Access level",
                                   "variant": "caption",
+                                  "content": "Access level",
                                   "type": "typography"
                                 },
                                 {
-                                  "variant": "body",
+                                  "type": "typography",
                                   "content": "@entity.accessLevel",
-                                  "type": "typography"
+                                  "variant": "body"
+                                }
+                              ],
+                              "gap": "md"
+                            },
+                            {
+                              "children": [
+                                {
+                                  "type": "typography",
+                                  "content": "Notes",
+                                  "color": "muted",
+                                  "variant": "caption"
+                                },
+                                {
+                                  "type": "typography",
+                                  "variant": "body",
+                                  "content": "@entity.notes"
                                 }
                               ],
                               "type": "stack",
                               "gap": "md",
                               "direction": "horizontal"
-                            },
-                            {
-                              "gap": "md",
-                              "direction": "horizontal",
-                              "type": "stack",
-                              "children": [
-                                {
-                                  "variant": "caption",
-                                  "color": "muted",
-                                  "content": "Notes",
-                                  "type": "typography"
-                                },
-                                {
-                                  "variant": "body",
-                                  "content": "@entity.notes",
-                                  "type": "typography"
-                                }
-                              ]
                             }
                           ],
+                          "type": "stack",
+                          "direction": "vertical",
                           "gap": "sm"
                         },
                         {
                           "type": "divider"
                         },
                         {
-                          "type": "simple-grid",
                           "cols": 3.0,
                           "children": [
                             {
-                              "value": "@entity.monthlyDues",
                               "icon": "dollar-sign",
                               "label": "Monthly dues",
+                              "type": "stat-display",
+                              "value": "@entity.monthlyDues"
+                            },
+                            {
+                              "label": "Started",
+                              "icon": "calendar",
+                              "value": "@entity.startDate",
                               "type": "stat-display"
                             },
                             {
-                              "icon": "calendar",
-                              "type": "stat-display",
-                              "label": "Started",
-                              "value": "@entity.startDate"
-                            },
-                            {
-                              "label": "Renews",
                               "icon": "refresh-cw",
                               "type": "stat-display",
+                              "label": "Renews",
                               "value": "@entity.renewalDate"
                             }
-                          ]
+                          ],
+                          "type": "simple-grid"
                         },
                         {
                           "direction": "horizontal",
+                          "type": "stack",
+                          "align": "center",
+                          "gap": "sm",
                           "children": [
                             {
+                              "type": "button",
                               "variant": "primary",
-                              "label": "Upgrade Tier",
-                              "type": "button",
-                              "action": "UPGRADE_TIER",
-                              "actionPayload": {
-                                "id": "@entity.id"
-                              }
-                            },
-                            {
-                              "type": "button",
-                              "action": "FREEZE_MEMBERSHIP",
                               "actionPayload": {
                                 "id": "@entity.id"
                               },
+                              "label": "Upgrade Tier",
+                              "action": "UPGRADE_TIER"
+                            },
+                            {
+                              "action": "FREEZE_MEMBERSHIP",
                               "label": "Freeze",
+                              "type": "button",
+                              "actionPayload": {
+                                "id": "@entity.id"
+                              },
                               "variant": "secondary"
                             },
                             {
-                              "label": "Cancel",
-                              "type": "button",
+                              "action": "CANCEL_MEMBERSHIP",
+                              "variant": "danger",
                               "actionPayload": {
                                 "id": "@entity.id"
                               },
-                              "action": "CANCEL_MEMBERSHIP",
-                              "variant": "danger"
+                              "type": "button",
+                              "label": "Cancel"
                             }
-                          ],
-                          "type": "stack",
-                          "gap": "sm",
-                          "align": "center"
+                          ]
                         }
                       ]
                     }
@@ -655,22 +756,106 @@
                     "render-ui",
                     "main",
                     {
-                      "direction": "vertical",
                       "type": "stack",
+                      "direction": "vertical",
+                      "align": "center",
                       "className": "py-12",
+                      "gap": "md",
                       "children": [
                         {
                           "type": "spinner"
                         },
                         {
-                          "type": "typography",
-                          "variant": "caption",
                           "color": "muted",
-                          "content": "Cancelling membership…"
+                          "content": "Cancelling membership…",
+                          "variant": "caption",
+                          "type": "typography"
                         }
-                      ],
+                      ]
+                    }
+                  ]
+                ]
+              },
+              {
+                "from": "browsing",
+                "to": "loading",
+                "event": "SET_STATUS",
+                "effects": [
+                  [
+                    "set",
+                    "@entity.id",
+                    "@payload.entityId"
+                  ],
+                  [
+                    "set",
+                    "@entity.status",
+                    "@payload.newStatus"
+                  ],
+                  [
+                    "persist",
+                    "update",
+                    "Membership",
+                    "@entity",
+                    {
+                      "emit": {
+                        "failure": "MembershipUpdateFailed",
+                        "success": "MembershipUpdated"
+                      }
+                    }
+                  ],
+                  [
+                    "render-ui",
+                    "main",
+                    {
                       "align": "center",
-                      "gap": "md"
+                      "className": "py-12",
+                      "type": "stack",
+                      "direction": "vertical",
+                      "gap": "md",
+                      "children": [
+                        {
+                          "type": "spinner"
+                        },
+                        {
+                          "content": "Updating membership status…",
+                          "color": "muted",
+                          "type": "typography",
+                          "variant": "caption"
+                        }
+                      ]
+                    }
+                  ]
+                ]
+              },
+              {
+                "from": "browsing",
+                "to": "loading",
+                "event": "MembershipUpdated",
+                "effects": [
+                  [
+                    "fetch",
+                    "Membership",
+                    {
+                      "emit": {
+                        "success": "MembershipLoaded",
+                        "failure": "MembershipLoadFailed"
+                      }
+                    }
+                  ]
+                ]
+              },
+              {
+                "from": "browsing",
+                "to": "browsing",
+                "event": "MembershipUpdateFailed",
+                "effects": [
+                  [
+                    "render-ui",
+                    "main",
+                    {
+                      "type": "alert",
+                      "message": "@payload.error",
+                      "variant": "error"
                     }
                   ]
                 ]
@@ -685,8 +870,8 @@
                     "Membership",
                     {
                       "emit": {
-                        "success": "MembershipLoaded",
-                        "failure": "MembershipLoadFailed"
+                        "failure": "MembershipLoadFailed",
+                        "success": "MembershipLoaded"
                       }
                     }
                   ],
@@ -694,22 +879,22 @@
                     "render-ui",
                     "main",
                     {
+                      "type": "stack",
+                      "className": "py-12",
+                      "gap": "md",
                       "children": [
                         {
                           "type": "spinner"
                         },
                         {
+                          "variant": "caption",
                           "color": "muted",
                           "type": "typography",
-                          "content": "Loading memberships…",
-                          "variant": "caption"
+                          "content": "Loading memberships…"
                         }
                       ],
                       "direction": "vertical",
-                      "type": "stack",
-                      "align": "center",
-                      "className": "py-12",
-                      "gap": "md"
+                      "align": "center"
                     }
                   ]
                 ]
@@ -729,8 +914,8 @@
                     "Membership",
                     {
                       "emit": {
-                        "failure": "MembershipLoadFailed",
-                        "success": "MembershipLoaded"
+                        "success": "MembershipLoaded",
+                        "failure": "MembershipLoadFailed"
                       }
                     }
                   ],
@@ -738,22 +923,22 @@
                     "render-ui",
                     "main",
                     {
-                      "align": "center",
-                      "gap": "md",
                       "direction": "vertical",
-                      "type": "stack",
+                      "align": "center",
                       "className": "py-12",
+                      "type": "stack",
                       "children": [
                         {
                           "type": "spinner"
                         },
                         {
-                          "variant": "caption",
                           "type": "typography",
-                          "content": "Upgrading tier…",
-                          "color": "muted"
+                          "variant": "caption",
+                          "color": "muted",
+                          "content": "Upgrading tier…"
                         }
-                      ]
+                      ],
+                      "gap": "md"
                     }
                   ]
                 ]
@@ -773,8 +958,8 @@
                     "Membership",
                     {
                       "emit": {
-                        "failure": "MembershipLoadFailed",
-                        "success": "MembershipLoaded"
+                        "success": "MembershipLoaded",
+                        "failure": "MembershipLoadFailed"
                       }
                     }
                   ],
@@ -782,22 +967,22 @@
                     "render-ui",
                     "main",
                     {
-                      "className": "py-12",
-                      "type": "stack",
-                      "direction": "vertical",
                       "gap": "md",
+                      "align": "center",
+                      "direction": "vertical",
+                      "className": "py-12",
                       "children": [
                         {
                           "type": "spinner"
                         },
                         {
-                          "type": "typography",
-                          "variant": "caption",
+                          "content": "Freezing membership…",
                           "color": "muted",
-                          "content": "Freezing membership…"
+                          "type": "typography",
+                          "variant": "caption"
                         }
                       ],
-                      "align": "center"
+                      "type": "stack"
                     }
                   ]
                 ]
@@ -826,7 +1011,6 @@
                     "render-ui",
                     "main",
                     {
-                      "direction": "vertical",
                       "type": "stack",
                       "align": "center",
                       "children": [
@@ -840,8 +1024,9 @@
                           "color": "muted"
                         }
                       ],
-                      "gap": "md",
-                      "className": "py-12"
+                      "className": "py-12",
+                      "direction": "vertical",
+                      "gap": "md"
                     }
                   ]
                 ]
@@ -856,8 +1041,8 @@
                     "Membership",
                     {
                       "emit": {
-                        "success": "MembershipLoaded",
-                        "failure": "MembershipLoadFailed"
+                        "failure": "MembershipLoadFailed",
+                        "success": "MembershipLoaded"
                       }
                     }
                   ],
@@ -865,8 +1050,8 @@
                     "render-ui",
                     "main",
                     {
-                      "type": "spinner",
-                      "size": "sm"
+                      "size": "sm",
+                      "type": "spinner"
                     }
                   ]
                 ]
@@ -874,19 +1059,47 @@
             ]
           },
           "config": {
+            "healthScoreThresholdAlert": {
+              "type": "number",
+              "default": 50.0,
+              "label": "Health score threshold",
+              "description": "Members below this engagement score get flagged for win-back outreach. Declarative; wire via sibling std-notify.",
+              "tier": "customization"
+            },
+            "renewalReminderDaysBefore": {
+              "type": "[number]",
+              "default": [
+                30.0,
+                14.0,
+                7.0
+              ],
+              "label": "Renewal reminder days-before",
+              "description": "Days before renewalDate to send renewal reminders. Declarative; wire via sibling std-reminder-scheduler.",
+              "tier": "customization",
+              "items": {
+                "type": "number"
+              }
+            },
+            "archiveInactiveAfterDays": {
+              "type": "number",
+              "default": 365.0,
+              "label": "Archive inactive after (days)",
+              "description": "Days after cancellation/expiry before membership record is archived. Declarative; wire via sibling std-lifecycle.",
+              "tier": "advanced"
+            },
             "itemActions": {
               "type": "[ItemAction]",
               "default": [
                 {
-                  "icon": "arrow-right",
                   "event": "OPEN_MEMBERSHIP",
-                  "variant": "primary",
-                  "label": "Open"
+                  "icon": "arrow-right",
+                  "label": "Open",
+                  "variant": "primary"
                 },
                 {
-                  "variant": "danger",
                   "event": "CANCEL_MEMBERSHIP",
-                  "label": "Cancel"
+                  "label": "Cancel",
+                  "variant": "danger"
                 }
               ],
               "label": "Row actions",
@@ -895,11 +1108,6 @@
               "items": {
                 "type": "object",
                 "properties": {
-                  "event": {
-                    "name": "event",
-                    "type": "string",
-                    "required": true
-                  },
                   "icon": {
                     "name": "icon",
                     "type": "string",
@@ -907,6 +1115,11 @@
                   },
                   "label": {
                     "name": "label",
+                    "type": "string",
+                    "required": true
+                  },
+                  "event": {
+                    "name": "event",
                     "type": "string",
                     "required": true
                   },
@@ -918,33 +1131,47 @@
                 }
               }
             },
+            "consentTrackingEnabled": {
+              "type": "boolean",
+              "default": true,
+              "label": "Track consent",
+              "description": "Whether to record marketing/data-processing consent on the member profile. Declarative.",
+              "tier": "customization"
+            },
+            "title": {
+              "type": "string",
+              "default": "Memberships",
+              "label": "Section title",
+              "description": "Heading shown above the membership list",
+              "tier": "customization"
+            },
             "fields": {
               "type": "[FieldSpec]",
               "default": [
                 {
+                  "name": "memberName",
                   "variant": "caption",
-                  "label": "Member",
-                  "name": "memberName"
+                  "label": "Member"
                 },
                 {
+                  "label": "Tier",
                   "name": "tier",
-                  "variant": "badge",
-                  "label": "Tier"
+                  "variant": "badge"
                 },
                 {
-                  "name": "monthlyDues",
+                  "variant": "caption",
                   "label": "Monthly Dues",
-                  "variant": "caption"
+                  "name": "monthlyDues"
                 },
                 {
-                  "name": "renewalDate",
                   "label": "Renews",
-                  "variant": "caption"
+                  "variant": "caption",
+                  "name": "renewalDate"
                 },
                 {
+                  "name": "status",
                   "label": "Status",
-                  "variant": "badge",
-                  "name": "status"
+                  "variant": "badge"
                 }
               ],
               "label": "Columns to show",
@@ -958,18 +1185,8 @@
                     "type": "string",
                     "required": false
                   },
-                  "key": {
-                    "name": "key",
-                    "type": "string",
-                    "required": false
-                  },
-                  "name": {
-                    "name": "name",
-                    "type": "string",
-                    "required": true
-                  },
-                  "header": {
-                    "name": "header",
+                  "format": {
+                    "name": "format",
                     "type": "string",
                     "required": false
                   },
@@ -978,25 +1195,28 @@
                     "type": "string",
                     "required": false
                   },
-                  "format": {
-                    "name": "format",
+                  "header": {
+                    "name": "header",
                     "type": "string",
                     "required": false
+                  },
+                  "name": {
+                    "name": "name",
+                    "type": "string",
+                    "required": true
                   },
                   "variant": {
                     "name": "variant",
                     "type": "string",
                     "required": false
+                  },
+                  "key": {
+                    "name": "key",
+                    "type": "string",
+                    "required": false
                   }
                 }
               }
-            },
-            "title": {
-              "type": "string",
-              "default": "Memberships",
-              "label": "Section title",
-              "description": "Heading shown above the membership list",
-              "tier": "customization"
             }
           },
           "scope": "collection"

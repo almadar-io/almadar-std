@@ -1,5 +1,5 @@
-app std-donation-receipt "1.1.0"
-"std-donation-receipt — tax-deductible donation receipt with IRS-compliance fields (taxYear, taxDeductible, nonprofitEin). Lists receipts in `browsing`; opens detail in `viewing_single` with Email / Void actions. Agents tune the list shape via `config.fields` + `config.itemActions`."
+app std-donation-receipt "1.2.0"
+"std-donation-receipt — tax-deductible donation receipt with IRS-compliance fields and Email / Void actions. Exposes Financial-pattern knobs (currency, jurisdiction, retention)."
 
 type FieldSpec = { name : string!, label : string, variant : string, icon : string, format : string, key : string, header : string }
 type ItemAction = { label : string!, event : string!, variant : string, icon : string }
@@ -46,6 +46,38 @@ orbital DonationReceiptOrbital {
         @label "Row actions"
         @description "Buttons users can click on each receipt row"
         @tier "customization"
+      currency        : string   = "USD"
+        @label "Default currency"
+        @description "ISO 4217 currency code for donation amounts."
+        @tier "essential"
+      taxStrategy     : "inclusive" | "exclusive" | "none" = "none"
+        @label "Tax strategy"
+        @description "Donations are usually tax-free at source. inclusive/exclusive/none."
+        @tier "customization"
+      roundingMode    : "bankers" | "half-up" | "down" = "half-up"
+        @label "Rounding mode"
+        @description "Sub-cent rounding behavior for donation amounts."
+        @tier "advanced"
+      gracePeriodDays : number   = 0
+        @label "Grace period (days)"
+        @description "Days a receipt is editable before it locks. Declarative."
+        @tier "customization"
+      lateFeePolicy   : "none" | "flat" | "percent" = "none"
+        @label "Late fee policy"
+        @description "Not typically applicable to donation receipts. Declarative; wiring deferred."
+        @tier "customization"
+      lateFeeAmount   : number   = 0
+        @label "Late fee amount"
+        @description "Flat cash amount or percentage (per lateFeePolicy)."
+        @tier "customization"
+      complianceJurisdiction : string = "US-IRS"
+        @label "Compliance jurisdiction"
+        @description "Drives charitable-deduction rules per locale: 'US-IRS', 'UK-HMRC', 'CA-CRA', etc. Declarative."
+        @tier "advanced"
+      retentionYears  : number   = 7
+        @label "Retention (years)"
+        @description "Years to keep donation receipts for compliance (IRS recommends 7)."
+        @tier "advanced"
     }
     initial: loading
     state loading {

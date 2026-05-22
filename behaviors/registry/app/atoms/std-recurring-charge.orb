@@ -1,7 +1,7 @@
 {
   "name": "std-recurring-charge",
-  "version": "1.1.0",
-  "description": "std-recurring-charge — subscription cycle clock. Lists subscriptions in `browsing`; opens detail in `viewing_single` with Charge / Cancel actions. Agents tune the list shape via `config.fields` + `config.itemActions`.",
+  "version": "1.2.0",
+  "description": "std-recurring-charge — subscription cycle clock with Charge / Cancel actions. Listens for SET_STATUS so std-lifecycle can drive automated transitions. Exposes Financial-pattern knobs.",
   "orbitals": [
     {
       "name": "SubscriptionOrbital",
@@ -205,6 +205,83 @@
                   "type": "string"
                 }
               ]
+            },
+            {
+              "event": "SubscriptionUpdated",
+              "payloadSchema": [
+                {
+                  "name": "row.id",
+                  "type": "string",
+                  "required": true
+                },
+                {
+                  "name": "row.customerId",
+                  "type": "string",
+                  "required": true
+                },
+                {
+                  "name": "row.planId",
+                  "type": "string",
+                  "required": true
+                },
+                {
+                  "name": "row.status",
+                  "type": "string"
+                },
+                {
+                  "name": "row.amount",
+                  "type": "number"
+                },
+                {
+                  "name": "row.currency",
+                  "type": "string"
+                },
+                {
+                  "name": "row.interval",
+                  "type": "string"
+                },
+                {
+                  "name": "row.currentPeriodStart",
+                  "type": "string"
+                },
+                {
+                  "name": "row.currentPeriodEnd",
+                  "type": "string"
+                },
+                {
+                  "name": "row.nextBillingAt",
+                  "type": "string"
+                },
+                {
+                  "name": "row.attemptCount",
+                  "type": "number"
+                },
+                {
+                  "name": "row.lastChargeAt",
+                  "type": "string"
+                },
+                {
+                  "name": "row.cancelledAt",
+                  "type": "string"
+                },
+                {
+                  "name": "row.createdAt",
+                  "type": "string"
+                }
+              ]
+            },
+            {
+              "event": "SubscriptionUpdateFailed",
+              "payloadSchema": [
+                {
+                  "name": "error",
+                  "type": "string"
+                },
+                {
+                  "name": "code",
+                  "type": "string"
+                }
+              ]
             }
           ],
           "stateMachine": {
@@ -290,6 +367,46 @@
                 ]
               },
               {
+                "key": "SET_STATUS",
+                "name": "Set Status",
+                "payloadSchema": [
+                  {
+                    "name": "entityId",
+                    "type": "string",
+                    "required": true
+                  },
+                  {
+                    "name": "newStatus",
+                    "type": "string",
+                    "required": true
+                  }
+                ]
+              },
+              {
+                "key": "SubscriptionUpdated",
+                "name": "Subscription updated",
+                "payloadSchema": [
+                  {
+                    "name": "row",
+                    "type": "Subscription"
+                  }
+                ]
+              },
+              {
+                "key": "SubscriptionUpdateFailed",
+                "name": "Subscription update failed",
+                "payloadSchema": [
+                  {
+                    "name": "error",
+                    "type": "string"
+                  },
+                  {
+                    "name": "code",
+                    "type": "string"
+                  }
+                ]
+              },
+              {
                 "key": "CLOSE_VIEW",
                 "name": "Close View"
               }
@@ -305,8 +422,8 @@
                     "Subscription",
                     {
                       "emit": {
-                        "success": "SubscriptionLoaded",
-                        "failure": "SubscriptionLoadFailed"
+                        "failure": "SubscriptionLoadFailed",
+                        "success": "SubscriptionLoaded"
                       }
                     }
                   ],
@@ -314,22 +431,22 @@
                     "render-ui",
                     "main",
                     {
-                      "direction": "vertical",
                       "gap": "md",
-                      "type": "stack",
-                      "align": "center",
-                      "className": "py-12",
+                      "direction": "vertical",
                       "children": [
                         {
                           "type": "spinner"
                         },
                         {
-                          "content": "Loading subscriptions…",
-                          "color": "muted",
                           "variant": "caption",
-                          "type": "typography"
+                          "type": "typography",
+                          "content": "Loading subscriptions…",
+                          "color": "muted"
                         }
-                      ]
+                      ],
+                      "align": "center",
+                      "className": "py-12",
+                      "type": "stack"
                     }
                   ]
                 ]
@@ -343,69 +460,69 @@
                     "render-ui",
                     "main",
                     {
-                      "type": "stack",
-                      "direction": "vertical",
-                      "gap": "md",
                       "children": [
                         {
-                          "align": "center",
+                          "type": "stack",
                           "direction": "horizontal",
+                          "align": "center",
                           "gap": "sm",
                           "children": [
                             {
-                              "name": "repeat",
-                              "type": "icon"
+                              "type": "icon",
+                              "name": "repeat"
                             },
                             {
-                              "content": "@config.title",
                               "variant": "h3",
-                              "type": "typography"
+                              "type": "typography",
+                              "content": "@config.title"
                             }
-                          ],
-                          "type": "stack"
+                          ]
                         },
                         {
-                          "type": "simple-grid",
                           "children": [
                             {
-                              "icon": "repeat",
+                              "type": "stat-display",
                               "label": "Total subscriptions",
-                              "value": "@payload.data.length",
-                              "type": "stat-display"
+                              "icon": "repeat",
+                              "value": "@payload.data.length"
                             },
                             {
-                              "type": "stat-display",
+                              "icon": "check-circle",
                               "value": "248",
-                              "label": "Active",
-                              "icon": "check-circle"
+                              "type": "stat-display",
+                              "label": "Active"
                             },
                             {
                               "type": "stat-display",
-                              "value": "$18,400",
                               "label": "MRR",
+                              "value": "$18,400",
                               "icon": "dollar-sign"
                             },
                             {
-                              "label": "Past due",
                               "type": "stat-display",
-                              "value": "7",
-                              "icon": "alert-triangle"
+                              "icon": "alert-triangle",
+                              "label": "Past due",
+                              "value": "7"
                             }
                           ],
-                          "cols": 4.0
+                          "cols": 4.0,
+                          "type": "simple-grid"
                         },
                         {
                           "type": "divider"
                         },
                         {
-                          "entity": "@payload.data",
-                          "fields": "@config.fields",
-                          "cols": 1.0,
-                          "type": "data-grid",
                           "gap": "sm",
-                          "itemActions": "@config.itemActions"
+                          "entity": "@payload.data",
+                          "itemActions": "@config.itemActions",
+                          "cols": 1.0,
+                          "fields": "@config.fields",
+                          "type": "data-grid"
                         }
-                      ]
+                      ],
+                      "gap": "md",
+                      "direction": "vertical",
+                      "type": "stack"
                     }
                   ]
                 ]
@@ -419,9 +536,9 @@
                     "render-ui",
                     "main",
                     {
-                      "type": "alert",
+                      "message": "@payload.error",
                       "variant": "error",
-                      "message": "@payload.error"
+                      "type": "alert"
                     }
                   ]
                 ]
@@ -505,46 +622,49 @@
                     "render-ui",
                     "main",
                     {
-                      "gap": "md",
+                      "direction": "vertical",
                       "type": "stack",
+                      "gap": "md",
                       "children": [
                         {
-                          "gap": "sm",
-                          "direction": "horizontal",
                           "align": "center",
+                          "direction": "horizontal",
                           "children": [
                             {
-                              "variant": "ghost",
-                              "action": "CLOSE_VIEW",
                               "type": "button",
-                              "label": "Back"
+                              "label": "Back",
+                              "action": "CLOSE_VIEW",
+                              "variant": "ghost"
                             },
                             {
                               "type": "icon",
                               "name": "repeat"
                             },
                             {
-                              "type": "typography",
                               "content": "@entity.customerId",
-                              "variant": "h3"
+                              "variant": "h3",
+                              "type": "typography"
                             },
                             {
-                              "label": "@entity.status",
                               "type": "badge",
+                              "label": "@entity.status",
                               "variant": "default"
                             },
                             {
-                              "variant": "primary",
                               "type": "badge",
-                              "label": "@entity.interval"
+                              "label": "@entity.interval",
+                              "variant": "primary"
                             }
                           ],
-                          "type": "stack"
+                          "type": "stack",
+                          "gap": "sm"
                         },
                         {
                           "type": "divider"
                         },
                         {
+                          "type": "stack",
+                          "direction": "vertical",
                           "gap": "sm",
                           "children": [
                             {
@@ -561,93 +681,90 @@
                                   "type": "typography"
                                 }
                               ],
-                              "type": "stack",
-                              "gap": "md",
-                              "direction": "horizontal"
-                            },
-                            {
-                              "gap": "md",
                               "direction": "horizontal",
                               "type": "stack",
+                              "gap": "md"
+                            },
+                            {
+                              "direction": "horizontal",
+                              "gap": "md",
                               "children": [
                                 {
                                   "type": "typography",
-                                  "variant": "caption",
                                   "color": "muted",
+                                  "variant": "caption",
                                   "content": "Currency"
                                 },
                                 {
-                                  "type": "typography",
+                                  "variant": "body",
                                   "content": "@entity.currency",
-                                  "variant": "body"
+                                  "type": "typography"
                                 }
-                              ]
+                              ],
+                              "type": "stack"
                             }
-                          ],
-                          "direction": "vertical",
-                          "type": "stack"
+                          ]
                         },
                         {
                           "type": "divider"
                         },
                         {
+                          "type": "simple-grid",
                           "children": [
                             {
-                              "label": "Amount",
                               "icon": "dollar-sign",
+                              "value": "@entity.amount",
                               "type": "stat-display",
-                              "value": "@entity.amount"
+                              "label": "Amount"
                             },
                             {
-                              "value": "@entity.attemptCount",
                               "type": "stat-display",
+                              "value": "@entity.attemptCount",
                               "label": "Retries",
                               "icon": "rotate-cw"
                             },
                             {
+                              "label": "Next bill",
                               "type": "stat-display",
-                              "value": "@entity.nextBillingAt",
                               "icon": "calendar",
-                              "label": "Next bill"
+                              "value": "@entity.nextBillingAt"
                             },
                             {
                               "icon": "credit-card",
+                              "value": "@entity.lastChargeAt",
                               "label": "Last charge",
-                              "type": "stat-display",
-                              "value": "@entity.lastChargeAt"
+                              "type": "stat-display"
                             }
                           ],
-                          "cols": 4.0,
-                          "type": "simple-grid"
+                          "cols": 4.0
                         },
                         {
-                          "type": "stack",
                           "gap": "sm",
-                          "direction": "horizontal",
                           "children": [
                             {
+                              "variant": "primary",
                               "actionPayload": {
                                 "id": "@entity.id"
                               },
-                              "action": "CHARGE",
-                              "variant": "primary",
                               "label": "Charge",
-                              "type": "button"
+                              "type": "button",
+                              "action": "CHARGE"
                             },
                             {
                               "type": "button",
                               "label": "Cancel",
-                              "action": "CANCEL",
                               "variant": "danger",
+                              "action": "CANCEL",
                               "actionPayload": {
                                 "id": "@entity.id"
                               }
                             }
                           ],
-                          "align": "center"
+                          "direction": "horizontal",
+                          "align": "center",
+                          "type": "stack"
                         }
-                      ],
-                      "direction": "vertical"
+                      ]
                     }
                   ]
                 ]
@@ -676,22 +793,22 @@
                     "render-ui",
                     "main",
                     {
-                      "align": "center",
-                      "gap": "md",
+                      "type": "stack",
                       "direction": "vertical",
-                      "className": "py-12",
+                      "gap": "md",
+                      "align": "center",
                       "children": [
                         {
                           "type": "spinner"
                         },
                         {
                           "variant": "caption",
+                          "type": "typography",
                           "color": "muted",
-                          "content": "Charging subscription…",
-                          "type": "typography"
+                          "content": "Charging subscription…"
                         }
                       ],
-                      "type": "stack"
+                      "className": "py-12"
                     }
                   ]
                 ]
@@ -720,22 +837,106 @@
                     "render-ui",
                     "main",
                     {
-                      "className": "py-12",
+                      "align": "center",
+                      "type": "stack",
                       "children": [
                         {
                           "type": "spinner"
                         },
                         {
                           "content": "Cancelling subscription…",
+                          "color": "muted",
+                          "type": "typography",
+                          "variant": "caption"
+                        }
+                      ],
+                      "gap": "md",
+                      "direction": "vertical",
+                      "className": "py-12"
+                    }
+                  ]
+                ]
+              },
+              {
+                "from": "browsing",
+                "to": "loading",
+                "event": "SET_STATUS",
+                "effects": [
+                  [
+                    "set",
+                    "@entity.id",
+                    "@payload.entityId"
+                  ],
+                  [
+                    "set",
+                    "@entity.status",
+                    "@payload.newStatus"
+                  ],
+                  [
+                    "persist",
+                    "update",
+                    "Subscription",
+                    "@entity",
+                    {
+                      "emit": {
+                        "success": "SubscriptionUpdated",
+                        "failure": "SubscriptionUpdateFailed"
+                      }
+                    }
+                  ],
+                  [
+                    "render-ui",
+                    "main",
+                    {
+                      "type": "stack",
+                      "direction": "vertical",
+                      "gap": "md",
+                      "className": "py-12",
+                      "children": [
+                        {
+                          "type": "spinner"
+                        },
+                        {
                           "variant": "caption",
+                          "content": "Updating subscription status…",
                           "color": "muted",
                           "type": "typography"
                         }
                       ],
-                      "direction": "vertical",
-                      "gap": "md",
-                      "align": "center",
-                      "type": "stack"
+                      "align": "center"
+                    }
+                  ]
+                ]
+              },
+              {
+                "from": "browsing",
+                "to": "loading",
+                "event": "SubscriptionUpdated",
+                "effects": [
+                  [
+                    "fetch",
+                    "Subscription",
+                    {
+                      "emit": {
+                        "failure": "SubscriptionLoadFailed",
+                        "success": "SubscriptionLoaded"
+                      }
+                    }
+                  ]
+                ]
+              },
+              {
+                "from": "browsing",
+                "to": "browsing",
+                "event": "SubscriptionUpdateFailed",
+                "effects": [
+                  [
+                    "render-ui",
+                    "main",
+                    {
+                      "variant": "error",
+                      "message": "@payload.error",
+                      "type": "alert"
                     }
                   ]
                 ]
@@ -760,7 +961,8 @@
                     "main",
                     {
                       "direction": "vertical",
-                      "className": "py-12",
+                      "gap": "md",
+                      "align": "center",
                       "children": [
                         {
                           "type": "spinner"
@@ -772,9 +974,8 @@
                           "content": "Loading subscriptions…"
                         }
                       ],
-                      "align": "center",
-                      "gap": "md",
-                      "type": "stack"
+                      "type": "stack",
+                      "className": "py-12"
                     }
                   ]
                 ]
@@ -803,22 +1004,22 @@
                     "render-ui",
                     "main",
                     {
+                      "gap": "md",
                       "align": "center",
+                      "className": "py-12",
+                      "type": "stack",
+                      "direction": "vertical",
                       "children": [
                         {
                           "type": "spinner"
                         },
                         {
-                          "color": "muted",
                           "type": "typography",
+                          "content": "Charging subscription…",
                           "variant": "caption",
-                          "content": "Charging subscription…"
+                          "color": "muted"
                         }
-                      ],
-                      "direction": "vertical",
-                      "className": "py-12",
-                      "type": "stack",
-                      "gap": "md"
+                      ]
                     }
                   ]
                 ]
@@ -847,21 +1048,21 @@
                     "render-ui",
                     "main",
                     {
-                      "align": "center",
-                      "direction": "vertical",
-                      "className": "py-12",
+                      "type": "stack",
                       "children": [
                         {
                           "type": "spinner"
                         },
                         {
-                          "content": "Cancelling subscription…",
-                          "color": "muted",
                           "variant": "caption",
+                          "color": "muted",
+                          "content": "Cancelling subscription…",
                           "type": "typography"
                         }
                       ],
-                      "type": "stack",
+                      "align": "center",
+                      "className": "py-12",
+                      "direction": "vertical",
                       "gap": "md"
                     }
                   ]
@@ -895,6 +1096,20 @@
             ]
           },
           "config": {
+            "complianceJurisdiction": {
+              "type": "string",
+              "default": "",
+              "label": "Compliance jurisdiction",
+              "description": "Drives subscription regulations per locale: 'US-CA', 'EU-DE', 'UK', etc. Declarative.",
+              "tier": "advanced"
+            },
+            "retentionYears": {
+              "type": "number",
+              "default": 7.0,
+              "label": "Retention (years)",
+              "description": "Years to keep subscription records for compliance.",
+              "tier": "advanced"
+            },
             "maxRetries": {
               "type": "number",
               "default": 4.0,
@@ -902,18 +1117,25 @@
               "description": "How many times a failed charge retries before going past-due",
               "tier": "advanced"
             },
+            "lateFeeAmount": {
+              "type": "number",
+              "default": 0.0,
+              "label": "Late fee amount",
+              "description": "Flat cash amount or percentage (per lateFeePolicy).",
+              "tier": "customization"
+            },
             "itemActions": {
               "type": "[ItemAction]",
               "default": [
                 {
-                  "event": "OPEN_SUBSCRIPTION",
+                  "icon": "arrow-right",
                   "label": "Open",
-                  "variant": "primary",
-                  "icon": "arrow-right"
+                  "event": "OPEN_SUBSCRIPTION",
+                  "variant": "primary"
                 },
                 {
-                  "label": "Cancel",
                   "event": "CANCEL",
+                  "label": "Cancel",
                   "variant": "danger"
                 }
               ],
@@ -923,15 +1145,15 @@
               "items": {
                 "type": "object",
                 "properties": {
-                  "icon": {
-                    "name": "icon",
-                    "type": "string",
-                    "required": false
-                  },
                   "event": {
                     "name": "event",
                     "type": "string",
                     "required": true
+                  },
+                  "icon": {
+                    "name": "icon",
+                    "type": "string",
+                    "required": false
                   },
                   "variant": {
                     "name": "variant",
@@ -942,6 +1164,89 @@
                     "name": "label",
                     "type": "string",
                     "required": true
+                  }
+                }
+              }
+            },
+            "fields": {
+              "type": "[FieldSpec]",
+              "default": [
+                {
+                  "variant": "caption",
+                  "name": "customerId",
+                  "label": "Customer"
+                },
+                {
+                  "label": "Plan",
+                  "variant": "caption",
+                  "name": "planId"
+                },
+                {
+                  "name": "status",
+                  "label": "Status",
+                  "variant": "badge"
+                },
+                {
+                  "variant": "caption",
+                  "name": "amount",
+                  "label": "Amount"
+                },
+                {
+                  "name": "interval",
+                  "label": "Interval",
+                  "variant": "badge"
+                },
+                {
+                  "variant": "caption",
+                  "name": "nextBillingAt",
+                  "label": "Next Bill"
+                },
+                {
+                  "label": "Retries",
+                  "name": "attemptCount",
+                  "variant": "caption"
+                }
+              ],
+              "label": "Columns to show",
+              "description": "Each column maps to one field on the Subscription entity",
+              "tier": "advanced",
+              "items": {
+                "type": "object",
+                "properties": {
+                  "icon": {
+                    "name": "icon",
+                    "type": "string",
+                    "required": false
+                  },
+                  "header": {
+                    "name": "header",
+                    "type": "string",
+                    "required": false
+                  },
+                  "key": {
+                    "name": "key",
+                    "type": "string",
+                    "required": false
+                  },
+                  "name": {
+                    "name": "name",
+                    "type": "string",
+                    "required": true
+                  },
+                  "variant": {
+                    "name": "variant",
+                    "type": "string",
+                    "required": false
+                  },
+                  "format": {
+                    "name": "format",
+                    "type": "string",
+                    "required": false
+                  },
+                  "label": {
+                    "name": "label",
+                    "type": "string",
+                    "required": false
                   }
                 }
               }
@@ -953,88 +1258,55 @@
               "description": "Heading shown above the subscription list",
               "tier": "customization"
             },
-            "fields": {
-              "type": "[FieldSpec]",
-              "default": [
-                {
-                  "label": "Customer",
-                  "variant": "caption",
-                  "name": "customerId"
-                },
-                {
-                  "label": "Plan",
-                  "variant": "caption",
-                  "name": "planId"
-                },
-                {
-                  "label": "Status",
-                  "variant": "badge",
-                  "name": "status"
-                },
-                {
-                  "name": "amount",
-                  "label": "Amount",
-                  "variant": "caption"
-                },
-                {
-                  "label": "Interval",
-                  "variant": "badge",
-                  "name": "interval"
-                },
-                {
-                  "label": "Next Bill",
-                  "name": "nextBillingAt",
-                  "variant": "caption"
-                },
-                {
-                  "variant": "caption",
-                  "name": "attemptCount",
-                  "label": "Retries"
-                }
-              ],
-              "label": "Columns to show",
-              "description": "Each column maps to one field on the Subscription entity",
+            "currency": {
+              "type": "string",
+              "default": "USD",
+              "label": "Default currency",
+              "description": "ISO 4217 currency code (USD, EUR, GBP, …) for new subscriptions.",
+              "tier": "essential"
+            },
+            "taxStrategy": {
+              "type": "string",
+              "default": "exclusive",
+              "label": "Tax strategy",
+              "description": "inclusive = tax baked into the amount; exclusive = tax added on top; none = no tax.",
+              "tier": "customization",
+              "values": [
+                "inclusive",
+                "exclusive",
+                "none"
+              ]
+            },
+            "roundingMode": {
+              "type": "string",
+              "default": "half-up",
+              "label": "Rounding mode",
+              "description": "Sub-cent rounding behavior for subscription amounts.",
               "tier": "advanced",
-              "items": {
-                "type": "object",
-                "properties": {
-                  "name": {
-                    "name": "name",
-                    "type": "string",
-                    "required": true
-                  },
-                  "icon": {
-                    "name": "icon",
-                    "type": "string",
-                    "required": false
-                  },
-                  "format": {
-                    "name": "format",
-                    "type": "string",
-                    "required": false
-                  },
-                  "key": {
-                    "name": "key",
-                    "type": "string",
-                    "required": false
-                  },
-                  "header": {
-                    "name": "header",
-                    "type": "string",
-                    "required": false
-                  },
-                  "variant": {
-                    "name": "variant",
-                    "type": "string",
-                    "required": false
-                  },
-                  "label": {
-                    "name": "label",
-                    "type": "string",
-                    "required": false
-                  }
-                }
-              }
+              "values": [
+                "bankers",
+                "half-up",
+                "down"
+              ]
+            },
+            "gracePeriodDays": {
+              "type": "number",
+              "default": 3.0,
+              "label": "Grace period (days)",
+              "description": "Days after a failed charge before the subscription is marked past-due. Wire via sibling std-lifecycle rule.",
+              "tier": "customization"
+            },
+            "lateFeePolicy": {
+              "type": "string",
+              "default": "none",
+              "label": "Late fee policy",
+              "description": "How late fees compute on overdue subscriptions. Declarative; wiring deferred.",
+              "tier": "customization",
+              "values": [
+                "none",
+                "flat",
+                "percent"
+              ]
             }
           },
           "scope": "collection"

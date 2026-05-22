@@ -1,5 +1,5 @@
-app std-renewal-risk "1.1.0"
-"std-renewal-risk — Customer Success renewal risk tracker. Lists at-risk accounts in `browsing`; opens detail in `viewing_single` with Mark Saved / Mark Churned actions. Agents tune the list shape via `config.fields` + `config.itemActions`."
+app std-renewal-risk "1.2.0"
+"std-renewal-risk — Customer Success renewal risk tracker with Mark Saved / Mark Churned actions. Listens for SET_STATUS so std-lifecycle can drive automated transitions. Exposes CRM-pattern knobs."
 
 type FieldSpec = { name : string!, label : string, variant : string, icon : string, format : string, key : string, header : string }
 type ItemAction = { label : string!, event : string!, variant : string, icon : string }
@@ -20,8 +20,10 @@ orbital RenewalRiskOrbital {
     pendingId       : string = ""
   }
 
-  type RenewalRiskLoaded     = Event { data : [RenewalRisk], totalCount : number } "Fired when the renewal risk collection finishes loading"
-  type RenewalRiskLoadFailed = Event { message : string }                           "Fired when the renewal risk collection fails to load"
+  type RenewalRiskLoaded       = Event { data : [RenewalRisk], totalCount : number } "Fired when the renewal risk collection finishes loading"
+  type RenewalRiskLoadFailed   = Event { message : string }                           "Fired when the renewal risk collection fails to load"
+  type RenewalRiskUpdated      = Event { row : RenewalRisk }                          "Fired after a risk's status persists"
+  type RenewalRiskUpdateFailed = Event { error : string, code : string }              "Fired when a risk's status update fails to persist"
 
   trait RenewalRiskWatch -> RenewalRisk [interaction, collection] {
     config {
@@ -46,6 +48,22 @@ orbital RenewalRiskOrbital {
       ]
         @label "Row actions"
         @description "Buttons users can click on each account row"
+        @tier "customization"
+      healthScoreThresholdAlert : number = 40
+        @label "Health score threshold"
+        @description "Accounts below this health score auto-promote to high/critical risk. Declarative; wire via sibling std-notify."
+        @tier "customization"
+      renewalReminderDaysBefore : [number] = [90, 60, 30, 14]
+        @label "Renewal reminder days-before"
+        @description "Days before renewalDate to send CSM reminder pings. Declarative; wire via sibling std-reminder-scheduler."
+        @tier "customization"
+      archiveInactiveAfterDays : number = 540
+        @label "Archive inactive after (days)"
+        @description "Days post-churn before risk record auto-archives. Declarative; wire via sibling std-lifecycle."
+        @tier "advanced"
+      consentTrackingEnabled : boolean = false
+        @label "Track consent"
+        @description "Whether mitigation-plan outreach requires recorded consent. Declarative."
         @tier "customization"
     }
     initial: loading
@@ -80,6 +98,15 @@ orbital RenewalRiskOrbital {
         (set @entity.id @payload.id)
         (fetch RenewalRisk { emit: { success: "RenewalRiskLoaded", failure: "RenewalRiskLoadFailed" } })
         (render-ui main { type: "stack", direction: "vertical", gap: "md", align: "center", className: "py-12", children: [{ type: "spinner" }, { type: "typography", variant: "caption", color: "muted", content: "Marking churned…" }] })
+      SET_STATUS -> loading
+        (set @entity.id @payload.entityId)
+        (set @entity.status @payload.newStatus)
+        (persist update RenewalRisk @entity { emit: { success: "RenewalRiskUpdated", failure: "RenewalRiskUpdateFailed" } })
+        (render-ui main { type: "stack", direction: "vertical", gap: "md", align: "center", className: "py-12", children: [{ type: "spinner" }, { type: "typography", variant: "caption", color: "muted", content: "Updating risk status…" }] })
+      RenewalRiskUpdated -> loading
+        (fetch RenewalRisk { emit: { success: "RenewalRiskLoaded", failure: "RenewalRiskLoadFailed" } })
+      RenewalRiskUpdateFailed -> browsing
+        (render-ui main { type: "alert", variant: "error", message: "@payload.error" })
     }
     state viewing_single {
       CLOSE_VIEW -> loading
@@ -100,20 +127,25 @@ orbital RenewalRiskOrbital {
         (render-ui main { type: "spinner", size: "sm" })
     }
     emits {
-      OPEN_RISK              { id : string!, row : RenewalRisk }
-      CLOSE_VIEW             { }
-      MARK_SAVED             { id : string! }
-      MARK_CHURNED           { id : string! }
-      RenewalRiskLoaded      { data : [RenewalRisk], totalCount : number }
-      RenewalRiskLoadFailed  { message : string }
+      OPEN_RISK                { id : string!, row : RenewalRisk }
+      CLOSE_VIEW               { }
+      MARK_SAVED               { id : string! }
+      MARK_CHURNED             { id : string! }
+      RenewalRiskLoaded        { data : [RenewalRisk], totalCount : number }
+      RenewalRiskLoadFailed    { message : string }
+      RenewalRiskUpdated       { row : RenewalRisk }
+      RenewalRiskUpdateFailed  { error : string, code : string }
     }
     listens {
-      OPEN_RISK              { id : string!, row : RenewalRisk }
-      CLOSE_VIEW             { }
-      MARK_SAVED             { id : string! }
-      MARK_CHURNED           { id : string! }
-      RenewalRiskLoaded      { data : [RenewalRisk], totalCount : number }
-      RenewalRiskLoadFailed  { message : string }
+      OPEN_RISK                { id : string!, row : RenewalRisk }
+      CLOSE_VIEW               { }
+      MARK_SAVED               { id : string! }
+      MARK_CHURNED             { id : string! }
+      SET_STATUS               { entityId : string!, newStatus : string! }
+      RenewalRiskLoaded        { data : [RenewalRisk], totalCount : number }
+      RenewalRiskLoadFailed    { message : string }
+      RenewalRiskUpdated       { row : RenewalRisk }
+      RenewalRiskUpdateFailed  { error : string, code : string }
     }
   }
   page "/renewal-risks" as RenewalRiskPage -> RenewalRiskWatch

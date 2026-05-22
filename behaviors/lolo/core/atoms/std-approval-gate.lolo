@@ -1,0 +1,103 @@
+app std-approval-gate "1.0.0"
+"std-approval-gate — generic approval workflow. Persists ApprovalRequest rows + surfaces them in a review queue with Approve / Deny actions. On approval emits ApprovalGranted; on denial emits ApprovalDenied. Differs from std-mod-queue, which is content-moderation-specific. v1.0 ships the queue + review UI; sentinel-event-driven auto-approval threshold lands in v1.1 (gap)."
+
+orbital ApprovalGateOrbital {
+  entity ApprovalRequest [persistent: approval_requests] {
+    id           : string!
+    gatedEvent   : string  = ""
+    status       : "pending" | "approved" | "denied" | "escalated" = "pending"
+    reviewer     : string  = ""
+    requestedAt  : number  = 0
+    decidedAt    : number  = 0
+    escalatedAt  : number  = 0
+    notes        : string  = ""
+  }
+
+  type ApprovalRequestLoaded     = Event { data : [ApprovalRequest] }            "Fired when the approval queue collection finishes loading"
+  type ApprovalRequestLoadFailed = Event { error : string, code : string }       "Fired when the approval queue fails to load"
+  type ApprovalRequestReviewed   = Event { row : ApprovalRequest }               "Fired after a row's status persists (approve / deny)"
+  type ApprovalRequestReviewFailed = Event { error : string, code : string }     "Fired when the persist fails"
+  type ApprovalGranted           = Event { requestId : string }                  "Re-emitted on approval; downstream listener fetches the ApprovalRequest by id and proceeds with the gated action."
+  type ApprovalDenied            = Event { requestId : string }                  "Emitted on denial; downstream listeners can log or notify."
+
+  trait ApprovalGateReview -> ApprovalRequest [interaction, collection] {
+    config {
+      approverRoles  : [string] = []
+        @label "Approver roles"
+        @description "Roles eligible to approve. The host application enforces role-gating on the page."
+        @tier "essential"
+      threshold      : number  = 0
+        @label "Auto-approve threshold"
+        @description "Below this value, requests should be auto-approved. v1.0 declarative only; wiring lands in v1.1 (gap)."
+        @tier "customization"
+      autoApproveBelowThreshold : boolean = true
+        @label "Auto-approve below threshold"
+        @description "Skip the review queue when the gated event's value is below the threshold. v1.0 declarative only."
+        @tier "customization"
+      valueField     : string   = ""
+        @label "Value field"
+        @description "Payload field name to compare against threshold (e.g. 'amount' on a RefundRequested event). v1.0 declarative only."
+        @tier "customization"
+      escalationHours : number  = 0
+        @label "Escalation hours"
+        @description "Hours a request can sit pending before escalating. v1.0 declarative only; per-row escalation needs loop-with-emit primitive (gap)."
+        @tier "customization"
+      escalationRoles : [string] = []
+        @label "Escalation roles"
+        @description "Roles notified when a request escalates (compose sibling std-notify-on-event)."
+        @tier "customization"
+    }
+    initial: loading
+    state loading {
+      INIT -> loading
+        (fetch ApprovalRequest { emit: { success: "ApprovalRequestLoaded", failure: "ApprovalRequestLoadFailed" } })
+        (render-ui main { type: "stack", direction: "vertical", gap: "md", align: "center", className: "py-12", children: [{ type: "spinner" }, { type: "typography", variant: "caption", color: "muted", content: "Loading approval queue…" }] })
+      ApprovalRequestLoaded -> reviewing
+        (render-ui main { type: "stack", direction: "vertical", gap: "md", children: [{ type: "stack", direction: "horizontal", gap: "sm", align: "center", children: [{ type: "icon", name: "shield-check" }, { type: "typography", content: "Approval queue", variant: "h3" }] }, { type: "divider" }, { type: "data-grid", entity: "@payload.data", fields: [{ name: "gatedEvent", label: "Action", variant: "badge" }, { name: "requestedAt", label: "Requested", variant: "caption" }, { name: "status", label: "Status", variant: "badge" }], cols: 1, gap: "sm", itemActions: [{ label: "Approve", event: "APPROVE", variant: "primary", icon: "check" }, { label: "Deny", event: "DENY", variant: "danger", icon: "x" }] }] })
+      ApprovalRequestLoadFailed -> error
+        (render-ui main { type: "alert", variant: "error", message: "@payload.error" })
+    }
+    state reviewing {
+      APPROVE -> reviewing
+        (set @entity.id @payload.id)
+        (set @entity.status "approved")
+        (set @entity.reviewer "@user.id")
+        (persist update ApprovalRequest @entity { emit: { success: "ApprovalRequestReviewed", failure: "ApprovalRequestReviewFailed" } })
+        (emit ApprovalGranted { requestId: "@payload.id" })
+      DENY -> reviewing
+        (set @entity.id @payload.id)
+        (set @entity.status "denied")
+        (set @entity.reviewer "@user.id")
+        (persist update ApprovalRequest @entity { emit: { success: "ApprovalRequestReviewed", failure: "ApprovalRequestReviewFailed" } })
+        (emit ApprovalDenied { requestId: "@payload.id" })
+      ApprovalRequestReviewed -> loading
+        (fetch ApprovalRequest { emit: { success: "ApprovalRequestLoaded", failure: "ApprovalRequestLoadFailed" } })
+      ApprovalRequestReviewFailed -> reviewing
+        (render-ui main { type: "alert", variant: "error", message: "@payload.error" })
+    }
+    state error {
+      INIT -> loading
+        (fetch ApprovalRequest { emit: { success: "ApprovalRequestLoaded", failure: "ApprovalRequestLoadFailed" } })
+        (render-ui main { type: "spinner", size: "sm" })
+    }
+    emits {
+      APPROVE          { id : string!, row : ApprovalRequest }
+      DENY             { id : string!, row : ApprovalRequest }
+      ApprovalGranted -> external { requestId : string }
+      ApprovalDenied  -> external { requestId : string }
+      ApprovalRequestLoaded       { data : [ApprovalRequest] }
+      ApprovalRequestLoadFailed   { error : string, code : string }
+      ApprovalRequestReviewed     { row : ApprovalRequest }
+      ApprovalRequestReviewFailed { error : string, code : string }
+    }
+    listens {
+      APPROVE          { id : string!, row : ApprovalRequest }
+      DENY             { id : string!, row : ApprovalRequest }
+      ApprovalRequestLoaded       { data : [ApprovalRequest] }
+      ApprovalRequestLoadFailed   { error : string, code : string }
+      ApprovalRequestReviewed     { row : ApprovalRequest }
+      ApprovalRequestReviewFailed { error : string, code : string }
+    }
+  }
+  page "/approvals/queue" as ApprovalGateReviewPage -> ApprovalGateReview
+}

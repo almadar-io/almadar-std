@@ -1,0 +1,42 @@
+app std-marketing-case-studies "1.0.0"
+"Case studies grid atom for marketing pages. Renders a grid of case study cards with categories, descriptions, and links. Pick for social proof and success story sections."
+;; Config-driven case studies using the `case-study-organism` marketing pattern.
+;; Items are declared as an array of { title, description, category, categoryColor, href, linkLabel } objects.
+;; The atom emits CASE_STUDY_CLICK when a card is clicked.
+
+orbital CaseStudyItemOrbital {
+  type CaseStudyCard = { id : string!, title : string!, description : string!, category : string!, categoryColor : string, href : string!, linkLabel : string }
+
+  entity CaseStudyItem [runtime] {
+    id : string!
+    items : [CaseStudyCard] = []
+  }
+
+  trait CaseStudyItemCaseStudies -> CaseStudyItem [interaction, instance] {
+    config {
+      items : [CaseStudyCard] = [
+        { id: "1", title: "Acme Corp", description: "How Acme scaled from 1K to 1M users in 6 months.", category: "SaaS", categoryColor: "", href: "#", linkLabel: "Read story" },
+        { id: "2", title: "Globex", description: "Globex reduced infrastructure costs by 70%.", category: "Fintech", categoryColor: "", href: "#", linkLabel: "Read story" },
+        { id: "3", title: "Initech", description: "Initech shipped their mobile app 3x faster.", category: "Healthtech", categoryColor: "", href: "#", linkLabel: "Read story" }
+      ]
+        @label "Case Studies"
+        @description "Array of case study cards"
+        @tier "essential"
+    }
+    initial: idle
+    state idle {
+      INIT -> idle
+        (set @entity.items @config.items)
+        (render-ui main { type: "case-study-organism", entity: "@entity.items" })
+      CASE_STUDY_CLICK -> idle
+        (emit CASE_STUDY_CLICK { id: "@payload.id", title: "@payload.title" })
+    }
+    emits {
+      CASE_STUDY_CLICK -> external { id : string, title : string }
+    }
+    listens {
+      CASE_STUDY_CLICK { id : string, title : string }
+    }
+  }
+  page "/case-studies" as CaseStudyItemCaseStudiesPage -> CaseStudyItemCaseStudies
+}

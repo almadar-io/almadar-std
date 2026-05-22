@@ -1,0 +1,42 @@
+app std-marketing-showcase "1.0.0"
+"Showcase grid atom for marketing pages. Renders a grid of portfolio or product showcase cards with images, badges, and descriptions. Pick for product galleries and portfolio sections."
+;; Config-driven showcase using the `showcase-organism` marketing pattern.
+;; Items are declared as an array of { title, description, image, href, badge, accentColor } objects.
+;; The atom emits SHOWCASE_CLICK when a card with an href is clicked.
+
+orbital ShowcaseItemOrbital {
+  type ShowcaseCard = { id : string!, title : string!, description : string, image : { src : string!, alt : string }, href : string, badge : string, accentColor : string }
+
+  entity ShowcaseItem [runtime] {
+    id : string!
+    items : [ShowcaseCard] = []
+  }
+
+  trait ShowcaseItemShowcase -> ShowcaseItem [interaction, instance] {
+    config {
+      items : [ShowcaseCard] = [
+        { id: "1", title: "Dashboard", description: "Real-time analytics at a glance.", image: { src: "", alt: "Dashboard preview" }, href: "", badge: "New", accentColor: "" },
+        { id: "2", title: "API", description: "GraphQL and REST in one click.", image: { src: "", alt: "API docs preview" }, href: "", badge: "", accentColor: "" },
+        { id: "3", title: "Mobile", description: "Native apps without native code.", image: { src: "", alt: "Mobile app preview" }, href: "", badge: "Beta", accentColor: "" }
+      ]
+        @label "Showcase Items"
+        @description "Array of showcase cards"
+        @tier "essential"
+    }
+    initial: idle
+    state idle {
+      INIT -> idle
+        (set @entity.items @config.items)
+        (render-ui main { type: "showcase-organism", entity: "@entity.items" })
+      SHOWCASE_CLICK -> idle
+        (emit SHOWCASE_CLICK { id: "@payload.id", title: "@payload.title" })
+    }
+    emits {
+      SHOWCASE_CLICK -> external { id : string, title : string }
+    }
+    listens {
+      SHOWCASE_CLICK { id : string, title : string }
+    }
+  }
+  page "/showcase" as ShowcaseItemShowcasePage -> ShowcaseItemShowcase
+}

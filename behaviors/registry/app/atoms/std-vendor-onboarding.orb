@@ -1,7 +1,7 @@
 {
   "name": "std-vendor-onboarding",
-  "version": "1.0.0",
-  "description": "std-vendor-onboarding — marketplace vendor multi-step KYC + bank-link wizard with identity-doc upload",
+  "version": "1.1.0",
+  "description": "std-vendor-onboarding — marketplace vendor multi-step KYC + bank-link wizard. Exposes HR knobs (backgroundCheckRequired, eVerifyRequired, anonymizeOnRejection, …).",
   "orbitals": [
     {
       "name": "VendorOnboardingOrbital",
@@ -301,8 +301,8 @@
                     "Vendor",
                     {
                       "emit": {
-                        "success": "VendorLoaded",
-                        "failure": "VendorLoadFailed"
+                        "failure": "VendorLoadFailed",
+                        "success": "VendorLoaded"
                       }
                     }
                   ],
@@ -310,9 +310,6 @@
                     "render-ui",
                     "main",
                     {
-                      "align": "center",
-                      "gap": "md",
-                      "className": "py-12",
                       "direction": "vertical",
                       "children": [
                         {
@@ -320,12 +317,15 @@
                         },
                         {
                           "color": "muted",
-                          "type": "typography",
                           "variant": "caption",
+                          "type": "typography",
                           "content": "Loading vendor application…"
                         }
                       ],
-                      "type": "stack"
+                      "type": "stack",
+                      "gap": "md",
+                      "align": "center",
+                      "className": "py-12"
                     }
                   ]
                 ]
@@ -339,26 +339,26 @@
                     "render-ui",
                     "main",
                     {
-                      "gap": "md",
                       "children": [
                         {
-                          "direction": "horizontal",
                           "gap": "sm",
                           "align": "center",
+                          "direction": "horizontal",
                           "children": [
                             {
-                              "type": "icon",
-                              "name": "user"
+                              "name": "user",
+                              "type": "icon"
                             },
                             {
-                              "type": "typography",
                               "variant": "h3",
+                              "type": "typography",
                               "content": "Vendor Onboarding"
                             }
                           ],
                           "type": "stack"
                         },
                         {
+                          "type": "wizard-progress",
                           "steps": [
                             "Business",
                             "Tax ID",
@@ -366,35 +366,35 @@
                             "Identity",
                             "Review"
                           ],
-                          "type": "wizard-progress",
                           "currentStep": 0.0
                         },
                         {
                           "type": "divider"
                         },
                         {
+                          "submitEvent": "NEXT_STEP",
+                          "type": "form-section",
+                          "cancelEvent": "INIT",
                           "fields": [
                             "businessName",
                             "legalName"
                           ],
-                          "type": "form-section",
-                          "cancelEvent": "INIT",
-                          "mode": "create",
-                          "submitEvent": "NEXT_STEP"
+                          "mode": "create"
                         },
                         {
-                          "currentStep": 0.0,
                           "showNext": true,
                           "type": "wizard-navigation",
-                          "showBack": false,
-                          "totalSteps": 5.0,
                           "showComplete": false,
-                          "onNext": "NEXT_STEP"
+                          "showBack": false,
+                          "onNext": "NEXT_STEP",
+                          "totalSteps": 5.0,
+                          "currentStep": 0.0
                         }
                       ],
-                      "className": "max-w-2xl mx-auto w-full",
                       "type": "stack",
-                      "direction": "vertical"
+                      "gap": "md",
+                      "direction": "vertical",
+                      "className": "max-w-2xl mx-auto w-full"
                     }
                   ]
                 ]
@@ -441,27 +441,27 @@
                     {
                       "type": "stack",
                       "direction": "vertical",
-                      "className": "max-w-2xl mx-auto w-full",
+                      "gap": "md",
                       "children": [
                         {
-                          "align": "center",
-                          "direction": "horizontal",
-                          "gap": "sm",
+                          "type": "stack",
                           "children": [
                             {
                               "type": "icon",
                               "name": "credit-card"
                             },
                             {
-                              "type": "typography",
                               "variant": "h3",
+                              "type": "typography",
                               "content": "Tax ID"
                             }
                           ],
-                          "type": "stack"
+                          "gap": "sm",
+                          "direction": "horizontal",
+                          "align": "center"
                         },
                         {
-                          "currentStep": 1.0,
+                          "type": "wizard-progress",
                           "steps": [
                             "Business",
                             "Tax ID",
@@ -469,33 +469,33 @@
                             "Identity",
                             "Review"
                           ],
-                          "type": "wizard-progress"
+                          "currentStep": 1.0
                         },
                         {
                           "type": "divider"
                         },
                         {
                           "entity": "@entity",
+                          "type": "form-section",
                           "submitEvent": "NEXT_STEP",
                           "cancelEvent": "BACK_STEP",
                           "fields": [
                             "ein"
                           ],
-                          "mode": "edit",
-                          "type": "form-section"
+                          "mode": "edit"
                         },
                         {
                           "onBack": "BACK_STEP",
-                          "showNext": true,
                           "onNext": "NEXT_STEP",
-                          "showComplete": false,
-                          "totalSteps": 5.0,
+                          "type": "wizard-navigation",
                           "showBack": true,
+                          "showNext": true,
+                          "totalSteps": 5.0,
                           "currentStep": 1.0,
-                          "type": "wizard-navigation"
+                          "showComplete": false
                         }
                       ],
-                      "gap": "md"
+                      "className": "max-w-2xl mx-auto w-full"
                     }
                   ]
                 ]
@@ -519,15 +519,12 @@
                     "render-ui",
                     "main",
                     {
-                      "direction": "vertical",
                       "type": "stack",
                       "gap": "md",
+                      "direction": "vertical",
                       "className": "max-w-2xl mx-auto w-full",
                       "children": [
                         {
-                          "align": "center",
-                          "gap": "sm",
-                          "type": "stack",
                           "children": [
                             {
                               "type": "icon",
@@ -539,9 +536,13 @@
                               "variant": "h3"
                             }
                           ],
-                          "direction": "horizontal"
+                          "direction": "horizontal",
+                          "gap": "sm",
+                          "align": "center",
+                          "type": "stack"
                         },
                         {
+                          "currentStep": 2.0,
                           "steps": [
                             "Business",
                             "Tax ID",
@@ -549,7 +550,6 @@
                             "Identity",
                             "Review"
                           ],
-                          "currentStep": 2.0,
                           "type": "wizard-progress"
                         },
                         {
@@ -557,24 +557,24 @@
                         },
                         {
                           "mode": "edit",
+                          "entity": "@entity",
+                          "submitEvent": "NEXT_STEP",
+                          "type": "form-section",
+                          "cancelEvent": "BACK_STEP",
                           "fields": [
                             "bankRoutingMasked",
                             "bankAcctMasked"
-                          ],
-                          "cancelEvent": "BACK_STEP",
-                          "type": "form-section",
-                          "submitEvent": "NEXT_STEP",
-                          "entity": "@entity"
+                          ]
                         },
                         {
-                          "currentStep": 2.0,
                           "showBack": true,
-                          "onBack": "BACK_STEP",
-                          "type": "wizard-navigation",
-                          "onNext": "NEXT_STEP",
-                          "showNext": true,
                           "totalSteps": 5.0,
-                          "showComplete": false
+                          "showComplete": false,
+                          "type": "wizard-navigation",
+                          "showNext": true,
+                          "currentStep": 2.0,
+                          "onBack": "BACK_STEP",
+                          "onNext": "NEXT_STEP"
                         }
                       ]
                     }
@@ -595,24 +595,24 @@
                     "render-ui",
                     "main",
                     {
-                      "gap": "md",
+                      "direction": "vertical",
                       "children": [
                         {
-                          "align": "center",
-                          "type": "stack",
                           "children": [
                             {
                               "name": "user",
                               "type": "icon"
                             },
                             {
+                              "variant": "h3",
                               "type": "typography",
-                              "content": "Business Info",
-                              "variant": "h3"
+                              "content": "Business Info"
                             }
                           ],
                           "direction": "horizontal",
-                          "gap": "sm"
+                          "gap": "sm",
+                          "type": "stack",
+                          "align": "center"
                         },
                         {
                           "currentStep": 0.0,
@@ -629,29 +629,29 @@
                           "type": "divider"
                         },
                         {
+                          "submitEvent": "NEXT_STEP",
                           "entity": "@entity",
                           "mode": "edit",
-                          "submitEvent": "NEXT_STEP",
-                          "type": "form-section",
                           "cancelEvent": "INIT",
                           "fields": [
                             "businessName",
                             "legalName"
-                          ]
+                          ],
+                          "type": "form-section"
                         },
                         {
-                          "showBack": false,
-                          "showNext": true,
-                          "type": "wizard-navigation",
-                          "showComplete": false,
                           "onNext": "NEXT_STEP",
+                          "showNext": true,
                           "totalSteps": 5.0,
-                          "currentStep": 0.0
+                          "currentStep": 0.0,
+                          "type": "wizard-navigation",
+                          "showBack": false,
+                          "showComplete": false
                         }
                       ],
-                      "direction": "vertical",
-                      "type": "stack",
-                      "className": "max-w-2xl mx-auto w-full"
+                      "gap": "md",
+                      "className": "max-w-2xl mx-auto w-full",
+                      "type": "stack"
                     }
                   ]
                 ]
@@ -680,29 +680,27 @@
                     "render-ui",
                     "main",
                     {
-                      "gap": "md",
-                      "type": "stack",
-                      "direction": "vertical",
                       "className": "max-w-2xl mx-auto w-full",
                       "children": [
                         {
-                          "type": "stack",
-                          "gap": "sm",
                           "children": [
                             {
-                              "name": "credit-card",
-                              "type": "icon"
+                              "type": "icon",
+                              "name": "credit-card"
                             },
                             {
-                              "variant": "h3",
                               "type": "typography",
+                              "variant": "h3",
                               "content": "Identity Verification"
                             }
                           ],
-                          "direction": "horizontal",
-                          "align": "center"
+                          "gap": "sm",
+                          "type": "stack",
+                          "align": "center",
+                          "direction": "horizontal"
                         },
                         {
+                          "type": "wizard-progress",
                           "steps": [
                             "Business",
                             "Tax ID",
@@ -710,8 +708,7 @@
                             "Identity",
                             "Review"
                           ],
-                          "currentStep": 3.0,
-                          "type": "wizard-progress"
+                          "currentStep": 3.0
                         },
                         {
                           "type": "divider"
@@ -723,26 +720,29 @@
                           "color": "muted"
                         },
                         {
+                          "accept": "image/*",
                           "maxFiles": 2.0,
+                          "icon": "credit-card",
+                          "description": "or click to browse",
                           "type": "upload-drop-zone",
                           "label": "Drop ID document here",
-                          "icon": "credit-card",
-                          "accept": "image/*",
-                          "description": "or click to browse",
-                          "action": "UPLOAD_IDENTITY",
-                          "maxSize": 10485760.0
+                          "maxSize": 10485760.0,
+                          "action": "UPLOAD_IDENTITY"
                         },
                         {
-                          "currentStep": 3.0,
-                          "onNext": "NEXT_STEP",
-                          "showBack": true,
                           "type": "wizard-navigation",
+                          "currentStep": 3.0,
+                          "showComplete": false,
+                          "onNext": "NEXT_STEP",
+                          "onBack": "BACK_STEP",
                           "totalSteps": 5.0,
                           "showNext": true,
-                          "showComplete": false,
-                          "onBack": "BACK_STEP"
+                          "showBack": true
                         }
-                      ]
+                      ],
+                      "type": "stack",
+                      "direction": "vertical",
+                      "gap": "md"
                     }
                   ]
                 ]
@@ -762,26 +762,26 @@
                     "main",
                     {
                       "className": "max-w-2xl mx-auto w-full",
+                      "direction": "vertical",
                       "children": [
                         {
-                          "type": "stack",
                           "align": "center",
                           "gap": "sm",
                           "direction": "horizontal",
+                          "type": "stack",
                           "children": [
                             {
                               "name": "credit-card",
                               "type": "icon"
                             },
                             {
-                              "content": "Tax ID",
                               "type": "typography",
+                              "content": "Tax ID",
                               "variant": "h3"
                             }
                           ]
                         },
                         {
-                          "type": "wizard-progress",
                           "steps": [
                             "Business",
                             "Tax ID",
@@ -789,35 +789,35 @@
                             "Identity",
                             "Review"
                           ],
+                          "type": "wizard-progress",
                           "currentStep": 1.0
                         },
                         {
                           "type": "divider"
                         },
                         {
+                          "entity": "@entity",
                           "type": "form-section",
                           "submitEvent": "NEXT_STEP",
-                          "mode": "edit",
                           "cancelEvent": "BACK_STEP",
-                          "entity": "@entity",
                           "fields": [
                             "ein"
-                          ]
+                          ],
+                          "mode": "edit"
                         },
                         {
-                          "showBack": true,
                           "type": "wizard-navigation",
-                          "showComplete": false,
-                          "currentStep": 1.0,
+                          "showNext": true,
                           "onNext": "NEXT_STEP",
                           "totalSteps": 5.0,
+                          "showBack": true,
                           "onBack": "BACK_STEP",
-                          "showNext": true
+                          "showComplete": false,
+                          "currentStep": 1.0
                         }
                       ],
-                      "direction": "vertical",
-                      "type": "stack",
-                      "gap": "md"
+                      "gap": "md",
+                      "type": "stack"
                     }
                   ]
                 ]
@@ -836,12 +836,12 @@
                     "render-ui",
                     "main",
                     {
-                      "gap": "md",
-                      "type": "stack",
                       "className": "max-w-2xl mx-auto w-full",
-                      "direction": "vertical",
+                      "gap": "md",
                       "children": [
                         {
+                          "align": "center",
+                          "gap": "sm",
                           "type": "stack",
                           "direction": "horizontal",
                           "children": [
@@ -850,16 +850,13 @@
                               "type": "icon"
                             },
                             {
+                              "type": "typography",
                               "content": "Identity Verification",
-                              "variant": "h3",
-                              "type": "typography"
+                              "variant": "h3"
                             }
-                          ],
-                          "gap": "sm",
-                          "align": "center"
+                          ]
                         },
                         {
-                          "currentStep": 3.0,
                           "type": "wizard-progress",
                           "steps": [
                             "Business",
@@ -867,52 +864,55 @@
                             "Bank",
                             "Identity",
                             "Review"
-                          ]
+                          ],
+                          "currentStep": 3.0
                         },
                         {
                           "type": "divider"
                         },
                         {
+                          "type": "alert",
                           "message": "Identity document uploaded.",
-                          "variant": "success",
-                          "type": "alert"
+                          "variant": "success"
                         },
                         {
-                          "type": "stack",
                           "children": [
                             {
-                              "type": "stack",
                               "direction": "horizontal",
                               "gap": "md",
                               "children": [
                                 {
                                   "type": "typography",
                                   "variant": "caption",
-                                  "content": "Document URL",
-                                  "color": "muted"
+                                  "color": "muted",
+                                  "content": "Document URL"
                                 },
                                 {
-                                  "variant": "body",
+                                  "content": "@entity.identityDocUrl",
                                   "type": "typography",
-                                  "content": "@entity.identityDocUrl"
+                                  "variant": "body"
                                 }
-                              ]
+                              ],
+                              "type": "stack"
                             }
                           ],
                           "direction": "vertical",
+                          "type": "stack",
                           "gap": "sm"
                         },
                         {
-                          "showBack": true,
-                          "showNext": true,
-                          "currentStep": 3.0,
-                          "onBack": "BACK_STEP",
+                          "onNext": "NEXT_STEP",
                           "showComplete": false,
+                          "currentStep": 3.0,
                           "totalSteps": 5.0,
-                          "type": "wizard-navigation",
-                          "onNext": "NEXT_STEP"
+                          "showNext": true,
+                          "onBack": "BACK_STEP",
+                          "showBack": true,
+                          "type": "wizard-navigation"
                         }
-                      ]
+                      ],
+                      "direction": "vertical",
+                      "type": "stack"
                     }
                   ]
                 ]
@@ -931,26 +931,27 @@
                     "render-ui",
                     "main",
                     {
-                      "direction": "vertical",
+                      "className": "max-w-2xl mx-auto w-full",
                       "children": [
                         {
                           "align": "center",
-                          "gap": "sm",
-                          "type": "stack",
                           "children": [
                             {
                               "type": "icon",
                               "name": "check-circle"
                             },
                             {
-                              "variant": "h3",
                               "type": "typography",
-                              "content": "Review"
+                              "content": "Review",
+                              "variant": "h3"
                             }
                           ],
+                          "gap": "sm",
+                          "type": "stack",
                           "direction": "horizontal"
                         },
                         {
+                          "type": "wizard-progress",
                           "steps": [
                             "Business",
                             "Tax ID",
@@ -958,104 +959,103 @@
                             "Identity",
                             "Review"
                           ],
-                          "type": "wizard-progress",
                           "currentStep": 4.0
                         },
                         {
                           "type": "divider"
                         },
                         {
-                          "type": "stack",
+                          "gap": "sm",
                           "children": [
                             {
-                              "direction": "horizontal",
                               "type": "stack",
+                              "direction": "horizontal",
+                              "gap": "md",
                               "children": [
                                 {
-                                  "content": "Business Name",
                                   "variant": "caption",
+                                  "content": "Business Name",
                                   "type": "typography",
                                   "color": "muted"
                                 },
                                 {
                                   "variant": "body",
-                                  "content": "@entity.businessName",
-                                  "type": "typography"
+                                  "type": "typography",
+                                  "content": "@entity.businessName"
+                                }
+                              ]
+                            },
+                            {
+                              "type": "stack",
+                              "children": [
+                                {
+                                  "variant": "caption",
+                                  "type": "typography",
+                                  "content": "Legal Name",
+                                  "color": "muted"
+                                },
+                                {
+                                  "variant": "body",
+                                  "type": "typography",
+                                  "content": "@entity.legalName"
                                 }
                               ],
+                              "direction": "horizontal",
                               "gap": "md"
                             },
                             {
+                              "type": "stack",
+                              "gap": "md",
+                              "direction": "horizontal",
                               "children": [
                                 {
-                                  "content": "Legal Name",
+                                  "type": "typography",
                                   "color": "muted",
                                   "variant": "caption",
-                                  "type": "typography"
+                                  "content": "EIN"
                                 },
                                 {
-                                  "content": "@entity.legalName",
                                   "type": "typography",
-                                  "variant": "body"
-                                }
-                              ],
-                              "type": "stack",
-                              "gap": "md",
-                              "direction": "horizontal"
-                            },
-                            {
-                              "direction": "horizontal",
-                              "type": "stack",
-                              "gap": "md",
-                              "children": [
-                                {
-                                  "color": "muted",
-                                  "type": "typography",
-                                  "content": "EIN",
-                                  "variant": "caption"
-                                },
-                                {
-                                  "content": "@entity.ein",
-                                  "type": "typography",
-                                  "variant": "body"
+                                  "variant": "body",
+                                  "content": "@entity.ein"
                                 }
                               ]
                             },
                             {
                               "gap": "md",
-                              "type": "stack",
+                              "direction": "horizontal",
                               "children": [
                                 {
-                                  "color": "muted",
-                                  "variant": "caption",
                                   "content": "Bank Routing",
-                                  "type": "typography"
+                                  "color": "muted",
+                                  "type": "typography",
+                                  "variant": "caption"
                                 },
                                 {
-                                  "content": "@entity.bankRoutingMasked",
                                   "type": "typography",
-                                  "variant": "body"
+                                  "variant": "body",
+                                  "content": "@entity.bankRoutingMasked"
                                 }
                               ],
-                              "direction": "horizontal"
+                              "type": "stack"
                             },
                             {
-                              "gap": "md",
                               "children": [
                                 {
                                   "type": "typography",
-                                  "variant": "caption",
                                   "content": "Bank Account",
-                                  "color": "muted"
+                                  "color": "muted",
+                                  "variant": "caption"
                                 },
                                 {
+                                  "variant": "body",
                                   "content": "@entity.bankAcctMasked",
-                                  "type": "typography",
-                                  "variant": "body"
+                                  "type": "typography"
                                 }
                               ],
                               "type": "stack",
-                              "direction": "horizontal"
+                              "direction": "horizontal",
+                              "gap": "md"
                             },
                             {
                               "type": "stack",
@@ -1064,56 +1064,56 @@
                               "children": [
                                 {
                                   "variant": "caption",
-                                  "color": "muted",
                                   "content": "Identity Doc",
+                                  "color": "muted",
                                   "type": "typography"
                                 },
                                 {
-                                  "variant": "body",
+                                  "content": "@entity.identityDocUrl",
                                   "type": "typography",
-                                  "content": "@entity.identityDocUrl"
+                                  "variant": "body"
                                 }
                               ]
                             }
                           ],
-                          "direction": "vertical",
-                          "gap": "sm"
+                          "type": "stack",
+                          "direction": "vertical"
                         },
                         {
                           "type": "divider"
                         },
                         {
+                          "type": "simple-grid",
                           "children": [
                             {
-                              "label": "Business",
                               "type": "stat-display",
                               "value": "@entity.businessName",
-                              "icon": "user"
+                              "icon": "user",
+                              "label": "Business"
                             },
                             {
-                              "icon": "credit-card",
                               "type": "stat-display",
                               "value": "@entity.ein",
+                              "icon": "credit-card",
                               "label": "EIN"
                             }
                           ],
-                          "type": "simple-grid",
                           "cols": 2.0
                         },
                         {
-                          "showBack": true,
-                          "type": "wizard-navigation",
-                          "showNext": false,
                           "onComplete": "SUBMIT",
-                          "totalSteps": 5.0,
                           "showComplete": true,
+                          "type": "wizard-navigation",
+                          "totalSteps": 5.0,
+                          "showBack": true,
+                          "onBack": "BACK_STEP",
                           "currentStep": 4.0,
-                          "onBack": "BACK_STEP"
+                          "showNext": false
                         }
                       ],
-                      "type": "stack",
                       "gap": "md",
-                      "className": "max-w-2xl mx-auto w-full"
+                      "type": "stack",
+                      "direction": "vertical"
                     }
                   ]
                 ]
@@ -1132,28 +1132,26 @@
                     "render-ui",
                     "main",
                     {
-                      "direction": "vertical",
-                      "className": "max-w-2xl mx-auto w-full",
-                      "type": "stack",
                       "children": [
                         {
+                          "direction": "horizontal",
+                          "type": "stack",
                           "gap": "sm",
+                          "align": "center",
                           "children": [
                             {
-                              "type": "icon",
-                              "name": "credit-card"
+                              "name": "credit-card",
+                              "type": "icon"
                             },
                             {
                               "type": "typography",
                               "content": "Bank Link",
                               "variant": "h3"
                             }
-                          ],
-                          "direction": "horizontal",
-                          "type": "stack",
-                          "align": "center"
+                          ]
                         },
                         {
+                          "type": "wizard-progress",
                           "steps": [
                             "Business",
                             "Tax ID",
@@ -1161,34 +1159,36 @@
                             "Identity",
                             "Review"
                           ],
-                          "currentStep": 2.0,
-                          "type": "wizard-progress"
+                          "currentStep": 2.0
                         },
                         {
                           "type": "divider"
                         },
                         {
+                          "cancelEvent": "BACK_STEP",
+                          "mode": "edit",
+                          "entity": "@entity",
+                          "type": "form-section",
                           "submitEvent": "NEXT_STEP",
                           "fields": [
                             "bankRoutingMasked",
                             "bankAcctMasked"
-                          ],
-                          "mode": "edit",
-                          "entity": "@entity",
-                          "type": "form-section",
-                          "cancelEvent": "BACK_STEP"
+                          ]
                         },
                         {
-                          "currentStep": 2.0,
-                          "type": "wizard-navigation",
-                          "onBack": "BACK_STEP",
-                          "showNext": true,
                           "showBack": true,
-                          "showComplete": false,
                           "onNext": "NEXT_STEP",
-                          "totalSteps": 5.0
+                          "showNext": true,
+                          "showComplete": false,
+                          "totalSteps": 5.0,
+                          "onBack": "BACK_STEP",
+                          "type": "wizard-navigation",
+                          "currentStep": 2.0
                         }
                       ],
+                      "direction": "vertical",
+                      "type": "stack",
+                      "className": "max-w-2xl mx-auto w-full",
                       "gap": "md"
                     }
                   ]
@@ -1214,11 +1214,14 @@
                     "main",
                     {
                       "align": "center",
+                      "gap": "md",
+                      "type": "stack",
+                      "className": "max-w-2xl mx-auto w-full py-12",
                       "children": [
                         {
-                          "name": "check-circle",
+                          "type": "icon",
                           "color": "success",
-                          "type": "icon"
+                          "name": "check-circle"
                         },
                         {
                           "content": "Application Submitted",
@@ -1227,15 +1230,12 @@
                         },
                         {
                           "type": "typography",
-                          "color": "muted",
                           "content": "Thanks. We will review your vendor application and email you within 2 business days.",
-                          "variant": "body"
+                          "variant": "body",
+                          "color": "muted"
                         }
                       ],
-                      "type": "stack",
-                      "className": "max-w-2xl mx-auto w-full py-12",
-                      "direction": "vertical",
-                      "gap": "md"
+                      "direction": "vertical"
                     }
                   ]
                 ]
@@ -1254,6 +1254,9 @@
                     "render-ui",
                     "main",
                     {
+                      "type": "stack",
+                      "className": "max-w-2xl mx-auto w-full",
+                      "direction": "vertical",
                       "children": [
                         {
                           "children": [
@@ -1262,18 +1265,18 @@
                               "type": "icon"
                             },
                             {
-                              "variant": "h3",
                               "content": "Identity Verification",
-                              "type": "typography"
+                              "type": "typography",
+                              "variant": "h3"
                             }
                           ],
-                          "gap": "sm",
-                          "align": "center",
                           "direction": "horizontal",
-                          "type": "stack"
+                          "type": "stack",
+                          "align": "center",
+                          "gap": "sm"
                         },
                         {
-                          "currentStep": 3.0,
+                          "type": "wizard-progress",
                           "steps": [
                             "Business",
                             "Tax ID",
@@ -1281,36 +1284,33 @@
                             "Identity",
                             "Review"
                           ],
-                          "type": "wizard-progress"
+                          "currentStep": 3.0
                         },
                         {
                           "type": "divider"
                         },
                         {
+                          "action": "UPLOAD_IDENTITY",
+                          "type": "upload-drop-zone",
+                          "description": "or click to browse",
+                          "accept": "image/*",
                           "maxSize": 10485760.0,
                           "icon": "credit-card",
-                          "label": "Drop ID document here",
-                          "type": "upload-drop-zone",
-                          "action": "UPLOAD_IDENTITY",
                           "maxFiles": 2.0,
-                          "description": "or click to browse",
-                          "accept": "image/*"
+                          "label": "Drop ID document here"
                         },
                         {
-                          "currentStep": 3.0,
-                          "onBack": "BACK_STEP",
-                          "type": "wizard-navigation",
-                          "totalSteps": 5.0,
-                          "showComplete": false,
                           "showBack": true,
+                          "onBack": "BACK_STEP",
+                          "totalSteps": 5.0,
+                          "type": "wizard-navigation",
+                          "currentStep": 3.0,
                           "showNext": true,
+                          "showComplete": false,
                           "onNext": "NEXT_STEP"
                         }
                       ],
-                      "direction": "vertical",
-                      "type": "stack",
-                      "gap": "md",
-                      "className": "max-w-2xl mx-auto w-full"
+                      "gap": "md"
                     }
                   ]
                 ]
@@ -1325,8 +1325,8 @@
                     "Vendor",
                     {
                       "emit": {
-                        "failure": "VendorLoadFailed",
-                        "success": "VendorLoaded"
+                        "success": "VendorLoaded",
+                        "failure": "VendorLoadFailed"
                       }
                     }
                   ],
@@ -1364,6 +1364,50 @@
                 ]
               }
             ]
+          },
+          "config": {
+            "eVerifyRequired": {
+              "type": "boolean",
+              "default": false,
+              "label": "E-Verify required",
+              "description": "US E-Verify gate. Block SUBMIT until verification passes.",
+              "tier": "customization"
+            },
+            "i9DocumentsRequired": {
+              "type": "boolean",
+              "default": false,
+              "label": "I-9 documents required",
+              "description": "Require I-9 supporting documents (relevant for sole-proprietor vendors).",
+              "tier": "customization"
+            },
+            "equalOpportunityTrackingEnabled": {
+              "type": "boolean",
+              "default": false,
+              "label": "Equal opportunity tracking",
+              "description": "Capture supplier diversity / EEO data separately (sibling collection).",
+              "tier": "advanced"
+            },
+            "anonymizeOnRejection": {
+              "type": "boolean",
+              "default": false,
+              "label": "Anonymize on rejection",
+              "description": "When true, scrub vendor PII on rejected applications. Pair with std-data-erasure.",
+              "tier": "customization"
+            },
+            "backgroundCheckRequired": {
+              "type": "boolean",
+              "default": true,
+              "label": "Background check required",
+              "description": "Block SUBMIT until a background check on the vendor is on file.",
+              "tier": "customization"
+            },
+            "retentionAfterRejectionDays": {
+              "type": "number",
+              "default": 1825.0,
+              "label": "Retention after rejection (days)",
+              "description": "Days to keep rejected vendor onboarding records. Default 1825 (5 years) typical KYC retention.",
+              "tier": "advanced"
+            }
           },
           "scope": "instance"
         },
@@ -1542,8 +1586,8 @@
                     "@payload.data",
                     {
                       "emit": {
-                        "success": "VendorUpdated",
-                        "failure": "VendorUpdateFailed"
+                        "failure": "VendorUpdateFailed",
+                        "success": "VendorUpdated"
                       }
                     }
                   ]
@@ -1561,8 +1605,8 @@
                     "@payload.data",
                     {
                       "emit": {
-                        "failure": "VendorSubmitFailed",
-                        "success": "VendorSubmitted"
+                        "success": "VendorSubmitted",
+                        "failure": "VendorSubmitFailed"
                       }
                     }
                   ]

@@ -1,7 +1,7 @@
 {
   "name": "std-work-order",
-  "version": "1.1.0",
-  "description": "std-work-order — field-service work order lifecycle (created → assigned → en-route → on-site → completed). Lists work orders in `browsing`; opens detail in `viewing_single` with Assign / Travel / Arrive / Complete / Cancel actions. Agents tune the list shape via `config.fields` + `config.itemActions`.",
+  "version": "1.2.0",
+  "description": "std-work-order — field-service work order lifecycle (created → assigned → en-route → on-site → completed). Lists work orders in `browsing`; opens detail in `viewing_single` with Assign / Travel / Arrive / Complete / Cancel actions. Listens for SET_STATUS so sibling std-lifecycle can drive automated transitions (e.g. en-route → completed on SLA breach). Exposes Service/Operations-pattern knobs (serviceAreaRadius, dispatchStrategy, SLA hours, …).",
   "orbitals": [
     {
       "name": "WorkOrderOrbital",
@@ -554,6 +554,22 @@
                 ]
               },
               {
+                "key": "SET_STATUS",
+                "name": "Set Status",
+                "payloadSchema": [
+                  {
+                    "name": "entityId",
+                    "type": "string",
+                    "required": true
+                  },
+                  {
+                    "name": "newStatus",
+                    "type": "string",
+                    "required": true
+                  }
+                ]
+              },
+              {
                 "key": "CLOSE_VIEW",
                 "name": "Close View"
               },
@@ -652,22 +668,22 @@
                     "render-ui",
                     "main",
                     {
-                      "direction": "vertical",
-                      "type": "stack",
-                      "className": "py-12",
+                      "align": "center",
                       "children": [
                         {
                           "type": "spinner"
                         },
                         {
-                          "content": "Loading work orders…",
                           "variant": "caption",
-                          "color": "muted",
-                          "type": "typography"
+                          "content": "Loading work orders…",
+                          "type": "typography",
+                          "color": "muted"
                         }
                       ],
-                      "gap": "md",
-                      "align": "center"
+                      "type": "stack",
+                      "className": "py-12",
+                      "direction": "vertical",
+                      "gap": "md"
                     }
                   ]
                 ]
@@ -681,69 +697,69 @@
                     "render-ui",
                     "main",
                     {
+                      "gap": "md",
+                      "direction": "vertical",
                       "type": "stack",
                       "children": [
                         {
-                          "type": "stack",
-                          "align": "center",
+                          "direction": "horizontal",
                           "children": [
                             {
-                              "name": "clipboard-list",
-                              "type": "icon"
+                              "type": "icon",
+                              "name": "clipboard-list"
                             },
                             {
-                              "content": "@config.title",
                               "variant": "h3",
+                              "content": "@config.title",
                               "type": "typography"
                             }
                           ],
-                          "direction": "horizontal",
+                          "align": "center",
+                          "type": "stack",
                           "gap": "sm"
                         },
                         {
+                          "type": "simple-grid",
                           "cols": 4.0,
                           "children": [
                             {
                               "type": "stat-display",
                               "label": "Total orders",
-                              "icon": "clipboard-list",
-                              "value": "@payload.data.length"
+                              "value": "@payload.data.length",
+                              "icon": "clipboard-list"
                             },
                             {
                               "type": "stat-display",
+                              "label": "Urgent open",
                               "icon": "alert-triangle",
-                              "value": "9",
-                              "label": "Urgent open"
+                              "value": "9"
                             },
                             {
-                              "value": "14",
                               "icon": "navigation",
+                              "type": "stat-display",
                               "label": "En route",
-                              "type": "stat-display"
+                              "value": "14"
                             },
                             {
                               "label": "Completed today",
+                              "icon": "check-circle",
                               "value": "47",
-                              "type": "stat-display",
-                              "icon": "check-circle"
+                              "type": "stat-display"
                             }
-                          ],
-                          "type": "simple-grid"
+                          ]
                         },
                         {
                           "type": "divider"
                         },
                         {
+                          "itemActions": "@config.itemActions",
+                          "type": "data-grid",
                           "gap": "sm",
-                          "entity": "@payload.data",
                           "fields": "@config.fields",
                           "cols": 1.0,
-                          "itemActions": "@config.itemActions",
-                          "type": "data-grid"
+                          "entity": "@payload.data"
                         }
-                      ],
-                      "direction": "vertical",
-                      "gap": "md"
+                      ]
                     }
                   ]
                 ]
@@ -757,8 +773,8 @@
                     "render-ui",
                     "main",
                     {
-                      "type": "alert",
                       "variant": "error",
+                      "type": "alert",
                       "message": "@payload.error"
                     }
                   ]
@@ -828,41 +844,39 @@
                     "render-ui",
                     "main",
                     {
-                      "gap": "md",
-                      "type": "stack",
                       "children": [
                         {
                           "type": "stack",
-                          "direction": "horizontal",
-                          "gap": "sm",
                           "align": "center",
                           "children": [
                             {
-                              "action": "CLOSE_VIEW",
+                              "label": "Back",
                               "variant": "ghost",
                               "type": "button",
-                              "label": "Back"
+                              "action": "CLOSE_VIEW"
                             },
                             {
-                              "name": "clipboard-list",
-                              "type": "icon"
+                              "type": "icon",
+                              "name": "clipboard-list"
                             },
                             {
-                              "type": "typography",
                               "content": "@entity.customerName",
-                              "variant": "h3"
+                              "variant": "h3",
+                              "type": "typography"
                             },
                             {
-                              "variant": "primary",
+                              "label": "@entity.priority",
                               "type": "badge",
-                              "label": "@entity.priority"
+                              "variant": "primary"
                             },
                             {
-                              "variant": "default",
                               "label": "@entity.status",
-                              "type": "badge"
+                              "type": "badge",
+                              "variant": "default"
                             }
-                          ]
+                          ],
+                          "direction": "horizontal",
+                          "gap": "sm"
                         },
                         {
                           "type": "divider"
@@ -873,75 +887,75 @@
                           "gap": "sm",
                           "children": [
                             {
-                              "type": "stack",
-                              "gap": "md",
-                              "direction": "horizontal",
                               "children": [
                                 {
+                                  "variant": "caption",
                                   "content": "Service",
-                                  "variant": "caption",
                                   "color": "muted",
                                   "type": "typography"
                                 },
                                 {
-                                  "variant": "body",
-                                  "content": "@entity.serviceType",
-                                  "type": "typography"
-                                }
-                              ]
-                            },
-                            {
-                              "type": "stack",
-                              "direction": "horizontal",
-                              "gap": "md",
-                              "children": [
-                                {
-                                  "content": "Address",
-                                  "variant": "caption",
-                                  "type": "typography",
-                                  "color": "muted"
-                                },
-                                {
                                   "type": "typography",
                                   "variant": "body",
-                                  "content": "@entity.address"
-                                }
-                              ]
-                            },
-                            {
-                              "direction": "horizontal",
-                              "children": [
-                                {
-                                  "color": "muted",
-                                  "variant": "caption",
-                                  "type": "typography",
-                                  "content": "Assigned to"
-                                },
-                                {
-                                  "variant": "body",
-                                  "content": "@entity.assignedTo",
-                                  "type": "typography"
+                                  "content": "@entity.serviceType"
                                 }
                               ],
+                              "direction": "horizontal",
                               "type": "stack",
                               "gap": "md"
                             },
                             {
+                              "type": "stack",
                               "children": [
                                 {
-                                  "type": "typography",
-                                  "variant": "caption",
                                   "color": "muted",
-                                  "content": "Notes"
+                                  "variant": "caption",
+                                  "type": "typography",
+                                  "content": "Address"
                                 },
                                 {
-                                  "variant": "body",
                                   "type": "typography",
+                                  "content": "@entity.address",
+                                  "variant": "body"
+                                }
+                              ],
+                              "gap": "md",
+                              "direction": "horizontal"
+                            },
+                            {
+                              "type": "stack",
+                              "children": [
+                                {
+                                  "color": "muted",
+                                  "type": "typography",
+                                  "content": "Assigned to",
+                                  "variant": "caption"
+                                },
+                                {
+                                  "content": "@entity.assignedTo",
+                                  "type": "typography",
+                                  "variant": "body"
+                                }
+                              ],
+                              "direction": "horizontal",
+                              "gap": "md"
+                            },
+                            {
+                              "direction": "horizontal",
+                              "children": [
+                                {
+                                  "content": "Notes",
+                                  "type": "typography",
+                                  "color": "muted",
+                                  "variant": "caption"
+                                },
+                                {
+                                  "type": "typography",
+                                  "variant": "body",
                                   "content": "@entity.notes"
                                 }
                               ],
                               "gap": "md",
-                              "direction": "horizontal",
                               "type": "stack"
                             }
                           ]
@@ -950,20 +964,18 @@
                           "type": "divider"
                         },
                         {
-                          "cols": 3.0,
-                          "type": "simple-grid",
                           "children": [
                             {
-                              "value": "@entity.etaMinutes",
                               "icon": "clock",
+                              "label": "ETA (min)",
                               "type": "stat-display",
-                              "label": "ETA (min)"
+                              "value": "@entity.etaMinutes"
                             },
                             {
-                              "type": "stat-display",
-                              "value": "@entity.scheduledAt",
                               "icon": "calendar",
-                              "label": "Scheduled"
+                              "value": "@entity.scheduledAt",
+                              "label": "Scheduled",
+                              "type": "stat-display"
                             },
                             {
                               "type": "stat-display",
@@ -971,72 +983,76 @@
                               "value": "@entity.createdAt",
                               "icon": "calendar-plus"
                             }
-                          ]
+                          ],
+                          "cols": 3.0,
+                          "type": "simple-grid"
                         },
                         {
-                          "gap": "sm",
                           "direction": "horizontal",
-                          "type": "stack",
+                          "gap": "sm",
                           "align": "center",
                           "children": [
                             {
-                              "type": "button",
                               "action": "ASSIGN",
-                              "label": "Assign",
                               "actionPayload": {
-                                "id": "@entity.id",
                                 "assignedTo": "@entity.assignedTo",
-                                "row": "@entity"
-                              },
-                              "variant": "primary"
-                            },
-                            {
-                              "type": "button",
-                              "label": "Start Travel",
-                              "action": "START_TRAVEL",
-                              "variant": "secondary",
-                              "actionPayload": {
-                                "etaMinutes": 0.0,
-                                "id": "@entity.id",
-                                "row": "@entity"
-                              }
-                            },
-                            {
-                              "label": "Arrive",
-                              "variant": "secondary",
-                              "actionPayload": {
                                 "row": "@entity",
                                 "id": "@entity.id"
                               },
                               "type": "button",
+                              "variant": "primary",
+                              "label": "Assign"
+                            },
+                            {
+                              "variant": "secondary",
+                              "label": "Start Travel",
+                              "type": "button",
+                              "action": "START_TRAVEL",
+                              "actionPayload": {
+                                "row": "@entity",
+                                "etaMinutes": 0.0,
+                                "id": "@entity.id"
+                              }
+                            },
+                            {
+                              "type": "button",
+                              "label": "Arrive",
+                              "actionPayload": {
+                                "id": "@entity.id",
+                                "row": "@entity"
+                              },
+                              "variant": "secondary",
                               "action": "ARRIVE"
                             },
                             {
                               "type": "button",
                               "variant": "primary",
                               "actionPayload": {
-                                "row": "@entity",
                                 "notes": "@entity.notes",
-                                "id": "@entity.id"
+                                "id": "@entity.id",
+                                "row": "@entity"
                               },
-                              "label": "Complete",
-                              "action": "COMPLETE"
+                              "action": "COMPLETE",
+                              "label": "Complete"
                             },
                             {
+                              "type": "button",
+                              "action": "CANCEL",
+                              "variant": "danger",
+                              "label": "Cancel",
                               "actionPayload": {
                                 "row": "@entity",
                                 "id": "@entity.id",
                                 "notes": "@entity.notes"
-                              },
-                              "variant": "danger",
-                              "type": "button",
-                              "action": "CANCEL",
-                              "label": "Cancel"
+                              }
                             }
-                          ]
+                          ],
+                          "type": "stack"
                         }
                       ],
-                      "direction": "vertical"
+                      "gap": "md",
+                      "direction": "vertical",
+                      "type": "stack"
                     }
                   ]
                 ]
@@ -1065,20 +1081,71 @@
                     "render-ui",
                     "main",
                     {
-                      "align": "center",
                       "direction": "vertical",
-                      "gap": "md",
-                      "type": "stack",
                       "className": "py-12",
+                      "gap": "md",
                       "children": [
                         {
                           "type": "spinner"
                         },
                         {
                           "type": "typography",
-                          "color": "muted",
                           "variant": "caption",
-                          "content": "Cancelling order…"
+                          "content": "Cancelling order…",
+                          "color": "muted"
+                        }
+                      ],
+                      "type": "stack",
+                      "align": "center"
+                    }
+                  ]
+                ]
+              },
+              {
+                "from": "browsing",
+                "to": "loading",
+                "event": "SET_STATUS",
+                "effects": [
+                  [
+                    "set",
+                    "@entity.id",
+                    "@payload.entityId"
+                  ],
+                  [
+                    "set",
+                    "@entity.status",
+                    "@payload.newStatus"
+                  ],
+                  [
+                    "persist",
+                    "update",
+                    "WorkOrder",
+                    "@entity",
+                    {
+                      "emit": {
+                        "failure": "WorkOrderLoadFailed",
+                        "success": "WorkOrderLoaded"
+                      }
+                    }
+                  ],
+                  [
+                    "render-ui",
+                    "main",
+                    {
+                      "type": "stack",
+                      "direction": "vertical",
+                      "gap": "md",
+                      "align": "center",
+                      "className": "py-12",
+                      "children": [
+                        {
+                          "type": "spinner"
+                        },
+                        {
+                          "variant": "caption",
+                          "type": "typography",
+                          "color": "muted",
+                          "content": "Updating order status…"
                         }
                       ]
                     }
@@ -1104,22 +1171,22 @@
                     "render-ui",
                     "main",
                     {
+                      "direction": "vertical",
+                      "type": "stack",
                       "align": "center",
                       "className": "py-12",
+                      "gap": "md",
                       "children": [
                         {
                           "type": "spinner"
                         },
                         {
                           "type": "typography",
-                          "variant": "caption",
                           "content": "Loading work orders…",
+                          "variant": "caption",
                           "color": "muted"
                         }
-                      ],
-                      "type": "stack",
-                      "direction": "vertical",
-                      "gap": "md"
+                      ]
                     }
                   ]
                 ]
@@ -1139,8 +1206,8 @@
                     "WorkOrder",
                     {
                       "emit": {
-                        "success": "WorkOrderLoaded",
-                        "failure": "WorkOrderLoadFailed"
+                        "failure": "WorkOrderLoadFailed",
+                        "success": "WorkOrderLoaded"
                       }
                     }
                   ],
@@ -1148,9 +1215,10 @@
                     "render-ui",
                     "main",
                     {
-                      "type": "stack",
                       "direction": "vertical",
                       "gap": "md",
+                      "type": "stack",
+                      "className": "py-12",
                       "align": "center",
                       "children": [
                         {
@@ -1158,12 +1226,11 @@
                         },
                         {
                           "type": "typography",
-                          "content": "Assigning order…",
                           "variant": "caption",
-                          "color": "muted"
+                          "color": "muted",
+                          "content": "Assigning order…"
                         }
-                      ],
-                      "className": "py-12"
+                      ]
                     }
                   ]
                 ]
@@ -1193,21 +1260,21 @@
                     "main",
                     {
                       "type": "stack",
-                      "className": "py-12",
-                      "gap": "md",
                       "direction": "vertical",
                       "children": [
                         {
                           "type": "spinner"
                         },
                         {
-                          "variant": "caption",
                           "color": "muted",
+                          "variant": "caption",
                           "content": "Starting travel…",
                           "type": "typography"
                         }
                       ],
-                      "align": "center"
+                      "align": "center",
+                      "gap": "md",
+                      "className": "py-12"
                     }
                   ]
                 ]
@@ -1236,22 +1303,22 @@
                     "render-ui",
                     "main",
                     {
-                      "direction": "vertical",
-                      "type": "stack",
-                      "align": "center",
                       "className": "py-12",
                       "children": [
                         {
                           "type": "spinner"
                         },
                         {
-                          "color": "muted",
-                          "variant": "caption",
+                          "type": "typography",
                           "content": "Arriving on site…",
-                          "type": "typography"
+                          "color": "muted",
+                          "variant": "caption"
                         }
                       ],
-                      "gap": "md"
+                      "direction": "vertical",
+                      "type": "stack",
+                      "gap": "md",
+                      "align": "center"
                     }
                   ]
                 ]
@@ -1280,22 +1347,22 @@
                     "render-ui",
                     "main",
                     {
-                      "direction": "vertical",
-                      "type": "stack",
                       "align": "center",
                       "className": "py-12",
+                      "direction": "vertical",
                       "gap": "md",
                       "children": [
                         {
                           "type": "spinner"
                         },
                         {
-                          "variant": "caption",
-                          "type": "typography",
                           "color": "muted",
-                          "content": "Completing order…"
+                          "variant": "caption",
+                          "content": "Completing order…",
+                          "type": "typography"
                         }
-                      ]
+                      ],
+                      "type": "stack"
                     }
                   ]
                 ]
@@ -1315,8 +1382,8 @@
                     "WorkOrder",
                     {
                       "emit": {
-                        "failure": "WorkOrderLoadFailed",
-                        "success": "WorkOrderLoaded"
+                        "success": "WorkOrderLoaded",
+                        "failure": "WorkOrderLoadFailed"
                       }
                     }
                   ],
@@ -1324,22 +1391,22 @@
                     "render-ui",
                     "main",
                     {
-                      "gap": "md",
+                      "direction": "vertical",
                       "align": "center",
-                      "className": "py-12",
                       "children": [
                         {
                           "type": "spinner"
                         },
                         {
                           "type": "typography",
-                          "variant": "caption",
+                          "content": "Cancelling order…",
                           "color": "muted",
-                          "content": "Cancelling order…"
+                          "variant": "caption"
                         }
                       ],
-                      "direction": "vertical",
-                      "type": "stack"
+                      "className": "py-12",
+                      "type": "stack",
+                      "gap": "md"
                     }
                   ]
                 ]
@@ -1363,8 +1430,8 @@
                     "render-ui",
                     "main",
                     {
-                      "size": "sm",
-                      "type": "spinner"
+                      "type": "spinner",
+                      "size": "sm"
                     }
                   ]
                 ]
@@ -1372,51 +1439,6 @@
             ]
           },
           "config": {
-            "itemActions": {
-              "type": "[ItemAction]",
-              "default": [
-                {
-                  "event": "OPEN_ORDER",
-                  "icon": "arrow-right",
-                  "label": "Open",
-                  "variant": "primary"
-                },
-                {
-                  "variant": "danger",
-                  "label": "Cancel",
-                  "event": "CANCEL",
-                  "icon": "x"
-                }
-              ],
-              "label": "Row actions",
-              "description": "Buttons users can click on each work order row",
-              "tier": "customization",
-              "items": {
-                "type": "object",
-                "properties": {
-                  "event": {
-                    "name": "event",
-                    "type": "string",
-                    "required": true
-                  },
-                  "variant": {
-                    "name": "variant",
-                    "type": "string",
-                    "required": false
-                  },
-                  "icon": {
-                    "name": "icon",
-                    "type": "string",
-                    "required": false
-                  },
-                  "label": {
-                    "name": "label",
-                    "type": "string",
-                    "required": true
-                  }
-                }
-              }
-            },
             "fields": {
               "type": "[FieldSpec]",
               "default": [
@@ -1426,33 +1448,33 @@
                   "name": "customerName"
                 },
                 {
-                  "variant": "caption",
+                  "name": "serviceType",
                   "label": "Service",
-                  "name": "serviceType"
+                  "variant": "caption"
                 },
                 {
                   "variant": "caption",
-                  "label": "Address",
-                  "name": "address"
+                  "name": "address",
+                  "label": "Address"
                 },
                 {
+                  "label": "Priority",
                   "name": "priority",
-                  "variant": "badge",
-                  "label": "Priority"
-                },
-                {
-                  "label": "Status",
-                  "name": "status",
                   "variant": "badge"
                 },
                 {
-                  "name": "assignedTo",
-                  "variant": "caption",
-                  "label": "Assigned"
+                  "label": "Status",
+                  "variant": "badge",
+                  "name": "status"
                 },
                 {
-                  "variant": "caption",
+                  "name": "assignedTo",
+                  "label": "Assigned",
+                  "variant": "caption"
+                },
+                {
                   "label": "ETA (min)",
+                  "variant": "caption",
                   "name": "etaMinutes"
                 }
               ],
@@ -1462,8 +1484,13 @@
               "items": {
                 "type": "object",
                 "properties": {
-                  "key": {
-                    "name": "key",
+                  "variant": {
+                    "name": "variant",
+                    "type": "string",
+                    "required": false
+                  },
+                  "format": {
+                    "name": "format",
                     "type": "string",
                     "required": false
                   },
@@ -1472,28 +1499,23 @@
                     "type": "string",
                     "required": false
                   },
-                  "header": {
-                    "name": "header",
-                    "type": "string",
-                    "required": false
-                  },
-                  "variant": {
-                    "name": "variant",
-                    "type": "string",
-                    "required": false
-                  },
                   "name": {
                     "name": "name",
                     "type": "string",
                     "required": true
                   },
-                  "format": {
-                    "name": "format",
+                  "icon": {
+                    "name": "icon",
                     "type": "string",
                     "required": false
                   },
-                  "icon": {
-                    "name": "icon",
+                  "header": {
+                    "name": "header",
+                    "type": "string",
+                    "required": false
+                  },
+                  "key": {
+                    "name": "key",
                     "type": "string",
                     "required": false
                   }
@@ -1505,6 +1527,139 @@
               "default": "Work Orders",
               "label": "Section title",
               "description": "Heading shown above the field service work orders",
+              "tier": "customization"
+            },
+            "serviceAreaRadius": {
+              "type": "number",
+              "default": 50.0,
+              "label": "Service area radius (mi)",
+              "description": "Maximum distance from the service hub for dispatch eligibility.",
+              "tier": "customization"
+            },
+            "dispatchStrategy": {
+              "type": "string",
+              "default": "nearest",
+              "label": "Dispatch strategy",
+              "description": "How techs are assigned: nearest = closest available, round-robin = even distribution, manual = dispatcher picks.",
+              "tier": "customization",
+              "values": [
+                "nearest",
+                "round-robin",
+                "manual"
+              ]
+            },
+            "escalationThresholdHours": {
+              "type": "number",
+              "default": 48.0,
+              "label": "Escalation threshold (hours)",
+              "description": "Hours after which an open order auto-escalates to escalationRoles. Compose std-lifecycle for wiring.",
+              "tier": "customization"
+            },
+            "itemActions": {
+              "type": "[ItemAction]",
+              "default": [
+                {
+                  "variant": "primary",
+                  "event": "OPEN_ORDER",
+                  "icon": "arrow-right",
+                  "label": "Open"
+                },
+                {
+                  "variant": "danger",
+                  "event": "CANCEL",
+                  "label": "Cancel",
+                  "icon": "x"
+                }
+              ],
+              "label": "Row actions",
+              "description": "Buttons users can click on each work order row",
+              "tier": "customization",
+              "items": {
+                "type": "object",
+                "properties": {
+                  "label": {
+                    "name": "label",
+                    "type": "string",
+                    "required": true
+                  },
+                  "variant": {
+                    "name": "variant",
+                    "type": "string",
+                    "required": false
+                  },
+                  "icon": {
+                    "name": "icon",
+                    "type": "string",
+                    "required": false
+                  },
+                  "event": {
+                    "name": "event",
+                    "type": "string",
+                    "required": true
+                  }
+                }
+              }
+            },
+            "skillsRequired": {
+              "type": "[string]",
+              "default": [],
+              "label": "Required skills",
+              "description": "Capability tags a tech must have to be assigned (e.g. 'plumbing', 'electrical', 'hvac').",
+              "tier": "customization",
+              "items": {
+                "type": "string"
+              }
+            },
+            "responseTimeMinutes": {
+              "type": "number",
+              "default": 60.0,
+              "label": "Response time SLA (min)",
+              "description": "Target time from order created to first response (assigned + acknowledged). Drives SLA dashboards and escalation.",
+              "tier": "essential"
+            },
+            "customerVisibleStatuses": {
+              "type": "[string]",
+              "default": [
+                "assigned",
+                "en-route",
+                "completed"
+              ],
+              "label": "Customer-visible statuses",
+              "description": "Subset of statuses the customer can see in their tracking view. Internal-only statuses are filtered.",
+              "tier": "customization",
+              "items": {
+                "type": "string"
+              }
+            },
+            "requirePhotoOnComplete": {
+              "type": "boolean",
+              "default": false,
+              "label": "Require photo on complete",
+              "description": "Block COMPLETE action unless a completion photo is attached.",
+              "tier": "customization"
+            },
+            "serviceZones": {
+              "type": "[string]",
+              "default": [],
+              "label": "Service zones",
+              "description": "Named geographic zones for dispatch grouping. Empty = no zone restriction.",
+              "tier": "customization",
+              "items": {
+                "type": "string"
+              }
+            },
+            "resolutionSLAHours": {
+              "type": "number",
+              "default": 24.0,
+              "label": "Resolution SLA (hours)",
+              "description": "Target time from order created to completed. Compose sibling std-lifecycle to auto-escalate at threshold.",
+              "tier": "essential"
+            },
+            "requireSignatureOnComplete": {
+              "type": "boolean",
+              "default": false,
+              "label": "Require customer signature on complete",
+              "description": "Block COMPLETE action unless customer signature is captured (compose std-signature-capture).",
               "tier": "customization"
             }
           },

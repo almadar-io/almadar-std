@@ -1,5 +1,5 @@
-app std-audit-capture "1.0.0"
-"std-audit-capture — event-interceptor audit log. Listens for the generic `EntityMutated` sentinel (rename via traitOverrides.events to the real mutation event, e.g. ContactSaved) and persists an AuditEntry row capturing actor, action, entity type/id, and timestamp. Composable via `extraTraits` to interpose audit logging behind any mutating trait without touching its state machine."
+app std-audit-capture "1.1.0"
+"std-audit-capture — event-interceptor audit log. Listens for the generic `EntityMutated` sentinel (rename via traitOverrides.events to the real mutation event, e.g. ContactSaved) and persists an AuditEntry row capturing actor, action, entity type/id, before/after snapshots, and timestamp. `captureEventTypes` filters on @payload.data.kind (empty = capture all). Compose with `std-lifecycle` to apply retention. Composable via `extraTraits` to interpose audit logging behind any mutating trait."
 
 orbital AuditCaptureOrbital {
   entity AuditEntry [persistent: audit_entries] {
@@ -8,6 +8,8 @@ orbital AuditCaptureOrbital {
     action     : string  = ""
     entityType : string  = ""
     entityId   : string  = ""
+    before     : object  = {}
+    after      : object  = {}
     recordedAt : number  = 0
   }
 
@@ -20,37 +22,52 @@ orbital AuditCaptureOrbital {
         @label "Entity to audit"
         @description "Type name of the entity whose mutations get logged"
         @tier "essential"
-      captureEventTypes : [string] = ["Saved", "Deleted"]
-        @label "Event suffixes"
-        @description "Mutation suffixes (Saved, Deleted, etc.) that trigger an audit row"
+      captureEventTypes : [string] = []
+        @label "Event-kind filter"
+        @description "When set, only @payload.data.kind values in this list are audited. Empty list = capture every event. Requires the upstream event to include a `kind` field on its payload."
         @tier "advanced"
       excludeFields     : [string] = []
         @label "Skip fields"
-        @description "Entity fields to omit from the audit payload"
+        @description "Entity fields to omit from the audit payload (declarative; before/after still capture all fields in v1.1 — field exclusion lands when captureBeforeAfter wiring filters per-field)."
+        @tier "advanced"
+      captureBeforeAfter : boolean = false
+        @label "Capture before/after snapshots"
+        @description "When true, persist `before` and `after` object snapshots from @payload.data on each audit row. Default off to keep audit rows small."
+        @tier "advanced"
+      retentionDays      : number  = 2555
+        @label "Retention (days)"
+        @description "Days to keep audit rows. Default 2555 (7 years) for typical compliance regimes. WIRING DEFERRED: retention enforcement requires composing `std-lifecycle` against AuditEntry with a delete rule (gap — docs/Almadar_Std_Factories.md)."
         @tier "advanced"
     }
     initial: idle
     state idle {
       EntityMutated -> idle
-        (set @entity.actor "@user.id")
-        (set @entity.action "EntityMutated")
-        (set @entity.entityType @config.captureEntity)
-        (set @entity.entityId (object/get @payload.data "id"))
-        (set @entity.recordedAt 0)
-        (persist create AuditEntry {
-          actor:      "@user.id",
-          action:     "EntityMutated",
-          entityType: "@config.captureEntity",
-          entityId:   "@payload.data.id",
-          recordedAt: 0
-        })
-        (emit AuditRecorded {
-          actor:      "@user.id",
-          action:     "EntityMutated",
-          entityType: "@config.captureEntity",
-          entityId:   "@payload.data.id",
-          recordedAt: 0
-        })
+        (when (or (= (array/len @config.captureEventTypes) 0)
+                  (array/includes @config.captureEventTypes (object/get @payload.data "kind" "")))
+          (do
+            (set @entity.actor "@user.id")
+            (set @entity.action (object/get @payload.data "kind" "EntityMutated"))
+            (set @entity.entityType @config.captureEntity)
+            (set @entity.entityId (object/get @payload.data "id" ""))
+            (set @entity.before (if @config.captureBeforeAfter (object/get @payload.data "before" {}) {}))
+            (set @entity.after  (if @config.captureBeforeAfter (object/get @payload.data "after"  {}) {}))
+            (set @entity.recordedAt 0)
+            (persist create AuditEntry {
+              actor:      "@user.id",
+              action:     @entity.action,
+              entityType: "@config.captureEntity",
+              entityId:   @entity.entityId,
+              before:     @entity.before,
+              after:      @entity.after,
+              recordedAt: 0
+            })
+            (emit AuditRecorded {
+              actor:      "@user.id",
+              action:     @entity.action,
+              entityType: "@config.captureEntity",
+              entityId:   @entity.entityId,
+              recordedAt: 0
+            })))
     }
     emits {
       AuditRecorded -> external { actor : string, action : string, entityType : string, entityId : string, recordedAt : number }

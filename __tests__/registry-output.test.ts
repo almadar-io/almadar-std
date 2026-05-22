@@ -21,7 +21,7 @@ import { describe, it, expect } from 'vitest';
 const REGISTRY_PATH = path.resolve(__dirname, '..', 'behaviors', 'behaviors-registry.json');
 const REGISTRY_DIR = path.resolve(__dirname, '..', 'behaviors', 'registry');
 
-const VALID_TOPICS = ['core', 'agent', 'app', 'game', 'service', 'probes'] as const;
+const VALID_TOPICS = ['core', 'agent', 'app', 'game', 'service', 'probes', 'marketing'] as const;
 const VALID_LEVELS = ['atom', 'molecule', 'organism'] as const;
 
 interface RegistryEntry {

@@ -1,5 +1,5 @@
-app std-vehicle "1.1.0"
-"std-vehicle — fleet vehicle primitive. Lists vehicles in `browsing` with fleet stats + map view; opens vehicle detail in `viewing_single` (VIN, plate, make/model, odometer, status, driver) with Assign Driver / Maintenance / Retire actions. Agents tune the list shape via `config.fields` + `config.itemActions`."
+app std-vehicle "1.2.0"
+"std-vehicle — fleet vehicle primitive. Lists vehicles + map; detail offers Assign Driver / Maintenance / Retire. Listens for SET_STATUS so sibling std-lifecycle can drive automated transitions. Exposes Inventory/Logistics knobs (defaultWarehouse, serialTracking, …)."
 
 type FieldSpec = { name : string!, label : string, variant : string, icon : string, format : string, key : string, header : string }
 type ItemAction = { label : string!, event : string!, variant : string, icon : string }
@@ -20,8 +20,10 @@ orbital VehicleOrbital {
     pendingId        : string = ""
   }
 
-  type VehicleLoaded     = Event { data : [Vehicle], totalCount : number }   "Fired when the vehicle collection finishes loading"
-  type VehicleLoadFailed = Event { error : string, code : string }           "Fired when the vehicle collection fails to load"
+  type VehicleLoaded       = Event { data : [Vehicle], totalCount : number }   "Fired when the vehicle collection finishes loading"
+  type VehicleLoadFailed   = Event { error : string, code : string }           "Fired when the vehicle collection fails to load"
+  type VehicleUpdated      = Event { row : Vehicle }                            "Fired after a vehicle row's status persists (retire / maintenance / SET_STATUS)"
+  type VehicleUpdateFailed = Event { error : string, code : string }           "Fired when a vehicle row's status update fails to persist"
 
   trait VehicleFleet -> Vehicle [interaction, collection] {
     config {
@@ -37,6 +39,34 @@ orbital VehicleOrbital {
         @label "Row actions"
         @description "Buttons users can click on each vehicle row"
         @tier "customization"
+      defaultWarehouse        : string  = ""
+        @label "Default depot / warehouse"
+        @description "Depot the vehicle is stationed at by default."
+        @tier "customization"
+      multiLocationEnabled    : boolean = false
+        @label "Multi-location"
+        @description "Allow the vehicle to operate across multiple depots."
+        @tier "customization"
+      serialTrackingEnabled   : boolean = false
+        @label "Serial tracking"
+        @description "Track serial numbers of cargo handled by this vehicle. v1.2 declarative."
+        @tier "customization"
+      lotTrackingEnabled      : boolean = false
+        @label "Lot tracking"
+        @description "Track lot/batch numbers on carried inventory."
+        @tier "customization"
+      expiryTrackingEnabled   : boolean = false
+        @label "Expiry tracking"
+        @description "Track expiry dates on carried inventory."
+        @tier "customization"
+      hazmatEnabled           : boolean = false
+        @label "Hazmat capable"
+        @description "Vehicle is certified to carry hazardous materials."
+        @tier "advanced"
+      cycleCountFrequencyDays : number  = 30
+        @label "Cycle count cadence (days)"
+        @description "Days between scheduled inventory cycle counts. v1.2 declarative."
+        @tier "advanced"
     }
     initial: loading
     state loading {
@@ -66,6 +96,15 @@ orbital VehicleOrbital {
         (set @entity.id @payload.id)
         (fetch Vehicle { emit: { success: "VehicleLoaded", failure: "VehicleLoadFailed" } })
         (render-ui main { type: "stack", direction: "vertical", gap: "md", align: "center", className: "py-12", children: [{ type: "spinner" }, { type: "typography", variant: "caption", color: "muted", content: "Retiring vehicle…" }] })
+      SET_STATUS -> loading
+        (set @entity.id @payload.entityId)
+        (set @entity.status @payload.newStatus)
+        (persist update Vehicle @entity { emit: { success: "VehicleUpdated", failure: "VehicleUpdateFailed" } })
+        (render-ui main { type: "stack", direction: "vertical", gap: "md", align: "center", className: "py-12", children: [{ type: "spinner" }, { type: "typography", variant: "caption", color: "muted", content: "Updating vehicle status…" }] })
+      VehicleUpdated -> loading
+        (fetch Vehicle { emit: { success: "VehicleLoaded", failure: "VehicleLoadFailed" } })
+      VehicleUpdateFailed -> browsing
+        (render-ui main { type: "alert", variant: "error", message: "@payload.error" })
     }
     state viewing_single {
       CLOSE_VEHICLE -> loading
@@ -90,22 +129,27 @@ orbital VehicleOrbital {
         (render-ui main { type: "spinner", size: "sm" })
     }
     emits {
-      OPEN_VEHICLE      { id : string!, row : Vehicle }
-      CLOSE_VEHICLE     { }
-      ASSIGN_DRIVER     { id : string! }
-      MARK_MAINTENANCE  { id : string! }
-      RETIRE            { id : string! }
-      VehicleLoaded     { data : [Vehicle], totalCount : number }
-      VehicleLoadFailed { error : string, code : string }
+      OPEN_VEHICLE        { id : string!, row : Vehicle }
+      CLOSE_VEHICLE       { }
+      ASSIGN_DRIVER       { id : string! }
+      MARK_MAINTENANCE    { id : string! }
+      RETIRE              { id : string! }
+      VehicleLoaded       { data : [Vehicle], totalCount : number }
+      VehicleLoadFailed   { error : string, code : string }
+      VehicleUpdated      { row : Vehicle }
+      VehicleUpdateFailed { error : string, code : string }
     }
     listens {
-      OPEN_VEHICLE      { id : string!, row : Vehicle }
-      CLOSE_VEHICLE     { }
-      ASSIGN_DRIVER     { id : string! }
-      MARK_MAINTENANCE  { id : string! }
-      RETIRE            { id : string! }
-      VehicleLoaded     { data : [Vehicle], totalCount : number }
-      VehicleLoadFailed { error : string, code : string }
+      OPEN_VEHICLE        { id : string!, row : Vehicle }
+      CLOSE_VEHICLE       { }
+      ASSIGN_DRIVER       { id : string! }
+      MARK_MAINTENANCE    { id : string! }
+      RETIRE              { id : string! }
+      SET_STATUS          { entityId : string!, newStatus : string! }
+      VehicleLoaded       { data : [Vehicle], totalCount : number }
+      VehicleLoadFailed   { error : string, code : string }
+      VehicleUpdated      { row : Vehicle }
+      VehicleUpdateFailed { error : string, code : string }
     }
   }
   page "/vehicles" as VehiclePage -> VehicleFleet

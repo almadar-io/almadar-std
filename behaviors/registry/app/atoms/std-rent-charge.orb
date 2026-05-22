@@ -1,7 +1,7 @@
 {
   "name": "std-rent-charge",
-  "version": "1.1.0",
-  "description": "std-rent-charge — monthly rent charge ledger. Lists charges in `browsing`; opens detail in `viewing_single` with Mark Paid / Late Fee / Waive actions. Agents tune the list shape via `config.fields` + `config.itemActions`.",
+  "version": "1.2.0",
+  "description": "std-rent-charge — monthly rent charge ledger with Mark Paid / Late Fee / Waive. Listens for SET_STATUS so std-lifecycle can drive automated transitions. Exposes Financial + Real-Estate-pattern knobs.",
   "orbitals": [
     {
       "name": "RentChargeOrbital",
@@ -172,6 +172,63 @@
                   "type": "string"
                 }
               ]
+            },
+            {
+              "event": "RentChargeUpdated",
+              "payloadSchema": [
+                {
+                  "name": "row.id",
+                  "type": "string",
+                  "required": true
+                },
+                {
+                  "name": "row.tenantId",
+                  "type": "string",
+                  "required": true
+                },
+                {
+                  "name": "row.leaseId",
+                  "type": "string"
+                },
+                {
+                  "name": "row.amount",
+                  "type": "number"
+                },
+                {
+                  "name": "row.dueDate",
+                  "type": "string",
+                  "required": true
+                },
+                {
+                  "name": "row.paidAt",
+                  "type": "string"
+                },
+                {
+                  "name": "row.status",
+                  "type": "string"
+                },
+                {
+                  "name": "row.lateFee",
+                  "type": "number"
+                },
+                {
+                  "name": "row.notes",
+                  "type": "string"
+                }
+              ]
+            },
+            {
+              "event": "RentChargeUpdateFailed",
+              "payloadSchema": [
+                {
+                  "name": "error",
+                  "type": "string"
+                },
+                {
+                  "name": "code",
+                  "type": "string"
+                }
+              ]
             }
           ],
           "stateMachine": {
@@ -268,6 +325,46 @@
                 ]
               },
               {
+                "key": "SET_STATUS",
+                "name": "Set Status",
+                "payloadSchema": [
+                  {
+                    "name": "entityId",
+                    "type": "string",
+                    "required": true
+                  },
+                  {
+                    "name": "newStatus",
+                    "type": "string",
+                    "required": true
+                  }
+                ]
+              },
+              {
+                "key": "RentChargeUpdated",
+                "name": "RentCharge updated",
+                "payloadSchema": [
+                  {
+                    "name": "row",
+                    "type": "RentCharge"
+                  }
+                ]
+              },
+              {
+                "key": "RentChargeUpdateFailed",
+                "name": "RentCharge update failed",
+                "payloadSchema": [
+                  {
+                    "name": "error",
+                    "type": "string"
+                  },
+                  {
+                    "name": "code",
+                    "type": "string"
+                  }
+                ]
+              },
+              {
                 "key": "CLOSE_VIEW",
                 "name": "Close View"
               }
@@ -292,22 +389,22 @@
                     "render-ui",
                     "main",
                     {
-                      "className": "py-12",
+                      "type": "stack",
+                      "gap": "md",
+                      "direction": "vertical",
+                      "align": "center",
                       "children": [
                         {
                           "type": "spinner"
                         },
                         {
-                          "color": "muted",
                           "type": "typography",
+                          "variant": "caption",
                           "content": "Loading rent charges…",
-                          "variant": "caption"
+                          "color": "muted"
                         }
                       ],
-                      "gap": "md",
-                      "type": "stack",
-                      "direction": "vertical",
-                      "align": "center"
+                      "className": "py-12"
                     }
                   ]
                 ]
@@ -321,69 +418,69 @@
                     "render-ui",
                     "main",
                     {
+                      "direction": "vertical",
                       "type": "stack",
+                      "gap": "md",
                       "children": [
                         {
-                          "align": "center",
-                          "gap": "sm",
                           "type": "stack",
                           "direction": "horizontal",
+                          "align": "center",
                           "children": [
                             {
                               "type": "icon",
                               "name": "home"
                             },
                             {
-                              "content": "@config.title",
                               "type": "typography",
+                              "content": "@config.title",
                               "variant": "h3"
                             }
-                          ]
+                          ],
+                          "gap": "sm"
                         },
                         {
                           "type": "simple-grid",
+                          "cols": 4.0,
                           "children": [
                             {
-                              "icon": "home",
                               "type": "stat-display",
+                              "value": "@payload.data.length",
                               "label": "Total charges",
-                              "value": "@payload.data.length"
+                              "icon": "home"
                             },
                             {
-                              "label": "Collected",
-                              "icon": "check-circle",
                               "value": "$284,500",
-                              "type": "stat-display"
+                              "type": "stat-display",
+                              "label": "Collected",
+                              "icon": "check-circle"
                             },
                             {
-                              "type": "stat-display",
-                              "icon": "alert-triangle",
                               "label": "Overdue",
-                              "value": "11"
+                              "value": "11",
+                              "type": "stat-display",
+                              "icon": "alert-triangle"
                             },
                             {
-                              "icon": "dollar-sign",
                               "type": "stat-display",
+                              "value": "$1,840",
                               "label": "Late fees",
-                              "value": "$1,840"
+                              "icon": "dollar-sign"
                             }
-                          ],
-                          "cols": 4.0
+                          ]
                         },
                         {
                           "type": "divider"
                         },
                         {
-                          "itemActions": "@config.itemActions",
                           "entity": "@payload.data",
-                          "type": "data-grid",
-                          "fields": "@config.fields",
+                          "gap": "sm",
                           "cols": 1.0,
-                          "gap": "sm"
+                          "fields": "@config.fields",
+                          "itemActions": "@config.itemActions",
+                          "type": "data-grid"
                         }
-                      ],
-                      "direction": "vertical",
-                      "gap": "md"
+                      ]
                     }
                   ]
                 ]
@@ -397,9 +494,9 @@
                     "render-ui",
                     "main",
                     {
+                      "variant": "error",
                       "type": "alert",
-                      "message": "@payload.error",
-                      "variant": "error"
+                      "message": "@payload.error"
                     }
                   ]
                 ]
@@ -458,18 +555,16 @@
                     "render-ui",
                     "main",
                     {
-                      "type": "stack",
-                      "direction": "vertical",
-                      "gap": "md",
                       "children": [
                         {
+                          "align": "center",
                           "gap": "sm",
                           "direction": "horizontal",
                           "children": [
                             {
-                              "variant": "ghost",
                               "type": "button",
                               "label": "Back",
+                              "variant": "ghost",
                               "action": "CLOSE_VIEW"
                             },
                             {
@@ -482,59 +577,58 @@
                               "content": "@entity.tenantId"
                             },
                             {
-                              "label": "@entity.status",
                               "variant": "default",
-                              "type": "badge"
+                              "type": "badge",
+                              "label": "@entity.status"
                             }
                           ],
-                          "align": "center",
                           "type": "stack"
                         },
                         {
                           "type": "divider"
                         },
                         {
+                          "gap": "sm",
                           "children": [
                             {
+                              "direction": "horizontal",
                               "type": "stack",
-                              "gap": "md",
                               "children": [
                                 {
-                                  "color": "muted",
                                   "type": "typography",
+                                  "content": "Lease",
                                   "variant": "caption",
-                                  "content": "Lease"
+                                  "color": "muted"
                                 },
                                 {
-                                  "type": "typography",
                                   "variant": "body",
-                                  "content": "@entity.leaseId"
+                                  "content": "@entity.leaseId",
+                                  "type": "typography"
                                 }
                               ],
-                              "direction": "horizontal"
+                              "gap": "md"
                             },
                             {
-                              "gap": "md",
+                              "type": "stack",
+                              "direction": "horizontal",
                               "children": [
                                 {
                                   "color": "muted",
                                   "variant": "caption",
-                                  "content": "Notes",
-                                  "type": "typography"
+                                  "type": "typography",
+                                  "content": "Notes"
                                 },
                                 {
+                                  "type": "typography",
                                   "variant": "body",
-                                  "content": "@entity.notes",
-                                  "type": "typography"
+                                  "content": "@entity.notes"
                                 }
                               ],
-                              "type": "stack",
-                              "direction": "horizontal"
+                              "gap": "md"
                             }
                           ],
-                          "gap": "sm",
-                          "direction": "vertical",
-                          "type": "stack"
+                          "type": "stack",
+                          "direction": "vertical"
                         },
                         {
                           "type": "divider"
@@ -542,10 +636,10 @@
                         {
                           "children": [
                             {
-                              "icon": "dollar-sign",
-                              "type": "stat-display",
+                              "label": "Amount",
                               "value": "@entity.amount",
-                              "label": "Amount"
+                              "type": "stat-display",
+                              "icon": "dollar-sign"
                             },
                             {
                               "label": "Late fee",
@@ -555,15 +649,15 @@
                             },
                             {
                               "icon": "calendar",
-                              "label": "Due",
+                              "type": "stat-display",
                               "value": "@entity.dueDate",
-                              "type": "stat-display"
+                              "label": "Due"
                             },
                             {
-                              "icon": "check-circle",
                               "label": "Paid",
-                              "type": "stat-display",
-                              "value": "@entity.paidAt"
+                              "value": "@entity.paidAt",
+                              "icon": "check-circle",
+                              "type": "stat-display"
                             }
                           ],
                           "type": "simple-grid",
@@ -571,40 +665,43 @@
                         },
                         {
                           "type": "stack",
-                          "gap": "sm",
-                          "direction": "horizontal",
+                          "align": "center",
                           "children": [
                             {
-                              "action": "MARK_PAID",
-                              "variant": "primary",
                               "actionPayload": {
                                 "id": "@entity.id"
                               },
                               "type": "button",
-                              "label": "Mark Paid"
+                              "label": "Mark Paid",
+                              "variant": "primary",
+                              "action": "MARK_PAID"
                             },
                             {
                               "label": "Assess Late Fee",
+                              "variant": "secondary",
                               "type": "button",
                               "action": "ASSESS_LATE_FEE",
                               "actionPayload": {
                                 "id": "@entity.id"
-                              },
-                              "variant": "secondary"
+                              }
                             },
                             {
-                              "label": "Waive",
-                              "action": "WAIVE_CHARGE",
-                              "variant": "danger",
-                              "type": "button",
                               "actionPayload": {
                                 "id": "@entity.id"
-                              }
+                              },
+                              "action": "WAIVE_CHARGE",
+                              "type": "button",
+                              "label": "Waive",
+                              "variant": "danger"
                             }
                           ],
-                          "align": "center"
+                          "direction": "horizontal",
+                          "gap": "sm"
                         }
-                      ]
+                      ],
+                      "type": "stack",
+                      "gap": "md",
+                      "direction": "vertical"
                     }
                   ]
                 ]
@@ -613,94 +710,6 @@
                 "from": "browsing",
                 "to": "loading",
                 "event": "MARK_PAID",
-                "effects": [
-                  [
-                    "set",
-                    "@entity.id",
-                    "@payload.id"
-                  ],
-                  [
-                    "fetch",
-                    "RentCharge",
-                    {
-                      "emit": {
-                        "success": "RentChargeLoaded",
-                        "failure": "RentChargeLoadFailed"
-                      }
-                    }
-                  ],
-                  [
-                    "render-ui",
-                    "main",
-                    {
-                      "gap": "md",
-                      "type": "stack",
-                      "className": "py-12",
-                      "direction": "vertical",
-                      "align": "center",
-                      "children": [
-                        {
-                          "type": "spinner"
-                        },
-                        {
-                          "color": "muted",
-                          "type": "typography",
-                          "variant": "caption",
-                          "content": "Recording payment…"
-                        }
-                      ]
-                    }
-                  ]
-                ]
-              },
-              {
-                "from": "browsing",
-                "to": "loading",
-                "event": "ASSESS_LATE_FEE",
-                "effects": [
-                  [
-                    "set",
-                    "@entity.id",
-                    "@payload.id"
-                  ],
-                  [
-                    "fetch",
-                    "RentCharge",
-                    {
-                      "emit": {
-                        "success": "RentChargeLoaded",
-                        "failure": "RentChargeLoadFailed"
-                      }
-                    }
-                  ],
-                  [
-                    "render-ui",
-                    "main",
-                    {
-                      "direction": "vertical",
-                      "type": "stack",
-                      "gap": "md",
-                      "children": [
-                        {
-                          "type": "spinner"
-                        },
-                        {
-                          "color": "muted",
-                          "type": "typography",
-                          "variant": "caption",
-                          "content": "Assessing late fee…"
-                        }
-                      ],
-                      "align": "center",
-                      "className": "py-12"
-                    }
-                  ]
-                ]
-              },
-              {
-                "from": "browsing",
-                "to": "loading",
-                "event": "WAIVE_CHARGE",
                 "effects": [
                   [
                     "set",
@@ -722,8 +731,6 @@
                     "main",
                     {
                       "align": "center",
-                      "className": "py-12",
-                      "gap": "md",
                       "direction": "vertical",
                       "children": [
                         {
@@ -731,12 +738,186 @@
                         },
                         {
                           "color": "muted",
-                          "variant": "caption",
                           "type": "typography",
+                          "variant": "caption",
+                          "content": "Recording payment…"
+                        }
+                      ],
+                      "className": "py-12",
+                      "gap": "md",
+                      "type": "stack"
+                    }
+                  ]
+                ]
+              },
+              {
+                "from": "browsing",
+                "to": "loading",
+                "event": "ASSESS_LATE_FEE",
+                "effects": [
+                  [
+                    "set",
+                    "@entity.id",
+                    "@payload.id"
+                  ],
+                  [
+                    "fetch",
+                    "RentCharge",
+                    {
+                      "emit": {
+                        "failure": "RentChargeLoadFailed",
+                        "success": "RentChargeLoaded"
+                      }
+                    }
+                  ],
+                  [
+                    "render-ui",
+                    "main",
+                    {
+                      "align": "center",
+                      "direction": "vertical",
+                      "className": "py-12",
+                      "children": [
+                        {
+                          "type": "spinner"
+                        },
+                        {
+                          "type": "typography",
+                          "content": "Assessing late fee…",
+                          "variant": "caption",
+                          "color": "muted"
+                        }
+                      ],
+                      "type": "stack",
+                      "gap": "md"
+                    }
+                  ]
+                ]
+              },
+              {
+                "from": "browsing",
+                "to": "loading",
+                "event": "WAIVE_CHARGE",
+                "effects": [
+                  [
+                    "set",
+                    "@entity.id",
+                    "@payload.id"
+                  ],
+                  [
+                    "fetch",
+                    "RentCharge",
+                    {
+                      "emit": {
+                        "success": "RentChargeLoaded",
+                        "failure": "RentChargeLoadFailed"
+                      }
+                    }
+                  ],
+                  [
+                    "render-ui",
+                    "main",
+                    {
+                      "className": "py-12",
+                      "children": [
+                        {
+                          "type": "spinner"
+                        },
+                        {
+                          "type": "typography",
+                          "variant": "caption",
+                          "color": "muted",
                           "content": "Waiving charge…"
                         }
                       ],
-                      "type": "stack"
+                      "direction": "vertical",
+                      "type": "stack",
+                      "gap": "md",
+                      "align": "center"
+                    }
+                  ]
+                ]
+              },
+              {
+                "from": "browsing",
+                "to": "loading",
+                "event": "SET_STATUS",
+                "effects": [
+                  [
+                    "set",
+                    "@entity.id",
+                    "@payload.entityId"
+                  ],
+                  [
+                    "set",
+                    "@entity.status",
+                    "@payload.newStatus"
+                  ],
+                  [
+                    "persist",
+                    "update",
+                    "RentCharge",
+                    "@entity",
+                    {
+                      "emit": {
+                        "failure": "RentChargeUpdateFailed",
+                        "success": "RentChargeUpdated"
+                      }
+                    }
+                  ],
+                  [
+                    "render-ui",
+                    "main",
+                    {
+                      "children": [
+                        {
+                          "type": "spinner"
+                        },
+                        {
+                          "content": "Updating charge status…",
+                          "variant": "caption",
+                          "type": "typography",
+                          "color": "muted"
+                        }
+                      ],
+                      "type": "stack",
+                      "gap": "md",
+                      "direction": "vertical",
+                      "align": "center",
+                      "className": "py-12"
+                    }
+                  ]
+                ]
+              },
+              {
+                "from": "browsing",
+                "to": "loading",
+                "event": "RentChargeUpdated",
+                "effects": [
+                  [
+                    "fetch",
+                    "RentCharge",
+                    {
+                      "emit": {
+                        "success": "RentChargeLoaded",
+                        "failure": "RentChargeLoadFailed"
+                      }
+                    }
+                  ]
+                ]
+              },
+              {
+                "from": "browsing",
+                "to": "browsing",
+                "event": "RentChargeUpdateFailed",
+                "effects": [
+                  [
+                    "render-ui",
+                    "main",
+                    {
+                      "type": "alert",
+                      "message": "@payload.error",
+                      "variant": "error"
                     }
                   ]
                 ]
@@ -760,22 +941,22 @@
                     "render-ui",
                     "main",
                     {
-                      "direction": "vertical",
-                      "gap": "md",
+                      "align": "center",
+                      "type": "stack",
                       "children": [
                         {
                           "type": "spinner"
                         },
                         {
-                          "type": "typography",
                           "color": "muted",
-                          "content": "Loading rent charges…",
-                          "variant": "caption"
+                          "type": "typography",
+                          "variant": "caption",
+                          "content": "Loading rent charges…"
                         }
                       ],
-                      "align": "center",
-                      "type": "stack",
-                      "className": "py-12"
+                      "className": "py-12",
+                      "gap": "md",
+                      "direction": "vertical"
                     }
                   ]
                 ]
@@ -804,22 +985,22 @@
                     "render-ui",
                     "main",
                     {
+                      "direction": "vertical",
+                      "type": "stack",
+                      "gap": "md",
+                      "className": "py-12",
+                      "align": "center",
                       "children": [
                         {
                           "type": "spinner"
                         },
                         {
-                          "variant": "caption",
                           "content": "Recording payment…",
-                          "type": "typography",
-                          "color": "muted"
+                          "variant": "caption",
+                          "color": "muted",
+                          "type": "typography"
                         }
-                      ],
-                      "direction": "vertical",
-                      "align": "center",
-                      "type": "stack",
-                      "gap": "md",
-                      "className": "py-12"
+                      ]
                     }
                   ]
                 ]
@@ -848,22 +1029,22 @@
                     "render-ui",
                     "main",
                     {
-                      "className": "py-12",
                       "direction": "vertical",
+                      "className": "py-12",
                       "type": "stack",
+                      "gap": "md",
                       "align": "center",
                       "children": [
                         {
                           "type": "spinner"
                         },
                         {
-                          "content": "Assessing late fee…",
-                          "type": "typography",
                           "variant": "caption",
-                          "color": "muted"
+                          "color": "muted",
+                          "content": "Assessing late fee…",
+                          "type": "typography"
                         }
-                      ],
-                      "gap": "md"
+                      ]
                     }
                   ]
                 ]
@@ -883,8 +1064,8 @@
                     "RentCharge",
                     {
                       "emit": {
-                        "success": "RentChargeLoaded",
-                        "failure": "RentChargeLoadFailed"
+                        "failure": "RentChargeLoadFailed",
+                        "success": "RentChargeLoaded"
                       }
                     }
                   ],
@@ -892,22 +1073,22 @@
                     "render-ui",
                     "main",
                     {
-                      "direction": "vertical",
-                      "className": "py-12",
-                      "gap": "md",
-                      "align": "center",
-                      "type": "stack",
                       "children": [
                         {
                           "type": "spinner"
                         },
                         {
-                          "type": "typography",
                           "color": "muted",
                           "variant": "caption",
+                          "type": "typography",
                           "content": "Waiving charge…"
                         }
-                      ]
+                      ],
+                      "align": "center",
+                      "className": "py-12",
+                      "type": "stack",
+                      "direction": "vertical",
+                      "gap": "md"
                     }
                   ]
                 ]
@@ -922,8 +1103,8 @@
                     "RentCharge",
                     {
                       "emit": {
-                        "failure": "RentChargeLoadFailed",
-                        "success": "RentChargeLoaded"
+                        "success": "RentChargeLoaded",
+                        "failure": "RentChargeLoadFailed"
                       }
                     }
                   ],
@@ -940,38 +1121,52 @@
             ]
           },
           "config": {
+            "retentionYears": {
+              "type": "number",
+              "default": 7.0,
+              "label": "Retention (years)",
+              "description": "Years to keep rent records for compliance.",
+              "tier": "advanced"
+            },
+            "title": {
+              "type": "string",
+              "default": "Rent Charges",
+              "label": "Section title",
+              "description": "Heading shown above the rent charge ledger",
+              "tier": "customization"
+            },
             "fields": {
               "type": "[FieldSpec]",
               "default": [
                 {
                   "name": "tenantId",
-                  "variant": "caption",
-                  "label": "Tenant"
-                },
-                {
-                  "name": "amount",
-                  "label": "Amount",
+                  "label": "Tenant",
                   "variant": "caption"
                 },
                 {
-                  "label": "Due",
+                  "label": "Amount",
                   "variant": "caption",
-                  "name": "dueDate"
+                  "name": "amount"
                 },
                 {
-                  "label": "Status",
+                  "name": "dueDate",
+                  "variant": "caption",
+                  "label": "Due"
+                },
+                {
                   "variant": "badge",
-                  "name": "status"
+                  "name": "status",
+                  "label": "Status"
                 },
                 {
                   "name": "paidAt",
-                  "label": "Paid",
-                  "variant": "caption"
+                  "variant": "caption",
+                  "label": "Paid"
                 },
                 {
-                  "variant": "caption",
                   "name": "lateFee",
-                  "label": "Late Fee"
+                  "label": "Late Fee",
+                  "variant": "caption"
                 }
               ],
               "label": "Columns to show",
@@ -985,18 +1180,23 @@
                     "type": "string",
                     "required": false
                   },
-                  "key": {
-                    "name": "key",
-                    "type": "string",
-                    "required": false
-                  },
-                  "header": {
-                    "name": "header",
-                    "type": "string",
-                    "required": false
-                  },
                   "variant": {
                     "name": "variant",
+                    "type": "string",
+                    "required": false
+                  },
+                  "icon": {
+                    "name": "icon",
+                    "type": "string",
+                    "required": false
+                  },
+                  "format": {
+                    "name": "format",
+                    "type": "string",
+                    "required": false
+                  },
+                  "key": {
+                    "name": "key",
                     "type": "string",
                     "required": false
                   },
@@ -1005,32 +1205,34 @@
                     "type": "string",
                     "required": true
                   },
-                  "format": {
-                    "name": "format",
-                    "type": "string",
-                    "required": false
-                  },
-                  "icon": {
-                    "name": "icon",
+                  "header": {
+                    "name": "header",
                     "type": "string",
                     "required": false
                   }
                 }
               }
             },
+            "currency": {
+              "type": "string",
+              "default": "USD",
+              "label": "Default currency",
+              "description": "ISO 4217 currency code (USD, EUR, GBP, …) for rent amounts.",
+              "tier": "essential"
+            },
             "itemActions": {
               "type": "[ItemAction]",
               "default": [
                 {
-                  "icon": "arrow-right",
                   "event": "OPEN_CHARGE",
-                  "label": "Open",
-                  "variant": "primary"
+                  "variant": "primary",
+                  "icon": "arrow-right",
+                  "label": "Open"
                 },
                 {
-                  "event": "WAIVE_CHARGE",
+                  "variant": "danger",
                   "label": "Waive",
-                  "variant": "danger"
+                  "event": "WAIVE_CHARGE"
                 }
               ],
               "label": "Row actions",
@@ -1039,20 +1241,20 @@
               "items": {
                 "type": "object",
                 "properties": {
-                  "variant": {
-                    "name": "variant",
+                  "event": {
+                    "name": "event",
                     "type": "string",
-                    "required": false
+                    "required": true
                   },
                   "label": {
                     "name": "label",
                     "type": "string",
                     "required": true
                   },
-                  "event": {
-                    "name": "event",
+                  "variant": {
+                    "name": "variant",
                     "type": "string",
-                    "required": true
+                    "required": false
                   },
                   "icon": {
                     "name": "icon",
@@ -1062,12 +1264,110 @@
                 }
               }
             },
-            "title": {
-              "type": "string",
-              "default": "Rent Charges",
-              "label": "Section title",
-              "description": "Heading shown above the rent charge ledger",
+            "autoRenewEnabled": {
+              "type": "boolean",
+              "default": false,
+              "label": "Auto-renew lease",
+              "description": "When true, leases auto-renew on expiry rather than going month-to-month. Declarative on rent-charge.",
               "tier": "customization"
+            },
+            "securityDepositMonths": {
+              "type": "number",
+              "default": 1.0,
+              "label": "Security deposit (months of rent)",
+              "description": "How many months of rent are held as a security deposit. Declarative on rent-charge.",
+              "tier": "customization"
+            },
+            "inspectionFrequencyMonths": {
+              "type": "number",
+              "default": 12.0,
+              "label": "Inspection frequency (months)",
+              "description": "How often property inspections are scheduled. Declarative.",
+              "tier": "advanced"
+            },
+            "lateFeePolicy": {
+              "type": "string",
+              "default": "flat",
+              "label": "Late fee policy",
+              "description": "How late fees compute on overdue rent: none, flat (lateFeeAmount cash), or percent (% of rent). Declarative; wiring deferred.",
+              "tier": "customization",
+              "values": [
+                "none",
+                "flat",
+                "percent"
+              ]
+            },
+            "roundingMode": {
+              "type": "string",
+              "default": "half-up",
+              "label": "Rounding mode",
+              "description": "Sub-cent rounding behavior for rent + late fee calculations.",
+              "tier": "advanced",
+              "values": [
+                "bankers",
+                "half-up",
+                "down"
+              ]
+            },
+            "complianceJurisdiction": {
+              "type": "string",
+              "default": "",
+              "label": "Compliance jurisdiction",
+              "description": "Drives rent regulations per locale: 'US-CA', 'EU-DE', 'UK', etc. Declarative.",
+              "tier": "advanced"
+            },
+            "leaseRenewalNoticeDays": {
+              "type": "number",
+              "default": 60.0,
+              "label": "Lease renewal notice (days)",
+              "description": "Days before lease end when a renewal notice should fire. Declarative on rent-charge; wired upstream by std-lease.",
+              "tier": "customization"
+            },
+            "gracePeriodDays": {
+              "type": "number",
+              "default": 5.0,
+              "label": "Grace period (days)",
+              "description": "Days after dueDate before the charge is treated as overdue. Wire via sibling std-lifecycle rule.",
+              "tier": "customization"
+            },
+            "taxStrategy": {
+              "type": "string",
+              "default": "none",
+              "label": "Tax strategy",
+              "description": "inclusive = tax baked into rent; exclusive = tax added on top; none = no tax.",
+              "tier": "customization",
+              "values": [
+                "inclusive",
+                "exclusive",
+                "none"
+              ]
+            },
+            "lateFeeAmount": {
+              "type": "number",
+              "default": 25.0,
+              "label": "Late fee amount",
+              "description": "Flat cash amount or percentage (per lateFeePolicy).",
+              "tier": "customization"
+            },
+            "lateRentGraceDays": {
+              "type": "number",
+              "default": 5.0,
+              "label": "Late rent grace (days)",
+              "description": "Days after dueDate before late fee is auto-assessed. Real-estate-specific alias for gracePeriodDays. Declarative.",
+              "tier": "customization"
+            },
+            "petPolicy": {
+              "type": "string",
+              "default": "no-pets",
+              "label": "Pet policy",
+              "description": "Property-level pet policy. Declarative.",
+              "tier": "customization",
+              "values": [
+                "no-pets",
+                "cats-only",
+                "dogs-only",
+                "all"
+              ]
             }
           },
           "scope": "collection"

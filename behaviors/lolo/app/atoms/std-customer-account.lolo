@@ -1,5 +1,5 @@
-app std-customer-account "1.1.0"
-"std-customer-account — retail customer profile primitive with loyalty points, store credit, and spend history. Lists customers in `browsing`; opens detail in `viewing_single` with Grant Points / Issue Credit / Ban actions. Agents tune the list shape via `config.fields` + `config.itemActions`."
+app std-customer-account "1.2.0"
+"std-customer-account — retail customer profile with loyalty points, store credit and Grant Points / Issue Credit / Ban actions. Listens for SET_STATUS so std-lifecycle can drive automated transitions. Exposes CRM-pattern knobs."
 
 type FieldSpec = { name : string!, label : string, variant : string, icon : string, format : string, key : string, header : string }
 type ItemAction = { label : string!, event : string!, variant : string, icon : string }
@@ -17,8 +17,10 @@ orbital CustomerAccountOrbital {
     lastVisitAt : string = ""
     status : "active" | "inactive" | "banned" = "active"
   }
-  type CustomerAccountLoaded = Event { data : [CustomerAccount] }
-  type CustomerAccountLoadFailed = Event { error : string, code : string }
+  type CustomerAccountLoaded       = Event { data : [CustomerAccount] }
+  type CustomerAccountLoadFailed   = Event { error : string, code : string }
+  type CustomerAccountUpdated      = Event { row : CustomerAccount }              "Fired after a customer's status persists"
+  type CustomerAccountUpdateFailed = Event { error : string, code : string }      "Fired when a customer's status update fails to persist"
 
   trait CustomerAccountDirectory -> CustomerAccount [interaction, collection] {
     config {
@@ -43,6 +45,22 @@ orbital CustomerAccountOrbital {
       ]
         @label "Row actions"
         @description "Buttons users can click on each customer row"
+        @tier "customization"
+      healthScoreThresholdAlert : number = 50
+        @label "Health score threshold"
+        @description "Customers with health score below this trigger an alert. Declarative; wire via sibling std-notify."
+        @tier "customization"
+      renewalReminderDaysBefore : [number] = [30, 7, 1]
+        @label "Renewal reminder days-before"
+        @description "Days before subscription renewal to send reminders. Declarative; wire via sibling std-reminder-scheduler."
+        @tier "customization"
+      archiveInactiveAfterDays : number = 365
+        @label "Archive inactive after (days)"
+        @description "Days of inactivity before customer is auto-archived. Declarative; wire via sibling std-lifecycle."
+        @tier "advanced"
+      consentTrackingEnabled : boolean = true
+        @label "Track consent"
+        @description "Whether to record marketing/data-processing consent on the customer profile. Declarative."
         @tier "customization"
     }
     initial: loading
@@ -72,6 +90,15 @@ orbital CustomerAccountOrbital {
         (set @entity.id @payload.id)
         (fetch CustomerAccount { emit: { success: "CustomerAccountLoaded", failure: "CustomerAccountLoadFailed" } })
         (render-ui main { type: "stack", direction: "vertical", gap: "md", align: "center", className: "py-12", children: [{ type: "spinner" }, { type: "typography", variant: "caption", color: "muted", content: "Banning customer…" }] })
+      SET_STATUS -> loading
+        (set @entity.id @payload.entityId)
+        (set @entity.status @payload.newStatus)
+        (persist update CustomerAccount @entity { emit: { success: "CustomerAccountUpdated", failure: "CustomerAccountUpdateFailed" } })
+        (render-ui main { type: "stack", direction: "vertical", gap: "md", align: "center", className: "py-12", children: [{ type: "spinner" }, { type: "typography", variant: "caption", color: "muted", content: "Updating customer status…" }] })
+      CustomerAccountUpdated -> loading
+        (fetch CustomerAccount { emit: { success: "CustomerAccountLoaded", failure: "CustomerAccountLoadFailed" } })
+      CustomerAccountUpdateFailed -> browsing
+        (render-ui main { type: "alert", variant: "error", message: "@payload.error" })
     }
     state viewing_single {
       CLOSE_VIEW -> loading
@@ -102,8 +129,10 @@ orbital CustomerAccountOrbital {
       GRANT_POINTS  { id : string! }
       GRANT_CREDIT  { id : string! }
       BAN_CUSTOMER  { id : string! }
-      CustomerAccountLoaded { data : [CustomerAccount] }
-      CustomerAccountLoadFailed { error : string, code : string }
+      CustomerAccountLoaded       { data : [CustomerAccount] }
+      CustomerAccountLoadFailed   { error : string, code : string }
+      CustomerAccountUpdated      { row : CustomerAccount }
+      CustomerAccountUpdateFailed { error : string, code : string }
     }
     listens {
       OPEN_CUSTOMER { id : string!, row : CustomerAccount }
@@ -111,8 +140,11 @@ orbital CustomerAccountOrbital {
       GRANT_POINTS  { id : string! }
       GRANT_CREDIT  { id : string! }
       BAN_CUSTOMER  { id : string! }
-      CustomerAccountLoaded { data : [CustomerAccount] }
-      CustomerAccountLoadFailed { error : string, code : string }
+      SET_STATUS    { entityId : string!, newStatus : string! }
+      CustomerAccountLoaded       { data : [CustomerAccount] }
+      CustomerAccountLoadFailed   { error : string, code : string }
+      CustomerAccountUpdated      { row : CustomerAccount }
+      CustomerAccountUpdateFailed { error : string, code : string }
     }
   }
   page "/customers" as CustomerAccountPage -> CustomerAccountDirectory

@@ -1,5 +1,5 @@
-app std-ledger-entry "1.1.0"
-"std-ledger-entry — general-ledger journal entry (double-entry debit/credit). Lists entries in `browsing`; opens entry detail in `viewing_single` with Reconcile / Reverse actions. Agents tune the list shape via `config.fields` + `config.itemActions`."
+app std-ledger-entry "1.2.0"
+"std-ledger-entry — general-ledger journal entry (double-entry debit/credit) with Reconcile / Reverse actions. Exposes Financial-pattern knobs (currency, jurisdiction, retention)."
 
 type FieldSpec = { name : string!, label : string, variant : string, icon : string, format : string, key : string, header : string }
 type ItemAction = { label : string!, event : string!, variant : string, icon : string }
@@ -45,6 +45,38 @@ orbital LedgerEntryOrbital {
         @label "Row actions"
         @description "Buttons users can click on each journal entry"
         @tier "customization"
+      currency        : string   = "USD"
+        @label "Default currency"
+        @description "ISO 4217 currency code (USD, EUR, GBP, …) for journal amounts."
+        @tier "essential"
+      taxStrategy     : "inclusive" | "exclusive" | "none" = "none"
+        @label "Tax strategy"
+        @description "How tax accounts treat their balances. inclusive/exclusive/none."
+        @tier "customization"
+      roundingMode    : "bankers" | "half-up" | "down" = "bankers"
+        @label "Rounding mode"
+        @description "Sub-cent rounding behavior for debit/credit postings."
+        @tier "advanced"
+      gracePeriodDays : number   = 0
+        @label "Grace period (days)"
+        @description "Days before a posted entry is locked from edits. Declarative."
+        @tier "customization"
+      lateFeePolicy   : "none" | "flat" | "percent" = "none"
+        @label "Late fee policy"
+        @description "Rarely used on ledger entries. Declarative; wiring deferred."
+        @tier "customization"
+      lateFeeAmount   : number   = 0
+        @label "Late fee amount"
+        @description "Flat cash amount or percentage (per lateFeePolicy)."
+        @tier "customization"
+      complianceJurisdiction : string = ""
+        @label "Compliance jurisdiction"
+        @description "Drives accounting standard per locale: 'US-GAAP', 'EU-IFRS', 'UK-FRS', etc. Declarative."
+        @tier "advanced"
+      retentionYears  : number   = 7
+        @label "Retention (years)"
+        @description "Years to keep ledger entries for compliance."
+        @tier "advanced"
     }
     initial: loading
     state loading {

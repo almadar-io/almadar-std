@@ -1,5 +1,5 @@
-app std-payout-ledger "1.1.0"
-"std-payout-ledger — marketplace vendor payout atom. Lists payouts in `browsing`; opens detail in `viewing_single` with Withdraw / Mark Paid actions. Agents tune the list shape via `config.fields` + `config.itemActions`."
+app std-payout-ledger "1.2.0"
+"std-payout-ledger — marketplace vendor payout ledger with Withdraw / Mark Paid actions. Listens for SET_STATUS so std-lifecycle can drive automated transitions. Exposes Financial-pattern knobs."
 
 type FieldSpec = { name : string!, label : string, variant : string, icon : string, format : string, key : string, header : string }
 type ItemAction = { label : string!, event : string!, variant : string, icon : string }
@@ -17,8 +17,10 @@ orbital PayoutOrbital {
     notes             : string
   }
 
-  type PayoutLoaded          = Event { data : [Payout] }                "Fired when the payout collection finishes loading"
-  type PayoutLoadFailed      = Event { error : string, code : string }  "Fired when the payout collection fails to load"
+  type PayoutLoaded        = Event { data : [Payout] }                "Fired when the payout collection finishes loading"
+  type PayoutLoadFailed    = Event { error : string, code : string }  "Fired when the payout collection fails to load"
+  type PayoutUpdated       = Event { row : Payout }                   "Fired after a payout's status persists"
+  type PayoutUpdateFailed  = Event { error : string, code : string }  "Fired when a payout's status update fails to persist"
 
   trait PayoutLedger -> Payout [interaction, collection] {
     config {
@@ -48,6 +50,38 @@ orbital PayoutOrbital {
         @label "Row actions"
         @description "Buttons users can click on each payout row"
         @tier "customization"
+      currency        : string   = "USD"
+        @label "Default currency"
+        @description "ISO 4217 currency code (USD, EUR, GBP, …) for payouts."
+        @tier "essential"
+      taxStrategy     : "inclusive" | "exclusive" | "none" = "none"
+        @label "Tax strategy"
+        @description "inclusive = tax baked into payout amount; exclusive = tax withheld separately; none = no tax."
+        @tier "customization"
+      roundingMode    : "bankers" | "half-up" | "down" = "half-up"
+        @label "Rounding mode"
+        @description "Sub-cent rounding behavior for payout amounts."
+        @tier "advanced"
+      gracePeriodDays : number   = 3
+        @label "Grace period (days)"
+        @description "Days before a pending payout escalates. Wire via sibling std-lifecycle rule."
+        @tier "customization"
+      lateFeePolicy   : "none" | "flat" | "percent" = "none"
+        @label "Late fee policy"
+        @description "How late fees compute on late payouts. Declarative; wiring deferred."
+        @tier "customization"
+      lateFeeAmount   : number   = 0
+        @label "Late fee amount"
+        @description "Flat cash amount or percentage (per lateFeePolicy)."
+        @tier "customization"
+      complianceJurisdiction : string = ""
+        @label "Compliance jurisdiction"
+        @description "Drives payout regulations per locale: 'US-CA', 'EU-DE', 'UK', etc. Declarative."
+        @tier "advanced"
+      retentionYears  : number   = 7
+        @label "Retention (years)"
+        @description "Years to keep payout records for compliance."
+        @tier "advanced"
     }
     initial: loading
     state loading {
@@ -79,6 +113,15 @@ orbital PayoutOrbital {
         (set @entity.id @payload.id)
         (fetch Payout { emit: { success: "PayoutLoaded", failure: "PayoutLoadFailed" } })
         (render-ui main { type: "stack", direction: "vertical", gap: "md", align: "center", className: "py-12", children: [{ type: "spinner" }, { type: "typography", variant: "caption", color: "muted", content: "Marking paid…" }] })
+      SET_STATUS -> loading
+        (set @entity.id @payload.entityId)
+        (set @entity.status @payload.newStatus)
+        (persist update Payout @entity { emit: { success: "PayoutUpdated", failure: "PayoutUpdateFailed" } })
+        (render-ui main { type: "stack", direction: "vertical", gap: "md", align: "center", className: "py-12", children: [{ type: "spinner" }, { type: "typography", variant: "caption", color: "muted", content: "Updating payout status…" }] })
+      PayoutUpdated -> loading
+        (fetch Payout { emit: { success: "PayoutLoaded", failure: "PayoutLoadFailed" } })
+      PayoutUpdateFailed -> browsing
+        (render-ui main { type: "alert", variant: "error", message: "@payload.error" })
     }
     state viewing_single {
       CLOSE_VIEW -> loading
@@ -105,14 +148,19 @@ orbital PayoutOrbital {
       MARK_PAID            { id : string! }
       PayoutLoaded         { data : [Payout] }
       PayoutLoadFailed     { error : string, code : string }
+      PayoutUpdated        { row : Payout }
+      PayoutUpdateFailed   { error : string, code : string }
     }
     listens {
       OPEN_PAYOUT          { id : string!, row : Payout }
       CLOSE_VIEW           { }
       REQUEST_WITHDRAW     { id : string! }
       MARK_PAID            { id : string! }
+      SET_STATUS           { entityId : string!, newStatus : string! }
       PayoutLoaded         { data : [Payout] }
       PayoutLoadFailed     { error : string, code : string }
+      PayoutUpdated        { row : Payout }
+      PayoutUpdateFailed   { error : string, code : string }
     }
   }
   page "/payouts/ledger" as PayoutLedgerPage -> PayoutLedger

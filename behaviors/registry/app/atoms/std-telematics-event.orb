@@ -1,7 +1,7 @@
 {
   "name": "std-telematics-event",
-  "version": "1.1.0",
-  "description": "std-telematics-event — read-only per-vehicle telemetry stream from GPS/OBD-II devices. Lists events in `browsing`; opens event detail in `viewing_single` with Acknowledge action. Agents tune the list shape via `config.fields` + `config.itemActions`.",
+  "version": "1.2.0",
+  "description": "std-telematics-event — read-only per-vehicle telemetry stream (GPS/OBD-II). Lists events, detail offers Acknowledge. Exposes Inventory/Logistics knobs (defaultWarehouse, hazmatEnabled, …) for the questionnaire.",
   "orbitals": [
     {
       "name": "TelematicsEventOrbital",
@@ -274,8 +274,8 @@
                     "TelematicsEvent",
                     {
                       "emit": {
-                        "success": "TelematicsEventLoaded",
-                        "failure": "TelematicsEventLoadFailed"
+                        "failure": "TelematicsEventLoadFailed",
+                        "success": "TelematicsEventLoaded"
                       }
                     }
                   ],
@@ -283,22 +283,22 @@
                     "render-ui",
                     "main",
                     {
-                      "className": "py-12",
-                      "gap": "md",
                       "direction": "vertical",
-                      "type": "stack",
+                      "align": "center",
                       "children": [
                         {
                           "type": "spinner"
                         },
                         {
-                          "content": "Loading telematics events…",
                           "type": "typography",
+                          "variant": "caption",
                           "color": "muted",
-                          "variant": "caption"
+                          "content": "Loading telematics events…"
                         }
                       ],
-                      "align": "center"
+                      "type": "stack",
+                      "gap": "md",
+                      "className": "py-12"
                     }
                   ]
                 ]
@@ -312,25 +312,25 @@
                     "render-ui",
                     "main",
                     {
-                      "gap": "md",
+                      "type": "stack",
                       "direction": "vertical",
                       "children": [
                         {
-                          "gap": "sm",
                           "direction": "horizontal",
                           "type": "stack",
+                          "align": "center",
                           "children": [
                             {
-                              "name": "activity",
-                              "type": "icon"
+                              "type": "icon",
+                              "name": "activity"
                             },
                             {
+                              "variant": "h3",
                               "type": "typography",
-                              "content": "@config.title",
-                              "variant": "h3"
+                              "content": "@config.title"
                             }
                           ],
-                          "align": "center"
+                          "gap": "sm"
                         },
                         {
                           "cols": 4.0,
@@ -343,22 +343,22 @@
                               "type": "stat-display"
                             },
                             {
-                              "value": "3",
                               "type": "stat-display",
-                              "icon": "alert-triangle",
-                              "label": "Critical"
+                              "label": "Critical",
+                              "value": "3",
+                              "icon": "alert-triangle"
                             },
                             {
+                              "icon": "bell",
                               "type": "stat-display",
                               "label": "Unacked",
-                              "value": "12",
-                              "icon": "bell"
+                              "value": "12"
                             },
                             {
+                              "value": "speeding",
                               "label": "Most common",
                               "icon": "gauge",
-                              "type": "stat-display",
-                              "value": "speeding"
+                              "type": "stat-display"
                             }
                           ]
                         },
@@ -366,15 +366,15 @@
                           "type": "divider"
                         },
                         {
-                          "entity": "@payload.data",
                           "gap": "sm",
-                          "itemActions": "@config.itemActions",
+                          "entity": "@payload.data",
                           "cols": 1.0,
-                          "type": "data-grid",
-                          "fields": "@config.fields"
+                          "fields": "@config.fields",
+                          "itemActions": "@config.itemActions",
+                          "type": "data-grid"
                         }
                       ],
-                      "type": "stack"
+                      "gap": "md"
                     }
                   ]
                 ]
@@ -389,8 +389,8 @@
                     "main",
                     {
                       "message": "@payload.error",
-                      "type": "alert",
-                      "variant": "error"
+                      "variant": "error",
+                      "type": "alert"
                     }
                   ]
                 ]
@@ -454,101 +454,100 @@
                     "render-ui",
                     "main",
                     {
-                      "gap": "md",
                       "direction": "vertical",
-                      "type": "stack",
                       "children": [
                         {
                           "direction": "horizontal",
+                          "gap": "sm",
                           "children": [
                             {
-                              "type": "button",
                               "label": "Back",
                               "variant": "ghost",
-                              "action": "CLOSE_VIEW"
+                              "action": "CLOSE_VIEW",
+                              "type": "button"
                             },
                             {
                               "type": "icon",
                               "name": "activity"
                             },
                             {
+                              "type": "typography",
                               "content": "@entity.eventType",
-                              "variant": "h3",
-                              "type": "typography"
+                              "variant": "h3"
                             },
                             {
-                              "type": "badge",
                               "label": "@entity.severity",
-                              "variant": "default"
+                              "variant": "default",
+                              "type": "badge"
                             }
                           ],
-                          "type": "stack",
-                          "gap": "sm",
-                          "align": "center"
+                          "align": "center",
+                          "type": "stack"
                         },
                         {
                           "type": "divider"
                         },
                         {
+                          "direction": "vertical",
                           "gap": "sm",
                           "type": "stack",
                           "children": [
                             {
-                              "gap": "md",
                               "direction": "horizontal",
                               "children": [
                                 {
-                                  "color": "muted",
-                                  "content": "Vehicle",
                                   "type": "typography",
-                                  "variant": "caption"
-                                },
-                                {
-                                  "content": "@entity.vehicleId",
-                                  "variant": "body",
-                                  "type": "typography"
-                                }
-                              ],
-                              "type": "stack"
-                            },
-                            {
-                              "type": "stack",
-                              "children": [
-                                {
+                                  "color": "muted",
                                   "variant": "caption",
-                                  "color": "muted",
-                                  "type": "typography",
-                                  "content": "Acknowledged by"
+                                  "content": "Vehicle"
                                 },
                                 {
                                   "type": "typography",
-                                  "content": "@entity.acknowledgedBy",
+                                  "content": "@entity.vehicleId",
                                   "variant": "body"
                                 }
                               ],
-                              "direction": "horizontal",
+                              "type": "stack",
                               "gap": "md"
+                            },
+                            {
+                              "direction": "horizontal",
+                              "type": "stack",
+                              "gap": "md",
+                              "children": [
+                                {
+                                  "type": "typography",
+                                  "content": "Acknowledged by",
+                                  "variant": "caption",
+                                  "color": "muted"
+                                },
+                                {
+                                  "variant": "body",
+                                  "content": "@entity.acknowledgedBy",
+                                  "type": "typography"
+                                }
+                              ]
                             }
-                          ],
-                          "direction": "vertical"
+                          ]
                         },
                         {
                           "type": "divider"
                         },
                         {
                           "type": "simple-grid",
+                          "cols": 3.0,
                           "children": [
                             {
-                              "value": "@entity.speed",
-                              "type": "stat-display",
                               "icon": "gauge",
-                              "label": "Speed"
+                              "type": "stat-display",
+                              "label": "Speed",
+                              "value": "@entity.speed"
                             },
                             {
-                              "type": "stat-display",
-                              "label": "Lat",
+                              "value": "@entity.locationLat",
                               "icon": "map-pin",
-                              "value": "@entity.locationLat"
+                              "label": "Lat",
+                              "type": "stat-display"
                             },
                             {
                               "label": "Lng",
@@ -556,27 +555,28 @@
                               "value": "@entity.locationLng",
                               "icon": "map-pin"
                             }
-                          ],
-                          "cols": 3.0
+                          ]
                         },
                         {
-                          "type": "stack",
-                          "align": "center",
-                          "gap": "sm",
-                          "direction": "horizontal",
                           "children": [
                             {
-                              "type": "button",
-                              "variant": "primary",
-                              "action": "ACKNOWLEDGE",
                               "label": "Acknowledge",
+                              "action": "ACKNOWLEDGE",
+                              "variant": "primary",
                               "actionPayload": {
                                 "id": "@entity.id"
-                              }
+                              },
+                              "type": "button"
                             }
-                          ]
+                          ],
+                          "type": "stack",
+                          "gap": "sm",
+                          "direction": "horizontal",
+                          "align": "center"
                         }
-                      ]
+                      ],
+                      "type": "stack",
+                      "gap": "md"
                     }
                   ]
                 ]
@@ -605,22 +605,22 @@
                     "render-ui",
                     "main",
                     {
+                      "type": "stack",
                       "direction": "vertical",
                       "className": "py-12",
-                      "align": "center",
-                      "type": "stack",
-                      "gap": "md",
                       "children": [
                         {
                           "type": "spinner"
                         },
                         {
-                          "type": "typography",
+                          "variant": "caption",
                           "content": "Acknowledging event…",
-                          "color": "muted",
-                          "variant": "caption"
+                          "type": "typography",
+                          "color": "muted"
                         }
-                      ]
+                      ],
+                      "align": "center",
+                      "gap": "md"
                     }
                   ]
                 ]
@@ -635,8 +635,8 @@
                     "TelematicsEvent",
                     {
                       "emit": {
-                        "failure": "TelematicsEventLoadFailed",
-                        "success": "TelematicsEventLoaded"
+                        "success": "TelematicsEventLoaded",
+                        "failure": "TelematicsEventLoadFailed"
                       }
                     }
                   ],
@@ -650,14 +650,14 @@
                         },
                         {
                           "type": "typography",
+                          "color": "muted",
                           "content": "Loading events…",
-                          "variant": "caption",
-                          "color": "muted"
+                          "variant": "caption"
                         }
                       ],
-                      "gap": "md",
                       "direction": "vertical",
                       "type": "stack",
+                      "gap": "md",
                       "align": "center",
                       "className": "py-12"
                     }
@@ -688,22 +688,22 @@
                     "render-ui",
                     "main",
                     {
-                      "gap": "md",
+                      "className": "py-12",
+                      "type": "stack",
                       "children": [
                         {
                           "type": "spinner"
                         },
                         {
                           "content": "Acknowledging event…",
-                          "variant": "caption",
+                          "color": "muted",
                           "type": "typography",
-                          "color": "muted"
+                          "variant": "caption"
                         }
                       ],
-                      "type": "stack",
-                      "className": "py-12",
-                      "direction": "vertical",
-                      "align": "center"
+                      "gap": "md",
+                      "align": "center",
+                      "direction": "vertical"
                     }
                   ]
                 ]
@@ -718,8 +718,8 @@
                     "TelematicsEvent",
                     {
                       "emit": {
-                        "success": "TelematicsEventLoaded",
-                        "failure": "TelematicsEventLoadFailed"
+                        "failure": "TelematicsEventLoadFailed",
+                        "success": "TelematicsEventLoaded"
                       }
                     }
                   ],
@@ -736,18 +736,25 @@
             ]
           },
           "config": {
+            "multiLocationEnabled": {
+              "type": "boolean",
+              "default": false,
+              "label": "Multi-location",
+              "description": "Source vehicles across multiple depots.",
+              "tier": "customization"
+            },
             "fields": {
               "type": "[FieldSpec]",
               "default": [
                 {
                   "label": "Vehicle",
-                  "variant": "caption",
-                  "name": "vehicleId"
+                  "name": "vehicleId",
+                  "variant": "caption"
                 },
                 {
+                  "name": "eventType",
                   "label": "Type",
-                  "variant": "badge",
-                  "name": "eventType"
+                  "variant": "badge"
                 },
                 {
                   "name": "severity",
@@ -755,13 +762,13 @@
                   "variant": "badge"
                 },
                 {
+                  "label": "Speed",
                   "variant": "caption",
-                  "name": "speed",
-                  "label": "Speed"
+                  "name": "speed"
                 },
                 {
-                  "label": "Occurred",
                   "name": "occurredAt",
+                  "label": "Occurred",
                   "variant": "caption"
                 },
                 {
@@ -786,6 +793,21 @@
                     "type": "string",
                     "required": false
                   },
+                  "label": {
+                    "name": "label",
+                    "type": "string",
+                    "required": false
+                  },
+                  "variant": {
+                    "name": "variant",
+                    "type": "string",
+                    "required": false
+                  },
+                  "format": {
+                    "name": "format",
+                    "type": "string",
+                    "required": false
+                  },
                   "key": {
                     "name": "key",
                     "type": "string",
@@ -795,21 +817,6 @@
                     "name": "name",
                     "type": "string",
                     "required": true
-                  },
-                  "variant": {
-                    "name": "variant",
-                    "type": "string",
-                    "required": false
-                  },
-                  "label": {
-                    "name": "label",
-                    "type": "string",
-                    "required": false
-                  },
-                  "format": {
-                    "name": "format",
-                    "type": "string",
-                    "required": false
                   }
                 }
               }
@@ -819,13 +826,13 @@
               "default": [
                 {
                   "label": "Open",
-                  "event": "OPEN_EVENT",
+                  "icon": "arrow-right",
                   "variant": "primary",
-                  "icon": "arrow-right"
+                  "event": "OPEN_EVENT"
                 },
                 {
-                  "variant": "secondary",
                   "event": "ACKNOWLEDGE",
+                  "variant": "secondary",
                   "label": "Acknowledge"
                 }
               ],
@@ -835,13 +842,13 @@
               "items": {
                 "type": "object",
                 "properties": {
+                  "label": {
+                    "name": "label",
+                    "type": "string",
+                    "required": true
+                  },
                   "variant": {
                     "name": "variant",
-                    "type": "string",
-                    "required": false
-                  },
-                  "icon": {
-                    "name": "icon",
                     "type": "string",
                     "required": false
                   },
@@ -850,13 +857,34 @@
                     "type": "string",
                     "required": true
                   },
-                  "label": {
-                    "name": "label",
+                  "icon": {
+                    "name": "icon",
                     "type": "string",
-                    "required": true
+                    "required": false
                   }
                 }
               }
+            },
+            "cycleCountFrequencyDays": {
+              "type": "number",
+              "default": 30.0,
+              "label": "Cycle count cadence (days)",
+              "description": "Days between scheduled fleet cycle counts triggered off telematics. v1.2 declarative.",
+              "tier": "advanced"
+            },
+            "defaultWarehouse": {
+              "type": "string",
+              "default": "",
+              "label": "Default depot / warehouse",
+              "description": "Depot that owns these vehicles by default. Used by downstream alerting.",
+              "tier": "customization"
+            },
+            "hazmatEnabled": {
+              "type": "boolean",
+              "default": false,
+              "label": "Hazmat tracking",
+              "description": "Surface hazmat-relevant telematics events distinctly.",
+              "tier": "advanced"
             },
             "title": {
               "type": "string",

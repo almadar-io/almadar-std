@@ -1,5 +1,5 @@
-app std-subscription-billing "1.0.0"
-"Subscription billing: plans browser with stats + graphs, embedded recurring-charge + trial managers, modal/confirm CRUD over plans, invoices browser, dunning queue."
+app std-subscription-billing "1.1.0"
+"Subscription billing: plans browser with stats + graphs, embedded recurring-charge + trial managers, modal/confirm CRUD over plans, invoices browser, dunning queue. Composes std-lifecycle (auto-overdue scan), std-notify-on-event (customer-facing notifications), and std-audit-capture (compliance audit trail) for the invoice domain."
 
 orbital SubscriptionOrbital {
   uses AppShell     from "std/behaviors/std-app-layout"
@@ -278,10 +278,13 @@ orbital SubscriptionOrbital {
 }
 
 orbital InvoiceOrbital {
-  uses AppShell from "std/behaviors/std-app-layout"
-  uses Modal    from "std/behaviors/std-modal"
-  uses Inv      from "std/behaviors/std-invoice"
-  uses Browse   from "std/behaviors/std-browse"
+  uses AppShell  from "std/behaviors/std-app-layout"
+  uses Modal     from "std/behaviors/std-modal"
+  uses Inv       from "std/behaviors/std-invoice"
+  uses Browse    from "std/behaviors/std-browse"
+  uses Lifecycle from "std/behaviors/std-lifecycle"
+  uses Notify    from "std/behaviors/std-notify-on-event"
+  uses Audit     from "std/behaviors/std-audit-capture"
 
   entity InvoiceNote [persistent: invoicenotes] {
     id : string!
@@ -350,7 +353,52 @@ orbital InvoiceOrbital {
   trait InvoiceManageBlock = Inv.traits.InvoiceManage {
     config: {
       title: "Invoices",
-      refundTiersJson: "[]"
+      refundTiersJson: "[]",
+      currency: "USD",
+      taxStrategy: "exclusive",
+      gracePeriodDays: 30,
+      lateFeePolicy: "none",
+      lateFeeAmount: 0,
+      complianceJurisdiction: "US",
+      retentionYears: 7
+    }
+  }
+
+  trait InvoiceLifecycleScan = Lifecycle.traits.LifecycleScheduler {
+    config: {
+      targetEntity: "InvoiceRecord",
+      rules: [
+        { fromStatus: "sent",    toStatus: "overdue", condition: { kind: "ageDays", value: 30, dateField: "dueAt" } },
+        { fromStatus: "overdue", toStatus: "void",    condition: { kind: "ageDays", value: 90, dateField: "dueAt" } }
+      ],
+      dryRun: false
+    }
+  }
+
+  trait InvoiceNotifier = Notify.traits.NotifyOnEventListener {
+    config: {
+      listensFor: ["InvoiceUpdated"],
+      notifyChannel: "in-app",
+      template: "Invoice updated",
+      severity: "info",
+      recipients: [],
+      suppressionList: []
+    }
+    events {
+      EventOccurred: InvoiceUpdated
+    }
+  }
+
+  trait InvoiceAuditCapture = Audit.traits.AuditCaptureListener {
+    config: {
+      captureEntity: "InvoiceRecord",
+      captureEventTypes: [],
+      excludeFields: [],
+      captureBeforeAfter: false,
+      retentionDays: 2555
+    }
+    events {
+      EntityMutated: InvoiceUpdated
     }
   }
 
@@ -413,7 +461,7 @@ orbital InvoiceOrbital {
     }
   }
 
-  page "/invoices" as InvoicesPage -> InvoiceAppLayout, InvoiceCatalog, InvoiceManageBlock, InvoiceNoteBrowseList, InvoiceNoteCreate, InvoiceNotePersistor
+  page "/invoices" as InvoicesPage -> InvoiceAppLayout, InvoiceCatalog, InvoiceManageBlock, InvoiceLifecycleScan, InvoiceNotifier, InvoiceAuditCapture, InvoiceNoteBrowseList, InvoiceNoteCreate, InvoiceNotePersistor
 }
 
 orbital DunningOrbital {

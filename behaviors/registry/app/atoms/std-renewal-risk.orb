@@ -1,7 +1,7 @@
 {
   "name": "std-renewal-risk",
-  "version": "1.1.0",
-  "description": "std-renewal-risk — Customer Success renewal risk tracker. Lists at-risk accounts in `browsing`; opens detail in `viewing_single` with Mark Saved / Mark Churned actions. Agents tune the list shape via `config.fields` + `config.itemActions`.",
+  "version": "1.2.0",
+  "description": "std-renewal-risk — Customer Success renewal risk tracker with Mark Saved / Mark Churned actions. Listens for SET_STATUS so std-lifecycle can drive automated transitions. Exposes CRM-pattern knobs.",
   "orbitals": [
     {
       "name": "RenewalRiskOrbital",
@@ -195,6 +195,75 @@
                   "type": "string"
                 }
               ]
+            },
+            {
+              "event": "RenewalRiskUpdated",
+              "payloadSchema": [
+                {
+                  "name": "row.id",
+                  "type": "string",
+                  "required": true
+                },
+                {
+                  "name": "row.customerId",
+                  "type": "string",
+                  "required": true
+                },
+                {
+                  "name": "row.customerName",
+                  "type": "string"
+                },
+                {
+                  "name": "row.renewalDate",
+                  "type": "string",
+                  "required": true
+                },
+                {
+                  "name": "row.arrAmount",
+                  "type": "number"
+                },
+                {
+                  "name": "row.riskLevel",
+                  "type": "string"
+                },
+                {
+                  "name": "row.reason",
+                  "type": "string"
+                },
+                {
+                  "name": "row.mitigationPlan",
+                  "type": "string"
+                },
+                {
+                  "name": "row.status",
+                  "type": "string"
+                },
+                {
+                  "name": "row.assignedCsm",
+                  "type": "string"
+                },
+                {
+                  "name": "row.lastCheckIn",
+                  "type": "string"
+                },
+                {
+                  "name": "row.pendingId",
+                  "type": "string"
+                }
+              ]
+            },
+            {
+              "event": "RenewalRiskUpdateFailed",
+              "payloadSchema": [
+                {
+                  "name": "error",
+                  "type": "string"
+                },
+                {
+                  "name": "code",
+                  "type": "string"
+                }
+              ]
             }
           ],
           "stateMachine": {
@@ -280,6 +349,46 @@
                 ]
               },
               {
+                "key": "SET_STATUS",
+                "name": "Set Status",
+                "payloadSchema": [
+                  {
+                    "name": "entityId",
+                    "type": "string",
+                    "required": true
+                  },
+                  {
+                    "name": "newStatus",
+                    "type": "string",
+                    "required": true
+                  }
+                ]
+              },
+              {
+                "key": "RenewalRiskUpdated",
+                "name": "RenewalRisk updated",
+                "payloadSchema": [
+                  {
+                    "name": "row",
+                    "type": "RenewalRisk"
+                  }
+                ]
+              },
+              {
+                "key": "RenewalRiskUpdateFailed",
+                "name": "RenewalRisk update failed",
+                "payloadSchema": [
+                  {
+                    "name": "error",
+                    "type": "string"
+                  },
+                  {
+                    "name": "code",
+                    "type": "string"
+                  }
+                ]
+              },
+              {
                 "key": "CLOSE_VIEW",
                 "name": "Close View"
               }
@@ -304,8 +413,6 @@
                     "render-ui",
                     "main",
                     {
-                      "gap": "md",
-                      "direction": "vertical",
                       "align": "center",
                       "type": "stack",
                       "className": "py-12",
@@ -316,10 +423,12 @@
                         {
                           "variant": "caption",
                           "type": "typography",
-                          "content": "Loading renewal risks…",
-                          "color": "muted"
+                          "color": "muted",
+                          "content": "Loading renewal risks…"
                         }
-                      ]
+                      ],
+                      "gap": "md",
+                      "direction": "vertical"
                     }
                   ]
                 ]
@@ -333,53 +442,53 @@
                     "render-ui",
                     "main",
                     {
-                      "type": "stack",
+                      "direction": "vertical",
                       "gap": "md",
                       "children": [
                         {
                           "type": "stack",
-                          "direction": "horizontal",
-                          "gap": "sm",
+                          "align": "center",
                           "children": [
                             {
-                              "type": "icon",
-                              "name": "alert-triangle"
+                              "name": "alert-triangle",
+                              "type": "icon"
                             },
                             {
+                              "variant": "h3",
                               "type": "typography",
-                              "content": "@config.title",
-                              "variant": "h3"
+                              "content": "@config.title"
                             }
                           ],
-                          "align": "center"
+                          "direction": "horizontal",
+                          "gap": "sm"
                         },
                         {
                           "type": "simple-grid",
                           "cols": 4.0,
                           "children": [
                             {
-                              "value": "@payload.data.length",
                               "type": "stat-display",
+                              "value": "@payload.data.length",
                               "label": "At-risk accounts",
                               "icon": "alert-triangle"
                             },
                             {
                               "value": "$1.2M",
+                              "label": "ARR at risk",
                               "icon": "dollar-sign",
-                              "type": "stat-display",
-                              "label": "ARR at risk"
+                              "type": "stat-display"
                             },
                             {
-                              "value": "8",
                               "type": "stat-display",
                               "icon": "flame",
-                              "label": "Critical"
+                              "label": "Critical",
+                              "value": "8"
                             },
                             {
-                              "label": "Save rate",
-                              "icon": "trending-up",
+                              "value": "67%",
                               "type": "stat-display",
-                              "value": "67%"
+                              "label": "Save rate",
+                              "icon": "trending-up"
                             }
                           ]
                         },
@@ -387,15 +496,15 @@
                           "type": "divider"
                         },
                         {
-                          "fields": "@config.fields",
+                          "cols": 1.0,
                           "type": "data-grid",
-                          "itemActions": "@config.itemActions",
                           "gap": "sm",
                           "entity": "@payload.data",
-                          "cols": 1.0
+                          "itemActions": "@config.itemActions",
+                          "fields": "@config.fields"
                         }
                       ],
-                      "direction": "vertical"
+                      "type": "stack"
                     }
                   ]
                 ]
@@ -409,9 +518,9 @@
                     "render-ui",
                     "main",
                     {
-                      "variant": "error",
                       "type": "alert",
-                      "message": "@payload.message"
+                      "message": "@payload.message",
+                      "variant": "error"
                     }
                   ]
                 ]
@@ -480,42 +589,42 @@
                     "render-ui",
                     "main",
                     {
-                      "direction": "vertical",
                       "type": "stack",
+                      "direction": "vertical",
                       "gap": "md",
                       "children": [
                         {
-                          "gap": "sm",
-                          "align": "center",
                           "type": "stack",
-                          "direction": "horizontal",
+                          "gap": "sm",
                           "children": [
                             {
                               "variant": "ghost",
                               "action": "CLOSE_VIEW",
-                              "type": "button",
-                              "label": "Back"
+                              "label": "Back",
+                              "type": "button"
                             },
                             {
-                              "type": "icon",
-                              "name": "alert-triangle"
+                              "name": "alert-triangle",
+                              "type": "icon"
                             },
                             {
-                              "content": "@entity.customerName",
                               "type": "typography",
+                              "content": "@entity.customerName",
                               "variant": "h3"
                             },
                             {
-                              "type": "badge",
                               "label": "@entity.riskLevel",
+                              "type": "badge",
                               "variant": "danger"
                             },
                             {
-                              "type": "badge",
+                              "label": "@entity.status",
                               "variant": "default",
-                              "label": "@entity.status"
+                              "type": "badge"
                             }
-                          ]
+                          ],
+                          "align": "center",
+                          "direction": "horizontal"
                         },
                         {
                           "type": "divider"
@@ -524,34 +633,34 @@
                           "children": [
                             {
                               "gap": "md",
-                              "direction": "horizontal",
                               "type": "stack",
+                              "direction": "horizontal",
                               "children": [
                                 {
                                   "variant": "caption",
+                                  "color": "muted",
                                   "type": "typography",
-                                  "content": "Reason",
-                                  "color": "muted"
+                                  "content": "Reason"
                                 },
                                 {
-                                  "type": "typography",
                                   "variant": "body",
-                                  "content": "@entity.reason"
+                                  "content": "@entity.reason",
+                                  "type": "typography"
                                 }
                               ]
                             },
                             {
                               "children": [
                                 {
-                                  "variant": "caption",
                                   "type": "typography",
                                   "color": "muted",
-                                  "content": "Mitigation plan"
+                                  "content": "Mitigation plan",
+                                  "variant": "caption"
                                 },
                                 {
+                                  "content": "@entity.mitigationPlan",
                                   "type": "typography",
-                                  "variant": "body",
-                                  "content": "@entity.mitigationPlan"
+                                  "variant": "body"
                                 }
                               ],
                               "direction": "horizontal",
@@ -559,78 +668,78 @@
                               "gap": "md"
                             },
                             {
-                              "direction": "horizontal",
                               "gap": "md",
                               "children": [
                                 {
-                                  "content": "CSM",
                                   "type": "typography",
                                   "color": "muted",
+                                  "content": "CSM",
                                   "variant": "caption"
                                 },
                                 {
+                                  "variant": "body",
                                   "content": "@entity.assignedCsm",
-                                  "type": "typography",
-                                  "variant": "body"
+                                  "type": "typography"
                                 }
                               ],
-                              "type": "stack"
+                              "type": "stack",
+                              "direction": "horizontal"
                             }
                           ],
-                          "direction": "vertical",
+                          "type": "stack",
                           "gap": "sm",
-                          "type": "stack"
+                          "direction": "vertical"
                         },
                         {
                           "type": "divider"
                         },
                         {
                           "cols": 3.0,
+                          "type": "simple-grid",
                           "children": [
                             {
-                              "icon": "dollar-sign",
-                              "value": "@entity.arrAmount",
                               "type": "stat-display",
-                              "label": "ARR"
+                              "label": "ARR",
+                              "value": "@entity.arrAmount",
+                              "icon": "dollar-sign"
                             },
                             {
-                              "type": "stat-display",
                               "label": "Renewal",
+                              "icon": "calendar",
                               "value": "@entity.renewalDate",
-                              "icon": "calendar"
+                              "type": "stat-display"
                             },
                             {
                               "type": "stat-display",
                               "value": "@entity.lastCheckIn",
-                              "label": "Last check-in",
-                              "icon": "phone"
+                              "icon": "phone",
+                              "label": "Last check-in"
                             }
-                          ],
-                          "type": "simple-grid"
+                          ]
                         },
                         {
                           "direction": "horizontal",
-                          "align": "center",
                           "children": [
                             {
-                              "actionPayload": {
-                                "id": "@entity.id"
-                              },
+                              "action": "MARK_SAVED",
                               "type": "button",
                               "variant": "primary",
-                              "action": "MARK_SAVED",
-                              "label": "Mark Saved"
+                              "label": "Mark Saved",
+                              "actionPayload": {
+                                "id": "@entity.id"
+                              }
                             },
                             {
                               "variant": "danger",
-                              "label": "Mark Churned",
+                              "type": "button",
                               "actionPayload": {
                                 "id": "@entity.id"
                               },
-                              "type": "button",
+                              "label": "Mark Churned",
                               "action": "MARK_CHURNED"
                             }
                           ],
+                          "align": "center",
                           "gap": "sm",
                           "type": "stack"
                         }
@@ -654,8 +763,8 @@
                     "RenewalRisk",
                     {
                       "emit": {
-                        "success": "RenewalRiskLoaded",
-                        "failure": "RenewalRiskLoadFailed"
+                        "failure": "RenewalRiskLoadFailed",
+                        "success": "RenewalRiskLoaded"
                       }
                     }
                   ],
@@ -664,21 +773,21 @@
                     "main",
                     {
                       "className": "py-12",
-                      "align": "center",
-                      "type": "stack",
                       "children": [
                         {
                           "type": "spinner"
                         },
                         {
                           "type": "typography",
-                          "color": "muted",
                           "variant": "caption",
-                          "content": "Marking saved…"
+                          "content": "Marking saved…",
+                          "color": "muted"
                         }
                       ],
+                      "gap": "md",
                       "direction": "vertical",
-                      "gap": "md"
+                      "align": "center",
+                      "type": "stack"
                     }
                   ]
                 ]
@@ -707,22 +816,106 @@
                     "render-ui",
                     "main",
                     {
-                      "type": "stack",
                       "gap": "md",
+                      "align": "center",
+                      "direction": "vertical",
                       "className": "py-12",
                       "children": [
                         {
                           "type": "spinner"
                         },
                         {
-                          "color": "muted",
                           "variant": "caption",
+                          "color": "muted",
                           "type": "typography",
                           "content": "Marking churned…"
                         }
                       ],
+                      "type": "stack"
+                    }
+                  ]
+                ]
+              },
+              {
+                "from": "browsing",
+                "to": "loading",
+                "event": "SET_STATUS",
+                "effects": [
+                  [
+                    "set",
+                    "@entity.id",
+                    "@payload.entityId"
+                  ],
+                  [
+                    "set",
+                    "@entity.status",
+                    "@payload.newStatus"
+                  ],
+                  [
+                    "persist",
+                    "update",
+                    "RenewalRisk",
+                    "@entity",
+                    {
+                      "emit": {
+                        "success": "RenewalRiskUpdated",
+                        "failure": "RenewalRiskUpdateFailed"
+                      }
+                    }
+                  ],
+                  [
+                    "render-ui",
+                    "main",
+                    {
+                      "className": "py-12",
+                      "children": [
+                        {
+                          "type": "spinner"
+                        },
+                        {
+                          "variant": "caption",
+                          "content": "Updating risk status…",
+                          "type": "typography",
+                          "color": "muted"
+                        }
+                      ],
+                      "direction": "vertical",
+                      "gap": "md",
                       "align": "center",
-                      "direction": "vertical"
+                      "type": "stack"
+                    }
+                  ]
+                ]
+              },
+              {
+                "from": "browsing",
+                "to": "loading",
+                "event": "RenewalRiskUpdated",
+                "effects": [
+                  [
+                    "fetch",
+                    "RenewalRisk",
+                    {
+                      "emit": {
+                        "failure": "RenewalRiskLoadFailed",
+                        "success": "RenewalRiskLoaded"
+                      }
+                    }
+                  ]
+                ]
+              },
+              {
+                "from": "browsing",
+                "to": "browsing",
+                "event": "RenewalRiskUpdateFailed",
+                "effects": [
+                  [
+                    "render-ui",
+                    "main",
+                    {
+                      "type": "alert",
+                      "variant": "error",
+                      "message": "@payload.error"
                     }
                   ]
                 ]
@@ -737,8 +930,8 @@
                     "RenewalRisk",
                     {
                       "emit": {
-                        "failure": "RenewalRiskLoadFailed",
-                        "success": "RenewalRiskLoaded"
+                        "success": "RenewalRiskLoaded",
+                        "failure": "RenewalRiskLoadFailed"
                       }
                     }
                   ],
@@ -747,6 +940,10 @@
                     "main",
                     {
                       "direction": "vertical",
+                      "gap": "md",
+                      "className": "py-12",
+                      "type": "stack",
+                      "align": "center",
                       "children": [
                         {
                           "type": "spinner"
@@ -757,11 +954,7 @@
                           "variant": "caption",
                           "type": "typography"
                         }
-                      ],
-                      "type": "stack",
-                      "gap": "md",
-                      "align": "center",
-                      "className": "py-12"
+                      ]
                     }
                   ]
                 ]
@@ -781,8 +974,8 @@
                     "RenewalRisk",
                     {
                       "emit": {
-                        "success": "RenewalRiskLoaded",
-                        "failure": "RenewalRiskLoadFailed"
+                        "failure": "RenewalRiskLoadFailed",
+                        "success": "RenewalRiskLoaded"
                       }
                     }
                   ],
@@ -790,7 +983,6 @@
                     "render-ui",
                     "main",
                     {
-                      "type": "stack",
                       "align": "center",
                       "className": "py-12",
                       "gap": "md",
@@ -799,13 +991,14 @@
                           "type": "spinner"
                         },
                         {
-                          "color": "muted",
                           "type": "typography",
+                          "content": "Marking saved…",
                           "variant": "caption",
-                          "content": "Marking saved…"
+                          "color": "muted"
                         }
                       ],
-                      "direction": "vertical"
+                      "direction": "vertical",
+                      "type": "stack"
                     }
                   ]
                 ]
@@ -825,8 +1018,8 @@
                     "RenewalRisk",
                     {
                       "emit": {
-                        "success": "RenewalRiskLoaded",
-                        "failure": "RenewalRiskLoadFailed"
+                        "failure": "RenewalRiskLoadFailed",
+                        "success": "RenewalRiskLoaded"
                       }
                     }
                   ],
@@ -834,22 +1027,22 @@
                     "render-ui",
                     "main",
                     {
+                      "gap": "md",
                       "className": "py-12",
-                      "type": "stack",
-                      "align": "center",
                       "direction": "vertical",
+                      "align": "center",
+                      "type": "stack",
                       "children": [
                         {
                           "type": "spinner"
                         },
                         {
-                          "color": "muted",
                           "variant": "caption",
-                          "content": "Marking churned…",
-                          "type": "typography"
+                          "color": "muted",
+                          "type": "typography",
+                          "content": "Marking churned…"
                         }
-                      ],
-                      "gap": "md"
+                      ]
                     }
                   ]
                 ]
@@ -882,23 +1075,66 @@
             ]
           },
           "config": {
+            "title": {
+              "type": "string",
+              "default": "Renewal Risk",
+              "label": "Section title",
+              "description": "Heading shown above the at-risk accounts list",
+              "tier": "customization"
+            },
+            "renewalReminderDaysBefore": {
+              "type": "[number]",
+              "default": [
+                90.0,
+                60.0,
+                30.0,
+                14.0
+              ],
+              "label": "Renewal reminder days-before",
+              "description": "Days before renewalDate to send CSM reminder pings. Declarative; wire via sibling std-reminder-scheduler.",
+              "tier": "customization",
+              "items": {
+                "type": "number"
+              }
+            },
+            "consentTrackingEnabled": {
+              "type": "boolean",
+              "default": false,
+              "label": "Track consent",
+              "description": "Whether mitigation-plan outreach requires recorded consent. Declarative.",
+              "tier": "customization"
+            },
+            "healthScoreThresholdAlert": {
+              "type": "number",
+              "default": 40.0,
+              "label": "Health score threshold",
+              "description": "Accounts below this health score auto-promote to high/critical risk. Declarative; wire via sibling std-notify.",
+              "tier": "customization"
+            },
+            "archiveInactiveAfterDays": {
+              "type": "number",
+              "default": 540.0,
+              "label": "Archive inactive after (days)",
+              "description": "Days post-churn before risk record auto-archives. Declarative; wire via sibling std-lifecycle.",
+              "tier": "advanced"
+            },
             "fields": {
               "type": "[FieldSpec]",
               "default": [
                 {
+                  "name": "customerName",
                   "label": "Customer",
-                  "variant": "caption",
-                  "name": "customerName"
-                },
-                {
-                  "name": "renewalDate",
-                  "label": "Renewal",
                   "variant": "caption"
                 },
                 {
-                  "variant": "caption",
+                  "label": "Renewal",
+                  "name": "renewalDate",
+                  "variant": "caption"
+                },
+                {
+                  "name": "arrAmount",
                   "label": "ARR",
-                  "name": "arrAmount"
+                  "variant": "caption"
                 },
                 {
                   "label": "Risk",
@@ -906,14 +1142,14 @@
                   "variant": "badge"
                 },
                 {
+                  "variant": "badge",
                   "name": "status",
-                  "label": "Status",
-                  "variant": "badge"
+                  "label": "Status"
                 },
                 {
+                  "variant": "caption",
                   "name": "assignedCsm",
-                  "label": "CSM",
-                  "variant": "caption"
+                  "label": "CSM"
                 }
               ],
               "label": "Columns to show",
@@ -922,8 +1158,13 @@
               "items": {
                 "type": "object",
                 "properties": {
-                  "variant": {
-                    "name": "variant",
+                  "name": {
+                    "name": "name",
+                    "type": "string",
+                    "required": true
+                  },
+                  "header": {
+                    "name": "header",
                     "type": "string",
                     "required": false
                   },
@@ -932,28 +1173,23 @@
                     "type": "string",
                     "required": false
                   },
-                  "key": {
-                    "name": "key",
+                  "format": {
+                    "name": "format",
                     "type": "string",
                     "required": false
-                  },
-                  "header": {
-                    "name": "header",
-                    "type": "string",
-                    "required": false
-                  },
-                  "name": {
-                    "name": "name",
-                    "type": "string",
-                    "required": true
                   },
                   "label": {
                     "name": "label",
                     "type": "string",
                     "required": false
                   },
-                  "format": {
-                    "name": "format",
+                  "variant": {
+                    "name": "variant",
+                    "type": "string",
+                    "required": false
+                  },
+                  "key": {
+                    "name": "key",
                     "type": "string",
                     "required": false
                   }
@@ -964,14 +1200,14 @@
               "type": "[ItemAction]",
               "default": [
                 {
-                  "variant": "primary",
-                  "event": "OPEN_RISK",
                   "label": "Open",
-                  "icon": "arrow-right"
+                  "icon": "arrow-right",
+                  "event": "OPEN_RISK",
+                  "variant": "primary"
                 },
                 {
-                  "label": "Mark Churned",
                   "event": "MARK_CHURNED",
+                  "label": "Mark Churned",
                   "variant": "danger"
                 }
               ],
@@ -981,16 +1217,6 @@
               "items": {
                 "type": "object",
                 "properties": {
-                  "icon": {
-                    "name": "icon",
-                    "type": "string",
-                    "required": false
-                  },
-                  "label": {
-                    "name": "label",
-                    "type": "string",
-                    "required": true
-                  },
                   "event": {
                     "name": "event",
                     "type": "string",
@@ -1000,16 +1226,19 @@
                     "name": "variant",
                     "type": "string",
                     "required": false
+                  },
+                  "icon": {
+                    "name": "icon",
+                    "type": "string",
+                    "required": false
+                  },
+                  "label": {
+                    "name": "label",
+                    "type": "string",
+                    "required": true
                   }
                 }
               }
-            },
-            "title": {
-              "type": "string",
-              "default": "Renewal Risk",
-              "label": "Section title",
-              "description": "Heading shown above the at-risk accounts list",
-              "tier": "customization"
             }
           },
           "scope": "collection"

@@ -1,5 +1,5 @@
-app std-telematics-event "1.1.0"
-"std-telematics-event — read-only per-vehicle telemetry stream from GPS/OBD-II devices. Lists events in `browsing`; opens event detail in `viewing_single` with Acknowledge action. Agents tune the list shape via `config.fields` + `config.itemActions`."
+app std-telematics-event "1.2.0"
+"std-telematics-event — read-only per-vehicle telemetry stream (GPS/OBD-II). Lists events, detail offers Acknowledge. Exposes Inventory/Logistics knobs (defaultWarehouse, hazmatEnabled, …) for the questionnaire."
 
 type FieldSpec = { name : string!, label : string, variant : string, icon : string, format : string, key : string, header : string }
 type ItemAction = { label : string!, event : string!, variant : string, icon : string }
@@ -36,6 +36,22 @@ orbital TelematicsEventOrbital {
         @label "Row actions"
         @description "Buttons users can click on each telemetry event"
         @tier "customization"
+      defaultWarehouse        : string  = ""
+        @label "Default depot / warehouse"
+        @description "Depot that owns these vehicles by default. Used by downstream alerting."
+        @tier "customization"
+      multiLocationEnabled    : boolean = false
+        @label "Multi-location"
+        @description "Source vehicles across multiple depots."
+        @tier "customization"
+      hazmatEnabled           : boolean = false
+        @label "Hazmat tracking"
+        @description "Surface hazmat-relevant telematics events distinctly."
+        @tier "advanced"
+      cycleCountFrequencyDays : number  = 30
+        @label "Cycle count cadence (days)"
+        @description "Days between scheduled fleet cycle counts triggered off telematics. v1.2 declarative."
+        @tier "advanced"
     }
     initial: loading
     state loading {

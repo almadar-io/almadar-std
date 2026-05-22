@@ -1,0 +1,232 @@
+{
+  "name": "std-marketing-pricing",
+  "version": "1.0.0",
+  "description": "Pricing grid atom for marketing pages. Renders tiered pricing cards with plans, features, and CTAs. Pick for SaaS pricing pages and subscription showcases.",
+  "orbitals": [
+    {
+      "name": "PricingItemOrbital",
+      "entity": {
+        "name": "PricingItem",
+        "persistence": "runtime",
+        "fields": [
+          {
+            "name": "id",
+            "type": "string",
+            "required": true
+          }
+        ]
+      },
+      "traits": [
+        {
+          "name": "PricingItemPricing",
+          "category": "interaction",
+          "linkedEntity": "PricingItem",
+          "emits": [
+            {
+              "event": "PLAN_SELECT",
+              "scope": "external",
+              "payloadSchema": [
+                {
+                  "name": "plan",
+                  "type": "string"
+                },
+                {
+                  "name": "href",
+                  "type": "string"
+                }
+              ]
+            }
+          ],
+          "stateMachine": {
+            "states": [
+              {
+                "name": "idle",
+                "isInitial": true
+              }
+            ],
+            "events": [
+              {
+                "key": "INIT",
+                "name": "Initialize"
+              },
+              {
+                "key": "PLAN_SELECT",
+                "name": "Plan Select",
+                "payloadSchema": [
+                  {
+                    "name": "plan",
+                    "type": "string"
+                  },
+                  {
+                    "name": "href",
+                    "type": "string"
+                  }
+                ]
+              }
+            ],
+            "transitions": [
+              {
+                "from": "idle",
+                "to": "idle",
+                "event": "INIT",
+                "effects": [
+                  [
+                    "render-ui",
+                    "main",
+                    {
+                      "plans": "@config.plans",
+                      "type": "pricing-grid"
+                    }
+                  ]
+                ]
+              },
+              {
+                "from": "idle",
+                "to": "idle",
+                "event": "PLAN_SELECT",
+                "effects": [
+                  [
+                    "emit",
+                    "PLAN_SELECT",
+                    {
+                      "href": "@payload.href",
+                      "plan": "@payload.plan"
+                    }
+                  ]
+                ]
+              }
+            ]
+          },
+          "config": {
+            "plans": {
+              "type": "[PricingPlan]",
+              "default": [
+                {
+                  "highlighted": false,
+                  "description": "For individuals and small projects.",
+                  "price": "$0",
+                  "features": [
+                    "1 project",
+                    "Community support",
+                    "Basic analytics"
+                  ],
+                  "badge": "",
+                  "name": "Starter",
+                  "action": {
+                    "href": "#",
+                    "label": "Get Started"
+                  }
+                },
+                {
+                  "action": {
+                    "label": "Start Trial",
+                    "href": "#"
+                  },
+                  "highlighted": true,
+                  "features": [
+                    "Unlimited projects",
+                    "Priority support",
+                    "Advanced analytics",
+                    "Custom domains"
+                  ],
+                  "badge": "Most Popular",
+                  "name": "Pro",
+                  "price": "$49",
+                  "description": "For growing teams that need more power."
+                },
+                {
+                  "features": [
+                    "Dedicated infra",
+                    "SLA guarantee",
+                    "SSO & SAML",
+                    "Audit logs",
+                    "Custom contracts"
+                  ],
+                  "highlighted": false,
+                  "name": "Enterprise",
+                  "action": {
+                    "href": "#",
+                    "label": "Contact Sales"
+                  },
+                  "badge": "",
+                  "description": "For organizations with advanced needs.",
+                  "price": "Custom"
+                }
+              ],
+              "label": "Pricing Plans",
+              "description": "Array of pricing tiers",
+              "tier": "essential",
+              "items": {
+                "type": "object",
+                "properties": {
+                  "name": {
+                    "name": "name",
+                    "type": "string",
+                    "required": true
+                  },
+                  "features": {
+                    "name": "features",
+                    "type": "array",
+                    "required": false,
+                    "items": {
+                      "type": "string"
+                    }
+                  },
+                  "highlighted": {
+                    "name": "highlighted",
+                    "type": "boolean",
+                    "required": false
+                  },
+                  "description": {
+                    "name": "description",
+                    "type": "string",
+                    "required": false
+                  },
+                  "badge": {
+                    "name": "badge",
+                    "type": "string",
+                    "required": false
+                  },
+                  "action": {
+                    "name": "action",
+                    "type": "object",
+                    "required": false,
+                    "properties": {
+                      "href": {
+                        "name": "href",
+                        "type": "string",
+                        "required": true
+                      },
+                      "label": {
+                        "name": "label",
+                        "type": "string",
+                        "required": true
+                      }
+                    }
+                  },
+                  "price": {
+                    "name": "price",
+                    "type": "string",
+                    "required": true
+                  }
+                }
+              }
+            }
+          },
+          "scope": "instance"
+        }
+      ],
+      "pages": [
+        {
+          "name": "PricingItemPricingPage",
+          "path": "/pricing",
+          "traits": [
+            {
+              "ref": "PricingItemPricing"
+            }
+          ]
+        }
+      ]
+    }
+  ]
+}

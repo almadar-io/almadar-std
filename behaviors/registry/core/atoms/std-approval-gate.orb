@@ -1,0 +1,703 @@
+{
+  "name": "std-approval-gate",
+  "version": "1.0.0",
+  "description": "std-approval-gate — generic approval workflow. Persists ApprovalRequest rows + surfaces them in a review queue with Approve / Deny actions. On approval emits ApprovalGranted; on denial emits ApprovalDenied. Differs from std-mod-queue, which is content-moderation-specific. v1.0 ships the queue + review UI; sentinel-event-driven auto-approval threshold lands in v1.1 (gap).",
+  "orbitals": [
+    {
+      "name": "ApprovalGateOrbital",
+      "entity": {
+        "name": "ApprovalRequest",
+        "collection": "approval_requests",
+        "persistence": "persistent",
+        "fields": [
+          {
+            "name": "id",
+            "type": "string",
+            "required": true
+          },
+          {
+            "name": "gatedEvent",
+            "type": "string",
+            "default": ""
+          },
+          {
+            "name": "status",
+            "type": "string",
+            "default": "pending",
+            "values": [
+              "pending",
+              "approved",
+              "denied",
+              "escalated"
+            ]
+          },
+          {
+            "name": "reviewer",
+            "type": "string",
+            "default": ""
+          },
+          {
+            "name": "requestedAt",
+            "type": "number",
+            "default": 0.0
+          },
+          {
+            "name": "decidedAt",
+            "type": "number",
+            "default": 0.0
+          },
+          {
+            "name": "escalatedAt",
+            "type": "number",
+            "default": 0.0
+          },
+          {
+            "name": "notes",
+            "type": "string",
+            "default": ""
+          }
+        ]
+      },
+      "traits": [
+        {
+          "name": "ApprovalGateReview",
+          "category": "interaction",
+          "linkedEntity": "ApprovalRequest",
+          "emits": [
+            {
+              "event": "APPROVE",
+              "payloadSchema": [
+                {
+                  "name": "id",
+                  "type": "string",
+                  "required": true
+                },
+                {
+                  "name": "row.id",
+                  "type": "string",
+                  "required": true
+                },
+                {
+                  "name": "row.gatedEvent",
+                  "type": "string"
+                },
+                {
+                  "name": "row.status",
+                  "type": "string"
+                },
+                {
+                  "name": "row.reviewer",
+                  "type": "string"
+                },
+                {
+                  "name": "row.requestedAt",
+                  "type": "number"
+                },
+                {
+                  "name": "row.decidedAt",
+                  "type": "number"
+                },
+                {
+                  "name": "row.escalatedAt",
+                  "type": "number"
+                },
+                {
+                  "name": "row.notes",
+                  "type": "string"
+                }
+              ]
+            },
+            {
+              "event": "DENY",
+              "payloadSchema": [
+                {
+                  "name": "id",
+                  "type": "string",
+                  "required": true
+                },
+                {
+                  "name": "row.id",
+                  "type": "string",
+                  "required": true
+                },
+                {
+                  "name": "row.gatedEvent",
+                  "type": "string"
+                },
+                {
+                  "name": "row.status",
+                  "type": "string"
+                },
+                {
+                  "name": "row.reviewer",
+                  "type": "string"
+                },
+                {
+                  "name": "row.requestedAt",
+                  "type": "number"
+                },
+                {
+                  "name": "row.decidedAt",
+                  "type": "number"
+                },
+                {
+                  "name": "row.escalatedAt",
+                  "type": "number"
+                },
+                {
+                  "name": "row.notes",
+                  "type": "string"
+                }
+              ]
+            },
+            {
+              "event": "ApprovalGranted",
+              "scope": "external",
+              "payloadSchema": [
+                {
+                  "name": "requestId",
+                  "type": "string"
+                }
+              ]
+            },
+            {
+              "event": "ApprovalDenied",
+              "scope": "external",
+              "payloadSchema": [
+                {
+                  "name": "requestId",
+                  "type": "string"
+                }
+              ]
+            },
+            {
+              "event": "ApprovalRequestLoaded",
+              "payloadSchema": [
+                {
+                  "name": "data",
+                  "type": "[ApprovalRequest]"
+                }
+              ]
+            },
+            {
+              "event": "ApprovalRequestLoadFailed",
+              "payloadSchema": [
+                {
+                  "name": "error",
+                  "type": "string"
+                },
+                {
+                  "name": "code",
+                  "type": "string"
+                }
+              ]
+            },
+            {
+              "event": "ApprovalRequestReviewed",
+              "payloadSchema": [
+                {
+                  "name": "row.id",
+                  "type": "string",
+                  "required": true
+                },
+                {
+                  "name": "row.gatedEvent",
+                  "type": "string"
+                },
+                {
+                  "name": "row.status",
+                  "type": "string"
+                },
+                {
+                  "name": "row.reviewer",
+                  "type": "string"
+                },
+                {
+                  "name": "row.requestedAt",
+                  "type": "number"
+                },
+                {
+                  "name": "row.decidedAt",
+                  "type": "number"
+                },
+                {
+                  "name": "row.escalatedAt",
+                  "type": "number"
+                },
+                {
+                  "name": "row.notes",
+                  "type": "string"
+                }
+              ]
+            },
+            {
+              "event": "ApprovalRequestReviewFailed",
+              "payloadSchema": [
+                {
+                  "name": "error",
+                  "type": "string"
+                },
+                {
+                  "name": "code",
+                  "type": "string"
+                }
+              ]
+            }
+          ],
+          "stateMachine": {
+            "states": [
+              {
+                "name": "loading",
+                "isInitial": true
+              },
+              {
+                "name": "reviewing"
+              },
+              {
+                "name": "error"
+              }
+            ],
+            "events": [
+              {
+                "key": "INIT",
+                "name": "Initialize"
+              },
+              {
+                "key": "ApprovalRequestLoaded",
+                "name": "ApprovalRequest loaded",
+                "payloadSchema": [
+                  {
+                    "name": "data",
+                    "type": "[ApprovalRequest]"
+                  }
+                ]
+              },
+              {
+                "key": "ApprovalRequestLoadFailed",
+                "name": "ApprovalRequest load failed",
+                "payloadSchema": [
+                  {
+                    "name": "error",
+                    "type": "string"
+                  },
+                  {
+                    "name": "code",
+                    "type": "string"
+                  }
+                ]
+              },
+              {
+                "key": "APPROVE",
+                "name": "Approve",
+                "payloadSchema": [
+                  {
+                    "name": "id",
+                    "type": "string",
+                    "required": true
+                  },
+                  {
+                    "name": "row",
+                    "type": "ApprovalRequest"
+                  }
+                ]
+              },
+              {
+                "key": "DENY",
+                "name": "Deny",
+                "payloadSchema": [
+                  {
+                    "name": "id",
+                    "type": "string",
+                    "required": true
+                  },
+                  {
+                    "name": "row",
+                    "type": "ApprovalRequest"
+                  }
+                ]
+              },
+              {
+                "key": "ApprovalRequestReviewed",
+                "name": "ApprovalRequest reviewed",
+                "payloadSchema": [
+                  {
+                    "name": "row",
+                    "type": "ApprovalRequest"
+                  }
+                ]
+              },
+              {
+                "key": "ApprovalRequestReviewFailed",
+                "name": "ApprovalRequest review failed",
+                "payloadSchema": [
+                  {
+                    "name": "error",
+                    "type": "string"
+                  },
+                  {
+                    "name": "code",
+                    "type": "string"
+                  }
+                ]
+              },
+              {
+                "key": "ApprovalGranted",
+                "name": "Approval granted",
+                "payloadSchema": [
+                  {
+                    "name": "requestId",
+                    "type": "string"
+                  }
+                ]
+              },
+              {
+                "key": "ApprovalDenied",
+                "name": "Approval denied",
+                "payloadSchema": [
+                  {
+                    "name": "requestId",
+                    "type": "string"
+                  }
+                ]
+              }
+            ],
+            "transitions": [
+              {
+                "from": "loading",
+                "to": "loading",
+                "event": "INIT",
+                "effects": [
+                  [
+                    "fetch",
+                    "ApprovalRequest",
+                    {
+                      "emit": {
+                        "success": "ApprovalRequestLoaded",
+                        "failure": "ApprovalRequestLoadFailed"
+                      }
+                    }
+                  ],
+                  [
+                    "render-ui",
+                    "main",
+                    {
+                      "className": "py-12",
+                      "gap": "md",
+                      "direction": "vertical",
+                      "children": [
+                        {
+                          "type": "spinner"
+                        },
+                        {
+                          "color": "muted",
+                          "content": "Loading approval queue…",
+                          "variant": "caption",
+                          "type": "typography"
+                        }
+                      ],
+                      "align": "center",
+                      "type": "stack"
+                    }
+                  ]
+                ]
+              },
+              {
+                "from": "loading",
+                "to": "reviewing",
+                "event": "ApprovalRequestLoaded",
+                "effects": [
+                  [
+                    "render-ui",
+                    "main",
+                    {
+                      "direction": "vertical",
+                      "gap": "md",
+                      "type": "stack",
+                      "children": [
+                        {
+                          "align": "center",
+                          "children": [
+                            {
+                              "name": "shield-check",
+                              "type": "icon"
+                            },
+                            {
+                              "type": "typography",
+                              "variant": "h3",
+                              "content": "Approval queue"
+                            }
+                          ],
+                          "gap": "sm",
+                          "direction": "horizontal",
+                          "type": "stack"
+                        },
+                        {
+                          "type": "divider"
+                        },
+                        {
+                          "entity": "@payload.data",
+                          "itemActions": [
+                            {
+                              "label": "Approve",
+                              "event": "APPROVE",
+                              "variant": "primary",
+                              "icon": "check"
+                            },
+                            {
+                              "icon": "x",
+                              "variant": "danger",
+                              "event": "DENY",
+                              "label": "Deny"
+                            }
+                          ],
+                          "type": "data-grid",
+                          "fields": [
+                            {
+                              "name": "gatedEvent",
+                              "variant": "badge",
+                              "label": "Action"
+                            },
+                            {
+                              "name": "requestedAt",
+                              "label": "Requested",
+                              "variant": "caption"
+                            },
+                            {
+                              "variant": "badge",
+                              "label": "Status",
+                              "name": "status"
+                            }
+                          ],
+                          "cols": 1.0,
+                          "gap": "sm"
+                        }
+                      ]
+                    }
+                  ]
+                ]
+              },
+              {
+                "from": "loading",
+                "to": "error",
+                "event": "ApprovalRequestLoadFailed",
+                "effects": [
+                  [
+                    "render-ui",
+                    "main",
+                    {
+                      "type": "alert",
+                      "message": "@payload.error",
+                      "variant": "error"
+                    }
+                  ]
+                ]
+              },
+              {
+                "from": "reviewing",
+                "to": "reviewing",
+                "event": "APPROVE",
+                "effects": [
+                  [
+                    "set",
+                    "@entity.id",
+                    "@payload.id"
+                  ],
+                  [
+                    "set",
+                    "@entity.status",
+                    "approved"
+                  ],
+                  [
+                    "set",
+                    "@entity.reviewer",
+                    "@user.id"
+                  ],
+                  [
+                    "persist",
+                    "update",
+                    "ApprovalRequest",
+                    "@entity",
+                    {
+                      "emit": {
+                        "success": "ApprovalRequestReviewed",
+                        "failure": "ApprovalRequestReviewFailed"
+                      }
+                    }
+                  ],
+                  [
+                    "emit",
+                    "ApprovalGranted",
+                    {
+                      "requestId": "@payload.id"
+                    }
+                  ]
+                ]
+              },
+              {
+                "from": "reviewing",
+                "to": "reviewing",
+                "event": "DENY",
+                "effects": [
+                  [
+                    "set",
+                    "@entity.id",
+                    "@payload.id"
+                  ],
+                  [
+                    "set",
+                    "@entity.status",
+                    "denied"
+                  ],
+                  [
+                    "set",
+                    "@entity.reviewer",
+                    "@user.id"
+                  ],
+                  [
+                    "persist",
+                    "update",
+                    "ApprovalRequest",
+                    "@entity",
+                    {
+                      "emit": {
+                        "failure": "ApprovalRequestReviewFailed",
+                        "success": "ApprovalRequestReviewed"
+                      }
+                    }
+                  ],
+                  [
+                    "emit",
+                    "ApprovalDenied",
+                    {
+                      "requestId": "@payload.id"
+                    }
+                  ]
+                ]
+              },
+              {
+                "from": "reviewing",
+                "to": "loading",
+                "event": "ApprovalRequestReviewed",
+                "effects": [
+                  [
+                    "fetch",
+                    "ApprovalRequest",
+                    {
+                      "emit": {
+                        "success": "ApprovalRequestLoaded",
+                        "failure": "ApprovalRequestLoadFailed"
+                      }
+                    }
+                  ]
+                ]
+              },
+              {
+                "from": "reviewing",
+                "to": "reviewing",
+                "event": "ApprovalRequestReviewFailed",
+                "effects": [
+                  [
+                    "render-ui",
+                    "main",
+                    {
+                      "message": "@payload.error",
+                      "variant": "error",
+                      "type": "alert"
+                    }
+                  ]
+                ]
+              },
+              {
+                "from": "error",
+                "to": "loading",
+                "event": "INIT",
+                "effects": [
+                  [
+                    "fetch",
+                    "ApprovalRequest",
+                    {
+                      "emit": {
+                        "failure": "ApprovalRequestLoadFailed",
+                        "success": "ApprovalRequestLoaded"
+                      }
+                    }
+                  ],
+                  [
+                    "render-ui",
+                    "main",
+                    {
+                      "size": "sm",
+                      "type": "spinner"
+                    }
+                  ]
+                ]
+              }
+            ]
+          },
+          "config": {
+            "escalationHours": {
+              "type": "number",
+              "default": 0.0,
+              "label": "Escalation hours",
+              "description": "Hours a request can sit pending before escalating. v1.0 declarative only; per-row escalation needs loop-with-emit primitive (gap).",
+              "tier": "customization"
+            },
+            "autoApproveBelowThreshold": {
+              "type": "boolean",
+              "default": true,
+              "label": "Auto-approve below threshold",
+              "description": "Skip the review queue when the gated event's value is below the threshold. v1.0 declarative only.",
+              "tier": "customization"
+            },
+            "approverRoles": {
+              "type": "[string]",
+              "default": [],
+              "label": "Approver roles",
+              "description": "Roles eligible to approve. The host application enforces role-gating on the page.",
+              "tier": "essential",
+              "items": {
+                "type": "string"
+              }
+            },
+            "valueField": {
+              "type": "string",
+              "default": "",
+              "label": "Value field",
+              "description": "Payload field name to compare against threshold (e.g. 'amount' on a RefundRequested event). v1.0 declarative only.",
+              "tier": "customization"
+            },
+            "escalationRoles": {
+              "type": "[string]",
+              "default": [],
+              "label": "Escalation roles",
+              "description": "Roles notified when a request escalates (compose sibling std-notify-on-event).",
+              "tier": "customization",
+              "items": {
+                "type": "string"
+              }
+            },
+            "threshold": {
+              "type": "number",
+              "default": 0.0,
+              "label": "Auto-approve threshold",
+              "description": "Below this value, requests should be auto-approved. v1.0 declarative only; wiring lands in v1.1 (gap).",
+              "tier": "customization"
+            }
+          },
+          "scope": "collection"
+        }
+      ],
+      "pages": [
+        {
+          "name": "ApprovalGateReviewPage",
+          "path": "/approvals/queue",
+          "traits": [
+            {
+              "ref": "ApprovalGateReview"
+            }
+          ]
+        }
+      ]
+    }
+  ]
+}

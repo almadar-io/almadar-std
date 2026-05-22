@@ -1,5 +1,5 @@
-app std-maintenance-request "1.1.0"
-"std-maintenance-request — tenant-submitted request lifecycle (open → scheduled → in_progress → completed). Request-flow primitive (distinct from work-order's dispatch-flow). Agents tune the list shape via `config.fields` + `config.itemActions`."
+app std-maintenance-request "1.2.0"
+"std-maintenance-request — tenant request lifecycle. Listens for SET_STATUS so std-lifecycle can auto-escalate. Exposes Scheduling + Service knobs (bookingWindowDays, responseTimeMinutes, resolutionSLAHours, …)."
 
 type FieldSpec = { name : string!, label : string, variant : string, icon : string, format : string, key : string, header : string }
 type ItemAction = { label : string!, event : string!, variant : string, icon : string }
@@ -49,6 +49,78 @@ orbital MaintenanceRequestOrbital {
         @label "Row actions"
         @description "Buttons users can click on each request row"
         @tier "customization"
+      bookingWindowDays : number = 30
+        @label "Booking window (days)"
+        @description "How far in advance tenants can schedule maintenance visits."
+        @tier "customization"
+      leadTimeMinutes : number = 120
+        @label "Lead time (minutes)"
+        @description "Minimum minutes before scheduledAt that a new visit can be booked."
+        @tier "customization"
+      bookingHours : string = "08:00-18:00"
+        @label "Booking hours"
+        @description "Daily window during which maintenance visits can be scheduled (HH:MM-HH:MM)."
+        @tier "customization"
+      blackoutDates : [string] = []
+        @label "Blackout dates"
+        @description "ISO dates blocked from scheduling. Compose std-lifecycle to enforce."
+        @tier "customization"
+      noShowGracePeriodMinutes : number = 30
+        @label "No-show grace (minutes)"
+        @description "Minutes after scheduledAt before the request flags no_show. Wire via std-lifecycle."
+        @tier "customization"
+      rescheduleWindowHours : number = 12
+        @label "Reschedule window (hours)"
+        @description "Hours before scheduledAt during which the tenant can self-reschedule."
+        @tier "customization"
+      maxReschedules : number = 2
+        @label "Max reschedules"
+        @description "Hard cap on reschedule count per request."
+        @tier "advanced"
+      cancellationPolicy : "free" | "partial-refund" | "no-refund" = "free"
+        @label "Cancellation policy"
+        @description "Fee treatment when a visit is cancelled inside the reschedule window."
+        @tier "customization"
+      serviceAreaRadius : number = 25
+        @label "Service area radius (mi)"
+        @description "Maximum distance from the property hub for tech dispatch eligibility."
+        @tier "customization"
+      serviceZones : [string] = []
+        @label "Service zones"
+        @description "Named geographic zones for dispatch grouping."
+        @tier "customization"
+      dispatchStrategy : "nearest" | "round-robin" | "manual" = "nearest"
+        @label "Dispatch strategy"
+        @description "How techs are assigned to a maintenance request."
+        @tier "customization"
+      skillsRequired : [string] = []
+        @label "Required skills"
+        @description "Capability tags a tech must have (e.g. 'plumbing', 'electrical', 'hvac')."
+        @tier "customization"
+      responseTimeMinutes : number = 240
+        @label "Response time SLA (min)"
+        @description "Target time from request open to first acknowledgement."
+        @tier "essential"
+      resolutionSLAHours : number = 48
+        @label "Resolution SLA (hours)"
+        @description "Target time from request open to completed. Compose std-lifecycle to auto-escalate."
+        @tier "essential"
+      escalationThresholdHours : number = 72
+        @label "Escalation threshold (hours)"
+        @description "Hours after which an unresolved request auto-escalates. Compose std-lifecycle for wiring."
+        @tier "customization"
+      customerVisibleStatuses : [string] = ["scheduled", "in_progress", "completed"]
+        @label "Customer-visible statuses"
+        @description "Subset of statuses tenants see in their portal. Internal statuses are filtered."
+        @tier "customization"
+      requirePhotoOnComplete : boolean = false
+        @label "Require photo on complete"
+        @description "Block COMPLETE_REQUEST unless a completion photo is attached."
+        @tier "customization"
+      requireSignatureOnComplete : boolean = false
+        @label "Require tenant signature on complete"
+        @description "Block COMPLETE_REQUEST unless tenant signature is captured (compose std-signature-capture)."
+        @tier "customization"
     }
     initial: loading
     state loading {
@@ -85,6 +157,11 @@ orbital MaintenanceRequestOrbital {
         (fetch MaintenanceRequest { emit: { success: "MaintenanceRequestLoaded", failure: "MaintenanceRequestLoadFailed" } })
       MaintenanceRequestUpdateFailed -> browsing
         (render-ui main { type: "alert", variant: "error", message: "@payload.error" })
+      SET_STATUS -> loading
+        (set @entity.id @payload.entityId)
+        (set @entity.status @payload.newStatus)
+        (persist update MaintenanceRequest @entity { emit: { success: "MaintenanceRequestUpdated", failure: "MaintenanceRequestUpdateFailed" } })
+        (render-ui main { type: "stack", direction: "vertical", gap: "md", align: "center", className: "py-12", children: [{ type: "spinner" }, { type: "typography", variant: "caption", color: "muted", content: "Updating request status…" }] })
     }
     state viewing_single {
       CLOSE_VIEW -> loading
@@ -131,6 +208,7 @@ orbital MaintenanceRequestOrbital {
       SCHEDULE_REQUEST { id : string!, scheduledAt : string!, row : MaintenanceRequest }
       COMPLETE_REQUEST { id : string!, completedAt : string,  row : MaintenanceRequest }
       CANCEL_REQUEST   { id : string!, notes : string,        row : MaintenanceRequest }
+      SET_STATUS       { entityId : string!, newStatus : string! }
       MaintenanceRequestLoaded       { data : [MaintenanceRequest] }
       MaintenanceRequestLoadFailed   { error : string, code : string }
       MaintenanceRequestUpdated      { row : MaintenanceRequest }

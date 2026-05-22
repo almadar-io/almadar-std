@@ -1,7 +1,7 @@
 {
   "name": "std-chart-of-accounts",
-  "version": "1.1.0",
-  "description": "std-chart-of-accounts — list of all accounts (asset, liability, equity, revenue, expense) that ledger entries post against. Lists accounts in `browsing`; opens detail in `viewing_single` with Activate / Deactivate actions. Agents tune the list shape via `config.fields` + `config.itemActions`.",
+  "version": "1.2.0",
+  "description": "std-chart-of-accounts — accounts catalog (asset/liability/equity/revenue/expense) with Activate / Deactivate actions. Exposes Financial-pattern knobs (currency, jurisdiction, retention).",
   "orbitals": [
     {
       "name": "ChartOfAccountsOrbital",
@@ -245,8 +245,8 @@
                     "Account",
                     {
                       "emit": {
-                        "failure": "AccountLoadFailed",
-                        "success": "AccountLoaded"
+                        "success": "AccountLoaded",
+                        "failure": "AccountLoadFailed"
                       }
                     }
                   ],
@@ -256,18 +256,18 @@
                     {
                       "direction": "vertical",
                       "gap": "md",
+                      "type": "stack",
                       "align": "center",
                       "className": "py-12",
-                      "type": "stack",
                       "children": [
                         {
                           "type": "spinner"
                         },
                         {
-                          "type": "typography",
                           "variant": "caption",
+                          "content": "Loading accounts…",
                           "color": "muted",
-                          "content": "Loading accounts…"
+                          "type": "typography"
                         }
                       ]
                     }
@@ -285,67 +285,67 @@
                     {
                       "children": [
                         {
-                          "direction": "horizontal",
+                          "gap": "sm",
+                          "type": "stack",
+                          "align": "center",
                           "children": [
                             {
                               "type": "icon",
                               "name": "book-open"
                             },
                             {
+                              "content": "@config.title",
                               "variant": "h3",
-                              "type": "typography",
-                              "content": "@config.title"
+                              "type": "typography"
                             }
                           ],
-                          "align": "center",
-                          "type": "stack",
-                          "gap": "sm"
+                          "direction": "horizontal"
                         },
                         {
-                          "type": "simple-grid",
+                          "cols": 4.0,
                           "children": [
                             {
-                              "type": "stat-display",
-                              "label": "Total accounts",
                               "icon": "book-open",
-                              "value": "@payload.data.length"
+                              "value": "@payload.data.length",
+                              "type": "stat-display",
+                              "label": "Total accounts"
                             },
                             {
                               "label": "Active",
-                              "icon": "check-circle",
                               "type": "stat-display",
-                              "value": "118"
+                              "value": "118",
+                              "icon": "check-circle"
                             },
                             {
-                              "value": "$2.4M",
+                              "type": "stat-display",
                               "icon": "trending-up",
-                              "label": "Assets balance",
-                              "type": "stat-display"
+                              "value": "$2.4M",
+                              "label": "Assets balance"
                             },
                             {
-                              "value": "$840K",
-                              "icon": "trending-down",
+                              "label": "Liabilities",
                               "type": "stat-display",
-                              "label": "Liabilities"
+                              "icon": "trending-down",
+                              "value": "$840K"
                             }
                           ],
-                          "cols": 4.0
+                          "type": "simple-grid"
                         },
                         {
                           "type": "divider"
                         },
                         {
                           "itemActions": "@config.itemActions",
-                          "entity": "@payload.data",
                           "fields": "@config.fields",
+                          "entity": "@payload.data",
+                          "gap": "sm",
                           "type": "data-grid",
-                          "cols": 1.0,
-                          "gap": "sm"
+                          "cols": 1.0
                         }
                       ],
-                      "gap": "md",
+                      "type": "stack",
                       "direction": "vertical",
-                      "type": "stack"
+                      "gap": "md"
                     }
                   ]
                 ]
@@ -359,9 +359,9 @@
                     "render-ui",
                     "main",
                     {
-                      "message": "@payload.error",
                       "type": "alert",
-                      "variant": "error"
+                      "variant": "error",
+                      "message": "@payload.error"
                     }
                   ]
                 ]
@@ -410,20 +410,14 @@
                     "render-ui",
                     "main",
                     {
-                      "direction": "vertical",
-                      "gap": "md",
-                      "type": "stack",
                       "children": [
                         {
-                          "gap": "sm",
-                          "type": "stack",
                           "direction": "horizontal",
-                          "align": "center",
                           "children": [
                             {
-                              "label": "Back",
                               "type": "button",
                               "variant": "ghost",
+                              "label": "Back",
                               "action": "CLOSE_VIEW"
                             },
                             {
@@ -436,37 +430,40 @@
                               "variant": "h3"
                             },
                             {
+                              "variant": "primary",
                               "type": "badge",
-                              "label": "@entity.type",
-                              "variant": "primary"
+                              "label": "@entity.type"
                             }
-                          ]
+                          ],
+                          "gap": "sm",
+                          "align": "center",
+                          "type": "stack"
                         },
                         {
                           "type": "divider"
                         },
                         {
+                          "direction": "vertical",
                           "children": [
                             {
+                              "gap": "md",
+                              "direction": "horizontal",
                               "children": [
                                 {
                                   "variant": "caption",
-                                  "color": "muted",
+                                  "type": "typography",
                                   "content": "Code",
-                                  "type": "typography"
+                                  "color": "muted"
                                 },
                                 {
-                                  "content": "@entity.code",
+                                  "variant": "body",
                                   "type": "typography",
-                                  "variant": "body"
+                                  "content": "@entity.code"
                                 }
                               ],
-                              "type": "stack",
-                              "direction": "horizontal",
-                              "gap": "md"
+                              "type": "stack"
                             },
                             {
-                              "type": "stack",
                               "children": [
                                 {
                                   "color": "muted",
@@ -481,61 +478,64 @@
                                 }
                               ],
                               "gap": "md",
+                              "type": "stack",
                               "direction": "horizontal"
                             }
                           ],
                           "type": "stack",
-                          "direction": "vertical",
                           "gap": "sm"
                         },
                         {
                           "type": "divider"
                         },
                         {
-                          "type": "simple-grid",
-                          "cols": 2.0,
                           "children": [
                             {
-                              "type": "stat-display",
                               "icon": "dollar-sign",
+                              "type": "stat-display",
                               "value": "@entity.balance",
                               "label": "Balance"
                             },
                             {
                               "label": "Type",
-                              "icon": "tag",
                               "type": "stat-display",
-                              "value": "@entity.type"
+                              "value": "@entity.type",
+                              "icon": "tag"
                             }
-                          ]
+                          ],
+                          "cols": 2.0,
+                          "type": "simple-grid"
                         },
                         {
                           "align": "center",
-                          "type": "stack",
                           "direction": "horizontal",
+                          "gap": "sm",
                           "children": [
                             {
-                              "type": "button",
+                              "variant": "primary",
+                              "action": "ACTIVATE_ACCOUNT",
                               "label": "Activate",
                               "actionPayload": {
                                 "id": "@entity.id"
                               },
-                              "variant": "primary",
-                              "action": "ACTIVATE_ACCOUNT"
+                              "type": "button"
                             },
                             {
-                              "label": "Deactivate",
+                              "variant": "danger",
+                              "action": "DEACTIVATE_ACCOUNT",
                               "actionPayload": {
                                 "id": "@entity.id"
                               },
-                              "action": "DEACTIVATE_ACCOUNT",
                               "type": "button",
-                              "variant": "danger"
+                              "label": "Deactivate"
                             }
                           ],
-                          "gap": "sm"
+                          "type": "stack"
                         }
-                      ]
+                      ],
+                      "type": "stack",
+                      "direction": "vertical",
+                      "gap": "md"
                     }
                   ]
                 ]
@@ -564,20 +564,20 @@
                     "render-ui",
                     "main",
                     {
-                      "className": "py-12",
-                      "align": "center",
                       "gap": "md",
                       "type": "stack",
                       "direction": "vertical",
+                      "align": "center",
+                      "className": "py-12",
                       "children": [
                         {
                           "type": "spinner"
                         },
                         {
+                          "content": "Deactivating account…",
                           "variant": "caption",
                           "type": "typography",
-                          "color": "muted",
-                          "content": "Deactivating account…"
+                          "color": "muted"
                         }
                       ]
                     }
@@ -594,8 +594,8 @@
                     "Account",
                     {
                       "emit": {
-                        "success": "AccountLoaded",
-                        "failure": "AccountLoadFailed"
+                        "failure": "AccountLoadFailed",
+                        "success": "AccountLoaded"
                       }
                     }
                   ],
@@ -603,22 +603,22 @@
                     "render-ui",
                     "main",
                     {
-                      "gap": "md",
                       "children": [
                         {
                           "type": "spinner"
                         },
                         {
                           "content": "Loading accounts…",
+                          "variant": "caption",
                           "type": "typography",
-                          "color": "muted",
-                          "variant": "caption"
+                          "color": "muted"
                         }
                       ],
-                      "type": "stack",
                       "align": "center",
-                      "className": "py-12",
-                      "direction": "vertical"
+                      "direction": "vertical",
+                      "type": "stack",
+                      "gap": "md",
+                      "className": "py-12"
                     }
                   ]
                 ]
@@ -638,8 +638,8 @@
                     "Account",
                     {
                       "emit": {
-                        "failure": "AccountLoadFailed",
-                        "success": "AccountLoaded"
+                        "success": "AccountLoaded",
+                        "failure": "AccountLoadFailed"
                       }
                     }
                   ],
@@ -648,21 +648,21 @@
                     "main",
                     {
                       "type": "stack",
-                      "align": "center",
-                      "className": "py-12",
                       "direction": "vertical",
+                      "gap": "md",
+                      "className": "py-12",
                       "children": [
                         {
                           "type": "spinner"
                         },
                         {
-                          "content": "Activating account…",
                           "variant": "caption",
+                          "type": "typography",
                           "color": "muted",
-                          "type": "typography"
+                          "content": "Activating account…"
                         }
                       ],
-                      "gap": "md"
+                      "align": "center"
                     }
                   ]
                 ]
@@ -691,22 +691,22 @@
                     "render-ui",
                     "main",
                     {
+                      "className": "py-12",
                       "align": "center",
                       "type": "stack",
                       "direction": "vertical",
-                      "gap": "md",
                       "children": [
                         {
                           "type": "spinner"
                         },
                         {
-                          "variant": "caption",
-                          "content": "Deactivating account…",
                           "color": "muted",
-                          "type": "typography"
+                          "content": "Deactivating account…",
+                          "type": "typography",
+                          "variant": "caption"
                         }
                       ],
-                      "className": "py-12"
+                      "gap": "md"
                     }
                   ]
                 ]
@@ -739,40 +739,73 @@
             ]
           },
           "config": {
-            "title": {
+            "currency": {
               "type": "string",
-              "default": "Chart of Accounts",
-              "label": "Section title",
-              "description": "Heading shown above the accounts list",
+              "default": "USD",
+              "label": "Default currency",
+              "description": "ISO 4217 currency code (USD, EUR, GBP, …) for account balances.",
+              "tier": "essential"
+            },
+            "lateFeeAmount": {
+              "type": "number",
+              "default": 0.0,
+              "label": "Late fee amount",
+              "description": "Flat cash amount or percentage (per lateFeePolicy).",
               "tier": "customization"
+            },
+            "gracePeriodDays": {
+              "type": "number",
+              "default": 0.0,
+              "label": "Grace period (days)",
+              "description": "Days a deactivated account may continue to accept postings. Declarative.",
+              "tier": "customization"
+            },
+            "complianceJurisdiction": {
+              "type": "string",
+              "default": "",
+              "label": "Compliance jurisdiction",
+              "description": "Drives chart structure + retention per locale: 'US-GAAP', 'EU-IFRS', 'UK-FRS', etc. Declarative.",
+              "tier": "advanced"
+            },
+            "roundingMode": {
+              "type": "string",
+              "default": "bankers",
+              "label": "Rounding mode",
+              "description": "Sub-cent rounding behavior for ledger postings.",
+              "tier": "advanced",
+              "values": [
+                "bankers",
+                "half-up",
+                "down"
+              ]
             },
             "fields": {
               "type": "[FieldSpec]",
               "default": [
                 {
+                  "name": "code",
                   "label": "Code",
-                  "variant": "caption",
-                  "name": "code"
+                  "variant": "caption"
                 },
                 {
-                  "variant": "caption",
                   "name": "name",
-                  "label": "Name"
+                  "label": "Name",
+                  "variant": "caption"
                 },
                 {
                   "name": "type",
-                  "label": "Type",
-                  "variant": "badge"
+                  "variant": "badge",
+                  "label": "Type"
                 },
                 {
+                  "name": "parentCode",
                   "label": "Parent",
-                  "variant": "caption",
-                  "name": "parentCode"
+                  "variant": "caption"
                 },
                 {
+                  "name": "balance",
                   "variant": "caption",
-                  "label": "Balance",
-                  "name": "balance"
+                  "label": "Balance"
                 }
               ],
               "label": "Columns to show",
@@ -781,18 +814,13 @@
               "items": {
                 "type": "object",
                 "properties": {
-                  "key": {
-                    "name": "key",
+                  "name": {
+                    "name": "name",
                     "type": "string",
-                    "required": false
+                    "required": true
                   },
-                  "header": {
-                    "name": "header",
-                    "type": "string",
-                    "required": false
-                  },
-                  "format": {
-                    "name": "format",
+                  "variant": {
+                    "name": "variant",
                     "type": "string",
                     "required": false
                   },
@@ -801,8 +829,13 @@
                     "type": "string",
                     "required": false
                   },
-                  "variant": {
-                    "name": "variant",
+                  "format": {
+                    "name": "format",
+                    "type": "string",
+                    "required": false
+                  },
+                  "key": {
+                    "name": "key",
                     "type": "string",
                     "required": false
                   },
@@ -811,27 +844,65 @@
                     "type": "string",
                     "required": false
                   },
-                  "name": {
-                    "name": "name",
+                  "header": {
+                    "name": "header",
                     "type": "string",
-                    "required": true
+                    "required": false
                   }
                 }
               }
+            },
+            "taxStrategy": {
+              "type": "string",
+              "default": "none",
+              "label": "Tax strategy",
+              "description": "How tax-related accounts treat their balances. inclusive/exclusive/none.",
+              "tier": "customization",
+              "values": [
+                "inclusive",
+                "exclusive",
+                "none"
+              ]
+            },
+            "lateFeePolicy": {
+              "type": "string",
+              "default": "none",
+              "label": "Late fee policy",
+              "description": "Per-account late fee policy (rarely used on COA). Declarative; wiring deferred.",
+              "tier": "customization",
+              "values": [
+                "none",
+                "flat",
+                "percent"
+              ]
+            },
+            "retentionYears": {
+              "type": "number",
+              "default": 7.0,
+              "label": "Retention (years)",
+              "description": "Years to keep account records for compliance.",
+              "tier": "advanced"
+            },
+            "title": {
+              "type": "string",
+              "default": "Chart of Accounts",
+              "label": "Section title",
+              "description": "Heading shown above the accounts list",
+              "tier": "customization"
             },
             "itemActions": {
               "type": "[ItemAction]",
               "default": [
                 {
-                  "label": "Open",
-                  "icon": "arrow-right",
                   "variant": "primary",
-                  "event": "OPEN_ACCOUNT"
+                  "event": "OPEN_ACCOUNT",
+                  "label": "Open",
+                  "icon": "arrow-right"
                 },
                 {
+                  "label": "Deactivate",
                   "event": "DEACTIVATE_ACCOUNT",
-                  "variant": "danger",
-                  "label": "Deactivate"
+                  "variant": "danger"
                 }
               ],
               "label": "Row actions",
@@ -845,11 +916,6 @@
                     "type": "string",
                     "required": true
                   },
-                  "icon": {
-                    "name": "icon",
-                    "type": "string",
-                    "required": false
-                  },
                   "event": {
                     "name": "event",
                     "type": "string",
@@ -857,6 +923,11 @@
                   },
                   "variant": {
                     "name": "variant",
+                    "type": "string",
+                    "required": false
+                  },
+                  "icon": {
+                    "name": "icon",
                     "type": "string",
                     "required": false
                   }

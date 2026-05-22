@@ -1,5 +1,5 @@
-app std-class-roster "1.1.0"
-"std-class-roster — list of members enrolled in a specific class session. Lists roster entries in `browsing`; opens entry detail in `viewing_single` with Check In / No Show actions. Agents tune the list shape via `config.fields` + `config.itemActions`."
+app std-class-roster "1.2.0"
+"std-class-roster — members enrolled in a class session. Listens for SET_STATUS so sibling std-lifecycle can auto-transition. Exposes Scheduling/Booking + HR knobs (bookingWindowDays, noShowGracePeriodMinutes, anonymizeOnRejection, …)."
 
 type FieldSpec = { name : string!, label : string, variant : string, icon : string, format : string, key : string, header : string }
 type ItemAction = { label : string!, event : string!, variant : string, icon : string }
@@ -42,6 +42,62 @@ orbital ClassRosterOrbital {
         @label "Row actions"
         @description "Buttons users can click on each enrolled member"
         @tier "customization"
+      bookingWindowDays : number = 30
+        @label "Booking window (days)"
+        @description "How far in advance members can enroll in a class."
+        @tier "customization"
+      leadTimeMinutes : number = 15
+        @label "Lead time (minutes)"
+        @description "Minimum minutes before class start that a new enrollment is accepted."
+        @tier "customization"
+      bookingHours : string = "06:00-22:00"
+        @label "Booking hours"
+        @description "Daily window during which enrollments can be made (HH:MM-HH:MM)."
+        @tier "customization"
+      blackoutDates : [string] = []
+        @label "Blackout dates"
+        @description "ISO dates blocked from booking (e.g. holidays). Compose std-lifecycle to enforce."
+        @tier "customization"
+      noShowGracePeriodMinutes : number = 10
+        @label "No-show grace (minutes)"
+        @description "Minutes after class start before the entry auto-marks no_show. Wire via std-lifecycle."
+        @tier "customization"
+      rescheduleWindowHours : number = 4
+        @label "Reschedule window (hours)"
+        @description "Hours before class start during which the member can self-reschedule."
+        @tier "customization"
+      maxReschedules : number = 3
+        @label "Max reschedules"
+        @description "Hard cap on reschedule count per enrollment."
+        @tier "advanced"
+      cancellationPolicy : "free" | "partial-refund" | "no-refund" = "free"
+        @label "Cancellation policy"
+        @description "Refund treatment when an enrollment is cancelled inside the reschedule window."
+        @tier "customization"
+      backgroundCheckRequired : boolean = false
+        @label "Background check required"
+        @description "Block CHECK_IN until a background check is on file (e.g. youth programs)."
+        @tier "customization"
+      eVerifyRequired : boolean = false
+        @label "E-Verify required"
+        @description "US I-9 / E-Verify gate (relevant for instructor rosters)."
+        @tier "customization"
+      i9DocumentsRequired : boolean = false
+        @label "I-9 documents required"
+        @description "Require I-9 supporting documents (instructor rosters)."
+        @tier "customization"
+      anonymizeOnRejection : boolean = false
+        @label "Anonymize on rejection"
+        @description "When true, scrub member PII on no_show / removal. Pair with std-data-erasure."
+        @tier "customization"
+      retentionAfterRejectionDays : number = 730
+        @label "Retention after rejection (days)"
+        @description "Days to keep no_show / removed roster entries."
+        @tier "advanced"
+      equalOpportunityTrackingEnabled : boolean = false
+        @label "Equal opportunity tracking"
+        @description "Capture demographic data separately for EEO reporting (sibling collection)."
+        @tier "advanced"
     }
     initial: loading
     state loading {
@@ -72,6 +128,11 @@ orbital ClassRosterOrbital {
         (set @entity.id @payload.id)
         (fetch RosterEntry { emit: { success: "RosterEntryLoaded", failure: "RosterEntryLoadFailed" } })
         (render-ui main { type: "stack", direction: "vertical", gap: "md", align: "center", className: "py-12", children: [{ type: "spinner" }, { type: "typography", variant: "caption", color: "muted", content: "Marking no-show…" }] })
+      SET_STATUS -> loading
+        (set @entity.id @payload.entityId)
+        (set @entity.status @payload.newStatus)
+        (persist update RosterEntry @entity { emit: { success: "RosterEntryLoaded", failure: "RosterEntryLoadFailed" } })
+        (render-ui main { type: "stack", direction: "vertical", gap: "md", align: "center", className: "py-12", children: [{ type: "spinner" }, { type: "typography", variant: "caption", color: "muted", content: "Updating roster entry status…" }] })
     }
     state viewing_single {
       CLOSE_VIEW -> loading
@@ -104,6 +165,7 @@ orbital ClassRosterOrbital {
       CLOSE_VIEW             { }
       CHECK_IN               { id : string! }
       MARK_NO_SHOW           { id : string! }
+      SET_STATUS             { entityId : string!, newStatus : string! }
       RosterEntryLoaded      { data : [RosterEntry] }
       RosterEntryLoadFailed  { error : string, code : string }
     }

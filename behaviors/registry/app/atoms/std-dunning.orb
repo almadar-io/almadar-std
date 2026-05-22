@@ -1,7 +1,7 @@
 {
   "name": "std-dunning",
-  "version": "1.1.0",
-  "description": "std-dunning — failed-payment escalation ladder for subscriptions. Lists open dunning cases in `browsing`; opens detail in `viewing_single` with Escalate / Resolve / Suspend actions. Agents tune the list shape via `config.fields` + `config.itemActions`.",
+  "version": "1.2.0",
+  "description": "std-dunning — failed-payment escalation ladder. Lists / escalates / resolves / suspends dunning cases. Listens for SET_STATUS so std-lifecycle can drive automated transitions. Exposes Financial-pattern knobs.",
   "orbitals": [
     {
       "name": "DunningCaseOrbital",
@@ -199,6 +199,75 @@
                   "type": "string"
                 }
               ]
+            },
+            {
+              "event": "DunningCaseUpdated",
+              "payloadSchema": [
+                {
+                  "name": "row.id",
+                  "type": "string",
+                  "required": true
+                },
+                {
+                  "name": "row.subscriptionId",
+                  "type": "string",
+                  "required": true
+                },
+                {
+                  "name": "row.customerId",
+                  "type": "string",
+                  "required": true
+                },
+                {
+                  "name": "row.severity",
+                  "type": "string"
+                },
+                {
+                  "name": "row.attemptNumber",
+                  "type": "number"
+                },
+                {
+                  "name": "row.attemptsTotal",
+                  "type": "number"
+                },
+                {
+                  "name": "row.failedAt",
+                  "type": "string"
+                },
+                {
+                  "name": "row.nextRetryAt",
+                  "type": "string"
+                },
+                {
+                  "name": "row.amountDue",
+                  "type": "number"
+                },
+                {
+                  "name": "row.currency",
+                  "type": "string"
+                },
+                {
+                  "name": "row.resolvedAt",
+                  "type": "string"
+                },
+                {
+                  "name": "row.status",
+                  "type": "string"
+                }
+              ]
+            },
+            {
+              "event": "DunningCaseUpdateFailed",
+              "payloadSchema": [
+                {
+                  "name": "error",
+                  "type": "string"
+                },
+                {
+                  "name": "code",
+                  "type": "string"
+                }
+              ]
             }
           ],
           "stateMachine": {
@@ -273,6 +342,46 @@
                 ]
               },
               {
+                "key": "SET_STATUS",
+                "name": "Set Status",
+                "payloadSchema": [
+                  {
+                    "name": "entityId",
+                    "type": "string",
+                    "required": true
+                  },
+                  {
+                    "name": "newStatus",
+                    "type": "string",
+                    "required": true
+                  }
+                ]
+              },
+              {
+                "key": "DunningCaseUpdated",
+                "name": "DunningCase updated",
+                "payloadSchema": [
+                  {
+                    "name": "row",
+                    "type": "DunningCase"
+                  }
+                ]
+              },
+              {
+                "key": "DunningCaseUpdateFailed",
+                "name": "DunningCase update failed",
+                "payloadSchema": [
+                  {
+                    "name": "error",
+                    "type": "string"
+                  },
+                  {
+                    "name": "code",
+                    "type": "string"
+                  }
+                ]
+              },
+              {
                 "key": "CLOSE_VIEW",
                 "name": "Close View"
               },
@@ -319,22 +428,22 @@
                     "render-ui",
                     "main",
                     {
-                      "type": "stack",
-                      "align": "center",
-                      "className": "py-12",
                       "children": [
                         {
                           "type": "spinner"
                         },
                         {
                           "content": "Loading dunning cases…",
-                          "color": "muted",
                           "variant": "caption",
-                          "type": "typography"
+                          "type": "typography",
+                          "color": "muted"
                         }
                       ],
                       "gap": "md",
-                      "direction": "vertical"
+                      "direction": "vertical",
+                      "type": "stack",
+                      "className": "py-12",
+                      "align": "center"
                     }
                   ]
                 ]
@@ -348,12 +457,11 @@
                     "render-ui",
                     "main",
                     {
+                      "gap": "md",
                       "type": "stack",
+                      "direction": "vertical",
                       "children": [
                         {
-                          "align": "center",
-                          "type": "stack",
-                          "direction": "horizontal",
                           "children": [
                             {
                               "name": "alert-triangle",
@@ -361,56 +469,57 @@
                             },
                             {
                               "content": "@config.title",
-                              "variant": "h3",
-                              "type": "typography"
+                              "type": "typography",
+                              "variant": "h3"
                             }
                           ],
-                          "gap": "sm"
+                          "direction": "horizontal",
+                          "type": "stack",
+                          "gap": "sm",
+                          "align": "center"
                         },
                         {
+                          "type": "simple-grid",
                           "cols": 4.0,
                           "children": [
                             {
-                              "icon": "alert-triangle",
-                              "type": "stat-display",
                               "label": "Open cases",
-                              "value": "@payload.data.length"
+                              "icon": "alert-triangle",
+                              "value": "@payload.data.length",
+                              "type": "stat-display"
                             },
                             {
-                              "icon": "check-circle",
+                              "label": "Recovered",
                               "value": "18",
                               "type": "stat-display",
-                              "label": "Recovered"
+                              "icon": "check-circle"
                             },
                             {
-                              "type": "stat-display",
-                              "icon": "ban",
                               "value": "3",
-                              "label": "Suspended"
+                              "label": "Suspended",
+                              "type": "stat-display",
+                              "icon": "ban"
                             },
                             {
                               "type": "stat-display",
-                              "value": "62%",
                               "icon": "trending-up",
+                              "value": "62%",
                               "label": "Recovery rate"
                             }
-                          ],
-                          "type": "simple-grid"
+                          ]
                         },
                         {
                           "type": "divider"
                         },
                         {
                           "type": "data-grid",
-                          "entity": "@payload.data",
-                          "fields": "@config.fields",
-                          "cols": 1.0,
                           "gap": "sm",
+                          "entity": "@payload.data",
+                          "cols": 1.0,
+                          "fields": "@config.fields",
                           "itemActions": "@config.itemActions"
                         }
-                      ],
-                      "direction": "vertical",
-                      "gap": "md"
+                      ]
                     }
                   ]
                 ]
@@ -424,9 +533,9 @@
                     "render-ui",
                     "main",
                     {
-                      "variant": "error",
                       "message": "@payload.error",
-                      "type": "alert"
+                      "type": "alert",
+                      "variant": "error"
                     }
                   ]
                 ]
@@ -500,28 +609,23 @@
                     "render-ui",
                     "main",
                     {
-                      "gap": "md",
-                      "type": "stack",
                       "children": [
                         {
-                          "direction": "horizontal",
-                          "gap": "sm",
-                          "type": "stack",
                           "children": [
                             {
+                              "label": "Back",
                               "variant": "ghost",
-                              "action": "CLOSE_VIEW",
                               "type": "button",
-                              "label": "Back"
+                              "action": "CLOSE_VIEW"
                             },
                             {
-                              "name": "alert-triangle",
-                              "type": "icon"
+                              "type": "icon",
+                              "name": "alert-triangle"
                             },
                             {
+                              "variant": "h3",
                               "type": "typography",
-                              "content": "@entity.subscriptionId",
-                              "variant": "h3"
+                              "content": "@entity.subscriptionId"
                             },
                             {
                               "label": "@entity.severity",
@@ -529,61 +633,68 @@
                               "type": "badge"
                             },
                             {
+                              "type": "badge",
                               "label": "@entity.status",
-                              "variant": "default",
-                              "type": "badge"
+                              "variant": "default"
                             }
                           ],
+                          "type": "stack",
+                          "gap": "sm",
+                          "direction": "horizontal",
                           "align": "center"
                         },
                         {
                           "type": "divider"
                         },
                         {
+                          "gap": "sm",
                           "type": "stack",
                           "children": [
                             {
-                              "gap": "md",
                               "direction": "horizontal",
                               "children": [
                                 {
-                                  "type": "typography",
-                                  "color": "muted",
+                                  "variant": "caption",
                                   "content": "Customer",
-                                  "variant": "caption"
+                                  "color": "muted",
+                                  "type": "typography"
                                 },
                                 {
-                                  "content": "@entity.customerId",
                                   "type": "typography",
-                                  "variant": "body"
+                                  "variant": "body",
+                                  "content": "@entity.customerId"
                                 }
                               ],
+                              "gap": "md",
                               "type": "stack"
                             },
                             {
                               "type": "stack",
+                              "gap": "md",
                               "children": [
                                 {
-                                  "type": "typography",
                                   "variant": "caption",
-                                  "color": "muted",
-                                  "content": "Currency"
+                                  "type": "typography",
+                                  "content": "Currency",
+                                  "color": "muted"
                                 },
                                 {
-                                  "variant": "body",
+                                  "content": "@entity.currency",
                                   "type": "typography",
-                                  "content": "@entity.currency"
+                                  "variant": "body"
                                 }
                               ],
-                              "direction": "horizontal",
-                              "gap": "md"
+                              "direction": "horizontal"
                             },
                             {
+                              "type": "stack",
+                              "direction": "horizontal",
+                              "gap": "md",
                               "children": [
                                 {
-                                  "type": "typography",
-                                  "color": "muted",
                                   "variant": "caption",
+                                  "color": "muted",
+                                  "type": "typography",
                                   "content": "Failed at"
                                 },
                                 {
@@ -591,32 +702,28 @@
                                   "content": "@entity.failedAt",
                                   "type": "typography"
                                 }
-                              ],
-                              "gap": "md",
-                              "type": "stack",
-                              "direction": "horizontal"
+                              ]
                             },
                             {
                               "children": [
                                 {
-                                  "content": "Next retry",
                                   "variant": "caption",
-                                  "color": "muted",
-                                  "type": "typography"
+                                  "type": "typography",
+                                  "content": "Next retry",
+                                  "color": "muted"
                                 },
                                 {
                                   "variant": "body",
-                                  "type": "typography",
-                                  "content": "@entity.nextRetryAt"
+                                  "content": "@entity.nextRetryAt",
+                                  "type": "typography"
                                 }
                               ],
-                              "type": "stack",
                               "gap": "md",
+                              "type": "stack",
                               "direction": "horizontal"
                             }
                           ],
-                          "direction": "vertical",
-                          "gap": "sm"
+                          "direction": "vertical"
                         },
                         {
                           "type": "divider"
@@ -626,67 +733,69 @@
                           "cols": 4.0,
                           "children": [
                             {
-                              "icon": "dollar-sign",
                               "label": "Amount due",
                               "type": "stat-display",
+                              "icon": "dollar-sign",
                               "value": "@entity.amountDue"
                             },
                             {
-                              "icon": "repeat",
                               "label": "Attempt",
-                              "value": "@entity.attemptNumber",
-                              "type": "stat-display"
+                              "type": "stat-display",
+                              "icon": "repeat",
+                              "value": "@entity.attemptNumber"
                             },
                             {
-                              "value": "@entity.attemptsTotal",
                               "icon": "list",
+                              "value": "@entity.attemptsTotal",
                               "type": "stat-display",
                               "label": "Total attempts"
                             },
                             {
+                              "value": "@entity.resolvedAt",
                               "label": "Resolved at",
-                              "icon": "check-circle",
                               "type": "stat-display",
-                              "value": "@entity.resolvedAt"
+                              "icon": "check-circle"
                             }
                           ]
                         },
                         {
+                          "direction": "horizontal",
+                          "align": "center",
                           "type": "stack",
                           "children": [
                             {
-                              "type": "button",
+                              "actionPayload": {
+                                "id": "@entity.id"
+                              },
                               "label": "Escalate",
                               "variant": "primary",
-                              "action": "ESCALATE",
+                              "type": "button",
+                              "action": "ESCALATE"
+                            },
+                            {
+                              "action": "RESOLVE",
+                              "variant": "secondary",
+                              "type": "button",
+                              "label": "Resolve",
                               "actionPayload": {
                                 "id": "@entity.id"
                               }
                             },
                             {
-                              "variant": "secondary",
                               "actionPayload": {
                                 "id": "@entity.id"
                               },
-                              "type": "button",
-                              "action": "RESOLVE",
-                              "label": "Resolve"
-                            },
-                            {
                               "label": "Suspend",
-                              "variant": "danger",
-                              "actionPayload": {
-                                "id": "@entity.id"
-                              },
                               "type": "button",
+                              "variant": "danger",
                               "action": "SUSPEND"
                             }
                           ],
-                          "direction": "horizontal",
-                          "align": "center",
                           "gap": "sm"
                         }
                       ],
+                      "type": "stack",
+                      "gap": "md",
                       "direction": "vertical"
                     }
                   ]
@@ -707,8 +816,8 @@
                     "DunningCase",
                     {
                       "emit": {
-                        "success": "DunningCaseLoaded",
-                        "failure": "DunningCaseLoadFailed"
+                        "failure": "DunningCaseLoadFailed",
+                        "success": "DunningCaseLoaded"
                       }
                     }
                   ],
@@ -716,22 +825,106 @@
                     "render-ui",
                     "main",
                     {
+                      "gap": "md",
                       "children": [
                         {
                           "type": "spinner"
                         },
                         {
                           "variant": "caption",
-                          "color": "muted",
                           "content": "Suspending service…",
+                          "color": "muted",
                           "type": "typography"
                         }
                       ],
                       "type": "stack",
-                      "gap": "md",
+                      "direction": "vertical",
                       "align": "center",
+                      "className": "py-12"
+                    }
+                  ]
+                ]
+              },
+              {
+                "from": "browsing",
+                "to": "loading",
+                "event": "SET_STATUS",
+                "effects": [
+                  [
+                    "set",
+                    "@entity.id",
+                    "@payload.entityId"
+                  ],
+                  [
+                    "set",
+                    "@entity.status",
+                    "@payload.newStatus"
+                  ],
+                  [
+                    "persist",
+                    "update",
+                    "DunningCase",
+                    "@entity",
+                    {
+                      "emit": {
+                        "failure": "DunningCaseUpdateFailed",
+                        "success": "DunningCaseUpdated"
+                      }
+                    }
+                  ],
+                  [
+                    "render-ui",
+                    "main",
+                    {
                       "className": "py-12",
-                      "direction": "vertical"
+                      "type": "stack",
+                      "children": [
+                        {
+                          "type": "spinner"
+                        },
+                        {
+                          "type": "typography",
+                          "color": "muted",
+                          "variant": "caption",
+                          "content": "Updating case status…"
+                        }
+                      ],
+                      "direction": "vertical",
+                      "gap": "md",
+                      "align": "center"
+                    }
+                  ]
+                ]
+              },
+              {
+                "from": "browsing",
+                "to": "loading",
+                "event": "DunningCaseUpdated",
+                "effects": [
+                  [
+                    "fetch",
+                    "DunningCase",
+                    {
+                      "emit": {
+                        "failure": "DunningCaseLoadFailed",
+                        "success": "DunningCaseLoaded"
+                      }
+                    }
+                  ]
+                ]
+              },
+              {
+                "from": "browsing",
+                "to": "browsing",
+                "event": "DunningCaseUpdateFailed",
+                "effects": [
+                  [
+                    "render-ui",
+                    "main",
+                    {
+                      "type": "alert",
+                      "variant": "error",
+                      "message": "@payload.error"
                     }
                   ]
                 ]
@@ -746,8 +939,8 @@
                     "DunningCase",
                     {
                       "emit": {
-                        "failure": "DunningCaseLoadFailed",
-                        "success": "DunningCaseLoaded"
+                        "success": "DunningCaseLoaded",
+                        "failure": "DunningCaseLoadFailed"
                       }
                     }
                   ],
@@ -755,22 +948,22 @@
                     "render-ui",
                     "main",
                     {
+                      "gap": "md",
                       "type": "stack",
+                      "align": "center",
+                      "className": "py-12",
                       "children": [
                         {
                           "type": "spinner"
                         },
                         {
-                          "variant": "caption",
                           "type": "typography",
-                          "color": "muted",
-                          "content": "Loading dunning cases…"
+                          "content": "Loading dunning cases…",
+                          "variant": "caption",
+                          "color": "muted"
                         }
                       ],
-                      "direction": "vertical",
-                      "className": "py-12",
-                      "align": "center",
-                      "gap": "md"
+                      "direction": "vertical"
                     }
                   ]
                 ]
@@ -799,22 +992,22 @@
                     "render-ui",
                     "main",
                     {
-                      "gap": "md",
-                      "type": "stack",
-                      "direction": "vertical",
                       "align": "center",
+                      "gap": "md",
                       "className": "py-12",
                       "children": [
                         {
                           "type": "spinner"
                         },
                         {
-                          "variant": "caption",
                           "type": "typography",
-                          "color": "muted",
-                          "content": "Escalating case…"
+                          "variant": "caption",
+                          "content": "Escalating case…",
+                          "color": "muted"
                         }
-                      ]
+                      ],
+                      "direction": "vertical",
+                      "type": "stack"
                     }
                   ]
                 ]
@@ -843,10 +1036,6 @@
                     "render-ui",
                     "main",
                     {
-                      "align": "center",
-                      "direction": "vertical",
-                      "className": "py-12",
-                      "type": "stack",
                       "children": [
                         {
                           "type": "spinner"
@@ -854,11 +1043,15 @@
                         {
                           "variant": "caption",
                           "type": "typography",
-                          "color": "muted",
-                          "content": "Resolving case…"
+                          "content": "Resolving case…",
+                          "color": "muted"
                         }
                       ],
-                      "gap": "md"
+                      "direction": "vertical",
+                      "type": "stack",
+                      "align": "center",
+                      "gap": "md",
+                      "className": "py-12"
                     }
                   ]
                 ]
@@ -887,22 +1080,22 @@
                     "render-ui",
                     "main",
                     {
+                      "className": "py-12",
+                      "type": "stack",
                       "children": [
                         {
                           "type": "spinner"
                         },
                         {
-                          "content": "Suspending service…",
-                          "color": "muted",
+                          "type": "typography",
                           "variant": "caption",
-                          "type": "typography"
+                          "color": "muted",
+                          "content": "Suspending service…"
                         }
                       ],
+                      "direction": "vertical",
                       "gap": "md",
-                      "type": "stack",
-                      "align": "center",
-                      "className": "py-12",
-                      "direction": "vertical"
+                      "align": "center"
                     }
                   ]
                 ]
@@ -917,8 +1110,8 @@
                     "DunningCase",
                     {
                       "emit": {
-                        "failure": "DunningCaseLoadFailed",
-                        "success": "DunningCaseLoaded"
+                        "success": "DunningCaseLoaded",
+                        "failure": "DunningCaseLoadFailed"
                       }
                     }
                   ],
@@ -935,30 +1128,75 @@
             ]
           },
           "config": {
-            "title": {
+            "roundingMode": {
               "type": "string",
-              "default": "Dunning Cases",
-              "label": "Section title",
-              "description": "Heading shown above the failed-payment cases",
+              "default": "half-up",
+              "label": "Rounding mode",
+              "description": "Sub-cent rounding behavior for amount calculations.",
+              "tier": "advanced",
+              "values": [
+                "bankers",
+                "half-up",
+                "down"
+              ]
+            },
+            "lateFeeAmount": {
+              "type": "number",
+              "default": 0.0,
+              "label": "Late fee amount",
+              "description": "Flat cash amount or percentage (per lateFeePolicy).",
               "tier": "customization"
+            },
+            "retentionYears": {
+              "type": "number",
+              "default": 7.0,
+              "label": "Retention (years)",
+              "description": "Years to keep dunning records for compliance.",
+              "tier": "advanced"
+            },
+            "gracePeriodDays": {
+              "type": "number",
+              "default": 7.0,
+              "label": "Grace period (days)",
+              "description": "Days after failure before escalation severity rises. Wire via sibling std-lifecycle rule.",
+              "tier": "customization"
+            },
+            "currency": {
+              "type": "string",
+              "default": "USD",
+              "label": "Default currency",
+              "description": "ISO 4217 currency code (USD, EUR, GBP, …) for amounts displayed on dunning cases.",
+              "tier": "essential"
+            },
+            "taxStrategy": {
+              "type": "string",
+              "default": "none",
+              "label": "Tax strategy",
+              "description": "inclusive = tax baked into amounts; exclusive = tax added on top; none = no tax.",
+              "tier": "customization",
+              "values": [
+                "inclusive",
+                "exclusive",
+                "none"
+              ]
             },
             "fields": {
               "type": "[FieldSpec]",
               "default": [
                 {
-                  "label": "Subscription",
+                  "variant": "caption",
                   "name": "subscriptionId",
-                  "variant": "caption"
+                  "label": "Subscription"
                 },
                 {
                   "name": "customerId",
-                  "label": "Customer",
-                  "variant": "caption"
+                  "variant": "caption",
+                  "label": "Customer"
                 },
                 {
                   "label": "Severity",
-                  "variant": "badge",
-                  "name": "severity"
+                  "name": "severity",
+                  "variant": "badge"
                 },
                 {
                   "label": "Attempt",
@@ -966,14 +1204,14 @@
                   "variant": "caption"
                 },
                 {
+                  "variant": "caption",
                   "name": "amountDue",
-                  "label": "Amount Due",
-                  "variant": "caption"
+                  "label": "Amount Due"
                 },
                 {
-                  "name": "status",
                   "label": "Status",
-                  "variant": "badge"
+                  "variant": "badge",
+                  "name": "status"
                 }
               ],
               "label": "Columns to show",
@@ -982,18 +1220,13 @@
               "items": {
                 "type": "object",
                 "properties": {
-                  "label": {
-                    "name": "label",
+                  "name": {
+                    "name": "name",
                     "type": "string",
-                    "required": false
+                    "required": true
                   },
                   "icon": {
                     "name": "icon",
-                    "type": "string",
-                    "required": false
-                  },
-                  "format": {
-                    "name": "format",
                     "type": "string",
                     "required": false
                   },
@@ -1007,33 +1240,50 @@
                     "type": "string",
                     "required": false
                   },
+                  "label": {
+                    "name": "label",
+                    "type": "string",
+                    "required": false
+                  },
+                  "format": {
+                    "name": "format",
+                    "type": "string",
+                    "required": false
+                  },
                   "variant": {
                     "name": "variant",
                     "type": "string",
                     "required": false
-                  },
-                  "name": {
-                    "name": "name",
-                    "type": "string",
-                    "required": true
                   }
                 }
               }
+            },
+            "lateFeePolicy": {
+              "type": "string",
+              "default": "none",
+              "label": "Late fee policy",
+              "description": "How late fees compute on overdue cases. Declarative; wiring deferred.",
+              "tier": "customization",
+              "values": [
+                "none",
+                "flat",
+                "percent"
+              ]
             },
             "itemActions": {
               "type": "[ItemAction]",
               "default": [
                 {
-                  "icon": "arrow-right",
                   "label": "Open",
                   "variant": "primary",
-                  "event": "OPEN_CASE"
+                  "event": "OPEN_CASE",
+                  "icon": "arrow-right"
                 },
                 {
-                  "event": "SUSPEND",
-                  "variant": "danger",
                   "icon": "ban",
-                  "label": "Suspend"
+                  "label": "Suspend",
+                  "event": "SUSPEND",
+                  "variant": "danger"
                 }
               ],
               "label": "Row actions",
@@ -1042,15 +1292,15 @@
               "items": {
                 "type": "object",
                 "properties": {
-                  "event": {
-                    "name": "event",
-                    "type": "string",
-                    "required": true
-                  },
                   "variant": {
                     "name": "variant",
                     "type": "string",
                     "required": false
+                  },
+                  "event": {
+                    "name": "event",
+                    "type": "string",
+                    "required": true
                   },
                   "icon": {
                     "name": "icon",
@@ -1064,6 +1314,20 @@
                   }
                 }
               }
+            },
+            "title": {
+              "type": "string",
+              "default": "Dunning Cases",
+              "label": "Section title",
+              "description": "Heading shown above the failed-payment cases",
+              "tier": "customization"
+            },
+            "complianceJurisdiction": {
+              "type": "string",
+              "default": "",
+              "label": "Compliance jurisdiction",
+              "description": "Drives debt-collection regulations per locale: 'US-CA', 'EU-DE', 'UK', etc. Declarative.",
+              "tier": "advanced"
             }
           },
           "scope": "collection"

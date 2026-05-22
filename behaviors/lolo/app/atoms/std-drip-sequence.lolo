@@ -1,5 +1,5 @@
-app std-drip-sequence "1.1.0"
-"std-drip-sequence — ordered email drip campaign primitive. Lists sequences in `browsing`; opens detail in `viewing_single` with Activate / Pause / Archive actions. Agents tune the list shape via `config.fields` + `config.itemActions`."
+app std-drip-sequence "1.2.0"
+"std-drip-sequence — ordered email drip campaign primitive. Lists sequences; detail offers Activate / Pause / Archive. Listens for SET_STATUS so std-lifecycle can drive transitions. Exposes Communication knobs (sendsPerHour, gdprConsentRequired, unsubscribe link, …)."
 
 type FieldSpec = { name : string!, label : string, variant : string, icon : string, format : string, key : string, header : string }
 type ItemAction = { label : string!, event : string!, variant : string, icon : string }
@@ -16,8 +16,10 @@ orbital DripSequenceOrbital {
     totalCompleted : number = 0
   }
 
-  type DripSequenceLoaded     = Event { data : [DripSequence] }         "Fired when the drip-sequence collection finishes loading"
-  type DripSequenceLoadFailed = Event { error : string, code : string } "Fired when the drip-sequence collection fails to load"
+  type DripSequenceLoaded       = Event { data : [DripSequence] }         "Fired when the drip-sequence collection finishes loading"
+  type DripSequenceLoadFailed   = Event { error : string, code : string } "Fired when the drip-sequence collection fails to load"
+  type DripSequenceUpdated      = Event { row : DripSequence }            "Fired after a drip-sequence row's status persists (SET_STATUS / lifecycle)"
+  type DripSequenceUpdateFailed = Event { error : string, code : string } "Fired when a drip-sequence row's status update fails to persist"
 
   trait DripSequenceSequence -> DripSequence [interaction, collection] {
     config {
@@ -43,6 +45,42 @@ orbital DripSequenceOrbital {
         @label "Row actions"
         @description "Buttons users can click on each sequence row"
         @tier "customization"
+      sendsPerHour              : number  = 500
+        @label "Sends per hour"
+        @description "Cap on outbound drip messages per hour for throttling. v1.2 declarative."
+        @tier "customization"
+      respectQuietHours         : boolean = true
+        @label "Respect quiet hours"
+        @description "Skip step delivery during recipient-local quiet hours."
+        @tier "customization"
+      suppressionListEnabled    : boolean = true
+        @label "Honor suppression list"
+        @description "Skip enrolled contacts on the global suppression / bounce list."
+        @tier "customization"
+      frequencyCapPerWeek       : number  = 5
+        @label "Frequency cap (per week)"
+        @description "Max drip + broadcast messages a recipient sees per 7-day window."
+        @tier "customization"
+      gdprConsentRequired       : boolean = true
+        @label "GDPR consent required"
+        @description "Require explicit marketing consent before enrolling EU/UK recipients."
+        @tier "customization"
+      trackOpens                : boolean = true
+        @label "Track opens"
+        @description "Embed a tracking pixel on each step message."
+        @tier "advanced"
+      trackClicks               : boolean = true
+        @label "Track clicks"
+        @description "Wrap outbound links for click attribution per step."
+        @tier "advanced"
+      includeUnsubscribeLink    : boolean = true
+        @label "Include unsubscribe link"
+        @description "Append a CAN-SPAM/GDPR-compliant unsubscribe link to every step."
+        @tier "essential"
+      physicalAddressFooter     : string  = ""
+        @label "Physical address footer"
+        @description "CAN-SPAM-required postal address appended to every step."
+        @tier "essential"
     }
     initial: loading
     state loading {
@@ -69,6 +107,15 @@ orbital DripSequenceOrbital {
         (set @entity.id @payload.id)
         (fetch DripSequence { emit: { success: "DripSequenceLoaded", failure: "DripSequenceLoadFailed" } })
         (render-ui main { type: "stack", direction: "vertical", gap: "md", align: "center", className: "py-12", children: [{ type: "spinner" }, { type: "typography", variant: "caption", color: "muted", content: "Pausing sequence…" }] })
+      SET_STATUS -> loading
+        (set @entity.id @payload.entityId)
+        (set @entity.status @payload.newStatus)
+        (persist update DripSequence @entity { emit: { success: "DripSequenceUpdated", failure: "DripSequenceUpdateFailed" } })
+        (render-ui main { type: "stack", direction: "vertical", gap: "md", align: "center", className: "py-12", children: [{ type: "spinner" }, { type: "typography", variant: "caption", color: "muted", content: "Updating sequence status…" }] })
+      DripSequenceUpdated -> loading
+        (fetch DripSequence { emit: { success: "DripSequenceLoaded", failure: "DripSequenceLoadFailed" } })
+      DripSequenceUpdateFailed -> browsing
+        (render-ui main { type: "alert", variant: "error", message: "@payload.error" })
     }
     state viewing_single {
       CLOSE_VIEW -> loading
@@ -89,20 +136,25 @@ orbital DripSequenceOrbital {
         (render-ui main { type: "spinner", size: "sm" })
     }
     emits {
-      OPEN_SEQUENCE { id : string!, row : DripSequence }
-      CLOSE_VIEW    { }
-      ACTIVATE      { id : string! }
-      PAUSE         { id : string! }
-      DripSequenceLoaded     { data : [DripSequence] }
-      DripSequenceLoadFailed { error : string, code : string }
+      OPEN_SEQUENCE              { id : string!, row : DripSequence }
+      CLOSE_VIEW                 { }
+      ACTIVATE                   { id : string! }
+      PAUSE                      { id : string! }
+      DripSequenceLoaded         { data : [DripSequence] }
+      DripSequenceLoadFailed     { error : string, code : string }
+      DripSequenceUpdated        { row : DripSequence }
+      DripSequenceUpdateFailed   { error : string, code : string }
     }
     listens {
-      OPEN_SEQUENCE { id : string!, row : DripSequence }
-      CLOSE_VIEW    { }
-      ACTIVATE      { id : string! }
-      PAUSE         { id : string! }
-      DripSequenceLoaded     { data : [DripSequence] }
-      DripSequenceLoadFailed { error : string, code : string }
+      OPEN_SEQUENCE              { id : string!, row : DripSequence }
+      CLOSE_VIEW                 { }
+      ACTIVATE                   { id : string! }
+      PAUSE                      { id : string! }
+      SET_STATUS                 { entityId : string!, newStatus : string! }
+      DripSequenceLoaded         { data : [DripSequence] }
+      DripSequenceLoadFailed     { error : string, code : string }
+      DripSequenceUpdated        { row : DripSequence }
+      DripSequenceUpdateFailed   { error : string, code : string }
     }
   }
   page "/sequences" as DripSequencePage -> DripSequenceSequence

@@ -1,5 +1,5 @@
-app std-matter "1.1.0"
-"std-matter — legal matter primitive: a single case (litigation, contract review, immigration filing) with client, status, lead attorney. Lists matters in `browsing`; opens matter detail in `viewing_single` with Close / Hold / Reopen actions. Agents tune the list shape via `config.fields` + `config.itemActions`."
+app std-matter "1.2.0"
+"std-matter — legal matter primitive (case with client, status, lead attorney). Lists matters; detail offers Close / Hold / Reopen. Listens for SET_STATUS so std-lifecycle can drive transitions. Exposes Legal knobs (practiceArea, confidentialityLevel, conflictCheckRequired, …)."
 
 type FieldSpec = { name : string!, label : string, variant : string, icon : string, format : string, key : string, header : string }
 type ItemAction = { label : string!, event : string!, variant : string, icon : string }
@@ -18,8 +18,10 @@ orbital MatterOrbital {
     notes         : string = ""
   }
 
-  type MatterLoaded     = Event { data : [Matter] }                "Fired when the matter collection finishes loading"
-  type MatterLoadFailed = Event { error : string, code : string }  "Fired when the matter collection fails to load"
+  type MatterLoaded       = Event { data : [Matter] }                "Fired when the matter collection finishes loading"
+  type MatterLoadFailed   = Event { error : string, code : string }  "Fired when the matter collection fails to load"
+  type MatterUpdated      = Event { row : Matter }                   "Fired after a matter row's status persists (SET_STATUS / lifecycle)"
+  type MatterUpdateFailed = Event { error : string, code : string }  "Fired when a matter row's status update fails to persist"
 
   trait MatterDocket -> Matter [interaction, collection] {
     config {
@@ -44,6 +46,26 @@ orbital MatterOrbital {
       ]
         @label "Row actions"
         @description "Buttons users can click on each matter row"
+        @tier "customization"
+      practiceArea               : string  = ""
+        @label "Default practice area"
+        @description "Practice area applied to new matters when not set per-row (litigation, IP, immigration, …)."
+        @tier "customization"
+      clientConfidentialityLevel : "standard" | "elevated" | "restricted" = "standard"
+        @label "Confidentiality level"
+        @description "Default client confidentiality level for new matters."
+        @tier "customization"
+      conflictCheckRequired      : boolean = true
+        @label "Conflict check required"
+        @description "Require a conflict-of-interest check before opening a new matter."
+        @tier "essential"
+      billingRateDefault         : number  = 0
+        @label "Default billing rate"
+        @description "Default hourly billing rate applied when a matter's leadAttorney has no rate set."
+        @tier "customization"
+      retainerRequired           : boolean = false
+        @label "Retainer required"
+        @description "Block opening a matter until a retainer is recorded."
         @tier "customization"
     }
     initial: loading
@@ -73,6 +95,15 @@ orbital MatterOrbital {
         (set @entity.id @payload.id)
         (fetch Matter { emit: { success: "MatterLoaded", failure: "MatterLoadFailed" } })
         (render-ui main { type: "stack", direction: "vertical", gap: "md", align: "center", className: "py-12", children: [{ type: "spinner" }, { type: "typography", variant: "caption", color: "muted", content: "Closing matter…" }] })
+      SET_STATUS -> loading
+        (set @entity.id @payload.entityId)
+        (set @entity.status @payload.newStatus)
+        (persist update Matter @entity { emit: { success: "MatterUpdated", failure: "MatterUpdateFailed" } })
+        (render-ui main { type: "stack", direction: "vertical", gap: "md", align: "center", className: "py-12", children: [{ type: "spinner" }, { type: "typography", variant: "caption", color: "muted", content: "Updating matter status…" }] })
+      MatterUpdated -> loading
+        (fetch Matter { emit: { success: "MatterLoaded", failure: "MatterLoadFailed" } })
+      MatterUpdateFailed -> browsing
+        (render-ui main { type: "alert", variant: "error", message: "@payload.error" })
     }
     state viewing_single {
       CLOSE_VIEW -> loading
@@ -97,22 +128,27 @@ orbital MatterOrbital {
         (render-ui main { type: "spinner", size: "sm" })
     }
     emits {
-      OPEN_MATTER      { id : string!, row : Matter }
-      CLOSE_VIEW       { }
-      CLOSE_MATTER     { id : string! }
-      HOLD_MATTER      { id : string! }
-      REOPEN_MATTER    { id : string! }
-      MatterLoaded     { data : [Matter] }
-      MatterLoadFailed { error : string, code : string }
+      OPEN_MATTER        { id : string!, row : Matter }
+      CLOSE_VIEW         { }
+      CLOSE_MATTER       { id : string! }
+      HOLD_MATTER        { id : string! }
+      REOPEN_MATTER      { id : string! }
+      MatterLoaded       { data : [Matter] }
+      MatterLoadFailed   { error : string, code : string }
+      MatterUpdated      { row : Matter }
+      MatterUpdateFailed { error : string, code : string }
     }
     listens {
-      OPEN_MATTER      { id : string!, row : Matter }
-      CLOSE_VIEW       { }
-      CLOSE_MATTER     { id : string! }
-      HOLD_MATTER      { id : string! }
-      REOPEN_MATTER    { id : string! }
-      MatterLoaded     { data : [Matter] }
-      MatterLoadFailed { error : string, code : string }
+      OPEN_MATTER        { id : string!, row : Matter }
+      CLOSE_VIEW         { }
+      CLOSE_MATTER       { id : string! }
+      HOLD_MATTER        { id : string! }
+      REOPEN_MATTER      { id : string! }
+      SET_STATUS         { entityId : string!, newStatus : string! }
+      MatterLoaded       { data : [Matter] }
+      MatterLoadFailed   { error : string, code : string }
+      MatterUpdated      { row : Matter }
+      MatterUpdateFailed { error : string, code : string }
     }
   }
   page "/matters" as MatterPage -> MatterDocket

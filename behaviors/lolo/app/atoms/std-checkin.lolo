@@ -1,5 +1,5 @@
-app std-checkin "1.1.0"
-"std-checkin — arrival check-in atom listing recorded check-ins (qr or geo). Lists check-ins in `browsing`; opens detail in `viewing_single` with Verify / Revoke actions. Agents tune the list shape via `config.fields` + `config.itemActions`."
+app std-checkin "1.2.0"
+"std-checkin — arrival check-in atom (qr / geo). Exposes Scheduling/Booking knobs (bookingWindowDays, leadTimeMinutes, noShowGracePeriodMinutes, …)."
 
 type FieldSpec = { name : string!, label : string, variant : string, icon : string, format : string, key : string, header : string }
 type ItemAction = { label : string!, event : string!, variant : string, icon : string }
@@ -47,6 +47,38 @@ orbital CheckinOrbital {
       ]
         @label "Row actions"
         @description "Buttons users can click on each check-in row"
+        @tier "customization"
+      bookingWindowDays : number = 1
+        @label "Booking window (days)"
+        @description "How far in advance attendees can pre-register a check-in."
+        @tier "customization"
+      leadTimeMinutes : number = 0
+        @label "Lead time (minutes)"
+        @description "Minutes before scheduled arrival at which check-in is accepted."
+        @tier "customization"
+      bookingHours : string = "06:00-23:00"
+        @label "Booking hours"
+        @description "Daily window during which check-ins are accepted (HH:MM-HH:MM)."
+        @tier "customization"
+      blackoutDates : [string] = []
+        @label "Blackout dates"
+        @description "ISO dates blocked from check-in. Compose std-lifecycle to enforce."
+        @tier "customization"
+      noShowGracePeriodMinutes : number = 15
+        @label "No-show grace (minutes)"
+        @description "Minutes after the scheduled arrival window before a no-show is logged."
+        @tier "customization"
+      rescheduleWindowHours : number = 24
+        @label "Reschedule window (hours)"
+        @description "Hours during which an attendee can amend their pre-registered check-in."
+        @tier "customization"
+      maxReschedules : number = 2
+        @label "Max reschedules"
+        @description "Hard cap on reschedule count per pre-registered check-in."
+        @tier "advanced"
+      cancellationPolicy : "free" | "partial-refund" | "no-refund" = "free"
+        @label "Cancellation policy"
+        @description "Refund treatment when a pre-registered check-in is cancelled."
         @tier "customization"
     }
     initial: loading

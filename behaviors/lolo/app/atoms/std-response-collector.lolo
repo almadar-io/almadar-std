@@ -1,5 +1,5 @@
-app std-response-collector "1.1.0"
-"std-response-collector — survey per-respondent answer accumulator. Lists responses in `browsing`; opens detail in `viewing_single` with Resubmit / Delete actions. Agents tune the list shape via `config.fields` + `config.itemActions`."
+app std-response-collector "1.2.0"
+"std-response-collector — survey per-respondent answer accumulator. Lists responses; detail offers Resubmit / Delete. Exposes Communication knobs (suppressionListEnabled, gdprConsentRequired, …) for the questionnaire."
 
 type FieldSpec = { name : string!, label : string, variant : string, icon : string, format : string, key : string, header : string }
 type ItemAction = { label : string!, event : string!, variant : string, icon : string }
@@ -40,6 +40,42 @@ orbital ResponseCollectorOrbital {
         @label "Row actions"
         @description "Buttons users can click on each response row"
         @tier "customization"
+      sendsPerHour              : number  = 500
+        @label "Sends per hour"
+        @description "Cap on follow-up dispatch volume per hour. v1.2 declarative."
+        @tier "customization"
+      respectQuietHours         : boolean = true
+        @label "Respect quiet hours"
+        @description "Suppress follow-up sends during recipient-local quiet hours."
+        @tier "customization"
+      suppressionListEnabled    : boolean = true
+        @label "Honor suppression list"
+        @description "Skip respondents on the global suppression / bounce list when dispatching follow-ups."
+        @tier "customization"
+      frequencyCapPerWeek       : number  = 2
+        @label "Frequency cap (per week)"
+        @description "Max survey-related touches per respondent per 7-day window."
+        @tier "customization"
+      gdprConsentRequired       : boolean = true
+        @label "GDPR consent required"
+        @description "Require survey consent before recording or following up with EU/UK respondents."
+        @tier "customization"
+      trackOpens                : boolean = false
+        @label "Track opens"
+        @description "Embed a tracking pixel on outbound survey reminders."
+        @tier "advanced"
+      trackClicks               : boolean = false
+        @label "Track clicks"
+        @description "Wrap survey links for click attribution on reminder mailings."
+        @tier "advanced"
+      includeUnsubscribeLink    : boolean = true
+        @label "Include unsubscribe link"
+        @description "Append a CAN-SPAM/GDPR-compliant unsubscribe link to every follow-up."
+        @tier "essential"
+      physicalAddressFooter     : string  = ""
+        @label "Physical address footer"
+        @description "CAN-SPAM-required postal address appended to every follow-up."
+        @tier "essential"
     }
     initial: loading
     state loading {
