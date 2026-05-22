@@ -66,27 +66,37 @@
           "RENEW_LEASE",
           "TERMINATE_LEASE",
           "LeaseLoaded",
-          "LeaseLoadFailed"
+          "LeaseLoadFailed",
+          "LeaseUpdated",
+          "LeaseUpdateFailed"
         ],
         "listenedEvents": [],
         "overridableConfigKeys": [
+          {
+            "key": "autoRenewEnabled",
+            "type": "boolean",
+            "default": false,
+            "label": "Auto-renew",
+            "description": "Roll over leases that reach term without an explicit non-renew notice.",
+            "tier": "customization"
+          },
           {
             "key": "fields",
             "type": "[FieldSpec]",
             "default": [
               {
-                "name": "tenantName",
                 "label": "Tenant",
-                "variant": "caption"
+                "variant": "caption",
+                "name": "tenantName"
               },
               {
                 "variant": "caption",
-                "name": "unitLabel",
-                "label": "Unit"
+                "label": "Unit",
+                "name": "unitLabel"
               },
               {
+                "variant": "caption",
                 "label": "Start",
-                "variant": "caption",
                 "name": "startDate"
               },
               {
@@ -95,14 +105,14 @@
                 "name": "endDate"
               },
               {
-                "label": "Monthly Rent",
+                "name": "monthlyRent",
                 "variant": "caption",
-                "name": "monthlyRent"
+                "label": "Monthly Rent"
               },
               {
+                "label": "Status",
                 "variant": "badge",
-                "name": "status",
-                "label": "Status"
+                "name": "status"
               }
             ],
             "label": "Columns to show",
@@ -110,23 +120,8 @@
             "tier": "customization",
             "items": {
               "properties": {
-                "header": {
-                  "name": "header",
-                  "required": false,
-                  "type": "string"
-                },
-                "format": {
-                  "name": "format",
-                  "required": false,
-                  "type": "string"
-                },
-                "name": {
-                  "name": "name",
-                  "required": true,
-                  "type": "string"
-                },
-                "label": {
-                  "name": "label",
+                "icon": {
+                  "name": "icon",
                   "required": false,
                   "type": "string"
                 },
@@ -135,9 +130,24 @@
                   "required": false,
                   "type": "string"
                 },
-                "icon": {
-                  "name": "icon",
+                "label": {
+                  "name": "label",
                   "required": false,
+                  "type": "string"
+                },
+                "format": {
+                  "name": "format",
+                  "required": false,
+                  "type": "string"
+                },
+                "header": {
+                  "name": "header",
+                  "required": false,
+                  "type": "string"
+                },
+                "name": {
+                  "name": "name",
+                  "required": true,
                   "type": "string"
                 },
                 "key": {
@@ -150,19 +160,27 @@
             }
           },
           {
+            "key": "inspectionFrequencyMonths",
+            "type": "number",
+            "default": 12,
+            "label": "Inspection cadence (months)",
+            "description": "Months between scheduled unit inspections during the lease.",
+            "tier": "advanced"
+          },
+          {
             "key": "itemActions",
             "type": "[ItemAction]",
             "default": [
               {
                 "variant": "primary",
+                "icon": "arrow-right",
                 "event": "OPEN_LEASE",
-                "label": "Open",
-                "icon": "arrow-right"
+                "label": "Open"
               },
               {
                 "label": "Terminate",
-                "variant": "danger",
-                "event": "TERMINATE_LEASE"
+                "event": "TERMINATE_LEASE",
+                "variant": "danger"
               }
             ],
             "label": "Row actions",
@@ -170,29 +188,67 @@
             "tier": "customization",
             "items": {
               "properties": {
-                "icon": {
-                  "name": "icon",
-                  "required": false,
-                  "type": "string"
-                },
                 "event": {
                   "name": "event",
                   "required": true,
-                  "type": "string"
-                },
-                "variant": {
-                  "name": "variant",
-                  "required": false,
                   "type": "string"
                 },
                 "label": {
                   "name": "label",
                   "required": true,
                   "type": "string"
+                },
+                "icon": {
+                  "name": "icon",
+                  "required": false,
+                  "type": "string"
+                },
+                "variant": {
+                  "name": "variant",
+                  "required": false,
+                  "type": "string"
                 }
               },
               "type": "object"
             }
+          },
+          {
+            "key": "lateRentGraceDays",
+            "type": "number",
+            "default": 5,
+            "label": "Late rent grace (days)",
+            "description": "Days after due date before a rent charge is treated as late.",
+            "tier": "customization"
+          },
+          {
+            "key": "leaseRenewalNoticeDays",
+            "type": "number",
+            "default": 60,
+            "label": "Renewal notice (days)",
+            "description": "Days before lease end when a renewal notice should fire. Wire via std-reminder-scheduler composed at the organism.",
+            "tier": "customization"
+          },
+          {
+            "key": "petPolicy",
+            "type": "string",
+            "default": "no-pets",
+            "label": "Pet policy",
+            "description": "Default pet policy applied to new leases.",
+            "tier": "customization",
+            "enumValues": [
+              "no-pets",
+              "cats-only",
+              "dogs-only",
+              "all"
+            ]
+          },
+          {
+            "key": "securityDepositMonths",
+            "type": "number",
+            "default": 1,
+            "label": "Security deposit (months)",
+            "description": "Months of rent required as security deposit on signing.",
+            "tier": "customization"
           },
           {
             "key": "title",
@@ -217,6 +273,8 @@
       "CLOSE_VIEW",
       "LeaseLoadFailed",
       "LeaseLoaded",
+      "LeaseUpdateFailed",
+      "LeaseUpdated",
       "OPEN_LEASE",
       "RENEW_LEASE",
       "TERMINATE_LEASE"

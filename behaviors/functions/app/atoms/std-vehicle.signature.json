@@ -77,10 +77,36 @@
           "MARK_MAINTENANCE",
           "RETIRE",
           "VehicleLoaded",
-          "VehicleLoadFailed"
+          "VehicleLoadFailed",
+          "VehicleUpdated",
+          "VehicleUpdateFailed"
         ],
         "listenedEvents": [],
         "overridableConfigKeys": [
+          {
+            "key": "cycleCountFrequencyDays",
+            "type": "number",
+            "default": 30,
+            "label": "Cycle count cadence (days)",
+            "description": "Days between scheduled inventory cycle counts. v1.2 declarative.",
+            "tier": "advanced"
+          },
+          {
+            "key": "defaultWarehouse",
+            "type": "string",
+            "default": "",
+            "label": "Default depot / warehouse",
+            "description": "Depot the vehicle is stationed at by default.",
+            "tier": "customization"
+          },
+          {
+            "key": "expiryTrackingEnabled",
+            "type": "boolean",
+            "default": false,
+            "label": "Expiry tracking",
+            "description": "Track expiry dates on carried inventory.",
+            "tier": "customization"
+          },
           {
             "key": "fields",
             "type": "[FieldSpec]",
@@ -91,14 +117,14 @@
                 "variant": "caption"
               },
               {
+                "variant": "caption",
                 "name": "make",
-                "label": "Make",
-                "variant": "caption"
+                "label": "Make"
               },
               {
                 "name": "model",
-                "variant": "caption",
-                "label": "Model"
+                "label": "Model",
+                "variant": "caption"
               },
               {
                 "name": "year",
@@ -106,19 +132,19 @@
                 "variant": "caption"
               },
               {
+                "name": "vehicleType",
                 "label": "Type",
-                "variant": "badge",
-                "name": "vehicleType"
+                "variant": "badge"
               },
               {
                 "variant": "caption",
-                "label": "Odometer",
-                "name": "odometer"
+                "name": "odometer",
+                "label": "Odometer"
               },
               {
-                "variant": "badge",
+                "label": "Status",
                 "name": "status",
-                "label": "Status"
+                "variant": "badge"
               }
             ],
             "label": "Columns to show",
@@ -126,18 +152,8 @@
             "tier": "advanced",
             "items": {
               "properties": {
-                "format": {
-                  "name": "format",
-                  "required": false,
-                  "type": "string"
-                },
-                "name": {
-                  "name": "name",
-                  "required": true,
-                  "type": "string"
-                },
-                "icon": {
-                  "name": "icon",
+                "header": {
+                  "name": "header",
                   "required": false,
                   "type": "string"
                 },
@@ -146,8 +162,13 @@
                   "required": false,
                   "type": "string"
                 },
-                "header": {
-                  "name": "header",
+                "format": {
+                  "name": "format",
+                  "required": false,
+                  "type": "string"
+                },
+                "icon": {
+                  "name": "icon",
                   "required": false,
                   "type": "string"
                 },
@@ -160,25 +181,38 @@
                   "name": "label",
                   "required": false,
                   "type": "string"
+                },
+                "name": {
+                  "name": "name",
+                  "required": true,
+                  "type": "string"
                 }
               },
               "type": "object"
             }
           },
           {
+            "key": "hazmatEnabled",
+            "type": "boolean",
+            "default": false,
+            "label": "Hazmat capable",
+            "description": "Vehicle is certified to carry hazardous materials.",
+            "tier": "advanced"
+          },
+          {
             "key": "itemActions",
             "type": "[ItemAction]",
             "default": [
               {
-                "event": "OPEN_VEHICLE",
-                "variant": "primary",
                 "icon": "arrow-right",
-                "label": "Open"
+                "event": "OPEN_VEHICLE",
+                "label": "Open",
+                "variant": "primary"
               },
               {
-                "variant": "danger",
+                "label": "Retire",
                 "event": "RETIRE",
-                "label": "Retire"
+                "variant": "danger"
               }
             ],
             "label": "Row actions",
@@ -186,11 +220,6 @@
             "tier": "customization",
             "items": {
               "properties": {
-                "variant": {
-                  "name": "variant",
-                  "required": false,
-                  "type": "string"
-                },
                 "label": {
                   "name": "label",
                   "required": true,
@@ -201,6 +230,11 @@
                   "required": true,
                   "type": "string"
                 },
+                "variant": {
+                  "name": "variant",
+                  "required": false,
+                  "type": "string"
+                },
                 "icon": {
                   "name": "icon",
                   "required": false,
@@ -209,6 +243,30 @@
               },
               "type": "object"
             }
+          },
+          {
+            "key": "lotTrackingEnabled",
+            "type": "boolean",
+            "default": false,
+            "label": "Lot tracking",
+            "description": "Track lot/batch numbers on carried inventory.",
+            "tier": "customization"
+          },
+          {
+            "key": "multiLocationEnabled",
+            "type": "boolean",
+            "default": false,
+            "label": "Multi-location",
+            "description": "Allow the vehicle to operate across multiple depots.",
+            "tier": "customization"
+          },
+          {
+            "key": "serialTrackingEnabled",
+            "type": "boolean",
+            "default": false,
+            "label": "Serial tracking",
+            "description": "Track serial numbers of cargo handled by this vehicle. v1.2 declarative.",
+            "tier": "customization"
           },
           {
             "key": "title",
@@ -236,7 +294,9 @@
       "OPEN_VEHICLE",
       "RETIRE",
       "VehicleLoadFailed",
-      "VehicleLoaded"
+      "VehicleLoaded",
+      "VehicleUpdateFailed",
+      "VehicleUpdated"
     ],
     "listenedEvents": []
   }

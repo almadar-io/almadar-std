@@ -73,43 +73,69 @@
           "REINSTATE",
           "TERMINATE",
           "DriverLoaded",
-          "DriverLoadFailed"
+          "DriverLoadFailed",
+          "DriverUpdated",
+          "DriverUpdateFailed"
         ],
         "listenedEvents": [],
         "overridableConfigKeys": [
+          {
+            "key": "cycleCountFrequencyDays",
+            "type": "number",
+            "default": 30,
+            "label": "Cycle count cadence (days)",
+            "description": "Days between scheduled inventory cycle counts on assigned vehicle. v1.2 declarative.",
+            "tier": "advanced"
+          },
+          {
+            "key": "defaultWarehouse",
+            "type": "string",
+            "default": "",
+            "label": "Default warehouse / depot",
+            "description": "ID of the depot a driver is assigned to by default. v1.2 declarative; surfaced for routing/scheduling.",
+            "tier": "customization"
+          },
+          {
+            "key": "expiryTrackingEnabled",
+            "type": "boolean",
+            "default": false,
+            "label": "Expiry tracking",
+            "description": "Track expiry dates on driver-carried inventory.",
+            "tier": "customization"
+          },
           {
             "key": "fields",
             "type": "[FieldSpec]",
             "default": [
               {
-                "label": "Name",
+                "name": "name",
                 "variant": "caption",
-                "name": "name"
+                "label": "Name"
               },
               {
-                "name": "licenseNumber",
+                "variant": "caption",
                 "label": "License",
-                "variant": "caption"
-              },
-              {
-                "label": "Class",
-                "name": "licenseClass",
-                "variant": "badge"
-              },
-              {
-                "name": "licenseExpiresAt",
-                "label": "Expires",
-                "variant": "caption"
+                "name": "licenseNumber"
               },
               {
                 "variant": "badge",
-                "name": "status",
-                "label": "Status"
+                "label": "Class",
+                "name": "licenseClass"
               },
               {
-                "label": "Vehicle",
+                "name": "licenseExpiresAt",
+                "variant": "caption",
+                "label": "Expires"
+              },
+              {
+                "variant": "badge",
+                "label": "Status",
+                "name": "status"
+              },
+              {
+                "variant": "caption",
                 "name": "assignedVehicleId",
-                "variant": "caption"
+                "label": "Vehicle"
               }
             ],
             "label": "Columns to show",
@@ -117,13 +143,8 @@
             "tier": "customization",
             "items": {
               "properties": {
-                "name": {
-                  "name": "name",
-                  "required": true,
-                  "type": "string"
-                },
-                "variant": {
-                  "name": "variant",
+                "key": {
+                  "name": "key",
                   "required": false,
                   "type": "string"
                 },
@@ -132,14 +153,19 @@
                   "required": false,
                   "type": "string"
                 },
-                "key": {
-                  "name": "key",
-                  "required": false,
-                  "type": "string"
-                },
                 "format": {
                   "name": "format",
                   "required": false,
+                  "type": "string"
+                },
+                "variant": {
+                  "name": "variant",
+                  "required": false,
+                  "type": "string"
+                },
+                "name": {
+                  "name": "name",
+                  "required": true,
                   "type": "string"
                 },
                 "icon": {
@@ -157,18 +183,26 @@
             }
           },
           {
+            "key": "hazmatEnabled",
+            "type": "boolean",
+            "default": false,
+            "label": "Hazmat capable",
+            "description": "Driver/route can carry hazardous-material loads. Drives endorsement checks.",
+            "tier": "advanced"
+          },
+          {
             "key": "itemActions",
             "type": "[ItemAction]",
             "default": [
               {
+                "event": "OPEN_DRIVER",
                 "variant": "primary",
                 "label": "Open",
-                "event": "OPEN_DRIVER",
                 "icon": "arrow-right"
               },
               {
-                "variant": "danger",
                 "label": "Suspend",
+                "variant": "danger",
                 "event": "SUSPEND"
               }
             ],
@@ -177,18 +211,13 @@
             "tier": "customization",
             "items": {
               "properties": {
-                "label": {
-                  "name": "label",
-                  "required": true,
-                  "type": "string"
-                },
                 "icon": {
                   "name": "icon",
                   "required": false,
                   "type": "string"
                 },
-                "event": {
-                  "name": "event",
+                "label": {
+                  "name": "label",
                   "required": true,
                   "type": "string"
                 },
@@ -196,10 +225,39 @@
                   "name": "variant",
                   "required": false,
                   "type": "string"
+                },
+                "event": {
+                  "name": "event",
+                  "required": true,
+                  "type": "string"
                 }
               },
               "type": "object"
             }
+          },
+          {
+            "key": "lotTrackingEnabled",
+            "type": "boolean",
+            "default": false,
+            "label": "Lot tracking",
+            "description": "Track lot/batch numbers on driver-carried inventory. v1.2 declarative.",
+            "tier": "customization"
+          },
+          {
+            "key": "multiLocationEnabled",
+            "type": "boolean",
+            "default": false,
+            "label": "Multi-location",
+            "description": "Allow a driver to operate across multiple depots/warehouses.",
+            "tier": "customization"
+          },
+          {
+            "key": "serialTrackingEnabled",
+            "type": "boolean",
+            "default": false,
+            "label": "Serial tracking",
+            "description": "Track individual asset serial numbers handed to the driver. v1.2 declarative.",
+            "tier": "customization"
           },
           {
             "key": "title",
@@ -225,6 +283,8 @@
       "CLOSE_VIEW",
       "DriverLoadFailed",
       "DriverLoaded",
+      "DriverUpdateFailed",
+      "DriverUpdated",
       "OPEN_DRIVER",
       "REINSTATE",
       "SUSPEND",

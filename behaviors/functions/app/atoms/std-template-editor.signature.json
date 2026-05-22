@@ -57,6 +57,43 @@
         "listenedEvents": [],
         "overridableConfigKeys": [
           {
+            "key": "allowRollback",
+            "type": "boolean",
+            "default": true,
+            "label": "Allow rollback",
+            "description": "Permit reverting a template to a prior version.",
+            "tier": "customization"
+          },
+          {
+            "key": "defaultLocale",
+            "type": "string",
+            "default": "en",
+            "label": "Default locale",
+            "description": "Locale used when no translation matches the recipient's language.",
+            "tier": "customization"
+          },
+          {
+            "key": "draftAutosaveSeconds",
+            "type": "number",
+            "default": 15,
+            "label": "Draft autosave interval (s)",
+            "description": "Seconds between draft autosaves in the template editor.",
+            "tier": "advanced"
+          },
+          {
+            "key": "enabledLocales",
+            "type": "[string]",
+            "default": [
+              "en"
+            ],
+            "label": "Enabled locales",
+            "description": "Locales the template subject + body can be translated into.",
+            "tier": "customization",
+            "items": {
+              "type": "string"
+            }
+          },
+          {
             "key": "fields",
             "type": "[FieldSpec]",
             "default": [
@@ -66,18 +103,18 @@
                 "label": "Name"
               },
               {
-                "name": "channel",
                 "variant": "badge",
+                "name": "channel",
                 "label": "Channel"
               },
               {
                 "label": "Subject",
-                "variant": "caption",
-                "name": "subject"
+                "name": "subject",
+                "variant": "caption"
               },
               {
-                "name": "lastEditedAt",
                 "label": "Updated",
+                "name": "lastEditedAt",
                 "variant": "caption"
               }
             ],
@@ -86,8 +123,8 @@
             "tier": "advanced",
             "items": {
               "properties": {
-                "format": {
-                  "name": "format",
+                "icon": {
+                  "name": "icon",
                   "required": false,
                   "type": "string"
                 },
@@ -96,13 +133,13 @@
                   "required": false,
                   "type": "string"
                 },
-                "header": {
-                  "name": "header",
+                "label": {
+                  "name": "label",
                   "required": false,
                   "type": "string"
                 },
-                "icon": {
-                  "name": "icon",
+                "header": {
+                  "name": "header",
                   "required": false,
                   "type": "string"
                 },
@@ -111,14 +148,14 @@
                   "required": false,
                   "type": "string"
                 },
-                "label": {
-                  "name": "label",
-                  "required": false,
-                  "type": "string"
-                },
                 "name": {
                   "name": "name",
                   "required": true,
+                  "type": "string"
+                },
+                "format": {
+                  "name": "format",
+                  "required": false,
                   "type": "string"
                 }
               },
@@ -130,15 +167,15 @@
             "type": "[ItemAction]",
             "default": [
               {
-                "icon": "arrow-right",
-                "label": "Open",
+                "variant": "primary",
                 "event": "OPEN_TEMPLATE",
-                "variant": "primary"
+                "label": "Open",
+                "icon": "arrow-right"
               },
               {
-                "event": "DELETE_TEMPLATE",
+                "label": "Delete",
                 "variant": "danger",
-                "label": "Delete"
+                "event": "DELETE_TEMPLATE"
               }
             ],
             "label": "Row actions",
@@ -146,14 +183,14 @@
             "tier": "customization",
             "items": {
               "properties": {
-                "icon": {
-                  "name": "icon",
-                  "required": false,
-                  "type": "string"
-                },
                 "label": {
                   "name": "label",
                   "required": true,
+                  "type": "string"
+                },
+                "icon": {
+                  "name": "icon",
+                  "required": false,
                   "type": "string"
                 },
                 "event": {
@@ -171,12 +208,49 @@
             }
           },
           {
+            "key": "keepVersions",
+            "type": "number",
+            "default": 10,
+            "label": "Versions to retain",
+            "description": "Number of template revisions to keep.",
+            "tier": "customization"
+          },
+          {
+            "key": "scheduledPublishEnabled",
+            "type": "boolean",
+            "default": false,
+            "label": "Scheduled publish",
+            "description": "Allow scheduling activation of edited templates. v1.2 declarative.",
+            "tier": "customization"
+          },
+          {
+            "key": "seoEnabled",
+            "type": "boolean",
+            "default": false,
+            "label": "SEO meta enabled",
+            "description": "Emit indexable metadata when templates appear on public surfaces.",
+            "tier": "customization"
+          },
+          {
             "key": "title",
             "type": "string",
             "default": "Templates",
             "label": "Section title",
             "description": "Heading shown above the message template list",
             "tier": "customization"
+          },
+          {
+            "key": "visibilityScope",
+            "type": "string",
+            "default": "internal",
+            "label": "Visibility scope",
+            "description": "Who can use templates: internal staff, signed-in customers, public.",
+            "tier": "essential",
+            "enumValues": [
+              "public",
+              "internal",
+              "customer"
+            ]
           }
         ],
         "capabilities": []

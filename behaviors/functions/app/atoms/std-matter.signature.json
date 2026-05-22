@@ -67,43 +67,74 @@
           "HOLD_MATTER",
           "REOPEN_MATTER",
           "MatterLoaded",
-          "MatterLoadFailed"
+          "MatterLoadFailed",
+          "MatterUpdated",
+          "MatterUpdateFailed"
         ],
         "listenedEvents": [],
         "overridableConfigKeys": [
+          {
+            "key": "billingRateDefault",
+            "type": "number",
+            "default": 0,
+            "label": "Default billing rate",
+            "description": "Default hourly billing rate applied when a matter's leadAttorney has no rate set.",
+            "tier": "customization"
+          },
+          {
+            "key": "clientConfidentialityLevel",
+            "type": "string",
+            "default": "standard",
+            "label": "Confidentiality level",
+            "description": "Default client confidentiality level for new matters.",
+            "tier": "customization",
+            "enumValues": [
+              "standard",
+              "elevated",
+              "restricted"
+            ]
+          },
+          {
+            "key": "conflictCheckRequired",
+            "type": "boolean",
+            "default": true,
+            "label": "Conflict check required",
+            "description": "Require a conflict-of-interest check before opening a new matter.",
+            "tier": "essential"
+          },
           {
             "key": "fields",
             "type": "[FieldSpec]",
             "default": [
               {
-                "name": "matterNumber",
                 "variant": "caption",
+                "name": "matterNumber",
                 "label": "Matter #"
               },
               {
-                "label": "Title",
                 "name": "title",
+                "label": "Title",
                 "variant": "caption"
               },
               {
                 "name": "clientName",
-                "variant": "caption",
-                "label": "Client"
+                "label": "Client",
+                "variant": "caption"
               },
               {
                 "variant": "badge",
-                "name": "practiceArea",
-                "label": "Practice"
+                "label": "Practice",
+                "name": "practiceArea"
               },
               {
-                "name": "leadAttorney",
+                "label": "Lead",
                 "variant": "caption",
-                "label": "Lead"
+                "name": "leadAttorney"
               },
               {
-                "label": "Status",
                 "variant": "badge",
-                "name": "status"
+                "name": "status",
+                "label": "Status"
               }
             ],
             "label": "Columns to show",
@@ -111,16 +142,6 @@
             "tier": "customization",
             "items": {
               "properties": {
-                "format": {
-                  "name": "format",
-                  "required": false,
-                  "type": "string"
-                },
-                "icon": {
-                  "name": "icon",
-                  "required": false,
-                  "type": "string"
-                },
                 "key": {
                   "name": "key",
                   "required": false,
@@ -131,9 +152,9 @@
                   "required": false,
                   "type": "string"
                 },
-                "name": {
-                  "name": "name",
-                  "required": true,
+                "variant": {
+                  "name": "variant",
+                  "required": false,
                   "type": "string"
                 },
                 "label": {
@@ -141,8 +162,18 @@
                   "required": false,
                   "type": "string"
                 },
-                "variant": {
-                  "name": "variant",
+                "name": {
+                  "name": "name",
+                  "required": true,
+                  "type": "string"
+                },
+                "icon": {
+                  "name": "icon",
+                  "required": false,
+                  "type": "string"
+                },
+                "format": {
+                  "name": "format",
                   "required": false,
                   "type": "string"
                 }
@@ -155,15 +186,15 @@
             "type": "[ItemAction]",
             "default": [
               {
+                "event": "OPEN_MATTER",
                 "label": "Open",
                 "variant": "primary",
-                "icon": "arrow-right",
-                "event": "OPEN_MATTER"
+                "icon": "arrow-right"
               },
               {
-                "variant": "danger",
                 "event": "CLOSE_MATTER",
-                "label": "Close"
+                "label": "Close",
+                "variant": "danger"
               }
             ],
             "label": "Row actions",
@@ -171,13 +202,13 @@
             "tier": "customization",
             "items": {
               "properties": {
-                "icon": {
-                  "name": "icon",
-                  "required": false,
-                  "type": "string"
-                },
                 "label": {
                   "name": "label",
+                  "required": true,
+                  "type": "string"
+                },
+                "event": {
+                  "name": "event",
                   "required": true,
                   "type": "string"
                 },
@@ -186,14 +217,30 @@
                   "required": false,
                   "type": "string"
                 },
-                "event": {
-                  "name": "event",
-                  "required": true,
+                "icon": {
+                  "name": "icon",
+                  "required": false,
                   "type": "string"
                 }
               },
               "type": "object"
             }
+          },
+          {
+            "key": "practiceArea",
+            "type": "string",
+            "default": "",
+            "label": "Default practice area",
+            "description": "Practice area applied to new matters when not set per-row (litigation, IP, immigration, …).",
+            "tier": "customization"
+          },
+          {
+            "key": "retainerRequired",
+            "type": "boolean",
+            "default": false,
+            "label": "Retainer required",
+            "description": "Block opening a matter until a retainer is recorded.",
+            "tier": "customization"
           },
           {
             "key": "title",
@@ -220,6 +267,8 @@
       "HOLD_MATTER",
       "MatterLoadFailed",
       "MatterLoaded",
+      "MatterUpdateFailed",
+      "MatterUpdated",
       "OPEN_MATTER",
       "REOPEN_MATTER"
     ],

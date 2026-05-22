@@ -70,7 +70,9 @@
           "CLOSE_VIEW",
           "MARK_FOLLOWED_UP",
           "NpsSurveyLoaded",
-          "NpsSurveyLoadFailed"
+          "NpsSurveyLoadFailed",
+          "NpsSurveyUpdated",
+          "NpsSurveyUpdateFailed"
         ],
         "listenedEvents": [],
         "overridableConfigKeys": [
@@ -79,34 +81,34 @@
             "type": "[FieldSpec]",
             "default": [
               {
+                "variant": "caption",
                 "name": "customerName",
-                "label": "Customer",
+                "label": "Customer"
+              },
+              {
+                "name": "score",
+                "variant": "caption",
+                "label": "Score"
+              },
+              {
+                "variant": "badge",
+                "name": "category",
+                "label": "Category"
+              },
+              {
+                "name": "surveyedAt",
+                "label": "Surveyed",
                 "variant": "caption"
               },
               {
                 "variant": "caption",
-                "label": "Score",
-                "name": "score"
-              },
-              {
-                "label": "Category",
-                "name": "category",
-                "variant": "badge"
-              },
-              {
-                "label": "Surveyed",
-                "variant": "caption",
-                "name": "surveyedAt"
-              },
-              {
                 "label": "Channel",
-                "variant": "caption",
                 "name": "channel"
               },
               {
-                "variant": "badge",
+                "name": "status",
                 "label": "Status",
-                "name": "status"
+                "variant": "badge"
               }
             ],
             "label": "Columns to show",
@@ -114,19 +116,9 @@
             "tier": "advanced",
             "items": {
               "properties": {
-                "format": {
-                  "name": "format",
-                  "required": false,
-                  "type": "string"
-                },
-                "variant": {
-                  "name": "variant",
-                  "required": false,
-                  "type": "string"
-                },
-                "key": {
-                  "name": "key",
-                  "required": false,
+                "name": {
+                  "name": "name",
+                  "required": true,
                   "type": "string"
                 },
                 "header": {
@@ -139,41 +131,6 @@
                   "required": false,
                   "type": "string"
                 },
-                "name": {
-                  "name": "name",
-                  "required": true,
-                  "type": "string"
-                },
-                "icon": {
-                  "name": "icon",
-                  "required": false,
-                  "type": "string"
-                }
-              },
-              "type": "object"
-            }
-          },
-          {
-            "key": "itemActions",
-            "type": "[ItemAction]",
-            "default": [
-              {
-                "label": "Open",
-                "event": "OPEN_SURVEY",
-                "icon": "arrow-right",
-                "variant": "primary"
-              },
-              {
-                "label": "Mark Followed Up",
-                "event": "MARK_FOLLOWED_UP",
-                "variant": "danger"
-              }
-            ],
-            "label": "Row actions",
-            "description": "Buttons users can click on each survey response",
-            "tier": "customization",
-            "items": {
-              "properties": {
                 "variant": {
                   "name": "variant",
                   "required": false,
@@ -184,9 +141,78 @@
                   "required": false,
                   "type": "string"
                 },
+                "format": {
+                  "name": "format",
+                  "required": false,
+                  "type": "string"
+                },
+                "key": {
+                  "name": "key",
+                  "required": false,
+                  "type": "string"
+                }
+              },
+              "type": "object"
+            }
+          },
+          {
+            "key": "frequencyCapPerWeek",
+            "type": "number",
+            "default": 2,
+            "label": "Frequency cap (per week)",
+            "description": "Max surveys a recipient can receive in a 7-day window.",
+            "tier": "customization"
+          },
+          {
+            "key": "gdprConsentRequired",
+            "type": "boolean",
+            "default": true,
+            "label": "GDPR consent required",
+            "description": "Require survey consent before delivery to EU/UK recipients.",
+            "tier": "customization"
+          },
+          {
+            "key": "includeUnsubscribeLink",
+            "type": "boolean",
+            "default": true,
+            "label": "Include unsubscribe link",
+            "description": "Append a CAN-SPAM/GDPR-compliant unsubscribe link to every survey.",
+            "tier": "essential"
+          },
+          {
+            "key": "itemActions",
+            "type": "[ItemAction]",
+            "default": [
+              {
+                "label": "Open",
+                "icon": "arrow-right",
+                "event": "OPEN_SURVEY",
+                "variant": "primary"
+              },
+              {
+                "label": "Mark Followed Up",
+                "variant": "danger",
+                "event": "MARK_FOLLOWED_UP"
+              }
+            ],
+            "label": "Row actions",
+            "description": "Buttons users can click on each survey response",
+            "tier": "customization",
+            "items": {
+              "properties": {
                 "label": {
                   "name": "label",
                   "required": true,
+                  "type": "string"
+                },
+                "icon": {
+                  "name": "icon",
+                  "required": false,
+                  "type": "string"
+                },
+                "variant": {
+                  "name": "variant",
+                  "required": false,
                   "type": "string"
                 },
                 "event": {
@@ -199,12 +225,60 @@
             }
           },
           {
+            "key": "physicalAddressFooter",
+            "type": "string",
+            "default": "",
+            "label": "Physical address footer",
+            "description": "CAN-SPAM-required postal address appended to every survey.",
+            "tier": "essential"
+          },
+          {
+            "key": "respectQuietHours",
+            "type": "boolean",
+            "default": true,
+            "label": "Respect quiet hours",
+            "description": "Defer survey delivery during recipient-local quiet hours.",
+            "tier": "customization"
+          },
+          {
+            "key": "sendsPerHour",
+            "type": "number",
+            "default": 500,
+            "label": "Sends per hour",
+            "description": "Cap on survey dispatch volume per hour. v1.2 declarative.",
+            "tier": "customization"
+          },
+          {
+            "key": "suppressionListEnabled",
+            "type": "boolean",
+            "default": true,
+            "label": "Honor suppression list",
+            "description": "Skip recipients on the global suppression / bounce list.",
+            "tier": "customization"
+          },
+          {
             "key": "title",
             "type": "string",
             "default": "NPS Surveys",
             "label": "Section title",
             "description": "Heading shown above the NPS response tracker",
             "tier": "customization"
+          },
+          {
+            "key": "trackClicks",
+            "type": "boolean",
+            "default": true,
+            "label": "Track clicks",
+            "description": "Wrap survey links for click attribution.",
+            "tier": "advanced"
+          },
+          {
+            "key": "trackOpens",
+            "type": "boolean",
+            "default": true,
+            "label": "Track opens",
+            "description": "Embed a tracking pixel on each survey email.",
+            "tier": "advanced"
           }
         ],
         "capabilities": []
@@ -222,6 +296,8 @@
       "MARK_FOLLOWED_UP",
       "NpsSurveyLoadFailed",
       "NpsSurveyLoaded",
+      "NpsSurveyUpdateFailed",
+      "NpsSurveyUpdated",
       "OPEN_SURVEY"
     ],
     "listenedEvents": []

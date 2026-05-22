@@ -66,33 +66,65 @@
         "listenedEvents": [],
         "overridableConfigKeys": [
           {
+            "key": "anonymizeOnRejection",
+            "type": "boolean",
+            "default": false,
+            "label": "Anonymize on rejection",
+            "description": "When true, scrub applicant PII on rejected/revoked. Pair with std-data-erasure.",
+            "tier": "customization"
+          },
+          {
+            "key": "backgroundCheckRequired",
+            "type": "boolean",
+            "default": true,
+            "label": "Background check required",
+            "description": "Block SEND_OFFER until a background check is on file.",
+            "tier": "customization"
+          },
+          {
+            "key": "eVerifyRequired",
+            "type": "boolean",
+            "default": false,
+            "label": "E-Verify required",
+            "description": "US I-9 / E-Verify gate. Block ACCEPT until verification passes.",
+            "tier": "customization"
+          },
+          {
+            "key": "equalOpportunityTrackingEnabled",
+            "type": "boolean",
+            "default": false,
+            "label": "Equal opportunity tracking",
+            "description": "Capture demographic data separately for EEO reporting (sibling collection).",
+            "tier": "advanced"
+          },
+          {
             "key": "fields",
             "type": "[FieldSpec]",
             "default": [
               {
-                "name": "applicantName",
                 "variant": "caption",
+                "name": "applicantName",
                 "label": "Applicant"
               },
               {
-                "variant": "caption",
                 "name": "position",
+                "variant": "caption",
                 "label": "Position"
               },
               {
-                "name": "salary",
                 "label": "Salary",
+                "name": "salary",
                 "variant": "caption"
               },
               {
-                "variant": "caption",
                 "name": "startDate",
-                "label": "Start Date"
+                "label": "Start Date",
+                "variant": "caption"
               },
               {
-                "label": "Status",
                 "variant": "badge",
-                "name": "status"
+                "name": "status",
+                "label": "Status"
               }
             ],
             "label": "Columns to show",
@@ -100,29 +132,14 @@
             "tier": "advanced",
             "items": {
               "properties": {
-                "label": {
-                  "name": "label",
-                  "required": false,
-                  "type": "string"
-                },
-                "header": {
-                  "name": "header",
+                "icon": {
+                  "name": "icon",
                   "required": false,
                   "type": "string"
                 },
                 "name": {
                   "name": "name",
                   "required": true,
-                  "type": "string"
-                },
-                "icon": {
-                  "name": "icon",
-                  "required": false,
-                  "type": "string"
-                },
-                "key": {
-                  "name": "key",
-                  "required": false,
                   "type": "string"
                 },
                 "variant": {
@@ -134,25 +151,48 @@
                   "name": "format",
                   "required": false,
                   "type": "string"
+                },
+                "key": {
+                  "name": "key",
+                  "required": false,
+                  "type": "string"
+                },
+                "header": {
+                  "name": "header",
+                  "required": false,
+                  "type": "string"
+                },
+                "label": {
+                  "name": "label",
+                  "required": false,
+                  "type": "string"
                 }
               },
               "type": "object"
             }
           },
           {
+            "key": "i9DocumentsRequired",
+            "type": "boolean",
+            "default": true,
+            "label": "I-9 documents required",
+            "description": "Require I-9 supporting documents at the accepted transition.",
+            "tier": "customization"
+          },
+          {
             "key": "itemActions",
             "type": "[ItemAction]",
             "default": [
               {
-                "icon": "arrow-right",
-                "variant": "primary",
                 "label": "Open",
-                "event": "OPEN_OFFER"
+                "variant": "primary",
+                "event": "OPEN_OFFER",
+                "icon": "arrow-right"
               },
               {
-                "event": "REVOKE_OFFER",
                 "variant": "danger",
-                "label": "Revoke"
+                "label": "Revoke",
+                "event": "REVOKE_OFFER"
               }
             ],
             "label": "Row actions",
@@ -160,8 +200,8 @@
             "tier": "customization",
             "items": {
               "properties": {
-                "icon": {
-                  "name": "icon",
+                "variant": {
+                  "name": "variant",
                   "required": false,
                   "type": "string"
                 },
@@ -170,8 +210,8 @@
                   "required": true,
                   "type": "string"
                 },
-                "variant": {
-                  "name": "variant",
+                "icon": {
+                  "name": "icon",
                   "required": false,
                   "type": "string"
                 },
@@ -183,6 +223,14 @@
               },
               "type": "object"
             }
+          },
+          {
+            "key": "retentionAfterRejectionDays",
+            "type": "number",
+            "default": 1825,
+            "label": "Retention after rejection (days)",
+            "description": "Days to keep rejected/revoked offers. Default 1825 (5 years) covers most EEOC + IRS retention.",
+            "tier": "advanced"
           },
           {
             "key": "title",

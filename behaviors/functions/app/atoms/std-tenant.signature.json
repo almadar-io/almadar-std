@@ -61,28 +61,38 @@
           "ACTIVATE_TENANT",
           "MOVE_OUT",
           "TenantLoaded",
-          "TenantLoadFailed"
+          "TenantLoadFailed",
+          "TenantUpdated",
+          "TenantUpdateFailed"
         ],
         "listenedEvents": [],
         "overridableConfigKeys": [
+          {
+            "key": "autoRenewEnabled",
+            "type": "boolean",
+            "default": false,
+            "label": "Auto-renew",
+            "description": "Roll over the tenant's lease at term without an explicit non-renew notice.",
+            "tier": "customization"
+          },
           {
             "key": "fields",
             "type": "[FieldSpec]",
             "default": [
               {
-                "label": "Name",
+                "variant": "h4",
                 "name": "name",
-                "variant": "h4"
+                "label": "Name"
               },
               {
-                "label": "Email",
+                "name": "email",
                 "variant": "body",
-                "name": "email"
+                "label": "Email"
               },
               {
+                "name": "phone",
                 "label": "Phone",
-                "variant": "caption",
-                "name": "phone"
+                "variant": "caption"
               },
               {
                 "variant": "badge",
@@ -90,9 +100,9 @@
                 "label": "Status"
               },
               {
+                "name": "moveInDate",
                 "label": "Move-In",
-                "variant": "caption",
-                "name": "moveInDate"
+                "variant": "caption"
               }
             ],
             "label": "Columns to show",
@@ -100,6 +110,21 @@
             "tier": "advanced",
             "items": {
               "properties": {
+                "key": {
+                  "name": "key",
+                  "required": false,
+                  "type": "string"
+                },
+                "icon": {
+                  "name": "icon",
+                  "required": false,
+                  "type": "string"
+                },
+                "variant": {
+                  "name": "variant",
+                  "required": false,
+                  "type": "string"
+                },
                 "label": {
                   "name": "label",
                   "required": false,
@@ -110,13 +135,8 @@
                   "required": false,
                   "type": "string"
                 },
-                "icon": {
-                  "name": "icon",
-                  "required": false,
-                  "type": "string"
-                },
-                "key": {
-                  "name": "key",
+                "format": {
+                  "name": "format",
                   "required": false,
                   "type": "string"
                 },
@@ -124,14 +144,57 @@
                   "name": "name",
                   "required": true,
                   "type": "string"
-                },
-                "format": {
-                  "name": "format",
-                  "required": false,
+                }
+              },
+              "type": "object"
+            }
+          },
+          {
+            "key": "inspectionFrequencyMonths",
+            "type": "number",
+            "default": 12,
+            "label": "Inspection cadence (months)",
+            "description": "Months between scheduled unit inspections.",
+            "tier": "advanced"
+          },
+          {
+            "key": "itemActions",
+            "type": "[ItemAction]",
+            "default": [
+              {
+                "label": "Open",
+                "variant": "primary",
+                "event": "OPEN_TENANT",
+                "icon": "arrow-right"
+              },
+              {
+                "event": "MOVE_OUT",
+                "variant": "danger",
+                "label": "Move Out"
+              }
+            ],
+            "label": "Row actions",
+            "description": "Buttons users can click on each tenant row",
+            "tier": "customization",
+            "items": {
+              "properties": {
+                "label": {
+                  "name": "label",
+                  "required": true,
                   "type": "string"
                 },
                 "variant": {
                   "name": "variant",
+                  "required": false,
+                  "type": "string"
+                },
+                "event": {
+                  "name": "event",
+                  "required": true,
+                  "type": "string"
+                },
+                "icon": {
+                  "name": "icon",
                   "required": false,
                   "type": "string"
                 }
@@ -140,49 +203,42 @@
             }
           },
           {
-            "key": "itemActions",
-            "type": "[ItemAction]",
-            "default": [
-              {
-                "icon": "arrow-right",
-                "variant": "primary",
-                "event": "OPEN_TENANT",
-                "label": "Open"
-              },
-              {
-                "variant": "danger",
-                "label": "Move Out",
-                "event": "MOVE_OUT"
-              }
-            ],
-            "label": "Row actions",
-            "description": "Buttons users can click on each tenant row",
+            "key": "lateRentGraceDays",
+            "type": "number",
+            "default": 5,
+            "label": "Late rent grace (days)",
+            "description": "Days after rent due before a tenant rolls into a late status.",
+            "tier": "customization"
+          },
+          {
+            "key": "leaseRenewalNoticeDays",
+            "type": "number",
+            "default": 60,
+            "label": "Renewal notice (days)",
+            "description": "Days before lease end when a renewal nudge fires for this tenant.",
+            "tier": "customization"
+          },
+          {
+            "key": "petPolicy",
+            "type": "string",
+            "default": "no-pets",
+            "label": "Pet policy",
+            "description": "Default pet policy enforced for new tenants.",
             "tier": "customization",
-            "items": {
-              "properties": {
-                "icon": {
-                  "name": "icon",
-                  "required": false,
-                  "type": "string"
-                },
-                "variant": {
-                  "name": "variant",
-                  "required": false,
-                  "type": "string"
-                },
-                "label": {
-                  "name": "label",
-                  "required": true,
-                  "type": "string"
-                },
-                "event": {
-                  "name": "event",
-                  "required": true,
-                  "type": "string"
-                }
-              },
-              "type": "object"
-            }
+            "enumValues": [
+              "no-pets",
+              "cats-only",
+              "dogs-only",
+              "all"
+            ]
+          },
+          {
+            "key": "securityDepositMonths",
+            "type": "number",
+            "default": 1,
+            "label": "Security deposit (months)",
+            "description": "Months of rent required as security deposit.",
+            "tier": "customization"
           },
           {
             "key": "title",
@@ -209,7 +265,9 @@
       "MOVE_OUT",
       "OPEN_TENANT",
       "TenantLoadFailed",
-      "TenantLoaded"
+      "TenantLoaded",
+      "TenantUpdateFailed",
+      "TenantUpdated"
     ],
     "listenedEvents": []
   }

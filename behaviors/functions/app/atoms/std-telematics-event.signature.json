@@ -75,18 +75,34 @@
         "listenedEvents": [],
         "overridableConfigKeys": [
           {
+            "key": "cycleCountFrequencyDays",
+            "type": "number",
+            "default": 30,
+            "label": "Cycle count cadence (days)",
+            "description": "Days between scheduled fleet cycle counts triggered off telematics. v1.2 declarative.",
+            "tier": "advanced"
+          },
+          {
+            "key": "defaultWarehouse",
+            "type": "string",
+            "default": "",
+            "label": "Default depot / warehouse",
+            "description": "Depot that owns these vehicles by default. Used by downstream alerting.",
+            "tier": "customization"
+          },
+          {
             "key": "fields",
             "type": "[FieldSpec]",
             "default": [
               {
                 "label": "Vehicle",
-                "variant": "caption",
-                "name": "vehicleId"
+                "name": "vehicleId",
+                "variant": "caption"
               },
               {
+                "name": "eventType",
                 "label": "Type",
-                "variant": "badge",
-                "name": "eventType"
+                "variant": "badge"
               },
               {
                 "name": "severity",
@@ -94,13 +110,13 @@
                 "variant": "badge"
               },
               {
+                "label": "Speed",
                 "variant": "caption",
-                "name": "speed",
-                "label": "Speed"
+                "name": "speed"
               },
               {
-                "label": "Occurred",
                 "name": "occurredAt",
+                "label": "Occurred",
                 "variant": "caption"
               },
               {
@@ -124,6 +140,21 @@
                   "required": false,
                   "type": "string"
                 },
+                "label": {
+                  "name": "label",
+                  "required": false,
+                  "type": "string"
+                },
+                "variant": {
+                  "name": "variant",
+                  "required": false,
+                  "type": "string"
+                },
+                "format": {
+                  "name": "format",
+                  "required": false,
+                  "type": "string"
+                },
                 "key": {
                   "name": "key",
                   "required": false,
@@ -133,25 +164,18 @@
                   "name": "name",
                   "required": true,
                   "type": "string"
-                },
-                "variant": {
-                  "name": "variant",
-                  "required": false,
-                  "type": "string"
-                },
-                "label": {
-                  "name": "label",
-                  "required": false,
-                  "type": "string"
-                },
-                "format": {
-                  "name": "format",
-                  "required": false,
-                  "type": "string"
                 }
               },
               "type": "object"
             }
+          },
+          {
+            "key": "hazmatEnabled",
+            "type": "boolean",
+            "default": false,
+            "label": "Hazmat tracking",
+            "description": "Surface hazmat-relevant telematics events distinctly.",
+            "tier": "advanced"
           },
           {
             "key": "itemActions",
@@ -159,13 +183,13 @@
             "default": [
               {
                 "label": "Open",
-                "event": "OPEN_EVENT",
+                "icon": "arrow-right",
                 "variant": "primary",
-                "icon": "arrow-right"
+                "event": "OPEN_EVENT"
               },
               {
-                "variant": "secondary",
                 "event": "ACKNOWLEDGE",
+                "variant": "secondary",
                 "label": "Acknowledge"
               }
             ],
@@ -174,13 +198,13 @@
             "tier": "customization",
             "items": {
               "properties": {
-                "variant": {
-                  "name": "variant",
-                  "required": false,
+                "label": {
+                  "name": "label",
+                  "required": true,
                   "type": "string"
                 },
-                "icon": {
-                  "name": "icon",
+                "variant": {
+                  "name": "variant",
                   "required": false,
                   "type": "string"
                 },
@@ -189,14 +213,22 @@
                   "required": true,
                   "type": "string"
                 },
-                "label": {
-                  "name": "label",
-                  "required": true,
+                "icon": {
+                  "name": "icon",
+                  "required": false,
                   "type": "string"
                 }
               },
               "type": "object"
             }
+          },
+          {
+            "key": "multiLocationEnabled",
+            "type": "boolean",
+            "default": false,
+            "label": "Multi-location",
+            "description": "Source vehicles across multiple depots.",
+            "tier": "customization"
           },
           {
             "key": "title",

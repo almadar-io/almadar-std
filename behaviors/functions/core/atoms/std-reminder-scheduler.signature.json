@@ -1,0 +1,116 @@
+[
+  {
+    "organism": "std-reminder-scheduler",
+    "orbital": "ReminderSchedulerOrbital",
+    "tier": "atoms",
+    "factoryPath": "behaviors/functions/core/atoms/std-reminder-scheduler.ts",
+    "entities": [
+      {
+        "name": "ReminderRunLog",
+        "fields": [
+          {
+            "name": "targetEntity",
+            "type": "string",
+            "required": false
+          },
+          {
+            "name": "recordCount",
+            "type": "number",
+            "required": false
+          },
+          {
+            "name": "ranAt",
+            "type": "number",
+            "required": false
+          },
+          {
+            "name": "errors",
+            "type": "string",
+            "required": false
+          }
+        ],
+        "persistence": "persistent"
+      }
+    ],
+    "traits": [
+      {
+        "name": "ReminderScheduler",
+        "emittedEvents": [
+          "ScanRecordsLoaded",
+          "ScanFailed",
+          "ReminderRunLogged",
+          "ReminderRunFailed"
+        ],
+        "listenedEvents": [],
+        "overridableConfigKeys": [
+          {
+            "key": "dateField",
+            "type": "string",
+            "default": "",
+            "label": "Deadline field",
+            "description": "Field on the target entity holding the deadline timestamp (e.g. 'dueAt', 'startsAt').",
+            "tier": "essential"
+          },
+          {
+            "key": "offsetsHours",
+            "type": "[number]",
+            "default": [],
+            "label": "Reminder offsets (hours before deadline)",
+            "description": "Multi-touch reminder offsets: e.g. [168, 24, 1] for 7d/1d/1h reminders. v1.0 declarative only — emit lands in v1.1 (gap).",
+            "tier": "essential",
+            "items": {
+              "type": "number"
+            }
+          },
+          {
+            "key": "severity",
+            "type": "string",
+            "default": "info",
+            "label": "Severity",
+            "description": "Severity passed to the notifier when emit lands: info / warning / error.",
+            "tier": "customization"
+          },
+          {
+            "key": "targetEntity",
+            "type": "string",
+            "default": "",
+            "label": "Target entity",
+            "description": "Entity to scan for upcoming deadlines (e.g. 'ClassSession', 'CourtDeadlineRecord').",
+            "tier": "essential"
+          },
+          {
+            "key": "template",
+            "type": "string",
+            "default": "",
+            "label": "Message template",
+            "description": "Message body passed to the notifier.",
+            "tier": "customization"
+          },
+          {
+            "key": "windowToleranceMinutes",
+            "type": "number",
+            "default": 60,
+            "label": "Match tolerance (minutes)",
+            "description": "How close to the offset a record must be to fire a reminder. Wider = more forgiving but more dupes.",
+            "tier": "advanced"
+          }
+        ],
+        "capabilities": []
+      }
+    ],
+    "pages": [
+      {
+        "name": "ReminderSchedulerPage",
+        "defaultPath": "/reminders/scheduler",
+        "primaryEntity": "ReminderRunLog"
+      }
+    ],
+    "emittedEvents": [
+      "ReminderRunFailed",
+      "ReminderRunLogged",
+      "ScanFailed",
+      "ScanRecordsLoaded"
+    ],
+    "listenedEvents": []
+  }
+]

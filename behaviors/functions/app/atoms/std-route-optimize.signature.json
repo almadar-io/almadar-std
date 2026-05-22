@@ -61,23 +61,47 @@
         "listenedEvents": [],
         "overridableConfigKeys": [
           {
+            "key": "cycleCountFrequencyDays",
+            "type": "number",
+            "default": 30,
+            "label": "Cycle count cadence (days)",
+            "description": "Days between scheduled cycle counts on vehicles assigned to optimized routes. v1.2 declarative.",
+            "tier": "advanced"
+          },
+          {
+            "key": "defaultWarehouse",
+            "type": "string",
+            "default": "",
+            "label": "Default depot / warehouse",
+            "description": "Origin depot routes start from by default.",
+            "tier": "customization"
+          },
+          {
+            "key": "expiryTrackingEnabled",
+            "type": "boolean",
+            "default": false,
+            "label": "Expiry tracking",
+            "description": "Prioritize near-expiry items in route ordering.",
+            "tier": "customization"
+          },
+          {
             "key": "fields",
             "type": "[FieldSpec]",
             "default": [
               {
+                "name": "technicianId",
                 "label": "Technician",
-                "variant": "caption",
-                "name": "technicianId"
-              },
-              {
-                "name": "totalDistanceKm",
-                "label": "Distance (km)",
                 "variant": "caption"
               },
               {
-                "label": "Duration (min)",
+                "label": "Distance (km)",
                 "variant": "caption",
-                "name": "totalDurationMinutes"
+                "name": "totalDistanceKm"
+              },
+              {
+                "variant": "caption",
+                "name": "totalDurationMinutes",
+                "label": "Duration (min)"
               },
               {
                 "variant": "caption",
@@ -90,9 +114,9 @@
             "tier": "advanced",
             "items": {
               "properties": {
-                "name": {
-                  "name": "name",
-                  "required": true,
+                "label": {
+                  "name": "label",
+                  "required": false,
                   "type": "string"
                 },
                 "icon": {
@@ -100,13 +124,13 @@
                   "required": false,
                   "type": "string"
                 },
-                "key": {
-                  "name": "key",
+                "format": {
+                  "name": "format",
                   "required": false,
                   "type": "string"
                 },
-                "label": {
-                  "name": "label",
+                "key": {
+                  "name": "key",
                   "required": false,
                   "type": "string"
                 },
@@ -120,9 +144,9 @@
                   "required": false,
                   "type": "string"
                 },
-                "format": {
-                  "name": "format",
-                  "required": false,
+                "name": {
+                  "name": "name",
+                  "required": true,
                   "type": "string"
                 }
               },
@@ -130,19 +154,27 @@
             }
           },
           {
+            "key": "hazmatEnabled",
+            "type": "boolean",
+            "default": false,
+            "label": "Hazmat routing",
+            "description": "Route honors hazmat-restricted lanes and depots.",
+            "tier": "advanced"
+          },
+          {
             "key": "itemActions",
             "type": "[ItemAction]",
             "default": [
               {
-                "variant": "primary",
-                "label": "Open",
                 "event": "OPEN_ROUTE",
-                "icon": "arrow-right"
+                "icon": "arrow-right",
+                "variant": "primary",
+                "label": "Open"
               },
               {
-                "event": "OPTIMIZE",
+                "variant": "danger",
                 "label": "Optimize",
-                "variant": "danger"
+                "event": "OPTIMIZE"
               }
             ],
             "label": "Row actions",
@@ -150,29 +182,53 @@
             "tier": "customization",
             "items": {
               "properties": {
-                "event": {
-                  "name": "event",
-                  "required": true,
-                  "type": "string"
-                },
-                "label": {
-                  "name": "label",
-                  "required": true,
-                  "type": "string"
-                },
                 "icon": {
                   "name": "icon",
                   "required": false,
+                  "type": "string"
+                },
+                "event": {
+                  "name": "event",
+                  "required": true,
                   "type": "string"
                 },
                 "variant": {
                   "name": "variant",
                   "required": false,
                   "type": "string"
+                },
+                "label": {
+                  "name": "label",
+                  "required": true,
+                  "type": "string"
                 }
               },
               "type": "object"
             }
+          },
+          {
+            "key": "lotTrackingEnabled",
+            "type": "boolean",
+            "default": false,
+            "label": "Lot tracking",
+            "description": "Honor lot/batch tracking when ordering pickups/drops.",
+            "tier": "customization"
+          },
+          {
+            "key": "multiLocationEnabled",
+            "type": "boolean",
+            "default": false,
+            "label": "Multi-location",
+            "description": "Allow routes to span multiple depots/warehouses.",
+            "tier": "customization"
+          },
+          {
+            "key": "serialTrackingEnabled",
+            "type": "boolean",
+            "default": false,
+            "label": "Serial tracking",
+            "description": "Honor serial-tracked items on route stops. v1.2 declarative.",
+            "tier": "customization"
           },
           {
             "key": "title",

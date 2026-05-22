@@ -71,38 +71,54 @@
         "listenedEvents": [],
         "overridableConfigKeys": [
           {
+            "key": "complianceJurisdiction",
+            "type": "string",
+            "default": "",
+            "label": "Compliance jurisdiction",
+            "description": "Drives accounting standard per locale: 'US-GAAP', 'EU-IFRS', 'UK-FRS', etc. Declarative.",
+            "tier": "advanced"
+          },
+          {
+            "key": "currency",
+            "type": "string",
+            "default": "USD",
+            "label": "Default currency",
+            "description": "ISO 4217 currency code (USD, EUR, GBP, …) for journal amounts.",
+            "tier": "essential"
+          },
+          {
             "key": "fields",
             "type": "[FieldSpec]",
             "default": [
               {
-                "variant": "caption",
+                "label": "Date",
                 "name": "entryDate",
-                "label": "Date"
-              },
-              {
-                "label": "Account",
-                "name": "accountName",
                 "variant": "caption"
               },
               {
-                "name": "description",
-                "label": "Description",
+                "name": "accountName",
+                "label": "Account",
                 "variant": "caption"
               },
               {
                 "variant": "caption",
+                "name": "description",
+                "label": "Description"
+              },
+              {
                 "name": "debit",
+                "variant": "caption",
                 "label": "Debit"
               },
               {
                 "variant": "caption",
-                "label": "Credit",
-                "name": "credit"
+                "name": "credit",
+                "label": "Credit"
               },
               {
                 "label": "Reconciled",
-                "name": "isReconciled",
-                "variant": "badge"
+                "variant": "badge",
+                "name": "isReconciled"
               }
             ],
             "label": "Columns to show",
@@ -110,6 +126,11 @@
             "tier": "customization",
             "items": {
               "properties": {
+                "format": {
+                  "name": "format",
+                  "required": false,
+                  "type": "string"
+                },
                 "name": {
                   "name": "name",
                   "required": true,
@@ -120,18 +141,13 @@
                   "required": false,
                   "type": "string"
                 },
-                "variant": {
-                  "name": "variant",
+                "header": {
+                  "name": "header",
                   "required": false,
                   "type": "string"
                 },
                 "icon": {
                   "name": "icon",
-                  "required": false,
-                  "type": "string"
-                },
-                "format": {
-                  "name": "format",
                   "required": false,
                   "type": "string"
                 },
@@ -140,8 +156,8 @@
                   "required": false,
                   "type": "string"
                 },
-                "header": {
-                  "name": "header",
+                "variant": {
+                  "name": "variant",
                   "required": false,
                   "type": "string"
                 }
@@ -150,18 +166,26 @@
             }
           },
           {
+            "key": "gracePeriodDays",
+            "type": "number",
+            "default": 0,
+            "label": "Grace period (days)",
+            "description": "Days before a posted entry is locked from edits. Declarative.",
+            "tier": "customization"
+          },
+          {
             "key": "itemActions",
             "type": "[ItemAction]",
             "default": [
               {
-                "variant": "primary",
-                "icon": "arrow-right",
                 "label": "Open",
+                "icon": "arrow-right",
+                "variant": "primary",
                 "event": "OPEN_ENTRY"
               },
               {
-                "variant": "danger",
                 "event": "REVERSE_ENTRY",
+                "variant": "danger",
                 "label": "Reverse"
               }
             ],
@@ -170,16 +194,6 @@
             "tier": "customization",
             "items": {
               "properties": {
-                "icon": {
-                  "name": "icon",
-                  "required": false,
-                  "type": "string"
-                },
-                "label": {
-                  "name": "label",
-                  "required": true,
-                  "type": "string"
-                },
                 "event": {
                   "name": "event",
                   "required": true,
@@ -189,10 +203,75 @@
                   "name": "variant",
                   "required": false,
                   "type": "string"
+                },
+                "label": {
+                  "name": "label",
+                  "required": true,
+                  "type": "string"
+                },
+                "icon": {
+                  "name": "icon",
+                  "required": false,
+                  "type": "string"
                 }
               },
               "type": "object"
             }
+          },
+          {
+            "key": "lateFeeAmount",
+            "type": "number",
+            "default": 0,
+            "label": "Late fee amount",
+            "description": "Flat cash amount or percentage (per lateFeePolicy).",
+            "tier": "customization"
+          },
+          {
+            "key": "lateFeePolicy",
+            "type": "string",
+            "default": "none",
+            "label": "Late fee policy",
+            "description": "Rarely used on ledger entries. Declarative; wiring deferred.",
+            "tier": "customization",
+            "enumValues": [
+              "none",
+              "flat",
+              "percent"
+            ]
+          },
+          {
+            "key": "retentionYears",
+            "type": "number",
+            "default": 7,
+            "label": "Retention (years)",
+            "description": "Years to keep ledger entries for compliance.",
+            "tier": "advanced"
+          },
+          {
+            "key": "roundingMode",
+            "type": "string",
+            "default": "bankers",
+            "label": "Rounding mode",
+            "description": "Sub-cent rounding behavior for debit/credit postings.",
+            "tier": "advanced",
+            "enumValues": [
+              "bankers",
+              "half-up",
+              "down"
+            ]
+          },
+          {
+            "key": "taxStrategy",
+            "type": "string",
+            "default": "none",
+            "label": "Tax strategy",
+            "description": "How tax accounts treat their balances. inclusive/exclusive/none.",
+            "tier": "customization",
+            "enumValues": [
+              "inclusive",
+              "exclusive",
+              "none"
+            ]
           },
           {
             "key": "title",

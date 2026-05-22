@@ -67,38 +67,56 @@
           "FREEZE_MEMBERSHIP",
           "CANCEL_MEMBERSHIP",
           "MembershipLoaded",
-          "MembershipLoadFailed"
+          "MembershipLoadFailed",
+          "MembershipUpdated",
+          "MembershipUpdateFailed"
         ],
         "listenedEvents": [],
         "overridableConfigKeys": [
+          {
+            "key": "archiveInactiveAfterDays",
+            "type": "number",
+            "default": 365,
+            "label": "Archive inactive after (days)",
+            "description": "Days after cancellation/expiry before membership record is archived. Declarative; wire via sibling std-lifecycle.",
+            "tier": "advanced"
+          },
+          {
+            "key": "consentTrackingEnabled",
+            "type": "boolean",
+            "default": true,
+            "label": "Track consent",
+            "description": "Whether to record marketing/data-processing consent on the member profile. Declarative.",
+            "tier": "customization"
+          },
           {
             "key": "fields",
             "type": "[FieldSpec]",
             "default": [
               {
+                "name": "memberName",
                 "variant": "caption",
-                "label": "Member",
-                "name": "memberName"
+                "label": "Member"
               },
               {
+                "label": "Tier",
                 "name": "tier",
-                "variant": "badge",
-                "label": "Tier"
+                "variant": "badge"
               },
               {
-                "name": "monthlyDues",
+                "variant": "caption",
                 "label": "Monthly Dues",
-                "variant": "caption"
+                "name": "monthlyDues"
               },
               {
-                "name": "renewalDate",
                 "label": "Renews",
-                "variant": "caption"
+                "variant": "caption",
+                "name": "renewalDate"
               },
               {
+                "name": "status",
                 "label": "Status",
-                "variant": "badge",
-                "name": "status"
+                "variant": "badge"
               }
             ],
             "label": "Columns to show",
@@ -111,18 +129,8 @@
                   "required": false,
                   "type": "string"
                 },
-                "key": {
-                  "name": "key",
-                  "required": false,
-                  "type": "string"
-                },
-                "name": {
-                  "name": "name",
-                  "required": true,
-                  "type": "string"
-                },
-                "header": {
-                  "name": "header",
+                "format": {
+                  "name": "format",
                   "required": false,
                   "type": "string"
                 },
@@ -131,9 +139,72 @@
                   "required": false,
                   "type": "string"
                 },
-                "format": {
-                  "name": "format",
+                "header": {
+                  "name": "header",
                   "required": false,
+                  "type": "string"
+                },
+                "name": {
+                  "name": "name",
+                  "required": true,
+                  "type": "string"
+                },
+                "variant": {
+                  "name": "variant",
+                  "required": false,
+                  "type": "string"
+                },
+                "key": {
+                  "name": "key",
+                  "required": false,
+                  "type": "string"
+                }
+              },
+              "type": "object"
+            }
+          },
+          {
+            "key": "healthScoreThresholdAlert",
+            "type": "number",
+            "default": 50,
+            "label": "Health score threshold",
+            "description": "Members below this engagement score get flagged for win-back outreach. Declarative; wire via sibling std-notify.",
+            "tier": "customization"
+          },
+          {
+            "key": "itemActions",
+            "type": "[ItemAction]",
+            "default": [
+              {
+                "event": "OPEN_MEMBERSHIP",
+                "icon": "arrow-right",
+                "label": "Open",
+                "variant": "primary"
+              },
+              {
+                "event": "CANCEL_MEMBERSHIP",
+                "label": "Cancel",
+                "variant": "danger"
+              }
+            ],
+            "label": "Row actions",
+            "description": "Buttons users can click on each row",
+            "tier": "customization",
+            "items": {
+              "properties": {
+                "icon": {
+                  "name": "icon",
+                  "required": false,
+                  "type": "string"
+                },
+                "label": {
+                  "name": "label",
+                  "required": true,
+                  "type": "string"
+                },
+                "event": {
+                  "name": "event",
+                  "required": true,
                   "type": "string"
                 },
                 "variant": {
@@ -146,48 +217,18 @@
             }
           },
           {
-            "key": "itemActions",
-            "type": "[ItemAction]",
+            "key": "renewalReminderDaysBefore",
+            "type": "[number]",
             "default": [
-              {
-                "icon": "arrow-right",
-                "event": "OPEN_MEMBERSHIP",
-                "variant": "primary",
-                "label": "Open"
-              },
-              {
-                "variant": "danger",
-                "event": "CANCEL_MEMBERSHIP",
-                "label": "Cancel"
-              }
+              30,
+              14,
+              7
             ],
-            "label": "Row actions",
-            "description": "Buttons users can click on each row",
+            "label": "Renewal reminder days-before",
+            "description": "Days before renewalDate to send renewal reminders. Declarative; wire via sibling std-reminder-scheduler.",
             "tier": "customization",
             "items": {
-              "properties": {
-                "event": {
-                  "name": "event",
-                  "required": true,
-                  "type": "string"
-                },
-                "icon": {
-                  "name": "icon",
-                  "required": false,
-                  "type": "string"
-                },
-                "label": {
-                  "name": "label",
-                  "required": true,
-                  "type": "string"
-                },
-                "variant": {
-                  "name": "variant",
-                  "required": false,
-                  "type": "string"
-                }
-              },
-              "type": "object"
+              "type": "number"
             }
           },
           {
@@ -217,6 +258,8 @@
       "FREEZE_MEMBERSHIP",
       "MembershipLoadFailed",
       "MembershipLoaded",
+      "MembershipUpdateFailed",
+      "MembershipUpdated",
       "OPEN_MEMBERSHIP",
       "UPGRADE_TIER"
     ],

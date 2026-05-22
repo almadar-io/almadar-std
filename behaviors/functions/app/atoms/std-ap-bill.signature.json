@@ -61,17 +61,35 @@
           "PAY_BILL",
           "VOID_BILL",
           "ApBillLoaded",
-          "ApBillLoadFailed"
+          "ApBillLoadFailed",
+          "ApBillUpdated",
+          "ApBillUpdateFailed"
         ],
         "listenedEvents": [],
         "overridableConfigKeys": [
+          {
+            "key": "complianceJurisdiction",
+            "type": "string",
+            "default": "",
+            "label": "Compliance jurisdiction",
+            "description": "Drives tax + retention rules per locale: 'US-CA', 'EU-DE', 'UK', etc. Declarative.",
+            "tier": "advanced"
+          },
+          {
+            "key": "currency",
+            "type": "string",
+            "default": "USD",
+            "label": "Default currency",
+            "description": "ISO 4217 currency code (USD, EUR, GBP, …) for bill amounts.",
+            "tier": "essential"
+          },
           {
             "key": "fields",
             "type": "[FieldSpec]",
             "default": [
               {
-                "name": "vendor",
                 "label": "Vendor",
+                "name": "vendor",
                 "variant": "caption"
               },
               {
@@ -81,13 +99,13 @@
               },
               {
                 "name": "billDate",
-                "label": "Bill Date",
-                "variant": "caption"
+                "variant": "caption",
+                "label": "Bill Date"
               },
               {
+                "name": "dueDate",
                 "label": "Due",
-                "variant": "caption",
-                "name": "dueDate"
+                "variant": "caption"
               },
               {
                 "variant": "caption",
@@ -95,8 +113,8 @@
                 "label": "Total"
               },
               {
-                "label": "Status",
                 "variant": "badge",
+                "label": "Status",
                 "name": "status"
               }
             ],
@@ -105,13 +123,18 @@
             "tier": "customization",
             "items": {
               "properties": {
+                "name": {
+                  "name": "name",
+                  "required": true,
+                  "type": "string"
+                },
                 "label": {
                   "name": "label",
                   "required": false,
                   "type": "string"
                 },
-                "format": {
-                  "name": "format",
+                "icon": {
+                  "name": "icon",
                   "required": false,
                   "type": "string"
                 },
@@ -120,18 +143,13 @@
                   "required": false,
                   "type": "string"
                 },
-                "name": {
-                  "name": "name",
-                  "required": true,
+                "format": {
+                  "name": "format",
+                  "required": false,
                   "type": "string"
                 },
                 "variant": {
                   "name": "variant",
-                  "required": false,
-                  "type": "string"
-                },
-                "icon": {
-                  "name": "icon",
                   "required": false,
                   "type": "string"
                 },
@@ -145,19 +163,27 @@
             }
           },
           {
+            "key": "gracePeriodDays",
+            "type": "number",
+            "default": 30,
+            "label": "Grace period (days)",
+            "description": "Days after dueDate before a bill is treated as overdue. Wire via sibling std-lifecycle rule.",
+            "tier": "customization"
+          },
+          {
             "key": "itemActions",
             "type": "[ItemAction]",
             "default": [
               {
+                "icon": "arrow-right",
                 "label": "Open",
                 "event": "OPEN_BILL",
-                "icon": "arrow-right",
                 "variant": "primary"
               },
               {
-                "variant": "danger",
                 "label": "Void",
-                "event": "VOID_BILL"
+                "event": "VOID_BILL",
+                "variant": "danger"
               }
             ],
             "label": "Row actions",
@@ -165,14 +191,14 @@
             "tier": "customization",
             "items": {
               "properties": {
-                "variant": {
-                  "name": "variant",
+                "icon": {
+                  "name": "icon",
                   "required": false,
                   "type": "string"
                 },
-                "event": {
-                  "name": "event",
-                  "required": true,
+                "variant": {
+                  "name": "variant",
+                  "required": false,
                   "type": "string"
                 },
                 "label": {
@@ -180,14 +206,69 @@
                   "required": true,
                   "type": "string"
                 },
-                "icon": {
-                  "name": "icon",
-                  "required": false,
+                "event": {
+                  "name": "event",
+                  "required": true,
                   "type": "string"
                 }
               },
               "type": "object"
             }
+          },
+          {
+            "key": "lateFeeAmount",
+            "type": "number",
+            "default": 0,
+            "label": "Late fee amount",
+            "description": "Flat cash amount or percentage (per lateFeePolicy).",
+            "tier": "customization"
+          },
+          {
+            "key": "lateFeePolicy",
+            "type": "string",
+            "default": "none",
+            "label": "Late fee policy",
+            "description": "How late fees compute when overdue: none, flat (lateFeeAmount cash), or percent (% of total). Declarative; wiring deferred.",
+            "tier": "customization",
+            "enumValues": [
+              "none",
+              "flat",
+              "percent"
+            ]
+          },
+          {
+            "key": "retentionYears",
+            "type": "number",
+            "default": 7,
+            "label": "Retention (years)",
+            "description": "Years to keep bill records for compliance. Default 7 matches common regimes.",
+            "tier": "advanced"
+          },
+          {
+            "key": "roundingMode",
+            "type": "string",
+            "default": "half-up",
+            "label": "Rounding mode",
+            "description": "Sub-cent rounding behavior for line items and totals.",
+            "tier": "advanced",
+            "enumValues": [
+              "bankers",
+              "half-up",
+              "down"
+            ]
+          },
+          {
+            "key": "taxStrategy",
+            "type": "string",
+            "default": "exclusive",
+            "label": "Tax strategy",
+            "description": "inclusive = tax baked into the line item totals; exclusive = tax added on top; none = no tax.",
+            "tier": "customization",
+            "enumValues": [
+              "inclusive",
+              "exclusive",
+              "none"
+            ]
           },
           {
             "key": "title",
@@ -211,6 +292,8 @@
     "emittedEvents": [
       "ApBillLoadFailed",
       "ApBillLoaded",
+      "ApBillUpdateFailed",
+      "ApBillUpdated",
       "CLOSE_VIEW",
       "OPEN_BILL",
       "PAY_BILL",

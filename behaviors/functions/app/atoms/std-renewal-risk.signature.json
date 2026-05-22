@@ -76,28 +76,46 @@
           "MARK_SAVED",
           "MARK_CHURNED",
           "RenewalRiskLoaded",
-          "RenewalRiskLoadFailed"
+          "RenewalRiskLoadFailed",
+          "RenewalRiskUpdated",
+          "RenewalRiskUpdateFailed"
         ],
         "listenedEvents": [],
         "overridableConfigKeys": [
+          {
+            "key": "archiveInactiveAfterDays",
+            "type": "number",
+            "default": 540,
+            "label": "Archive inactive after (days)",
+            "description": "Days post-churn before risk record auto-archives. Declarative; wire via sibling std-lifecycle.",
+            "tier": "advanced"
+          },
+          {
+            "key": "consentTrackingEnabled",
+            "type": "boolean",
+            "default": false,
+            "label": "Track consent",
+            "description": "Whether mitigation-plan outreach requires recorded consent. Declarative.",
+            "tier": "customization"
+          },
           {
             "key": "fields",
             "type": "[FieldSpec]",
             "default": [
               {
+                "name": "customerName",
                 "label": "Customer",
-                "variant": "caption",
-                "name": "customerName"
-              },
-              {
-                "name": "renewalDate",
-                "label": "Renewal",
                 "variant": "caption"
               },
               {
-                "variant": "caption",
+                "label": "Renewal",
+                "name": "renewalDate",
+                "variant": "caption"
+              },
+              {
+                "name": "arrAmount",
                 "label": "ARR",
-                "name": "arrAmount"
+                "variant": "caption"
               },
               {
                 "label": "Risk",
@@ -105,14 +123,14 @@
                 "variant": "badge"
               },
               {
+                "variant": "badge",
                 "name": "status",
-                "label": "Status",
-                "variant": "badge"
+                "label": "Status"
               },
               {
+                "variant": "caption",
                 "name": "assignedCsm",
-                "label": "CSM",
-                "variant": "caption"
+                "label": "CSM"
               }
             ],
             "label": "Columns to show",
@@ -120,8 +138,13 @@
             "tier": "advanced",
             "items": {
               "properties": {
-                "variant": {
-                  "name": "variant",
+                "name": {
+                  "name": "name",
+                  "required": true,
+                  "type": "string"
+                },
+                "header": {
+                  "name": "header",
                   "required": false,
                   "type": "string"
                 },
@@ -130,19 +153,9 @@
                   "required": false,
                   "type": "string"
                 },
-                "key": {
-                  "name": "key",
+                "format": {
+                  "name": "format",
                   "required": false,
-                  "type": "string"
-                },
-                "header": {
-                  "name": "header",
-                  "required": false,
-                  "type": "string"
-                },
-                "name": {
-                  "name": "name",
-                  "required": true,
                   "type": "string"
                 },
                 "label": {
@@ -150,8 +163,13 @@
                   "required": false,
                   "type": "string"
                 },
-                "format": {
-                  "name": "format",
+                "variant": {
+                  "name": "variant",
+                  "required": false,
+                  "type": "string"
+                },
+                "key": {
+                  "name": "key",
                   "required": false,
                   "type": "string"
                 }
@@ -160,18 +178,26 @@
             }
           },
           {
+            "key": "healthScoreThresholdAlert",
+            "type": "number",
+            "default": 40,
+            "label": "Health score threshold",
+            "description": "Accounts below this health score auto-promote to high/critical risk. Declarative; wire via sibling std-notify.",
+            "tier": "customization"
+          },
+          {
             "key": "itemActions",
             "type": "[ItemAction]",
             "default": [
               {
-                "variant": "primary",
-                "event": "OPEN_RISK",
                 "label": "Open",
-                "icon": "arrow-right"
+                "icon": "arrow-right",
+                "event": "OPEN_RISK",
+                "variant": "primary"
               },
               {
-                "label": "Mark Churned",
                 "event": "MARK_CHURNED",
+                "label": "Mark Churned",
                 "variant": "danger"
               }
             ],
@@ -180,16 +206,6 @@
             "tier": "customization",
             "items": {
               "properties": {
-                "icon": {
-                  "name": "icon",
-                  "required": false,
-                  "type": "string"
-                },
-                "label": {
-                  "name": "label",
-                  "required": true,
-                  "type": "string"
-                },
                 "event": {
                   "name": "event",
                   "required": true,
@@ -199,9 +215,35 @@
                   "name": "variant",
                   "required": false,
                   "type": "string"
+                },
+                "icon": {
+                  "name": "icon",
+                  "required": false,
+                  "type": "string"
+                },
+                "label": {
+                  "name": "label",
+                  "required": true,
+                  "type": "string"
                 }
               },
               "type": "object"
+            }
+          },
+          {
+            "key": "renewalReminderDaysBefore",
+            "type": "[number]",
+            "default": [
+              90,
+              60,
+              30,
+              14
+            ],
+            "label": "Renewal reminder days-before",
+            "description": "Days before renewalDate to send CSM reminder pings. Declarative; wire via sibling std-reminder-scheduler.",
+            "tier": "customization",
+            "items": {
+              "type": "number"
             }
           },
           {
@@ -229,7 +271,9 @@
       "MARK_SAVED",
       "OPEN_RISK",
       "RenewalRiskLoadFailed",
-      "RenewalRiskLoaded"
+      "RenewalRiskLoaded",
+      "RenewalRiskUpdateFailed",
+      "RenewalRiskUpdated"
     ],
     "listenedEvents": []
   }

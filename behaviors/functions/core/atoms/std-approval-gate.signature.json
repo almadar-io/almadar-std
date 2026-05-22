@@ -1,0 +1,142 @@
+[
+  {
+    "organism": "std-approval-gate",
+    "orbital": "ApprovalGateOrbital",
+    "tier": "atoms",
+    "factoryPath": "behaviors/functions/core/atoms/std-approval-gate.ts",
+    "entities": [
+      {
+        "name": "ApprovalRequest",
+        "fields": [
+          {
+            "name": "gatedEvent",
+            "type": "string",
+            "required": false
+          },
+          {
+            "name": "status",
+            "type": "string",
+            "required": false
+          },
+          {
+            "name": "reviewer",
+            "type": "string",
+            "required": false
+          },
+          {
+            "name": "requestedAt",
+            "type": "number",
+            "required": false
+          },
+          {
+            "name": "decidedAt",
+            "type": "number",
+            "required": false
+          },
+          {
+            "name": "escalatedAt",
+            "type": "number",
+            "required": false
+          },
+          {
+            "name": "notes",
+            "type": "string",
+            "required": false
+          }
+        ],
+        "persistence": "persistent"
+      }
+    ],
+    "traits": [
+      {
+        "name": "ApprovalGateReview",
+        "emittedEvents": [
+          "APPROVE",
+          "DENY",
+          "ApprovalGranted",
+          "ApprovalDenied",
+          "ApprovalRequestLoaded",
+          "ApprovalRequestLoadFailed",
+          "ApprovalRequestReviewed",
+          "ApprovalRequestReviewFailed"
+        ],
+        "listenedEvents": [],
+        "overridableConfigKeys": [
+          {
+            "key": "approverRoles",
+            "type": "[string]",
+            "default": [],
+            "label": "Approver roles",
+            "description": "Roles eligible to approve. The host application enforces role-gating on the page.",
+            "tier": "essential",
+            "items": {
+              "type": "string"
+            }
+          },
+          {
+            "key": "autoApproveBelowThreshold",
+            "type": "boolean",
+            "default": true,
+            "label": "Auto-approve below threshold",
+            "description": "Skip the review queue when the gated event's value is below the threshold. v1.0 declarative only.",
+            "tier": "customization"
+          },
+          {
+            "key": "escalationHours",
+            "type": "number",
+            "default": 0,
+            "label": "Escalation hours",
+            "description": "Hours a request can sit pending before escalating. v1.0 declarative only; per-row escalation needs loop-with-emit primitive (gap).",
+            "tier": "customization"
+          },
+          {
+            "key": "escalationRoles",
+            "type": "[string]",
+            "default": [],
+            "label": "Escalation roles",
+            "description": "Roles notified when a request escalates (compose sibling std-notify-on-event).",
+            "tier": "customization",
+            "items": {
+              "type": "string"
+            }
+          },
+          {
+            "key": "threshold",
+            "type": "number",
+            "default": 0,
+            "label": "Auto-approve threshold",
+            "description": "Below this value, requests should be auto-approved. v1.0 declarative only; wiring lands in v1.1 (gap).",
+            "tier": "customization"
+          },
+          {
+            "key": "valueField",
+            "type": "string",
+            "default": "",
+            "label": "Value field",
+            "description": "Payload field name to compare against threshold (e.g. 'amount' on a RefundRequested event). v1.0 declarative only.",
+            "tier": "customization"
+          }
+        ],
+        "capabilities": []
+      }
+    ],
+    "pages": [
+      {
+        "name": "ApprovalGateReviewPage",
+        "defaultPath": "/approvals/queue",
+        "primaryEntity": "ApprovalRequest"
+      }
+    ],
+    "emittedEvents": [
+      "APPROVE",
+      "ApprovalDenied",
+      "ApprovalGranted",
+      "ApprovalRequestLoadFailed",
+      "ApprovalRequestLoaded",
+      "ApprovalRequestReviewFailed",
+      "ApprovalRequestReviewed",
+      "DENY"
+    ],
+    "listenedEvents": []
+  }
+]
