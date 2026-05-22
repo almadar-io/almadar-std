@@ -13,13 +13,13 @@ orbital MarketingSiteOrbital {
   type FeatureCard = { icon : string, title : string!, description : string!, href : string, linkLabel : string }
   type StatCard = { value : string!, label : string! }
   type StepCard = { id : string!, number : number, title : string!, description : string!, icon : string }
-  type ShowcaseCard = { id : string!, title : string!, description : string, image : { src : string!, alt : string }, href : string, badge : string, accentColor : string }
-  type PricingPlan = { id : string, name : string!, price : string!, description : string, features : [string]!, action : { label : string!, href : string! }!, highlighted : boolean, badge : string }
+  type ShowcaseCard = { id : string!, title : string!, description : string, image : { src : string!, alt : string! }!, href : string, badge : string, accentColor : string }
+  type PricingPlan = { name : string!, price : string!, description : string, features : [string]!, action : { label : string!, href : string! }!, highlighted : boolean, badge : string }
   type FaqItem = { id : string!, title : string!, content : string! }
   type TeamMemberCard = { id : string, name : string!, nameAr : string, role : string!, bio : string!, avatar : string }
   type CaseStudyCard = { id : string, title : string!, description : string!, category : string!, categoryColor : string, href : string!, linkLabel : string }
   type ArticleCard = { title : string!, content : string! }
-  type SectionCard = { title : string!, description : string!, bullets : [string], image : { src : string, alt : string }, imagePosition : string }
+  type SectionCard = { title : string!, description : string!, bullets : [string]!, image : { src : string!, alt : string! }!, imagePosition : "left" | "right" }
   type FooterLink = { label : string!, href : string! }
   type FooterColumn = { title : string!, items : [FooterLink] }
 
@@ -50,7 +50,7 @@ orbital MarketingSiteOrbital {
     initial: idle
     state idle {
       INIT -> idle
-        (render-ui main { type: "header", brandName: "@config.brandName", logoSrc: "@config.logoSrc", navigationItems: "@config.navItems", actions: [{ label: "@config.primaryActionLabel", href: "@config.primaryActionHref", variant: "primary" }] })
+        (render-ui main { type: "header", brandName: "@config.brandName", logoSrc: "@config.logoSrc", navigationItems: "@config.navItems", actions: { type: "button", label: "@config.primaryActionLabel", action: "NAV_CLICK", variant: "primary" } })
       NAV_CLICK -> idle
         (emit NAV_CLICK { href: "@payload.href", label: "@payload.label" })
     }
@@ -121,9 +121,9 @@ orbital MarketingSiteOrbital {
       heroTitle : string = "Simple, transparent pricing"
       heroSubtitle : string = "Start free, scale as you grow."
       plans : [PricingPlan] = [
-        { id: "starter", name: "Starter", price: "$0", description: "For individuals and small projects.", features: ["1 project", "Community support", "Basic analytics"], action: { label: "Get Started", href: "#" }, highlighted: false, badge: "" },
-        { id: "pro", name: "Pro", price: "$49", description: "For growing teams that need more power.", features: ["Unlimited projects", "Priority support", "Advanced analytics", "Custom domains"], action: { label: "Start Trial", href: "#" }, highlighted: true, badge: "Most Popular" },
-        { id: "enterprise", name: "Enterprise", price: "Custom", description: "For organizations with advanced needs.", features: ["Dedicated infra", "SLA guarantee", "SSO & SAML", "Audit logs", "Custom contracts"], action: { label: "Contact Sales", href: "#" }, highlighted: false, badge: "" }
+        { name: "Starter", price: "$0", description: "For individuals and small projects.", features: ["1 project", "Community support", "Basic analytics"], action: { label: "Get Started", href: "#" }, highlighted: false, badge: "" },
+        { name: "Pro", price: "$49", description: "For growing teams that need more power.", features: ["Unlimited projects", "Priority support", "Advanced analytics", "Custom domains"], action: { label: "Start Trial", href: "#" }, highlighted: true, badge: "Most Popular" },
+        { name: "Enterprise", price: "Custom", description: "For organizations with advanced needs.", features: ["Dedicated infra", "SLA guarantee", "SSO & SAML", "Audit logs", "Custom contracts"], action: { label: "Contact Sales", href: "#" }, highlighted: false, badge: "" }
       ]
       faq : [FaqItem] = [
         { id: "plan-changes", title: "Can I change plans later?", content: "Yes, you can upgrade or downgrade at any time." },
