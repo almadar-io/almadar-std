@@ -1,7 +1,7 @@
 {
   "name": "std-stock-level",
-  "version": "1.1.0",
-  "description": "std-stock-level — on-hand quantity primitive for a SKU at a location. Lists stock rows in `browsing`; opens row detail in `viewing_single` with Adjust / Recount actions. Agents tune the list shape via `config.fields` + `config.itemActions`.",
+  "version": "1.2.0",
+  "description": "std-stock-level — on-hand quantity primitive for a SKU at a location. Lists stock rows; detail offers Adjust / Recount. Exposes Inventory/Logistics knobs (lowStockThreshold, reorderPoint, multiLocationEnabled, …) for the questionnaire.",
   "orbitals": [
     {
       "name": "StockLevelOrbital",
@@ -255,22 +255,22 @@
                     "render-ui",
                     "main",
                     {
-                      "direction": "vertical",
+                      "align": "center",
+                      "gap": "md",
+                      "type": "stack",
+                      "className": "py-12",
                       "children": [
                         {
                           "type": "spinner"
                         },
                         {
-                          "content": "Loading stock levels…",
+                          "color": "muted",
                           "type": "typography",
-                          "variant": "caption",
-                          "color": "muted"
+                          "content": "Loading stock levels…",
+                          "variant": "caption"
                         }
                       ],
-                      "type": "stack",
-                      "align": "center",
-                      "gap": "md",
-                      "className": "py-12"
+                      "direction": "vertical"
                     }
                   ]
                 ]
@@ -284,69 +284,69 @@
                     "render-ui",
                     "main",
                     {
-                      "type": "stack",
+                      "gap": "md",
                       "children": [
                         {
-                          "align": "center",
                           "children": [
                             {
-                              "type": "icon",
-                              "name": "package"
+                              "name": "package",
+                              "type": "icon"
                             },
                             {
                               "variant": "h3",
-                              "content": "@config.title",
-                              "type": "typography"
+                              "type": "typography",
+                              "content": "@config.title"
                             }
                           ],
-                          "gap": "sm",
                           "type": "stack",
-                          "direction": "horizontal"
+                          "direction": "horizontal",
+                          "gap": "sm",
+                          "align": "center"
                         },
                         {
+                          "type": "simple-grid",
+                          "cols": 4.0,
                           "children": [
                             {
-                              "type": "stat-display",
                               "icon": "package",
+                              "type": "stat-display",
                               "label": "Total SKUs",
                               "value": "@payload.data.length"
                             },
                             {
-                              "icon": "alert-triangle",
-                              "label": "Below reorder",
                               "value": "12",
-                              "type": "stat-display"
+                              "icon": "alert-triangle",
+                              "type": "stat-display",
+                              "label": "Below reorder"
                             },
                             {
                               "label": "Total on hand",
                               "icon": "boxes",
-                              "value": "8,420",
-                              "type": "stat-display"
+                              "type": "stat-display",
+                              "value": "8,420"
                             },
                             {
-                              "type": "stat-display",
-                              "label": "Reserved",
+                              "icon": "lock",
                               "value": "1,260",
-                              "icon": "lock"
+                              "label": "Reserved",
+                              "type": "stat-display"
                             }
-                          ],
-                          "cols": 4.0,
-                          "type": "simple-grid"
+                          ]
                         },
                         {
                           "type": "divider"
                         },
                         {
-                          "fields": "@config.fields",
-                          "entity": "@payload.data",
                           "type": "data-grid",
-                          "cols": 1.0,
+                          "entity": "@payload.data",
                           "gap": "sm",
-                          "itemActions": "@config.itemActions"
+                          "itemActions": "@config.itemActions",
+                          "cols": 1.0,
+                          "fields": "@config.fields"
                         }
                       ],
-                      "direction": "vertical",
-                      "gap": "md"
+                      "type": "stack",
+                      "direction": "vertical"
                     }
                   ]
                 ]
@@ -360,9 +360,9 @@
                     "render-ui",
                     "main",
                     {
+                      "message": "@payload.error",
                       "type": "alert",
-                      "variant": "error",
-                      "message": "@payload.error"
+                      "variant": "error"
                     }
                   ]
                 ]
@@ -416,16 +416,15 @@
                     "render-ui",
                     "main",
                     {
+                      "direction": "vertical",
                       "children": [
                         {
-                          "type": "stack",
                           "direction": "horizontal",
-                          "align": "center",
                           "children": [
                             {
+                              "type": "button",
                               "label": "Back",
                               "action": "CLOSE_VIEW",
-                              "type": "button",
                               "variant": "ghost"
                             },
                             {
@@ -433,9 +432,9 @@
                               "type": "icon"
                             },
                             {
-                              "type": "typography",
+                              "content": "@entity.productName",
                               "variant": "h3",
-                              "content": "@entity.productName"
+                              "type": "typography"
                             },
                             {
                               "type": "badge",
@@ -443,34 +442,36 @@
                               "variant": "primary"
                             }
                           ],
+                          "align": "center",
+                          "type": "stack",
                           "gap": "sm"
                         },
                         {
                           "type": "divider"
                         },
                         {
-                          "gap": "sm",
-                          "direction": "vertical",
                           "children": [
                             {
                               "type": "stack",
+                              "direction": "horizontal",
+                              "gap": "md",
                               "children": [
                                 {
-                                  "type": "typography",
-                                  "content": "Location",
                                   "variant": "caption",
-                                  "color": "muted"
+                                  "content": "Location",
+                                  "color": "muted",
+                                  "type": "typography"
                                 },
                                 {
                                   "type": "typography",
-                                  "content": "@entity.locationId",
-                                  "variant": "body"
+                                  "variant": "body",
+                                  "content": "@entity.locationId"
                                 }
-                              ],
-                              "direction": "horizontal",
-                              "gap": "md"
+                              ]
                             },
                             {
+                              "type": "stack",
+                              "gap": "md",
                               "children": [
                                 {
                                   "color": "muted",
@@ -479,16 +480,16 @@
                                   "variant": "caption"
                                 },
                                 {
-                                  "content": "@entity.lastCounted",
                                   "type": "typography",
+                                  "content": "@entity.lastCounted",
                                   "variant": "body"
                                 }
                               ],
-                              "type": "stack",
-                              "direction": "horizontal",
-                              "gap": "md"
+                              "direction": "horizontal"
                             }
                           ],
+                          "gap": "sm",
+                          "direction": "vertical",
                           "type": "stack"
                         },
                         {
@@ -497,57 +498,56 @@
                         {
                           "children": [
                             {
-                              "icon": "boxes",
-                              "type": "stat-display",
                               "value": "@entity.onHand",
+                              "type": "stat-display",
+                              "icon": "boxes",
                               "label": "On hand"
                             },
                             {
-                              "label": "Reserved",
                               "type": "stat-display",
+                              "label": "Reserved",
                               "value": "@entity.reserved",
                               "icon": "lock"
                             },
                             {
-                              "value": "@entity.reorderPoint",
+                              "type": "stat-display",
                               "label": "Reorder at",
-                              "icon": "alert-triangle",
-                              "type": "stat-display"
+                              "value": "@entity.reorderPoint",
+                              "icon": "alert-triangle"
                             }
                           ],
-                          "type": "simple-grid",
-                          "cols": 3.0
+                          "cols": 3.0,
+                          "type": "simple-grid"
                         },
                         {
                           "align": "center",
-                          "direction": "horizontal",
-                          "type": "stack",
                           "children": [
                             {
-                              "action": "ADJUST_STOCK",
-                              "type": "button",
                               "label": "Adjust",
-                              "variant": "primary",
+                              "action": "ADJUST_STOCK",
                               "actionPayload": {
                                 "id": "@entity.id"
-                              }
+                              },
+                              "type": "button",
+                              "variant": "primary"
                             },
                             {
+                              "type": "button",
                               "label": "Recount",
                               "variant": "secondary",
                               "actionPayload": {
                                 "id": "@entity.id"
                               },
-                              "type": "button",
                               "action": "RECOUNT"
                             }
                           ],
-                          "gap": "sm"
+                          "gap": "sm",
+                          "direction": "horizontal",
+                          "type": "stack"
                         }
                       ],
-                      "gap": "md",
-                      "direction": "vertical",
-                      "type": "stack"
+                      "type": "stack",
+                      "gap": "md"
                     }
                   ]
                 ]
@@ -576,21 +576,21 @@
                     "render-ui",
                     "main",
                     {
-                      "gap": "md",
-                      "align": "center",
                       "direction": "vertical",
+                      "align": "center",
                       "className": "py-12",
                       "children": [
                         {
                           "type": "spinner"
                         },
                         {
+                          "type": "typography",
                           "variant": "caption",
                           "content": "Adjusting stock…",
-                          "type": "typography",
                           "color": "muted"
                         }
                       ],
+                      "gap": "md",
                       "type": "stack"
                     }
                   ]
@@ -620,22 +620,22 @@
                     "render-ui",
                     "main",
                     {
-                      "gap": "md",
-                      "align": "center",
-                      "direction": "vertical",
                       "children": [
                         {
                           "type": "spinner"
                         },
                         {
+                          "content": "Recounting stock…",
                           "variant": "caption",
                           "type": "typography",
-                          "color": "muted",
-                          "content": "Recounting stock…"
+                          "color": "muted"
                         }
                       ],
-                      "type": "stack",
-                      "className": "py-12"
+                      "direction": "vertical",
+                      "className": "py-12",
+                      "align": "center",
+                      "gap": "md",
+                      "type": "stack"
                     }
                   ]
                 ]
@@ -663,18 +663,18 @@
                       "type": "stack",
                       "align": "center",
                       "className": "py-12",
-                      "direction": "vertical",
                       "children": [
                         {
                           "type": "spinner"
                         },
                         {
                           "type": "typography",
-                          "content": "Loading stock levels…",
+                          "variant": "caption",
                           "color": "muted",
-                          "variant": "caption"
+                          "content": "Loading stock levels…"
                         }
-                      ]
+                      ],
+                      "direction": "vertical"
                     }
                   ]
                 ]
@@ -694,8 +694,8 @@
                     "StockLevel",
                     {
                       "emit": {
-                        "success": "StockLevelLoaded",
-                        "failure": "StockLevelLoadFailed"
+                        "failure": "StockLevelLoadFailed",
+                        "success": "StockLevelLoaded"
                       }
                     }
                   ],
@@ -703,20 +703,20 @@
                     "render-ui",
                     "main",
                     {
-                      "align": "center",
-                      "className": "py-12",
-                      "direction": "vertical",
                       "gap": "md",
+                      "align": "center",
                       "type": "stack",
+                      "direction": "vertical",
+                      "className": "py-12",
                       "children": [
                         {
                           "type": "spinner"
                         },
                         {
                           "variant": "caption",
+                          "content": "Adjusting stock…",
                           "type": "typography",
-                          "color": "muted",
-                          "content": "Adjusting stock…"
+                          "color": "muted"
                         }
                       ]
                     }
@@ -747,22 +747,22 @@
                     "render-ui",
                     "main",
                     {
+                      "type": "stack",
+                      "gap": "md",
                       "className": "py-12",
+                      "align": "center",
+                      "direction": "vertical",
                       "children": [
                         {
                           "type": "spinner"
                         },
                         {
-                          "color": "muted",
+                          "variant": "caption",
                           "content": "Recounting stock…",
                           "type": "typography",
-                          "variant": "caption"
+                          "color": "muted"
                         }
-                      ],
-                      "gap": "md",
-                      "type": "stack",
-                      "direction": "vertical",
-                      "align": "center"
+                      ]
                     }
                   ]
                 ]
@@ -777,8 +777,8 @@
                     "StockLevel",
                     {
                       "emit": {
-                        "failure": "StockLevelLoadFailed",
-                        "success": "StockLevelLoaded"
+                        "success": "StockLevelLoaded",
+                        "failure": "StockLevelLoadFailed"
                       }
                     }
                   ],
@@ -795,19 +795,75 @@
             ]
           },
           "config": {
+            "expiryTrackingEnabled": {
+              "type": "boolean",
+              "default": false,
+              "label": "Expiry tracking",
+              "description": "Track expiry dates and surface near-expiry rows. v1.2 declarative.",
+              "tier": "customization"
+            },
+            "title": {
+              "type": "string",
+              "default": "Stock Levels",
+              "label": "Section title",
+              "description": "Heading shown above the inventory stock list",
+              "tier": "customization"
+            },
+            "defaultWarehouse": {
+              "type": "string",
+              "default": "",
+              "label": "Default warehouse",
+              "description": "Warehouse used when a row doesn't specify a location.",
+              "tier": "customization"
+            },
+            "multiLocationEnabled": {
+              "type": "boolean",
+              "default": false,
+              "label": "Multi-location",
+              "description": "Track on-hand stock across multiple warehouses.",
+              "tier": "customization"
+            },
+            "reorderPoint": {
+              "type": "number",
+              "default": 5.0,
+              "label": "Default reorder point",
+              "description": "Default reorder trigger applied to new stock rows when their per-row reorderPoint isn't set.",
+              "tier": "essential"
+            },
+            "serialTrackingEnabled": {
+              "type": "boolean",
+              "default": false,
+              "label": "Serial tracking",
+              "description": "Track individual serial numbers per unit. v1.2 declarative.",
+              "tier": "customization"
+            },
+            "hazmatEnabled": {
+              "type": "boolean",
+              "default": false,
+              "label": "Hazmat-classified inventory",
+              "description": "Flag hazmat SKUs for handling/storage compliance.",
+              "tier": "advanced"
+            },
+            "safetyStockDays": {
+              "type": "number",
+              "default": 7.0,
+              "label": "Safety stock (days)",
+              "description": "Days of expected demand to keep as buffer above the reorder point.",
+              "tier": "customization"
+            },
             "itemActions": {
               "type": "[ItemAction]",
               "default": [
                 {
-                  "icon": "arrow-right",
                   "label": "Open",
+                  "variant": "primary",
                   "event": "OPEN_STOCK",
-                  "variant": "primary"
+                  "icon": "arrow-right"
                 },
                 {
                   "label": "Adjust",
-                  "variant": "danger",
-                  "event": "ADJUST_STOCK"
+                  "event": "ADJUST_STOCK",
+                  "variant": "danger"
                 }
               ],
               "label": "Row actions",
@@ -821,13 +877,13 @@
                     "type": "string",
                     "required": false
                   },
-                  "label": {
-                    "name": "label",
+                  "event": {
+                    "name": "event",
                     "type": "string",
                     "required": true
                   },
-                  "event": {
-                    "name": "event",
+                  "label": {
+                    "name": "label",
                     "type": "string",
                     "required": true
                   },
@@ -839,40 +895,54 @@
                 }
               }
             },
-            "title": {
-              "type": "string",
-              "default": "Stock Levels",
-              "label": "Section title",
-              "description": "Heading shown above the inventory stock list",
+            "cycleCountFrequencyDays": {
+              "type": "number",
+              "default": 30.0,
+              "label": "Cycle count cadence (days)",
+              "description": "Days between scheduled inventory cycle counts. v1.2 declarative; wire via sibling std-lifecycle when available.",
+              "tier": "advanced"
+            },
+            "lowStockThreshold": {
+              "type": "number",
+              "default": 10.0,
+              "label": "Low-stock threshold",
+              "description": "Default on-hand quantity below which a SKU is flagged as low. v1.2 declarative; surfaced for downstream std-notify composition.",
+              "tier": "essential"
+            },
+            "lotTrackingEnabled": {
+              "type": "boolean",
+              "default": false,
+              "label": "Lot tracking",
+              "description": "Track lot/batch numbers per receipt. v1.2 declarative.",
               "tier": "customization"
             },
             "fields": {
               "type": "[FieldSpec]",
               "default": [
                 {
-                  "variant": "caption",
                   "name": "sku",
-                  "label": "SKU"
+                  "label": "SKU",
+                  "variant": "caption"
                 },
                 {
+                  "variant": "caption",
                   "name": "productName",
-                  "label": "Product",
-                  "variant": "caption"
+                  "label": "Product"
                 },
                 {
-                  "label": "Location",
+                  "name": "locationId",
                   "variant": "caption",
-                  "name": "locationId"
+                  "label": "Location"
                 },
                 {
-                  "name": "onHand",
                   "label": "On Hand",
-                  "variant": "caption"
+                  "variant": "caption",
+                  "name": "onHand"
                 },
                 {
-                  "label": "Reorder At",
                   "variant": "caption",
-                  "name": "reorderPoint"
+                  "name": "reorderPoint",
+                  "label": "Reorder At"
                 }
               ],
               "label": "Columns to show",
@@ -881,11 +951,6 @@
               "items": {
                 "type": "object",
                 "properties": {
-                  "format": {
-                    "name": "format",
-                    "type": "string",
-                    "required": false
-                  },
                   "key": {
                     "name": "key",
                     "type": "string",
@@ -913,6 +978,11 @@
                   },
                   "label": {
                     "name": "label",
+                    "type": "string",
+                    "required": false
+                  },
+                  "format": {
+                    "name": "format",
                     "type": "string",
                     "required": false
                   }

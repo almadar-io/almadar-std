@@ -1,5 +1,5 @@
-app std-ap-bill "1.1.0"
-"std-ap-bill — accounts-payable bill (vendor bills we owe). Lists bills in `browsing`; opens bill detail in `viewing_single` with Pay / Void actions. Counterpart to std-invoice on the payables side. Agents tune the list shape via `config.fields` + `config.itemActions`."
+app std-ap-bill "1.2.0"
+"std-ap-bill — accounts-payable bill (vendor bills we owe). Lists bills with Pay / Void actions. Listens for SET_STATUS so sibling std-lifecycle can drive automated transitions. Exposes Financial-pattern knobs (currency, taxStrategy, gracePeriodDays, lateFeePolicy, …)."
 
 type FieldSpec = { name : string!, label : string, variant : string, icon : string, format : string, key : string, header : string }
 type ItemAction = { label : string!, event : string!, variant : string, icon : string }
@@ -17,8 +17,10 @@ orbital ApBillOrbital {
     notes        : string = ""
   }
 
-  type ApBillLoaded     = Event { data : [ApBill] }                "Fired when the bill collection finishes loading"
-  type ApBillLoadFailed = Event { error : string, code : string }  "Fired when the bill collection fails to load"
+  type ApBillLoaded       = Event { data : [ApBill] }                "Fired when the bill collection finishes loading"
+  type ApBillLoadFailed   = Event { error : string, code : string }  "Fired when the bill collection fails to load"
+  type ApBillUpdated      = Event { row : ApBill }                   "Fired after a bill row's status persists"
+  type ApBillUpdateFailed = Event { error : string, code : string }  "Fired when a bill row's status update fails to persist"
 
   trait ApBillLedger -> ApBill [interaction, collection] {
     config {
@@ -44,6 +46,38 @@ orbital ApBillOrbital {
         @label "Row actions"
         @description "Buttons users can click on each bill row"
         @tier "customization"
+      currency        : string   = "USD"
+        @label "Default currency"
+        @description "ISO 4217 currency code (USD, EUR, GBP, …) for bill amounts."
+        @tier "essential"
+      taxStrategy     : "inclusive" | "exclusive" | "none" = "exclusive"
+        @label "Tax strategy"
+        @description "inclusive = tax baked into the line item totals; exclusive = tax added on top; none = no tax."
+        @tier "customization"
+      roundingMode    : "bankers" | "half-up" | "down" = "half-up"
+        @label "Rounding mode"
+        @description "Sub-cent rounding behavior for line items and totals."
+        @tier "advanced"
+      gracePeriodDays : number   = 30
+        @label "Grace period (days)"
+        @description "Days after dueDate before a bill is treated as overdue. Wire via sibling std-lifecycle rule."
+        @tier "customization"
+      lateFeePolicy   : "none" | "flat" | "percent" = "none"
+        @label "Late fee policy"
+        @description "How late fees compute when overdue: none, flat (lateFeeAmount cash), or percent (% of total). Declarative; wiring deferred."
+        @tier "customization"
+      lateFeeAmount   : number   = 0
+        @label "Late fee amount"
+        @description "Flat cash amount or percentage (per lateFeePolicy)."
+        @tier "customization"
+      complianceJurisdiction : string = ""
+        @label "Compliance jurisdiction"
+        @description "Drives tax + retention rules per locale: 'US-CA', 'EU-DE', 'UK', etc. Declarative."
+        @tier "advanced"
+      retentionYears  : number   = 7
+        @label "Retention (years)"
+        @description "Years to keep bill records for compliance. Default 7 matches common regimes."
+        @tier "advanced"
     }
     initial: loading
     state loading {
@@ -71,6 +105,15 @@ orbital ApBillOrbital {
         (set @entity.id @payload.id)
         (fetch ApBill { emit: { success: "ApBillLoaded", failure: "ApBillLoadFailed" } })
         (render-ui main { type: "stack", direction: "vertical", gap: "md", align: "center", className: "py-12", children: [{ type: "spinner" }, { type: "typography", variant: "caption", color: "muted", content: "Voiding bill…" }] })
+      SET_STATUS -> loading
+        (set @entity.id @payload.entityId)
+        (set @entity.status @payload.newStatus)
+        (persist update ApBill @entity { emit: { success: "ApBillUpdated", failure: "ApBillUpdateFailed" } })
+        (render-ui main { type: "stack", direction: "vertical", gap: "md", align: "center", className: "py-12", children: [{ type: "spinner" }, { type: "typography", variant: "caption", color: "muted", content: "Updating bill status…" }] })
+      ApBillUpdated -> loading
+        (fetch ApBill { emit: { success: "ApBillLoaded", failure: "ApBillLoadFailed" } })
+      ApBillUpdateFailed -> browsing
+        (render-ui main { type: "alert", variant: "error", message: "@payload.error" })
     }
     state viewing_single {
       CLOSE_VIEW -> loading
@@ -97,14 +140,19 @@ orbital ApBillOrbital {
       VOID_BILL        { id : string! }
       ApBillLoaded     { data : [ApBill] }
       ApBillLoadFailed { error : string, code : string }
+      ApBillUpdated      { row : ApBill }
+      ApBillUpdateFailed { error : string, code : string }
     }
     listens {
       OPEN_BILL        { id : string!, row : ApBill }
       CLOSE_VIEW       { }
       PAY_BILL         { id : string! }
       VOID_BILL        { id : string! }
+      SET_STATUS       { entityId : string!, newStatus : string! }
       ApBillLoaded     { data : [ApBill] }
       ApBillLoadFailed { error : string, code : string }
+      ApBillUpdated      { row : ApBill }
+      ApBillUpdateFailed { error : string, code : string }
     }
   }
   page "/bills" as ApBillPage -> ApBillLedger

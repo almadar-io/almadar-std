@@ -1,5 +1,5 @@
-app std-nps-survey "1.1.0"
-"std-nps-survey — NPS survey primitive tracking per-customer Net Promoter Score responses with category, comment, and follow-up status. Agents tune the list shape via `config.fields` + `config.itemActions`."
+app std-nps-survey "1.2.0"
+"std-nps-survey — NPS survey primitive tracking per-customer Net Promoter Score responses, category, comment, follow-up. Listens for SET_STATUS so std-lifecycle can mark stale rows expired. Exposes Communication knobs (sendsPerHour, gdprConsentRequired, …)."
 
 type FieldSpec = { name : string!, label : string, variant : string, icon : string, format : string, key : string, header : string }
 type ItemAction = { label : string!, event : string!, variant : string, icon : string }
@@ -19,8 +19,10 @@ orbital NpsSurveyOrbital {
     pendingId    : string = ""
   }
 
-  type NpsSurveyLoaded     = Event { data : [NpsSurvey], totalCount : number } "Fired when the NPS survey collection finishes loading"
-  type NpsSurveyLoadFailed = Event { error : string, code : string }           "Fired when the NPS survey collection fails to load"
+  type NpsSurveyLoaded       = Event { data : [NpsSurvey], totalCount : number } "Fired when the NPS survey collection finishes loading"
+  type NpsSurveyLoadFailed   = Event { error : string, code : string }           "Fired when the NPS survey collection fails to load"
+  type NpsSurveyUpdated      = Event { row : NpsSurvey }                          "Fired after an NPS row's status persists (SET_STATUS / lifecycle)"
+  type NpsSurveyUpdateFailed = Event { error : string, code : string }           "Fired when an NPS row's status update fails to persist"
 
   trait NpsSurveyTracker -> NpsSurvey [interaction, collection] {
     config {
@@ -46,6 +48,42 @@ orbital NpsSurveyOrbital {
         @label "Row actions"
         @description "Buttons users can click on each survey response"
         @tier "customization"
+      sendsPerHour              : number  = 500
+        @label "Sends per hour"
+        @description "Cap on survey dispatch volume per hour. v1.2 declarative."
+        @tier "customization"
+      respectQuietHours         : boolean = true
+        @label "Respect quiet hours"
+        @description "Defer survey delivery during recipient-local quiet hours."
+        @tier "customization"
+      suppressionListEnabled    : boolean = true
+        @label "Honor suppression list"
+        @description "Skip recipients on the global suppression / bounce list."
+        @tier "customization"
+      frequencyCapPerWeek       : number  = 2
+        @label "Frequency cap (per week)"
+        @description "Max surveys a recipient can receive in a 7-day window."
+        @tier "customization"
+      gdprConsentRequired       : boolean = true
+        @label "GDPR consent required"
+        @description "Require survey consent before delivery to EU/UK recipients."
+        @tier "customization"
+      trackOpens                : boolean = true
+        @label "Track opens"
+        @description "Embed a tracking pixel on each survey email."
+        @tier "advanced"
+      trackClicks               : boolean = true
+        @label "Track clicks"
+        @description "Wrap survey links for click attribution."
+        @tier "advanced"
+      includeUnsubscribeLink    : boolean = true
+        @label "Include unsubscribe link"
+        @description "Append a CAN-SPAM/GDPR-compliant unsubscribe link to every survey."
+        @tier "essential"
+      physicalAddressFooter     : string  = ""
+        @label "Physical address footer"
+        @description "CAN-SPAM-required postal address appended to every survey."
+        @tier "essential"
     }
     initial: loading
     state loading {
@@ -74,6 +112,15 @@ orbital NpsSurveyOrbital {
         (set @entity.id @payload.id)
         (fetch NpsSurvey { emit: { success: "NpsSurveyLoaded", failure: "NpsSurveyLoadFailed" } })
         (render-ui main { type: "stack", direction: "vertical", gap: "md", align: "center", className: "py-12", children: [{ type: "spinner" }, { type: "typography", variant: "caption", color: "muted", content: "Marking survey followed up…" }] })
+      SET_STATUS -> loading
+        (set @entity.id @payload.entityId)
+        (set @entity.status @payload.newStatus)
+        (persist update NpsSurvey @entity { emit: { success: "NpsSurveyUpdated", failure: "NpsSurveyUpdateFailed" } })
+        (render-ui main { type: "stack", direction: "vertical", gap: "md", align: "center", className: "py-12", children: [{ type: "spinner" }, { type: "typography", variant: "caption", color: "muted", content: "Updating survey status…" }] })
+      NpsSurveyUpdated -> loading
+        (fetch NpsSurvey { emit: { success: "NpsSurveyLoaded", failure: "NpsSurveyLoadFailed" } })
+      NpsSurveyUpdateFailed -> browsing
+        (render-ui main { type: "alert", variant: "error", message: "@payload.error" })
     }
     state viewing_single {
       CLOSE_VIEW -> loading
@@ -90,18 +137,23 @@ orbital NpsSurveyOrbital {
         (render-ui main { type: "spinner", size: "sm" })
     }
     emits {
-      OPEN_SURVEY         { id : string!, row : NpsSurvey }
-      CLOSE_VIEW          { }
-      MARK_FOLLOWED_UP    { id : string! }
-      NpsSurveyLoaded     { data : [NpsSurvey], totalCount : number }
-      NpsSurveyLoadFailed { error : string, code : string }
+      OPEN_SURVEY           { id : string!, row : NpsSurvey }
+      CLOSE_VIEW            { }
+      MARK_FOLLOWED_UP      { id : string! }
+      NpsSurveyLoaded       { data : [NpsSurvey], totalCount : number }
+      NpsSurveyLoadFailed   { error : string, code : string }
+      NpsSurveyUpdated      { row : NpsSurvey }
+      NpsSurveyUpdateFailed { error : string, code : string }
     }
     listens {
-      OPEN_SURVEY         { id : string!, row : NpsSurvey }
-      CLOSE_VIEW          { }
-      MARK_FOLLOWED_UP    { id : string! }
-      NpsSurveyLoaded     { data : [NpsSurvey], totalCount : number }
-      NpsSurveyLoadFailed { error : string, code : string }
+      OPEN_SURVEY           { id : string!, row : NpsSurvey }
+      CLOSE_VIEW            { }
+      MARK_FOLLOWED_UP      { id : string! }
+      SET_STATUS            { entityId : string!, newStatus : string! }
+      NpsSurveyLoaded       { data : [NpsSurvey], totalCount : number }
+      NpsSurveyLoadFailed   { error : string, code : string }
+      NpsSurveyUpdated      { row : NpsSurvey }
+      NpsSurveyUpdateFailed { error : string, code : string }
     }
   }
   page "/nps-surveys" as NpsSurveyPage -> NpsSurveyTracker

@@ -1,5 +1,5 @@
-app std-change-order "1.1.0"
-"std-change-order — construction change-order primitive tracking contract scope/cost/schedule modifications with owner approval. Lists orders in `browsing`; opens detail in `viewing_single` with Approve / Reject / Execute / Delete actions. Agents tune the list shape via `config.fields` + `config.itemActions`."
+app std-change-order "1.2.0"
+"std-change-order — construction change-order ledger with Approve / Reject / Execute / Delete. Listens for SET_STATUS so std-lifecycle can drive automated transitions. Exposes Financial-pattern knobs."
 
 type FieldSpec = { name : string!, label : string, variant : string, icon : string, format : string, key : string, header : string }
 type ItemAction = { label : string!, event : string!, variant : string, icon : string }
@@ -20,8 +20,10 @@ orbital ChangeOrderOrbital {
     pendingId           : string = ""
   }
 
-  type ChangeOrderLoaded     = Event { data : [ChangeOrder], totalCount : number } "Fired when the change-order collection finishes loading"
-  type ChangeOrderLoadFailed = Event { error : string, code : string }              "Fired when the change-order collection fails to load"
+  type ChangeOrderLoaded       = Event { data : [ChangeOrder], totalCount : number } "Fired when the change-order collection finishes loading"
+  type ChangeOrderLoadFailed   = Event { error : string, code : string }              "Fired when the change-order collection fails to load"
+  type ChangeOrderUpdated      = Event { row : ChangeOrder }                          "Fired after a change order's status persists"
+  type ChangeOrderUpdateFailed = Event { error : string, code : string }              "Fired when a change order's status update fails to persist"
 
   trait ChangeOrderLedger -> ChangeOrder [interaction, collection] {
     config {
@@ -47,6 +49,38 @@ orbital ChangeOrderOrbital {
         @label "Row actions"
         @description "Buttons users can click on each change-order row"
         @tier "customization"
+      currency        : string   = "USD"
+        @label "Default currency"
+        @description "ISO 4217 currency code (USD, EUR, GBP, …) for cost impact."
+        @tier "essential"
+      taxStrategy     : "inclusive" | "exclusive" | "none" = "exclusive"
+        @label "Tax strategy"
+        @description "inclusive = tax baked into the cost impact; exclusive = tax added on top; none = no tax."
+        @tier "customization"
+      roundingMode    : "bankers" | "half-up" | "down" = "half-up"
+        @label "Rounding mode"
+        @description "Sub-cent rounding behavior for cost impact calculations."
+        @tier "advanced"
+      gracePeriodDays : number   = 7
+        @label "Grace period (days)"
+        @description "Days a pending approval can sit before escalation. Wire via sibling std-lifecycle rule."
+        @tier "customization"
+      lateFeePolicy   : "none" | "flat" | "percent" = "none"
+        @label "Late fee policy"
+        @description "Penalty when change order execution slips past approved date. Declarative; wiring deferred."
+        @tier "customization"
+      lateFeeAmount   : number   = 0
+        @label "Late fee amount"
+        @description "Flat cash amount or percentage (per lateFeePolicy)."
+        @tier "customization"
+      complianceJurisdiction : string = ""
+        @label "Compliance jurisdiction"
+        @description "Drives contracting + retention rules per locale: 'US-CA', 'EU-DE', 'UK', etc. Declarative."
+        @tier "advanced"
+      retentionYears  : number   = 7
+        @label "Retention (years)"
+        @description "Years to keep change-order records for compliance."
+        @tier "advanced"
     }
     initial: loading
     state loading {
@@ -76,6 +110,15 @@ orbital ChangeOrderOrbital {
         (set @entity.id @payload.id)
         (fetch ChangeOrder { emit: { success: "ChangeOrderLoaded", failure: "ChangeOrderLoadFailed" } })
         (render-ui main { type: "stack", direction: "vertical", gap: "md", align: "center", className: "py-12", children: [{ type: "spinner" }, { type: "typography", variant: "caption", color: "muted", content: "Deleting change order…" }] })
+      SET_STATUS -> loading
+        (set @entity.id @payload.entityId)
+        (set @entity.status @payload.newStatus)
+        (persist update ChangeOrder @entity { emit: { success: "ChangeOrderUpdated", failure: "ChangeOrderUpdateFailed" } })
+        (render-ui main { type: "stack", direction: "vertical", gap: "md", align: "center", className: "py-12", children: [{ type: "spinner" }, { type: "typography", variant: "caption", color: "muted", content: "Updating change-order status…" }] })
+      ChangeOrderUpdated -> loading
+        (fetch ChangeOrder { emit: { success: "ChangeOrderLoaded", failure: "ChangeOrderLoadFailed" } })
+      ChangeOrderUpdateFailed -> browsing
+        (render-ui main { type: "alert", variant: "error", message: "@payload.error" })
     }
     state viewing_single {
       CLOSE_VIEW -> loading
@@ -108,26 +151,31 @@ orbital ChangeOrderOrbital {
         (render-ui main { type: "spinner", size: "sm" })
     }
     emits {
-      OPEN_CHANGE_ORDER     { id : string!, row : ChangeOrder }
-      CLOSE_VIEW            { }
-      REQUEST_DELETE        { id : string!, row : ChangeOrder }
-      SUBMIT_FOR_APPROVAL   { id : string! }
-      APPROVE               { id : string! }
-      REJECT                { id : string! }
-      EXECUTE               { id : string! }
-      ChangeOrderLoaded     { data : [ChangeOrder], totalCount : number }
-      ChangeOrderLoadFailed { error : string, code : string }
+      OPEN_CHANGE_ORDER       { id : string!, row : ChangeOrder }
+      CLOSE_VIEW              { }
+      REQUEST_DELETE          { id : string!, row : ChangeOrder }
+      SUBMIT_FOR_APPROVAL     { id : string! }
+      APPROVE                 { id : string! }
+      REJECT                  { id : string! }
+      EXECUTE                 { id : string! }
+      ChangeOrderLoaded       { data : [ChangeOrder], totalCount : number }
+      ChangeOrderLoadFailed   { error : string, code : string }
+      ChangeOrderUpdated      { row : ChangeOrder }
+      ChangeOrderUpdateFailed { error : string, code : string }
     }
     listens {
-      OPEN_CHANGE_ORDER     { id : string!, row : ChangeOrder }
-      CLOSE_VIEW            { }
-      REQUEST_DELETE        { id : string! }
-      SUBMIT_FOR_APPROVAL   { id : string! }
-      APPROVE               { id : string! }
-      REJECT                { id : string! }
-      EXECUTE               { id : string! }
-      ChangeOrderLoaded     { data : [ChangeOrder], totalCount : number }
-      ChangeOrderLoadFailed { error : string, code : string }
+      OPEN_CHANGE_ORDER       { id : string!, row : ChangeOrder }
+      CLOSE_VIEW              { }
+      REQUEST_DELETE          { id : string! }
+      SUBMIT_FOR_APPROVAL     { id : string! }
+      APPROVE                 { id : string! }
+      REJECT                  { id : string! }
+      EXECUTE                 { id : string! }
+      SET_STATUS              { entityId : string!, newStatus : string! }
+      ChangeOrderLoaded       { data : [ChangeOrder], totalCount : number }
+      ChangeOrderLoadFailed   { error : string, code : string }
+      ChangeOrderUpdated      { row : ChangeOrder }
+      ChangeOrderUpdateFailed { error : string, code : string }
     }
   }
   page "/change-orders" as ChangeOrderPage -> ChangeOrderLedger

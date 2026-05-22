@@ -1,5 +1,5 @@
-app std-template-editor "1.1.0"
-"std-template-editor — message template authoring primitive. Lists templates in `browsing`; opens detail in `viewing_single` with Edit / Save / Delete actions. Agents tune the list shape via `config.fields` + `config.itemActions`."
+app std-template-editor "1.2.0"
+"std-template-editor — message template authoring primitive. Lists templates; detail offers Edit / Save / Delete. Exposes Content/Knowledge knobs (visibilityScope, enabledLocales, keepVersions, …)."
 
 type FieldSpec = { name : string!, label : string, variant : string, icon : string, format : string, key : string, header : string }
 type ItemAction = { label : string!, event : string!, variant : string, icon : string }
@@ -32,6 +32,38 @@ orbital MessageTemplateOrbital {
         @label "Row actions"
         @description "Buttons users can click on each template row"
         @tier "customization"
+      visibilityScope          : "public" | "internal" | "customer" = "internal"
+        @label "Visibility scope"
+        @description "Who can use templates: internal staff, signed-in customers, public."
+        @tier "essential"
+      scheduledPublishEnabled  : boolean = false
+        @label "Scheduled publish"
+        @description "Allow scheduling activation of edited templates. v1.2 declarative."
+        @tier "customization"
+      keepVersions             : number  = 10
+        @label "Versions to retain"
+        @description "Number of template revisions to keep."
+        @tier "customization"
+      allowRollback            : boolean = true
+        @label "Allow rollback"
+        @description "Permit reverting a template to a prior version."
+        @tier "customization"
+      seoEnabled               : boolean = false
+        @label "SEO meta enabled"
+        @description "Emit indexable metadata when templates appear on public surfaces."
+        @tier "customization"
+      enabledLocales           : [string] = ["en"]
+        @label "Enabled locales"
+        @description "Locales the template subject + body can be translated into."
+        @tier "customization"
+      defaultLocale            : string  = "en"
+        @label "Default locale"
+        @description "Locale used when no translation matches the recipient's language."
+        @tier "customization"
+      draftAutosaveSeconds     : number  = 15
+        @label "Draft autosave interval (s)"
+        @description "Seconds between draft autosaves in the template editor."
+        @tier "advanced"
     }
     initial: loading
     state loading {

@@ -1,5 +1,5 @@
-app std-lease "1.1.0"
-"std-lease — owner-side lease records that tie tenants to property units with dates, monthly rent, and lifecycle status (pending/active/expired/terminated). Agents tune the list shape via `config.fields` + `config.itemActions`."
+app std-lease "1.2.0"
+"std-lease — owner-side lease records (tenant ↔ unit, dates, monthly rent, status). Listens for SET_STATUS so std-lifecycle can drive transitions (active → expired). Exposes Real-estate knobs (leaseRenewalNoticeDays, securityDepositMonths, lateRentGraceDays, …)."
 
 type FieldSpec = { name : string!, label : string, variant : string, icon : string, format : string, key : string, header : string }
 type ItemAction = { label : string!, event : string!, variant : string, icon : string }
@@ -18,8 +18,10 @@ orbital LeaseOrbital {
     notes        : string = ""
   }
 
-  type LeaseLoaded     = Event { data : [Lease] }              "Fired when the lease collection finishes loading"
-  type LeaseLoadFailed = Event { error : string, code : string } "Fired when the lease collection fails to load"
+  type LeaseLoaded       = Event { data : [Lease] }                "Fired when the lease collection finishes loading"
+  type LeaseLoadFailed   = Event { error : string, code : string } "Fired when the lease collection fails to load"
+  type LeaseUpdated      = Event { row : Lease }                   "Fired after a lease row's status persists (SET_STATUS / lifecycle)"
+  type LeaseUpdateFailed = Event { error : string, code : string } "Fired when a lease row's status update fails to persist"
 
   trait LeaseManager -> Lease [interaction, collection] {
     config {
@@ -45,6 +47,30 @@ orbital LeaseOrbital {
         @label "Row actions"
         @description "Buttons users can click on each lease row"
         @tier "customization"
+      leaseRenewalNoticeDays    : number  = 60
+        @label "Renewal notice (days)"
+        @description "Days before lease end when a renewal notice should fire. Wire via std-reminder-scheduler composed at the organism."
+        @tier "customization"
+      securityDepositMonths     : number  = 1
+        @label "Security deposit (months)"
+        @description "Months of rent required as security deposit on signing."
+        @tier "customization"
+      lateRentGraceDays         : number  = 5
+        @label "Late rent grace (days)"
+        @description "Days after due date before a rent charge is treated as late."
+        @tier "customization"
+      autoRenewEnabled          : boolean = false
+        @label "Auto-renew"
+        @description "Roll over leases that reach term without an explicit non-renew notice."
+        @tier "customization"
+      petPolicy                 : "no-pets" | "cats-only" | "dogs-only" | "all" = "no-pets"
+        @label "Pet policy"
+        @description "Default pet policy applied to new leases."
+        @tier "customization"
+      inspectionFrequencyMonths : number  = 12
+        @label "Inspection cadence (months)"
+        @description "Months between scheduled unit inspections during the lease."
+        @tier "advanced"
     }
     initial: loading
     state loading {
@@ -73,6 +99,15 @@ orbital LeaseOrbital {
         (set @entity.id @payload.id)
         (fetch Lease { emit: { success: "LeaseLoaded", failure: "LeaseLoadFailed" } })
         (render-ui main { type: "stack", direction: "vertical", gap: "md", align: "center", className: "py-12", children: [{ type: "spinner" }, { type: "typography", variant: "caption", color: "muted", content: "Terminating lease…" }] })
+      SET_STATUS -> loading
+        (set @entity.id @payload.entityId)
+        (set @entity.status @payload.newStatus)
+        (persist update Lease @entity { emit: { success: "LeaseUpdated", failure: "LeaseUpdateFailed" } })
+        (render-ui main { type: "stack", direction: "vertical", gap: "md", align: "center", className: "py-12", children: [{ type: "spinner" }, { type: "typography", variant: "caption", color: "muted", content: "Updating lease status…" }] })
+      LeaseUpdated -> loading
+        (fetch Lease { emit: { success: "LeaseLoaded", failure: "LeaseLoadFailed" } })
+      LeaseUpdateFailed -> browsing
+        (render-ui main { type: "alert", variant: "error", message: "@payload.error" })
     }
     state viewing_single {
       CLOSE_VIEW -> loading
@@ -93,20 +128,25 @@ orbital LeaseOrbital {
         (render-ui main { type: "spinner", size: "sm" })
     }
     emits {
-      OPEN_LEASE      { id : string!, row : Lease }
-      CLOSE_VIEW      { }
-      RENEW_LEASE     { id : string! }
-      TERMINATE_LEASE { id : string! }
-      LeaseLoaded     { data : [Lease] }
-      LeaseLoadFailed { error : string, code : string }
+      OPEN_LEASE        { id : string!, row : Lease }
+      CLOSE_VIEW        { }
+      RENEW_LEASE       { id : string! }
+      TERMINATE_LEASE   { id : string! }
+      LeaseLoaded       { data : [Lease] }
+      LeaseLoadFailed   { error : string, code : string }
+      LeaseUpdated      { row : Lease }
+      LeaseUpdateFailed { error : string, code : string }
     }
     listens {
-      OPEN_LEASE      { id : string!, row : Lease }
-      CLOSE_VIEW      { }
-      RENEW_LEASE     { id : string! }
-      TERMINATE_LEASE { id : string! }
-      LeaseLoaded     { data : [Lease] }
-      LeaseLoadFailed { error : string, code : string }
+      OPEN_LEASE        { id : string!, row : Lease }
+      CLOSE_VIEW        { }
+      RENEW_LEASE       { id : string! }
+      TERMINATE_LEASE   { id : string! }
+      SET_STATUS        { entityId : string!, newStatus : string! }
+      LeaseLoaded       { data : [Lease] }
+      LeaseLoadFailed   { error : string, code : string }
+      LeaseUpdated      { row : Lease }
+      LeaseUpdateFailed { error : string, code : string }
     }
   }
   page "/leases" as LeasePage -> LeaseManager

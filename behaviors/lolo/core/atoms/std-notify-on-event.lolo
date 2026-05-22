@@ -1,5 +1,7 @@
-app std-notify-on-event "1.0.0"
-"std-notify-on-event — event-driven notification dispatcher. Listens for the generic `EventOccurred` sentinel (rename via traitOverrides.events to the real event, e.g. ContactSaved). Emits in-app `notify` when `notifyChannel` is `\"in-app\"`, or persists a `NotificationRecord` row for out-of-band delivery when channel is `\"email\"` or `\"sms\"`. Composable via `extraTraits` to wire reactive notifications behind any emitting trait."
+app std-notify-on-event "1.1.0"
+"std-notify-on-event — event-driven notification dispatcher. Listens for the generic `EventOccurred` sentinel (rename via traitOverrides.events to the real event, e.g. ContactSaved). Resolves recipient from `recipients` (first entry; fan-out is a future extension) or falls back to `@user.id`. Skips dispatch when the recipient is in `suppressionList`. Emits in-app `notify` when `notifyChannel` is `\"in-app\"`, or persists a `NotificationRecord` row for out-of-band delivery when channel is `\"email\"` or `\"sms\"`."
+
+type QuietHoursSpec = { start : string, end : string }
 
 orbital NotifyOnEventOrbital {
   entity NotificationRecord [persistent: notifications] {
@@ -33,28 +35,48 @@ orbital NotifyOnEventOrbital {
         @label "Severity"
         @description "info, success, warning, or error — controls styling"
         @tier "customization"
+      recipients    : [string] = []
+        @label "Recipients"
+        @description "Recipient ids/addresses. v1.1 uses the first entry; multi-recipient fan-out lands in v1.2 (gap). When empty, falls back to the authenticated user."
+        @tier "customization"
+      suppressionList : [string] = []
+        @label "Suppression list"
+        @description "Recipient ids/addresses to skip (e.g. unsubscribed users). Suppression check runs before dispatch."
+        @tier "customization"
+      quietHours    : QuietHoursSpec = { start: "", end: "" }
+        @label "Quiet hours"
+        @description "Local-time window during which dispatch is suppressed. Both start and end required to activate. WIRING DEFERRED: needs @now-aware time comparison primitive (gap — docs/Almadar_Std_Factories.md)."
+        @tier "customization"
+      frequencyCapPerWeek : number = 0
+        @label "Frequency cap (per week)"
+        @description "Max sends per (channel, recipient) per rolling 7-day window. 0 = uncapped. WIRING DEFERRED: needs stateful history query (gap — docs/Almadar_Std_Factories.md)."
+        @tier "customization"
     }
     initial: idle
     state idle {
       EventOccurred -> idle
-        (set @entity.recipient "@user.id")
+        (set @entity.recipient
+          (if (= (array/len @config.recipients) 0) "@user.id" (array/first @config.recipients)))
         (set @entity.channel @config.notifyChannel)
         (set @entity.message @config.template)
         (set @entity.severity @config.severity)
-        (set @entity.dispatched (= @config.notifyChannel "in-app"))
+        (set @entity.dispatched
+          (and (= @config.notifyChannel "in-app")
+               (not (array/includes @config.suppressionList @entity.recipient))))
         (set @entity.recordedAt 0)
-        (if (= @config.notifyChannel "in-app")
-          (notify @config.severity @config.template)
-          (persist create NotificationRecord {
-            recipient:  "@user.id",
-            channel:    "@config.notifyChannel",
-            message:    "@config.template",
-            severity:   "@config.severity",
-            dispatched: false,
-            recordedAt: 0
-          }))
+        (when (not (array/includes @config.suppressionList @entity.recipient))
+          (if (= @config.notifyChannel "in-app")
+            (notify @config.severity @config.template)
+            (persist create NotificationRecord {
+              recipient:  @entity.recipient,
+              channel:    "@config.notifyChannel",
+              message:    "@config.template",
+              severity:   "@config.severity",
+              dispatched: false,
+              recordedAt: 0
+            })))
         (emit NotificationDispatched {
-          recipient: "@user.id",
+          recipient: @entity.recipient,
           channel:   "@config.notifyChannel",
           message:   "@config.template",
           severity:  "@config.severity"

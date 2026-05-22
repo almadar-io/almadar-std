@@ -1,5 +1,5 @@
-app std-warehouse "1.1.0"
-"std-warehouse — physical or logical storage location. Lists warehouses in `browsing`; opens a warehouse detail view (name, code, address, type, active flag, total SKU count) in `viewing_single`. Agents tune the list shape via `config.fields` + `config.itemActions`."
+app std-warehouse "1.2.0"
+"std-warehouse — physical or logical storage location. Lists warehouses; detail shows code, address, type, active flag, SKU count. Exposes Inventory/Logistics knobs (multiLocationEnabled, hazmatEnabled, …) for the questionnaire."
 
 type FieldSpec = { name : string!, label : string, variant : string, icon : string, format : string, key : string, header : string }
 type ItemAction = { label : string!, event : string!, variant : string, icon : string }
@@ -32,6 +32,46 @@ orbital WarehouseOrbital {
         @label "Row actions"
         @description "Buttons users can click on each location row"
         @tier "customization"
+      lowStockThreshold       : number  = 10
+        @label "Low-stock threshold"
+        @description "Default low-stock trigger across SKUs in this warehouse. v1.2 declarative."
+        @tier "essential"
+      reorderPoint            : number  = 5
+        @label "Default reorder point"
+        @description "Default reorder qty applied when SKU-level rules omit it."
+        @tier "essential"
+      safetyStockDays         : number  = 7
+        @label "Safety stock (days)"
+        @description "Buffer days of expected demand to keep above the reorder point."
+        @tier "customization"
+      defaultWarehouse        : string  = ""
+        @label "Default warehouse code"
+        @description "Marks this warehouse as the system-wide default for new SKUs when set to its own code."
+        @tier "customization"
+      multiLocationEnabled    : boolean = false
+        @label "Multi-location"
+        @description "Treat as part of a multi-location inventory network."
+        @tier "customization"
+      serialTrackingEnabled   : boolean = false
+        @label "Serial tracking"
+        @description "Track serial numbers on stock held at this warehouse. v1.2 declarative."
+        @tier "customization"
+      lotTrackingEnabled      : boolean = false
+        @label "Lot tracking"
+        @description "Track lot/batch numbers at this warehouse."
+        @tier "customization"
+      expiryTrackingEnabled   : boolean = false
+        @label "Expiry tracking"
+        @description "Track expiry dates on stock at this warehouse."
+        @tier "customization"
+      hazmatEnabled           : boolean = false
+        @label "Hazmat permitted"
+        @description "Warehouse is certified to store hazardous materials."
+        @tier "advanced"
+      cycleCountFrequencyDays : number  = 30
+        @label "Cycle count cadence (days)"
+        @description "Days between scheduled cycle counts at this warehouse. v1.2 declarative."
+        @tier "advanced"
     }
     initial: loading
     state loading {

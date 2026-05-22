@@ -1,5 +1,5 @@
-app std-application "1.1.0"
-"std-application — job-style application bundle: form + attachments + status flow (draft/submitted/under-review/accepted/rejected). Agents tune the list shape via `config.fields` + `config.itemActions`."
+app std-application "1.2.0"
+"std-application — job-style application bundle: form + attachments + status flow (draft/submitted/under-review/accepted/rejected). Listens for SET_STATUS so sibling std-lifecycle can drive automated transitions. Exposes HR-pattern knobs (backgroundCheckRequired, eVerifyRequired, anonymizeOnRejection, …) for the questionnaire."
 
 type FieldSpec = { name : string!, label : string, variant : string, icon : string, format : string, key : string, header : string }
 type ItemAction = { label : string!, event : string!, variant : string, icon : string }
@@ -52,6 +52,30 @@ orbital ApplicationOrbital {
         @label "Row actions"
         @description "Buttons users can click on each application row"
         @tier "customization"
+      backgroundCheckRequired : boolean = false
+        @label "Background check required"
+        @description "Block ACCEPT transition until a background check is complete."
+        @tier "customization"
+      eVerifyRequired : boolean = false
+        @label "E-Verify required"
+        @description "US I-9 / E-Verify gate. Block ACCEPT until verification passes."
+        @tier "customization"
+      i9DocumentsRequired : boolean = false
+        @label "I-9 documents required"
+        @description "Require I-9 supporting documents at the accepted transition."
+        @tier "customization"
+      anonymizeOnRejection : boolean = false
+        @label "Anonymize on rejection"
+        @description "When true, scrub PII (applicantName, applicantEmail, coverLetter) on REJECT to retain only the audit row. Pair with sibling std-data-erasure for full Art. 17 compliance."
+        @tier "customization"
+      retentionAfterRejectionDays : number = 730
+        @label "Retention after rejection (days)"
+        @description "Days to keep rejected applications. Default 730 (2 years) is typical EEOC retention. Wire via sibling std-lifecycle delete rule."
+        @tier "advanced"
+      equalOpportunityTrackingEnabled : boolean = false
+        @label "Equal opportunity tracking"
+        @description "Capture demographic data separately for EEO reporting (stored in a sibling collection, not on the Application entity)."
+        @tier "advanced"
     }
     initial: loading
     state loading {
@@ -106,6 +130,11 @@ orbital ApplicationOrbital {
       INIT -> loading
         (fetch Application { emit: { success: "ApplicationLoaded", failure: "ApplicationLoadFailed" } })
         (render-ui main { type: "spinner" })
+      SET_STATUS -> loading
+        (set @entity.id @payload.entityId)
+        (set @entity.status @payload.newStatus)
+        (persist update Application { id: "@entity.id", status: "@entity.status" } { emit: { success: "ApplicationUpdated", failure: "ApplicationLoadFailed" } })
+        (render-ui main { type: "stack", direction: "vertical", gap: "md", align: "center", className: "py-12", children: [{ type: "spinner" }, { type: "typography", variant: "caption", color: "muted", content: "Updating application status…" }] })
     }
     state editing {
       CREATE_SUBMIT -> submitting
@@ -168,6 +197,7 @@ orbital ApplicationOrbital {
       CREATE_SUBMIT { data : object! }
       UPDATE_SUBMIT { data : object! }
       CANCEL_EDIT { }
+      SET_STATUS { entityId : string!, newStatus : string! }
       ApplicationLoadFailed { error : string!, code : string }
       ApplicationPersistor.ITEM_CREATED   -> INIT
       ApplicationPersistor.ITEM_UPDATED   -> INIT

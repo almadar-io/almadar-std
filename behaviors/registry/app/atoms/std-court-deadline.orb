@@ -1,7 +1,7 @@
 {
   "name": "std-court-deadline",
-  "version": "1.1.0",
-  "description": "std-court-deadline — statutory filing deadline tied to a legal matter. Lists deadlines in `browsing`; opens detail in `viewing_single` with Complete / Extend actions. Agents tune the list shape via `config.fields` + `config.itemActions`.",
+  "version": "1.2.0",
+  "description": "std-court-deadline — statutory filing deadline tied to a legal matter. Listens for SET_STATUS so std-lifecycle can auto-miss / auto-complete. Exposes Scheduling + Legal knobs (bookingWindowDays, practiceArea, conflictCheckRequired, …).",
   "orbitals": [
     {
       "name": "CourtDeadlineOrbital",
@@ -254,6 +254,22 @@
                 ]
               },
               {
+                "key": "SET_STATUS",
+                "name": "Set Status",
+                "payloadSchema": [
+                  {
+                    "name": "entityId",
+                    "type": "string",
+                    "required": true
+                  },
+                  {
+                    "name": "newStatus",
+                    "type": "string",
+                    "required": true
+                  }
+                ]
+              },
+              {
                 "key": "CLOSE_VIEW",
                 "name": "Close View"
               },
@@ -289,22 +305,22 @@
                     "render-ui",
                     "main",
                     {
+                      "align": "center",
+                      "className": "py-12",
                       "children": [
                         {
                           "type": "spinner"
                         },
                         {
                           "variant": "caption",
+                          "type": "typography",
                           "content": "Loading deadlines…",
-                          "color": "muted",
-                          "type": "typography"
+                          "color": "muted"
                         }
                       ],
                       "type": "stack",
-                      "gap": "md",
-                      "align": "center",
-                      "className": "py-12",
-                      "direction": "vertical"
+                      "direction": "vertical",
+                      "gap": "md"
                     }
                   ]
                 ]
@@ -318,7 +334,7 @@
                     "render-ui",
                     "main",
                     {
-                      "direction": "vertical",
+                      "type": "stack",
                       "children": [
                         {
                           "gap": "sm",
@@ -326,61 +342,61 @@
                           "align": "center",
                           "children": [
                             {
-                              "name": "calendar-clock",
-                              "type": "icon"
+                              "type": "icon",
+                              "name": "calendar-clock"
                             },
                             {
                               "type": "typography",
-                              "variant": "h3",
-                              "content": "@config.title"
+                              "content": "@config.title",
+                              "variant": "h3"
                             }
                           ],
                           "direction": "horizontal"
                         },
                         {
+                          "type": "simple-grid",
+                          "cols": 4.0,
                           "children": [
                             {
-                              "value": "@payload.data.length",
-                              "type": "stat-display",
                               "icon": "calendar-clock",
-                              "label": "Total deadlines"
+                              "label": "Total deadlines",
+                              "value": "@payload.data.length",
+                              "type": "stat-display"
                             },
                             {
-                              "label": "Due this week",
-                              "value": "7",
                               "type": "stat-display",
+                              "value": "7",
+                              "label": "Due this week",
                               "icon": "alert-triangle"
                             },
                             {
                               "icon": "check-circle",
                               "label": "Completed",
-                              "type": "stat-display",
-                              "value": "84%"
+                              "value": "84%",
+                              "type": "stat-display"
                             },
                             {
+                              "label": "Missed YTD",
                               "icon": "x-circle",
-                              "value": "2",
                               "type": "stat-display",
-                              "label": "Missed YTD"
+                              "value": "2"
                             }
-                          ],
-                          "cols": 4.0,
-                          "type": "simple-grid"
+                          ]
                         },
                         {
                           "type": "divider"
                         },
                         {
-                          "cols": 1.0,
-                          "itemActions": "@config.itemActions",
-                          "gap": "sm",
                           "type": "data-grid",
+                          "gap": "sm",
+                          "itemActions": "@config.itemActions",
+                          "fields": "@config.fields",
                           "entity": "@payload.data",
-                          "fields": "@config.fields"
+                          "cols": 1.0
                         }
                       ],
-                      "type": "stack",
-                      "gap": "md"
+                      "gap": "md",
+                      "direction": "vertical"
                     }
                   ]
                 ]
@@ -394,8 +410,8 @@
                     "render-ui",
                     "main",
                     {
-                      "message": "@payload.error",
                       "variant": "error",
+                      "message": "@payload.error",
                       "type": "alert"
                     }
                   ]
@@ -455,37 +471,121 @@
                     "render-ui",
                     "main",
                     {
+                      "type": "stack",
+                      "gap": "md",
                       "children": [
                         {
-                          "align": "center",
                           "type": "stack",
                           "direction": "horizontal",
-                          "gap": "sm",
                           "children": [
                             {
                               "action": "CLOSE_VIEW",
+                              "variant": "ghost",
                               "type": "button",
-                              "label": "Back",
-                              "variant": "ghost"
+                              "label": "Back"
                             },
                             {
                               "name": "calendar-clock",
                               "type": "icon"
                             },
                             {
-                              "content": "@entity.title",
+                              "variant": "h3",
                               "type": "typography",
-                              "variant": "h3"
+                              "content": "@entity.title"
                             },
                             {
                               "label": "@entity.deadlineType",
-                              "variant": "primary",
-                              "type": "badge"
+                              "type": "badge",
+                              "variant": "primary"
                             },
                             {
                               "variant": "default",
                               "type": "badge",
                               "label": "@entity.status"
+                            }
+                          ],
+                          "align": "center",
+                          "gap": "sm"
+                        },
+                        {
+                          "type": "divider"
+                        },
+                        {
+                          "direction": "vertical",
+                          "type": "stack",
+                          "gap": "sm",
+                          "children": [
+                            {
+                              "gap": "md",
+                              "type": "stack",
+                              "direction": "horizontal",
+                              "children": [
+                                {
+                                  "content": "Matter",
+                                  "variant": "caption",
+                                  "type": "typography",
+                                  "color": "muted"
+                                },
+                                {
+                                  "variant": "body",
+                                  "content": "@entity.matterId",
+                                  "type": "typography"
+                                }
+                              ]
+                            },
+                            {
+                              "gap": "md",
+                              "type": "stack",
+                              "direction": "horizontal",
+                              "children": [
+                                {
+                                  "content": "Jurisdiction",
+                                  "color": "muted",
+                                  "type": "typography",
+                                  "variant": "caption"
+                                },
+                                {
+                                  "variant": "body",
+                                  "content": "@entity.jurisdiction",
+                                  "type": "typography"
+                                }
+                              ]
+                            },
+                            {
+                              "children": [
+                                {
+                                  "variant": "caption",
+                                  "type": "typography",
+                                  "content": "Assigned to",
+                                  "color": "muted"
+                                },
+                                {
+                                  "type": "typography",
+                                  "variant": "body",
+                                  "content": "@entity.assignedTo"
+                                }
+                              ],
+                              "type": "stack",
+                              "direction": "horizontal",
+                              "gap": "md"
+                            },
+                            {
+                              "direction": "horizontal",
+                              "gap": "md",
+                              "type": "stack",
+                              "children": [
+                                {
+                                  "color": "muted",
+                                  "variant": "caption",
+                                  "content": "Notes",
+                                  "type": "typography"
+                                },
+                                {
+                                  "type": "typography",
+                                  "content": "@entity.notes",
+                                  "variant": "body"
+                                }
+                              ]
                             }
                           ]
                         },
@@ -493,134 +593,50 @@
                           "type": "divider"
                         },
                         {
-                          "type": "stack",
+                          "type": "simple-grid",
                           "children": [
                             {
-                              "type": "stack",
-                              "gap": "md",
-                              "children": [
-                                {
-                                  "variant": "caption",
-                                  "content": "Matter",
-                                  "color": "muted",
-                                  "type": "typography"
-                                },
-                                {
-                                  "type": "typography",
-                                  "variant": "body",
-                                  "content": "@entity.matterId"
-                                }
-                              ],
-                              "direction": "horizontal"
-                            },
-                            {
-                              "type": "stack",
-                              "direction": "horizontal",
-                              "gap": "md",
-                              "children": [
-                                {
-                                  "variant": "caption",
-                                  "color": "muted",
-                                  "content": "Jurisdiction",
-                                  "type": "typography"
-                                },
-                                {
-                                  "type": "typography",
-                                  "variant": "body",
-                                  "content": "@entity.jurisdiction"
-                                }
-                              ]
-                            },
-                            {
-                              "direction": "horizontal",
-                              "children": [
-                                {
-                                  "type": "typography",
-                                  "content": "Assigned to",
-                                  "color": "muted",
-                                  "variant": "caption"
-                                },
-                                {
-                                  "variant": "body",
-                                  "type": "typography",
-                                  "content": "@entity.assignedTo"
-                                }
-                              ],
-                              "type": "stack",
-                              "gap": "md"
-                            },
-                            {
-                              "gap": "md",
-                              "direction": "horizontal",
-                              "type": "stack",
-                              "children": [
-                                {
-                                  "variant": "caption",
-                                  "type": "typography",
-                                  "content": "Notes",
-                                  "color": "muted"
-                                },
-                                {
-                                  "variant": "body",
-                                  "content": "@entity.notes",
-                                  "type": "typography"
-                                }
-                              ]
-                            }
-                          ],
-                          "direction": "vertical",
-                          "gap": "sm"
-                        },
-                        {
-                          "type": "divider"
-                        },
-                        {
-                          "children": [
-                            {
-                              "icon": "calendar",
                               "label": "Due",
-                              "value": "@entity.dueAt",
-                              "type": "stat-display"
+                              "icon": "calendar",
+                              "type": "stat-display",
+                              "value": "@entity.dueAt"
                             },
                             {
                               "label": "Status",
-                              "type": "stat-display",
                               "value": "@entity.status",
+                              "type": "stat-display",
                               "icon": "tag"
                             }
                           ],
-                          "cols": 2.0,
-                          "type": "simple-grid"
+                          "cols": 2.0
                         },
                         {
-                          "direction": "horizontal",
                           "type": "stack",
+                          "gap": "sm",
+                          "direction": "horizontal",
                           "align": "center",
                           "children": [
                             {
-                              "variant": "primary",
+                              "type": "button",
+                              "action": "MARK_COMPLETED",
                               "actionPayload": {
                                 "id": "@entity.id"
                               },
-                              "action": "MARK_COMPLETED",
-                              "type": "button",
+                              "variant": "primary",
                               "label": "Mark Complete"
                             },
                             {
-                              "label": "Extend",
-                              "variant": "secondary",
-                              "type": "button",
                               "actionPayload": {
                                 "id": "@entity.id"
                               },
+                              "variant": "secondary",
+                              "label": "Extend",
+                              "type": "button",
                               "action": "EXTEND_DEADLINE"
                             }
-                          ],
-                          "gap": "sm"
+                          ]
                         }
                       ],
-                      "gap": "md",
-                      "type": "stack",
                       "direction": "vertical"
                     }
                   ]
@@ -641,8 +657,8 @@
                     "CourtDeadline",
                     {
                       "emit": {
-                        "success": "CourtDeadlineLoaded",
-                        "failure": "CourtDeadlineLoadFailed"
+                        "failure": "CourtDeadlineLoadFailed",
+                        "success": "CourtDeadlineLoaded"
                       }
                     }
                   ],
@@ -650,22 +666,73 @@
                     "render-ui",
                     "main",
                     {
-                      "gap": "md",
-                      "direction": "vertical",
                       "align": "center",
-                      "type": "stack",
                       "className": "py-12",
                       "children": [
                         {
                           "type": "spinner"
                         },
                         {
+                          "type": "typography",
                           "content": "Completing deadline…",
                           "variant": "caption",
-                          "color": "muted",
-                          "type": "typography"
+                          "color": "muted"
                         }
-                      ]
+                      ],
+                      "type": "stack",
+                      "direction": "vertical",
+                      "gap": "md"
+                    }
+                  ]
+                ]
+              },
+              {
+                "from": "browsing",
+                "to": "loading",
+                "event": "SET_STATUS",
+                "effects": [
+                  [
+                    "set",
+                    "@entity.id",
+                    "@payload.entityId"
+                  ],
+                  [
+                    "set",
+                    "@entity.status",
+                    "@payload.newStatus"
+                  ],
+                  [
+                    "persist",
+                    "update",
+                    "CourtDeadline",
+                    "@entity",
+                    {
+                      "emit": {
+                        "failure": "CourtDeadlineLoadFailed",
+                        "success": "CourtDeadlineLoaded"
+                      }
+                    }
+                  ],
+                  [
+                    "render-ui",
+                    "main",
+                    {
+                      "direction": "vertical",
+                      "align": "center",
+                      "children": [
+                        {
+                          "type": "spinner"
+                        },
+                        {
+                          "type": "typography",
+                          "variant": "caption",
+                          "color": "muted",
+                          "content": "Updating deadline status…"
+                        }
+                      ],
+                      "gap": "md",
+                      "className": "py-12",
+                      "type": "stack"
                     }
                   ]
                 ]
@@ -689,7 +756,9 @@
                     "render-ui",
                     "main",
                     {
-                      "type": "stack",
+                      "direction": "vertical",
+                      "gap": "md",
+                      "className": "py-12",
                       "align": "center",
                       "children": [
                         {
@@ -697,14 +766,12 @@
                         },
                         {
                           "type": "typography",
-                          "color": "muted",
                           "variant": "caption",
+                          "color": "muted",
                           "content": "Loading deadlines…"
                         }
                       ],
-                      "direction": "vertical",
-                      "className": "py-12",
-                      "gap": "md"
+                      "type": "stack"
                     }
                   ]
                 ]
@@ -713,50 +780,6 @@
                 "from": "viewing_single",
                 "to": "loading",
                 "event": "MARK_COMPLETED",
-                "effects": [
-                  [
-                    "set",
-                    "@entity.id",
-                    "@payload.id"
-                  ],
-                  [
-                    "fetch",
-                    "CourtDeadline",
-                    {
-                      "emit": {
-                        "failure": "CourtDeadlineLoadFailed",
-                        "success": "CourtDeadlineLoaded"
-                      }
-                    }
-                  ],
-                  [
-                    "render-ui",
-                    "main",
-                    {
-                      "children": [
-                        {
-                          "type": "spinner"
-                        },
-                        {
-                          "content": "Completing deadline…",
-                          "color": "muted",
-                          "type": "typography",
-                          "variant": "caption"
-                        }
-                      ],
-                      "align": "center",
-                      "type": "stack",
-                      "direction": "vertical",
-                      "gap": "md",
-                      "className": "py-12"
-                    }
-                  ]
-                ]
-              },
-              {
-                "from": "viewing_single",
-                "to": "loading",
-                "event": "EXTEND_DEADLINE",
                 "effects": [
                   [
                     "set",
@@ -777,22 +800,66 @@
                     "render-ui",
                     "main",
                     {
-                      "direction": "vertical",
-                      "type": "stack",
-                      "align": "center",
-                      "gap": "md",
                       "className": "py-12",
+                      "direction": "vertical",
+                      "align": "center",
                       "children": [
                         {
                           "type": "spinner"
                         },
                         {
-                          "color": "muted",
                           "variant": "caption",
                           "type": "typography",
-                          "content": "Extending deadline…"
+                          "content": "Completing deadline…",
+                          "color": "muted"
                         }
-                      ]
+                      ],
+                      "type": "stack",
+                      "gap": "md"
+                    }
+                  ]
+                ]
+              },
+              {
+                "from": "viewing_single",
+                "to": "loading",
+                "event": "EXTEND_DEADLINE",
+                "effects": [
+                  [
+                    "set",
+                    "@entity.id",
+                    "@payload.id"
+                  ],
+                  [
+                    "fetch",
+                    "CourtDeadline",
+                    {
+                      "emit": {
+                        "failure": "CourtDeadlineLoadFailed",
+                        "success": "CourtDeadlineLoaded"
+                      }
+                    }
+                  ],
+                  [
+                    "render-ui",
+                    "main",
+                    {
+                      "direction": "vertical",
+                      "gap": "md",
+                      "type": "stack",
+                      "children": [
+                        {
+                          "type": "spinner"
+                        },
+                        {
+                          "variant": "caption",
+                          "content": "Extending deadline…",
+                          "color": "muted",
+                          "type": "typography"
+                        }
+                      ],
+                      "className": "py-12",
+                      "align": "center"
                     }
                   ]
                 ]
@@ -825,19 +892,156 @@
             ]
           },
           "config": {
+            "rescheduleWindowHours": {
+              "type": "number",
+              "default": 72.0,
+              "label": "Reschedule window (hours)",
+              "description": "Hours before dueAt during which an extension request is accepted.",
+              "tier": "customization"
+            },
+            "maxReschedules": {
+              "type": "number",
+              "default": 2.0,
+              "label": "Max reschedules",
+              "description": "Hard cap on extension count per deadline.",
+              "tier": "advanced"
+            },
+            "retainerRequired": {
+              "type": "boolean",
+              "default": false,
+              "label": "Retainer required",
+              "description": "Require a signed retainer before work begins on the matter.",
+              "tier": "customization"
+            },
+            "blackoutDates": {
+              "type": "[string]",
+              "default": [],
+              "label": "Blackout dates",
+              "description": "ISO dates (court holidays) blocked from scheduling. Compose std-lifecycle to auto-shift.",
+              "tier": "customization",
+              "items": {
+                "type": "string"
+              }
+            },
+            "billingRateDefault": {
+              "type": "number",
+              "default": 0.0,
+              "label": "Default billing rate",
+              "description": "Default hourly billing rate applied to work logged against this deadline.",
+              "tier": "customization"
+            },
+            "noShowGracePeriodMinutes": {
+              "type": "number",
+              "default": 0.0,
+              "label": "No-show grace (minutes)",
+              "description": "Minutes after dueAt before the deadline auto-marks missed. Wire via std-lifecycle.",
+              "tier": "customization"
+            },
+            "fields": {
+              "type": "[FieldSpec]",
+              "default": [
+                {
+                  "variant": "caption",
+                  "label": "Title",
+                  "name": "title"
+                },
+                {
+                  "variant": "badge",
+                  "name": "deadlineType",
+                  "label": "Type"
+                },
+                {
+                  "name": "dueAt",
+                  "label": "Due",
+                  "variant": "caption"
+                },
+                {
+                  "variant": "caption",
+                  "name": "jurisdiction",
+                  "label": "Jurisdiction"
+                },
+                {
+                  "label": "Assigned",
+                  "variant": "caption",
+                  "name": "assignedTo"
+                },
+                {
+                  "name": "status",
+                  "label": "Status",
+                  "variant": "badge"
+                }
+              ],
+              "label": "Columns to show",
+              "description": "Each column maps to one field on the Court Deadline entity",
+              "tier": "customization",
+              "items": {
+                "type": "object",
+                "properties": {
+                  "name": {
+                    "name": "name",
+                    "type": "string",
+                    "required": true
+                  },
+                  "key": {
+                    "name": "key",
+                    "type": "string",
+                    "required": false
+                  },
+                  "variant": {
+                    "name": "variant",
+                    "type": "string",
+                    "required": false
+                  },
+                  "icon": {
+                    "name": "icon",
+                    "type": "string",
+                    "required": false
+                  },
+                  "format": {
+                    "name": "format",
+                    "type": "string",
+                    "required": false
+                  },
+                  "header": {
+                    "name": "header",
+                    "type": "string",
+                    "required": false
+                  },
+                  "label": {
+                    "name": "label",
+                    "type": "string",
+                    "required": false
+                  }
+                }
+              }
+            },
+            "conflictCheckRequired": {
+              "type": "boolean",
+              "default": true,
+              "label": "Conflict check required",
+              "description": "Block creation until a conflict-of-interest check is on file.",
+              "tier": "essential"
+            },
+            "bookingWindowDays": {
+              "type": "number",
+              "default": 365.0,
+              "label": "Booking window (days)",
+              "description": "How far in advance deadlines can be scheduled.",
+              "tier": "customization"
+            },
             "itemActions": {
               "type": "[ItemAction]",
               "default": [
                 {
+                  "icon": "arrow-right",
                   "event": "OPEN_DEADLINE",
                   "variant": "primary",
-                  "label": "Open",
-                  "icon": "arrow-right"
+                  "label": "Open"
                 },
                 {
                   "variant": "danger",
-                  "event": "MARK_COMPLETED",
-                  "label": "Complete"
+                  "label": "Complete",
+                  "event": "MARK_COMPLETED"
                 }
               ],
               "label": "Row actions",
@@ -846,13 +1050,13 @@
               "items": {
                 "type": "object",
                 "properties": {
-                  "icon": {
-                    "name": "icon",
-                    "type": "string",
-                    "required": false
-                  },
                   "label": {
                     "name": "label",
+                    "type": "string",
+                    "required": true
+                  },
+                  "event": {
+                    "name": "event",
                     "type": "string",
                     "required": true
                   },
@@ -861,10 +1065,10 @@
                     "type": "string",
                     "required": false
                   },
-                  "event": {
-                    "name": "event",
+                  "icon": {
+                    "name": "icon",
                     "type": "string",
-                    "required": true
+                    "required": false
                   }
                 }
               }
@@ -876,83 +1080,50 @@
               "description": "Heading shown above the legal deadlines docket",
               "tier": "customization"
             },
-            "fields": {
-              "type": "[FieldSpec]",
-              "default": [
-                {
-                  "name": "title",
-                  "label": "Title",
-                  "variant": "caption"
-                },
-                {
-                  "label": "Type",
-                  "name": "deadlineType",
-                  "variant": "badge"
-                },
-                {
-                  "variant": "caption",
-                  "name": "dueAt",
-                  "label": "Due"
-                },
-                {
-                  "label": "Jurisdiction",
-                  "name": "jurisdiction",
-                  "variant": "caption"
-                },
-                {
-                  "label": "Assigned",
-                  "name": "assignedTo",
-                  "variant": "caption"
-                },
-                {
-                  "label": "Status",
-                  "name": "status",
-                  "variant": "badge"
-                }
-              ],
-              "label": "Columns to show",
-              "description": "Each column maps to one field on the Court Deadline entity",
+            "leadTimeMinutes": {
+              "type": "number",
+              "default": 1440.0,
+              "label": "Lead time (minutes)",
+              "description": "Minimum minutes before dueAt at which a deadline can still be created (default 1 day).",
+              "tier": "customization"
+            },
+            "practiceArea": {
+              "type": "string",
+              "default": "",
+              "label": "Practice area",
+              "description": "Practice area (e.g. litigation, IP, family). Drives docket grouping.",
+              "tier": "customization"
+            },
+            "cancellationPolicy": {
+              "type": "string",
+              "default": "no-refund",
+              "label": "Cancellation policy",
+              "description": "Refund treatment when a deadline is cancelled (typically n/a for legal).",
               "tier": "customization",
-              "items": {
-                "type": "object",
-                "properties": {
-                  "label": {
-                    "name": "label",
-                    "type": "string",
-                    "required": false
-                  },
-                  "format": {
-                    "name": "format",
-                    "type": "string",
-                    "required": false
-                  },
-                  "key": {
-                    "name": "key",
-                    "type": "string",
-                    "required": false
-                  },
-                  "header": {
-                    "name": "header",
-                    "type": "string",
-                    "required": false
-                  },
-                  "name": {
-                    "name": "name",
-                    "type": "string",
-                    "required": true
-                  },
-                  "icon": {
-                    "name": "icon",
-                    "type": "string",
-                    "required": false
-                  },
-                  "variant": {
-                    "name": "variant",
-                    "type": "string",
-                    "required": false
-                  }
-                }
-              }
+              "values": [
+                "free",
+                "partial-refund",
+                "no-refund"
+              ]
+            },
+            "clientConfidentialityLevel": {
+              "type": "string",
+              "default": "standard",
+              "label": "Confidentiality level",
+              "description": "Access control tier for related matter data.",
+              "tier": "customization",
+              "values": [
+                "standard",
+                "elevated",
+                "restricted"
+              ]
+            },
+            "bookingHours": {
+              "type": "string",
+              "default": "00:00-23:59",
+              "label": "Booking hours",
+              "description": "Daily window during which deadlines can be created (HH:MM-HH:MM).",
+              "tier": "customization"
             }
           },
           "scope": "collection"

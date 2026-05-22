@@ -1,7 +1,7 @@
 {
   "name": "std-ticket-tier",
-  "version": "1.1.0",
-  "description": "std-ticket-tier — event ticket pricing tiers (VIP, general, early-bird) with quantity tracking. Lists tiers in `browsing`; opens detail in `viewing_single` with Update / Sell / Close actions. Agents tune the list shape via `config.fields` + `config.itemActions`.",
+  "version": "1.2.0",
+  "description": "std-ticket-tier — event ticket pricing tiers (VIP, general, early-bird) with quantity tracking. Listens for SET_STATUS so std-lifecycle can drive transitions (sold-out / closed). Exposes Restaurant/POS + Financial knobs (currency, tipPresets, taxStrategy, …).",
   "orbitals": [
     {
       "name": "TicketTierOrbital",
@@ -330,6 +330,70 @@
                   "type": "string"
                 }
               ]
+            },
+            {
+              "event": "TicketTierUpdated",
+              "payloadSchema": [
+                {
+                  "name": "row.id",
+                  "type": "string",
+                  "required": true
+                },
+                {
+                  "name": "row.eventId",
+                  "type": "string",
+                  "required": true
+                },
+                {
+                  "name": "row.name",
+                  "type": "string",
+                  "required": true
+                },
+                {
+                  "name": "row.price",
+                  "type": "number",
+                  "required": true
+                },
+                {
+                  "name": "row.currency",
+                  "type": "string"
+                },
+                {
+                  "name": "row.quantityTotal",
+                  "type": "number",
+                  "required": true
+                },
+                {
+                  "name": "row.quantitySold",
+                  "type": "number",
+                  "required": true
+                },
+                {
+                  "name": "row.availableFrom",
+                  "type": "string"
+                },
+                {
+                  "name": "row.availableUntil",
+                  "type": "string"
+                },
+                {
+                  "name": "row.status",
+                  "type": "string"
+                }
+              ]
+            },
+            {
+              "event": "TicketTierUpdateFailed",
+              "payloadSchema": [
+                {
+                  "name": "error",
+                  "type": "string"
+                },
+                {
+                  "name": "code",
+                  "type": "string"
+                }
+              ]
             }
           ],
           "stateMachine": {
@@ -448,6 +512,46 @@
                 ]
               },
               {
+                "key": "SET_STATUS",
+                "name": "Set Status",
+                "payloadSchema": [
+                  {
+                    "name": "entityId",
+                    "type": "string",
+                    "required": true
+                  },
+                  {
+                    "name": "newStatus",
+                    "type": "string",
+                    "required": true
+                  }
+                ]
+              },
+              {
+                "key": "TicketTierUpdated",
+                "name": "TicketTier updated",
+                "payloadSchema": [
+                  {
+                    "name": "row",
+                    "type": "TicketTier"
+                  }
+                ]
+              },
+              {
+                "key": "TicketTierUpdateFailed",
+                "name": "TicketTier update failed",
+                "payloadSchema": [
+                  {
+                    "name": "error",
+                    "type": "string"
+                  },
+                  {
+                    "name": "code",
+                    "type": "string"
+                  }
+                ]
+              },
+              {
                 "key": "CLOSE_VIEW",
                 "name": "Close View"
               }
@@ -463,8 +567,8 @@
                     "TicketTier",
                     {
                       "emit": {
-                        "failure": "TicketTierLoadFailed",
-                        "success": "TicketTierLoaded"
+                        "success": "TicketTierLoaded",
+                        "failure": "TicketTierLoadFailed"
                       }
                     }
                   ],
@@ -472,22 +576,22 @@
                     "render-ui",
                     "main",
                     {
-                      "className": "py-12",
-                      "direction": "vertical",
+                      "gap": "md",
                       "align": "center",
+                      "type": "stack",
+                      "direction": "vertical",
                       "children": [
                         {
                           "type": "spinner"
                         },
                         {
-                          "color": "muted",
                           "type": "typography",
+                          "color": "muted",
                           "variant": "caption",
                           "content": "Loading ticket tiers…"
                         }
                       ],
-                      "type": "stack",
-                      "gap": "md"
+                      "className": "py-12"
                     }
                   ]
                 ]
@@ -506,49 +610,49 @@
                       "gap": "md",
                       "children": [
                         {
+                          "gap": "sm",
                           "type": "stack",
-                          "align": "center",
                           "children": [
                             {
                               "name": "ticket",
                               "type": "icon"
                             },
                             {
-                              "type": "typography",
                               "content": "@config.title",
-                              "variant": "h3"
+                              "variant": "h3",
+                              "type": "typography"
                             }
                           ],
                           "direction": "horizontal",
-                          "gap": "sm"
+                          "align": "center"
                         },
                         {
-                          "type": "simple-grid",
                           "cols": 4.0,
+                          "type": "simple-grid",
                           "children": [
                             {
                               "icon": "ticket",
-                              "value": "@payload.data.length",
                               "type": "stat-display",
+                              "value": "@payload.data.length",
                               "label": "Total tiers"
                             },
                             {
-                              "type": "stat-display",
-                              "label": "Gross sales",
+                              "icon": "dollar-sign",
                               "value": "$184,200",
-                              "icon": "dollar-sign"
+                              "type": "stat-display",
+                              "label": "Gross sales"
                             },
                             {
                               "type": "stat-display",
-                              "label": "Sold seats",
                               "value": "2,840",
-                              "icon": "users"
+                              "icon": "users",
+                              "label": "Sold seats"
                             },
                             {
-                              "type": "stat-display",
-                              "label": "Sell-through",
                               "value": "73%",
-                              "icon": "trending-up"
+                              "icon": "trending-up",
+                              "type": "stat-display",
+                              "label": "Sell-through"
                             }
                           ]
                         },
@@ -556,12 +660,12 @@
                           "type": "divider"
                         },
                         {
-                          "itemActions": "@config.itemActions",
+                          "gap": "sm",
+                          "entity": "@payload.data",
+                          "fields": "@config.fields",
                           "type": "data-grid",
                           "cols": 1.0,
-                          "entity": "@payload.data",
-                          "gap": "sm",
-                          "fields": "@config.fields"
+                          "itemActions": "@config.itemActions"
                         }
                       ]
                     }
@@ -577,8 +681,8 @@
                     "render-ui",
                     "main",
                     {
-                      "type": "alert",
                       "message": "@payload.error",
+                      "type": "alert",
                       "variant": "error"
                     }
                   ]
@@ -643,49 +747,50 @@
                     "render-ui",
                     "main",
                     {
-                      "type": "stack",
                       "gap": "md",
                       "children": [
                         {
                           "type": "stack",
+                          "gap": "sm",
+                          "direction": "horizontal",
+                          "align": "center",
                           "children": [
                             {
+                              "action": "CLOSE_VIEW",
                               "variant": "ghost",
                               "label": "Back",
-                              "action": "CLOSE_VIEW",
                               "type": "button"
                             },
                             {
-                              "name": "ticket",
-                              "type": "icon"
+                              "type": "icon",
+                              "name": "ticket"
                             },
                             {
+                              "type": "typography",
                               "content": "@entity.name",
-                              "variant": "h3",
-                              "type": "typography"
+                              "variant": "h3"
                             },
                             {
-                              "variant": "primary",
                               "type": "badge",
-                              "label": "@entity.status"
+                              "label": "@entity.status",
+                              "variant": "primary"
                             }
-                          ],
-                          "align": "center",
-                          "direction": "horizontal",
-                          "gap": "sm"
+                          ]
                         },
                         {
                           "type": "divider"
                         },
                         {
+                          "gap": "sm",
                           "children": [
                             {
+                              "type": "stack",
                               "children": [
                                 {
-                                  "type": "typography",
-                                  "color": "muted",
+                                  "variant": "caption",
                                   "content": "Event",
-                                  "variant": "caption"
+                                  "type": "typography",
+                                  "color": "muted"
                                 },
                                 {
                                   "type": "typography",
@@ -693,126 +798,125 @@
                                   "content": "@entity.eventId"
                                 }
                               ],
-                              "type": "stack",
                               "direction": "horizontal",
                               "gap": "md"
                             },
                             {
                               "gap": "md",
-                              "type": "stack",
-                              "direction": "horizontal",
                               "children": [
                                 {
-                                  "type": "typography",
-                                  "variant": "caption",
                                   "content": "Available from",
-                                  "color": "muted"
+                                  "variant": "caption",
+                                  "color": "muted",
+                                  "type": "typography"
                                 },
                                 {
-                                  "variant": "body",
                                   "content": "@entity.availableFrom",
-                                  "type": "typography"
+                                  "type": "typography",
+                                  "variant": "body"
                                 }
-                              ]
+                              ],
+                              "direction": "horizontal",
+                              "type": "stack"
                             },
                             {
-                              "gap": "md",
                               "children": [
                                 {
                                   "type": "typography",
-                                  "content": "Available until",
                                   "color": "muted",
+                                  "content": "Available until",
                                   "variant": "caption"
                                 },
                                 {
-                                  "variant": "body",
                                   "type": "typography",
+                                  "variant": "body",
                                   "content": "@entity.availableUntil"
                                 }
                               ],
+                              "gap": "md",
                               "type": "stack",
                               "direction": "horizontal"
                             }
                           ],
                           "direction": "vertical",
-                          "gap": "sm",
                           "type": "stack"
                         },
                         {
                           "type": "divider"
                         },
                         {
+                          "cols": 4.0,
+                          "type": "simple-grid",
                           "children": [
                             {
+                              "icon": "dollar-sign",
                               "label": "Price",
                               "type": "stat-display",
-                              "icon": "dollar-sign",
                               "value": "@entity.price"
                             },
                             {
-                              "type": "stat-display",
                               "label": "Currency",
-                              "icon": "globe",
-                              "value": "@entity.currency"
+                              "type": "stat-display",
+                              "value": "@entity.currency",
+                              "icon": "globe"
                             },
                             {
                               "value": "@entity.quantityTotal",
-                              "type": "stat-display",
+                              "label": "Total seats",
                               "icon": "users",
-                              "label": "Total seats"
+                              "type": "stat-display"
                             },
                             {
-                              "value": "@entity.quantitySold",
                               "type": "stat-display",
-                              "icon": "check-circle",
-                              "label": "Sold"
+                              "label": "Sold",
+                              "value": "@entity.quantitySold",
+                              "icon": "check-circle"
                             }
-                          ],
-                          "type": "simple-grid",
-                          "cols": 4.0
+                          ]
                         },
                         {
-                          "type": "stack",
-                          "direction": "horizontal",
                           "align": "center",
-                          "gap": "sm",
                           "children": [
                             {
                               "action": "UPDATE",
+                              "variant": "primary",
                               "actionPayload": {
                                 "row": "@entity",
-                                "tierId": "@entity.id",
-                                "data": {}
+                                "data": {},
+                                "tierId": "@entity.id"
                               },
-                              "label": "Update",
                               "type": "button",
-                              "variant": "primary"
+                              "label": "Update"
                             },
                             {
-                              "action": "SELL",
                               "label": "Sell",
+                              "action": "SELL",
+                              "type": "button",
                               "actionPayload": {
                                 "qty": 1.0,
                                 "tierId": "@entity.id",
                                 "row": "@entity"
                               },
-                              "type": "button",
                               "variant": "secondary"
                             },
                             {
-                              "variant": "danger",
-                              "type": "button",
-                              "action": "CLOSE",
                               "actionPayload": {
                                 "row": "@entity",
                                 "tierId": "@entity.id"
                               },
-                              "label": "Close"
+                              "variant": "danger",
+                              "type": "button",
+                              "label": "Close",
+                              "action": "CLOSE"
                             }
-                          ]
+                          ],
+                          "direction": "horizontal",
+                          "gap": "sm",
+                          "type": "stack"
                         }
                       ],
-                      "direction": "vertical"
+                      "direction": "vertical",
+                      "type": "stack"
                     }
                   ]
                 ]
@@ -841,22 +945,22 @@
                     "render-ui",
                     "main",
                     {
-                      "gap": "md",
                       "children": [
                         {
                           "type": "spinner"
                         },
                         {
                           "content": "Updating tier…",
-                          "color": "muted",
+                          "variant": "caption",
                           "type": "typography",
-                          "variant": "caption"
+                          "color": "muted"
                         }
                       ],
+                      "className": "py-12",
                       "direction": "vertical",
-                      "type": "stack",
+                      "gap": "md",
                       "align": "center",
-                      "className": "py-12"
+                      "type": "stack"
                     }
                   ]
                 ]
@@ -865,50 +969,6 @@
                 "from": "browsing",
                 "to": "loading",
                 "event": "SELL",
-                "effects": [
-                  [
-                    "set",
-                    "@entity.id",
-                    "@payload.tierId"
-                  ],
-                  [
-                    "fetch",
-                    "TicketTier",
-                    {
-                      "emit": {
-                        "failure": "TicketTierLoadFailed",
-                        "success": "TicketTierLoaded"
-                      }
-                    }
-                  ],
-                  [
-                    "render-ui",
-                    "main",
-                    {
-                      "type": "stack",
-                      "gap": "md",
-                      "children": [
-                        {
-                          "type": "spinner"
-                        },
-                        {
-                          "variant": "caption",
-                          "type": "typography",
-                          "color": "muted",
-                          "content": "Selling tickets…"
-                        }
-                      ],
-                      "align": "center",
-                      "className": "py-12",
-                      "direction": "vertical"
-                    }
-                  ]
-                ]
-              },
-              {
-                "from": "browsing",
-                "to": "loading",
-                "event": "CLOSE",
                 "effects": [
                   [
                     "set",
@@ -929,22 +989,150 @@
                     "render-ui",
                     "main",
                     {
-                      "className": "py-12",
-                      "gap": "md",
                       "align": "center",
+                      "gap": "md",
+                      "type": "stack",
+                      "className": "py-12",
                       "children": [
                         {
                           "type": "spinner"
                         },
                         {
-                          "color": "muted",
+                          "content": "Selling tickets…",
                           "type": "typography",
-                          "variant": "caption",
-                          "content": "Closing tier…"
+                          "color": "muted",
+                          "variant": "caption"
                         }
                       ],
-                      "type": "stack",
                       "direction": "vertical"
+                    }
+                  ]
+                ]
+              },
+              {
+                "from": "browsing",
+                "to": "loading",
+                "event": "CLOSE",
+                "effects": [
+                  [
+                    "set",
+                    "@entity.id",
+                    "@payload.tierId"
+                  ],
+                  [
+                    "fetch",
+                    "TicketTier",
+                    {
+                      "emit": {
+                        "failure": "TicketTierLoadFailed",
+                        "success": "TicketTierLoaded"
+                      }
+                    }
+                  ],
+                  [
+                    "render-ui",
+                    "main",
+                    {
+                      "align": "center",
+                      "gap": "md",
+                      "direction": "vertical",
+                      "type": "stack",
+                      "className": "py-12",
+                      "children": [
+                        {
+                          "type": "spinner"
+                        },
+                        {
+                          "type": "typography",
+                          "content": "Closing tier…",
+                          "color": "muted",
+                          "variant": "caption"
+                        }
+                      ]
+                    }
+                  ]
+                ]
+              },
+              {
+                "from": "browsing",
+                "to": "loading",
+                "event": "SET_STATUS",
+                "effects": [
+                  [
+                    "set",
+                    "@entity.id",
+                    "@payload.entityId"
+                  ],
+                  [
+                    "set",
+                    "@entity.status",
+                    "@payload.newStatus"
+                  ],
+                  [
+                    "persist",
+                    "update",
+                    "TicketTier",
+                    "@entity",
+                    {
+                      "emit": {
+                        "success": "TicketTierUpdated",
+                        "failure": "TicketTierUpdateFailed"
+                      }
+                    }
+                  ],
+                  [
+                    "render-ui",
+                    "main",
+                    {
+                      "direction": "vertical",
+                      "children": [
+                        {
+                          "type": "spinner"
+                        },
+                        {
+                          "variant": "caption",
+                          "content": "Updating tier status…",
+                          "color": "muted",
+                          "type": "typography"
+                        }
+                      ],
+                      "className": "py-12",
+                      "align": "center",
+                      "type": "stack",
+                      "gap": "md"
+                    }
+                  ]
+                ]
+              },
+              {
+                "from": "browsing",
+                "to": "loading",
+                "event": "TicketTierUpdated",
+                "effects": [
+                  [
+                    "fetch",
+                    "TicketTier",
+                    {
+                      "emit": {
+                        "success": "TicketTierLoaded",
+                        "failure": "TicketTierLoadFailed"
+                      }
+                    }
+                  ]
+                ]
+              },
+              {
+                "from": "browsing",
+                "to": "browsing",
+                "event": "TicketTierUpdateFailed",
+                "effects": [
+                  [
+                    "render-ui",
+                    "main",
+                    {
+                      "type": "alert",
+                      "variant": "error",
+                      "message": "@payload.error"
                     }
                   ]
                 ]
@@ -959,8 +1147,8 @@
                     "TicketTier",
                     {
                       "emit": {
-                        "success": "TicketTierLoaded",
-                        "failure": "TicketTierLoadFailed"
+                        "failure": "TicketTierLoadFailed",
+                        "success": "TicketTierLoaded"
                       }
                     }
                   ],
@@ -968,21 +1156,21 @@
                     "render-ui",
                     "main",
                     {
-                      "className": "py-12",
                       "gap": "md",
+                      "align": "center",
+                      "className": "py-12",
                       "children": [
                         {
                           "type": "spinner"
                         },
                         {
-                          "content": "Loading ticket tiers…",
                           "variant": "caption",
-                          "type": "typography",
-                          "color": "muted"
+                          "color": "muted",
+                          "content": "Loading ticket tiers…",
+                          "type": "typography"
                         }
                       ],
                       "type": "stack",
-                      "align": "center",
                       "direction": "vertical"
                     }
                   ]
@@ -1003,8 +1191,8 @@
                     "TicketTier",
                     {
                       "emit": {
-                        "failure": "TicketTierLoadFailed",
-                        "success": "TicketTierLoaded"
+                        "success": "TicketTierLoaded",
+                        "failure": "TicketTierLoadFailed"
                       }
                     }
                   ],
@@ -1012,22 +1200,22 @@
                     "render-ui",
                     "main",
                     {
-                      "align": "center",
                       "type": "stack",
                       "direction": "vertical",
+                      "gap": "md",
+                      "align": "center",
+                      "className": "py-12",
                       "children": [
                         {
                           "type": "spinner"
                         },
                         {
-                          "type": "typography",
+                          "color": "muted",
                           "variant": "caption",
                           "content": "Updating tier…",
-                          "color": "muted"
+                          "type": "typography"
                         }
-                      ],
-                      "gap": "md",
-                      "className": "py-12"
+                      ]
                     }
                   ]
                 ]
@@ -1047,8 +1235,8 @@
                     "TicketTier",
                     {
                       "emit": {
-                        "failure": "TicketTierLoadFailed",
-                        "success": "TicketTierLoaded"
+                        "success": "TicketTierLoaded",
+                        "failure": "TicketTierLoadFailed"
                       }
                     }
                   ],
@@ -1056,6 +1244,9 @@
                     "render-ui",
                     "main",
                     {
+                      "type": "stack",
+                      "gap": "md",
+                      "direction": "vertical",
                       "align": "center",
                       "className": "py-12",
                       "children": [
@@ -1063,15 +1254,12 @@
                           "type": "spinner"
                         },
                         {
-                          "variant": "caption",
-                          "content": "Selling tickets…",
                           "type": "typography",
-                          "color": "muted"
+                          "variant": "caption",
+                          "color": "muted",
+                          "content": "Selling tickets…"
                         }
-                      ],
-                      "direction": "vertical",
-                      "type": "stack",
-                      "gap": "md"
+                      ]
                     }
                   ]
                 ]
@@ -1100,22 +1288,22 @@
                     "render-ui",
                     "main",
                     {
-                      "className": "py-12",
-                      "direction": "vertical",
                       "gap": "md",
-                      "align": "center",
                       "children": [
                         {
                           "type": "spinner"
                         },
                         {
-                          "type": "typography",
                           "color": "muted",
+                          "type": "typography",
                           "variant": "caption",
                           "content": "Closing tier…"
                         }
                       ],
-                      "type": "stack"
+                      "direction": "vertical",
+                      "align": "center",
+                      "type": "stack",
+                      "className": "py-12"
                     }
                   ]
                 ]
@@ -1130,8 +1318,8 @@
                     "TicketTier",
                     {
                       "emit": {
-                        "success": "TicketTierLoaded",
-                        "failure": "TicketTierLoadFailed"
+                        "failure": "TicketTierLoadFailed",
+                        "success": "TicketTierLoaded"
                       }
                     }
                   ],
@@ -1148,6 +1336,20 @@
             ]
           },
           "config": {
+            "coursingEnabled": {
+              "type": "boolean",
+              "default": false,
+              "label": "Coursing enabled",
+              "description": "Track ordered courses when tier purchases include meals.",
+              "tier": "customization"
+            },
+            "lateFeeAmount": {
+              "type": "number",
+              "default": 0.0,
+              "label": "Late fee amount",
+              "description": "Flat cash amount or percentage (per lateFeePolicy).",
+              "tier": "customization"
+            },
             "title": {
               "type": "string",
               "default": "Ticket Tiers",
@@ -1155,23 +1357,42 @@
               "description": "Heading shown above the ticket pricing tiers",
               "tier": "customization"
             },
+            "complianceJurisdiction": {
+              "type": "string",
+              "default": "",
+              "label": "Compliance jurisdiction",
+              "description": "Drives ticket-tax + reporting rules per locale ('US-CA', 'EU-DE', …). v1.2 declarative.",
+              "tier": "advanced"
+            },
+            "lateFeePolicy": {
+              "type": "string",
+              "default": "none",
+              "label": "Late fee policy",
+              "description": "Penalty applied to late ticket purchases. v1.2 declarative.",
+              "tier": "customization",
+              "values": [
+                "none",
+                "flat",
+                "percent"
+              ]
+            },
             "fields": {
               "type": "[FieldSpec]",
               "default": [
                 {
-                  "name": "name",
                   "label": "Tier",
-                  "variant": "badge"
+                  "variant": "badge",
+                  "name": "name"
                 },
                 {
-                  "name": "price",
                   "variant": "caption",
+                  "name": "price",
                   "label": "Price"
                 },
                 {
-                  "name": "currency",
+                  "variant": "badge",
                   "label": "Currency",
-                  "variant": "badge"
+                  "name": "currency"
                 },
                 {
                   "variant": "caption",
@@ -1179,8 +1400,8 @@
                   "label": "Total"
                 },
                 {
-                  "label": "Sold",
                   "variant": "caption",
+                  "label": "Sold",
                   "name": "quantitySold"
                 },
                 {
@@ -1210,13 +1431,13 @@
                     "type": "string",
                     "required": false
                   },
-                  "header": {
-                    "name": "header",
+                  "key": {
+                    "name": "key",
                     "type": "string",
                     "required": false
                   },
-                  "key": {
-                    "name": "key",
+                  "header": {
+                    "name": "header",
                     "type": "string",
                     "required": false
                   },
@@ -1244,9 +1465,9 @@
                 },
                 {
                   "variant": "danger",
-                  "icon": "x",
+                  "label": "Close",
                   "event": "CLOSE",
-                  "label": "Close"
+                  "icon": "x"
                 }
               ],
               "label": "Row actions",
@@ -1260,8 +1481,8 @@
                     "type": "string",
                     "required": true
                   },
-                  "variant": {
-                    "name": "variant",
+                  "icon": {
+                    "name": "icon",
                     "type": "string",
                     "required": false
                   },
@@ -1270,13 +1491,105 @@
                     "type": "string",
                     "required": true
                   },
-                  "icon": {
-                    "name": "icon",
+                  "variant": {
+                    "name": "variant",
                     "type": "string",
                     "required": false
                   }
                 }
               }
+            },
+            "taxStrategy": {
+              "type": "string",
+              "default": "exclusive",
+              "label": "Tax strategy",
+              "description": "How tax is applied to tier prices: inclusive / exclusive / none.",
+              "tier": "customization",
+              "values": [
+                "inclusive",
+                "exclusive",
+                "none"
+              ]
+            },
+            "tipPresets": {
+              "type": "[number]",
+              "default": [
+                0.0
+              ],
+              "label": "Tip presets (%)",
+              "description": "Tip percentages exposed at ticket checkout (often 0 for events).",
+              "tier": "customization",
+              "items": {
+                "type": "number"
+              }
+            },
+            "gracePeriodDays": {
+              "type": "number",
+              "default": 0.0,
+              "label": "Grace period (days)",
+              "description": "Days after availability ends before the tier flips to closed.",
+              "tier": "customization"
+            },
+            "allowSplitChecks": {
+              "type": "boolean",
+              "default": false,
+              "label": "Allow split checks",
+              "description": "Permit splitting a multi-ticket order across multiple payments.",
+              "tier": "customization"
+            },
+            "roundingMode": {
+              "type": "string",
+              "default": "half-up",
+              "label": "Rounding mode",
+              "description": "Sub-cent rounding behavior on totals.",
+              "tier": "advanced",
+              "values": [
+                "bankers",
+                "half-up",
+                "down"
+              ]
+            },
+            "serviceCharge": {
+              "type": "number",
+              "default": 0.0,
+              "label": "Service charge (%)",
+              "description": "Service-charge percentage applied to tier purchases.",
+              "tier": "customization"
+            },
+            "currency": {
+              "type": "string",
+              "default": "USD",
+              "label": "Default currency",
+              "description": "ISO 4217 currency code (USD, EUR, GBP, …) for new tier rows.",
+              "tier": "essential"
+            },
+            "retentionYears": {
+              "type": "number",
+              "default": 7.0,
+              "label": "Retention (years)",
+              "description": "Years to keep ticket-tier records for accounting compliance.",
+              "tier": "advanced"
+            },
+            "kitchenAutoFire": {
+              "type": "boolean",
+              "default": false,
+              "label": "Kitchen auto-fire",
+              "description": "Auto-fire concession orders bound to ticket tiers.",
+              "tier": "customization"
+            },
+            "tableTurnoverTargetMinutes": {
+              "type": "number",
+              "default": 60.0,
+              "label": "Table turnover target (min)",
+              "description": "Used for seated/VIP tier pacing. v1.2 declarative.",
+              "tier": "advanced"
+            },
+            "allergenWarningsEnabled": {
+              "type": "boolean",
+              "default": true,
+              "label": "Allergen warnings",
+              "description": "Surface allergen warnings on bundled food/drink items.",
+              "tier": "customization"
             }
           },
           "scope": "collection"

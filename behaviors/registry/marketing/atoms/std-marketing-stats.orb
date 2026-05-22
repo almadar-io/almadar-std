@@ -1,0 +1,120 @@
+{
+  "name": "std-marketing-stats",
+  "version": "1.0.0",
+  "description": "Stats grid atom for marketing pages. Renders a responsive grid of key metrics with values and labels. Pick for social proof, traction, and credibility sections.",
+  "orbitals": [
+    {
+      "name": "StatItemOrbital",
+      "entity": {
+        "name": "StatItem",
+        "persistence": "runtime",
+        "fields": [
+          {
+            "name": "id",
+            "type": "string",
+            "required": true
+          }
+        ]
+      },
+      "traits": [
+        {
+          "name": "StatItemStats",
+          "category": "interaction",
+          "linkedEntity": "StatItem",
+          "stateMachine": {
+            "states": [
+              {
+                "name": "idle",
+                "isInitial": true
+              }
+            ],
+            "events": [
+              {
+                "key": "INIT",
+                "name": "Initialize"
+              }
+            ],
+            "transitions": [
+              {
+                "from": "idle",
+                "to": "idle",
+                "event": "INIT",
+                "effects": [
+                  [
+                    "render-ui",
+                    "main",
+                    {
+                      "columns": "@config.columns",
+                      "stats": "@config.stats",
+                      "type": "stats-grid"
+                    }
+                  ]
+                ]
+              }
+            ]
+          },
+          "config": {
+            "columns": {
+              "type": "number",
+              "default": 4.0,
+              "label": "Columns",
+              "description": "Number of grid columns",
+              "tier": "customization"
+            },
+            "stats": {
+              "type": "[StatCard]",
+              "default": [
+                {
+                  "label": "Developers",
+                  "value": "10K+"
+                },
+                {
+                  "label": "Uptime",
+                  "value": "99.9%"
+                },
+                {
+                  "label": "Requests served",
+                  "value": "50M+"
+                },
+                {
+                  "value": "4.9",
+                  "label": "Average rating"
+                }
+              ],
+              "label": "Stats",
+              "description": "Array of stat value/label pairs",
+              "tier": "essential",
+              "items": {
+                "type": "object",
+                "properties": {
+                  "value": {
+                    "name": "value",
+                    "type": "string",
+                    "required": true
+                  },
+                  "label": {
+                    "name": "label",
+                    "type": "string",
+                    "required": true
+                  }
+                }
+              }
+            }
+          },
+          "scope": "instance"
+        }
+      ],
+      "pages": [
+        {
+          "name": "StatItemStatsPage",
+          "path": "/stats",
+          "traits": [
+            {
+              "ref": "StatItemStats"
+            }
+          ]
+        }
+      ]
+    }
+  ]
+}

@@ -1,5 +1,5 @@
-app std-interview-slot "1.1.0"
-"std-interview-slot — scheduled interview between an applicant and one or more interviewers, with date/time, format, and status. Agents tune the list shape via `config.fields` + `config.itemActions`."
+app std-interview-slot "1.2.0"
+"std-interview-slot — scheduled interview between applicant and interviewers. Listens for SET_STATUS so sibling std-lifecycle can drive automated transitions. Exposes Scheduling/Booking + HR knobs (bookingWindowDays, leadTimeMinutes, backgroundCheckRequired, …)."
 
 type FieldSpec = { name : string!, label : string, variant : string, icon : string, format : string, key : string, header : string }
 type ItemAction = { label : string!, event : string!, variant : string, icon : string }
@@ -43,6 +43,62 @@ orbital InterviewSlotOrbital {
         @label "Row actions"
         @description "Buttons users can click on each interview row"
         @tier "customization"
+      bookingWindowDays : number = 30
+        @label "Booking window (days)"
+        @description "How far in advance applicants can schedule interviews."
+        @tier "customization"
+      leadTimeMinutes : number = 60
+        @label "Lead time (minutes)"
+        @description "Minimum minutes before start time that a new booking is accepted."
+        @tier "customization"
+      bookingHours : string = "09:00-17:00"
+        @label "Booking hours"
+        @description "Daily window during which interviews can be scheduled (HH:MM-HH:MM)."
+        @tier "customization"
+      blackoutDates : [string] = []
+        @label "Blackout dates"
+        @description "ISO dates blocked from booking (e.g. holidays). Compose std-lifecycle to enforce."
+        @tier "customization"
+      noShowGracePeriodMinutes : number = 15
+        @label "No-show grace (minutes)"
+        @description "Minutes after scheduledAt before the slot auto-marks no_show. Wire via std-lifecycle."
+        @tier "customization"
+      rescheduleWindowHours : number = 24
+        @label "Reschedule window (hours)"
+        @description "Hours before scheduledAt during which the applicant can self-reschedule."
+        @tier "customization"
+      maxReschedules : number = 2
+        @label "Max reschedules"
+        @description "Hard cap on reschedule count per interview slot."
+        @tier "advanced"
+      cancellationPolicy : "free" | "partial-refund" | "no-refund" = "free"
+        @label "Cancellation policy"
+        @description "Refund treatment when a slot is cancelled inside the reschedule window."
+        @tier "customization"
+      backgroundCheckRequired : boolean = false
+        @label "Background check required"
+        @description "Block COMPLETE_INTERVIEW until a background check is on file."
+        @tier "customization"
+      eVerifyRequired : boolean = false
+        @label "E-Verify required"
+        @description "US I-9 / E-Verify gate. Block downstream offer until verification passes."
+        @tier "customization"
+      i9DocumentsRequired : boolean = false
+        @label "I-9 documents required"
+        @description "Require I-9 supporting documents before accepting an offer downstream."
+        @tier "customization"
+      anonymizeOnRejection : boolean = false
+        @label "Anonymize on rejection"
+        @description "When true, scrub applicant PII on rejection. Pair with std-data-erasure."
+        @tier "customization"
+      retentionAfterRejectionDays : number = 730
+        @label "Retention after rejection (days)"
+        @description "Days to keep rejected interview records. Default 730 (2 years) EEOC typical."
+        @tier "advanced"
+      equalOpportunityTrackingEnabled : boolean = false
+        @label "Equal opportunity tracking"
+        @description "Capture demographic data separately for EEO reporting (sibling collection)."
+        @tier "advanced"
     }
     initial: loading
     state loading {
@@ -70,6 +126,11 @@ orbital InterviewSlotOrbital {
         (set @entity.id @payload.id)
         (fetch InterviewSlot { emit: { success: "InterviewSlotLoaded", failure: "InterviewSlotLoadFailed" } })
         (render-ui main { type: "stack", direction: "vertical", gap: "md", align: "center", className: "py-12", children: [{ type: "spinner" }, { type: "typography", variant: "caption", color: "muted", content: "Cancelling interview…" }] })
+      SET_STATUS -> loading
+        (set @entity.id @payload.entityId)
+        (set @entity.status @payload.newStatus)
+        (persist update InterviewSlot @entity { emit: { success: "InterviewSlotLoaded", failure: "InterviewSlotLoadFailed" } })
+        (render-ui main { type: "stack", direction: "vertical", gap: "md", align: "center", className: "py-12", children: [{ type: "spinner" }, { type: "typography", variant: "caption", color: "muted", content: "Updating interview status…" }] })
     }
     state viewing_single {
       CLOSE_VIEW -> loading
@@ -102,6 +163,7 @@ orbital InterviewSlotOrbital {
       CLOSE_VIEW               { }
       COMPLETE_INTERVIEW       { id : string! }
       CANCEL_INTERVIEW         { id : string! }
+      SET_STATUS               { entityId : string!, newStatus : string! }
       InterviewSlotLoaded      { data : [InterviewSlot] }
       InterviewSlotLoadFailed  { error : string, code : string }
     }

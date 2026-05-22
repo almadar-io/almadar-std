@@ -1,5 +1,5 @@
-app std-event "1.1.0"
-"std-event — event-ticketing event entity (date, venue, capacity, recurrenceRule, status). Lists events in `browsing`; opens detail in `viewing_single` with Publish / Cancel / Update actions. Agents tune the list shape via `config.fields` + `config.itemActions`."
+app std-event "1.2.0"
+"std-event — event-ticketing event entity. Listens for SET_STATUS so sibling std-lifecycle can auto-transition. Exposes Scheduling/Booking knobs (bookingWindowDays, leadTimeMinutes, cancellationPolicy, …)."
 
 type FieldSpec = { name : string!, label : string, variant : string, icon : string, format : string, key : string, header : string }
 type ItemAction = { label : string!, event : string!, variant : string, icon : string }
@@ -48,6 +48,38 @@ orbital EventOrbital {
         @label "Row actions"
         @description "Buttons users can click on each event row"
         @tier "customization"
+      bookingWindowDays : number = 180
+        @label "Booking window (days)"
+        @description "How far in advance attendees can purchase tickets."
+        @tier "customization"
+      leadTimeMinutes : number = 60
+        @label "Lead time (minutes)"
+        @description "Minimum minutes before startsAt that ticket sales remain open."
+        @tier "customization"
+      bookingHours : string = "00:00-23:59"
+        @label "Booking hours"
+        @description "Daily window during which ticket purchases are allowed (HH:MM-HH:MM)."
+        @tier "customization"
+      blackoutDates : [string] = []
+        @label "Blackout dates"
+        @description "ISO dates blocked from booking. Compose std-lifecycle to enforce."
+        @tier "customization"
+      noShowGracePeriodMinutes : number = 30
+        @label "No-show grace (minutes)"
+        @description "Minutes after startsAt before unscanned tickets auto-mark no_show. Wire via std-lifecycle."
+        @tier "customization"
+      rescheduleWindowHours : number = 48
+        @label "Reschedule window (hours)"
+        @description "Hours before startsAt during which attendees can self-reschedule."
+        @tier "customization"
+      maxReschedules : number = 1
+        @label "Max reschedules"
+        @description "Hard cap on reschedule count per ticket."
+        @tier "advanced"
+      cancellationPolicy : "free" | "partial-refund" | "no-refund" = "partial-refund"
+        @label "Cancellation policy"
+        @description "Refund treatment when a ticket is cancelled inside the reschedule window."
+        @tier "customization"
     }
     initial: loading
     state loading {
@@ -79,6 +111,11 @@ orbital EventOrbital {
         (set @entity.id @payload.eventId)
         (fetch EventRecord { emit: { success: "EventLoaded", failure: "EventLoadFailed" } })
         (render-ui main { type: "stack", direction: "vertical", gap: "md", align: "center", className: "py-12", children: [{ type: "spinner" }, { type: "typography", variant: "caption", color: "muted", content: "Cancelling event…" }] })
+      SET_STATUS -> loading
+        (set @entity.id @payload.entityId)
+        (set @entity.status @payload.newStatus)
+        (persist update EventRecord @entity { emit: { success: "EventLoaded", failure: "EventLoadFailed" } })
+        (render-ui main { type: "stack", direction: "vertical", gap: "md", align: "center", className: "py-12", children: [{ type: "spinner" }, { type: "typography", variant: "caption", color: "muted", content: "Updating event status…" }] })
     }
     state viewing_single {
       CLOSE_VIEW -> loading
@@ -117,6 +154,7 @@ orbital EventOrbital {
       PUBLISH    { eventId : string! }
       UPDATE     { eventId : string! }
       CANCEL     { eventId : string! }
+      SET_STATUS { entityId : string!, newStatus : string! }
       EventLoaded     { data : [EventRecord] }
       EventLoadFailed { error : string, code : string }
     }

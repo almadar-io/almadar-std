@@ -1,5 +1,5 @@
-app std-campaign-goal "1.1.0"
-"std-campaign-goal — nonprofit fundraising campaign with target / raised / donor count / deadline / status. Lists campaigns in `browsing`; opens campaign detail in `viewing_single` with Launch / End actions. Agents tune the list shape via `config.fields` + `config.itemActions`."
+app std-campaign-goal "1.2.0"
+"std-campaign-goal — nonprofit fundraising campaign with Launch / End actions. Listens for SET_STATUS so std-lifecycle can drive automated transitions. Exposes CRM-pattern knobs."
 
 type FieldSpec = { name : string!, label : string, variant : string, icon : string, format : string, key : string, header : string }
 type ItemAction = { label : string!, event : string!, variant : string, icon : string }
@@ -17,8 +17,10 @@ orbital CampaignGoalOrbital {
     status        : "draft" | "active" | "achieved" | "ended" = "draft"
   }
 
-  type CampaignGoalLoaded     = Event { data : [CampaignGoal] }            "Fired when the campaign collection finishes loading"
-  type CampaignGoalLoadFailed = Event { error : string, code : string }    "Fired when the campaign collection fails to load"
+  type CampaignGoalLoaded       = Event { data : [CampaignGoal] }            "Fired when the campaign collection finishes loading"
+  type CampaignGoalLoadFailed   = Event { error : string, code : string }    "Fired when the campaign collection fails to load"
+  type CampaignGoalUpdated      = Event { row : CampaignGoal }               "Fired after a campaign's status persists"
+  type CampaignGoalUpdateFailed = Event { error : string, code : string }    "Fired when a campaign's status update fails to persist"
 
   trait CampaignGoalTracker -> CampaignGoal [interaction, collection] {
     config {
@@ -42,6 +44,22 @@ orbital CampaignGoalOrbital {
       ]
         @label "Row actions"
         @description "Buttons users can click on each campaign row"
+        @tier "customization"
+      healthScoreThresholdAlert : number = 25
+        @label "Health score threshold (% of target)"
+        @description "Alert when raisedAmount/targetAmount drops below this with deadline approaching. Declarative; wire via sibling std-notify."
+        @tier "customization"
+      renewalReminderDaysBefore : [number] = [30, 7, 1]
+        @label "Reminder days-before endDate"
+        @description "Days before campaign endDate to ping major donors / followers. Declarative; wire via sibling std-reminder-scheduler."
+        @tier "customization"
+      archiveInactiveAfterDays : number = 180
+        @label "Archive after end (days)"
+        @description "Days after endDate before an ended campaign is archived. Declarative; wire via sibling std-lifecycle."
+        @tier "advanced"
+      consentTrackingEnabled : boolean = true
+        @label "Track consent"
+        @description "Whether donor outreach honors opt-in consent records. Declarative."
         @tier "customization"
     }
     initial: loading
@@ -70,6 +88,15 @@ orbital CampaignGoalOrbital {
         (set @entity.id @payload.id)
         (fetch CampaignGoal { emit: { success: "CampaignGoalLoaded", failure: "CampaignGoalLoadFailed" } })
         (render-ui main { type: "stack", direction: "vertical", gap: "md", align: "center", className: "py-12", children: [{ type: "spinner" }, { type: "typography", variant: "caption", color: "muted", content: "Ending campaign…" }] })
+      SET_STATUS -> loading
+        (set @entity.id @payload.entityId)
+        (set @entity.status @payload.newStatus)
+        (persist update CampaignGoal @entity { emit: { success: "CampaignGoalUpdated", failure: "CampaignGoalUpdateFailed" } })
+        (render-ui main { type: "stack", direction: "vertical", gap: "md", align: "center", className: "py-12", children: [{ type: "spinner" }, { type: "typography", variant: "caption", color: "muted", content: "Updating campaign status…" }] })
+      CampaignGoalUpdated -> loading
+        (fetch CampaignGoal { emit: { success: "CampaignGoalLoaded", failure: "CampaignGoalLoadFailed" } })
+      CampaignGoalUpdateFailed -> browsing
+        (render-ui main { type: "alert", variant: "error", message: "@payload.error" })
     }
     state viewing_single {
       CLOSE_VIEW -> loading
@@ -90,20 +117,25 @@ orbital CampaignGoalOrbital {
         (render-ui main { type: "spinner", size: "sm" })
     }
     emits {
-      OPEN_CAMPAIGN           { id : string!, row : CampaignGoal }
-      CLOSE_VIEW              { }
-      LAUNCH_CAMPAIGN         { id : string! }
-      END_CAMPAIGN            { id : string! }
-      CampaignGoalLoaded      { data : [CampaignGoal] }
-      CampaignGoalLoadFailed  { error : string, code : string }
+      OPEN_CAMPAIGN             { id : string!, row : CampaignGoal }
+      CLOSE_VIEW                { }
+      LAUNCH_CAMPAIGN           { id : string! }
+      END_CAMPAIGN              { id : string! }
+      CampaignGoalLoaded        { data : [CampaignGoal] }
+      CampaignGoalLoadFailed    { error : string, code : string }
+      CampaignGoalUpdated       { row : CampaignGoal }
+      CampaignGoalUpdateFailed  { error : string, code : string }
     }
     listens {
-      OPEN_CAMPAIGN           { id : string!, row : CampaignGoal }
-      CLOSE_VIEW              { }
-      LAUNCH_CAMPAIGN         { id : string! }
-      END_CAMPAIGN            { id : string! }
-      CampaignGoalLoaded      { data : [CampaignGoal] }
-      CampaignGoalLoadFailed  { error : string, code : string }
+      OPEN_CAMPAIGN             { id : string!, row : CampaignGoal }
+      CLOSE_VIEW                { }
+      LAUNCH_CAMPAIGN           { id : string! }
+      END_CAMPAIGN              { id : string! }
+      SET_STATUS                { entityId : string!, newStatus : string! }
+      CampaignGoalLoaded        { data : [CampaignGoal] }
+      CampaignGoalLoadFailed    { error : string, code : string }
+      CampaignGoalUpdated       { row : CampaignGoal }
+      CampaignGoalUpdateFailed  { error : string, code : string }
     }
   }
   page "/campaigns" as CampaignGoalPage -> CampaignGoalTracker

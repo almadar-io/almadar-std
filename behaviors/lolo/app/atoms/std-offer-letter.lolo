@@ -1,5 +1,5 @@
-app std-offer-letter "1.1.0"
-"std-offer-letter — formal job offer primitive. Owns an OfferLetter entity (applicant, position, salary, start date, acceptance status). Browses offers in a data-grid with Send / Revoke actions. Agents tune the list shape via `config.fields` + `config.itemActions`."
+app std-offer-letter "1.2.0"
+"std-offer-letter — formal job offer lifecycle. Listens for SET_STATUS so std-lifecycle can auto-expire offers past expiresAt. Exposes HR knobs (backgroundCheckRequired, eVerifyRequired, anonymizeOnRejection, …)."
 
 type FieldSpec = { name : string!, label : string, variant : string, icon : string, format : string, key : string, header : string }
 type ItemAction = { label : string!, event : string!, variant : string, icon : string }
@@ -43,6 +43,30 @@ orbital OfferLetterOrbital {
         @label "Row actions"
         @description "Buttons users can click on each offer row"
         @tier "customization"
+      backgroundCheckRequired : boolean = true
+        @label "Background check required"
+        @description "Block SEND_OFFER until a background check is on file."
+        @tier "customization"
+      eVerifyRequired : boolean = false
+        @label "E-Verify required"
+        @description "US I-9 / E-Verify gate. Block ACCEPT until verification passes."
+        @tier "customization"
+      i9DocumentsRequired : boolean = true
+        @label "I-9 documents required"
+        @description "Require I-9 supporting documents at the accepted transition."
+        @tier "customization"
+      anonymizeOnRejection : boolean = false
+        @label "Anonymize on rejection"
+        @description "When true, scrub applicant PII on rejected/revoked. Pair with std-data-erasure."
+        @tier "customization"
+      retentionAfterRejectionDays : number = 1825
+        @label "Retention after rejection (days)"
+        @description "Days to keep rejected/revoked offers. Default 1825 (5 years) covers most EEOC + IRS retention."
+        @tier "advanced"
+      equalOpportunityTrackingEnabled : boolean = false
+        @label "Equal opportunity tracking"
+        @description "Capture demographic data separately for EEO reporting (sibling collection)."
+        @tier "advanced"
     }
     initial: loading
     state loading {
@@ -70,6 +94,11 @@ orbital OfferLetterOrbital {
         (set @entity.id @payload.id)
         (fetch OfferLetter { emit: { success: "OfferLetterLoaded", failure: "OfferLetterLoadFailed" } })
         (render-ui main { type: "stack", direction: "vertical", gap: "md", align: "center", className: "py-12", children: [{ type: "spinner" }, { type: "typography", variant: "caption", color: "muted", content: "Revoking offer…" }] })
+      SET_STATUS -> loading
+        (set @entity.id @payload.entityId)
+        (set @entity.status @payload.newStatus)
+        (persist update OfferLetter @entity { emit: { success: "OfferLetterLoaded", failure: "OfferLetterLoadFailed" } })
+        (render-ui main { type: "stack", direction: "vertical", gap: "md", align: "center", className: "py-12", children: [{ type: "spinner" }, { type: "typography", variant: "caption", color: "muted", content: "Updating offer status…" }] })
     }
     state viewing_single {
       CLOSE_VIEW -> loading
@@ -102,6 +131,7 @@ orbital OfferLetterOrbital {
       CLOSE_VIEW             { }
       SEND_OFFER             { id : string! }
       REVOKE_OFFER           { id : string! }
+      SET_STATUS             { entityId : string!, newStatus : string! }
       OfferLetterLoaded      { data : [OfferLetter] }
       OfferLetterLoadFailed  { error : string, code : string }
     }

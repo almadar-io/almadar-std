@@ -1,7 +1,7 @@
 {
   "name": "std-lease",
-  "version": "1.1.0",
-  "description": "std-lease — owner-side lease records that tie tenants to property units with dates, monthly rent, and lifecycle status (pending/active/expired/terminated). Agents tune the list shape via `config.fields` + `config.itemActions`.",
+  "version": "1.2.0",
+  "description": "std-lease — owner-side lease records (tenant ↔ unit, dates, monthly rent, status). Listens for SET_STATUS so std-lifecycle can drive transitions (active → expired). Exposes Real-estate knobs (leaseRenewalNoticeDays, securityDepositMonths, lateRentGraceDays, …).",
   "orbitals": [
     {
       "name": "LeaseOrbital",
@@ -171,6 +171,67 @@
                   "type": "string"
                 }
               ]
+            },
+            {
+              "event": "LeaseUpdated",
+              "payloadSchema": [
+                {
+                  "name": "row.id",
+                  "type": "string",
+                  "required": true
+                },
+                {
+                  "name": "row.tenantId",
+                  "type": "string",
+                  "required": true
+                },
+                {
+                  "name": "row.tenantName",
+                  "type": "string"
+                },
+                {
+                  "name": "row.unitId",
+                  "type": "string"
+                },
+                {
+                  "name": "row.unitLabel",
+                  "type": "string"
+                },
+                {
+                  "name": "row.startDate",
+                  "type": "string",
+                  "required": true
+                },
+                {
+                  "name": "row.endDate",
+                  "type": "string"
+                },
+                {
+                  "name": "row.monthlyRent",
+                  "type": "number"
+                },
+                {
+                  "name": "row.status",
+                  "type": "string"
+                },
+                {
+                  "name": "row.notes",
+                  "type": "string"
+                }
+              ]
+            },
+            {
+              "event": "LeaseUpdateFailed",
+              "payloadSchema": [
+                {
+                  "name": "error",
+                  "type": "string"
+                },
+                {
+                  "name": "code",
+                  "type": "string"
+                }
+              ]
             }
           ],
           "stateMachine": {
@@ -245,6 +306,46 @@
                 ]
               },
               {
+                "key": "SET_STATUS",
+                "name": "Set Status",
+                "payloadSchema": [
+                  {
+                    "name": "entityId",
+                    "type": "string",
+                    "required": true
+                  },
+                  {
+                    "name": "newStatus",
+                    "type": "string",
+                    "required": true
+                  }
+                ]
+              },
+              {
+                "key": "LeaseUpdated",
+                "name": "Lease updated",
+                "payloadSchema": [
+                  {
+                    "name": "row",
+                    "type": "Lease"
+                  }
+                ]
+              },
+              {
+                "key": "LeaseUpdateFailed",
+                "name": "Lease update failed",
+                "payloadSchema": [
+                  {
+                    "name": "error",
+                    "type": "string"
+                  },
+                  {
+                    "name": "code",
+                    "type": "string"
+                  }
+                ]
+              },
+              {
                 "key": "CLOSE_VIEW",
                 "name": "Close View"
               },
@@ -280,22 +381,22 @@
                     "render-ui",
                     "main",
                     {
-                      "align": "center",
                       "type": "stack",
-                      "direction": "vertical",
+                      "className": "py-12",
                       "gap": "md",
+                      "direction": "vertical",
+                      "align": "center",
                       "children": [
                         {
                           "type": "spinner"
                         },
                         {
-                          "variant": "caption",
                           "type": "typography",
-                          "content": "Loading leases…",
-                          "color": "muted"
+                          "variant": "caption",
+                          "color": "muted",
+                          "content": "Loading leases…"
                         }
-                      ],
-                      "className": "py-12"
+                      ]
                     }
                   ]
                 ]
@@ -309,69 +410,69 @@
                     "render-ui",
                     "main",
                     {
-                      "direction": "vertical",
-                      "gap": "md",
-                      "type": "stack",
                       "children": [
                         {
+                          "gap": "sm",
+                          "direction": "horizontal",
                           "children": [
                             {
                               "name": "file-text",
                               "type": "icon"
                             },
                             {
-                              "type": "typography",
                               "content": "@config.title",
+                              "type": "typography",
                               "variant": "h3"
                             }
                           ],
-                          "gap": "sm",
                           "type": "stack",
-                          "direction": "horizontal",
                           "align": "center"
                         },
                         {
-                          "type": "simple-grid",
-                          "cols": 4.0,
                           "children": [
                             {
-                              "label": "Total leases",
+                              "icon": "file-text",
                               "type": "stat-display",
                               "value": "@payload.data.length",
-                              "icon": "file-text"
+                              "label": "Total leases"
                             },
                             {
+                              "type": "stat-display",
                               "label": "Active",
                               "icon": "check-circle",
-                              "value": "86",
+                              "value": "86"
+                            },
+                            {
+                              "icon": "alert-triangle",
+                              "value": "11",
+                              "label": "Expiring 60d",
                               "type": "stat-display"
                             },
                             {
                               "type": "stat-display",
-                              "icon": "alert-triangle",
-                              "value": "11",
-                              "label": "Expiring 60d"
-                            },
-                            {
-                              "label": "Monthly revenue",
-                              "type": "stat-display",
+                              "value": "$184,200",
                               "icon": "dollar-sign",
-                              "value": "$184,200"
+                              "label": "Monthly revenue"
                             }
-                          ]
+                          ],
+                          "cols": 4.0,
+                          "type": "simple-grid"
                         },
                         {
                           "type": "divider"
                         },
                         {
                           "gap": "sm",
-                          "type": "data-grid",
-                          "cols": 1.0,
                           "itemActions": "@config.itemActions",
+                          "cols": 1.0,
                           "entity": "@payload.data",
-                          "fields": "@config.fields"
+                          "fields": "@config.fields",
+                          "type": "data-grid"
                         }
-                      ]
+                      ],
+                      "type": "stack",
+                      "direction": "vertical",
+                      "gap": "md"
                     }
                   ]
                 ]
@@ -386,8 +487,8 @@
                     "main",
                     {
                       "variant": "error",
-                      "message": "@payload.error",
-                      "type": "alert"
+                      "type": "alert",
+                      "message": "@payload.error"
                     }
                   ]
                 ]
@@ -452,19 +553,21 @@
                     "main",
                     {
                       "gap": "md",
+                      "direction": "vertical",
                       "children": [
                         {
-                          "gap": "sm",
+                          "type": "stack",
+                          "direction": "horizontal",
                           "children": [
                             {
-                              "label": "Back",
-                              "variant": "ghost",
                               "type": "button",
-                              "action": "CLOSE_VIEW"
+                              "action": "CLOSE_VIEW",
+                              "label": "Back",
+                              "variant": "ghost"
                             },
                             {
-                              "name": "file-text",
-                              "type": "icon"
+                              "type": "icon",
+                              "name": "file-text"
                             },
                             {
                               "variant": "h3",
@@ -473,65 +576,65 @@
                             },
                             {
                               "type": "badge",
-                              "label": "@entity.status",
-                              "variant": "default"
+                              "variant": "default",
+                              "label": "@entity.status"
                             }
                           ],
-                          "type": "stack",
-                          "direction": "horizontal",
-                          "align": "center"
+                          "align": "center",
+                          "gap": "sm"
                         },
                         {
                           "type": "divider"
                         },
                         {
-                          "type": "stack",
+                          "direction": "vertical",
+                          "gap": "sm",
                           "children": [
                             {
                               "type": "stack",
+                              "direction": "horizontal",
                               "gap": "md",
                               "children": [
                                 {
-                                  "type": "typography",
                                   "content": "Unit",
-                                  "variant": "caption",
-                                  "color": "muted"
-                                },
-                                {
-                                  "content": "@entity.unitLabel",
                                   "type": "typography",
-                                  "variant": "body"
-                                }
-                              ],
-                              "direction": "horizontal"
-                            },
-                            {
-                              "type": "stack",
-                              "children": [
-                                {
-                                  "type": "typography",
-                                  "content": "Tenant ID",
                                   "color": "muted",
                                   "variant": "caption"
                                 },
                                 {
-                                  "type": "typography",
                                   "variant": "body",
-                                  "content": "@entity.tenantId"
+                                  "content": "@entity.unitLabel",
+                                  "type": "typography"
                                 }
-                              ],
-                              "direction": "horizontal",
-                              "gap": "md"
+                              ]
                             },
                             {
                               "gap": "md",
-                              "type": "stack",
                               "children": [
                                 {
-                                  "variant": "caption",
-                                  "type": "typography",
                                   "color": "muted",
-                                  "content": "Notes"
+                                  "variant": "caption",
+                                  "content": "Tenant ID",
+                                  "type": "typography"
+                                },
+                                {
+                                  "type": "typography",
+                                  "content": "@entity.tenantId",
+                                  "variant": "body"
+                                }
+                              ],
+                              "type": "stack",
+                              "direction": "horizontal"
+                            },
+                            {
+                              "type": "stack",
+                              "gap": "md",
+                              "children": [
+                                {
+                                  "type": "typography",
+                                  "variant": "caption",
+                                  "content": "Notes",
+                                  "color": "muted"
                                 },
                                 {
                                   "variant": "body",
@@ -542,64 +645,62 @@
                               "direction": "horizontal"
                             }
                           ],
-                          "gap": "sm",
-                          "direction": "vertical"
+                          "type": "stack"
                         },
                         {
                           "type": "divider"
                         },
                         {
+                          "cols": 3.0,
                           "children": [
                             {
                               "icon": "dollar-sign",
-                              "value": "@entity.monthlyRent",
+                              "label": "Monthly rent",
                               "type": "stat-display",
-                              "label": "Monthly rent"
+                              "value": "@entity.monthlyRent"
                             },
                             {
-                              "icon": "calendar",
-                              "type": "stat-display",
                               "value": "@entity.startDate",
-                              "label": "Start"
+                              "icon": "calendar",
+                              "label": "Start",
+                              "type": "stat-display"
                             },
                             {
-                              "value": "@entity.endDate",
                               "icon": "calendar-x",
+                              "type": "stat-display",
                               "label": "End",
-                              "type": "stat-display"
+                              "value": "@entity.endDate"
                             }
                           ],
-                          "type": "simple-grid",
-                          "cols": 3.0
+                          "type": "simple-grid"
                         },
                         {
-                          "type": "stack",
                           "children": [
                             {
-                              "label": "Renew Lease",
-                              "variant": "primary",
-                              "type": "button",
-                              "action": "RENEW_LEASE",
-                              "actionPayload": {
-                                "id": "@entity.id"
-                              }
-                            },
-                            {
-                              "action": "TERMINATE_LEASE",
-                              "label": "Terminate",
                               "actionPayload": {
                                 "id": "@entity.id"
                               },
                               "type": "button",
+                              "variant": "primary",
+                              "label": "Renew Lease",
+                              "action": "RENEW_LEASE"
+                            },
+                            {
+                              "action": "TERMINATE_LEASE",
+                              "actionPayload": {
+                                "id": "@entity.id"
+                              },
+                              "type": "button",
+                              "label": "Terminate",
                               "variant": "danger"
                             }
                           ],
                           "direction": "horizontal",
-                          "align": "center",
-                          "gap": "sm"
+                          "type": "stack",
+                          "gap": "sm",
+                          "align": "center"
                         }
                       ],
-                      "direction": "vertical",
                       "type": "stack"
                     }
                   ]
@@ -629,22 +730,106 @@
                     "render-ui",
                     "main",
                     {
-                      "className": "py-12",
-                      "direction": "vertical",
                       "type": "stack",
                       "gap": "md",
-                      "align": "center",
+                      "className": "py-12",
+                      "direction": "vertical",
                       "children": [
                         {
                           "type": "spinner"
                         },
                         {
-                          "content": "Terminating lease…",
+                          "color": "muted",
                           "type": "typography",
-                          "variant": "caption",
-                          "color": "muted"
+                          "content": "Terminating lease…",
+                          "variant": "caption"
                         }
-                      ]
+                      ],
+                      "align": "center"
+                    }
+                  ]
+                ]
+              },
+              {
+                "from": "browsing",
+                "to": "loading",
+                "event": "SET_STATUS",
+                "effects": [
+                  [
+                    "set",
+                    "@entity.id",
+                    "@payload.entityId"
+                  ],
+                  [
+                    "set",
+                    "@entity.status",
+                    "@payload.newStatus"
+                  ],
+                  [
+                    "persist",
+                    "update",
+                    "Lease",
+                    "@entity",
+                    {
+                      "emit": {
+                        "failure": "LeaseUpdateFailed",
+                        "success": "LeaseUpdated"
+                      }
+                    }
+                  ],
+                  [
+                    "render-ui",
+                    "main",
+                    {
+                      "className": "py-12",
+                      "children": [
+                        {
+                          "type": "spinner"
+                        },
+                        {
+                          "type": "typography",
+                          "color": "muted",
+                          "variant": "caption",
+                          "content": "Updating lease status…"
+                        }
+                      ],
+                      "align": "center",
+                      "type": "stack",
+                      "direction": "vertical",
+                      "gap": "md"
+                    }
+                  ]
+                ]
+              },
+              {
+                "from": "browsing",
+                "to": "loading",
+                "event": "LeaseUpdated",
+                "effects": [
+                  [
+                    "fetch",
+                    "Lease",
+                    {
+                      "emit": {
+                        "success": "LeaseLoaded",
+                        "failure": "LeaseLoadFailed"
+                      }
+                    }
+                  ]
+                ]
+              },
+              {
+                "from": "browsing",
+                "to": "browsing",
+                "event": "LeaseUpdateFailed",
+                "effects": [
+                  [
+                    "render-ui",
+                    "main",
+                    {
+                      "message": "@payload.error",
+                      "type": "alert",
+                      "variant": "error"
                     }
                   ]
                 ]
@@ -668,9 +853,9 @@
                     "render-ui",
                     "main",
                     {
-                      "type": "stack",
+                      "className": "py-12",
                       "direction": "vertical",
-                      "gap": "md",
+                      "type": "stack",
                       "children": [
                         {
                           "type": "spinner"
@@ -682,8 +867,8 @@
                           "type": "typography"
                         }
                       ],
-                      "align": "center",
-                      "className": "py-12"
+                      "gap": "md",
+                      "align": "center"
                     }
                   ]
                 ]
@@ -712,22 +897,22 @@
                     "render-ui",
                     "main",
                     {
-                      "direction": "vertical",
                       "className": "py-12",
-                      "gap": "md",
+                      "direction": "vertical",
                       "type": "stack",
-                      "align": "center",
                       "children": [
                         {
                           "type": "spinner"
                         },
                         {
-                          "content": "Renewing lease…",
                           "type": "typography",
-                          "color": "muted",
-                          "variant": "caption"
+                          "variant": "caption",
+                          "content": "Renewing lease…",
+                          "color": "muted"
                         }
-                      ]
+                      ],
+                      "align": "center",
+                      "gap": "md"
                     }
                   ]
                 ]
@@ -756,22 +941,22 @@
                     "render-ui",
                     "main",
                     {
-                      "gap": "md",
-                      "direction": "vertical",
-                      "align": "center",
-                      "className": "py-12",
                       "children": [
                         {
                           "type": "spinner"
                         },
                         {
-                          "color": "muted",
                           "variant": "caption",
+                          "color": "muted",
                           "type": "typography",
                           "content": "Terminating lease…"
                         }
                       ],
-                      "type": "stack"
+                      "direction": "vertical",
+                      "className": "py-12",
+                      "gap": "md",
+                      "type": "stack",
+                      "align": "center"
                     }
                   ]
                 ]
@@ -795,8 +980,8 @@
                     "render-ui",
                     "main",
                     {
-                      "type": "spinner",
-                      "size": "sm"
+                      "size": "sm",
+                      "type": "spinner"
                     }
                   ]
                 ]
@@ -804,73 +989,22 @@
             ]
           },
           "config": {
-            "title": {
-              "type": "string",
-              "default": "Leases",
-              "label": "Section title",
-              "description": "Heading shown above the lease list",
-              "tier": "customization"
-            },
-            "itemActions": {
-              "type": "[ItemAction]",
-              "default": [
-                {
-                  "variant": "primary",
-                  "event": "OPEN_LEASE",
-                  "label": "Open",
-                  "icon": "arrow-right"
-                },
-                {
-                  "label": "Terminate",
-                  "variant": "danger",
-                  "event": "TERMINATE_LEASE"
-                }
-              ],
-              "label": "Row actions",
-              "description": "Buttons users can click on each lease row",
-              "tier": "customization",
-              "items": {
-                "type": "object",
-                "properties": {
-                  "icon": {
-                    "name": "icon",
-                    "type": "string",
-                    "required": false
-                  },
-                  "event": {
-                    "name": "event",
-                    "type": "string",
-                    "required": true
-                  },
-                  "variant": {
-                    "name": "variant",
-                    "type": "string",
-                    "required": false
-                  },
-                  "label": {
-                    "name": "label",
-                    "type": "string",
-                    "required": true
-                  }
-                }
-              }
-            },
             "fields": {
               "type": "[FieldSpec]",
               "default": [
                 {
-                  "name": "tenantName",
                   "label": "Tenant",
-                  "variant": "caption"
+                  "variant": "caption",
+                  "name": "tenantName"
                 },
                 {
                   "variant": "caption",
-                  "name": "unitLabel",
-                  "label": "Unit"
+                  "label": "Unit",
+                  "name": "unitLabel"
                 },
                 {
+                  "variant": "caption",
                   "label": "Start",
-                  "variant": "caption",
                   "name": "startDate"
                 },
                 {
@@ -879,14 +1013,14 @@
                   "name": "endDate"
                 },
                 {
-                  "label": "Monthly Rent",
+                  "name": "monthlyRent",
                   "variant": "caption",
-                  "name": "monthlyRent"
+                  "label": "Monthly Rent"
                 },
                 {
+                  "label": "Status",
                   "variant": "badge",
-                  "name": "status",
-                  "label": "Status"
+                  "name": "status"
                 }
               ],
               "label": "Columns to show",
@@ -895,23 +1029,8 @@
               "items": {
                 "type": "object",
                 "properties": {
-                  "header": {
-                    "name": "header",
-                    "type": "string",
-                    "required": false
-                  },
-                  "format": {
-                    "name": "format",
-                    "type": "string",
-                    "required": false
-                  },
-                  "name": {
-                    "name": "name",
-                    "type": "string",
-                    "required": true
-                  },
-                  "label": {
-                    "name": "label",
+                  "icon": {
+                    "name": "icon",
                     "type": "string",
                     "required": false
                   },
@@ -920,10 +1039,25 @@
                     "type": "string",
                     "required": false
                   },
-                  "icon": {
-                    "name": "icon",
+                  "label": {
+                    "name": "label",
                     "type": "string",
                     "required": false
+                  },
+                  "format": {
+                    "name": "format",
+                    "type": "string",
+                    "required": false
+                  },
+                  "header": {
+                    "name": "header",
+                    "type": "string",
+                    "required": false
+                  },
+                  "name": {
+                    "name": "name",
+                    "type": "string",
+                    "required": true
                   },
                   "key": {
                     "name": "key",
@@ -932,6 +1066,105 @@
                   }
                 }
               }
+            },
+            "itemActions": {
+              "type": "[ItemAction]",
+              "default": [
+                {
+                  "variant": "primary",
+                  "icon": "arrow-right",
+                  "event": "OPEN_LEASE",
+                  "label": "Open"
+                },
+                {
+                  "label": "Terminate",
+                  "event": "TERMINATE_LEASE",
+                  "variant": "danger"
+                }
+              ],
+              "label": "Row actions",
+              "description": "Buttons users can click on each lease row",
+              "tier": "customization",
+              "items": {
+                "type": "object",
+                "properties": {
+                  "event": {
+                    "name": "event",
+                    "type": "string",
+                    "required": true
+                  },
+                  "label": {
+                    "name": "label",
+                    "type": "string",
+                    "required": true
+                  },
+                  "icon": {
+                    "name": "icon",
+                    "type": "string",
+                    "required": false
+                  },
+                  "variant": {
+                    "name": "variant",
+                    "type": "string",
+                    "required": false
+                  }
+                }
+              }
+            },
+            "autoRenewEnabled": {
+              "type": "boolean",
+              "default": false,
+              "label": "Auto-renew",
+              "description": "Roll over leases that reach term without an explicit non-renew notice.",
+              "tier": "customization"
+            },
+            "inspectionFrequencyMonths": {
+              "type": "number",
+              "default": 12.0,
+              "label": "Inspection cadence (months)",
+              "description": "Months between scheduled unit inspections during the lease.",
+              "tier": "advanced"
+            },
+            "title": {
+              "type": "string",
+              "default": "Leases",
+              "label": "Section title",
+              "description": "Heading shown above the lease list",
+              "tier": "customization"
+            },
+            "leaseRenewalNoticeDays": {
+              "type": "number",
+              "default": 60.0,
+              "label": "Renewal notice (days)",
+              "description": "Days before lease end when a renewal notice should fire. Wire via std-reminder-scheduler composed at the organism.",
+              "tier": "customization"
+            },
+            "securityDepositMonths": {
+              "type": "number",
+              "default": 1.0,
+              "label": "Security deposit (months)",
+              "description": "Months of rent required as security deposit on signing.",
+              "tier": "customization"
+            },
+            "petPolicy": {
+              "type": "string",
+              "default": "no-pets",
+              "label": "Pet policy",
+              "description": "Default pet policy applied to new leases.",
+              "tier": "customization",
+              "values": [
+                "no-pets",
+                "cats-only",
+                "dogs-only",
+                "all"
+              ]
+            },
+            "lateRentGraceDays": {
+              "type": "number",
+              "default": 5.0,
+              "label": "Late rent grace (days)",
+              "description": "Days after due date before a rent charge is treated as late.",
+              "tier": "customization"
             }
           },
           "scope": "collection"

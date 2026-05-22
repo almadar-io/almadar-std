@@ -1,0 +1,69 @@
+app std-lifecycle "1.0.0"
+"std-lifecycle — declarative lifecycle-rule definitions for a target entity. Periodic tick logs scan attempts to LifecycleRunLog. v1.0 ships the config knobs + scan topology so the questionnaire surfaces rules + targetEntity + dryRun cleanly; auto-emit of SET_STATUS per matching record lands in v1.1 when loop-with-emit primitive exists (gap — docs/Almadar_Std_Factories.md)."
+
+type LifecycleCondition = { kind : string, value : number, dateField : string }
+type LifecycleRule      = { fromStatus : string, toStatus : string, condition : LifecycleCondition }
+
+orbital LifecycleOrbital {
+  entity LifecycleRunLog [persistent: lifecycle_runs] {
+    id            : string!
+    targetEntity  : string  = ""
+    recordCount   : number  = 0
+    ranAt         : number  = 0
+    errors        : string  = ""
+  }
+
+  type ScanRecordsLoaded = Event { data : [object] }                         "Internal: target entity collection fetched by the scan tick."
+  type ScanFailed        = Event { error : string, code : string }           "Internal: scan fetch failed."
+  type LifecycleRunLogged = Event { row : LifecycleRunLog }                  "Re-emitted after a run log row persists."
+  type LifecycleRunFailed = Event { error : string, code : string }          "Emitted when persisting the run log fails."
+
+  trait LifecycleScheduler -> LifecycleRunLog [lifecycle, instance] {
+    config {
+      targetEntity        : string   = ""
+        @label "Target entity"
+        @description "Entity name to scan (e.g. 'InvoiceRecord'). v1.1 will drive SET_STATUS transitions on this entity."
+        @tier "essential"
+      rules               : [LifecycleRule] = []
+        @label "Lifecycle rules"
+        @description "When a record's status is fromStatus and its dateField is older than condition.value days (kind='ageDays'), transition to toStatus. v1.0 declarative only — wiring lands in v1.1 (gap)."
+        @tier "essential"
+      dryRun              : boolean = false
+        @label "Dry-run mode"
+        @description "When true, log scan results without emitting transitions."
+        @tier "advanced"
+    }
+    initial: idle
+    state idle {
+      ScanRecordsLoaded -> idle
+        (set @entity.targetEntity @config.targetEntity)
+        (set @entity.recordCount (array/len @payload.data))
+        (set @entity.ranAt 0)
+        (persist create LifecycleRunLog @entity { emit: { success: "LifecycleRunLogged", failure: "LifecycleRunFailed" } })
+      ScanFailed -> idle
+        (set @entity.targetEntity @config.targetEntity)
+        (set @entity.recordCount 0)
+        (set @entity.errors @payload.error)
+        (persist create LifecycleRunLog @entity { emit: { success: "LifecycleRunLogged", failure: "LifecycleRunFailed" } })
+      LifecycleRunLogged -> idle
+      LifecycleRunFailed -> idle
+    }
+    ticks {
+      scanCycle every 1 h
+        (fetch LifecycleRunLog { emit: { success: "ScanRecordsLoaded", failure: "ScanFailed" } })
+    }
+    emits {
+      ScanRecordsLoaded   { data : [object] }
+      ScanFailed          { error : string, code : string }
+      LifecycleRunLogged  { row : LifecycleRunLog }
+      LifecycleRunFailed  { error : string, code : string }
+    }
+    listens {
+      ScanRecordsLoaded   { data : [object] }
+      ScanFailed          { error : string, code : string }
+      LifecycleRunLogged  { row : LifecycleRunLog }
+      LifecycleRunFailed  { error : string, code : string }
+    }
+  }
+  page "/lifecycle/scheduler" as LifecycleSchedulerPage -> LifecycleScheduler
+}

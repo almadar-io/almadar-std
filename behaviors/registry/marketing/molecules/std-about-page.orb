@@ -1,0 +1,440 @@
+{
+  "name": "std-about-page",
+  "version": "1.0.0",
+  "description": "About page molecule for marketing sites. Composes hero, articles, team grid, case studies, and CTA sections as a vertical stack of individual marketing patterns. Pick for company overviews, team showcases, and culture pages.",
+  "orbitals": [
+    {
+      "name": "AboutPageItemOrbital",
+      "entity": {
+        "name": "AboutPageItem",
+        "persistence": "runtime",
+        "fields": [
+          {
+            "name": "id",
+            "type": "string"
+          }
+        ]
+      },
+      "traits": [
+        {
+          "name": "AboutPageItemLayout",
+          "category": "interaction",
+          "linkedEntity": "AboutPageItem",
+          "stateMachine": {
+            "states": [
+              {
+                "name": "composing",
+                "isInitial": true
+              }
+            ],
+            "events": [
+              {
+                "key": "INIT",
+                "name": "Initialize"
+              }
+            ],
+            "transitions": [
+              {
+                "from": "composing",
+                "to": "composing",
+                "event": "INIT",
+                "effects": [
+                  [
+                    "render-ui",
+                    "main",
+                    {
+                      "type": "stack",
+                      "direction": "vertical",
+                      "gap": "none",
+                      "children": [
+                        {
+                          "align": "@config.heroAlign",
+                          "background": "@config.heroBackground",
+                          "subtitle": "@config.heroSubtitle",
+                          "tag": "@config.heroTag",
+                          "type": "hero-section",
+                          "primaryAction": {
+                            "label": "@config.heroPrimaryActionLabel",
+                            "href": "@config.heroPrimaryActionHref"
+                          },
+                          "titleAccent": "@config.heroTitleAccent",
+                          "title": "@config.heroTitle"
+                        },
+                        {
+                          "direction": "vertical",
+                          "type": "stack",
+                          "className": "max-w-prose mx-auto py-12",
+                          "children": [
+                            {
+                              "type": "typography",
+                              "variant": "h2",
+                              "content": "@config.article1Title"
+                            },
+                            {
+                              "type": "typography",
+                              "variant": "body",
+                              "content": "@config.article1Content"
+                            },
+                            {
+                              "type": "typography",
+                              "variant": "h2",
+                              "content": "@config.article2Title"
+                            },
+                            {
+                              "type": "typography",
+                              "variant": "body",
+                              "content": "@config.article2Content"
+                            },
+                            {
+                              "variant": "h2",
+                              "content": "@config.article3Title",
+                              "type": "typography"
+                            },
+                            {
+                              "variant": "body",
+                              "type": "typography",
+                              "content": "@config.article3Content"
+                            }
+                          ],
+                          "gap": "md"
+                        },
+                        {
+                          "type": "team-organism",
+                          "entity": "@config.team"
+                        },
+                        {
+                          "entity": "@config.caseStudies",
+                          "type": "case-study-organism"
+                        },
+                        {
+                          "type": "cta-banner",
+                          "title": "@config.ctaTitle",
+                          "primaryAction": "@config.ctaAction"
+                        },
+                        {
+                          "columns": "@config.footerColumns",
+                          "copyright": "@config.footerCopyright",
+                          "type": "marketing-footer"
+                        }
+                      ]
+                    }
+                  ]
+                ]
+              }
+            ]
+          },
+          "config": {
+            "article3Title": {
+              "type": "string",
+              "default": "Our Values"
+            },
+            "article2Title": {
+              "type": "string",
+              "default": "Our Mission"
+            },
+            "ctaAction": {
+              "type": "ActionCard",
+              "default": {
+                "href": "/careers",
+                "label": "View Open Roles"
+              },
+              "properties": {
+                "href": {
+                  "name": "href",
+                  "type": "string",
+                  "required": true
+                },
+                "label": {
+                  "name": "label",
+                  "type": "string",
+                  "required": true
+                }
+              }
+            },
+            "heroBackground": {
+              "type": "string",
+              "default": "subtle"
+            },
+            "heroPrimaryActionHref": {
+              "type": "string",
+              "default": "/careers"
+            },
+            "ctaTitle": {
+              "type": "string",
+              "default": "Want to work with us?"
+            },
+            "article1Title": {
+              "type": "string",
+              "default": "Our Story"
+            },
+            "article3Content": {
+              "type": "string",
+              "default": "Speed, simplicity, and developer joy guide every decision we make."
+            },
+            "team": {
+              "type": "[TeamMemberCard]",
+              "default": [
+                {
+                  "id": "1",
+                  "name": "Jane Doe",
+                  "nameAr": "",
+                  "role": "CEO",
+                  "avatar": "",
+                  "bio": "Former VP Engineering at BigTech. Obsessed with developer experience."
+                },
+                {
+                  "role": "CTO",
+                  "bio": "Built distributed systems at scale for a decade.",
+                  "nameAr": "",
+                  "id": "2",
+                  "avatar": "",
+                  "name": "John Smith"
+                },
+                {
+                  "id": "3",
+                  "bio": "Believes great design is invisible.",
+                  "avatar": "",
+                  "nameAr": "",
+                  "name": "Alice Chen",
+                  "role": "Head of Design"
+                }
+              ],
+              "items": {
+                "type": "object",
+                "properties": {
+                  "nameAr": {
+                    "name": "nameAr",
+                    "type": "string",
+                    "required": false
+                  },
+                  "id": {
+                    "name": "id",
+                    "type": "string",
+                    "required": false
+                  },
+                  "avatar": {
+                    "name": "avatar",
+                    "type": "string",
+                    "required": false
+                  },
+                  "role": {
+                    "name": "role",
+                    "type": "string",
+                    "required": true
+                  },
+                  "name": {
+                    "name": "name",
+                    "type": "string",
+                    "required": true
+                  },
+                  "bio": {
+                    "name": "bio",
+                    "type": "string",
+                    "required": true
+                  }
+                }
+              }
+            },
+            "article2Content": {
+              "type": "string",
+              "default": "We exist to democratize software creation through natural language and AI."
+            },
+            "heroTag": {
+              "type": "string",
+              "default": ""
+            },
+            "heroTitleAccent": {
+              "type": "string",
+              "default": ""
+            },
+            "heroTitle": {
+              "type": "string",
+              "default": "About Almadar"
+            },
+            "article1Content": {
+              "type": "string",
+              "default": "Almadar started with a simple belief: everyone should be able to build software."
+            },
+            "footerColumns": {
+              "type": "[FooterColumn]",
+              "default": [
+                {
+                  "items": [
+                    {
+                      "label": "Features",
+                      "href": "#"
+                    },
+                    {
+                      "href": "#",
+                      "label": "Pricing"
+                    },
+                    {
+                      "href": "#",
+                      "label": "Changelog"
+                    }
+                  ],
+                  "title": "Product"
+                },
+                {
+                  "items": [
+                    {
+                      "href": "#",
+                      "label": "About"
+                    },
+                    {
+                      "label": "Careers",
+                      "href": "#"
+                    },
+                    {
+                      "label": "Blog",
+                      "href": "#"
+                    }
+                  ],
+                  "title": "Company"
+                },
+                {
+                  "title": "Resources",
+                  "items": [
+                    {
+                      "label": "Docs",
+                      "href": "#"
+                    },
+                    {
+                      "label": "Community",
+                      "href": "#"
+                    },
+                    {
+                      "label": "Support",
+                      "href": "#"
+                    }
+                  ]
+                }
+              ],
+              "items": {
+                "type": "object",
+                "properties": {
+                  "title": {
+                    "name": "title",
+                    "type": "string",
+                    "required": true
+                  },
+                  "items": {
+                    "name": "items",
+                    "type": "array",
+                    "required": false,
+                    "items": {
+                      "type": "object",
+                      "properties": {
+                        "label": {
+                          "name": "label",
+                          "type": "string",
+                          "required": true
+                        },
+                        "href": {
+                          "name": "href",
+                          "type": "string",
+                          "required": true
+                        }
+                      }
+                    }
+                  }
+                }
+              }
+            },
+            "heroPrimaryActionLabel": {
+              "type": "string",
+              "default": "Join Us"
+            },
+            "heroAlign": {
+              "type": "string",
+              "default": "center"
+            },
+            "caseStudies": {
+              "type": "[CaseStudyCard]",
+              "default": [
+                {
+                  "category": "SaaS",
+                  "title": "Acme Corp",
+                  "id": "1",
+                  "categoryColor": "",
+                  "href": "#",
+                  "linkLabel": "Read story",
+                  "description": "How Acme scaled from 1K to 1M users in 6 months."
+                },
+                {
+                  "href": "#",
+                  "linkLabel": "Read story",
+                  "title": "Globex",
+                  "description": "Globex reduced infrastructure costs by 70%.",
+                  "categoryColor": "",
+                  "category": "Fintech",
+                  "id": "2"
+                }
+              ],
+              "items": {
+                "type": "object",
+                "properties": {
+                  "id": {
+                    "name": "id",
+                    "type": "string",
+                    "required": false
+                  },
+                  "href": {
+                    "name": "href",
+                    "type": "string",
+                    "required": true
+                  },
+                  "title": {
+                    "name": "title",
+                    "type": "string",
+                    "required": true
+                  },
+                  "linkLabel": {
+                    "name": "linkLabel",
+                    "type": "string",
+                    "required": false
+                  },
+                  "category": {
+                    "name": "category",
+                    "type": "string",
+                    "required": true
+                  },
+                  "categoryColor": {
+                    "name": "categoryColor",
+                    "type": "string",
+                    "required": false
+                  },
+                  "description": {
+                    "name": "description",
+                    "type": "string",
+                    "required": true
+                  }
+                }
+              }
+            },
+            "footerCopyright": {
+              "type": "string",
+              "default": "© 2026 Almadar. All rights reserved."
+            },
+            "heroSubtitle": {
+              "type": "string",
+              "default": "We're building the future of software creation."
+            }
+          },
+          "scope": "instance"
+        }
+      ],
+      "pages": [
+        {
+          "name": "AboutPage",
+          "path": "/about",
+          "traits": [
+            {
+              "ref": "AboutPageItemLayout"
+            }
+          ]
+        }
+      ]
+    }
+  ]
+}

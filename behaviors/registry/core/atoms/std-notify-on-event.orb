@@ -1,7 +1,7 @@
 {
   "name": "std-notify-on-event",
-  "version": "1.0.0",
-  "description": "std-notify-on-event — event-driven notification dispatcher. Listens for the generic `EventOccurred` sentinel (rename via traitOverrides.events to the real event, e.g. ContactSaved). Emits in-app `notify` when `notifyChannel` is `\"in-app\"`, or persists a `NotificationRecord` row for out-of-band delivery when channel is `\"email\"` or `\"sms\"`. Composable via `extraTraits` to wire reactive notifications behind any emitting trait.",
+  "version": "1.1.0",
+  "description": "std-notify-on-event — event-driven notification dispatcher. Listens for the generic `EventOccurred` sentinel (rename via traitOverrides.events to the real event, e.g. ContactSaved). Resolves recipient from `recipients` (first entry; fan-out is a future extension) or falls back to `@user.id`. Skips dispatch when the recipient is in `suppressionList`. Emits in-app `notify` when `notifyChannel` is `\"in-app\"`, or persists a `NotificationRecord` row for out-of-band delivery when channel is `\"email\"` or `\"sms\"`.",
   "orbitals": [
     {
       "name": "NotifyOnEventOrbital",
@@ -126,7 +126,22 @@
                   [
                     "set",
                     "@entity.recipient",
-                    "@user.id"
+                    [
+                      "if",
+                      [
+                        "=",
+                        [
+                          "array/len",
+                          "@config.recipients"
+                        ],
+                        0.0
+                      ],
+                      "@user.id",
+                      [
+                        "array/first",
+                        "@config.recipients"
+                      ]
+                    ]
                   ],
                   [
                     "set",
@@ -147,9 +162,20 @@
                     "set",
                     "@entity.dispatched",
                     [
-                      "=",
-                      "@config.notifyChannel",
-                      "in-app"
+                      "and",
+                      [
+                        "=",
+                        "@config.notifyChannel",
+                        "in-app"
+                      ],
+                      [
+                        "not",
+                        [
+                          "array/includes",
+                          "@config.suppressionList",
+                          "@entity.recipient"
+                        ]
+                      ]
                     ]
                   ],
                   [
@@ -158,39 +184,50 @@
                     0.0
                   ],
                   [
-                    "if",
+                    "when",
                     [
-                      "=",
-                      "@config.notifyChannel",
-                      "in-app"
+                      "not",
+                      [
+                        "array/includes",
+                        "@config.suppressionList",
+                        "@entity.recipient"
+                      ]
                     ],
                     [
-                      "notify",
-                      "@config.severity",
-                      "@config.template"
-                    ],
-                    [
-                      "persist",
-                      "create",
-                      "NotificationRecord",
-                      {
-                        "recipient": "@user.id",
-                        "message": "@config.template",
-                        "dispatched": false,
-                        "channel": "@config.notifyChannel",
-                        "severity": "@config.severity",
-                        "recordedAt": 0.0
-                      }
+                      "if",
+                      [
+                        "=",
+                        "@config.notifyChannel",
+                        "in-app"
+                      ],
+                      [
+                        "notify",
+                        "@config.severity",
+                        "@config.template"
+                      ],
+                      [
+                        "persist",
+                        "create",
+                        "NotificationRecord",
+                        {
+                          "channel": "@config.notifyChannel",
+                          "recipient": "@entity.recipient",
+                          "severity": "@config.severity",
+                          "dispatched": false,
+                          "message": "@config.template",
+                          "recordedAt": 0.0
+                        }
+                      ]
                     ]
                   ],
                   [
                     "emit",
                     "NotificationDispatched",
                     {
-                      "channel": "@config.notifyChannel",
+                      "recipient": "@entity.recipient",
+                      "severity": "@config.severity",
                       "message": "@config.template",
-                      "recipient": "@user.id",
-                      "severity": "@config.severity"
+                      "channel": "@config.notifyChannel"
                     }
                   ]
                 ]
@@ -198,6 +235,65 @@
             ]
           },
           "config": {
+            "quietHours": {
+              "type": "QuietHoursSpec",
+              "default": {
+                "start": "",
+                "end": ""
+              },
+              "label": "Quiet hours",
+              "description": "Local-time window during which dispatch is suppressed. Both start and end required to activate. WIRING DEFERRED: needs @now-aware time comparison primitive (gap — docs/Almadar_Std_Factories.md).",
+              "tier": "customization",
+              "properties": {
+                "end": {
+                  "name": "end",
+                  "type": "string",
+                  "required": false
+                },
+                "start": {
+                  "name": "start",
+                  "type": "string",
+                  "required": false
+                }
+              }
+            },
+            "template": {
+              "type": "string",
+              "default": "",
+              "label": "Message template",
+              "description": "Text shown to the recipient; supports payload interpolation",
+              "tier": "essential"
+            },
+            "recipients": {
+              "type": "[string]",
+              "default": [],
+              "label": "Recipients",
+              "description": "Recipient ids/addresses. v1.1 uses the first entry; multi-recipient fan-out lands in v1.2 (gap). When empty, falls back to the authenticated user.",
+              "tier": "customization",
+              "items": {
+                "type": "string"
+              }
+            },
+            "listensFor": {
+              "type": "[string]",
+              "default": [],
+              "label": "Trigger events",
+              "description": "Event names that should fire a notification",
+              "tier": "essential",
+              "items": {
+                "type": "string"
+              }
+            },
+            "suppressionList": {
+              "type": "[string]",
+              "default": [],
+              "label": "Suppression list",
+              "description": "Recipient ids/addresses to skip (e.g. unsubscribed users). Suppression check runs before dispatch.",
+              "tier": "customization",
+              "items": {
+                "type": "string"
+              }
+            },
             "notifyChannel": {
               "type": "string",
               "default": "in-app",
@@ -212,22 +308,12 @@
               "description": "info, success, warning, or error — controls styling",
               "tier": "customization"
             },
-            "listensFor": {
-              "type": "[string]",
-              "default": [],
-              "label": "Trigger events",
-              "description": "Event names that should fire a notification",
-              "tier": "essential",
-              "items": {
-                "type": "string"
-              }
-            },
-            "template": {
-              "type": "string",
-              "default": "",
-              "label": "Message template",
-              "description": "Text shown to the recipient; supports payload interpolation",
-              "tier": "essential"
+            "frequencyCapPerWeek": {
+              "type": "number",
+              "default": 0.0,
+              "label": "Frequency cap (per week)",
+              "description": "Max sends per (channel, recipient) per rolling 7-day window. 0 = uncapped. WIRING DEFERRED: needs stateful history query (gap — docs/Almadar_Std_Factories.md).",
+              "tier": "customization"
             }
           },
           "scope": "instance"

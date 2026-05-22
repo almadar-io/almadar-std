@@ -1,0 +1,371 @@
+{
+  "name": "std-feature-detail-page",
+  "version": "1.0.0",
+  "description": "Feature detail page molecule for marketing sites. Composes hero, alternating split sections, and CTA as a vertical stack of individual marketing patterns. Pick for product deep-dives and capability explainers.",
+  "orbitals": [
+    {
+      "name": "FeatureDetailPageItemOrbital",
+      "entity": {
+        "name": "FeatureDetailPageItem",
+        "persistence": "runtime",
+        "fields": [
+          {
+            "name": "id",
+            "type": "string"
+          }
+        ]
+      },
+      "traits": [
+        {
+          "name": "FeatureDetailPageItemLayout",
+          "category": "interaction",
+          "linkedEntity": "FeatureDetailPageItem",
+          "stateMachine": {
+            "states": [
+              {
+                "name": "composing",
+                "isInitial": true
+              }
+            ],
+            "events": [
+              {
+                "key": "INIT",
+                "name": "Initialize"
+              }
+            ],
+            "transitions": [
+              {
+                "from": "composing",
+                "to": "composing",
+                "event": "INIT",
+                "effects": [
+                  [
+                    "render-ui",
+                    "main",
+                    {
+                      "children": [
+                        {
+                          "tag": "@config.heroTag",
+                          "secondaryAction": {
+                            "label": "@config.heroSecondaryActionLabel",
+                            "href": "@config.heroSecondaryActionHref"
+                          },
+                          "title": "@config.heroTitle",
+                          "subtitle": "@config.heroSubtitle",
+                          "background": "@config.heroBackground",
+                          "align": "@config.heroAlign",
+                          "type": "hero-section",
+                          "primaryAction": {
+                            "label": "@config.heroPrimaryActionLabel",
+                            "href": "@config.heroPrimaryActionHref"
+                          },
+                          "titleAccent": "@config.heroTitleAccent"
+                        },
+                        {
+                          "type": "split-section",
+                          "imagePosition": "@config.sections[0].imagePosition",
+                          "image": "@config.sections[0].image",
+                          "title": "@config.sections[0].title",
+                          "bullets": "@config.sections[0].bullets",
+                          "description": "@config.sections[0].description"
+                        },
+                        {
+                          "imagePosition": "@config.sections[1].imagePosition",
+                          "title": "@config.sections[1].title",
+                          "image": "@config.sections[1].image",
+                          "description": "@config.sections[1].description",
+                          "type": "split-section",
+                          "bullets": "@config.sections[1].bullets"
+                        },
+                        {
+                          "image": "@config.sections[2].image",
+                          "bullets": "@config.sections[2].bullets",
+                          "description": "@config.sections[2].description",
+                          "title": "@config.sections[2].title",
+                          "type": "split-section",
+                          "imagePosition": "@config.sections[2].imagePosition"
+                        },
+                        {
+                          "title": "@config.ctaTitle",
+                          "primaryAction": "@config.ctaAction",
+                          "type": "cta-banner"
+                        },
+                        {
+                          "columns": "@config.footerColumns",
+                          "type": "marketing-footer",
+                          "copyright": "@config.footerCopyright"
+                        }
+                      ],
+                      "direction": "vertical",
+                      "type": "stack",
+                      "gap": "none"
+                    }
+                  ]
+                ]
+              }
+            ]
+          },
+          "config": {
+            "heroPrimaryActionHref": {
+              "type": "string",
+              "default": "/signup"
+            },
+            "heroTag": {
+              "type": "string",
+              "default": "Feature"
+            },
+            "footerCopyright": {
+              "type": "string",
+              "default": "© 2026 Almadar. All rights reserved."
+            },
+            "heroTitle": {
+              "type": "string",
+              "default": "Everything you need to ship"
+            },
+            "ctaAction": {
+              "type": "ActionCard",
+              "default": {
+                "href": "/signup",
+                "label": "Get Started"
+              },
+              "properties": {
+                "href": {
+                  "name": "href",
+                  "type": "string",
+                  "required": true
+                },
+                "label": {
+                  "name": "label",
+                  "type": "string",
+                  "required": true
+                }
+              }
+            },
+            "heroAlign": {
+              "type": "string",
+              "default": "center"
+            },
+            "heroSecondaryActionHref": {
+              "type": "string",
+              "default": "#"
+            },
+            "heroTitleAccent": {
+              "type": "string",
+              "default": ""
+            },
+            "heroPrimaryActionLabel": {
+              "type": "string",
+              "default": "Get Started"
+            },
+            "ctaTitle": {
+              "type": "string",
+              "default": "Ready to experience the future?"
+            },
+            "heroBackground": {
+              "type": "string",
+              "default": "gradient"
+            },
+            "heroSubtitle": {
+              "type": "string",
+              "default": "From design to deployment, Almadar handles the entire stack."
+            },
+            "heroSecondaryActionLabel": {
+              "type": "string",
+              "default": "Watch Demo"
+            },
+            "sections": {
+              "type": "[SectionCard]",
+              "default": [
+                {
+                  "bullets": [
+                    "No-code visual editor",
+                    "AI-assisted schema generation",
+                    "Real-time preview"
+                  ],
+                  "title": "Design in Natural Language",
+                  "description": "Describe what you want. Almadar translates your words into a complete application schema.",
+                  "image": {
+                    "alt": "Design interface",
+                    "src": ""
+                  },
+                  "imagePosition": "right"
+                },
+                {
+                  "bullets": [
+                    "Type-safe APIs",
+                    "Auto-generated database schema",
+                    "Instant deployments"
+                  ],
+                  "image": {
+                    "src": "",
+                    "alt": "Generated code"
+                  },
+                  "imagePosition": "left",
+                  "description": "Get a production-ready TypeScript backend and React frontend in seconds.",
+                  "title": "Full-Stack Generation"
+                },
+                {
+                  "bullets": [
+                    "SOC-2 ready",
+                    "RBAC & SSO",
+                    "End-to-end encryption"
+                  ],
+                  "image": {
+                    "alt": "Security dashboard",
+                    "src": ""
+                  },
+                  "imagePosition": "right",
+                  "description": "Built-in auth, audit logs, and compliance from day one.",
+                  "title": "Enterprise-Grade Security"
+                }
+              ],
+              "items": {
+                "type": "object",
+                "properties": {
+                  "description": {
+                    "name": "description",
+                    "type": "string",
+                    "required": true
+                  },
+                  "bullets": {
+                    "name": "bullets",
+                    "type": "array",
+                    "required": false,
+                    "items": {
+                      "type": "string"
+                    }
+                  },
+                  "title": {
+                    "name": "title",
+                    "type": "string",
+                    "required": true
+                  },
+                  "imagePosition": {
+                    "name": "imagePosition",
+                    "type": "string",
+                    "required": false
+                  },
+                  "image": {
+                    "name": "image",
+                    "type": "object",
+                    "required": false,
+                    "properties": {
+                      "alt": {
+                        "name": "alt",
+                        "type": "string",
+                        "required": false
+                      },
+                      "src": {
+                        "name": "src",
+                        "type": "string",
+                        "required": false
+                      }
+                    }
+                  }
+                }
+              }
+            },
+            "footerColumns": {
+              "type": "[FooterColumn]",
+              "default": [
+                {
+                  "title": "Product",
+                  "items": [
+                    {
+                      "label": "Features",
+                      "href": "#"
+                    },
+                    {
+                      "label": "Pricing",
+                      "href": "#"
+                    },
+                    {
+                      "label": "Changelog",
+                      "href": "#"
+                    }
+                  ]
+                },
+                {
+                  "title": "Company",
+                  "items": [
+                    {
+                      "label": "About",
+                      "href": "#"
+                    },
+                    {
+                      "label": "Careers",
+                      "href": "#"
+                    },
+                    {
+                      "href": "#",
+                      "label": "Blog"
+                    }
+                  ]
+                },
+                {
+                  "items": [
+                    {
+                      "label": "Docs",
+                      "href": "#"
+                    },
+                    {
+                      "label": "Community",
+                      "href": "#"
+                    },
+                    {
+                      "label": "Support",
+                      "href": "#"
+                    }
+                  ],
+                  "title": "Resources"
+                }
+              ],
+              "items": {
+                "type": "object",
+                "properties": {
+                  "title": {
+                    "name": "title",
+                    "type": "string",
+                    "required": true
+                  },
+                  "items": {
+                    "name": "items",
+                    "type": "array",
+                    "required": false,
+                    "items": {
+                      "type": "object",
+                      "properties": {
+                        "label": {
+                          "name": "label",
+                          "type": "string",
+                          "required": true
+                        },
+                        "href": {
+                          "name": "href",
+                          "type": "string",
+                          "required": true
+                        }
+                      }
+                    }
+                  }
+                }
+              }
+            }
+          },
+          "scope": "instance"
+        }
+      ],
+      "pages": [
+        {
+          "name": "FeatureDetailPage",
+          "path": "/features",
+          "traits": [
+            {
+              "ref": "FeatureDetailPageItemLayout"
+            }
+          ]
+        }
+      ]
+    }
+  ]
+}

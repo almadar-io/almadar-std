@@ -1,7 +1,7 @@
 {
   "name": "std-campaign-goal",
-  "version": "1.1.0",
-  "description": "std-campaign-goal — nonprofit fundraising campaign with target / raised / donor count / deadline / status. Lists campaigns in `browsing`; opens campaign detail in `viewing_single` with Launch / End actions. Agents tune the list shape via `config.fields` + `config.itemActions`.",
+  "version": "1.2.0",
+  "description": "std-campaign-goal — nonprofit fundraising campaign with Launch / End actions. Listens for SET_STATUS so std-lifecycle can drive automated transitions. Exposes CRM-pattern knobs.",
   "orbitals": [
     {
       "name": "CampaignGoalOrbital",
@@ -161,6 +161,62 @@
                   "type": "string"
                 }
               ]
+            },
+            {
+              "event": "CampaignGoalUpdated",
+              "payloadSchema": [
+                {
+                  "name": "row.id",
+                  "type": "string",
+                  "required": true
+                },
+                {
+                  "name": "row.name",
+                  "type": "string",
+                  "required": true
+                },
+                {
+                  "name": "row.description",
+                  "type": "string"
+                },
+                {
+                  "name": "row.targetAmount",
+                  "type": "number"
+                },
+                {
+                  "name": "row.raisedAmount",
+                  "type": "number"
+                },
+                {
+                  "name": "row.donorCount",
+                  "type": "number"
+                },
+                {
+                  "name": "row.startDate",
+                  "type": "string"
+                },
+                {
+                  "name": "row.endDate",
+                  "type": "string"
+                },
+                {
+                  "name": "row.status",
+                  "type": "string"
+                }
+              ]
+            },
+            {
+              "event": "CampaignGoalUpdateFailed",
+              "payloadSchema": [
+                {
+                  "name": "error",
+                  "type": "string"
+                },
+                {
+                  "name": "code",
+                  "type": "string"
+                }
+              ]
             }
           ],
           "stateMachine": {
@@ -235,6 +291,46 @@
                 ]
               },
               {
+                "key": "SET_STATUS",
+                "name": "Set Status",
+                "payloadSchema": [
+                  {
+                    "name": "entityId",
+                    "type": "string",
+                    "required": true
+                  },
+                  {
+                    "name": "newStatus",
+                    "type": "string",
+                    "required": true
+                  }
+                ]
+              },
+              {
+                "key": "CampaignGoalUpdated",
+                "name": "CampaignGoal updated",
+                "payloadSchema": [
+                  {
+                    "name": "row",
+                    "type": "CampaignGoal"
+                  }
+                ]
+              },
+              {
+                "key": "CampaignGoalUpdateFailed",
+                "name": "CampaignGoal update failed",
+                "payloadSchema": [
+                  {
+                    "name": "error",
+                    "type": "string"
+                  },
+                  {
+                    "name": "code",
+                    "type": "string"
+                  }
+                ]
+              },
+              {
                 "key": "CLOSE_VIEW",
                 "name": "Close View"
               },
@@ -261,8 +357,8 @@
                     "CampaignGoal",
                     {
                       "emit": {
-                        "success": "CampaignGoalLoaded",
-                        "failure": "CampaignGoalLoadFailed"
+                        "failure": "CampaignGoalLoadFailed",
+                        "success": "CampaignGoalLoaded"
                       }
                     }
                   ],
@@ -270,22 +366,22 @@
                     "render-ui",
                     "main",
                     {
-                      "direction": "vertical",
-                      "className": "py-12",
-                      "type": "stack",
                       "children": [
                         {
                           "type": "spinner"
                         },
                         {
                           "variant": "caption",
-                          "color": "muted",
+                          "content": "Loading campaigns…",
                           "type": "typography",
-                          "content": "Loading campaigns…"
+                          "color": "muted"
                         }
                       ],
-                      "align": "center",
-                      "gap": "md"
+                      "direction": "vertical",
+                      "className": "py-12",
+                      "type": "stack",
+                      "gap": "md",
+                      "align": "center"
                     }
                   ]
                 ]
@@ -299,10 +395,9 @@
                     "render-ui",
                     "main",
                     {
-                      "type": "stack",
+                      "gap": "md",
                       "children": [
                         {
-                          "gap": "sm",
                           "align": "center",
                           "direction": "horizontal",
                           "type": "stack",
@@ -312,39 +407,40 @@
                               "name": "target"
                             },
                             {
-                              "type": "typography",
                               "content": "@config.title",
+                              "type": "typography",
                               "variant": "h3"
                             }
-                          ]
+                          ],
+                          "gap": "sm"
                         },
                         {
                           "cols": 4.0,
                           "type": "simple-grid",
                           "children": [
                             {
-                              "label": "Campaigns",
                               "type": "stat-display",
-                              "value": "@payload.data.length",
-                              "icon": "target"
+                              "label": "Campaigns",
+                              "icon": "target",
+                              "value": "@payload.data.length"
                             },
                             {
                               "icon": "play-circle",
-                              "label": "Active",
                               "type": "stat-display",
+                              "label": "Active",
                               "value": "6"
                             },
                             {
-                              "label": "Total raised",
                               "type": "stat-display",
                               "value": "$482K",
-                              "icon": "dollar-sign"
+                              "icon": "dollar-sign",
+                              "label": "Total raised"
                             },
                             {
-                              "value": "1,240",
+                              "icon": "users",
                               "type": "stat-display",
                               "label": "Donors",
-                              "icon": "users"
+                              "value": "1,240"
                             }
                           ]
                         },
@@ -352,16 +448,16 @@
                           "type": "divider"
                         },
                         {
-                          "type": "data-grid",
                           "cols": 1.0,
                           "itemActions": "@config.itemActions",
-                          "gap": "sm",
+                          "type": "data-grid",
+                          "entity": "@payload.data",
                           "fields": "@config.fields",
-                          "entity": "@payload.data"
+                          "gap": "sm"
                         }
                       ],
-                      "gap": "md",
-                      "direction": "vertical"
+                      "direction": "vertical",
+                      "type": "stack"
                     }
                   ]
                 ]
@@ -375,9 +471,9 @@
                     "render-ui",
                     "main",
                     {
-                      "message": "@payload.error",
+                      "variant": "error",
                       "type": "alert",
-                      "variant": "error"
+                      "message": "@payload.error"
                     }
                   ]
                 ]
@@ -436,124 +532,124 @@
                     "render-ui",
                     "main",
                     {
+                      "direction": "vertical",
                       "children": [
                         {
-                          "gap": "sm",
-                          "direction": "horizontal",
-                          "type": "stack",
-                          "align": "center",
                           "children": [
                             {
-                              "type": "button",
                               "label": "Back",
                               "action": "CLOSE_VIEW",
+                              "type": "button",
                               "variant": "ghost"
                             },
                             {
-                              "type": "icon",
-                              "name": "target"
+                              "name": "target",
+                              "type": "icon"
                             },
                             {
+                              "type": "typography",
                               "content": "@entity.name",
-                              "variant": "h3",
-                              "type": "typography"
+                              "variant": "h3"
                             },
                             {
-                              "label": "@entity.status",
                               "variant": "default",
-                              "type": "badge"
+                              "type": "badge",
+                              "label": "@entity.status"
                             }
-                          ]
+                          ],
+                          "direction": "horizontal",
+                          "align": "center",
+                          "type": "stack",
+                          "gap": "sm"
                         },
                         {
                           "type": "divider"
                         },
                         {
+                          "gap": "sm",
+                          "direction": "vertical",
                           "type": "stack",
                           "children": [
                             {
-                              "type": "stack",
-                              "gap": "md",
-                              "direction": "horizontal",
                               "children": [
                                 {
-                                  "content": "Description",
                                   "type": "typography",
                                   "color": "muted",
+                                  "content": "Description",
                                   "variant": "caption"
                                 },
                                 {
-                                  "type": "typography",
                                   "variant": "body",
+                                  "type": "typography",
                                   "content": "@entity.description"
                                 }
-                              ]
+                              ],
+                              "gap": "md",
+                              "type": "stack",
+                              "direction": "horizontal"
                             }
-                          ],
-                          "gap": "sm",
-                          "direction": "vertical"
+                          ]
                         },
                         {
                           "type": "divider"
                         },
                         {
+                          "type": "simple-grid",
+                          "cols": 4.0,
                           "children": [
                             {
-                              "value": "@entity.targetAmount",
-                              "type": "stat-display",
+                              "icon": "target",
                               "label": "Target",
-                              "icon": "target"
+                              "type": "stat-display",
+                              "value": "@entity.targetAmount"
                             },
                             {
                               "icon": "dollar-sign",
+                              "value": "@entity.raisedAmount",
                               "label": "Raised",
-                              "type": "stat-display",
-                              "value": "@entity.raisedAmount"
+                              "type": "stat-display"
                             },
                             {
-                              "type": "stat-display",
+                              "label": "Donors",
                               "icon": "users",
                               "value": "@entity.donorCount",
-                              "label": "Donors"
+                              "type": "stat-display"
                             },
                             {
                               "label": "Ends",
+                              "type": "stat-display",
                               "value": "@entity.endDate",
-                              "icon": "calendar",
-                              "type": "stat-display"
+                              "icon": "calendar"
                             }
-                          ],
-                          "type": "simple-grid",
-                          "cols": 4.0
+                          ]
                         },
                         {
                           "type": "stack",
-                          "direction": "horizontal",
-                          "gap": "sm",
                           "align": "center",
+                          "gap": "sm",
                           "children": [
                             {
-                              "variant": "primary",
-                              "action": "LAUNCH_CAMPAIGN",
                               "actionPayload": {
                                 "id": "@entity.id"
                               },
-                              "type": "button",
-                              "label": "Launch"
+                              "label": "Launch",
+                              "action": "LAUNCH_CAMPAIGN",
+                              "variant": "primary",
+                              "type": "button"
                             },
                             {
-                              "type": "button",
                               "label": "End",
-                              "action": "END_CAMPAIGN",
                               "actionPayload": {
                                 "id": "@entity.id"
                               },
+                              "type": "button",
+                              "action": "END_CAMPAIGN",
                               "variant": "danger"
                             }
-                          ]
+                          ],
+                          "direction": "horizontal"
                         }
                       ],
-                      "direction": "vertical",
                       "gap": "md",
                       "type": "stack"
                     }
@@ -584,7 +680,58 @@
                     "render-ui",
                     "main",
                     {
+                      "align": "center",
                       "className": "py-12",
+                      "gap": "md",
+                      "direction": "vertical",
+                      "type": "stack",
+                      "children": [
+                        {
+                          "type": "spinner"
+                        },
+                        {
+                          "type": "typography",
+                          "color": "muted",
+                          "content": "Ending campaign…",
+                          "variant": "caption"
+                        }
+                      ]
+                    }
+                  ]
+                ]
+              },
+              {
+                "from": "browsing",
+                "to": "loading",
+                "event": "SET_STATUS",
+                "effects": [
+                  [
+                    "set",
+                    "@entity.id",
+                    "@payload.entityId"
+                  ],
+                  [
+                    "set",
+                    "@entity.status",
+                    "@payload.newStatus"
+                  ],
+                  [
+                    "persist",
+                    "update",
+                    "CampaignGoal",
+                    "@entity",
+                    {
+                      "emit": {
+                        "failure": "CampaignGoalUpdateFailed",
+                        "success": "CampaignGoalUpdated"
+                      }
+                    }
+                  ],
+                  [
+                    "render-ui",
+                    "main",
+                    {
+                      "type": "stack",
                       "children": [
                         {
                           "type": "spinner"
@@ -592,14 +739,47 @@
                         {
                           "variant": "caption",
                           "color": "muted",
-                          "content": "Ending campaign…",
-                          "type": "typography"
+                          "type": "typography",
+                          "content": "Updating campaign status…"
                         }
                       ],
-                      "direction": "vertical",
-                      "type": "stack",
                       "gap": "md",
+                      "className": "py-12",
+                      "direction": "vertical",
                       "align": "center"
+                    }
+                  ]
+                ]
+              },
+              {
+                "from": "browsing",
+                "to": "loading",
+                "event": "CampaignGoalUpdated",
+                "effects": [
+                  [
+                    "fetch",
+                    "CampaignGoal",
+                    {
+                      "emit": {
+                        "success": "CampaignGoalLoaded",
+                        "failure": "CampaignGoalLoadFailed"
+                      }
+                    }
+                  ]
+                ]
+              },
+              {
+                "from": "browsing",
+                "to": "browsing",
+                "event": "CampaignGoalUpdateFailed",
+                "effects": [
+                  [
+                    "render-ui",
+                    "main",
+                    {
+                      "message": "@payload.error",
+                      "variant": "error",
+                      "type": "alert"
                     }
                   ]
                 ]
@@ -623,10 +803,6 @@
                     "render-ui",
                     "main",
                     {
-                      "type": "stack",
-                      "align": "center",
-                      "gap": "md",
-                      "className": "py-12",
                       "children": [
                         {
                           "type": "spinner"
@@ -634,11 +810,15 @@
                         {
                           "color": "muted",
                           "variant": "caption",
-                          "content": "Loading campaigns…",
-                          "type": "typography"
+                          "type": "typography",
+                          "content": "Loading campaigns…"
                         }
                       ],
-                      "direction": "vertical"
+                      "gap": "md",
+                      "type": "stack",
+                      "direction": "vertical",
+                      "align": "center",
+                      "className": "py-12"
                     }
                   ]
                 ]
@@ -672,17 +852,17 @@
                           "type": "spinner"
                         },
                         {
-                          "type": "typography",
-                          "variant": "caption",
                           "color": "muted",
+                          "variant": "caption",
+                          "type": "typography",
                           "content": "Launching campaign…"
                         }
                       ],
-                      "direction": "vertical",
+                      "type": "stack",
                       "align": "center",
-                      "gap": "md",
                       "className": "py-12",
-                      "type": "stack"
+                      "direction": "vertical",
+                      "gap": "md"
                     }
                   ]
                 ]
@@ -702,8 +882,8 @@
                     "CampaignGoal",
                     {
                       "emit": {
-                        "failure": "CampaignGoalLoadFailed",
-                        "success": "CampaignGoalLoaded"
+                        "success": "CampaignGoalLoaded",
+                        "failure": "CampaignGoalLoadFailed"
                       }
                     }
                   ],
@@ -711,22 +891,22 @@
                     "render-ui",
                     "main",
                     {
-                      "direction": "vertical",
-                      "align": "center",
-                      "type": "stack",
-                      "gap": "md",
-                      "className": "py-12",
                       "children": [
                         {
                           "type": "spinner"
                         },
                         {
-                          "type": "typography",
-                          "color": "muted",
                           "content": "Ending campaign…",
-                          "variant": "caption"
+                          "variant": "caption",
+                          "type": "typography",
+                          "color": "muted"
                         }
-                      ]
+                      ],
+                      "type": "stack",
+                      "direction": "vertical",
+                      "className": "py-12",
+                      "gap": "md",
+                      "align": "center"
                     }
                   ]
                 ]
@@ -741,8 +921,8 @@
                     "CampaignGoal",
                     {
                       "emit": {
-                        "success": "CampaignGoalLoaded",
-                        "failure": "CampaignGoalLoadFailed"
+                        "failure": "CampaignGoalLoadFailed",
+                        "success": "CampaignGoalLoaded"
                       }
                     }
                   ],
@@ -759,99 +939,47 @@
             ]
           },
           "config": {
-            "fields": {
-              "type": "[FieldSpec]",
+            "healthScoreThresholdAlert": {
+              "type": "number",
+              "default": 25.0,
+              "label": "Health score threshold (% of target)",
+              "description": "Alert when raisedAmount/targetAmount drops below this with deadline approaching. Declarative; wire via sibling std-notify.",
+              "tier": "customization"
+            },
+            "renewalReminderDaysBefore": {
+              "type": "[number]",
               "default": [
-                {
-                  "variant": "caption",
-                  "name": "name",
-                  "label": "Name"
-                },
-                {
-                  "variant": "caption",
-                  "name": "targetAmount",
-                  "label": "Target"
-                },
-                {
-                  "label": "Raised",
-                  "name": "raisedAmount",
-                  "variant": "caption"
-                },
-                {
-                  "variant": "caption",
-                  "name": "donorCount",
-                  "label": "Donors"
-                },
-                {
-                  "variant": "badge",
-                  "name": "status",
-                  "label": "Status"
-                }
+                30.0,
+                7.0,
+                1.0
               ],
-              "label": "Columns to show",
-              "description": "Each column maps to one field on the Campaign entity",
+              "label": "Reminder days-before endDate",
+              "description": "Days before campaign endDate to ping major donors / followers. Declarative; wire via sibling std-reminder-scheduler.",
               "tier": "customization",
               "items": {
-                "type": "object",
-                "properties": {
-                  "name": {
-                    "name": "name",
-                    "type": "string",
-                    "required": true
-                  },
-                  "format": {
-                    "name": "format",
-                    "type": "string",
-                    "required": false
-                  },
-                  "key": {
-                    "name": "key",
-                    "type": "string",
-                    "required": false
-                  },
-                  "header": {
-                    "name": "header",
-                    "type": "string",
-                    "required": false
-                  },
-                  "label": {
-                    "name": "label",
-                    "type": "string",
-                    "required": false
-                  },
-                  "variant": {
-                    "name": "variant",
-                    "type": "string",
-                    "required": false
-                  },
-                  "icon": {
-                    "name": "icon",
-                    "type": "string",
-                    "required": false
-                  }
-                }
+                "type": "number"
               }
             },
-            "title": {
-              "type": "string",
-              "default": "Campaigns",
-              "label": "Section title",
-              "description": "Heading shown above the fundraising campaign list",
+            "consentTrackingEnabled": {
+              "type": "boolean",
+              "default": true,
+              "label": "Track consent",
+              "description": "Whether donor outreach honors opt-in consent records. Declarative.",
               "tier": "customization"
             },
             "itemActions": {
               "type": "[ItemAction]",
               "default": [
                 {
+                  "event": "OPEN_CAMPAIGN",
                   "label": "Open",
-                  "icon": "arrow-right",
                   "variant": "primary",
-                  "event": "OPEN_CAMPAIGN"
+                  "icon": "arrow-right"
                 },
                 {
-                  "event": "END_CAMPAIGN",
                   "label": "End",
-                  "variant": "danger"
+                  "variant": "danger",
+                  "event": "END_CAMPAIGN"
                 }
               ],
               "label": "Row actions",
@@ -865,6 +993,73 @@
                     "type": "string",
                     "required": true
                   },
+                  "label": {
+                    "name": "label",
+                    "type": "string",
+                    "required": true
+                  },
+                  "icon": {
+                    "name": "icon",
+                    "type": "string",
+                    "required": false
+                  },
+                  "variant": {
+                    "name": "variant",
+                    "type": "string",
+                    "required": false
+                  }
+                }
+              }
+            },
+            "title": {
+              "type": "string",
+              "default": "Campaigns",
+              "label": "Section title",
+              "description": "Heading shown above the fundraising campaign list",
+              "tier": "customization"
+            },
+            "archiveInactiveAfterDays": {
+              "type": "number",
+              "default": 180.0,
+              "label": "Archive after end (days)",
+              "description": "Days after endDate before an ended campaign is archived. Declarative; wire via sibling std-lifecycle.",
+              "tier": "advanced"
+            },
+            "fields": {
+              "type": "[FieldSpec]",
+              "default": [
+                {
+                  "name": "name",
+                  "variant": "caption",
+                  "label": "Name"
+                },
+                {
+                  "name": "targetAmount",
+                  "label": "Target",
+                  "variant": "caption"
+                },
+                {
+                  "name": "raisedAmount",
+                  "label": "Raised",
+                  "variant": "caption"
+                },
+                {
+                  "name": "donorCount",
+                  "variant": "caption",
+                  "label": "Donors"
+                },
+                {
+                  "variant": "badge",
+                  "label": "Status",
+                  "name": "status"
+                }
+              ],
+              "label": "Columns to show",
+              "description": "Each column maps to one field on the Campaign entity",
+              "tier": "customization",
+              "items": {
+                "type": "object",
+                "properties": {
                   "variant": {
                     "name": "variant",
                     "type": "string",
@@ -875,10 +1070,30 @@
                     "type": "string",
                     "required": false
                   },
+                  "format": {
+                    "name": "format",
+                    "type": "string",
+                    "required": false
+                  },
+                  "key": {
+                    "name": "key",
+                    "type": "string",
+                    "required": false
+                  },
+                  "name": {
+                    "name": "name",
+                    "type": "string",
+                    "required": true
+                  },
+                  "header": {
+                    "name": "header",
+                    "type": "string",
+                    "required": false
+                  },
                   "label": {
                     "name": "label",
                     "type": "string",
-                    "required": true
+                    "required": false
                   }
                 }
               }

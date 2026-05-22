@@ -1,5 +1,5 @@
-app std-health-score "1.1.0"
-"std-health-score — customer success health score primitive surfacing churn risk via composite usage/support/engagement signals. Lists health scores in `browsing`; opens detail in `viewing_single` with Recalculate / Assign CSM actions. Agents tune the list shape via `config.fields` + `config.itemActions`."
+app std-health-score "1.2.0"
+"std-health-score — customer success composite score (usage/support/engagement) with Recalculate / Assign CSM. Exposes CRM-pattern knobs (alert threshold, reminder cadence, archive policy, consent)."
 
 type FieldSpec = { name : string!, label : string, variant : string, icon : string, format : string, key : string, header : string }
 type ItemAction = { label : string!, event : string!, variant : string, icon : string }
@@ -47,6 +47,22 @@ orbital HealthScoreOrbital {
       ]
         @label "Row actions"
         @description "Buttons users can click on each customer row"
+        @tier "customization"
+      healthScoreThresholdAlert : number = 40
+        @label "Health score threshold"
+        @description "Scores below this trigger CSM alert. Default lines up with the green/yellow/red tier transition. Declarative; wire via sibling std-notify."
+        @tier "customization"
+      renewalReminderDaysBefore : [number] = [30, 7, 1]
+        @label "Renewal reminder days-before"
+        @description "Days before subscription renewal to send health-score-driven check-ins. Declarative; wire via sibling std-reminder-scheduler."
+        @tier "customization"
+      archiveInactiveAfterDays : number = 365
+        @label "Archive inactive after (days)"
+        @description "Days a health score may go without recalculation before being archived. Declarative; wire via sibling std-lifecycle."
+        @tier "advanced"
+      consentTrackingEnabled : boolean = false
+        @label "Track consent"
+        @description "Whether composite score includes only consented signals. Declarative."
         @tier "customization"
     }
     initial: loading

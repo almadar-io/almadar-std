@@ -1,5 +1,5 @@
-app std-waitlist "1.1.0"
-"std-waitlist — sorted queue with auto-promote-on-cancel. Lists waitlist entries in `browsing`; opens detail in `viewing_single` with Promote / Cancel actions. Agents tune the list shape via `config.fields` + `config.itemActions`."
+app std-waitlist "1.2.0"
+"std-waitlist — sorted queue with auto-promote-on-cancel. Listens for SET_STATUS so std-lifecycle can auto-expire. Exposes Scheduling/Booking knobs (bookingWindowDays, leadTimeMinutes, cancellationPolicy, …)."
 
 type FieldSpec = { name : string!, label : string, variant : string, icon : string, format : string, key : string, header : string }
 type ItemAction = { label : string!, event : string!, variant : string, icon : string }
@@ -34,6 +34,38 @@ orbital WaitlistOrbital {
         @label "Row actions"
         @description "Buttons users can click on each waitlist entry"
         @tier "customization"
+      bookingWindowDays : number = 30
+        @label "Booking window (days)"
+        @description "How far in advance users can join the waitlist."
+        @tier "customization"
+      leadTimeMinutes : number = 0
+        @label "Lead time (minutes)"
+        @description "Minutes before target availability that the waitlist still accepts joins."
+        @tier "customization"
+      bookingHours : string = "00:00-23:59"
+        @label "Booking hours"
+        @description "Daily window during which waitlist joins are accepted (HH:MM-HH:MM)."
+        @tier "customization"
+      blackoutDates : [string] = []
+        @label "Blackout dates"
+        @description "ISO dates blocked from joining the waitlist."
+        @tier "customization"
+      noShowGracePeriodMinutes : number = 60
+        @label "No-show grace (minutes)"
+        @description "Minutes after promotion notice before the entry auto-expires if not claimed. Wire via std-lifecycle."
+        @tier "customization"
+      rescheduleWindowHours : number = 24
+        @label "Reschedule window (hours)"
+        @description "Hours during which a user can defer their promoted slot."
+        @tier "customization"
+      maxReschedules : number = 1
+        @label "Max reschedules"
+        @description "Hard cap on deferral count per waitlist entry."
+        @tier "advanced"
+      cancellationPolicy : "free" | "partial-refund" | "no-refund" = "free"
+        @label "Cancellation policy"
+        @description "Refund treatment when a waitlist entry is cancelled after a deposit."
+        @tier "customization"
     }
     initial: loading
     state loading {
@@ -61,6 +93,11 @@ orbital WaitlistOrbital {
         (set @entity.id @payload.entryId)
         (fetch WaitlistEntry { emit: { success: "WaitlistEntryLoaded", failure: "WaitlistEntryLoadFailed" } })
         (render-ui main { type: "stack", direction: "vertical", gap: "md", align: "center", className: "py-12", children: [{ type: "spinner" }, { type: "typography", variant: "caption", color: "muted", content: "Cancelling entry…" }] })
+      SET_STATUS -> loading
+        (set @entity.id @payload.entityId)
+        (set @entity.status @payload.newStatus)
+        (persist update WaitlistEntry @entity { emit: { success: "WaitlistEntryLoaded", failure: "WaitlistEntryLoadFailed" } })
+        (render-ui main { type: "stack", direction: "vertical", gap: "md", align: "center", className: "py-12", children: [{ type: "spinner" }, { type: "typography", variant: "caption", color: "muted", content: "Updating waitlist entry status…" }] })
     }
     state viewing_single {
       CLOSE_VIEW -> loading
@@ -93,6 +130,7 @@ orbital WaitlistOrbital {
       CLOSE_VIEW { }
       PROMOTE    { entryId : string!, row : WaitlistEntry }
       CANCEL     { entryId : string!, row : WaitlistEntry }
+      SET_STATUS { entityId : string!, newStatus : string! }
       WaitlistEntryLoaded     { data : [WaitlistEntry] }
       WaitlistEntryLoadFailed { error : string, code : string }
     }

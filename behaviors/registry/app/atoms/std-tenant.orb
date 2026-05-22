@@ -1,7 +1,7 @@
 {
   "name": "std-tenant",
-  "version": "1.1.0",
-  "description": "std-tenant — person/company occupying a leased unit. Lists tenants in `browsing`; opens tenant detail (name, contact, lease, move-in/out dates, status) in `viewing_single` with Activate / Move Out actions. Agents tune the list shape via `config.fields` + `config.itemActions`.",
+  "version": "1.2.0",
+  "description": "std-tenant — person/company occupying a leased unit. Lists tenants; detail offers Activate / Move Out. Listens for SET_STATUS so std-lifecycle can drive transitions. Exposes Real-estate knobs (leaseRenewalNoticeDays, petPolicy, lateRentGraceDays, …).",
   "orbitals": [
     {
       "name": "TenantOrbital",
@@ -160,6 +160,62 @@
                   "type": "string"
                 }
               ]
+            },
+            {
+              "event": "TenantUpdated",
+              "payloadSchema": [
+                {
+                  "name": "row.id",
+                  "type": "string",
+                  "required": true
+                },
+                {
+                  "name": "row.name",
+                  "type": "string",
+                  "required": true
+                },
+                {
+                  "name": "row.email",
+                  "type": "string"
+                },
+                {
+                  "name": "row.phone",
+                  "type": "string"
+                },
+                {
+                  "name": "row.leaseId",
+                  "type": "string"
+                },
+                {
+                  "name": "row.moveInDate",
+                  "type": "string"
+                },
+                {
+                  "name": "row.moveOutDate",
+                  "type": "string"
+                },
+                {
+                  "name": "row.status",
+                  "type": "string"
+                },
+                {
+                  "name": "row.notes",
+                  "type": "string"
+                }
+              ]
+            },
+            {
+              "event": "TenantUpdateFailed",
+              "payloadSchema": [
+                {
+                  "name": "error",
+                  "type": "string"
+                },
+                {
+                  "name": "code",
+                  "type": "string"
+                }
+              ]
             }
           ],
           "stateMachine": {
@@ -234,6 +290,46 @@
                 ]
               },
               {
+                "key": "SET_STATUS",
+                "name": "Set Status",
+                "payloadSchema": [
+                  {
+                    "name": "entityId",
+                    "type": "string",
+                    "required": true
+                  },
+                  {
+                    "name": "newStatus",
+                    "type": "string",
+                    "required": true
+                  }
+                ]
+              },
+              {
+                "key": "TenantUpdated",
+                "name": "Tenant updated",
+                "payloadSchema": [
+                  {
+                    "name": "row",
+                    "type": "Tenant"
+                  }
+                ]
+              },
+              {
+                "key": "TenantUpdateFailed",
+                "name": "Tenant update failed",
+                "payloadSchema": [
+                  {
+                    "name": "error",
+                    "type": "string"
+                  },
+                  {
+                    "name": "code",
+                    "type": "string"
+                  }
+                ]
+              },
+              {
                 "key": "CLOSE_TENANT",
                 "name": "Close Tenant"
               },
@@ -260,8 +356,8 @@
                     "Tenant",
                     {
                       "emit": {
-                        "failure": "TenantLoadFailed",
-                        "success": "TenantLoaded"
+                        "success": "TenantLoaded",
+                        "failure": "TenantLoadFailed"
                       }
                     }
                   ],
@@ -274,17 +370,17 @@
                           "type": "spinner"
                         },
                         {
-                          "variant": "caption",
                           "color": "muted",
+                          "content": "Loading tenants…",
                           "type": "typography",
-                          "content": "Loading tenants…"
+                          "variant": "caption"
                         }
                       ],
                       "align": "center",
+                      "className": "py-12",
                       "direction": "vertical",
-                      "type": "stack",
                       "gap": "md",
-                      "className": "py-12"
+                      "type": "stack"
                     }
                   ]
                 ]
@@ -298,65 +394,65 @@
                     "render-ui",
                     "main",
                     {
+                      "gap": "md",
                       "children": [
                         {
                           "type": "stack",
-                          "align": "center",
                           "gap": "sm",
+                          "align": "center",
                           "children": [
                             {
                               "type": "icon",
                               "name": "users"
                             },
                             {
-                              "variant": "h3",
                               "content": "@config.title",
+                              "variant": "h3",
                               "type": "typography"
                             }
                           ],
                           "direction": "horizontal"
                         },
                         {
+                          "type": "simple-grid",
                           "cols": 4.0,
                           "children": [
                             {
-                              "label": "Total tenants",
-                              "value": "@payload.data.length",
                               "icon": "users",
-                              "type": "stat-display"
+                              "value": "@payload.data.length",
+                              "type": "stat-display",
+                              "label": "Total tenants"
                             },
                             {
-                              "type": "stat-display",
-                              "value": "42",
                               "icon": "check-circle",
+                              "value": "42",
+                              "type": "stat-display",
                               "label": "Current"
                             },
                             {
-                              "icon": "user-plus",
-                              "value": "8",
                               "type": "stat-display",
-                              "label": "Prospective"
+                              "label": "Prospective",
+                              "value": "8",
+                              "icon": "user-plus"
                             },
                             {
-                              "icon": "user-minus",
                               "type": "stat-display",
-                              "label": "Former",
-                              "value": "120"
+                              "icon": "user-minus",
+                              "value": "120",
+                              "label": "Former"
                             }
-                          ],
-                          "type": "simple-grid"
+                          ]
                         },
                         {
                           "type": "divider"
                         },
                         {
+                          "fields": "@config.fields",
                           "type": "data-grid",
                           "entity": "@payload.data",
-                          "fields": "@config.fields",
                           "itemActions": "@config.itemActions"
                         }
                       ],
-                      "gap": "md",
                       "type": "stack",
                       "direction": "vertical"
                     }
@@ -373,9 +469,9 @@
                     "main",
                     {
                       "title": "Failed to load tenants",
-                      "type": "alert",
+                      "message": "@payload.error",
                       "variant": "error",
-                      "message": "@payload.error"
+                      "type": "alert"
                     }
                   ]
                 ]
@@ -434,35 +530,36 @@
                     "render-ui",
                     "main",
                     {
+                      "type": "stack",
                       "gap": "md",
                       "children": [
                         {
+                          "align": "center",
+                          "type": "stack",
+                          "gap": "sm",
                           "direction": "horizontal",
                           "children": [
                             {
-                              "label": "Back",
                               "variant": "ghost",
-                              "action": "CLOSE_TENANT",
-                              "type": "button"
+                              "type": "button",
+                              "label": "Back",
+                              "action": "CLOSE_TENANT"
                             },
                             {
-                              "name": "user",
-                              "type": "icon"
+                              "type": "icon",
+                              "name": "user"
                             },
                             {
+                              "variant": "h3",
                               "type": "typography",
-                              "content": "@entity.name",
-                              "variant": "h3"
+                              "content": "@entity.name"
                             },
                             {
-                              "label": "@entity.status",
                               "type": "badge",
+                              "label": "@entity.status",
                               "variant": "default"
                             }
-                          ],
-                          "type": "stack",
-                          "align": "center",
-                          "gap": "sm"
+                          ]
                         },
                         {
                           "type": "divider"
@@ -470,22 +567,22 @@
                         {
                           "children": [
                             {
+                              "type": "stack",
+                              "direction": "horizontal",
                               "children": [
                                 {
-                                  "variant": "caption",
-                                  "content": "Email",
                                   "type": "typography",
+                                  "content": "Email",
+                                  "variant": "caption",
                                   "color": "muted"
                                 },
                                 {
-                                  "content": "@entity.email",
+                                  "type": "typography",
                                   "variant": "body",
-                                  "type": "typography"
+                                  "content": "@entity.email"
                                 }
                               ],
-                              "gap": "md",
-                              "type": "stack",
-                              "direction": "horizontal"
+                              "gap": "md"
                             },
                             {
                               "direction": "horizontal",
@@ -493,10 +590,10 @@
                               "gap": "md",
                               "children": [
                                 {
+                                  "content": "Phone",
                                   "variant": "caption",
-                                  "type": "typography",
                                   "color": "muted",
-                                  "content": "Phone"
+                                  "type": "typography"
                                 },
                                 {
                                   "variant": "body",
@@ -506,39 +603,39 @@
                               ]
                             },
                             {
+                              "direction": "horizontal",
                               "gap": "md",
                               "children": [
                                 {
-                                  "content": "Lease",
-                                  "variant": "caption",
                                   "type": "typography",
+                                  "variant": "caption",
+                                  "content": "Lease",
                                   "color": "muted"
                                 },
                                 {
-                                  "variant": "body",
+                                  "type": "typography",
                                   "content": "@entity.leaseId",
-                                  "type": "typography"
-                                }
-                              ],
-                              "direction": "horizontal",
-                              "type": "stack"
-                            },
-                            {
-                              "type": "stack",
-                              "children": [
-                                {
-                                  "color": "muted",
-                                  "type": "typography",
-                                  "variant": "caption",
-                                  "content": "Notes"
-                                },
-                                {
-                                  "content": "@entity.notes",
-                                  "type": "typography",
                                   "variant": "body"
                                 }
                               ],
+                              "type": "stack"
+                            },
+                            {
                               "direction": "horizontal",
+                              "children": [
+                                {
+                                  "type": "typography",
+                                  "color": "muted",
+                                  "content": "Notes",
+                                  "variant": "caption"
+                                },
+                                {
+                                  "type": "typography",
+                                  "variant": "body",
+                                  "content": "@entity.notes"
+                                }
+                              ],
+                              "type": "stack",
                               "gap": "md"
                             }
                           ],
@@ -550,51 +647,50 @@
                           "type": "divider"
                         },
                         {
-                          "cols": 2.0,
-                          "type": "simple-grid",
                           "children": [
                             {
                               "icon": "calendar",
-                              "value": "@entity.moveInDate",
                               "type": "stat-display",
+                              "value": "@entity.moveInDate",
                               "label": "Move-In"
                             },
                             {
+                              "icon": "calendar",
                               "label": "Move-Out",
-                              "value": "@entity.moveOutDate",
                               "type": "stat-display",
-                              "icon": "calendar"
+                              "value": "@entity.moveOutDate"
                             }
-                          ]
+                          ],
+                          "cols": 2.0,
+                          "type": "simple-grid"
                         },
                         {
                           "gap": "sm",
+                          "type": "stack",
                           "children": [
                             {
-                              "actionPayload": {
-                                "id": "@entity.id"
-                              },
-                              "action": "ACTIVATE_TENANT",
-                              "type": "button",
                               "label": "Activate",
-                              "variant": "primary"
-                            },
-                            {
-                              "action": "MOVE_OUT",
+                              "variant": "primary",
                               "type": "button",
-                              "label": "Move Out",
-                              "variant": "danger",
+                              "action": "ACTIVATE_TENANT",
                               "actionPayload": {
                                 "id": "@entity.id"
                               }
+                            },
+                            {
+                              "label": "Move Out",
+                              "action": "MOVE_OUT",
+                              "actionPayload": {
+                                "id": "@entity.id"
+                              },
+                              "type": "button",
+                              "variant": "danger"
                             }
                           ],
-                          "type": "stack",
                           "direction": "horizontal",
                           "align": "center"
                         }
                       ],
-                      "type": "stack",
                       "direction": "vertical"
                     }
                   ]
@@ -615,8 +711,8 @@
                     "Tenant",
                     {
                       "emit": {
-                        "success": "TenantLoaded",
-                        "failure": "TenantLoadFailed"
+                        "failure": "TenantLoadFailed",
+                        "success": "TenantLoaded"
                       }
                     }
                   ],
@@ -624,22 +720,106 @@
                     "render-ui",
                     "main",
                     {
+                      "children": [
+                        {
+                          "type": "spinner"
+                        },
+                        {
+                          "variant": "caption",
+                          "type": "typography",
+                          "color": "muted",
+                          "content": "Recording move-out…"
+                        }
+                      ],
+                      "align": "center",
+                      "type": "stack",
+                      "gap": "md",
                       "direction": "vertical",
+                      "className": "py-12"
+                    }
+                  ]
+                ]
+              },
+              {
+                "from": "browsing",
+                "to": "loading",
+                "event": "SET_STATUS",
+                "effects": [
+                  [
+                    "set",
+                    "@entity.id",
+                    "@payload.entityId"
+                  ],
+                  [
+                    "set",
+                    "@entity.status",
+                    "@payload.newStatus"
+                  ],
+                  [
+                    "persist",
+                    "update",
+                    "Tenant",
+                    "@entity",
+                    {
+                      "emit": {
+                        "failure": "TenantUpdateFailed",
+                        "success": "TenantUpdated"
+                      }
+                    }
+                  ],
+                  [
+                    "render-ui",
+                    "main",
+                    {
+                      "className": "py-12",
+                      "gap": "md",
+                      "align": "center",
                       "children": [
                         {
                           "type": "spinner"
                         },
                         {
                           "type": "typography",
+                          "content": "Updating tenant status…",
                           "variant": "caption",
-                          "color": "muted",
-                          "content": "Recording move-out…"
+                          "color": "muted"
                         }
                       ],
-                      "type": "stack",
-                      "className": "py-12",
-                      "gap": "md",
-                      "align": "center"
+                      "direction": "vertical",
+                      "type": "stack"
+                    }
+                  ]
+                ]
+              },
+              {
+                "from": "browsing",
+                "to": "loading",
+                "event": "TenantUpdated",
+                "effects": [
+                  [
+                    "fetch",
+                    "Tenant",
+                    {
+                      "emit": {
+                        "success": "TenantLoaded",
+                        "failure": "TenantLoadFailed"
+                      }
+                    }
+                  ]
+                ]
+              },
+              {
+                "from": "browsing",
+                "to": "browsing",
+                "event": "TenantUpdateFailed",
+                "effects": [
+                  [
+                    "render-ui",
+                    "main",
+                    {
+                      "type": "alert",
+                      "variant": "error",
+                      "message": "@payload.error"
                     }
                   ]
                 ]
@@ -663,22 +843,22 @@
                     "render-ui",
                     "main",
                     {
+                      "className": "py-12",
+                      "align": "center",
                       "children": [
                         {
                           "type": "spinner"
                         },
                         {
-                          "content": "Loading tenants…",
-                          "type": "typography",
                           "color": "muted",
-                          "variant": "caption"
+                          "type": "typography",
+                          "variant": "caption",
+                          "content": "Loading tenants…"
                         }
                       ],
-                      "align": "center",
-                      "direction": "vertical",
                       "type": "stack",
                       "gap": "md",
-                      "className": "py-12"
+                      "direction": "vertical"
                     }
                   ]
                 ]
@@ -707,22 +887,22 @@
                     "render-ui",
                     "main",
                     {
-                      "align": "center",
-                      "className": "py-12",
                       "children": [
                         {
                           "type": "spinner"
                         },
                         {
-                          "content": "Activating tenant…",
-                          "variant": "caption",
                           "type": "typography",
-                          "color": "muted"
+                          "variant": "caption",
+                          "color": "muted",
+                          "content": "Activating tenant…"
                         }
                       ],
-                      "type": "stack",
+                      "direction": "vertical",
                       "gap": "md",
-                      "direction": "vertical"
+                      "type": "stack",
+                      "align": "center",
+                      "className": "py-12"
                     }
                   ]
                 ]
@@ -742,8 +922,8 @@
                     "Tenant",
                     {
                       "emit": {
-                        "success": "TenantLoaded",
-                        "failure": "TenantLoadFailed"
+                        "failure": "TenantLoadFailed",
+                        "success": "TenantLoaded"
                       }
                     }
                   ],
@@ -751,11 +931,7 @@
                     "render-ui",
                     "main",
                     {
-                      "direction": "vertical",
-                      "align": "center",
-                      "type": "stack",
                       "gap": "md",
-                      "className": "py-12",
                       "children": [
                         {
                           "type": "spinner"
@@ -763,10 +939,14 @@
                         {
                           "color": "muted",
                           "variant": "caption",
-                          "content": "Recording move-out…",
-                          "type": "typography"
+                          "type": "typography",
+                          "content": "Recording move-out…"
                         }
-                      ]
+                      ],
+                      "align": "center",
+                      "type": "stack",
+                      "className": "py-12",
+                      "direction": "vertical"
                     }
                   ]
                 ]
@@ -781,8 +961,8 @@
                     "Tenant",
                     {
                       "emit": {
-                        "failure": "TenantLoadFailed",
-                        "success": "TenantLoaded"
+                        "success": "TenantLoaded",
+                        "failure": "TenantLoadFailed"
                       }
                     }
                   ],
@@ -790,8 +970,8 @@
                     "render-ui",
                     "main",
                     {
-                      "size": "sm",
-                      "type": "spinner"
+                      "type": "spinner",
+                      "size": "sm"
                     }
                   ]
                 ]
@@ -799,30 +979,57 @@
             ]
           },
           "config": {
-            "title": {
+            "petPolicy": {
               "type": "string",
-              "default": "Tenants",
-              "label": "Section title",
-              "description": "Heading shown above the tenant directory",
+              "default": "no-pets",
+              "label": "Pet policy",
+              "description": "Default pet policy enforced for new tenants.",
+              "tier": "customization",
+              "values": [
+                "no-pets",
+                "cats-only",
+                "dogs-only",
+                "all"
+              ]
+            },
+            "inspectionFrequencyMonths": {
+              "type": "number",
+              "default": 12.0,
+              "label": "Inspection cadence (months)",
+              "description": "Months between scheduled unit inspections.",
+              "tier": "advanced"
+            },
+            "securityDepositMonths": {
+              "type": "number",
+              "default": 1.0,
+              "label": "Security deposit (months)",
+              "description": "Months of rent required as security deposit.",
+              "tier": "customization"
+            },
+            "leaseRenewalNoticeDays": {
+              "type": "number",
+              "default": 60.0,
+              "label": "Renewal notice (days)",
+              "description": "Days before lease end when a renewal nudge fires for this tenant.",
               "tier": "customization"
             },
             "fields": {
               "type": "[FieldSpec]",
               "default": [
                 {
-                  "label": "Name",
+                  "variant": "h4",
                   "name": "name",
-                  "variant": "h4"
+                  "label": "Name"
                 },
                 {
-                  "label": "Email",
+                  "name": "email",
                   "variant": "body",
-                  "name": "email"
+                  "label": "Email"
                 },
                 {
+                  "name": "phone",
                   "label": "Phone",
-                  "variant": "caption",
-                  "name": "phone"
+                  "variant": "caption"
                 },
                 {
                   "variant": "badge",
@@ -830,9 +1037,9 @@
                   "label": "Status"
                 },
                 {
+                  "name": "moveInDate",
                   "label": "Move-In",
-                  "variant": "caption",
-                  "name": "moveInDate"
+                  "variant": "caption"
                 }
               ],
               "label": "Columns to show",
@@ -841,6 +1048,21 @@
               "items": {
                 "type": "object",
                 "properties": {
+                  "key": {
+                    "name": "key",
+                    "type": "string",
+                    "required": false
+                  },
+                  "icon": {
+                    "name": "icon",
+                    "type": "string",
+                    "required": false
+                  },
+                  "variant": {
+                    "name": "variant",
+                    "type": "string",
+                    "required": false
+                  },
                   "label": {
                     "name": "label",
                     "type": "string",
@@ -851,13 +1073,8 @@
                     "type": "string",
                     "required": false
                   },
-                  "icon": {
-                    "name": "icon",
-                    "type": "string",
-                    "required": false
-                  },
-                  "key": {
-                    "name": "key",
+                  "format": {
+                    "name": "format",
                     "type": "string",
                     "required": false
                   },
@@ -865,16 +1082,6 @@
                     "name": "name",
                     "type": "string",
                     "required": true
-                  },
-                  "format": {
-                    "name": "format",
-                    "type": "string",
-                    "required": false
-                  },
-                  "variant": {
-                    "name": "variant",
-                    "type": "string",
-                    "required": false
                   }
                 }
               }
@@ -883,15 +1090,15 @@
               "type": "[ItemAction]",
               "default": [
                 {
-                  "icon": "arrow-right",
+                  "label": "Open",
                   "variant": "primary",
                   "event": "OPEN_TENANT",
-                  "label": "Open"
+                  "icon": "arrow-right"
                 },
                 {
+                  "event": "MOVE_OUT",
                   "variant": "danger",
-                  "label": "Move Out",
-                  "event": "MOVE_OUT"
+                  "label": "Move Out"
                 }
               ],
               "label": "Row actions",
@@ -900,28 +1107,49 @@
               "items": {
                 "type": "object",
                 "properties": {
-                  "icon": {
-                    "name": "icon",
+                  "label": {
+                    "name": "label",
                     "type": "string",
-                    "required": false
+                    "required": true
                   },
                   "variant": {
                     "name": "variant",
                     "type": "string",
                     "required": false
                   },
-                  "label": {
-                    "name": "label",
-                    "type": "string",
-                    "required": true
-                  },
                   "event": {
                     "name": "event",
                     "type": "string",
                     "required": true
+                  },
+                  "icon": {
+                    "name": "icon",
+                    "type": "string",
+                    "required": false
                   }
                 }
               }
+            },
+            "autoRenewEnabled": {
+              "type": "boolean",
+              "default": false,
+              "label": "Auto-renew",
+              "description": "Roll over the tenant's lease at term without an explicit non-renew notice.",
+              "tier": "customization"
+            },
+            "lateRentGraceDays": {
+              "type": "number",
+              "default": 5.0,
+              "label": "Late rent grace (days)",
+              "description": "Days after rent due before a tenant rolls into a late status.",
+              "tier": "customization"
+            },
+            "title": {
+              "type": "string",
+              "default": "Tenants",
+              "label": "Section title",
+              "description": "Heading shown above the tenant directory",
+              "tier": "customization"
             }
           },
           "scope": "collection"

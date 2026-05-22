@@ -1,5 +1,5 @@
-app std-checkout-terminal "1.1.0"
-"std-checkout-terminal — retail POS checkout terminal sessions. Lists open sessions in `browsing`; opens a read-only session detail view (terminal, cashier, status, totals, payment method) in `viewing_single`. Tender / Void / Open are the only interactions; post-action transitions re-fetch the list. Agents tune the list shape via `config.fields` + `config.itemActions`."
+app std-checkout-terminal "1.2.0"
+"std-checkout-terminal — POS checkout sessions. Listens for SET_STATUS so std-lifecycle can auto-void abandoned. Exposes Scheduling + Restaurant/POS knobs (bookingHours, serviceCharge, tipPresets, …)."
 
 type FieldSpec = { name : string!, label : string, variant : string, icon : string, format : string, key : string, header : string }
 type ItemAction = { label : string!, event : string!, variant : string, icon : string }
@@ -46,6 +46,66 @@ orbital CheckoutSessionOrbital {
         @label "Row actions"
         @description "Buttons users can click on each terminal row"
         @tier "customization"
+      bookingWindowDays : number = 1
+        @label "Booking window (days)"
+        @description "How far in advance terminal sessions can be opened."
+        @tier "customization"
+      leadTimeMinutes : number = 0
+        @label "Lead time (minutes)"
+        @description "Minutes before openedAt that a session can be pre-staged."
+        @tier "customization"
+      bookingHours : string = "06:00-23:00"
+        @label "Booking hours"
+        @description "Daily window during which terminals can be opened (HH:MM-HH:MM)."
+        @tier "customization"
+      blackoutDates : [string] = []
+        @label "Blackout dates"
+        @description "ISO dates blocked from opening (e.g. holidays, deep cleans)."
+        @tier "customization"
+      noShowGracePeriodMinutes : number = 60
+        @label "No-show grace (minutes)"
+        @description "Minutes of inactivity before an open session auto-voids. Wire via std-lifecycle."
+        @tier "customization"
+      rescheduleWindowHours : number = 1
+        @label "Reschedule window (hours)"
+        @description "Hours during which a tendered payment can be reversed without manager override."
+        @tier "customization"
+      maxReschedules : number = 1
+        @label "Max reschedules"
+        @description "Hard cap on payment reversal count per session."
+        @tier "advanced"
+      cancellationPolicy : "free" | "partial-refund" | "no-refund" = "free"
+        @label "Cancellation policy"
+        @description "Refund treatment for voided sessions."
+        @tier "customization"
+      serviceCharge : number = 0
+        @label "Service charge (%)"
+        @description "Automatic service charge added to every checkout (percentage)."
+        @tier "customization"
+      tipPresets : [number] = [15, 18, 20, 25]
+        @label "Tip presets (%)"
+        @description "Suggested tip percentages shown at checkout."
+        @tier "customization"
+      allowSplitChecks : boolean = false
+        @label "Allow split checks"
+        @description "Permit a single session to split tender across multiple payers."
+        @tier "customization"
+      kitchenAutoFire : boolean = false
+        @label "Kitchen auto-fire"
+        @description "Fire kitchen order automatically once payment is tendered."
+        @tier "customization"
+      coursingEnabled : boolean = false
+        @label "Coursing enabled"
+        @description "Send items to kitchen in course-ordered waves."
+        @tier "customization"
+      allergenWarningsEnabled : boolean = false
+        @label "Allergen warnings"
+        @description "Surface allergen warnings on the cart and receipt."
+        @tier "customization"
+      tableTurnoverTargetMinutes : number = 60
+        @label "Turnover target (min)"
+        @description "Target minutes per session for FOH pacing. Drives turnover dashboards."
+        @tier "advanced"
     }
     initial: loading
     state loading {
@@ -73,6 +133,11 @@ orbital CheckoutSessionOrbital {
         (set @entity.id @payload.id)
         (fetch CheckoutSession { emit: { success: "CheckoutSessionLoaded", failure: "CheckoutSessionLoadFailed" } })
         (render-ui main { type: "stack", direction: "vertical", gap: "md", align: "center", className: "py-12", children: [{ type: "spinner", size: "md" }, { type: "typography", variant: "caption", color: "muted", content: "Voiding session…" }] })
+      SET_STATUS -> loading
+        (set @entity.id @payload.entityId)
+        (set @entity.status @payload.newStatus)
+        (persist update CheckoutSession @entity { emit: { success: "CheckoutSessionLoaded", failure: "CheckoutSessionLoadFailed" } })
+        (render-ui main { type: "stack", direction: "vertical", gap: "md", align: "center", className: "py-12", children: [{ type: "spinner", size: "md" }, { type: "typography", variant: "caption", color: "muted", content: "Updating session status…" }] })
     }
     state viewing_single {
       CLOSE_TERMINAL -> loading
@@ -105,6 +170,7 @@ orbital CheckoutSessionOrbital {
       CLOSE_TERMINAL { }
       TENDER_PAYMENT { id : string! }
       VOID_SESSION   { id : string! }
+      SET_STATUS     { entityId : string!, newStatus : string! }
       CheckoutSessionLoaded     { data : [CheckoutSession] }
       CheckoutSessionLoadFailed { error : string, code : string }
     }

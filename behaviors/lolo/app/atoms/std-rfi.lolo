@@ -1,5 +1,5 @@
-app std-rfi "1.1.0"
-"std-rfi — Request For Information primitive for construction projects. Lists RFIs in `browsing`; opens detail in `viewing_single` with Submit / Answer / Close actions. Agents tune the list shape via `config.fields` + `config.itemActions`."
+app std-rfi "1.2.0"
+"std-rfi — RFI pipeline for construction projects. Listens for SET_STATUS so std-lifecycle can auto-close stale RFIs. Exposes Service/Operations knobs (responseTimeMinutes, resolutionSLAHours, …)."
 
 type FieldSpec = { name : string!, label : string, variant : string, icon : string, format : string, key : string, header : string }
 type ItemAction = { label : string!, event : string!, variant : string, icon : string }
@@ -47,6 +47,46 @@ orbital RfiOrbital {
         @label "Row actions"
         @description "Buttons users can click on each RFI row"
         @tier "customization"
+      serviceAreaRadius : number = 0
+        @label "Service area radius (mi)"
+        @description "Project-site distance limit for assignable responders. Zero = no restriction."
+        @tier "customization"
+      serviceZones : [string] = []
+        @label "Service zones"
+        @description "Named project zones for routing RFIs to the right responder pool."
+        @tier "customization"
+      dispatchStrategy : "nearest" | "round-robin" | "manual" = "manual"
+        @label "Dispatch strategy"
+        @description "How responders are picked when an RFI is raised."
+        @tier "customization"
+      skillsRequired : [string] = []
+        @label "Required skills"
+        @description "Discipline tags a responder must hold (e.g. 'structural', 'mep', 'arch')."
+        @tier "customization"
+      responseTimeMinutes : number = 480
+        @label "Response time SLA (min)"
+        @description "Target minutes from raised to first acknowledgement (default 8 business hours)."
+        @tier "essential"
+      resolutionSLAHours : number = 120
+        @label "Resolution SLA (hours)"
+        @description "Target hours from raised to answered (default 5 business days). Compose std-lifecycle to escalate."
+        @tier "essential"
+      escalationThresholdHours : number = 168
+        @label "Escalation threshold (hours)"
+        @description "Hours after which a stalled RFI auto-escalates (default 7 days)."
+        @tier "customization"
+      customerVisibleStatuses : [string] = ["submitted", "answered", "closed"]
+        @label "Customer-visible statuses"
+        @description "Subset of statuses external collaborators see."
+        @tier "customization"
+      requirePhotoOnComplete : boolean = false
+        @label "Require photo on complete"
+        @description "Block ANSWER unless a supporting attachment is provided."
+        @tier "customization"
+      requireSignatureOnComplete : boolean = false
+        @label "Require responder signature on complete"
+        @description "Block ANSWER unless responder signature is captured (compose std-signature-capture)."
+        @tier "customization"
     }
     initial: loading
     state loading {
@@ -84,6 +124,11 @@ orbital RfiOrbital {
         (set @entity.id @payload.id)
         (fetch Rfi { emit: { success: "RfiLoaded", failure: "RfiLoadFailed" } })
         (render-ui main { type: "stack", direction: "vertical", gap: "md", align: "center", className: "py-12", children: [{ type: "spinner" }, { type: "typography", variant: "caption", color: "muted", content: "Closing RFI…" }] })
+      SET_STATUS -> loading
+        (set @entity.id @payload.entityId)
+        (set @entity.status @payload.newStatus)
+        (persist update Rfi @entity { emit: { success: "RfiLoaded", failure: "RfiLoadFailed" } })
+        (render-ui main { type: "stack", direction: "vertical", gap: "md", align: "center", className: "py-12", children: [{ type: "spinner" }, { type: "typography", variant: "caption", color: "muted", content: "Updating RFI status…" }] })
     }
     state viewing_single {
       CLOSE_VIEW -> loading
@@ -122,6 +167,7 @@ orbital RfiOrbital {
       SUBMIT         { id : string! }
       ANSWER         { id : string! }
       CLOSE          { id : string! }
+      SET_STATUS     { entityId : string!, newStatus : string! }
       RfiLoaded      { data : [Rfi], totalCount : number }
       RfiLoadFailed  { error : string, code : string }
     }

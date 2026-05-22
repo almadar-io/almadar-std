@@ -1,7 +1,7 @@
 {
   "name": "std-waitlist",
-  "version": "1.1.0",
-  "description": "std-waitlist — sorted queue with auto-promote-on-cancel. Lists waitlist entries in `browsing`; opens detail in `viewing_single` with Promote / Cancel actions. Agents tune the list shape via `config.fields` + `config.itemActions`.",
+  "version": "1.2.0",
+  "description": "std-waitlist — sorted queue with auto-promote-on-cancel. Listens for SET_STATUS so std-lifecycle can auto-expire. Exposes Scheduling/Booking knobs (bookingWindowDays, leadTimeMinutes, cancellationPolicy, …).",
   "orbitals": [
     {
       "name": "WaitlistOrbital",
@@ -321,6 +321,22 @@
                 ]
               },
               {
+                "key": "SET_STATUS",
+                "name": "Set Status",
+                "payloadSchema": [
+                  {
+                    "name": "entityId",
+                    "type": "string",
+                    "required": true
+                  },
+                  {
+                    "name": "newStatus",
+                    "type": "string",
+                    "required": true
+                  }
+                ]
+              },
+              {
                 "key": "CLOSE_VIEW",
                 "name": "Close View"
               },
@@ -360,22 +376,22 @@
                     "render-ui",
                     "main",
                     {
-                      "direction": "vertical",
+                      "className": "py-12",
                       "gap": "md",
+                      "type": "stack",
+                      "align": "center",
+                      "direction": "vertical",
                       "children": [
                         {
                           "type": "spinner"
                         },
                         {
-                          "type": "typography",
-                          "color": "muted",
                           "variant": "caption",
-                          "content": "Loading waitlist…"
+                          "content": "Loading waitlist…",
+                          "type": "typography",
+                          "color": "muted"
                         }
-                      ],
-                      "align": "center",
-                      "className": "py-12",
-                      "type": "stack"
+                      ]
                     }
                   ]
                 ]
@@ -389,13 +405,11 @@
                     "render-ui",
                     "main",
                     {
-                      "direction": "vertical",
-                      "gap": "md",
-                      "type": "stack",
                       "children": [
                         {
+                          "gap": "sm",
                           "direction": "horizontal",
-                          "align": "center",
+                          "type": "stack",
                           "children": [
                             {
                               "type": "icon",
@@ -407,51 +421,53 @@
                               "variant": "h3"
                             }
                           ],
-                          "gap": "sm",
-                          "type": "stack"
+                          "align": "center"
                         },
                         {
+                          "type": "simple-grid",
+                          "cols": 4.0,
                           "children": [
                             {
                               "icon": "users",
                               "type": "stat-display",
-                              "label": "Total entries",
-                              "value": "@payload.data.length"
+                              "value": "@payload.data.length",
+                              "label": "Total entries"
                             },
                             {
-                              "value": "126",
                               "label": "Waiting",
+                              "value": "126",
                               "type": "stat-display",
                               "icon": "hourglass"
                             },
                             {
+                              "type": "stat-display",
                               "icon": "arrow-up",
                               "value": "24",
-                              "type": "stat-display",
                               "label": "Promoted 7d"
                             },
                             {
-                              "type": "stat-display",
                               "value": "3d",
-                              "icon": "clock",
-                              "label": "Avg wait time"
+                              "type": "stat-display",
+                              "label": "Avg wait time",
+                              "icon": "clock"
                             }
-                          ],
-                          "cols": 4.0,
-                          "type": "simple-grid"
+                          ]
                         },
                         {
                           "type": "divider"
                         },
                         {
                           "type": "data-grid",
-                          "fields": "@config.fields",
                           "entity": "@payload.data",
+                          "fields": "@config.fields",
                           "cols": 1.0,
                           "gap": "sm",
                           "itemActions": "@config.itemActions"
                         }
-                      ]
+                      ],
+                      "type": "stack",
+                      "direction": "vertical",
+                      "gap": "md"
                     }
                   ]
                 ]
@@ -465,8 +481,8 @@
                     "render-ui",
                     "main",
                     {
-                      "variant": "error",
                       "message": "@payload.error",
+                      "variant": "error",
                       "type": "alert"
                     }
                   ]
@@ -526,146 +542,146 @@
                     "render-ui",
                     "main",
                     {
-                      "type": "stack",
                       "children": [
                         {
+                          "type": "stack",
+                          "align": "center",
+                          "gap": "sm",
+                          "direction": "horizontal",
                           "children": [
                             {
-                              "variant": "ghost",
                               "label": "Back",
+                              "variant": "ghost",
                               "action": "CLOSE_VIEW",
                               "type": "button"
                             },
                             {
-                              "type": "icon",
-                              "name": "users"
+                              "name": "users",
+                              "type": "icon"
                             },
                             {
+                              "variant": "h3",
                               "content": "@entity.userId",
-                              "type": "typography",
-                              "variant": "h3"
+                              "type": "typography"
                             },
                             {
                               "type": "badge",
                               "label": "@entity.status",
                               "variant": "primary"
                             }
-                          ],
-                          "direction": "horizontal",
-                          "gap": "sm",
-                          "align": "center",
-                          "type": "stack"
+                          ]
                         },
                         {
                           "type": "divider"
                         },
                         {
+                          "gap": "sm",
                           "direction": "vertical",
+                          "type": "stack",
                           "children": [
+                            {
+                              "type": "stack",
+                              "direction": "horizontal",
+                              "gap": "md",
+                              "children": [
+                                {
+                                  "color": "muted",
+                                  "variant": "caption",
+                                  "type": "typography",
+                                  "content": "Target"
+                                },
+                                {
+                                  "content": "@entity.targetId",
+                                  "variant": "body",
+                                  "type": "typography"
+                                }
+                              ]
+                            },
                             {
                               "type": "stack",
                               "gap": "md",
                               "direction": "horizontal",
                               "children": [
                                 {
-                                  "type": "typography",
                                   "color": "muted",
-                                  "content": "Target",
+                                  "content": "Target type",
+                                  "type": "typography",
                                   "variant": "caption"
                                 },
                                 {
                                   "variant": "body",
                                   "type": "typography",
-                                  "content": "@entity.targetId"
+                                  "content": "@entity.targetType"
                                 }
                               ]
-                            },
-                            {
-                              "children": [
-                                {
-                                  "type": "typography",
-                                  "variant": "caption",
-                                  "content": "Target type",
-                                  "color": "muted"
-                                },
-                                {
-                                  "variant": "body",
-                                  "content": "@entity.targetType",
-                                  "type": "typography"
-                                }
-                              ],
-                              "type": "stack",
-                              "direction": "horizontal",
-                              "gap": "md"
                             }
-                          ],
-                          "gap": "sm",
-                          "type": "stack"
+                          ]
                         },
                         {
                           "type": "divider"
                         },
                         {
                           "type": "simple-grid",
-                          "cols": 4.0,
                           "children": [
                             {
-                              "value": "@entity.position",
-                              "icon": "hash",
+                              "label": "Position",
                               "type": "stat-display",
-                              "label": "Position"
+                              "value": "@entity.position",
+                              "icon": "hash"
                             },
                             {
                               "icon": "calendar",
-                              "label": "Joined",
-                              "value": "@entity.joinedAt",
-                              "type": "stat-display"
-                            },
-                            {
-                              "value": "@entity.promotedAt",
-                              "icon": "arrow-up",
                               "type": "stat-display",
-                              "label": "Promoted"
+                              "value": "@entity.joinedAt",
+                              "label": "Joined"
                             },
                             {
-                              "label": "Notified",
-                              "value": "@entity.notifiedAt",
+                              "type": "stat-display",
+                              "value": "@entity.promotedAt",
+                              "label": "Promoted",
+                              "icon": "arrow-up"
+                            },
+                            {
                               "icon": "bell",
-                              "type": "stat-display"
+                              "label": "Notified",
+                              "type": "stat-display",
+                              "value": "@entity.notifiedAt"
                             }
-                          ]
+                          ],
+                          "cols": 4.0
                         },
                         {
-                          "direction": "horizontal",
-                          "gap": "sm",
-                          "type": "stack",
                           "align": "center",
                           "children": [
                             {
-                              "variant": "primary",
                               "label": "Promote",
-                              "actionPayload": {
-                                "entryId": "@entity.id",
-                                "row": "@entity"
-                              },
+                              "variant": "primary",
+                              "action": "PROMOTE",
                               "type": "button",
-                              "action": "PROMOTE"
+                              "actionPayload": {
+                                "row": "@entity",
+                                "entryId": "@entity.id"
+                              }
                             },
                             {
-                              "action": "CANCEL",
-                              "variant": "danger",
-                              "type": "button",
                               "label": "Cancel",
+                              "action": "CANCEL",
                               "actionPayload": {
-                                "entryId": "@entity.id",
-                                "row": "@entity"
-                              }
+                                "row": "@entity",
+                                "entryId": "@entity.id"
+                              },
+                              "type": "button",
+                              "variant": "danger"
                             }
-                          ]
+                          ],
+                          "type": "stack",
+                          "gap": "sm",
+                          "direction": "horizontal"
                         }
                       ],
-                      "direction": "vertical",
-                      "gap": "md"
+                      "gap": "md",
+                      "type": "stack",
+                      "direction": "vertical"
                     }
                   ]
                 ]
@@ -694,20 +710,71 @@
                     "render-ui",
                     "main",
                     {
-                      "direction": "vertical",
-                      "gap": "md",
-                      "className": "py-12",
-                      "align": "center",
                       "type": "stack",
+                      "direction": "vertical",
+                      "className": "py-12",
                       "children": [
                         {
                           "type": "spinner"
                         },
                         {
                           "type": "typography",
-                          "color": "muted",
                           "content": "Cancelling entry…",
+                          "color": "muted",
                           "variant": "caption"
+                        }
+                      ],
+                      "gap": "md",
+                      "align": "center"
+                    }
+                  ]
+                ]
+              },
+              {
+                "from": "browsing",
+                "to": "loading",
+                "event": "SET_STATUS",
+                "effects": [
+                  [
+                    "set",
+                    "@entity.id",
+                    "@payload.entityId"
+                  ],
+                  [
+                    "set",
+                    "@entity.status",
+                    "@payload.newStatus"
+                  ],
+                  [
+                    "persist",
+                    "update",
+                    "WaitlistEntry",
+                    "@entity",
+                    {
+                      "emit": {
+                        "success": "WaitlistEntryLoaded",
+                        "failure": "WaitlistEntryLoadFailed"
+                      }
+                    }
+                  ],
+                  [
+                    "render-ui",
+                    "main",
+                    {
+                      "type": "stack",
+                      "direction": "vertical",
+                      "className": "py-12",
+                      "gap": "md",
+                      "align": "center",
+                      "children": [
+                        {
+                          "type": "spinner"
+                        },
+                        {
+                          "type": "typography",
+                          "content": "Updating waitlist entry status…",
+                          "variant": "caption",
+                          "color": "muted"
                         }
                       ]
                     }
@@ -724,8 +791,8 @@
                     "WaitlistEntry",
                     {
                       "emit": {
-                        "success": "WaitlistEntryLoaded",
-                        "failure": "WaitlistEntryLoadFailed"
+                        "failure": "WaitlistEntryLoadFailed",
+                        "success": "WaitlistEntryLoaded"
                       }
                     }
                   ],
@@ -738,16 +805,16 @@
                           "type": "spinner"
                         },
                         {
-                          "color": "muted",
                           "type": "typography",
                           "content": "Loading waitlist…",
-                          "variant": "caption"
+                          "variant": "caption",
+                          "color": "muted"
                         }
                       ],
-                      "direction": "vertical",
-                      "gap": "md",
-                      "type": "stack",
                       "align": "center",
+                      "direction": "vertical",
+                      "type": "stack",
+                      "gap": "md",
                       "className": "py-12"
                     }
                   ]
@@ -777,22 +844,22 @@
                     "render-ui",
                     "main",
                     {
-                      "gap": "md",
                       "children": [
                         {
                           "type": "spinner"
                         },
                         {
-                          "content": "Promoting entry…",
-                          "color": "muted",
+                          "type": "typography",
                           "variant": "caption",
-                          "type": "typography"
+                          "color": "muted",
+                          "content": "Promoting entry…"
                         }
                       ],
-                      "direction": "vertical",
+                      "gap": "md",
+                      "align": "center",
                       "className": "py-12",
                       "type": "stack",
-                      "align": "center"
+                      "direction": "vertical"
                     }
                   ]
                 ]
@@ -812,8 +879,8 @@
                     "WaitlistEntry",
                     {
                       "emit": {
-                        "failure": "WaitlistEntryLoadFailed",
-                        "success": "WaitlistEntryLoaded"
+                        "success": "WaitlistEntryLoaded",
+                        "failure": "WaitlistEntryLoadFailed"
                       }
                     }
                   ],
@@ -821,9 +888,11 @@
                     "render-ui",
                     "main",
                     {
-                      "type": "stack",
-                      "align": "center",
                       "direction": "vertical",
+                      "align": "center",
+                      "gap": "md",
+                      "type": "stack",
+                      "className": "py-12",
                       "children": [
                         {
                           "type": "spinner"
@@ -831,12 +900,10 @@
                         {
                           "content": "Cancelling entry…",
                           "color": "muted",
-                          "variant": "caption",
-                          "type": "typography"
+                          "type": "typography",
+                          "variant": "caption"
                         }
-                      ],
-                      "className": "py-12",
-                      "gap": "md"
+                      ]
                     }
                   ]
                 ]
@@ -851,8 +918,8 @@
                     "WaitlistEntry",
                     {
                       "emit": {
-                        "failure": "WaitlistEntryLoadFailed",
-                        "success": "WaitlistEntryLoaded"
+                        "success": "WaitlistEntryLoaded",
+                        "failure": "WaitlistEntryLoadFailed"
                       }
                     }
                   ],
@@ -860,8 +927,8 @@
                     "render-ui",
                     "main",
                     {
-                      "type": "spinner",
-                      "size": "sm"
+                      "size": "sm",
+                      "type": "spinner"
                     }
                   ]
                 ]
@@ -869,98 +936,25 @@
             ]
           },
           "config": {
-            "title": {
-              "type": "string",
-              "default": "Waitlist",
-              "label": "Section title",
-              "description": "Heading shown above the waitlist queue",
+            "bookingWindowDays": {
+              "type": "number",
+              "default": 30.0,
+              "label": "Booking window (days)",
+              "description": "How far in advance users can join the waitlist.",
               "tier": "customization"
-            },
-            "fields": {
-              "type": "[FieldSpec]",
-              "default": [
-                {
-                  "name": "position",
-                  "label": "#",
-                  "variant": "badge"
-                },
-                {
-                  "name": "userId",
-                  "variant": "caption",
-                  "label": "User"
-                },
-                {
-                  "label": "Type",
-                  "variant": "badge",
-                  "name": "targetType"
-                },
-                {
-                  "label": "Status",
-                  "name": "status",
-                  "variant": "badge"
-                },
-                {
-                  "variant": "caption",
-                  "name": "joinedAt",
-                  "label": "Joined"
-                }
-              ],
-              "label": "Columns to show",
-              "description": "Each column maps to one field on the Waitlist Entry entity",
-              "tier": "advanced",
-              "items": {
-                "type": "object",
-                "properties": {
-                  "icon": {
-                    "name": "icon",
-                    "type": "string",
-                    "required": false
-                  },
-                  "key": {
-                    "name": "key",
-                    "type": "string",
-                    "required": false
-                  },
-                  "variant": {
-                    "name": "variant",
-                    "type": "string",
-                    "required": false
-                  },
-                  "label": {
-                    "name": "label",
-                    "type": "string",
-                    "required": false
-                  },
-                  "name": {
-                    "name": "name",
-                    "type": "string",
-                    "required": true
-                  },
-                  "format": {
-                    "name": "format",
-                    "type": "string",
-                    "required": false
-                  },
-                  "header": {
-                    "name": "header",
-                    "type": "string",
-                    "required": false
-                  }
-                }
-              }
             },
             "itemActions": {
               "type": "[ItemAction]",
               "default": [
                 {
+                  "icon": "arrow-right",
                   "event": "OPEN_ENTRY",
                   "label": "Open",
-                  "icon": "arrow-right",
                   "variant": "primary"
                 },
                 {
-                  "label": "Cancel",
                   "event": "CANCEL",
+                  "label": "Cancel",
                   "variant": "danger",
                   "icon": "x"
                 }
@@ -981,18 +975,155 @@
                     "type": "string",
                     "required": false
                   },
+                  "variant": {
+                    "name": "variant",
+                    "type": "string",
+                    "required": false
+                  },
                   "event": {
                     "name": "event",
                     "type": "string",
                     "required": true
+                  }
+                }
+              }
+            },
+            "blackoutDates": {
+              "type": "[string]",
+              "default": [],
+              "label": "Blackout dates",
+              "description": "ISO dates blocked from joining the waitlist.",
+              "tier": "customization",
+              "items": {
+                "type": "string"
+              }
+            },
+            "rescheduleWindowHours": {
+              "type": "number",
+              "default": 24.0,
+              "label": "Reschedule window (hours)",
+              "description": "Hours during which a user can defer their promoted slot.",
+              "tier": "customization"
+            },
+            "title": {
+              "type": "string",
+              "default": "Waitlist",
+              "label": "Section title",
+              "description": "Heading shown above the waitlist queue",
+              "tier": "customization"
+            },
+            "bookingHours": {
+              "type": "string",
+              "default": "00:00-23:59",
+              "label": "Booking hours",
+              "description": "Daily window during which waitlist joins are accepted (HH:MM-HH:MM).",
+              "tier": "customization"
+            },
+            "noShowGracePeriodMinutes": {
+              "type": "number",
+              "default": 60.0,
+              "label": "No-show grace (minutes)",
+              "description": "Minutes after promotion notice before the entry auto-expires if not claimed. Wire via std-lifecycle.",
+              "tier": "customization"
+            },
+            "maxReschedules": {
+              "type": "number",
+              "default": 1.0,
+              "label": "Max reschedules",
+              "description": "Hard cap on deferral count per waitlist entry.",
+              "tier": "advanced"
+            },
+            "fields": {
+              "type": "[FieldSpec]",
+              "default": [
+                {
+                  "name": "position",
+                  "label": "#",
+                  "variant": "badge"
+                },
+                {
+                  "label": "User",
+                  "variant": "caption",
+                  "name": "userId"
+                },
+                {
+                  "name": "targetType",
+                  "label": "Type",
+                  "variant": "badge"
+                },
+                {
+                  "name": "status",
+                  "label": "Status",
+                  "variant": "badge"
+                },
+                {
+                  "name": "joinedAt",
+                  "variant": "caption",
+                  "label": "Joined"
+                }
+              ],
+              "label": "Columns to show",
+              "description": "Each column maps to one field on the Waitlist Entry entity",
+              "tier": "advanced",
+              "items": {
+                "type": "object",
+                "properties": {
+                  "icon": {
+                    "name": "icon",
+                    "type": "string",
+                    "required": false
                   },
                   "variant": {
                     "name": "variant",
                     "type": "string",
                     "required": false
+                  },
+                  "format": {
+                    "name": "format",
+                    "type": "string",
+                    "required": false
+                  },
+                  "key": {
+                    "name": "key",
+                    "type": "string",
+                    "required": false
+                  },
+                  "name": {
+                    "name": "name",
+                    "type": "string",
+                    "required": true
+                  },
+                  "header": {
+                    "name": "header",
+                    "type": "string",
+                    "required": false
+                  },
+                  "label": {
+                    "name": "label",
+                    "type": "string",
+                    "required": false
                   }
                 }
               }
+            },
+            "leadTimeMinutes": {
+              "type": "number",
+              "default": 0.0,
+              "label": "Lead time (minutes)",
+              "description": "Minutes before target availability that the waitlist still accepts joins.",
+              "tier": "customization"
+            },
+            "cancellationPolicy": {
+              "type": "string",
+              "default": "free",
+              "label": "Cancellation policy",
+              "description": "Refund treatment when a waitlist entry is cancelled after a deposit.",
+              "tier": "customization",
+              "values": [
+                "free",
+                "partial-refund",
+                "no-refund"
+              ]
             }
           },
           "scope": "collection"

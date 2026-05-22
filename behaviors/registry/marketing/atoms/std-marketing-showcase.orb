@@ -1,0 +1,276 @@
+{
+  "name": "std-marketing-showcase",
+  "version": "1.0.0",
+  "description": "Showcase grid atom for marketing pages. Renders a grid of portfolio or product showcase cards with images, badges, and descriptions. Pick for product galleries and portfolio sections.",
+  "orbitals": [
+    {
+      "name": "ShowcaseItemOrbital",
+      "entity": {
+        "name": "ShowcaseItem",
+        "persistence": "runtime",
+        "fields": [
+          {
+            "name": "id",
+            "type": "string",
+            "required": true
+          },
+          {
+            "name": "items",
+            "type": "array",
+            "default": [],
+            "items": {
+              "type": "object",
+              "properties": {
+                "title": {
+                  "name": "title",
+                  "type": "string",
+                  "required": true
+                },
+                "image": {
+                  "name": "image",
+                  "type": "object",
+                  "required": false,
+                  "properties": {
+                    "alt": {
+                      "name": "alt",
+                      "type": "string",
+                      "required": false
+                    },
+                    "src": {
+                      "name": "src",
+                      "type": "string",
+                      "required": true
+                    }
+                  }
+                },
+                "href": {
+                  "name": "href",
+                  "type": "string",
+                  "required": false
+                },
+                "description": {
+                  "name": "description",
+                  "type": "string",
+                  "required": false
+                },
+                "badge": {
+                  "name": "badge",
+                  "type": "string",
+                  "required": false
+                },
+                "accentColor": {
+                  "name": "accentColor",
+                  "type": "string",
+                  "required": false
+                },
+                "id": {
+                  "name": "id",
+                  "type": "string",
+                  "required": true
+                }
+              }
+            }
+          }
+        ]
+      },
+      "traits": [
+        {
+          "name": "ShowcaseItemShowcase",
+          "category": "interaction",
+          "linkedEntity": "ShowcaseItem",
+          "emits": [
+            {
+              "event": "SHOWCASE_CLICK",
+              "scope": "external",
+              "payloadSchema": [
+                {
+                  "name": "id",
+                  "type": "string"
+                },
+                {
+                  "name": "title",
+                  "type": "string"
+                }
+              ]
+            }
+          ],
+          "stateMachine": {
+            "states": [
+              {
+                "name": "idle",
+                "isInitial": true
+              }
+            ],
+            "events": [
+              {
+                "key": "INIT",
+                "name": "Initialize"
+              },
+              {
+                "key": "SHOWCASE_CLICK",
+                "name": "Showcase Click",
+                "payloadSchema": [
+                  {
+                    "name": "id",
+                    "type": "string"
+                  },
+                  {
+                    "name": "title",
+                    "type": "string"
+                  }
+                ]
+              }
+            ],
+            "transitions": [
+              {
+                "from": "idle",
+                "to": "idle",
+                "event": "INIT",
+                "effects": [
+                  [
+                    "set",
+                    "@entity.items",
+                    "@config.items"
+                  ],
+                  [
+                    "render-ui",
+                    "main",
+                    {
+                      "entity": "@entity.items",
+                      "type": "showcase-organism"
+                    }
+                  ]
+                ]
+              },
+              {
+                "from": "idle",
+                "to": "idle",
+                "event": "SHOWCASE_CLICK",
+                "effects": [
+                  [
+                    "emit",
+                    "SHOWCASE_CLICK",
+                    {
+                      "title": "@payload.title",
+                      "id": "@payload.id"
+                    }
+                  ]
+                ]
+              }
+            ]
+          },
+          "config": {
+            "items": {
+              "type": "[ShowcaseCard]",
+              "default": [
+                {
+                  "id": "1",
+                  "accentColor": "",
+                  "description": "Real-time analytics at a glance.",
+                  "title": "Dashboard",
+                  "image": {
+                    "alt": "Dashboard preview",
+                    "src": ""
+                  },
+                  "href": "",
+                  "badge": "New"
+                },
+                {
+                  "description": "GraphQL and REST in one click.",
+                  "id": "2",
+                  "title": "API",
+                  "href": "",
+                  "accentColor": "",
+                  "image": {
+                    "alt": "API docs preview",
+                    "src": ""
+                  },
+                  "badge": ""
+                },
+                {
+                  "badge": "Beta",
+                  "description": "Native apps without native code.",
+                  "id": "3",
+                  "title": "Mobile",
+                  "accentColor": "",
+                  "href": "",
+                  "image": {
+                    "src": "",
+                    "alt": "Mobile app preview"
+                  }
+                }
+              ],
+              "label": "Showcase Items",
+              "description": "Array of showcase cards",
+              "tier": "essential",
+              "items": {
+                "type": "object",
+                "properties": {
+                  "title": {
+                    "name": "title",
+                    "type": "string",
+                    "required": true
+                  },
+                  "accentColor": {
+                    "name": "accentColor",
+                    "type": "string",
+                    "required": false
+                  },
+                  "href": {
+                    "name": "href",
+                    "type": "string",
+                    "required": false
+                  },
+                  "image": {
+                    "name": "image",
+                    "type": "object",
+                    "required": false,
+                    "properties": {
+                      "alt": {
+                        "name": "alt",
+                        "type": "string",
+                        "required": false
+                      },
+                      "src": {
+                        "name": "src",
+                        "type": "string",
+                        "required": true
+                      }
+                    }
+                  },
+                  "id": {
+                    "name": "id",
+                    "type": "string",
+                    "required": true
+                  },
+                  "badge": {
+                    "name": "badge",
+                    "type": "string",
+                    "required": false
+                  },
+                  "description": {
+                    "name": "description",
+                    "type": "string",
+                    "required": false
+                  }
+                }
+              }
+            }
+          },
+          "scope": "instance"
+        }
+      ],
+      "pages": [
+        {
+          "name": "ShowcaseItemShowcasePage",
+          "path": "/showcase",
+          "traits": [
+            {
+              "ref": "ShowcaseItemShowcase"
+            }
+          ]
+        }
+      ]
+    }
+  ]
+}

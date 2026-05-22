@@ -1,7 +1,7 @@
 {
   "name": "std-payout-ledger",
-  "version": "1.1.0",
-  "description": "std-payout-ledger — marketplace vendor payout atom. Lists payouts in `browsing`; opens detail in `viewing_single` with Withdraw / Mark Paid actions. Agents tune the list shape via `config.fields` + `config.itemActions`.",
+  "version": "1.2.0",
+  "description": "std-payout-ledger — marketplace vendor payout ledger with Withdraw / Mark Paid actions. Listens for SET_STATUS so std-lifecycle can drive automated transitions. Exposes Financial-pattern knobs.",
   "orbitals": [
     {
       "name": "PayoutOrbital",
@@ -158,6 +158,63 @@
                   "type": "string"
                 }
               ]
+            },
+            {
+              "event": "PayoutUpdated",
+              "payloadSchema": [
+                {
+                  "name": "row.id",
+                  "type": "string",
+                  "required": true
+                },
+                {
+                  "name": "row.vendorId",
+                  "type": "string",
+                  "required": true
+                },
+                {
+                  "name": "row.amount",
+                  "type": "number",
+                  "required": true
+                },
+                {
+                  "name": "row.currency",
+                  "type": "string"
+                },
+                {
+                  "name": "row.status",
+                  "type": "string"
+                },
+                {
+                  "name": "row.bankAccountMasked",
+                  "type": "string"
+                },
+                {
+                  "name": "row.requestedAt",
+                  "type": "string"
+                },
+                {
+                  "name": "row.paidAt",
+                  "type": "string"
+                },
+                {
+                  "name": "row.notes",
+                  "type": "string"
+                }
+              ]
+            },
+            {
+              "event": "PayoutUpdateFailed",
+              "payloadSchema": [
+                {
+                  "name": "error",
+                  "type": "string"
+                },
+                {
+                  "name": "code",
+                  "type": "string"
+                }
+              ]
             }
           ],
           "stateMachine": {
@@ -243,6 +300,46 @@
                 ]
               },
               {
+                "key": "SET_STATUS",
+                "name": "Set Status",
+                "payloadSchema": [
+                  {
+                    "name": "entityId",
+                    "type": "string",
+                    "required": true
+                  },
+                  {
+                    "name": "newStatus",
+                    "type": "string",
+                    "required": true
+                  }
+                ]
+              },
+              {
+                "key": "PayoutUpdated",
+                "name": "Payout updated",
+                "payloadSchema": [
+                  {
+                    "name": "row",
+                    "type": "Payout"
+                  }
+                ]
+              },
+              {
+                "key": "PayoutUpdateFailed",
+                "name": "Payout update failed",
+                "payloadSchema": [
+                  {
+                    "name": "error",
+                    "type": "string"
+                  },
+                  {
+                    "name": "code",
+                    "type": "string"
+                  }
+                ]
+              },
+              {
                 "key": "CLOSE_VIEW",
                 "name": "Close View"
               }
@@ -267,22 +364,22 @@
                     "render-ui",
                     "main",
                     {
+                      "align": "center",
+                      "direction": "vertical",
+                      "className": "py-12",
                       "children": [
                         {
                           "type": "spinner"
                         },
                         {
+                          "variant": "caption",
                           "content": "Loading payouts…",
                           "color": "muted",
-                          "variant": "caption",
                           "type": "typography"
                         }
                       ],
-                      "align": "center",
-                      "gap": "md",
-                      "direction": "vertical",
                       "type": "stack",
-                      "className": "py-12"
+                      "gap": "md"
                     }
                   ]
                 ]
@@ -297,66 +394,66 @@
                     "main",
                     {
                       "direction": "vertical",
-                      "gap": "md",
                       "type": "stack",
+                      "gap": "md",
                       "children": [
                         {
+                          "direction": "horizontal",
+                          "type": "stack",
+                          "align": "center",
+                          "gap": "sm",
                           "children": [
                             {
                               "name": "wallet",
                               "type": "icon"
                             },
                             {
-                              "type": "typography",
+                              "variant": "h3",
                               "content": "@config.title",
-                              "variant": "h3"
+                              "type": "typography"
                             }
-                          ],
-                          "gap": "sm",
-                          "direction": "horizontal",
-                          "type": "stack",
-                          "align": "center"
+                          ]
                         },
                         {
-                          "cols": 4.0,
-                          "type": "simple-grid",
                           "children": [
                             {
-                              "value": "@payload.data.length",
                               "label": "Total payouts",
                               "type": "stat-display",
-                              "icon": "wallet"
+                              "icon": "wallet",
+                              "value": "@payload.data.length"
                             },
                             {
-                              "type": "stat-display",
+                              "icon": "clock",
                               "label": "Pending",
-                              "value": "12",
-                              "icon": "clock"
+                              "type": "stat-display",
+                              "value": "12"
                             },
                             {
-                              "value": "$48,200",
                               "label": "Paid this month",
-                              "type": "stat-display",
-                              "icon": "check-circle"
+                              "value": "$48,200",
+                              "icon": "check-circle",
+                              "type": "stat-display"
                             },
                             {
                               "label": "Minimum",
-                              "value": "@config.minimumWithdrawal",
                               "type": "stat-display",
+                              "value": "@config.minimumWithdrawal",
                               "icon": "dollar-sign"
                             }
-                          ]
+                          ],
+                          "cols": 4.0,
+                          "type": "simple-grid"
                         },
                         {
                           "type": "divider"
                         },
                         {
-                          "gap": "sm",
                           "fields": "@config.fields",
-                          "type": "data-grid",
+                          "entity": "@payload.data",
                           "cols": 1.0,
-                          "itemActions": "@config.itemActions",
-                          "entity": "@payload.data"
+                          "gap": "sm",
+                          "type": "data-grid",
+                          "itemActions": "@config.itemActions"
                         }
                       ]
                     }
@@ -372,9 +469,9 @@
                     "render-ui",
                     "main",
                     {
-                      "variant": "error",
+                      "message": "@payload.error",
                       "type": "alert",
-                      "message": "@payload.error"
+                      "variant": "error"
                     }
                   ]
                 ]
@@ -433,18 +530,15 @@
                     "render-ui",
                     "main",
                     {
-                      "gap": "md",
-                      "type": "stack",
+                      "direction": "vertical",
                       "children": [
                         {
                           "type": "stack",
-                          "direction": "horizontal",
-                          "align": "center",
                           "children": [
                             {
-                              "label": "Back",
-                              "type": "button",
                               "action": "CLOSE_VIEW",
+                              "type": "button",
+                              "label": "Back",
                               "variant": "ghost"
                             },
                             {
@@ -452,9 +546,9 @@
                               "name": "wallet"
                             },
                             {
+                              "type": "typography",
                               "content": "@entity.vendorId",
-                              "variant": "h3",
-                              "type": "typography"
+                              "variant": "h3"
                             },
                             {
                               "variant": "default",
@@ -462,28 +556,30 @@
                               "type": "badge"
                             }
                           ],
+                          "align": "center",
+                          "direction": "horizontal",
                           "gap": "sm"
                         },
                         {
                           "type": "divider"
                         },
                         {
-                          "gap": "sm",
                           "type": "stack",
                           "direction": "vertical",
+                          "gap": "sm",
                           "children": [
                             {
                               "direction": "horizontal",
                               "children": [
                                 {
-                                  "type": "typography",
-                                  "content": "Bank",
                                   "variant": "caption",
-                                  "color": "muted"
+                                  "color": "muted",
+                                  "content": "Bank",
+                                  "type": "typography"
                                 },
                                 {
-                                  "content": "@entity.bankAccountMasked",
                                   "variant": "body",
+                                  "content": "@entity.bankAccountMasked",
                                   "type": "typography"
                                 }
                               ],
@@ -491,22 +587,22 @@
                               "gap": "md"
                             },
                             {
-                              "type": "stack",
                               "direction": "horizontal",
+                              "gap": "md",
+                              "type": "stack",
                               "children": [
                                 {
-                                  "type": "typography",
-                                  "content": "Notes",
                                   "variant": "caption",
+                                  "content": "Notes",
+                                  "type": "typography",
                                   "color": "muted"
                                 },
                                 {
-                                  "content": "@entity.notes",
+                                  "type": "typography",
                                   "variant": "body",
-                                  "type": "typography"
+                                  "content": "@entity.notes"
                                 }
-                              ],
-                              "gap": "md"
+                              ]
                             }
                           ]
                         },
@@ -514,57 +610,58 @@
                           "type": "divider"
                         },
                         {
+                          "type": "simple-grid",
+                          "cols": 3.0,
                           "children": [
                             {
+                              "type": "stat-display",
                               "value": "@entity.amount",
                               "icon": "dollar-sign",
-                              "type": "stat-display",
                               "label": "Amount"
                             },
                             {
                               "label": "Requested",
-                              "value": "@entity.requestedAt",
                               "icon": "calendar",
+                              "value": "@entity.requestedAt",
                               "type": "stat-display"
                             },
                             {
-                              "icon": "check-circle",
-                              "type": "stat-display",
                               "label": "Paid",
-                              "value": "@entity.paidAt"
+                              "icon": "check-circle",
+                              "value": "@entity.paidAt",
+                              "type": "stat-display"
                             }
-                          ],
-                          "type": "simple-grid",
-                          "cols": 3.0
+                          ]
                         },
                         {
+                          "type": "stack",
+                          "align": "center",
                           "children": [
                             {
+                              "action": "REQUEST_WITHDRAW",
+                              "variant": "primary",
+                              "type": "button",
                               "label": "Withdraw",
                               "actionPayload": {
                                 "id": "@entity.id"
-                              },
-                              "type": "button",
-                              "action": "REQUEST_WITHDRAW",
-                              "variant": "primary"
+                              }
                             },
                             {
-                              "action": "MARK_PAID",
-                              "type": "button",
                               "label": "Mark Paid",
+                              "action": "MARK_PAID",
+                              "variant": "secondary",
                               "actionPayload": {
                                 "id": "@entity.id"
                               },
-                              "variant": "secondary"
+                              "type": "button"
                             }
                           ],
-                          "gap": "sm",
-                          "type": "stack",
                           "direction": "horizontal",
-                          "align": "center"
+                          "gap": "sm"
                         }
                       ],
-                      "direction": "vertical"
+                      "type": "stack",
+                      "gap": "md"
                     }
                   ]
                 ]
@@ -584,8 +681,8 @@
                     "Payout",
                     {
                       "emit": {
-                        "failure": "PayoutLoadFailed",
-                        "success": "PayoutLoaded"
+                        "success": "PayoutLoaded",
+                        "failure": "PayoutLoadFailed"
                       }
                     }
                   ],
@@ -593,22 +690,22 @@
                     "render-ui",
                     "main",
                     {
-                      "type": "stack",
+                      "className": "py-12",
                       "children": [
                         {
                           "type": "spinner"
                         },
                         {
-                          "content": "Requesting withdrawal…",
                           "variant": "caption",
-                          "color": "muted",
-                          "type": "typography"
+                          "content": "Requesting withdrawal…",
+                          "type": "typography",
+                          "color": "muted"
                         }
                       ],
+                      "align": "center",
                       "gap": "md",
                       "direction": "vertical",
-                      "align": "center",
-                      "className": "py-12"
+                      "type": "stack"
                     }
                   ]
                 ]
@@ -628,8 +725,8 @@
                     "Payout",
                     {
                       "emit": {
-                        "failure": "PayoutLoadFailed",
-                        "success": "PayoutLoaded"
+                        "success": "PayoutLoaded",
+                        "failure": "PayoutLoadFailed"
                       }
                     }
                   ],
@@ -637,22 +734,106 @@
                     "render-ui",
                     "main",
                     {
+                      "className": "py-12",
                       "children": [
                         {
                           "type": "spinner"
                         },
                         {
-                          "variant": "caption",
-                          "content": "Marking paid…",
                           "type": "typography",
-                          "color": "muted"
+                          "color": "muted",
+                          "variant": "caption",
+                          "content": "Marking paid…"
                         }
                       ],
                       "type": "stack",
+                      "direction": "vertical",
                       "gap": "md",
+                      "align": "center"
+                    }
+                  ]
+                ]
+              },
+              {
+                "from": "browsing",
+                "to": "loading",
+                "event": "SET_STATUS",
+                "effects": [
+                  [
+                    "set",
+                    "@entity.id",
+                    "@payload.entityId"
+                  ],
+                  [
+                    "set",
+                    "@entity.status",
+                    "@payload.newStatus"
+                  ],
+                  [
+                    "persist",
+                    "update",
+                    "Payout",
+                    "@entity",
+                    {
+                      "emit": {
+                        "failure": "PayoutUpdateFailed",
+                        "success": "PayoutUpdated"
+                      }
+                    }
+                  ],
+                  [
+                    "render-ui",
+                    "main",
+                    {
+                      "direction": "vertical",
                       "align": "center",
                       "className": "py-12",
-                      "direction": "vertical"
+                      "children": [
+                        {
+                          "type": "spinner"
+                        },
+                        {
+                          "content": "Updating payout status…",
+                          "color": "muted",
+                          "variant": "caption",
+                          "type": "typography"
+                        }
+                      ],
+                      "type": "stack",
+                      "gap": "md"
+                    }
+                  ]
+                ]
+              },
+              {
+                "from": "browsing",
+                "to": "loading",
+                "event": "PayoutUpdated",
+                "effects": [
+                  [
+                    "fetch",
+                    "Payout",
+                    {
+                      "emit": {
+                        "success": "PayoutLoaded",
+                        "failure": "PayoutLoadFailed"
+                      }
+                    }
+                  ]
+                ]
+              },
+              {
+                "from": "browsing",
+                "to": "browsing",
+                "event": "PayoutUpdateFailed",
+                "effects": [
+                  [
+                    "render-ui",
+                    "main",
+                    {
+                      "message": "@payload.error",
+                      "type": "alert",
+                      "variant": "error"
                     }
                   ]
                 ]
@@ -667,8 +848,8 @@
                     "Payout",
                     {
                       "emit": {
-                        "failure": "PayoutLoadFailed",
-                        "success": "PayoutLoaded"
+                        "success": "PayoutLoaded",
+                        "failure": "PayoutLoadFailed"
                       }
                     }
                   ],
@@ -676,22 +857,22 @@
                     "render-ui",
                     "main",
                     {
-                      "direction": "vertical",
-                      "align": "center",
-                      "gap": "md",
                       "className": "py-12",
                       "children": [
                         {
                           "type": "spinner"
                         },
                         {
+                          "color": "muted",
                           "type": "typography",
                           "variant": "caption",
-                          "content": "Loading payouts…",
-                          "color": "muted"
+                          "content": "Loading payouts…"
                         }
                       ],
-                      "type": "stack"
+                      "type": "stack",
+                      "direction": "vertical",
+                      "gap": "md",
+                      "align": "center"
                     }
                   ]
                 ]
@@ -720,22 +901,22 @@
                     "render-ui",
                     "main",
                     {
-                      "gap": "md",
-                      "type": "stack",
                       "direction": "vertical",
+                      "type": "stack",
                       "align": "center",
+                      "className": "py-12",
                       "children": [
                         {
                           "type": "spinner"
                         },
                         {
-                          "content": "Requesting withdrawal…",
                           "type": "typography",
+                          "color": "muted",
                           "variant": "caption",
-                          "color": "muted"
+                          "content": "Requesting withdrawal…"
                         }
                       ],
-                      "className": "py-12"
+                      "gap": "md"
                     }
                   ]
                 ]
@@ -755,8 +936,8 @@
                     "Payout",
                     {
                       "emit": {
-                        "failure": "PayoutLoadFailed",
-                        "success": "PayoutLoaded"
+                        "success": "PayoutLoaded",
+                        "failure": "PayoutLoadFailed"
                       }
                     }
                   ],
@@ -765,21 +946,21 @@
                     "main",
                     {
                       "type": "stack",
-                      "align": "center",
                       "direction": "vertical",
-                      "className": "py-12",
                       "children": [
                         {
                           "type": "spinner"
                         },
                         {
-                          "type": "typography",
-                          "color": "muted",
+                          "variant": "caption",
                           "content": "Marking paid…",
-                          "variant": "caption"
+                          "color": "muted",
+                          "type": "typography"
                         }
                       ],
-                      "gap": "md"
+                      "gap": "md",
+                      "className": "py-12",
+                      "align": "center"
                     }
                   ]
                 ]
@@ -803,8 +984,8 @@
                     "render-ui",
                     "main",
                     {
-                      "type": "spinner",
-                      "size": "sm"
+                      "size": "sm",
+                      "type": "spinner"
                     }
                   ]
                 ]
@@ -812,6 +993,155 @@
             ]
           },
           "config": {
+            "lateFeeAmount": {
+              "type": "number",
+              "default": 0.0,
+              "label": "Late fee amount",
+              "description": "Flat cash amount or percentage (per lateFeePolicy).",
+              "tier": "customization"
+            },
+            "currency": {
+              "type": "string",
+              "default": "USD",
+              "label": "Default currency",
+              "description": "ISO 4217 currency code (USD, EUR, GBP, …) for payouts.",
+              "tier": "essential"
+            },
+            "lateFeePolicy": {
+              "type": "string",
+              "default": "none",
+              "label": "Late fee policy",
+              "description": "How late fees compute on late payouts. Declarative; wiring deferred.",
+              "tier": "customization",
+              "values": [
+                "none",
+                "flat",
+                "percent"
+              ]
+            },
+            "taxStrategy": {
+              "type": "string",
+              "default": "none",
+              "label": "Tax strategy",
+              "description": "inclusive = tax baked into payout amount; exclusive = tax withheld separately; none = no tax.",
+              "tier": "customization",
+              "values": [
+                "inclusive",
+                "exclusive",
+                "none"
+              ]
+            },
+            "retentionYears": {
+              "type": "number",
+              "default": 7.0,
+              "label": "Retention (years)",
+              "description": "Years to keep payout records for compliance.",
+              "tier": "advanced"
+            },
+            "gracePeriodDays": {
+              "type": "number",
+              "default": 3.0,
+              "label": "Grace period (days)",
+              "description": "Days before a pending payout escalates. Wire via sibling std-lifecycle rule.",
+              "tier": "customization"
+            },
+            "fields": {
+              "type": "[FieldSpec]",
+              "default": [
+                {
+                  "variant": "caption",
+                  "name": "vendorId",
+                  "label": "Vendor"
+                },
+                {
+                  "name": "amount",
+                  "variant": "caption",
+                  "label": "Amount"
+                },
+                {
+                  "label": "Currency",
+                  "name": "currency",
+                  "variant": "badge"
+                },
+                {
+                  "label": "Status",
+                  "name": "status",
+                  "variant": "badge"
+                },
+                {
+                  "variant": "caption",
+                  "label": "Bank",
+                  "name": "bankAccountMasked"
+                },
+                {
+                  "name": "requestedAt",
+                  "variant": "caption",
+                  "label": "Requested"
+                }
+              ],
+              "label": "Columns to show",
+              "description": "Each column maps to one field on the Payout entity",
+              "tier": "advanced",
+              "items": {
+                "type": "object",
+                "properties": {
+                  "name": {
+                    "name": "name",
+                    "type": "string",
+                    "required": true
+                  },
+                  "icon": {
+                    "name": "icon",
+                    "type": "string",
+                    "required": false
+                  },
+                  "key": {
+                    "name": "key",
+                    "type": "string",
+                    "required": false
+                  },
+                  "header": {
+                    "name": "header",
+                    "type": "string",
+                    "required": false
+                  },
+                  "format": {
+                    "name": "format",
+                    "type": "string",
+                    "required": false
+                  },
+                  "label": {
+                    "name": "label",
+                    "type": "string",
+                    "required": false
+                  },
+                  "variant": {
+                    "name": "variant",
+                    "type": "string",
+                    "required": false
+                  }
+                }
+              }
+            },
+            "complianceJurisdiction": {
+              "type": "string",
+              "default": "",
+              "label": "Compliance jurisdiction",
+              "description": "Drives payout regulations per locale: 'US-CA', 'EU-DE', 'UK', etc. Declarative.",
+              "tier": "advanced"
+            },
+            "roundingMode": {
+              "type": "string",
+              "default": "half-up",
+              "label": "Rounding mode",
+              "description": "Sub-cent rounding behavior for payout amounts.",
+              "tier": "advanced",
+              "values": [
+                "bankers",
+                "half-up",
+                "down"
+              ]
+            },
             "minimumWithdrawal": {
               "type": "number",
               "default": 50.0,
@@ -831,9 +1161,9 @@
               "default": [
                 {
                   "label": "Open",
+                  "event": "OPEN_PAYOUT",
                   "variant": "primary",
-                  "icon": "arrow-right",
-                  "event": "OPEN_PAYOUT"
+                  "icon": "arrow-right"
                 },
                 {
                   "label": "Withdraw",
@@ -847,96 +1177,18 @@
               "items": {
                 "type": "object",
                 "properties": {
-                  "label": {
-                    "name": "label",
-                    "type": "string",
-                    "required": true
-                  },
                   "event": {
                     "name": "event",
                     "type": "string",
                     "required": true
                   },
-                  "variant": {
-                    "name": "variant",
-                    "type": "string",
-                    "required": false
-                  },
-                  "icon": {
-                    "name": "icon",
-                    "type": "string",
-                    "required": false
-                  }
-                }
-              }
-            },
-            "fields": {
-              "type": "[FieldSpec]",
-              "default": [
-                {
-                  "variant": "caption",
-                  "label": "Vendor",
-                  "name": "vendorId"
-                },
-                {
-                  "label": "Amount",
-                  "variant": "caption",
-                  "name": "amount"
-                },
-                {
-                  "name": "currency",
-                  "label": "Currency",
-                  "variant": "badge"
-                },
-                {
-                  "name": "status",
-                  "label": "Status",
-                  "variant": "badge"
-                },
-                {
-                  "name": "bankAccountMasked",
-                  "variant": "caption",
-                  "label": "Bank"
-                },
-                {
-                  "label": "Requested",
-                  "variant": "caption",
-                  "name": "requestedAt"
-                }
-              ],
-              "label": "Columns to show",
-              "description": "Each column maps to one field on the Payout entity",
-              "tier": "advanced",
-              "items": {
-                "type": "object",
-                "properties": {
-                  "icon": {
-                    "name": "icon",
-                    "type": "string",
-                    "required": false
-                  },
-                  "name": {
-                    "name": "name",
+                  "label": {
+                    "name": "label",
                     "type": "string",
                     "required": true
                   },
-                  "header": {
-                    "name": "header",
-                    "type": "string",
-                    "required": false
-                  },
-                  "format": {
-                    "name": "format",
-                    "type": "string",
-                    "required": false
-                  },
-                  "key": {
-                    "name": "key",
-                    "type": "string",
-                    "required": false
-                  },
-                  "label": {
-                    "name": "label",
+                  "icon": {
+                    "name": "icon",
                     "type": "string",
                     "required": false
                   },

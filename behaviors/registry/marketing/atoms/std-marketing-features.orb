@@ -1,0 +1,193 @@
+{
+  "name": "std-marketing-features",
+  "version": "1.0.0",
+  "description": "Feature grid atom for marketing pages. Renders a responsive grid of feature cards with icons, titles, descriptions, and optional links. Pick for product capability showcases and benefit sections.",
+  "orbitals": [
+    {
+      "name": "FeatureItemOrbital",
+      "entity": {
+        "name": "FeatureItem",
+        "persistence": "runtime",
+        "fields": [
+          {
+            "name": "id",
+            "type": "string",
+            "required": true
+          }
+        ]
+      },
+      "traits": [
+        {
+          "name": "FeatureItemFeatures",
+          "category": "interaction",
+          "linkedEntity": "FeatureItem",
+          "emits": [
+            {
+              "event": "FEATURE_CLICK",
+              "scope": "external",
+              "payloadSchema": [
+                {
+                  "name": "id",
+                  "type": "string"
+                },
+                {
+                  "name": "title",
+                  "type": "string"
+                }
+              ]
+            }
+          ],
+          "stateMachine": {
+            "states": [
+              {
+                "name": "idle",
+                "isInitial": true
+              }
+            ],
+            "events": [
+              {
+                "key": "INIT",
+                "name": "Initialize"
+              },
+              {
+                "key": "FEATURE_CLICK",
+                "name": "Feature Click",
+                "payloadSchema": [
+                  {
+                    "name": "id",
+                    "type": "string"
+                  },
+                  {
+                    "name": "title",
+                    "type": "string"
+                  }
+                ]
+              }
+            ],
+            "transitions": [
+              {
+                "from": "idle",
+                "to": "idle",
+                "event": "INIT",
+                "effects": [
+                  [
+                    "render-ui",
+                    "main",
+                    {
+                      "type": "feature-grid",
+                      "items": "@config.items",
+                      "columns": "@config.columns",
+                      "gap": "@config.gap"
+                    }
+                  ]
+                ]
+              },
+              {
+                "from": "idle",
+                "to": "idle",
+                "event": "FEATURE_CLICK",
+                "effects": [
+                  [
+                    "emit",
+                    "FEATURE_CLICK",
+                    {
+                      "id": "@payload.id",
+                      "title": "@payload.title"
+                    }
+                  ]
+                ]
+              }
+            ]
+          },
+          "config": {
+            "columns": {
+              "type": "number",
+              "default": 3.0,
+              "label": "Columns",
+              "description": "Number of grid columns",
+              "tier": "customization"
+            },
+            "items": {
+              "type": "[FeatureCard]",
+              "default": [
+                {
+                  "title": "Lightning Fast",
+                  "icon": "zap",
+                  "href": "",
+                  "linkLabel": "Learn more",
+                  "description": "Build and deploy in minutes, not months."
+                },
+                {
+                  "description": "SOC-2 compliant with end-to-end encryption.",
+                  "icon": "shield",
+                  "linkLabel": "Learn more",
+                  "href": "",
+                  "title": "Enterprise Secure"
+                },
+                {
+                  "icon": "puzzle",
+                  "href": "",
+                  "description": "Plug in any service, any data source, any UI pattern.",
+                  "linkLabel": "Learn more",
+                  "title": "Infinitely Extensible"
+                }
+              ],
+              "label": "Feature Items",
+              "description": "Array of feature cards",
+              "tier": "essential",
+              "items": {
+                "type": "object",
+                "properties": {
+                  "title": {
+                    "name": "title",
+                    "type": "string",
+                    "required": true
+                  },
+                  "linkLabel": {
+                    "name": "linkLabel",
+                    "type": "string",
+                    "required": false
+                  },
+                  "icon": {
+                    "name": "icon",
+                    "type": "string",
+                    "required": false
+                  },
+                  "href": {
+                    "name": "href",
+                    "type": "string",
+                    "required": false
+                  },
+                  "description": {
+                    "name": "description",
+                    "type": "string",
+                    "required": true
+                  }
+                }
+              }
+            },
+            "gap": {
+              "type": "string",
+              "default": "lg",
+              "label": "Gap",
+              "description": "Spacing between cards",
+              "tier": "customization"
+            }
+          },
+          "scope": "instance"
+        }
+      ],
+      "pages": [
+        {
+          "name": "FeatureItemFeaturesPage",
+          "path": "/features",
+          "traits": [
+            {
+              "ref": "FeatureItemFeatures"
+            }
+          ]
+        }
+      ]
+    }
+  ]
+}

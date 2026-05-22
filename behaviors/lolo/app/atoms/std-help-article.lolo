@@ -1,5 +1,5 @@
-app std-help-article "1.1.0"
-"std-help-article — Public help center article primitive with title, body, category, view count, and published/draft status. Agents tune the list shape via `config.fields` + `config.itemActions`."
+app std-help-article "1.2.0"
+"std-help-article — public help center article (title, body, category, status, view count). Listens for SET_STATUS so std-lifecycle can drive transitions. Exposes Content/Knowledge knobs (visibilityScope, keepVersions, enabledLocales, …)."
 
 type FieldSpec = { name : string!, label : string, variant : string, icon : string, format : string, key : string, header : string }
 type ItemAction = { label : string!, event : string!, variant : string, icon : string }
@@ -23,8 +23,10 @@ orbital HelpArticleOrbital {
     pendingId        : string = ""
   }
 
-  type HelpArticleLoaded     = Event { data : [HelpArticle], totalCount : number } "Fired when the help article collection finishes loading"
-  type HelpArticleLoadFailed = Event { message : string }                           "Fired when the help article collection fails to load"
+  type HelpArticleLoaded       = Event { data : [HelpArticle], totalCount : number } "Fired when the help article collection finishes loading"
+  type HelpArticleLoadFailed   = Event { message : string }                           "Fired when the help article collection fails to load"
+  type HelpArticleUpdated      = Event { row : HelpArticle }                          "Fired after a help article's status persists (SET_STATUS / lifecycle)"
+  type HelpArticleUpdateFailed = Event { message : string }                           "Fired when a help article's status update fails to persist"
 
   trait HelpArticleManage -> HelpArticle [interaction, collection] {
     config {
@@ -51,6 +53,38 @@ orbital HelpArticleOrbital {
         @label "Row actions"
         @description "Buttons users can click on each article row"
         @tier "customization"
+      visibilityScope          : "public" | "internal" | "customer" = "public"
+        @label "Visibility scope"
+        @description "Who can read published articles: public web, internal staff, signed-in customers."
+        @tier "essential"
+      scheduledPublishEnabled  : boolean = false
+        @label "Scheduled publish"
+        @description "Allow authors to schedule publish in the future. v1.2 declarative."
+        @tier "customization"
+      keepVersions             : number  = 10
+        @label "Versions to retain"
+        @description "How many revisions to keep per article. v1.2 declarative."
+        @tier "customization"
+      allowRollback            : boolean = true
+        @label "Allow rollback"
+        @description "Permit reverting an article to a prior retained version."
+        @tier "customization"
+      seoEnabled               : boolean = true
+        @label "SEO meta enabled"
+        @description "Emit canonical tags + meta description for indexing."
+        @tier "customization"
+      enabledLocales           : [string] = ["en"]
+        @label "Enabled locales"
+        @description "Locales the article can be translated into."
+        @tier "customization"
+      defaultLocale            : string  = "en"
+        @label "Default locale"
+        @description "Locale used when no translation is available for the reader's preferred language."
+        @tier "customization"
+      draftAutosaveSeconds     : number  = 30
+        @label "Draft autosave interval (s)"
+        @description "Seconds between draft autosaves in the editor."
+        @tier "advanced"
     }
     initial: loading
     state loading {
@@ -81,6 +115,15 @@ orbital HelpArticleOrbital {
         (set @entity.id @payload.id)
         (fetch HelpArticle { emit: { success: "HelpArticleLoaded", failure: "HelpArticleLoadFailed" } })
         (render-ui main { type: "stack", direction: "vertical", gap: "md", align: "center", className: "py-12", children: [{ type: "spinner" }, { type: "typography", variant: "caption", color: "muted", content: "Archiving article…" }] })
+      SET_STATUS -> loading
+        (set @entity.id @payload.entityId)
+        (set @entity.status @payload.newStatus)
+        (persist update HelpArticle @entity { emit: { success: "HelpArticleUpdated", failure: "HelpArticleUpdateFailed" } })
+        (render-ui main { type: "stack", direction: "vertical", gap: "md", align: "center", className: "py-12", children: [{ type: "spinner" }, { type: "typography", variant: "caption", color: "muted", content: "Updating article status…" }] })
+      HelpArticleUpdated -> loading
+        (fetch HelpArticle { emit: { success: "HelpArticleLoaded", failure: "HelpArticleLoadFailed" } })
+      HelpArticleUpdateFailed -> browsing
+        (render-ui main { type: "alert", variant: "error", message: "@payload.message" })
     }
     state viewing_single {
       CLOSE_VIEW -> loading
@@ -101,20 +144,25 @@ orbital HelpArticleOrbital {
         (render-ui main { type: "spinner", size: "sm" })
     }
     emits {
-      OPEN_ARTICLE          { id : string!, row : HelpArticle }
-      CLOSE_VIEW            { }
-      PUBLISH               { id : string! }
-      ARCHIVE               { id : string! }
-      HelpArticleLoaded     { data : [HelpArticle], totalCount : number }
-      HelpArticleLoadFailed { message : string }
+      OPEN_ARTICLE            { id : string!, row : HelpArticle }
+      CLOSE_VIEW              { }
+      PUBLISH                 { id : string! }
+      ARCHIVE                 { id : string! }
+      HelpArticleLoaded       { data : [HelpArticle], totalCount : number }
+      HelpArticleLoadFailed   { message : string }
+      HelpArticleUpdated      { row : HelpArticle }
+      HelpArticleUpdateFailed { message : string }
     }
     listens {
-      OPEN_ARTICLE          { id : string!, row : HelpArticle }
-      CLOSE_VIEW            { }
-      PUBLISH               { id : string! }
-      ARCHIVE               { id : string! }
-      HelpArticleLoaded     { data : [HelpArticle], totalCount : number }
-      HelpArticleLoadFailed { message : string }
+      OPEN_ARTICLE            { id : string!, row : HelpArticle }
+      CLOSE_VIEW              { }
+      PUBLISH                 { id : string! }
+      ARCHIVE                 { id : string! }
+      SET_STATUS              { entityId : string!, newStatus : string! }
+      HelpArticleLoaded       { data : [HelpArticle], totalCount : number }
+      HelpArticleLoadFailed   { message : string }
+      HelpArticleUpdated      { row : HelpArticle }
+      HelpArticleUpdateFailed { message : string }
     }
   }
   page "/help-articles" as HelpArticlePage -> HelpArticleManage

@@ -1,7 +1,7 @@
 {
   "name": "std-question-bank",
-  "version": "1.1.0",
-  "description": "std-question-bank — typed question library for surveys. Lists questions in `browsing`; opens detail in `viewing_single` with Update / Delete actions. Agents tune the list shape via `config.fields` + `config.itemActions`.",
+  "version": "1.2.0",
+  "description": "std-question-bank — typed question library for surveys. Lists questions; detail offers Update / Delete. Exposes Content/Knowledge knobs (visibilityScope, enabledLocales, keepVersions, …).",
   "orbitals": [
     {
       "name": "QuestionBankOrbital",
@@ -261,22 +261,22 @@
                     "render-ui",
                     "main",
                     {
-                      "type": "stack",
-                      "direction": "vertical",
-                      "gap": "md",
-                      "className": "py-12",
                       "children": [
                         {
                           "type": "spinner"
                         },
                         {
-                          "type": "typography",
                           "variant": "caption",
-                          "color": "muted",
-                          "content": "Loading questions…"
+                          "content": "Loading questions…",
+                          "type": "typography",
+                          "color": "muted"
                         }
                       ],
-                      "align": "center"
+                      "gap": "md",
+                      "type": "stack",
+                      "direction": "vertical",
+                      "align": "center",
+                      "className": "py-12"
                     }
                   ]
                 ]
@@ -290,29 +290,27 @@
                     "render-ui",
                     "main",
                     {
-                      "direction": "vertical",
-                      "type": "stack",
                       "gap": "md",
+                      "direction": "vertical",
                       "children": [
                         {
-                          "gap": "sm",
                           "type": "stack",
-                          "direction": "horizontal",
                           "align": "center",
                           "children": [
                             {
-                              "name": "list-checks",
-                              "type": "icon"
+                              "type": "icon",
+                              "name": "list-checks"
                             },
                             {
-                              "content": "@config.title",
                               "type": "typography",
-                              "variant": "h3"
+                              "variant": "h3",
+                              "content": "@config.title"
                             }
-                          ]
+                          ],
+                          "direction": "horizontal",
+                          "gap": "sm"
                         },
                         {
-                          "type": "simple-grid",
                           "cols": 4.0,
                           "children": [
                             {
@@ -322,37 +320,39 @@
                               "label": "Total questions"
                             },
                             {
-                              "value": "18",
+                              "type": "stat-display",
+                              "icon": "alert-circle",
                               "label": "Required",
-                              "type": "stat-display",
-                              "icon": "alert-circle"
+                              "value": "18"
                             },
                             {
                               "type": "stat-display",
-                              "label": "Surveys",
                               "value": "6",
-                              "icon": "clipboard-list"
+                              "icon": "clipboard-list",
+                              "label": "Surveys"
                             },
                             {
+                              "value": "9",
                               "label": "Categories",
-                              "type": "stat-display",
                               "icon": "tag",
-                              "value": "9"
+                              "type": "stat-display"
                             }
-                          ]
+                          ],
+                          "type": "simple-grid"
                         },
                         {
                           "type": "divider"
                         },
                         {
+                          "fields": "@config.fields",
+                          "entity": "@payload.data",
                           "type": "data-grid",
                           "cols": 1.0,
-                          "entity": "@payload.data",
-                          "gap": "sm",
                           "itemActions": "@config.itemActions",
-                          "fields": "@config.fields"
+                          "gap": "sm"
                         }
-                      ]
+                      ],
+                      "type": "stack"
                     }
                   ]
                 ]
@@ -422,20 +422,24 @@
                     "render-ui",
                     "main",
                     {
+                      "gap": "md",
+                      "type": "stack",
                       "children": [
                         {
                           "direction": "horizontal",
                           "align": "center",
+                          "type": "stack",
+                          "gap": "sm",
                           "children": [
                             {
+                              "action": "CLOSE_VIEW",
                               "type": "button",
                               "variant": "ghost",
-                              "action": "CLOSE_VIEW",
                               "label": "Back"
                             },
                             {
-                              "type": "icon",
-                              "name": "list-checks"
+                              "name": "list-checks",
+                              "type": "icon"
                             },
                             {
                               "type": "typography",
@@ -443,77 +447,75 @@
                               "variant": "h3"
                             },
                             {
-                              "label": "@entity.kind",
                               "type": "badge",
+                              "label": "@entity.kind",
                               "variant": "default"
                             }
-                          ],
-                          "gap": "sm",
-                          "type": "stack"
+                          ]
                         },
                         {
                           "type": "divider"
                         },
                         {
-                          "type": "stack",
-                          "direction": "vertical",
-                          "gap": "sm",
                           "children": [
                             {
-                              "gap": "md",
                               "type": "stack",
                               "direction": "horizontal",
+                              "gap": "md",
                               "children": [
                                 {
-                                  "type": "typography",
                                   "color": "muted",
                                   "content": "Category",
-                                  "variant": "caption"
+                                  "variant": "caption",
+                                  "type": "typography"
                                 },
                                 {
-                                  "type": "typography",
+                                  "content": "@entity.category",
                                   "variant": "body",
-                                  "content": "@entity.category"
+                                  "type": "typography"
                                 }
                               ]
                             },
                             {
-                              "children": [
-                                {
-                                  "content": "Survey",
-                                  "color": "muted",
-                                  "variant": "caption",
-                                  "type": "typography"
-                                },
-                                {
-                                  "variant": "body",
-                                  "content": "@entity.surveyId",
-                                  "type": "typography"
-                                }
-                              ],
-                              "direction": "horizontal",
                               "type": "stack",
-                              "gap": "md"
-                            },
-                            {
                               "direction": "horizontal",
                               "gap": "md",
+                              "children": [
+                                {
+                                  "type": "typography",
+                                  "variant": "caption",
+                                  "color": "muted",
+                                  "content": "Survey"
+                                },
+                                {
+                                  "content": "@entity.surveyId",
+                                  "variant": "body",
+                                  "type": "typography"
+                                }
+                              ]
+                            },
+                            {
                               "type": "stack",
+                              "direction": "horizontal",
                               "children": [
                                 {
                                   "variant": "caption",
                                   "color": "muted",
-                                  "content": "Options",
-                                  "type": "typography"
+                                  "type": "typography",
+                                  "content": "Options"
                                 },
                                 {
                                   "content": "@entity.optionsJson",
                                   "variant": "body",
                                   "type": "typography"
                                 }
-                              ]
+                              ],
+                              "gap": "md"
                             }
-                          ]
+                          ],
+                          "direction": "vertical",
+                          "type": "stack",
+                          "gap": "sm"
                         },
                         {
                           "type": "divider"
@@ -522,50 +524,48 @@
                           "cols": 2.0,
                           "children": [
                             {
-                              "value": "@entity.kind",
-                              "type": "stat-display",
                               "label": "Kind",
+                              "type": "stat-display",
+                              "value": "@entity.kind",
                               "icon": "tag"
                             },
                             {
                               "type": "stat-display",
                               "value": "@entity.order",
-                              "icon": "hash",
-                              "label": "Order"
+                              "label": "Order",
+                              "icon": "hash"
                             }
                           ],
                           "type": "simple-grid"
                         },
                         {
-                          "direction": "horizontal",
+                          "gap": "sm",
+                          "align": "center",
+                          "type": "stack",
                           "children": [
                             {
+                              "variant": "primary",
+                              "label": "Update",
+                              "type": "button",
                               "action": "UPDATE_QUESTION",
                               "actionPayload": {
                                 "id": "@entity.id"
-                              },
-                              "type": "button",
-                              "label": "Update",
-                              "variant": "primary"
+                              }
                             },
                             {
+                              "variant": "danger",
+                              "type": "button",
+                              "label": "Delete",
+                              "action": "DELETE_QUESTION",
                               "actionPayload": {
                                 "id": "@entity.id"
-                              },
-                              "label": "Delete",
-                              "type": "button",
-                              "variant": "danger",
-                              "action": "DELETE_QUESTION"
+                              }
                             }
                           ],
-                          "align": "center",
-                          "gap": "sm",
-                          "type": "stack"
+                          "direction": "horizontal"
                         }
                       ],
-                      "type": "stack",
-                      "direction": "vertical",
-                      "gap": "md"
+                      "direction": "vertical"
                     }
                   ]
                 ]
@@ -585,8 +585,8 @@
                     "Question",
                     {
                       "emit": {
-                        "failure": "QuestionLoadFailed",
-                        "success": "QuestionLoaded"
+                        "success": "QuestionLoaded",
+                        "failure": "QuestionLoadFailed"
                       }
                     }
                   ],
@@ -594,7 +594,11 @@
                     "render-ui",
                     "main",
                     {
+                      "gap": "md",
                       "direction": "vertical",
+                      "align": "center",
+                      "className": "py-12",
+                      "type": "stack",
                       "children": [
                         {
                           "type": "spinner"
@@ -605,11 +609,7 @@
                           "variant": "caption",
                           "content": "Updating question…"
                         }
-                      ],
-                      "type": "stack",
-                      "gap": "md",
-                      "align": "center",
-                      "className": "py-12"
+                      ]
                     }
                   ]
                 ]
@@ -639,21 +639,21 @@
                     "main",
                     {
                       "type": "stack",
-                      "align": "center",
                       "direction": "vertical",
                       "className": "py-12",
+                      "gap": "md",
+                      "align": "center",
                       "children": [
                         {
                           "type": "spinner"
                         },
                         {
-                          "content": "Deleting question…",
                           "type": "typography",
-                          "color": "muted",
-                          "variant": "caption"
+                          "content": "Deleting question…",
+                          "variant": "caption",
+                          "color": "muted"
                         }
-                      ],
-                      "gap": "md"
+                      ]
                     }
                   ]
                 ]
@@ -668,8 +668,8 @@
                     "Question",
                     {
                       "emit": {
-                        "failure": "QuestionLoadFailed",
-                        "success": "QuestionLoaded"
+                        "success": "QuestionLoaded",
+                        "failure": "QuestionLoadFailed"
                       }
                     }
                   ],
@@ -677,20 +677,20 @@
                     "render-ui",
                     "main",
                     {
+                      "align": "center",
                       "className": "py-12",
+                      "type": "stack",
                       "gap": "md",
                       "direction": "vertical",
-                      "type": "stack",
-                      "align": "center",
                       "children": [
                         {
                           "type": "spinner"
                         },
                         {
-                          "color": "muted",
-                          "variant": "caption",
                           "content": "Loading questions…",
-                          "type": "typography"
+                          "type": "typography",
+                          "color": "muted",
+                          "variant": "caption"
                         }
                       ]
                     }
@@ -712,8 +712,8 @@
                     "Question",
                     {
                       "emit": {
-                        "success": "QuestionLoaded",
-                        "failure": "QuestionLoadFailed"
+                        "failure": "QuestionLoadFailed",
+                        "success": "QuestionLoaded"
                       }
                     }
                   ],
@@ -725,18 +725,18 @@
                       "gap": "md",
                       "direction": "vertical",
                       "align": "center",
-                      "type": "stack",
                       "children": [
                         {
                           "type": "spinner"
                         },
                         {
-                          "variant": "caption",
                           "color": "muted",
+                          "content": "Updating question…",
                           "type": "typography",
-                          "content": "Updating question…"
+                          "variant": "caption"
                         }
-                      ]
+                      ],
+                      "type": "stack"
                     }
                   ]
                 ]
@@ -765,22 +765,22 @@
                     "render-ui",
                     "main",
                     {
-                      "direction": "vertical",
-                      "align": "center",
+                      "className": "py-12",
                       "children": [
                         {
                           "type": "spinner"
                         },
                         {
-                          "variant": "caption",
                           "type": "typography",
+                          "variant": "caption",
                           "content": "Deleting question…",
                           "color": "muted"
                         }
                       ],
                       "gap": "md",
                       "type": "stack",
-                      "className": "py-12"
+                      "direction": "vertical",
+                      "align": "center"
                     }
                   ]
                 ]
@@ -813,13 +813,32 @@
             ]
           },
           "config": {
+            "enabledLocales": {
+              "type": "[string]",
+              "default": [
+                "en"
+              ],
+              "label": "Enabled locales",
+              "description": "Locales questions can be translated into.",
+              "tier": "customization",
+              "items": {
+                "type": "string"
+              }
+            },
+            "defaultLocale": {
+              "type": "string",
+              "default": "en",
+              "label": "Default locale",
+              "description": "Locale shown when no translation exists for the respondent.",
+              "tier": "customization"
+            },
             "fields": {
               "type": "[FieldSpec]",
               "default": [
                 {
-                  "variant": "caption",
+                  "label": "Question",
                   "name": "label",
-                  "label": "Question"
+                  "variant": "caption"
                 },
                 {
                   "name": "kind",
@@ -833,13 +852,13 @@
                 },
                 {
                   "label": "Survey",
-                  "variant": "caption",
-                  "name": "surveyId"
+                  "name": "surveyId",
+                  "variant": "caption"
                 },
                 {
-                  "variant": "caption",
+                  "label": "Order",
                   "name": "order",
-                  "label": "Order"
+                  "variant": "caption"
                 }
               ],
               "label": "Columns to show",
@@ -848,13 +867,8 @@
               "items": {
                 "type": "object",
                 "properties": {
-                  "key": {
-                    "name": "key",
-                    "type": "string",
-                    "required": false
-                  },
-                  "label": {
-                    "name": "label",
+                  "variant": {
+                    "name": "variant",
                     "type": "string",
                     "required": false
                   },
@@ -863,13 +877,13 @@
                     "type": "string",
                     "required": true
                   },
-                  "header": {
-                    "name": "header",
+                  "icon": {
+                    "name": "icon",
                     "type": "string",
                     "required": false
                   },
-                  "icon": {
-                    "name": "icon",
+                  "label": {
+                    "name": "label",
                     "type": "string",
                     "required": false
                   },
@@ -878,21 +892,73 @@
                     "type": "string",
                     "required": false
                   },
-                  "variant": {
-                    "name": "variant",
+                  "key": {
+                    "name": "key",
+                    "type": "string",
+                    "required": false
+                  },
+                  "header": {
+                    "name": "header",
                     "type": "string",
                     "required": false
                   }
                 }
               }
             },
+            "draftAutosaveSeconds": {
+              "type": "number",
+              "default": 30.0,
+              "label": "Draft autosave interval (s)",
+              "description": "Seconds between draft autosaves in the question editor.",
+              "tier": "advanced"
+            },
+            "visibilityScope": {
+              "type": "string",
+              "default": "internal",
+              "label": "Visibility scope",
+              "description": "Who can browse the question bank: public, internal staff, signed-in customers.",
+              "tier": "essential",
+              "values": [
+                "public",
+                "internal",
+                "customer"
+              ]
+            },
+            "allowRollback": {
+              "type": "boolean",
+              "default": true,
+              "label": "Allow rollback",
+              "description": "Permit reverting a question to a prior version.",
+              "tier": "customization"
+            },
+            "scheduledPublishEnabled": {
+              "type": "boolean",
+              "default": false,
+              "label": "Scheduled publish",
+              "description": "Allow scheduling future availability of question additions. v1.2 declarative.",
+              "tier": "customization"
+            },
+            "keepVersions": {
+              "type": "number",
+              "default": 5.0,
+              "label": "Versions to retain",
+              "description": "Number of question revisions to keep.",
+              "tier": "customization"
+            },
+            "title": {
+              "type": "string",
+              "default": "Question Bank",
+              "label": "Section title",
+              "description": "Heading shown above the survey question library",
+              "tier": "customization"
+            },
             "itemActions": {
               "type": "[ItemAction]",
               "default": [
                 {
+                  "event": "OPEN_QUESTION",
                   "variant": "primary",
                   "label": "Open",
-                  "event": "OPEN_QUESTION",
                   "icon": "arrow-right"
                 },
                 {
@@ -907,13 +973,13 @@
               "items": {
                 "type": "object",
                 "properties": {
+                  "icon": {
+                    "name": "icon",
+                    "type": "string",
+                    "required": false
+                  },
                   "label": {
                     "name": "label",
-                    "type": "string",
-                    "required": true
-                  },
-                  "event": {
-                    "name": "event",
                     "type": "string",
                     "required": true
                   },
@@ -922,19 +988,19 @@
                     "type": "string",
                     "required": false
                   },
-                  "icon": {
-                    "name": "icon",
+                  "event": {
+                    "name": "event",
                     "type": "string",
-                    "required": false
+                    "required": true
                   }
                 }
               }
             },
-            "title": {
-              "type": "string",
-              "default": "Question Bank",
-              "label": "Section title",
-              "description": "Heading shown above the survey question library",
+            "seoEnabled": {
+              "type": "boolean",
+              "default": false,
+              "label": "SEO meta enabled",
+              "description": "Emit indexable metadata when questions are publicly viewable.",
               "tier": "customization"
             }
           },

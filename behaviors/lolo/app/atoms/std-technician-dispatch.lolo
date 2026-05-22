@@ -1,5 +1,5 @@
-app std-technician-dispatch "1.1.0"
-"std-technician-dispatch — dispatch board for field technicians. Lists technicians in `browsing`; opens detail in `viewing_single` with Assign / Accept / Reject / Toggle Availability actions. Agents tune the list shape via `config.fields` + `config.itemActions`."
+app std-technician-dispatch "1.2.0"
+"std-technician-dispatch — dispatch board for field technicians. Exposes Service/Operations knobs (serviceAreaRadius, dispatchStrategy, responseTimeMinutes, …)."
 
 type FieldSpec = { name : string!, label : string, variant : string, icon : string, format : string, key : string, header : string }
 type ItemAction = { label : string!, event : string!, variant : string, icon : string }
@@ -37,6 +37,46 @@ orbital TechnicianDispatchOrbital {
       itemActions : [ItemAction] = [{ label: "Open", event: "OPEN_TECHNICIAN", variant: "primary", icon: "arrow-right" }, { label: "Assign", event: "ASSIGN", variant: "danger" }]
         @label "Row actions"
         @description "Buttons users can click on each technician row"
+        @tier "customization"
+      serviceAreaRadius : number = 50
+        @label "Service area radius (mi)"
+        @description "Maximum distance from a tech's home base for dispatch eligibility."
+        @tier "customization"
+      serviceZones : [string] = []
+        @label "Service zones"
+        @description "Named geographic zones for dispatch grouping. Empty = no zone restriction."
+        @tier "customization"
+      dispatchStrategy : "nearest" | "round-robin" | "manual" = "nearest"
+        @label "Dispatch strategy"
+        @description "How techs are selected: nearest, round-robin, or manual pick."
+        @tier "customization"
+      skillsRequired : [string] = []
+        @label "Required skills"
+        @description "Capability tags a tech must hold to be eligible for the queue."
+        @tier "customization"
+      responseTimeMinutes : number = 30
+        @label "Response time SLA (min)"
+        @description "Target minutes from dispatch to tech acknowledgement."
+        @tier "essential"
+      resolutionSLAHours : number = 8
+        @label "Resolution SLA (hours)"
+        @description "Target hours from dispatch to job completion. Compose std-lifecycle to auto-escalate."
+        @tier "essential"
+      escalationThresholdHours : number = 12
+        @label "Escalation threshold (hours)"
+        @description "Hours after which an unacknowledged dispatch auto-escalates."
+        @tier "customization"
+      customerVisibleStatuses : [string] = ["available", "en-route", "on-site"]
+        @label "Customer-visible statuses"
+        @description "Subset of tech statuses surfaced in the customer tracking view."
+        @tier "customization"
+      requirePhotoOnComplete : boolean = false
+        @label "Require photo on complete"
+        @description "Block job completion until the tech attaches a completion photo."
+        @tier "customization"
+      requireSignatureOnComplete : boolean = false
+        @label "Require customer signature on complete"
+        @description "Block completion unless customer signature is captured (compose std-signature-capture)."
         @tier "customization"
     }
     initial: loading

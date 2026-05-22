@@ -1,0 +1,262 @@
+{
+  "name": "std-marketing-hero",
+  "version": "1.0.0",
+  "description": "Hero section atom for marketing pages. Renders a full-width hero with tag, title, subtitle, actions, and optional image. Pick for landing pages, product launches, and campaign microsites.",
+  "orbitals": [
+    {
+      "name": "HeroItemOrbital",
+      "entity": {
+        "name": "HeroItem",
+        "persistence": "runtime",
+        "fields": [
+          {
+            "name": "id",
+            "type": "string",
+            "required": true
+          }
+        ]
+      },
+      "traits": [
+        {
+          "name": "HeroItemHero",
+          "category": "interaction",
+          "linkedEntity": "HeroItem",
+          "emits": [
+            {
+              "event": "CTA_PRIMARY",
+              "scope": "external",
+              "payloadSchema": [
+                {
+                  "name": "href",
+                  "type": "string"
+                }
+              ]
+            },
+            {
+              "event": "CTA_SECONDARY",
+              "scope": "external",
+              "payloadSchema": [
+                {
+                  "name": "href",
+                  "type": "string"
+                }
+              ]
+            }
+          ],
+          "stateMachine": {
+            "states": [
+              {
+                "name": "idle",
+                "isInitial": true
+              }
+            ],
+            "events": [
+              {
+                "key": "INIT",
+                "name": "Initialize"
+              },
+              {
+                "key": "CTA_PRIMARY",
+                "name": "Cta Primary",
+                "payloadSchema": [
+                  {
+                    "name": "href",
+                    "type": "string"
+                  }
+                ]
+              },
+              {
+                "key": "CTA_SECONDARY",
+                "name": "Cta Secondary",
+                "payloadSchema": [
+                  {
+                    "name": "href",
+                    "type": "string"
+                  }
+                ]
+              }
+            ],
+            "transitions": [
+              {
+                "from": "idle",
+                "to": "idle",
+                "event": "INIT",
+                "effects": [
+                  [
+                    "render-ui",
+                    "main",
+                    {
+                      "imagePosition": "@config.imagePosition",
+                      "installCommand": "@config.installCommand",
+                      "subtitle": "@config.subtitle",
+                      "background": "@config.background",
+                      "titleAccent": "@config.titleAccent",
+                      "title": "@config.title",
+                      "secondaryAction": {
+                        "label": "@config.secondaryActionLabel",
+                        "href": "@config.secondaryActionHref"
+                      },
+                      "image": {
+                        "alt": "@config.imageAlt",
+                        "src": "@config.imageSrc"
+                      },
+                      "align": "@config.align",
+                      "type": "hero-section",
+                      "tag": "@config.tag",
+                      "tagVariant": "@config.tagVariant",
+                      "primaryAction": {
+                        "label": "@config.primaryActionLabel",
+                        "href": "@config.primaryActionHref"
+                      }
+                    }
+                  ]
+                ]
+              },
+              {
+                "from": "idle",
+                "to": "idle",
+                "event": "CTA_PRIMARY",
+                "effects": [
+                  [
+                    "emit",
+                    "CTA_PRIMARY",
+                    {
+                      "href": "@config.primaryActionHref"
+                    }
+                  ]
+                ]
+              },
+              {
+                "from": "idle",
+                "to": "idle",
+                "event": "CTA_SECONDARY",
+                "effects": [
+                  [
+                    "emit",
+                    "CTA_SECONDARY",
+                    {
+                      "href": "@config.secondaryActionHref"
+                    }
+                  ]
+                ]
+              }
+            ]
+          },
+          "config": {
+            "imageAlt": {
+              "type": "string",
+              "default": "",
+              "label": "Image Alt Text",
+              "tier": "customization"
+            },
+            "secondaryActionLabel": {
+              "type": "string",
+              "default": "",
+              "label": "Secondary Action Label",
+              "tier": "customization"
+            },
+            "imagePosition": {
+              "type": "string",
+              "default": "below",
+              "label": "Image Position",
+              "description": "below, right, or background",
+              "tier": "customization"
+            },
+            "titleAccent": {
+              "type": "string",
+              "default": "",
+              "label": "Title Accent",
+              "description": "Highlighted portion of the title",
+              "tier": "customization"
+            },
+            "primaryActionLabel": {
+              "type": "string",
+              "default": "Get Started",
+              "label": "Primary Action Label",
+              "tier": "essential"
+            },
+            "primaryActionHref": {
+              "type": "string",
+              "default": "#",
+              "label": "Primary Action Link",
+              "tier": "essential"
+            },
+            "tag": {
+              "type": "string",
+              "default": "",
+              "label": "Tag",
+              "description": "Small badge above the headline",
+              "tier": "customization"
+            },
+            "subtitle": {
+              "type": "string",
+              "default": "From idea to production in minutes, not months.",
+              "label": "Subtitle",
+              "description": "Supporting text below the title",
+              "tier": "essential"
+            },
+            "installCommand": {
+              "type": "string",
+              "default": "",
+              "label": "Install Command",
+              "description": "CLI command shown in a copyable box",
+              "tier": "customization"
+            },
+            "title": {
+              "type": "string",
+              "default": "Build faster with Almadar",
+              "label": "Title",
+              "description": "Main headline",
+              "tier": "essential"
+            },
+            "tagVariant": {
+              "type": "string",
+              "default": "accent",
+              "label": "Tag Variant",
+              "description": "Visual style of the tag badge",
+              "tier": "customization"
+            },
+            "background": {
+              "type": "string",
+              "default": "gradient",
+              "label": "Background",
+              "description": "dark, gradient, or subtle",
+              "tier": "customization"
+            },
+            "align": {
+              "type": "string",
+              "default": "center",
+              "label": "Alignment",
+              "description": "center or left",
+              "tier": "customization"
+            },
+            "secondaryActionHref": {
+              "type": "string",
+              "default": "",
+              "label": "Secondary Action Link",
+              "tier": "customization"
+            },
+            "imageSrc": {
+              "type": "string",
+              "default": "",
+              "label": "Image Source",
+              "tier": "customization"
+            }
+          },
+          "scope": "instance"
+        }
+      ],
+      "pages": [
+        {
+          "name": "HeroItemHeroPage",
+          "path": "/hero",
+          "traits": [
+            {
+              "ref": "HeroItemHero"
+            }
+          ]
+        }
+      ]
+    }
+  ]
+}

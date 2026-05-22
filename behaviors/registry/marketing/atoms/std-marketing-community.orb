@@ -1,0 +1,134 @@
+{
+  "name": "std-marketing-community",
+  "version": "1.0.0",
+  "description": "Community links atom for marketing pages. Renders GitHub, Discord, and Twitter links with follower counts. Pick for open-source projects and community-driven products.",
+  "orbitals": [
+    {
+      "name": "CommunityItemOrbital",
+      "entity": {
+        "name": "CommunityItem",
+        "persistence": "runtime",
+        "fields": [
+          {
+            "name": "id",
+            "type": "string",
+            "required": true
+          }
+        ]
+      },
+      "traits": [
+        {
+          "name": "CommunityItemCommunity",
+          "category": "interaction",
+          "linkedEntity": "CommunityItem",
+          "stateMachine": {
+            "states": [
+              {
+                "name": "idle",
+                "isInitial": true
+              }
+            ],
+            "events": [
+              {
+                "key": "INIT",
+                "name": "Initialize"
+              }
+            ],
+            "transitions": [
+              {
+                "from": "idle",
+                "to": "idle",
+                "event": "INIT",
+                "effects": [
+                  [
+                    "render-ui",
+                    "main",
+                    {
+                      "type": "community-links",
+                      "github": {
+                        "label": "@config.githubStars",
+                        "url": "@config.githubUrl"
+                      },
+                      "heading": "@config.heading",
+                      "subtitle": "@config.subtitle",
+                      "discord": {
+                        "label": "@config.discordMembers",
+                        "url": "@config.discordUrl"
+                      },
+                      "twitter": {
+                        "label": "@config.twitterFollowers",
+                        "url": "@config.twitterUrl"
+                      }
+                    }
+                  ]
+                ]
+              }
+            ]
+          },
+          "config": {
+            "twitterUrl": {
+              "type": "string",
+              "default": "",
+              "label": "Twitter URL",
+              "tier": "customization"
+            },
+            "githubUrl": {
+              "type": "string",
+              "default": "",
+              "label": "GitHub URL",
+              "tier": "customization"
+            },
+            "discordMembers": {
+              "type": "string",
+              "default": "",
+              "label": "Discord Members",
+              "tier": "customization"
+            },
+            "twitterFollowers": {
+              "type": "string",
+              "default": "",
+              "label": "Twitter Followers",
+              "tier": "customization"
+            },
+            "discordUrl": {
+              "type": "string",
+              "default": "",
+              "label": "Discord URL",
+              "tier": "customization"
+            },
+            "subtitle": {
+              "type": "string",
+              "default": "Connect with thousands of builders.",
+              "label": "Subtitle",
+              "tier": "essential"
+            },
+            "heading": {
+              "type": "string",
+              "default": "Join the community",
+              "label": "Heading",
+              "tier": "essential"
+            },
+            "githubStars": {
+              "type": "string",
+              "default": "",
+              "label": "GitHub Stars",
+              "tier": "customization"
+            }
+          },
+          "scope": "instance"
+        }
+      ],
+      "pages": [
+        {
+          "name": "CommunityItemCommunityPage",
+          "path": "/community",
+          "traits": [
+            {
+              "ref": "CommunityItemCommunity"
+            }
+          ]
+        }
+      ]
+    }
+  ]
+}

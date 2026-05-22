@@ -1,5 +1,5 @@
-app std-help-category "1.1.0"
-"std-help-category — Help center category directory grouping articles into sections like Getting Started, Billing, API Reference. Agents tune the list shape via `config.fields` + `config.itemActions`."
+app std-help-category "1.2.0"
+"std-help-category — help center category directory grouping articles (Getting Started, Billing, API Reference…). Listens for SET_STATUS so std-lifecycle can drive transitions. Exposes Content/Knowledge knobs (visibilityScope, enabledLocales, …)."
 
 type FieldSpec = { name : string!, label : string, variant : string, icon : string, format : string, key : string, header : string }
 type ItemAction = { label : string!, event : string!, variant : string, icon : string }
@@ -18,8 +18,10 @@ orbital HelpCategoryOrbital {
     pendingId    : string = ""
   }
 
-  type HelpCategoryLoaded     = Event { data : [HelpCategory], totalCount : number } "Fired when the help category collection finishes loading"
-  type HelpCategoryLoadFailed = Event { message : string }                            "Fired when the help category collection fails to load"
+  type HelpCategoryLoaded       = Event { data : [HelpCategory], totalCount : number } "Fired when the help category collection finishes loading"
+  type HelpCategoryLoadFailed   = Event { message : string }                            "Fired when the help category collection fails to load"
+  type HelpCategoryUpdated      = Event { row : HelpCategory }                          "Fired after a help category's status persists (SET_STATUS / lifecycle)"
+  type HelpCategoryUpdateFailed = Event { message : string }                            "Fired when a help category's status update fails to persist"
 
   trait HelpCategoryDirectory -> HelpCategory [interaction, collection] {
     config {
@@ -45,6 +47,38 @@ orbital HelpCategoryOrbital {
         @label "Row actions"
         @description "Buttons users can click on each category row"
         @tier "customization"
+      visibilityScope          : "public" | "internal" | "customer" = "public"
+        @label "Visibility scope"
+        @description "Who can see published categories: public web, internal staff, signed-in customers."
+        @tier "essential"
+      scheduledPublishEnabled  : boolean = false
+        @label "Scheduled publish"
+        @description "Allow authors to schedule category publish. v1.2 declarative."
+        @tier "customization"
+      keepVersions             : number  = 5
+        @label "Versions to retain"
+        @description "Number of revisions to keep per category."
+        @tier "customization"
+      allowRollback            : boolean = true
+        @label "Allow rollback"
+        @description "Permit reverting a category to a prior version."
+        @tier "customization"
+      seoEnabled               : boolean = true
+        @label "SEO meta enabled"
+        @description "Emit canonical + meta description tags on the category index page."
+        @tier "customization"
+      enabledLocales           : [string] = ["en"]
+        @label "Enabled locales"
+        @description "Locales the category name/description can be translated into."
+        @tier "customization"
+      defaultLocale            : string  = "en"
+        @label "Default locale"
+        @description "Locale used when no translation matches the reader's language."
+        @tier "customization"
+      draftAutosaveSeconds     : number  = 30
+        @label "Draft autosave interval (s)"
+        @description "Seconds between draft autosaves in the editor."
+        @tier "advanced"
     }
     initial: loading
     state loading {
@@ -72,6 +106,15 @@ orbital HelpCategoryOrbital {
         (set @entity.id @payload.id)
         (fetch HelpCategory { emit: { success: "HelpCategoryLoaded", failure: "HelpCategoryLoadFailed" } })
         (render-ui main { type: "stack", direction: "vertical", gap: "md", align: "center", className: "py-12", children: [{ type: "spinner" }, { type: "typography", variant: "caption", color: "muted", content: "Archiving category…" }] })
+      SET_STATUS -> loading
+        (set @entity.id @payload.entityId)
+        (set @entity.status @payload.newStatus)
+        (persist update HelpCategory @entity { emit: { success: "HelpCategoryUpdated", failure: "HelpCategoryUpdateFailed" } })
+        (render-ui main { type: "stack", direction: "vertical", gap: "md", align: "center", className: "py-12", children: [{ type: "spinner" }, { type: "typography", variant: "caption", color: "muted", content: "Updating category status…" }] })
+      HelpCategoryUpdated -> loading
+        (fetch HelpCategory { emit: { success: "HelpCategoryLoaded", failure: "HelpCategoryLoadFailed" } })
+      HelpCategoryUpdateFailed -> browsing
+        (render-ui main { type: "alert", variant: "error", message: "@payload.message" })
     }
     state viewing_single {
       CLOSE_VIEW -> loading
@@ -92,20 +135,25 @@ orbital HelpCategoryOrbital {
         (render-ui main { type: "spinner", size: "sm" })
     }
     emits {
-      OPEN_CATEGORY          { id : string!, row : HelpCategory }
-      CLOSE_VIEW             { }
-      PUBLISH                { id : string! }
-      ARCHIVE                { id : string! }
-      HelpCategoryLoaded     { data : [HelpCategory], totalCount : number }
-      HelpCategoryLoadFailed { message : string }
+      OPEN_CATEGORY            { id : string!, row : HelpCategory }
+      CLOSE_VIEW               { }
+      PUBLISH                  { id : string! }
+      ARCHIVE                  { id : string! }
+      HelpCategoryLoaded       { data : [HelpCategory], totalCount : number }
+      HelpCategoryLoadFailed   { message : string }
+      HelpCategoryUpdated      { row : HelpCategory }
+      HelpCategoryUpdateFailed { message : string }
     }
     listens {
-      OPEN_CATEGORY          { id : string!, row : HelpCategory }
-      CLOSE_VIEW             { }
-      PUBLISH                { id : string! }
-      ARCHIVE                { id : string! }
-      HelpCategoryLoaded     { data : [HelpCategory], totalCount : number }
-      HelpCategoryLoadFailed { message : string }
+      OPEN_CATEGORY            { id : string!, row : HelpCategory }
+      CLOSE_VIEW               { }
+      PUBLISH                  { id : string! }
+      ARCHIVE                  { id : string! }
+      SET_STATUS               { entityId : string!, newStatus : string! }
+      HelpCategoryLoaded       { data : [HelpCategory], totalCount : number }
+      HelpCategoryLoadFailed   { message : string }
+      HelpCategoryUpdated      { row : HelpCategory }
+      HelpCategoryUpdateFailed { message : string }
     }
   }
   page "/help-categories" as HelpCategoryPage -> HelpCategoryDirectory

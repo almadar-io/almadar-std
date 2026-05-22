@@ -1,7 +1,7 @@
 {
   "name": "std-help-article",
-  "version": "1.1.0",
-  "description": "std-help-article — Public help center article primitive with title, body, category, view count, and published/draft status. Agents tune the list shape via `config.fields` + `config.itemActions`.",
+  "version": "1.2.0",
+  "description": "std-help-article — public help center article (title, body, category, status, view count). Listens for SET_STATUS so std-lifecycle can drive transitions. Exposes Content/Knowledge knobs (visibilityScope, keepVersions, enabledLocales, …).",
   "orbitals": [
     {
       "name": "HelpArticleOrbital",
@@ -216,6 +216,83 @@
                   "type": "string"
                 }
               ]
+            },
+            {
+              "event": "HelpArticleUpdated",
+              "payloadSchema": [
+                {
+                  "name": "row.id",
+                  "type": "string",
+                  "required": true
+                },
+                {
+                  "name": "row.title",
+                  "type": "string",
+                  "required": true
+                },
+                {
+                  "name": "row.slug",
+                  "type": "string",
+                  "required": true
+                },
+                {
+                  "name": "row.body",
+                  "type": "string"
+                },
+                {
+                  "name": "row.summary",
+                  "type": "string"
+                },
+                {
+                  "name": "row.categoryId",
+                  "type": "string"
+                },
+                {
+                  "name": "row.categoryName",
+                  "type": "string"
+                },
+                {
+                  "name": "row.author",
+                  "type": "string"
+                },
+                {
+                  "name": "row.status",
+                  "type": "string"
+                },
+                {
+                  "name": "row.viewCount",
+                  "type": "number"
+                },
+                {
+                  "name": "row.helpfulCount",
+                  "type": "number"
+                },
+                {
+                  "name": "row.notHelpfulCount",
+                  "type": "number"
+                },
+                {
+                  "name": "row.publishedAt",
+                  "type": "string"
+                },
+                {
+                  "name": "row.updatedAt",
+                  "type": "string"
+                },
+                {
+                  "name": "row.pendingId",
+                  "type": "string"
+                }
+              ]
+            },
+            {
+              "event": "HelpArticleUpdateFailed",
+              "payloadSchema": [
+                {
+                  "name": "message",
+                  "type": "string"
+                }
+              ]
             }
           ],
           "stateMachine": {
@@ -290,6 +367,42 @@
                 ]
               },
               {
+                "key": "SET_STATUS",
+                "name": "Set Status",
+                "payloadSchema": [
+                  {
+                    "name": "entityId",
+                    "type": "string",
+                    "required": true
+                  },
+                  {
+                    "name": "newStatus",
+                    "type": "string",
+                    "required": true
+                  }
+                ]
+              },
+              {
+                "key": "HelpArticleUpdated",
+                "name": "HelpArticle updated",
+                "payloadSchema": [
+                  {
+                    "name": "row",
+                    "type": "HelpArticle"
+                  }
+                ]
+              },
+              {
+                "key": "HelpArticleUpdateFailed",
+                "name": "HelpArticle update failed",
+                "payloadSchema": [
+                  {
+                    "name": "message",
+                    "type": "string"
+                  }
+                ]
+              },
+              {
                 "key": "CLOSE_VIEW",
                 "name": "Close View"
               },
@@ -316,8 +429,8 @@
                     "HelpArticle",
                     {
                       "emit": {
-                        "success": "HelpArticleLoaded",
-                        "failure": "HelpArticleLoadFailed"
+                        "failure": "HelpArticleLoadFailed",
+                        "success": "HelpArticleLoaded"
                       }
                     }
                   ],
@@ -325,21 +438,21 @@
                     "render-ui",
                     "main",
                     {
+                      "direction": "vertical",
+                      "align": "center",
+                      "gap": "md",
+                      "type": "stack",
                       "children": [
                         {
                           "type": "spinner"
                         },
                         {
-                          "color": "muted",
-                          "variant": "caption",
                           "type": "typography",
-                          "content": "Loading help articles…"
+                          "variant": "caption",
+                          "content": "Loading help articles…",
+                          "color": "muted"
                         }
                       ],
-                      "type": "stack",
-                      "align": "center",
-                      "gap": "md",
-                      "direction": "vertical",
                       "className": "py-12"
                     }
                   ]
@@ -365,57 +478,57 @@
                             },
                             {
                               "variant": "h3",
-                              "content": "@config.title",
-                              "type": "typography"
+                              "type": "typography",
+                              "content": "@config.title"
                             }
                           ],
-                          "direction": "horizontal",
-                          "gap": "sm"
+                          "gap": "sm",
+                          "direction": "horizontal"
                         },
                         {
+                          "type": "simple-grid",
                           "children": [
                             {
                               "type": "stat-display",
+                              "icon": "book-open",
                               "label": "Total articles",
-                              "value": "@payload.data.length",
-                              "icon": "book-open"
+                              "value": "@payload.data.length"
                             },
                             {
-                              "value": "184",
-                              "icon": "check-circle",
                               "label": "Published",
-                              "type": "stat-display"
+                              "type": "stat-display",
+                              "value": "184",
+                              "icon": "check-circle"
                             },
                             {
-                              "value": "12",
                               "icon": "edit",
                               "type": "stat-display",
-                              "label": "Drafts"
+                              "label": "Drafts",
+                              "value": "12"
                             },
                             {
-                              "type": "stat-display",
                               "icon": "thumbs-up",
-                              "label": "Avg helpful rate",
-                              "value": "87%"
+                              "type": "stat-display",
+                              "value": "87%",
+                              "label": "Avg helpful rate"
                             }
                           ],
-                          "cols": 4.0,
-                          "type": "simple-grid"
+                          "cols": 4.0
                         },
                         {
                           "type": "divider"
                         },
                         {
-                          "entity": "@payload.data",
-                          "cols": 1.0,
-                          "itemActions": "@config.itemActions",
                           "fields": "@config.fields",
+                          "itemActions": "@config.itemActions",
                           "type": "data-grid",
-                          "gap": "sm"
+                          "cols": 1.0,
+                          "gap": "sm",
+                          "entity": "@payload.data"
                         }
                       ],
-                      "type": "stack",
                       "direction": "vertical",
+                      "type": "stack",
                       "gap": "md"
                     }
                   ]
@@ -506,28 +619,27 @@
                     "render-ui",
                     "main",
                     {
-                      "direction": "vertical",
                       "gap": "md",
                       "type": "stack",
                       "children": [
                         {
-                          "direction": "horizontal",
-                          "align": "center",
+                          "gap": "sm",
+                          "type": "stack",
                           "children": [
                             {
+                              "label": "Back",
                               "action": "CLOSE_VIEW",
                               "type": "button",
-                              "label": "Back",
                               "variant": "ghost"
                             },
                             {
-                              "type": "icon",
-                              "name": "book-open"
+                              "name": "book-open",
+                              "type": "icon"
                             },
                             {
-                              "content": "@entity.title",
+                              "type": "typography",
                               "variant": "h3",
-                              "type": "typography"
+                              "content": "@entity.title"
                             },
                             {
                               "label": "@entity.status",
@@ -535,151 +647,152 @@
                               "type": "badge"
                             }
                           ],
-                          "type": "stack",
-                          "gap": "sm"
+                          "direction": "horizontal",
+                          "align": "center"
                         },
                         {
                           "type": "divider"
                         },
                         {
-                          "gap": "sm",
                           "type": "stack",
-                          "direction": "vertical",
+                          "gap": "sm",
                           "children": [
                             {
-                              "gap": "md",
-                              "type": "stack",
                               "direction": "horizontal",
                               "children": [
                                 {
-                                  "color": "muted",
-                                  "variant": "caption",
                                   "content": "Slug",
-                                  "type": "typography"
-                                },
-                                {
-                                  "type": "typography",
-                                  "variant": "body",
-                                  "content": "@entity.slug"
-                                }
-                              ]
-                            },
-                            {
-                              "type": "stack",
-                              "gap": "md",
-                              "children": [
-                                {
-                                  "content": "Category",
                                   "type": "typography",
                                   "color": "muted",
                                   "variant": "caption"
                                 },
                                 {
-                                  "content": "@entity.categoryName",
                                   "variant": "body",
+                                  "content": "@entity.slug",
                                   "type": "typography"
                                 }
                               ],
-                              "direction": "horizontal"
+                              "gap": "md",
+                              "type": "stack"
+                            },
+                            {
+                              "direction": "horizontal",
+                              "type": "stack",
+                              "children": [
+                                {
+                                  "type": "typography",
+                                  "color": "muted",
+                                  "content": "Category",
+                                  "variant": "caption"
+                                },
+                                {
+                                  "type": "typography",
+                                  "variant": "body",
+                                  "content": "@entity.categoryName"
+                                }
+                              ],
+                              "gap": "md"
                             },
                             {
                               "gap": "md",
                               "children": [
                                 {
                                   "variant": "caption",
-                                  "type": "typography",
                                   "color": "muted",
+                                  "type": "typography",
                                   "content": "Author"
                                 },
                                 {
-                                  "variant": "body",
+                                  "content": "@entity.author",
                                   "type": "typography",
-                                  "content": "@entity.author"
+                                  "variant": "body"
                                 }
                               ],
-                              "type": "stack",
-                              "direction": "horizontal"
+                              "direction": "horizontal",
+                              "type": "stack"
                             },
                             {
                               "children": [
                                 {
-                                  "type": "typography",
                                   "variant": "caption",
                                   "color": "muted",
-                                  "content": "Summary"
+                                  "content": "Summary",
+                                  "type": "typography"
                                 },
                                 {
-                                  "variant": "body",
                                   "type": "typography",
+                                  "variant": "body",
                                   "content": "@entity.summary"
                                 }
                               ],
                               "gap": "md",
-                              "direction": "horizontal",
-                              "type": "stack"
+                              "type": "stack",
+                              "direction": "horizontal"
                             }
-                          ]
+                          ],
+                          "direction": "vertical"
                         },
                         {
                           "type": "divider"
                         },
                         {
+                          "type": "simple-grid",
                           "cols": 4.0,
                           "children": [
                             {
-                              "type": "stat-display",
+                              "value": "@entity.viewCount",
                               "label": "Views",
-                              "icon": "eye",
-                              "value": "@entity.viewCount"
+                              "type": "stat-display",
+                              "icon": "eye"
                             },
                             {
-                              "type": "stat-display",
+                              "value": "@entity.helpfulCount",
                               "icon": "thumbs-up",
                               "label": "Helpful",
-                              "value": "@entity.helpfulCount"
+                              "type": "stat-display"
                             },
                             {
-                              "icon": "thumbs-down",
                               "type": "stat-display",
+                              "icon": "thumbs-down",
                               "label": "Not helpful",
                               "value": "@entity.notHelpfulCount"
                             },
                             {
                               "value": "@entity.publishedAt",
                               "label": "Published",
-                              "icon": "calendar",
-                              "type": "stat-display"
+                              "type": "stat-display",
+                              "icon": "calendar"
                             }
-                          ],
-                          "type": "simple-grid"
+                          ]
                         },
                         {
-                          "gap": "sm",
-                          "direction": "horizontal",
-                          "align": "center",
                           "children": [
                             {
-                              "variant": "primary",
-                              "label": "Publish",
-                              "type": "button",
-                              "action": "PUBLISH",
-                              "actionPayload": {
-                                "id": "@entity.id"
-                              }
-                            },
-                            {
-                              "label": "Archive",
                               "actionPayload": {
                                 "id": "@entity.id"
                               },
+                              "type": "button",
+                              "label": "Publish",
+                              "variant": "primary",
+                              "action": "PUBLISH"
+                            },
+                            {
+                              "label": "Archive",
                               "variant": "danger",
                               "type": "button",
+                              "actionPayload": {
+                                "id": "@entity.id"
+                              },
                               "action": "ARCHIVE"
                             }
                           ],
-                          "type": "stack"
+                          "direction": "horizontal",
+                          "gap": "sm",
+                          "type": "stack",
+                          "align": "center"
                         }
-                      ]
+                      ],
+                      "direction": "vertical"
                     }
                   ]
                 ]
@@ -699,8 +812,8 @@
                     "HelpArticle",
                     {
                       "emit": {
-                        "failure": "HelpArticleLoadFailed",
-                        "success": "HelpArticleLoaded"
+                        "success": "HelpArticleLoaded",
+                        "failure": "HelpArticleLoadFailed"
                       }
                     }
                   ],
@@ -708,22 +821,106 @@
                     "render-ui",
                     "main",
                     {
+                      "type": "stack",
                       "className": "py-12",
                       "gap": "md",
-                      "direction": "vertical",
-                      "align": "center",
                       "children": [
                         {
                           "type": "spinner"
                         },
                         {
-                          "type": "typography",
-                          "variant": "caption",
                           "color": "muted",
-                          "content": "Archiving article…"
+                          "variant": "caption",
+                          "content": "Archiving article…",
+                          "type": "typography"
                         }
                       ],
-                      "type": "stack"
+                      "align": "center",
+                      "direction": "vertical"
+                    }
+                  ]
+                ]
+              },
+              {
+                "from": "browsing",
+                "to": "loading",
+                "event": "SET_STATUS",
+                "effects": [
+                  [
+                    "set",
+                    "@entity.id",
+                    "@payload.entityId"
+                  ],
+                  [
+                    "set",
+                    "@entity.status",
+                    "@payload.newStatus"
+                  ],
+                  [
+                    "persist",
+                    "update",
+                    "HelpArticle",
+                    "@entity",
+                    {
+                      "emit": {
+                        "failure": "HelpArticleUpdateFailed",
+                        "success": "HelpArticleUpdated"
+                      }
+                    }
+                  ],
+                  [
+                    "render-ui",
+                    "main",
+                    {
+                      "align": "center",
+                      "className": "py-12",
+                      "children": [
+                        {
+                          "type": "spinner"
+                        },
+                        {
+                          "color": "muted",
+                          "variant": "caption",
+                          "type": "typography",
+                          "content": "Updating article status…"
+                        }
+                      ],
+                      "direction": "vertical",
+                      "type": "stack",
+                      "gap": "md"
+                    }
+                  ]
+                ]
+              },
+              {
+                "from": "browsing",
+                "to": "loading",
+                "event": "HelpArticleUpdated",
+                "effects": [
+                  [
+                    "fetch",
+                    "HelpArticle",
+                    {
+                      "emit": {
+                        "success": "HelpArticleLoaded",
+                        "failure": "HelpArticleLoadFailed"
+                      }
+                    }
+                  ]
+                ]
+              },
+              {
+                "from": "browsing",
+                "to": "browsing",
+                "event": "HelpArticleUpdateFailed",
+                "effects": [
+                  [
+                    "render-ui",
+                    "main",
+                    {
+                      "variant": "error",
+                      "type": "alert",
+                      "message": "@payload.message"
                     }
                   ]
                 ]
@@ -738,8 +935,8 @@
                     "HelpArticle",
                     {
                       "emit": {
-                        "success": "HelpArticleLoaded",
-                        "failure": "HelpArticleLoadFailed"
+                        "failure": "HelpArticleLoadFailed",
+                        "success": "HelpArticleLoaded"
                       }
                     }
                   ],
@@ -747,22 +944,22 @@
                     "render-ui",
                     "main",
                     {
-                      "type": "stack",
-                      "className": "py-12",
                       "children": [
                         {
                           "type": "spinner"
                         },
                         {
-                          "type": "typography",
                           "variant": "caption",
-                          "color": "muted",
-                          "content": "Loading help articles…"
+                          "content": "Loading help articles…",
+                          "type": "typography",
+                          "color": "muted"
                         }
                       ],
-                      "direction": "vertical",
+                      "className": "py-12",
                       "align": "center",
-                      "gap": "md"
+                      "gap": "md",
+                      "direction": "vertical",
+                      "type": "stack"
                     }
                   ]
                 ]
@@ -791,22 +988,22 @@
                     "render-ui",
                     "main",
                     {
-                      "gap": "md",
-                      "className": "py-12",
-                      "type": "stack",
-                      "direction": "vertical",
+                      "align": "center",
                       "children": [
                         {
                           "type": "spinner"
                         },
                         {
-                          "content": "Publishing article…",
                           "type": "typography",
-                          "variant": "caption",
-                          "color": "muted"
+                          "content": "Publishing article…",
+                          "color": "muted",
+                          "variant": "caption"
                         }
                       ],
-                      "align": "center"
+                      "gap": "md",
+                      "className": "py-12",
+                      "type": "stack",
+                      "direction": "vertical"
                     }
                   ]
                 ]
@@ -826,8 +1023,8 @@
                     "HelpArticle",
                     {
                       "emit": {
-                        "failure": "HelpArticleLoadFailed",
-                        "success": "HelpArticleLoaded"
+                        "success": "HelpArticleLoaded",
+                        "failure": "HelpArticleLoadFailed"
                       }
                     }
                   ],
@@ -835,22 +1032,22 @@
                     "render-ui",
                     "main",
                     {
-                      "className": "py-12",
                       "children": [
                         {
                           "type": "spinner"
                         },
                         {
-                          "type": "typography",
-                          "content": "Archiving article…",
                           "variant": "caption",
-                          "color": "muted"
+                          "color": "muted",
+                          "content": "Archiving article…",
+                          "type": "typography"
                         }
                       ],
-                      "type": "stack",
+                      "className": "py-12",
                       "direction": "vertical",
-                      "align": "center",
-                      "gap": "md"
+                      "type": "stack",
+                      "gap": "md",
+                      "align": "center"
                     }
                   ]
                 ]
@@ -874,8 +1071,8 @@
                     "render-ui",
                     "main",
                     {
-                      "size": "sm",
-                      "type": "spinner"
+                      "type": "spinner",
+                      "size": "sm"
                     }
                   ]
                 ]
@@ -883,6 +1080,13 @@
             ]
           },
           "config": {
+            "scheduledPublishEnabled": {
+              "type": "boolean",
+              "default": false,
+              "label": "Scheduled publish",
+              "description": "Allow authors to schedule publish in the future. v1.2 declarative.",
+              "tier": "customization"
+            },
             "title": {
               "type": "string",
               "default": "Help Articles",
@@ -890,43 +1094,102 @@
               "description": "Heading shown above the help articles list",
               "tier": "customization"
             },
+            "keepVersions": {
+              "type": "number",
+              "default": 10.0,
+              "label": "Versions to retain",
+              "description": "How many revisions to keep per article. v1.2 declarative.",
+              "tier": "customization"
+            },
+            "visibilityScope": {
+              "type": "string",
+              "default": "public",
+              "label": "Visibility scope",
+              "description": "Who can read published articles: public web, internal staff, signed-in customers.",
+              "tier": "essential",
+              "values": [
+                "public",
+                "internal",
+                "customer"
+              ]
+            },
+            "defaultLocale": {
+              "type": "string",
+              "default": "en",
+              "label": "Default locale",
+              "description": "Locale used when no translation is available for the reader's preferred language.",
+              "tier": "customization"
+            },
+            "seoEnabled": {
+              "type": "boolean",
+              "default": true,
+              "label": "SEO meta enabled",
+              "description": "Emit canonical tags + meta description for indexing.",
+              "tier": "customization"
+            },
+            "draftAutosaveSeconds": {
+              "type": "number",
+              "default": 30.0,
+              "label": "Draft autosave interval (s)",
+              "description": "Seconds between draft autosaves in the editor.",
+              "tier": "advanced"
+            },
+            "enabledLocales": {
+              "type": "[string]",
+              "default": [
+                "en"
+              ],
+              "label": "Enabled locales",
+              "description": "Locales the article can be translated into.",
+              "tier": "customization",
+              "items": {
+                "type": "string"
+              }
+            },
+            "allowRollback": {
+              "type": "boolean",
+              "default": true,
+              "label": "Allow rollback",
+              "description": "Permit reverting an article to a prior retained version.",
+              "tier": "customization"
+            },
             "fields": {
               "type": "[FieldSpec]",
               "default": [
                 {
+                  "variant": "caption",
                   "name": "title",
-                  "label": "Title",
+                  "label": "Title"
+                },
+                {
+                  "label": "Slug",
+                  "name": "slug",
+                  "variant": "caption"
+                },
+                {
+                  "name": "categoryName",
+                  "label": "Category",
                   "variant": "caption"
                 },
                 {
                   "variant": "caption",
-                  "name": "slug",
-                  "label": "Slug"
+                  "label": "Author",
+                  "name": "author"
                 },
                 {
-                  "variant": "caption",
-                  "label": "Category",
-                  "name": "categoryName"
-                },
-                {
-                  "name": "author",
-                  "variant": "caption",
-                  "label": "Author"
-                },
-                {
-                  "name": "status",
                   "label": "Status",
+                  "name": "status",
                   "variant": "badge"
                 },
                 {
+                  "label": "Views",
                   "variant": "caption",
-                  "name": "viewCount",
-                  "label": "Views"
+                  "name": "viewCount"
                 },
                 {
-                  "variant": "caption",
+                  "name": "publishedAt",
                   "label": "Published",
-                  "name": "publishedAt"
+                  "variant": "caption"
                 }
               ],
               "label": "Columns to show",
@@ -935,18 +1198,13 @@
               "items": {
                 "type": "object",
                 "properties": {
-                  "variant": {
-                    "name": "variant",
-                    "type": "string",
-                    "required": false
-                  },
                   "icon": {
                     "name": "icon",
                     "type": "string",
                     "required": false
                   },
-                  "key": {
-                    "name": "key",
+                  "variant": {
+                    "name": "variant",
                     "type": "string",
                     "required": false
                   },
@@ -955,18 +1213,23 @@
                     "type": "string",
                     "required": false
                   },
-                  "name": {
-                    "name": "name",
-                    "type": "string",
-                    "required": true
-                  },
                   "header": {
                     "name": "header",
                     "type": "string",
                     "required": false
                   },
+                  "name": {
+                    "name": "name",
+                    "type": "string",
+                    "required": true
+                  },
                   "label": {
                     "name": "label",
+                    "type": "string",
+                    "required": false
+                  },
+                  "key": {
+                    "name": "key",
                     "type": "string",
                     "required": false
                   }
@@ -977,15 +1240,15 @@
               "type": "[ItemAction]",
               "default": [
                 {
-                  "label": "Open",
-                  "event": "OPEN_ARTICLE",
+                  "icon": "arrow-right",
                   "variant": "primary",
-                  "icon": "arrow-right"
+                  "label": "Open",
+                  "event": "OPEN_ARTICLE"
                 },
                 {
-                  "label": "Archive",
+                  "variant": "danger",
                   "event": "ARCHIVE",
-                  "variant": "danger"
+                  "label": "Archive"
                 }
               ],
               "label": "Row actions",
@@ -994,8 +1257,8 @@
               "items": {
                 "type": "object",
                 "properties": {
-                  "event": {
-                    "name": "event",
+                  "label": {
+                    "name": "label",
                     "type": "string",
                     "required": true
                   },
@@ -1004,15 +1267,15 @@
                     "type": "string",
                     "required": false
                   },
-                  "label": {
-                    "name": "label",
-                    "type": "string",
-                    "required": true
-                  },
                   "variant": {
                     "name": "variant",
                     "type": "string",
                     "required": false
+                  },
+                  "event": {
+                    "name": "event",
+                    "type": "string",
+                    "required": true
                   }
                 }
               }

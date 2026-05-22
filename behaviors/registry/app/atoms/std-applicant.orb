@@ -1,7 +1,7 @@
 {
   "name": "std-applicant",
-  "version": "1.1.0",
-  "description": "std-applicant — job applicant primitive tracking a person who applied to a job, their pipeline stage, and basic info. Lists applicants in `browsing`; opens applicant detail in `viewing_single` with Advance / Reject actions. Agents tune the list shape via `config.fields` + `config.itemActions`.",
+  "version": "1.2.0",
+  "description": "std-applicant — job applicant pipeline (stage field, not status). Exposes HR knobs (backgroundCheckRequired, eVerifyRequired, anonymizeOnRejection, …).",
   "orbitals": [
     {
       "name": "ApplicantOrbital",
@@ -348,19 +348,19 @@
                     "render-ui",
                     "main",
                     {
+                      "className": "py-12",
                       "type": "stack",
+                      "gap": "md",
                       "align": "center",
                       "direction": "vertical",
-                      "gap": "md",
-                      "className": "py-12",
                       "children": [
                         {
                           "type": "spinner"
                         },
                         {
                           "content": "Loading applicants…",
-                          "variant": "caption",
                           "color": "muted",
+                          "variant": "caption",
                           "type": "typography"
                         }
                       ]
@@ -377,25 +377,24 @@
                     "render-ui",
                     "main",
                     {
-                      "direction": "vertical",
-                      "gap": "md",
                       "type": "stack",
+                      "direction": "vertical",
                       "children": [
                         {
-                          "direction": "horizontal",
                           "align": "center",
+                          "type": "stack",
                           "children": [
                             {
                               "name": "users",
                               "type": "icon"
                             },
                             {
-                              "type": "typography",
                               "content": "@config.title",
-                              "variant": "h3"
+                              "variant": "h3",
+                              "type": "typography"
                             }
                           ],
-                          "type": "stack",
+                          "direction": "horizontal",
                           "gap": "sm"
                         },
                         {
@@ -403,28 +402,28 @@
                           "cols": 4.0,
                           "children": [
                             {
-                              "type": "stat-display",
-                              "value": "@payload.data.length",
                               "icon": "users",
-                              "label": "Total applicants"
-                            },
-                            {
-                              "label": "In interview",
                               "type": "stat-display",
-                              "value": "18",
-                              "icon": "message-square"
+                              "label": "Total applicants",
+                              "value": "@payload.data.length"
                             },
                             {
-                              "value": "5",
+                              "value": "18",
+                              "icon": "message-square",
+                              "label": "In interview",
+                              "type": "stat-display"
+                            },
+                            {
                               "icon": "send",
                               "type": "stat-display",
-                              "label": "Offers out"
+                              "label": "Offers out",
+                              "value": "5"
                             },
                             {
                               "label": "Hired this month",
-                              "value": "9",
+                              "icon": "check-circle",
                               "type": "stat-display",
-                              "icon": "check-circle"
+                              "value": "9"
                             }
                           ]
                         },
@@ -432,14 +431,15 @@
                           "type": "divider"
                         },
                         {
-                          "entity": "@payload.data",
+                          "gap": "sm",
                           "itemActions": "@config.itemActions",
+                          "fields": "@config.fields",
                           "cols": 1.0,
                           "type": "data-grid",
-                          "gap": "sm",
-                          "fields": "@config.fields"
+                          "entity": "@payload.data"
                         }
-                      ]
+                      ],
+                      "gap": "md"
                     }
                   ]
                 ]
@@ -514,15 +514,14 @@
                     "render-ui",
                     "main",
                     {
+                      "type": "stack",
                       "direction": "vertical",
-                      "gap": "md",
                       "children": [
                         {
-                          "type": "stack",
                           "children": [
                             {
-                              "variant": "ghost",
                               "action": "CLOSE_VIEW",
+                              "variant": "ghost",
                               "type": "button",
                               "label": "Back"
                             },
@@ -531,29 +530,30 @@
                               "type": "icon"
                             },
                             {
+                              "variant": "h3",
                               "type": "typography",
-                              "content": "@entity.name",
-                              "variant": "h3"
+                              "content": "@entity.name"
                             },
                             {
-                              "variant": "primary",
                               "label": "@entity.stage",
+                              "variant": "primary",
                               "type": "badge"
                             }
                           ],
-                          "gap": "sm",
                           "direction": "horizontal",
+                          "type": "stack",
+                          "gap": "sm",
                           "align": "center"
                         },
                         {
                           "type": "divider"
                         },
                         {
+                          "gap": "sm",
+                          "direction": "vertical",
+                          "type": "stack",
                           "children": [
                             {
-                              "direction": "horizontal",
-                              "gap": "md",
-                              "type": "stack",
                               "children": [
                                 {
                                   "content": "Email",
@@ -562,32 +562,34 @@
                                   "color": "muted"
                                 },
                                 {
+                                  "content": "@entity.email",
                                   "type": "typography",
-                                  "variant": "body",
-                                  "content": "@entity.email"
+                                  "variant": "body"
                                 }
-                              ]
+                              ],
+                              "gap": "md",
+                              "direction": "horizontal",
+                              "type": "stack"
                             },
                             {
+                              "type": "stack",
+                              "gap": "md",
                               "direction": "horizontal",
                               "children": [
                                 {
                                   "variant": "caption",
                                   "content": "Phone",
-                                  "type": "typography",
-                                  "color": "muted"
+                                  "color": "muted",
+                                  "type": "typography"
                                 },
                                 {
+                                  "type": "typography",
                                   "variant": "body",
-                                  "content": "@entity.phone",
-                                  "type": "typography"
+                                  "content": "@entity.phone"
                                 }
-                              ],
-                              "type": "stack",
-                              "gap": "md"
+                              ]
                             },
                             {
-                              "direction": "horizontal",
                               "gap": "md",
                               "children": [
                                 {
@@ -598,34 +600,32 @@
                                 },
                                 {
                                   "variant": "body",
-                                  "content": "@entity.jobId",
-                                  "type": "typography"
+                                  "type": "typography",
+                                  "content": "@entity.jobId"
                                 }
                               ],
+                              "direction": "horizontal",
                               "type": "stack"
                             },
                             {
-                              "gap": "md",
-                              "type": "stack",
                               "direction": "horizontal",
                               "children": [
                                 {
                                   "color": "muted",
                                   "type": "typography",
-                                  "variant": "caption",
-                                  "content": "Notes"
+                                  "content": "Notes",
+                                  "variant": "caption"
                                 },
                                 {
+                                  "variant": "body",
                                   "content": "@entity.notes",
-                                  "type": "typography",
-                                  "variant": "body"
+                                  "type": "typography"
                                 }
-                              ]
+                              ],
+                              "gap": "md",
+                              "type": "stack"
                             }
-                          ],
-                          "direction": "vertical",
-                          "type": "stack",
-                          "gap": "sm"
+                          ]
                         },
                         {
                           "type": "divider"
@@ -633,49 +633,49 @@
                         {
                           "children": [
                             {
-                              "icon": "calendar",
-                              "type": "stat-display",
+                              "value": "@entity.appliedAt",
                               "label": "Applied",
-                              "value": "@entity.appliedAt"
+                              "icon": "calendar",
+                              "type": "stat-display"
                             },
                             {
-                              "value": "@entity.resumeUrl",
                               "label": "Resume",
+                              "type": "stat-display",
                               "icon": "file-text",
-                              "type": "stat-display"
+                              "value": "@entity.resumeUrl"
                             }
                           ],
-                          "cols": 2.0,
-                          "type": "simple-grid"
+                          "type": "simple-grid",
+                          "cols": 2.0
                         },
                         {
+                          "direction": "horizontal",
+                          "align": "center",
+                          "gap": "sm",
+                          "type": "stack",
                           "children": [
                             {
                               "type": "button",
-                              "label": "Advance Stage",
-                              "variant": "primary",
                               "action": "ADVANCE_STAGE",
+                              "label": "Advance Stage",
                               "actionPayload": {
                                 "id": "@entity.id"
-                              }
+                              },
+                              "variant": "primary"
                             },
                             {
+                              "label": "Reject",
                               "action": "REJECT_APPLICANT",
-                              "variant": "danger",
                               "actionPayload": {
                                 "id": "@entity.id"
                               },
                               "type": "button",
-                              "label": "Reject"
+                              "variant": "danger"
                             }
-                          ],
-                          "direction": "horizontal",
-                          "gap": "sm",
-                          "align": "center",
-                          "type": "stack"
+                          ]
                         }
                       ],
-                      "type": "stack"
+                      "gap": "md"
                     }
                   ]
                 ]
@@ -704,22 +704,22 @@
                     "render-ui",
                     "main",
                     {
+                      "align": "center",
+                      "type": "stack",
                       "gap": "md",
+                      "className": "py-12",
+                      "direction": "vertical",
                       "children": [
                         {
                           "type": "spinner"
                         },
                         {
-                          "type": "typography",
                           "content": "Rejecting applicant…",
+                          "type": "typography",
                           "variant": "caption",
                           "color": "muted"
                         }
-                      ],
-                      "type": "stack",
-                      "align": "center",
-                      "className": "py-12",
-                      "direction": "vertical"
+                      ]
                     }
                   ]
                 ]
@@ -754,11 +754,11 @@
                           "color": "muted"
                         }
                       ],
-                      "direction": "vertical",
                       "type": "stack",
+                      "direction": "vertical",
+                      "gap": "md",
                       "align": "center",
-                      "className": "py-12",
-                      "gap": "md"
+                      "className": "py-12"
                     }
                   ]
                 ]
@@ -778,8 +778,8 @@
                     "Applicant",
                     {
                       "emit": {
-                        "failure": "ApplicantLoadFailed",
-                        "success": "ApplicantLoaded"
+                        "success": "ApplicantLoaded",
+                        "failure": "ApplicantLoadFailed"
                       }
                     }
                   ],
@@ -787,19 +787,19 @@
                     "render-ui",
                     "main",
                     {
-                      "gap": "md",
-                      "align": "center",
                       "className": "py-12",
                       "direction": "vertical",
+                      "gap": "md",
+                      "align": "center",
                       "children": [
                         {
                           "type": "spinner"
                         },
                         {
-                          "color": "muted",
-                          "variant": "caption",
                           "type": "typography",
-                          "content": "Advancing applicant…"
+                          "color": "muted",
+                          "content": "Advancing applicant…",
+                          "variant": "caption"
                         }
                       ],
                       "type": "stack"
@@ -822,8 +822,8 @@
                     "Applicant",
                     {
                       "emit": {
-                        "failure": "ApplicantLoadFailed",
-                        "success": "ApplicantLoaded"
+                        "success": "ApplicantLoaded",
+                        "failure": "ApplicantLoadFailed"
                       }
                     }
                   ],
@@ -831,22 +831,22 @@
                     "render-ui",
                     "main",
                     {
-                      "className": "py-12",
                       "type": "stack",
-                      "direction": "vertical",
                       "gap": "md",
-                      "align": "center",
+                      "className": "py-12",
+                      "direction": "vertical",
                       "children": [
                         {
                           "type": "spinner"
                         },
                         {
-                          "type": "typography",
+                          "color": "muted",
                           "variant": "caption",
                           "content": "Rejecting applicant…",
-                          "color": "muted"
+                          "type": "typography"
                         }
-                      ]
+                      ],
+                      "align": "center"
                     }
                   ]
                 ]
@@ -861,8 +861,8 @@
                     "Applicant",
                     {
                       "emit": {
-                        "failure": "ApplicantLoadFailed",
-                        "success": "ApplicantLoaded"
+                        "success": "ApplicantLoaded",
+                        "failure": "ApplicantLoadFailed"
                       }
                     }
                   ],
@@ -879,19 +879,113 @@
             ]
           },
           "config": {
+            "fields": {
+              "type": "[FieldSpec]",
+              "default": [
+                {
+                  "label": "Name",
+                  "name": "name",
+                  "variant": "caption"
+                },
+                {
+                  "label": "Email",
+                  "name": "email",
+                  "variant": "caption"
+                },
+                {
+                  "variant": "caption",
+                  "name": "jobId",
+                  "label": "Job"
+                },
+                {
+                  "label": "Stage",
+                  "name": "stage",
+                  "variant": "badge"
+                },
+                {
+                  "name": "appliedAt",
+                  "label": "Applied",
+                  "variant": "caption"
+                }
+              ],
+              "label": "Columns to show",
+              "description": "Each column maps to one field on the Applicant entity",
+              "tier": "customization",
+              "items": {
+                "type": "object",
+                "properties": {
+                  "name": {
+                    "name": "name",
+                    "type": "string",
+                    "required": true
+                  },
+                  "label": {
+                    "name": "label",
+                    "type": "string",
+                    "required": false
+                  },
+                  "icon": {
+                    "name": "icon",
+                    "type": "string",
+                    "required": false
+                  },
+                  "variant": {
+                    "name": "variant",
+                    "type": "string",
+                    "required": false
+                  },
+                  "format": {
+                    "name": "format",
+                    "type": "string",
+                    "required": false
+                  },
+                  "key": {
+                    "name": "key",
+                    "type": "string",
+                    "required": false
+                  },
+                  "header": {
+                    "name": "header",
+                    "type": "string",
+                    "required": false
+                  }
+                }
+              }
+            },
+            "eVerifyRequired": {
+              "type": "boolean",
+              "default": false,
+              "label": "E-Verify required",
+              "description": "US I-9 / E-Verify gate. Block ADVANCE_STAGE to 'hired' until verification passes.",
+              "tier": "customization"
+            },
+            "title": {
+              "type": "string",
+              "default": "Applicants",
+              "label": "Section title",
+              "description": "Heading shown above the applicant pipeline",
+              "tier": "customization"
+            },
+            "retentionAfterRejectionDays": {
+              "type": "number",
+              "default": 730.0,
+              "label": "Retention after rejection (days)",
+              "description": "Days to keep rejected applicants. Default 730 (2 years) is typical EEOC retention.",
+              "tier": "advanced"
+            },
             "itemActions": {
               "type": "[ItemAction]",
               "default": [
                 {
-                  "label": "Open",
                   "icon": "arrow-right",
-                  "variant": "primary",
-                  "event": "OPEN_APPLICANT"
+                  "label": "Open",
+                  "event": "OPEN_APPLICANT",
+                  "variant": "primary"
                 },
                 {
-                  "event": "REJECT_APPLICANT",
+                  "variant": "danger",
                   "label": "Reject",
-                  "variant": "danger"
+                  "event": "REJECT_APPLICANT"
                 }
               ],
               "label": "Row actions",
@@ -923,85 +1017,33 @@
                 }
               }
             },
-            "title": {
-              "type": "string",
-              "default": "Applicants",
-              "label": "Section title",
-              "description": "Heading shown above the applicant pipeline",
+            "anonymizeOnRejection": {
+              "type": "boolean",
+              "default": false,
+              "label": "Anonymize on rejection",
+              "description": "When true, scrub PII (name, email, phone, resumeUrl) on REJECT_APPLICANT. Pair with std-data-erasure.",
               "tier": "customization"
             },
-            "fields": {
-              "type": "[FieldSpec]",
-              "default": [
-                {
-                  "variant": "caption",
-                  "name": "name",
-                  "label": "Name"
-                },
-                {
-                  "label": "Email",
-                  "variant": "caption",
-                  "name": "email"
-                },
-                {
-                  "name": "jobId",
-                  "variant": "caption",
-                  "label": "Job"
-                },
-                {
-                  "name": "stage",
-                  "variant": "badge",
-                  "label": "Stage"
-                },
-                {
-                  "name": "appliedAt",
-                  "variant": "caption",
-                  "label": "Applied"
-                }
-              ],
-              "label": "Columns to show",
-              "description": "Each column maps to one field on the Applicant entity",
-              "tier": "customization",
-              "items": {
-                "type": "object",
-                "properties": {
-                  "label": {
-                    "name": "label",
-                    "type": "string",
-                    "required": false
-                  },
-                  "header": {
-                    "name": "header",
-                    "type": "string",
-                    "required": false
-                  },
-                  "variant": {
-                    "name": "variant",
-                    "type": "string",
-                    "required": false
-                  },
-                  "name": {
-                    "name": "name",
-                    "type": "string",
-                    "required": true
-                  },
-                  "icon": {
-                    "name": "icon",
-                    "type": "string",
-                    "required": false
-                  },
-                  "key": {
-                    "name": "key",
-                    "type": "string",
-                    "required": false
-                  },
-                  "format": {
-                    "name": "format",
-                    "type": "string",
-                    "required": false
-                  }
-                }
-              }
+            "equalOpportunityTrackingEnabled": {
+              "type": "boolean",
+              "default": false,
+              "label": "Equal opportunity tracking",
+              "description": "Capture demographic data separately for EEO reporting (sibling collection, not on Applicant entity).",
+              "tier": "advanced"
+            },
+            "backgroundCheckRequired": {
+              "type": "boolean",
+              "default": false,
+              "label": "Background check required",
+              "description": "Block ADVANCE_STAGE to 'hired' until a background check is on file.",
+              "tier": "customization"
+            },
+            "i9DocumentsRequired": {
+              "type": "boolean",
+              "default": false,
+              "label": "I-9 documents required",
+              "description": "Require I-9 supporting documents at the hired stage.",
+              "tier": "customization"
             }
           },
           "scope": "collection"

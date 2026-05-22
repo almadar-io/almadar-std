@@ -1,7 +1,7 @@
 {
   "name": "std-response-collector",
-  "version": "1.1.0",
-  "description": "std-response-collector — survey per-respondent answer accumulator. Lists responses in `browsing`; opens detail in `viewing_single` with Resubmit / Delete actions. Agents tune the list shape via `config.fields` + `config.itemActions`.",
+  "version": "1.2.0",
+  "description": "std-response-collector — survey per-respondent answer accumulator. Lists responses; detail offers Resubmit / Delete. Exposes Communication knobs (suppressionListEnabled, gdprConsentRequired, …) for the questionnaire.",
   "orbitals": [
     {
       "name": "ResponseCollectorOrbital",
@@ -237,22 +237,22 @@
                     "render-ui",
                     "main",
                     {
+                      "align": "center",
                       "className": "py-12",
-                      "type": "stack",
-                      "direction": "vertical",
                       "children": [
                         {
                           "type": "spinner"
                         },
                         {
-                          "variant": "caption",
                           "color": "muted",
+                          "content": "Loading responses…",
                           "type": "typography",
-                          "content": "Loading responses…"
+                          "variant": "caption"
                         }
                       ],
-                      "gap": "md",
-                      "align": "center"
+                      "type": "stack",
+                      "direction": "vertical",
+                      "gap": "md"
                     }
                   ]
                 ]
@@ -266,35 +266,35 @@
                     "render-ui",
                     "main",
                     {
-                      "type": "stack",
-                      "direction": "vertical",
                       "gap": "md",
+                      "direction": "vertical",
+                      "type": "stack",
                       "children": [
                         {
-                          "align": "center",
                           "type": "stack",
-                          "gap": "sm",
-                          "direction": "horizontal",
                           "children": [
                             {
-                              "type": "icon",
-                              "name": "clipboard-list"
+                              "name": "clipboard-list",
+                              "type": "icon"
                             },
                             {
-                              "type": "typography",
                               "content": "@config.title",
+                              "type": "typography",
                               "variant": "h3"
                             }
-                          ]
+                          ],
+                          "direction": "horizontal",
+                          "gap": "sm",
+                          "align": "center"
                         },
                         {
                           "cols": 4.0,
                           "children": [
                             {
-                              "icon": "clipboard-list",
+                              "label": "Total responses",
                               "value": "@payload.data.length",
                               "type": "stat-display",
-                              "label": "Total responses"
+                              "icon": "clipboard-list"
                             },
                             {
                               "type": "stat-display",
@@ -303,16 +303,16 @@
                               "icon": "check-circle"
                             },
                             {
-                              "type": "stat-display",
-                              "value": "312",
                               "label": "Respondents",
-                              "icon": "users"
+                              "icon": "users",
+                              "type": "stat-display",
+                              "value": "312"
                             },
                             {
-                              "value": "6",
-                              "type": "stat-display",
                               "icon": "file-text",
-                              "label": "Surveys"
+                              "type": "stat-display",
+                              "label": "Surveys",
+                              "value": "6"
                             }
                           ],
                           "type": "simple-grid"
@@ -321,11 +321,11 @@
                           "type": "divider"
                         },
                         {
+                          "entity": "@payload.data",
                           "gap": "sm",
+                          "type": "data-grid",
                           "cols": 1.0,
                           "itemActions": "@config.itemActions",
-                          "type": "data-grid",
-                          "entity": "@payload.data",
                           "fields": "@config.fields"
                         }
                       ]
@@ -342,9 +342,9 @@
                     "render-ui",
                     "main",
                     {
+                      "variant": "error",
                       "message": "@payload.error",
-                      "type": "alert",
-                      "variant": "error"
+                      "type": "alert"
                     }
                   ]
                 ]
@@ -388,33 +388,36 @@
                     "render-ui",
                     "main",
                     {
+                      "type": "stack",
+                      "direction": "vertical",
+                      "gap": "md",
                       "children": [
                         {
+                          "type": "stack",
                           "align": "center",
                           "children": [
                             {
-                              "type": "button",
-                              "variant": "ghost",
+                              "label": "Back",
                               "action": "CLOSE_VIEW",
-                              "label": "Back"
+                              "type": "button",
+                              "variant": "ghost"
                             },
                             {
-                              "type": "icon",
-                              "name": "clipboard-list"
+                              "name": "clipboard-list",
+                              "type": "icon"
                             },
                             {
-                              "type": "typography",
+                              "content": "@entity.respondentId",
                               "variant": "h3",
-                              "content": "@entity.respondentId"
+                              "type": "typography"
                             },
                             {
+                              "variant": "success",
                               "label": "Submitted",
-                              "type": "badge",
-                              "variant": "success"
+                              "type": "badge"
                             }
                           ],
                           "gap": "sm",
-                          "type": "stack",
                           "direction": "horizontal"
                         },
                         {
@@ -423,57 +426,57 @@
                         {
                           "children": [
                             {
-                              "direction": "horizontal",
+                              "type": "stack",
                               "children": [
                                 {
-                                  "color": "muted",
+                                  "variant": "caption",
                                   "type": "typography",
                                   "content": "Survey",
-                                  "variant": "caption"
-                                },
-                                {
-                                  "variant": "body",
-                                  "content": "@entity.surveyId",
-                                  "type": "typography"
-                                }
-                              ],
-                              "gap": "md",
-                              "type": "stack"
-                            },
-                            {
-                              "type": "stack",
-                              "gap": "md",
-                              "children": [
-                                {
-                                  "type": "typography",
-                                  "color": "muted",
-                                  "variant": "caption",
-                                  "content": "Question"
-                                },
-                                {
-                                  "variant": "body",
-                                  "content": "@entity.questionId",
-                                  "type": "typography"
-                                }
-                              ],
-                              "direction": "horizontal"
-                            },
-                            {
-                              "children": [
-                                {
-                                  "type": "typography",
-                                  "content": "Answer",
-                                  "variant": "caption",
                                   "color": "muted"
                                 },
                                 {
-                                  "content": "@entity.answerJson",
                                   "type": "typography",
+                                  "content": "@entity.surveyId",
                                   "variant": "body"
                                 }
                               ],
-                              "gap": "md",
+                              "direction": "horizontal",
+                              "gap": "md"
+                            },
+                            {
                               "type": "stack",
+                              "gap": "md",
+                              "direction": "horizontal",
+                              "children": [
+                                {
+                                  "variant": "caption",
+                                  "content": "Question",
+                                  "color": "muted",
+                                  "type": "typography"
+                                },
+                                {
+                                  "variant": "body",
+                                  "type": "typography",
+                                  "content": "@entity.questionId"
+                                }
+                              ]
+                            },
+                            {
+                              "type": "stack",
+                              "children": [
+                                {
+                                  "variant": "caption",
+                                  "content": "Answer",
+                                  "color": "muted",
+                                  "type": "typography"
+                                },
+                                {
+                                  "type": "typography",
+                                  "variant": "body",
+                                  "content": "@entity.answerJson"
+                                }
+                              ],
+                              "gap": "md",
                               "direction": "horizontal"
                             }
                           ],
@@ -485,53 +488,50 @@
                           "type": "divider"
                         },
                         {
+                          "cols": 2.0,
                           "children": [
                             {
-                              "icon": "user",
-                              "type": "stat-display",
+                              "value": "@entity.respondentId",
                               "label": "Respondent",
-                              "value": "@entity.respondentId"
+                              "type": "stat-display",
+                              "icon": "user"
                             },
                             {
-                              "label": "Submitted",
-                              "icon": "calendar",
                               "type": "stat-display",
+                              "icon": "calendar",
+                              "label": "Submitted",
                               "value": "@entity.submittedAt"
                             }
                           ],
-                          "type": "simple-grid",
-                          "cols": 2.0
+                          "type": "simple-grid"
                         },
                         {
-                          "type": "stack",
-                          "gap": "sm",
                           "align": "center",
                           "direction": "horizontal",
+                          "type": "stack",
                           "children": [
                             {
-                              "label": "Resubmit",
                               "type": "button",
-                              "variant": "primary",
+                              "label": "Resubmit",
                               "action": "RESUBMIT",
+                              "variant": "primary",
                               "actionPayload": {
                                 "id": "@entity.id"
                               }
                             },
                             {
-                              "variant": "danger",
+                              "type": "button",
+                              "label": "Delete",
+                              "action": "DELETE_RESPONSE",
                               "actionPayload": {
                                 "id": "@entity.id"
                               },
-                              "type": "button",
-                              "action": "DELETE_RESPONSE",
-                              "label": "Delete"
+                              "variant": "danger"
                             }
-                          ]
+                          ],
+                          "gap": "sm"
                         }
-                      ],
-                      "type": "stack",
-                      "direction": "vertical",
-                      "gap": "md"
+                      ]
                     }
                   ]
                 ]
@@ -560,22 +560,22 @@
                     "render-ui",
                     "main",
                     {
+                      "type": "stack",
+                      "align": "center",
                       "children": [
                         {
                           "type": "spinner"
                         },
                         {
-                          "color": "muted",
-                          "content": "Resubmitting response…",
+                          "type": "typography",
                           "variant": "caption",
-                          "type": "typography"
+                          "color": "muted",
+                          "content": "Resubmitting response…"
                         }
                       ],
-                      "className": "py-12",
-                      "align": "center",
-                      "type": "stack",
+                      "gap": "md",
                       "direction": "vertical",
-                      "gap": "md"
+                      "className": "py-12"
                     }
                   ]
                 ]
@@ -595,8 +595,8 @@
                     "Response",
                     {
                       "emit": {
-                        "failure": "ResponseLoadFailed",
-                        "success": "ResponseLoaded"
+                        "success": "ResponseLoaded",
+                        "failure": "ResponseLoadFailed"
                       }
                     }
                   ],
@@ -604,10 +604,8 @@
                     "render-ui",
                     "main",
                     {
-                      "type": "stack",
                       "direction": "vertical",
                       "align": "center",
-                      "gap": "md",
                       "children": [
                         {
                           "type": "spinner"
@@ -619,6 +617,8 @@
                           "color": "muted"
                         }
                       ],
+                      "gap": "md",
+                      "type": "stack",
                       "className": "py-12"
                     }
                   ]
@@ -634,8 +634,8 @@
                     "Response",
                     {
                       "emit": {
-                        "success": "ResponseLoaded",
-                        "failure": "ResponseLoadFailed"
+                        "failure": "ResponseLoadFailed",
+                        "success": "ResponseLoaded"
                       }
                     }
                   ],
@@ -643,22 +643,22 @@
                     "render-ui",
                     "main",
                     {
-                      "gap": "md",
-                      "type": "stack",
-                      "direction": "vertical",
                       "children": [
                         {
                           "type": "spinner"
                         },
                         {
-                          "variant": "caption",
-                          "color": "muted",
                           "type": "typography",
-                          "content": "Loading responses…"
+                          "content": "Loading responses…",
+                          "variant": "caption",
+                          "color": "muted"
                         }
                       ],
-                      "align": "center",
-                      "className": "py-12"
+                      "className": "py-12",
+                      "direction": "vertical",
+                      "type": "stack",
+                      "gap": "md",
+                      "align": "center"
                     }
                   ]
                 ]
@@ -678,8 +678,8 @@
                     "Response",
                     {
                       "emit": {
-                        "success": "ResponseLoaded",
-                        "failure": "ResponseLoadFailed"
+                        "failure": "ResponseLoadFailed",
+                        "success": "ResponseLoaded"
                       }
                     }
                   ],
@@ -687,22 +687,22 @@
                     "render-ui",
                     "main",
                     {
-                      "direction": "vertical",
-                      "className": "py-12",
-                      "type": "stack",
                       "align": "center",
+                      "type": "stack",
+                      "className": "py-12",
+                      "direction": "vertical",
+                      "gap": "md",
                       "children": [
                         {
                           "type": "spinner"
                         },
                         {
+                          "color": "muted",
                           "variant": "caption",
-                          "content": "Resubmitting response…",
                           "type": "typography",
-                          "color": "muted"
+                          "content": "Resubmitting response…"
                         }
-                      ],
-                      "gap": "md"
+                      ]
                     }
                   ]
                 ]
@@ -722,8 +722,8 @@
                     "Response",
                     {
                       "emit": {
-                        "failure": "ResponseLoadFailed",
-                        "success": "ResponseLoaded"
+                        "success": "ResponseLoaded",
+                        "failure": "ResponseLoadFailed"
                       }
                     }
                   ],
@@ -731,22 +731,22 @@
                     "render-ui",
                     "main",
                     {
-                      "gap": "md",
-                      "type": "stack",
-                      "direction": "vertical",
-                      "align": "center",
                       "className": "py-12",
                       "children": [
                         {
                           "type": "spinner"
                         },
                         {
-                          "variant": "caption",
-                          "color": "muted",
                           "content": "Deleting response…",
-                          "type": "typography"
+                          "color": "muted",
+                          "type": "typography",
+                          "variant": "caption"
                         }
-                      ]
+                      ],
+                      "gap": "md",
+                      "direction": "vertical",
+                      "align": "center",
+                      "type": "stack"
                     }
                   ]
                 ]
@@ -761,8 +761,8 @@
                     "Response",
                     {
                       "emit": {
-                        "failure": "ResponseLoadFailed",
-                        "success": "ResponseLoaded"
+                        "success": "ResponseLoaded",
+                        "failure": "ResponseLoadFailed"
                       }
                     }
                   ],
@@ -785,12 +785,12 @@
                 {
                   "variant": "primary",
                   "label": "Open",
-                  "icon": "arrow-right",
-                  "event": "OPEN_RESPONSE"
+                  "event": "OPEN_RESPONSE",
+                  "icon": "arrow-right"
                 },
                 {
-                  "event": "DELETE_RESPONSE",
                   "label": "Delete",
+                  "event": "DELETE_RESPONSE",
                   "variant": "danger"
                 }
               ],
@@ -800,8 +800,13 @@
               "items": {
                 "type": "object",
                 "properties": {
-                  "variant": {
-                    "name": "variant",
+                  "event": {
+                    "name": "event",
+                    "type": "string",
+                    "required": true
+                  },
+                  "icon": {
+                    "name": "icon",
                     "type": "string",
                     "required": false
                   },
@@ -810,13 +815,8 @@
                     "type": "string",
                     "required": true
                   },
-                  "event": {
-                    "name": "event",
-                    "type": "string",
-                    "required": true
-                  },
-                  "icon": {
-                    "name": "icon",
+                  "variant": {
+                    "name": "variant",
                     "type": "string",
                     "required": false
                   }
@@ -830,13 +830,62 @@
               "description": "Heading shown above the survey response list",
               "tier": "customization"
             },
+            "trackClicks": {
+              "type": "boolean",
+              "default": false,
+              "label": "Track clicks",
+              "description": "Wrap survey links for click attribution on reminder mailings.",
+              "tier": "advanced"
+            },
+            "includeUnsubscribeLink": {
+              "type": "boolean",
+              "default": true,
+              "label": "Include unsubscribe link",
+              "description": "Append a CAN-SPAM/GDPR-compliant unsubscribe link to every follow-up.",
+              "tier": "essential"
+            },
+            "suppressionListEnabled": {
+              "type": "boolean",
+              "default": true,
+              "label": "Honor suppression list",
+              "description": "Skip respondents on the global suppression / bounce list when dispatching follow-ups.",
+              "tier": "customization"
+            },
+            "physicalAddressFooter": {
+              "type": "string",
+              "default": "",
+              "label": "Physical address footer",
+              "description": "CAN-SPAM-required postal address appended to every follow-up.",
+              "tier": "essential"
+            },
+            "trackOpens": {
+              "type": "boolean",
+              "default": false,
+              "label": "Track opens",
+              "description": "Embed a tracking pixel on outbound survey reminders.",
+              "tier": "advanced"
+            },
+            "sendsPerHour": {
+              "type": "number",
+              "default": 500.0,
+              "label": "Sends per hour",
+              "description": "Cap on follow-up dispatch volume per hour. v1.2 declarative.",
+              "tier": "customization"
+            },
+            "respectQuietHours": {
+              "type": "boolean",
+              "default": true,
+              "label": "Respect quiet hours",
+              "description": "Suppress follow-up sends during recipient-local quiet hours.",
+              "tier": "customization"
+            },
             "fields": {
               "type": "[FieldSpec]",
               "default": [
                 {
+                  "label": "Question",
                   "name": "questionId",
-                  "variant": "caption",
-                  "label": "Question"
+                  "variant": "caption"
                 },
                 {
                   "label": "Respondent",
@@ -844,19 +893,19 @@
                   "variant": "caption"
                 },
                 {
-                  "variant": "caption",
                   "name": "surveyId",
+                  "variant": "caption",
                   "label": "Survey"
                 },
                 {
+                  "variant": "caption",
                   "label": "Answer",
-                  "name": "answerJson",
-                  "variant": "caption"
+                  "name": "answerJson"
                 },
                 {
                   "variant": "caption",
-                  "label": "Submitted",
-                  "name": "submittedAt"
+                  "name": "submittedAt",
+                  "label": "Submitted"
                 }
               ],
               "label": "Columns to show",
@@ -880,28 +929,42 @@
                     "type": "string",
                     "required": false
                   },
-                  "name": {
-                    "name": "name",
-                    "type": "string",
-                    "required": true
-                  },
-                  "label": {
-                    "name": "label",
-                    "type": "string",
-                    "required": false
-                  },
                   "variant": {
                     "name": "variant",
                     "type": "string",
                     "required": false
                   },
+                  "name": {
+                    "name": "name",
+                    "type": "string",
+                    "required": true
+                  },
                   "icon": {
                     "name": "icon",
+                    "type": "string",
+                    "required": false
+                  },
+                  "label": {
+                    "name": "label",
                     "type": "string",
                     "required": false
                   }
                 }
               }
+            },
+            "gdprConsentRequired": {
+              "type": "boolean",
+              "default": true,
+              "label": "GDPR consent required",
+              "description": "Require survey consent before recording or following up with EU/UK respondents.",
+              "tier": "customization"
+            },
+            "frequencyCapPerWeek": {
+              "type": "number",
+              "default": 2.0,
+              "label": "Frequency cap (per week)",
+              "description": "Max survey-related touches per respondent per 7-day window.",
+              "tier": "customization"
             }
           },
           "scope": "collection"

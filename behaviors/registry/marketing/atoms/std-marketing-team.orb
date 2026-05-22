@@ -1,0 +1,192 @@
+{
+  "name": "std-marketing-team",
+  "version": "1.0.0",
+  "description": "Team grid atom for marketing pages. Renders a responsive grid of team member cards with avatars, names, roles, and bios. Pick for about pages and company culture sections.",
+  "orbitals": [
+    {
+      "name": "TeamItemOrbital",
+      "entity": {
+        "name": "TeamItem",
+        "persistence": "runtime",
+        "fields": [
+          {
+            "name": "id",
+            "type": "string",
+            "required": true
+          },
+          {
+            "name": "members",
+            "type": "array",
+            "default": [],
+            "items": {
+              "type": "object",
+              "properties": {
+                "id": {
+                  "name": "id",
+                  "type": "string",
+                  "required": true
+                },
+                "bio": {
+                  "name": "bio",
+                  "type": "string",
+                  "required": true
+                },
+                "name": {
+                  "name": "name",
+                  "type": "string",
+                  "required": true
+                },
+                "role": {
+                  "name": "role",
+                  "type": "string",
+                  "required": true
+                },
+                "avatar": {
+                  "name": "avatar",
+                  "type": "string",
+                  "required": false
+                },
+                "nameAr": {
+                  "name": "nameAr",
+                  "type": "string",
+                  "required": false
+                }
+              }
+            }
+          }
+        ]
+      },
+      "traits": [
+        {
+          "name": "TeamItemTeam",
+          "category": "interaction",
+          "linkedEntity": "TeamItem",
+          "stateMachine": {
+            "states": [
+              {
+                "name": "idle",
+                "isInitial": true
+              }
+            ],
+            "events": [
+              {
+                "key": "INIT",
+                "name": "Initialize"
+              }
+            ],
+            "transitions": [
+              {
+                "from": "idle",
+                "to": "idle",
+                "event": "INIT",
+                "effects": [
+                  [
+                    "set",
+                    "@entity.members",
+                    "@config.members"
+                  ],
+                  [
+                    "render-ui",
+                    "main",
+                    {
+                      "type": "team-organism",
+                      "entity": "@entity.members"
+                    }
+                  ]
+                ]
+              }
+            ]
+          },
+          "config": {
+            "members": {
+              "type": "[TeamMemberCard]",
+              "default": [
+                {
+                  "id": "1",
+                  "name": "Jane Doe",
+                  "nameAr": "",
+                  "bio": "Former VP Engineering at BigTech. Obsessed with developer experience.",
+                  "avatar": "",
+                  "role": "CEO"
+                },
+                {
+                  "role": "CTO",
+                  "id": "2",
+                  "nameAr": "",
+                  "avatar": "",
+                  "name": "John Smith",
+                  "bio": "Built distributed systems at scale for a decade."
+                },
+                {
+                  "id": "3",
+                  "name": "Alice Chen",
+                  "bio": "Believes great design is invisible.",
+                  "nameAr": "",
+                  "avatar": "",
+                  "role": "Head of Design"
+                }
+              ],
+              "label": "Team Members",
+              "description": "Array of team member cards",
+              "tier": "essential",
+              "items": {
+                "type": "object",
+                "properties": {
+                  "name": {
+                    "name": "name",
+                    "type": "string",
+                    "required": true
+                  },
+                  "nameAr": {
+                    "name": "nameAr",
+                    "type": "string",
+                    "required": false
+                  },
+                  "avatar": {
+                    "name": "avatar",
+                    "type": "string",
+                    "required": false
+                  },
+                  "id": {
+                    "name": "id",
+                    "type": "string",
+                    "required": true
+                  },
+                  "role": {
+                    "name": "role",
+                    "type": "string",
+                    "required": true
+                  },
+                  "bio": {
+                    "name": "bio",
+                    "type": "string",
+                    "required": true
+                  }
+                }
+              }
+            },
+            "columns": {
+              "type": "number",
+              "default": 3.0,
+              "label": "Columns",
+              "description": "Number of grid columns",
+              "tier": "customization"
+            }
+          },
+          "scope": "instance"
+        }
+      ],
+      "pages": [
+        {
+          "name": "TeamItemTeamPage",
+          "path": "/team",
+          "traits": [
+            {
+              "ref": "TeamItemTeam"
+            }
+          ]
+        }
+      ]
+    }
+  ]
+}

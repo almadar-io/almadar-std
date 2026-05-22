@@ -1,5 +1,5 @@
-app std-invoice "1.1.0"
-"std-invoice — invoice generation atom. Owns an Invoice entity (line-items + tax + total + refund tiers via config). Browses invoices in a data-grid with Send / Mark-Paid / Void / Refund actions; viewing state renders the canonical invoice pattern detail. Agents tune the list shape via `config.fields` + `config.itemActions`."
+app std-invoice "1.2.0"
+"std-invoice — invoice generation atom. Owns an Invoice entity (line-items + tax + total + refund tiers via config). Browses invoices in a data-grid with Send / Mark-Paid / Void / Refund actions; viewing state renders the canonical invoice pattern detail. Listens for SET_STATUS so sibling std-lifecycle can drive automated transitions (e.g. sent → overdue after 30d). Exposes Financial-pattern knobs (currency, taxStrategy, gracePeriodDays, lateFeePolicy, …) for the questionnaire."
 
 type FieldSpec = { name : string!, label : string, variant : string, icon : string, format : string, key : string, header : string }
 type ItemAction = { label : string!, event : string!, variant : string, icon : string }
@@ -57,6 +57,38 @@ orbital InvoiceOrbital {
         @label "Row actions"
         @description "Buttons users can click on each invoice row"
         @tier "customization"
+      currency        : string   = "USD"
+        @label "Default currency"
+        @description "ISO 4217 currency code (USD, EUR, GBP, …) for new invoices."
+        @tier "essential"
+      taxStrategy     : "inclusive" | "exclusive" | "none" = "exclusive"
+        @label "Tax strategy"
+        @description "inclusive = tax baked into the line item totals; exclusive = tax added on top; none = no tax."
+        @tier "customization"
+      roundingMode    : "bankers" | "half-up" | "down" = "half-up"
+        @label "Rounding mode"
+        @description "Sub-cent rounding behavior for line items and totals."
+        @tier "advanced"
+      gracePeriodDays : number   = 30
+        @label "Grace period (days)"
+        @description "Days after dueAt before an invoice is treated as overdue. Wire via sibling std-lifecycle rule { fromStatus: 'sent', toStatus: 'overdue', condition: { kind: 'ageDays', value: gracePeriodDays, dateField: 'dueAt' } }."
+        @tier "customization"
+      lateFeePolicy   : "none" | "flat" | "percent" = "none"
+        @label "Late fee policy"
+        @description "How late fees compute when overdue: none = no fee; flat = lateFeeAmount as flat cash; percent = lateFeeAmount as % of total. v1.2 declarative; wiring requires a late-fee compute step (gap)."
+        @tier "customization"
+      lateFeeAmount   : number   = 0
+        @label "Late fee amount"
+        @description "Flat cash amount or percentage (per lateFeePolicy)."
+        @tier "customization"
+      complianceJurisdiction : string = ""
+        @label "Compliance jurisdiction"
+        @description "Drives tax + retention rules per locale: 'US-CA', 'EU-DE', 'UK', etc. v1.2 declarative."
+        @tier "advanced"
+      retentionYears  : number   = 7
+        @label "Retention (years)"
+        @description "Years to keep invoice records for compliance. Default 7 matches common regimes. Wire via sibling std-lifecycle delete rule when available."
+        @tier "advanced"
     }
     initial: loading
     state loading {
@@ -96,6 +128,11 @@ orbital InvoiceOrbital {
         (fetch InvoiceRecord { emit: { success: "InvoiceLoaded", failure: "InvoiceLoadFailed" } })
       InvoiceRefundFailed -> browsing
         (render-ui main { type: "alert", variant: "error", message: "@payload.error" })
+      SET_STATUS -> loading
+        (set @entity.id @payload.entityId)
+        (set @entity.status @payload.newStatus)
+        (persist update InvoiceRecord @entity { emit: { success: "InvoiceUpdated", failure: "InvoiceUpdateFailed" } })
+        (render-ui main { type: "stack", direction: "vertical", gap: "md", align: "center", className: "py-12", children: [{ type: "spinner" }, { type: "typography", variant: "caption", color: "muted", content: "Updating invoice status…" }] })
     }
     state viewing_single {
       CLOSE_VIEW -> loading
@@ -149,6 +186,7 @@ orbital InvoiceOrbital {
       MARK_PAID    { invoiceId : string! }
       VOID         { invoiceId : string! }
       REFUND       { invoiceId : string!, amount : number! }
+      SET_STATUS   { entityId : string!, newStatus : string! }
       InvoiceLoaded       { data : [InvoiceRecord] }
       InvoiceLoadFailed   { error : string, code : string }
       InvoiceUpdated      { row : InvoiceRecord }

@@ -1,7 +1,7 @@
 {
   "name": "std-audit-capture",
-  "version": "1.0.0",
-  "description": "std-audit-capture — event-interceptor audit log. Listens for the generic `EntityMutated` sentinel (rename via traitOverrides.events to the real mutation event, e.g. ContactSaved) and persists an AuditEntry row capturing actor, action, entity type/id, and timestamp. Composable via `extraTraits` to interpose audit logging behind any mutating trait without touching its state machine.",
+  "version": "1.1.0",
+  "description": "std-audit-capture — event-interceptor audit log. Listens for the generic `EntityMutated` sentinel (rename via traitOverrides.events to the real mutation event, e.g. ContactSaved) and persists an AuditEntry row capturing actor, action, entity type/id, before/after snapshots, and timestamp. `captureEventTypes` filters on @payload.data.kind (empty = capture all). Compose with `std-lifecycle` to apply retention. Composable via `extraTraits` to interpose audit logging behind any mutating trait.",
   "orbitals": [
     {
       "name": "AuditCaptureOrbital",
@@ -34,6 +34,16 @@
             "name": "entityId",
             "type": "string",
             "default": ""
+          },
+          {
+            "name": "before",
+            "type": "object",
+            "default": {}
+          },
+          {
+            "name": "after",
+            "type": "object",
+            "default": {}
           },
           {
             "name": "recordedAt",
@@ -131,70 +141,146 @@
                 "event": "EntityMutated",
                 "effects": [
                   [
-                    "set",
-                    "@entity.actor",
-                    "@user.id"
-                  ],
-                  [
-                    "set",
-                    "@entity.action",
-                    "EntityMutated"
-                  ],
-                  [
-                    "set",
-                    "@entity.entityType",
-                    "@config.captureEntity"
-                  ],
-                  [
-                    "set",
-                    "@entity.entityId",
+                    "when",
                     [
-                      "object/get",
-                      "@payload.data",
-                      "id"
+                      "or",
+                      [
+                        "=",
+                        [
+                          "array/len",
+                          "@config.captureEventTypes"
+                        ],
+                        0.0
+                      ],
+                      [
+                        "array/includes",
+                        "@config.captureEventTypes",
+                        [
+                          "object/get",
+                          "@payload.data",
+                          "kind",
+                          ""
+                        ]
+                      ]
+                    ],
+                    [
+                      "do",
+                      [
+                        "set",
+                        "@entity.actor",
+                        "@user.id"
+                      ],
+                      [
+                        "set",
+                        "@entity.action",
+                        [
+                          "object/get",
+                          "@payload.data",
+                          "kind",
+                          "EntityMutated"
+                        ]
+                      ],
+                      [
+                        "set",
+                        "@entity.entityType",
+                        "@config.captureEntity"
+                      ],
+                      [
+                        "set",
+                        "@entity.entityId",
+                        [
+                          "object/get",
+                          "@payload.data",
+                          "id",
+                          ""
+                        ]
+                      ],
+                      [
+                        "set",
+                        "@entity.before",
+                        [
+                          "if",
+                          "@config.captureBeforeAfter",
+                          [
+                            "object/get",
+                            "@payload.data",
+                            "before",
+                            {}
+                          ],
+                          {}
+                        ]
+                      ],
+                      [
+                        "set",
+                        "@entity.after",
+                        [
+                          "if",
+                          "@config.captureBeforeAfter",
+                          [
+                            "object/get",
+                            "@payload.data",
+                            "after",
+                            {}
+                          ],
+                          {}
+                        ]
+                      ],
+                      [
+                        "set",
+                        "@entity.recordedAt",
+                        0.0
+                      ],
+                      [
+                        "persist",
+                        "create",
+                        "AuditEntry",
+                        {
+                          "before": "@entity.before",
+                          "entityId": "@entity.entityId",
+                          "actor": "@user.id",
+                          "entityType": "@config.captureEntity",
+                          "after": "@entity.after",
+                          "action": "@entity.action",
+                          "recordedAt": 0.0
+                        }
+                      ],
+                      [
+                        "emit",
+                        "AuditRecorded",
+                        {
+                          "actor": "@user.id",
+                          "entityType": "@config.captureEntity",
+                          "entityId": "@entity.entityId",
+                          "action": "@entity.action",
+                          "recordedAt": 0.0
+                        }
+                      ]
                     ]
-                  ],
-                  [
-                    "set",
-                    "@entity.recordedAt",
-                    0.0
-                  ],
-                  [
-                    "persist",
-                    "create",
-                    "AuditEntry",
-                    {
-                      "entityType": "@config.captureEntity",
-                      "action": "EntityMutated",
-                      "actor": "@user.id",
-                      "recordedAt": 0.0,
-                      "entityId": "@payload.data.id"
-                    }
-                  ],
-                  [
-                    "emit",
-                    "AuditRecorded",
-                    {
-                      "entityId": "@payload.data.id",
-                      "entityType": "@config.captureEntity",
-                      "recordedAt": 0.0,
-                      "actor": "@user.id",
-                      "action": "EntityMutated"
-                    }
                   ]
                 ]
               }
             ]
           },
           "config": {
+            "captureBeforeAfter": {
+              "type": "boolean",
+              "default": false,
+              "label": "Capture before/after snapshots",
+              "description": "When true, persist `before` and `after` object snapshots from @payload.data on each audit row. Default off to keep audit rows small.",
+              "tier": "advanced"
+            },
+            "captureEntity": {
+              "type": "string",
+              "default": "",
+              "label": "Entity to audit",
+              "description": "Type name of the entity whose mutations get logged",
+              "tier": "essential"
+            },
             "captureEventTypes": {
               "type": "[string]",
-              "default": [
-                "Saved",
-                "Deleted"
-              ],
-              "label": "Event suffixes",
-              "description": "Mutation suffixes (Saved, Deleted, etc.) that trigger an audit row",
+              "default": [],
+              "label": "Event-kind filter",
+              "description": "When set, only @payload.data.kind values in this list are audited. Empty list = capture every event. Requires the upstream event to include a `kind` field on its payload.",
               "tier": "advanced",
               "items": {
                 "type": "string"
@@ -204,18 +290,18 @@
               "type": "[string]",
               "default": [],
               "label": "Skip fields",
-              "description": "Entity fields to omit from the audit payload",
+              "description": "Entity fields to omit from the audit payload (declarative; before/after still capture all fields in v1.1 — field exclusion lands when captureBeforeAfter wiring filters per-field).",
               "tier": "advanced",
               "items": {
                 "type": "string"
               }
             },
-            "captureEntity": {
-              "type": "string",
-              "default": "",
-              "label": "Entity to audit",
-              "description": "Type name of the entity whose mutations get logged",
-              "tier": "essential"
+            "retentionDays": {
+              "type": "number",
+              "default": 2555.0,
+              "label": "Retention (days)",
+              "description": "Days to keep audit rows. Default 2555 (7 years) for typical compliance regimes. WIRING DEFERRED: retention enforcement requires composing `std-lifecycle` against AuditEntry with a delete rule (gap — docs/Almadar_Std_Factories.md).",
+              "tier": "advanced"
             }
           },
           "scope": "instance"

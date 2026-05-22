@@ -1,0 +1,78 @@
+app std-landing-page "1.0.0"
+"Landing page molecule for marketing sites. Composes hero, features, stats, steps, showcase, CTA, and footer sections as a vertical stack of individual marketing patterns. Pick for product launches, SaaS homepages, and campaign microsites."
+;; Assembles individual marketing patterns into a full landing page scroll experience.
+;; Each section is a distinct render-ui effect so patterns handle their own responsive design.
+
+orbital LandingPageItemOrbital {
+  entity LandingPageItem [runtime] {
+    id : string
+  }
+
+  type FeatureCard = { icon : string, title : string!, description : string!, href : string, linkLabel : string }
+  type StatCard = { value : string!, label : string! }
+  type StepCard = { number : number, title : string!, description : string!, icon : string }
+  type ShowcaseCard = { title : string!, description : string, image : { src : string!, alt : string }, href : string, badge : string, accentColor : string }
+  type ActionCard = { label : string!, href : string! }
+  type FooterLink = { label : string!, href : string! }
+  type FooterColumn = { title : string!, items : [FooterLink] }
+
+  trait LandingPageItemLayout -> LandingPageItem [interaction, instance] {
+    config {
+      heroTag : string = ""
+      heroTitle : string = "Build faster with Almadar"
+      heroTitleAccent : string = ""
+      heroSubtitle : string = "From idea to production in minutes, not months."
+      heroPrimaryActionLabel : string = "Get Started"
+      heroPrimaryActionHref : string = "/signup"
+      heroSecondaryActionLabel : string = ""
+      heroSecondaryActionHref : string = ""
+      heroBackground : string = "gradient"
+      heroAlign : string = "center"
+      features : [FeatureCard] = [
+        { icon: "zap", title: "Lightning Fast", description: "Build and deploy in minutes.", href: "", linkLabel: "Learn more" },
+        { icon: "shield", title: "Enterprise Secure", description: "SOC-2 compliant with end-to-end encryption.", href: "", linkLabel: "Learn more" },
+        { icon: "puzzle", title: "Infinitely Extensible", description: "Plug in any service, any data source, any UI pattern.", href: "", linkLabel: "Learn more" }
+      ]
+      stats : [StatCard] = [
+        { value: "10K+", label: "Developers" },
+        { value: "99.9%", label: "Uptime" },
+        { value: "50M+", label: "Requests served" },
+        { value: "4.9", label: "Average rating" }
+      ]
+      steps : [StepCard] = [
+        { number: 1, title: "Design", description: "Describe your app in natural language.", icon: "pen-tool" },
+        { number: 2, title: "Build", description: "Almadar generates the full stack automatically.", icon: "hammer" },
+        { number: 3, title: "Ship", description: "Deploy to production with one click.", icon: "rocket" }
+      ]
+      showcase : [ShowcaseCard] = [
+        { title: "Dashboard", description: "Real-time analytics at a glance.", image: { src: "", alt: "Dashboard" }, href: "", badge: "New", accentColor: "" },
+        { title: "API", description: "GraphQL and REST in one click.", image: { src: "", alt: "API" }, href: "", badge: "", accentColor: "" },
+        { title: "Mobile", description: "Native apps without native code.", image: { src: "", alt: "Mobile" }, href: "", badge: "Beta", accentColor: "" }
+      ]
+      ctaTitle : string = "Ready to get started?"
+      ctaSubtitle : string = "Join thousands of teams shipping faster."
+      ctaPrimaryAction : ActionCard = { label: "Get Started", href: "/signup" }
+      ctaSecondaryAction : ActionCard = { label: "", href: "" }
+      footerColumns : [FooterColumn] = [
+        { title: "Product", items: [{ label: "Features", href: "#" }, { label: "Pricing", href: "#" }, { label: "Changelog", href: "#" }] },
+        { title: "Company", items: [{ label: "About", href: "#" }, { label: "Careers", href: "#" }, { label: "Blog", href: "#" }] },
+        { title: "Resources", items: [{ label: "Docs", href: "#" }, { label: "Community", href: "#" }, { label: "Support", href: "#" }] }
+      ]
+      footerCopyright : string = "© 2026 Almadar. All rights reserved."
+    }
+    initial: composing
+    state composing {
+      INIT -> composing
+        (render-ui main { type: "stack", direction: "vertical", gap: "none", children: [
+          { type: "hero-section", tag: "@config.heroTag", title: "@config.heroTitle", titleAccent: "@config.heroTitleAccent", subtitle: "@config.heroSubtitle", primaryAction: { label: "@config.heroPrimaryActionLabel", href: "@config.heroPrimaryActionHref" }, secondaryAction: { label: "@config.heroSecondaryActionLabel", href: "@config.heroSecondaryActionHref" }, background: "@config.heroBackground", align: "@config.heroAlign" },
+          { type: "feature-grid", items: "@config.features" },
+          { type: "stats-grid", stats: "@config.stats" },
+          { type: "step-flow-organism", entity: "@config.steps" },
+          { type: "showcase-organism", entity: "@config.showcase" },
+          { type: "cta-banner", title: "@config.ctaTitle", subtitle: "@config.ctaSubtitle", primaryAction: "@config.ctaPrimaryAction", secondaryAction: "@config.ctaSecondaryAction" },
+          { type: "marketing-footer", columns: "@config.footerColumns", copyright: "@config.footerCopyright" }
+        ]})
+    }
+  }
+  page "/" as LandingPage -> LandingPageItemLayout
+}

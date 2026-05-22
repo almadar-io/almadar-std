@@ -1,5 +1,5 @@
-app std-approval-request "1.3.0"
-"std-approval-request — approver inbox / triage queue. Browses many pending approval requests in a list (data-grid), opens one at a time for detail with Approve / Reject / Request Info / Withdraw. Pick this when the user is an approver working through a queue. For single-item N-step sequential approval (manager → finance → exec on ONE item), use std-approval-chain instead. Agents tune the list shape via `config.fields` + `config.itemActions`."
+app std-approval-request "1.4.0"
+"std-approval-request — approver inbox/triage queue (use std-approval-chain for sequential single-item approvals). Listens for SET_STATUS so std-lifecycle can auto-withdraw stale requests. Exposes Service/Operations knobs (responseTimeMinutes, resolutionSLAHours, …)."
 
 type FieldSpec = { name : string!, label : string, variant : string, icon : string, format : string, key : string, header : string }
 type ItemAction = { label : string!, event : string!, variant : string, icon : string }
@@ -52,6 +52,46 @@ orbital ApprovalRequestOrbital {
         @label "Row actions"
         @description "Buttons users can click on each request row"
         @tier "customization"
+      serviceAreaRadius : number = 0
+        @label "Service area radius (mi)"
+        @description "Geographic distance limit for assignable approvers. Zero = no restriction."
+        @tier "customization"
+      serviceZones : [string] = []
+        @label "Service zones"
+        @description "Named approver pools (e.g. by region, department, business unit)."
+        @tier "customization"
+      dispatchStrategy : "nearest" | "round-robin" | "manual" = "manual"
+        @label "Dispatch strategy"
+        @description "How approvers are assigned to incoming requests."
+        @tier "customization"
+      skillsRequired : [string] = []
+        @label "Required skills"
+        @description "Capability tags an approver must hold (e.g. 'finance', 'legal', 'security')."
+        @tier "customization"
+      responseTimeMinutes : number = 240
+        @label "Response time SLA (min)"
+        @description "Target minutes from request submitted to first approver acknowledgement."
+        @tier "essential"
+      resolutionSLAHours : number = 48
+        @label "Resolution SLA (hours)"
+        @description "Target hours from submitted to decided. Compose std-lifecycle to auto-escalate."
+        @tier "essential"
+      escalationThresholdHours : number = 72
+        @label "Escalation threshold (hours)"
+        @description "Hours after which a pending request auto-escalates to backup approvers."
+        @tier "customization"
+      customerVisibleStatuses : [string] = ["submitted", "approved", "rejected"]
+        @label "Customer-visible statuses"
+        @description "Subset of statuses the requester sees in their tracking view."
+        @tier "customization"
+      requirePhotoOnComplete : boolean = false
+        @label "Require photo on complete"
+        @description "Block APPROVE unless supporting evidence is attached."
+        @tier "customization"
+      requireSignatureOnComplete : boolean = false
+        @label "Require approver signature on complete"
+        @description "Block APPROVE unless approver signature is captured (compose std-signature-capture)."
+        @tier "customization"
     }
     initial: loading
     state loading {
@@ -81,6 +121,11 @@ orbital ApprovalRequestOrbital {
         (set @entity.id @payload.id)
         (fetch ApprovalRequest { emit: { success: "ApprovalRequestLoaded", failure: "ApprovalRequestLoadFailed" } })
         (render-ui main { type: "stack", direction: "vertical", gap: "md", align: "center", className: "py-12", children: [{ type: "spinner" }, { type: "typography", variant: "caption", color: "muted", content: "Withdrawing request…" }] })
+      SET_STATUS -> loading
+        (set @entity.id @payload.entityId)
+        (set @entity.status @payload.newStatus)
+        (persist update ApprovalRequest @entity { emit: { success: "ApprovalRequestLoaded", failure: "ApprovalRequestLoadFailed" } })
+        (render-ui main { type: "stack", direction: "vertical", gap: "md", align: "center", className: "py-12", children: [{ type: "spinner" }, { type: "typography", variant: "caption", color: "muted", content: "Updating approval status…" }] })
     }
     state viewing_single {
       CLOSE_REQUEST -> loading
@@ -146,6 +191,7 @@ orbital ApprovalRequestOrbital {
       EDIT_COMMENT     { comment : string }
       SUBMIT_REJECTION { id : string!, comment : string }
       CANCEL_REJECTION { }
+      SET_STATUS       { entityId : string!, newStatus : string! }
       ApprovalRequestLoaded      { data : [ApprovalRequest], totalCount : number }
       ApprovalRequestLoadFailed  { message : string }
     }

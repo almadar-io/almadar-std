@@ -1,5 +1,5 @@
-app std-route-optimize "1.1.0"
-"std-route-optimize — multi-stop route ordering for technician dispatch. Lists routes in `browsing`; opens detail in `viewing_single` with Optimize / Reset actions. Agents tune the list shape via `config.fields` + `config.itemActions`."
+app std-route-optimize "1.2.0"
+"std-route-optimize — multi-stop route ordering for technician dispatch. Lists routes; detail offers Optimize / Reset. Exposes Inventory/Logistics knobs (defaultWarehouse, multiLocationEnabled, hazmatEnabled, …) for the questionnaire."
 
 type FieldSpec = { name : string!, label : string, variant : string, icon : string, format : string, key : string, header : string }
 type ItemAction = { label : string!, event : string!, variant : string, icon : string }
@@ -41,6 +41,34 @@ orbital RouteOptimizeOrbital {
         @label "Row actions"
         @description "Buttons users can click on each route row"
         @tier "customization"
+      defaultWarehouse        : string  = ""
+        @label "Default depot / warehouse"
+        @description "Origin depot routes start from by default."
+        @tier "customization"
+      multiLocationEnabled    : boolean = false
+        @label "Multi-location"
+        @description "Allow routes to span multiple depots/warehouses."
+        @tier "customization"
+      serialTrackingEnabled   : boolean = false
+        @label "Serial tracking"
+        @description "Honor serial-tracked items on route stops. v1.2 declarative."
+        @tier "customization"
+      lotTrackingEnabled      : boolean = false
+        @label "Lot tracking"
+        @description "Honor lot/batch tracking when ordering pickups/drops."
+        @tier "customization"
+      expiryTrackingEnabled   : boolean = false
+        @label "Expiry tracking"
+        @description "Prioritize near-expiry items in route ordering."
+        @tier "customization"
+      hazmatEnabled           : boolean = false
+        @label "Hazmat routing"
+        @description "Route honors hazmat-restricted lanes and depots."
+        @tier "advanced"
+      cycleCountFrequencyDays : number  = 30
+        @label "Cycle count cadence (days)"
+        @description "Days between scheduled cycle counts on vehicles assigned to optimized routes. v1.2 declarative."
+        @tier "advanced"
     }
     initial: loading
     state loading {

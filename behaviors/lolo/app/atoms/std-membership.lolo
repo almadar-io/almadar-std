@@ -1,5 +1,5 @@
-app std-membership "1.1.0"
-"std-membership — recurring gym/fitness/club membership with tier, renewal, freeze, and self-managed cancel. Lists memberships in `browsing`; opens membership detail in `viewing_single` with Upgrade / Freeze / Cancel actions. Agents tune the list shape via `config.fields` + `config.itemActions`."
+app std-membership "1.2.0"
+"std-membership — gym/club membership with tier, renewal, freeze, cancel. Listens for SET_STATUS so std-lifecycle can drive automated transitions. Exposes CRM-pattern knobs."
 
 type FieldSpec = { name : string!, label : string, variant : string, icon : string, format : string, key : string, header : string }
 type ItemAction = { label : string!, event : string!, variant : string, icon : string }
@@ -18,8 +18,10 @@ orbital MembershipOrbital {
     notes        : string = ""
   }
 
-  type MembershipLoaded     = Event { data : [Membership] }            "Fired when the membership collection finishes loading"
-  type MembershipLoadFailed = Event { error : string, code : string }  "Fired when the membership collection fails to load"
+  type MembershipLoaded       = Event { data : [Membership] }            "Fired when the membership collection finishes loading"
+  type MembershipLoadFailed   = Event { error : string, code : string }  "Fired when the membership collection fails to load"
+  type MembershipUpdated      = Event { row : Membership }               "Fired after a membership's status persists"
+  type MembershipUpdateFailed = Event { error : string, code : string }  "Fired when a membership's status update fails to persist"
 
   trait MembershipDirectory -> Membership [interaction, collection, membership] {
     config {
@@ -43,6 +45,22 @@ orbital MembershipOrbital {
       ]
         @label "Row actions"
         @description "Buttons users can click on each row"
+        @tier "customization"
+      healthScoreThresholdAlert : number = 50
+        @label "Health score threshold"
+        @description "Members below this engagement score get flagged for win-back outreach. Declarative; wire via sibling std-notify."
+        @tier "customization"
+      renewalReminderDaysBefore : [number] = [30, 14, 7]
+        @label "Renewal reminder days-before"
+        @description "Days before renewalDate to send renewal reminders. Declarative; wire via sibling std-reminder-scheduler."
+        @tier "customization"
+      archiveInactiveAfterDays : number = 365
+        @label "Archive inactive after (days)"
+        @description "Days after cancellation/expiry before membership record is archived. Declarative; wire via sibling std-lifecycle."
+        @tier "advanced"
+      consentTrackingEnabled : boolean = true
+        @label "Track consent"
+        @description "Whether to record marketing/data-processing consent on the member profile. Declarative."
         @tier "customization"
     }
     initial: loading
@@ -72,6 +90,15 @@ orbital MembershipOrbital {
         (set @entity.id @payload.id)
         (fetch Membership { emit: { success: "MembershipLoaded", failure: "MembershipLoadFailed" } })
         (render-ui main { type: "stack", direction: "vertical", gap: "md", align: "center", className: "py-12", children: [{ type: "spinner" }, { type: "typography", variant: "caption", color: "muted", content: "Cancelling membership…" }] })
+      SET_STATUS -> loading
+        (set @entity.id @payload.entityId)
+        (set @entity.status @payload.newStatus)
+        (persist update Membership @entity { emit: { success: "MembershipUpdated", failure: "MembershipUpdateFailed" } })
+        (render-ui main { type: "stack", direction: "vertical", gap: "md", align: "center", className: "py-12", children: [{ type: "spinner" }, { type: "typography", variant: "caption", color: "muted", content: "Updating membership status…" }] })
+      MembershipUpdated -> loading
+        (fetch Membership { emit: { success: "MembershipLoaded", failure: "MembershipLoadFailed" } })
+      MembershipUpdateFailed -> browsing
+        (render-ui main { type: "alert", variant: "error", message: "@payload.error" })
     }
     state viewing_single {
       CLOSE_MEMBERSHIP -> loading
@@ -101,8 +128,10 @@ orbital MembershipOrbital {
       UPGRADE_TIER      { id : string! }
       FREEZE_MEMBERSHIP { id : string! }
       CANCEL_MEMBERSHIP { id : string! }
-      MembershipLoaded     { data : [Membership] }
-      MembershipLoadFailed { error : string, code : string }
+      MembershipLoaded       { data : [Membership] }
+      MembershipLoadFailed   { error : string, code : string }
+      MembershipUpdated      { row : Membership }
+      MembershipUpdateFailed { error : string, code : string }
     }
     listens {
       OPEN_MEMBERSHIP   { id : string!, row : Membership }
@@ -110,8 +139,11 @@ orbital MembershipOrbital {
       UPGRADE_TIER      { id : string! }
       FREEZE_MEMBERSHIP { id : string! }
       CANCEL_MEMBERSHIP { id : string! }
-      MembershipLoaded     { data : [Membership] }
-      MembershipLoadFailed { error : string, code : string }
+      SET_STATUS        { entityId : string!, newStatus : string! }
+      MembershipLoaded       { data : [Membership] }
+      MembershipLoadFailed   { error : string, code : string }
+      MembershipUpdated      { row : Membership }
+      MembershipUpdateFailed { error : string, code : string }
     }
   }
   page "/memberships" as MembershipPage -> MembershipDirectory

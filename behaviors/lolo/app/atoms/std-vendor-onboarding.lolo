@@ -1,5 +1,5 @@
-app std-vendor-onboarding "1.0.0"
-"std-vendor-onboarding — marketplace vendor multi-step KYC + bank-link wizard with identity-doc upload"
+app std-vendor-onboarding "1.1.0"
+"std-vendor-onboarding — marketplace vendor multi-step KYC + bank-link wizard. Exposes HR knobs (backgroundCheckRequired, eVerifyRequired, anonymizeOnRejection, …)."
 
 orbital VendorOnboardingOrbital {
   entity Vendor [persistent: vendors] {
@@ -23,6 +23,32 @@ orbital VendorOnboardingOrbital {
   type VendorSubmitFailed = Event { error : string, code : string }       "Fired when final submission fails"
 
   trait VendorOnboard -> Vendor [interaction, instance] {
+    config {
+      backgroundCheckRequired : boolean = true
+        @label "Background check required"
+        @description "Block SUBMIT until a background check on the vendor is on file."
+        @tier "customization"
+      eVerifyRequired : boolean = false
+        @label "E-Verify required"
+        @description "US E-Verify gate. Block SUBMIT until verification passes."
+        @tier "customization"
+      i9DocumentsRequired : boolean = false
+        @label "I-9 documents required"
+        @description "Require I-9 supporting documents (relevant for sole-proprietor vendors)."
+        @tier "customization"
+      anonymizeOnRejection : boolean = false
+        @label "Anonymize on rejection"
+        @description "When true, scrub vendor PII on rejected applications. Pair with std-data-erasure."
+        @tier "customization"
+      retentionAfterRejectionDays : number = 1825
+        @label "Retention after rejection (days)"
+        @description "Days to keep rejected vendor onboarding records. Default 1825 (5 years) typical KYC retention."
+        @tier "advanced"
+      equalOpportunityTrackingEnabled : boolean = false
+        @label "Equal opportunity tracking"
+        @description "Capture supplier diversity / EEO data separately (sibling collection)."
+        @tier "advanced"
+    }
     initial: loading
     state loading {
       INIT -> loading

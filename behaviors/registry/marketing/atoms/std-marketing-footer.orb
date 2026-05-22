@@ -1,0 +1,192 @@
+{
+  "name": "std-marketing-footer",
+  "version": "1.0.0",
+  "description": "Marketing footer atom for marketing pages. Renders a full footer with link columns, logo, and copyright. Pick for every marketing page bottom.",
+  "orbitals": [
+    {
+      "name": "FooterItemOrbital",
+      "entity": {
+        "name": "FooterItem",
+        "persistence": "runtime",
+        "fields": [
+          {
+            "name": "id",
+            "type": "string",
+            "required": true
+          }
+        ]
+      },
+      "traits": [
+        {
+          "name": "FooterItemFooter",
+          "category": "interaction",
+          "linkedEntity": "FooterItem",
+          "stateMachine": {
+            "states": [
+              {
+                "name": "idle",
+                "isInitial": true
+              }
+            ],
+            "events": [
+              {
+                "key": "INIT",
+                "name": "Initialize"
+              }
+            ],
+            "transitions": [
+              {
+                "from": "idle",
+                "to": "idle",
+                "event": "INIT",
+                "effects": [
+                  [
+                    "render-ui",
+                    "main",
+                    {
+                      "copyright": "@config.copyright",
+                      "columns": "@config.columns",
+                      "logo": {
+                        "src": "@config.logoSrc",
+                        "alt": "@config.logoAlt",
+                        "href": "@config.logoHref"
+                      },
+                      "type": "marketing-footer"
+                    }
+                  ]
+                ]
+              }
+            ]
+          },
+          "config": {
+            "logoAlt": {
+              "type": "string",
+              "default": "",
+              "label": "Logo Alt Text",
+              "tier": "customization"
+            },
+            "copyright": {
+              "type": "string",
+              "default": "© 2026 Almadar. All rights reserved.",
+              "label": "Copyright",
+              "tier": "customization"
+            },
+            "columns": {
+              "type": "[FooterColumn]",
+              "default": [
+                {
+                  "items": [
+                    {
+                      "label": "Features",
+                      "href": "#"
+                    },
+                    {
+                      "href": "#",
+                      "label": "Pricing"
+                    },
+                    {
+                      "label": "Changelog",
+                      "href": "#"
+                    }
+                  ],
+                  "title": "Product"
+                },
+                {
+                  "title": "Company",
+                  "items": [
+                    {
+                      "href": "#",
+                      "label": "About"
+                    },
+                    {
+                      "label": "Careers",
+                      "href": "#"
+                    },
+                    {
+                      "href": "#",
+                      "label": "Blog"
+                    }
+                  ]
+                },
+                {
+                  "title": "Resources",
+                  "items": [
+                    {
+                      "href": "#",
+                      "label": "Docs"
+                    },
+                    {
+                      "label": "Community",
+                      "href": "#"
+                    },
+                    {
+                      "label": "Support",
+                      "href": "#"
+                    }
+                  ]
+                }
+              ],
+              "label": "Footer Columns",
+              "description": "Array of link column groups",
+              "tier": "essential",
+              "items": {
+                "type": "object",
+                "properties": {
+                  "title": {
+                    "name": "title",
+                    "type": "string",
+                    "required": true
+                  },
+                  "items": {
+                    "name": "items",
+                    "type": "array",
+                    "required": false,
+                    "items": {
+                      "type": "object",
+                      "properties": {
+                        "label": {
+                          "name": "label",
+                          "type": "string",
+                          "required": true
+                        },
+                        "href": {
+                          "name": "href",
+                          "type": "string",
+                          "required": true
+                        }
+                      }
+                    }
+                  }
+                }
+              }
+            },
+            "logoHref": {
+              "type": "string",
+              "default": "/",
+              "label": "Logo Link",
+              "tier": "customization"
+            },
+            "logoSrc": {
+              "type": "string",
+              "default": "",
+              "label": "Logo Source",
+              "tier": "customization"
+            }
+          },
+          "scope": "instance"
+        }
+      ],
+      "pages": [
+        {
+          "name": "FooterItemFooterPage",
+          "path": "/footer",
+          "traits": [
+            {
+              "ref": "FooterItemFooter"
+            }
+          ]
+        }
+      ]
+    }
+  ]
+}

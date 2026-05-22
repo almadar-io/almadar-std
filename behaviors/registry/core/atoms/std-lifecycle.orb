@@ -1,0 +1,343 @@
+{
+  "name": "std-lifecycle",
+  "version": "1.0.0",
+  "description": "std-lifecycle — declarative lifecycle-rule definitions for a target entity. Periodic tick logs scan attempts to LifecycleRunLog. v1.0 ships the config knobs + scan topology so the questionnaire surfaces rules + targetEntity + dryRun cleanly; auto-emit of SET_STATUS per matching record lands in v1.1 when loop-with-emit primitive exists (gap — docs/Almadar_Std_Factories.md).",
+  "orbitals": [
+    {
+      "name": "LifecycleOrbital",
+      "entity": {
+        "name": "LifecycleRunLog",
+        "collection": "lifecycle_runs",
+        "persistence": "persistent",
+        "fields": [
+          {
+            "name": "id",
+            "type": "string",
+            "required": true
+          },
+          {
+            "name": "targetEntity",
+            "type": "string",
+            "default": ""
+          },
+          {
+            "name": "recordCount",
+            "type": "number",
+            "default": 0.0
+          },
+          {
+            "name": "ranAt",
+            "type": "number",
+            "default": 0.0
+          },
+          {
+            "name": "errors",
+            "type": "string",
+            "default": ""
+          }
+        ]
+      },
+      "traits": [
+        {
+          "name": "LifecycleScheduler",
+          "category": "lifecycle",
+          "linkedEntity": "LifecycleRunLog",
+          "emits": [
+            {
+              "event": "ScanRecordsLoaded",
+              "payloadSchema": [
+                {
+                  "name": "data",
+                  "type": "[object]"
+                }
+              ]
+            },
+            {
+              "event": "ScanFailed",
+              "payloadSchema": [
+                {
+                  "name": "error",
+                  "type": "string"
+                },
+                {
+                  "name": "code",
+                  "type": "string"
+                }
+              ]
+            },
+            {
+              "event": "LifecycleRunLogged",
+              "payloadSchema": [
+                {
+                  "name": "row.id",
+                  "type": "string",
+                  "required": true
+                },
+                {
+                  "name": "row.targetEntity",
+                  "type": "string"
+                },
+                {
+                  "name": "row.recordCount",
+                  "type": "number"
+                },
+                {
+                  "name": "row.ranAt",
+                  "type": "number"
+                },
+                {
+                  "name": "row.errors",
+                  "type": "string"
+                }
+              ]
+            },
+            {
+              "event": "LifecycleRunFailed",
+              "payloadSchema": [
+                {
+                  "name": "error",
+                  "type": "string"
+                },
+                {
+                  "name": "code",
+                  "type": "string"
+                }
+              ]
+            }
+          ],
+          "stateMachine": {
+            "states": [
+              {
+                "name": "idle",
+                "isInitial": true
+              }
+            ],
+            "events": [
+              {
+                "key": "ScanRecordsLoaded",
+                "name": "Scan records loaded",
+                "payloadSchema": [
+                  {
+                    "name": "data",
+                    "type": "[object]"
+                  }
+                ]
+              },
+              {
+                "key": "ScanFailed",
+                "name": "Scan failed",
+                "payloadSchema": [
+                  {
+                    "name": "error",
+                    "type": "string"
+                  },
+                  {
+                    "name": "code",
+                    "type": "string"
+                  }
+                ]
+              },
+              {
+                "key": "LifecycleRunLogged",
+                "name": "LifecycleRunLog ged",
+                "payloadSchema": [
+                  {
+                    "name": "row",
+                    "type": "LifecycleRunLog"
+                  }
+                ]
+              },
+              {
+                "key": "LifecycleRunFailed",
+                "name": "Lifecycle run failed",
+                "payloadSchema": [
+                  {
+                    "name": "error",
+                    "type": "string"
+                  },
+                  {
+                    "name": "code",
+                    "type": "string"
+                  }
+                ]
+              }
+            ],
+            "transitions": [
+              {
+                "from": "idle",
+                "to": "idle",
+                "event": "ScanRecordsLoaded",
+                "effects": [
+                  [
+                    "set",
+                    "@entity.targetEntity",
+                    "@config.targetEntity"
+                  ],
+                  [
+                    "set",
+                    "@entity.recordCount",
+                    [
+                      "array/len",
+                      "@payload.data"
+                    ]
+                  ],
+                  [
+                    "set",
+                    "@entity.ranAt",
+                    0.0
+                  ],
+                  [
+                    "persist",
+                    "create",
+                    "LifecycleRunLog",
+                    "@entity",
+                    {
+                      "emit": {
+                        "failure": "LifecycleRunFailed",
+                        "success": "LifecycleRunLogged"
+                      }
+                    }
+                  ]
+                ]
+              },
+              {
+                "from": "idle",
+                "to": "idle",
+                "event": "ScanFailed",
+                "effects": [
+                  [
+                    "set",
+                    "@entity.targetEntity",
+                    "@config.targetEntity"
+                  ],
+                  [
+                    "set",
+                    "@entity.recordCount",
+                    0.0
+                  ],
+                  [
+                    "set",
+                    "@entity.errors",
+                    "@payload.error"
+                  ],
+                  [
+                    "persist",
+                    "create",
+                    "LifecycleRunLog",
+                    "@entity",
+                    {
+                      "emit": {
+                        "failure": "LifecycleRunFailed",
+                        "success": "LifecycleRunLogged"
+                      }
+                    }
+                  ]
+                ]
+              },
+              {
+                "from": "idle",
+                "to": "idle",
+                "event": "LifecycleRunLogged"
+              },
+              {
+                "from": "idle",
+                "to": "idle",
+                "event": "LifecycleRunFailed"
+              }
+            ]
+          },
+          "ticks": [
+            {
+              "name": "scanCycle",
+              "interval": 3600000.0,
+              "effects": [
+                [
+                  "fetch",
+                  "LifecycleRunLog",
+                  {
+                    "emit": {
+                      "failure": "ScanFailed",
+                      "success": "ScanRecordsLoaded"
+                    }
+                  }
+                ]
+              ]
+            }
+          ],
+          "config": {
+            "rules": {
+              "type": "[LifecycleRule]",
+              "default": [],
+              "label": "Lifecycle rules",
+              "description": "When a record's status is fromStatus and its dateField is older than condition.value days (kind='ageDays'), transition to toStatus. v1.0 declarative only — wiring lands in v1.1 (gap).",
+              "tier": "essential",
+              "items": {
+                "type": "object",
+                "properties": {
+                  "fromStatus": {
+                    "name": "fromStatus",
+                    "type": "string",
+                    "required": false
+                  },
+                  "toStatus": {
+                    "name": "toStatus",
+                    "type": "string",
+                    "required": false
+                  },
+                  "condition": {
+                    "name": "condition",
+                    "type": "object",
+                    "required": false,
+                    "properties": {
+                      "kind": {
+                        "name": "kind",
+                        "type": "string",
+                        "required": false
+                      },
+                      "value": {
+                        "name": "value",
+                        "type": "number",
+                        "required": false
+                      },
+                      "dateField": {
+                        "name": "dateField",
+                        "type": "string",
+                        "required": false
+                      }
+                    }
+                  }
+                }
+              }
+            },
+            "dryRun": {
+              "type": "boolean",
+              "default": false,
+              "label": "Dry-run mode",
+              "description": "When true, log scan results without emitting transitions.",
+              "tier": "advanced"
+            },
+            "targetEntity": {
+              "type": "string",
+              "default": "",
+              "label": "Target entity",
+              "description": "Entity name to scan (e.g. 'InvoiceRecord'). v1.1 will drive SET_STATUS transitions on this entity.",
+              "tier": "essential"
+            }
+          },
+          "scope": "instance"
+        }
+      ],
+      "pages": [
+        {
+          "name": "LifecycleSchedulerPage",
+          "path": "/lifecycle/scheduler",
+          "traits": [
+            {
+              "ref": "LifecycleScheduler"
+            }
+          ]
+        }
+      ]
+    }
+  ]
+}

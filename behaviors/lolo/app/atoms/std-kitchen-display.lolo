@@ -1,5 +1,5 @@
-app std-kitchen-display "1.1.0"
-"std-kitchen-display — restaurant POS kitchen display system. Owns a KitchenTicket entity (one row per kitchen-bound order) and a single management trait that loads pending tickets, renders them in a data-grid with Mark Preparing / Ready / Served actions, and persists status + aging back to the row. Agents tune the list shape via `config.fields` + `config.itemActions`."
+app std-kitchen-display "1.2.0"
+"std-kitchen-display — restaurant POS kitchen ticket board (Mark Preparing / Ready / Served). Listens for SET_STATUS so std-lifecycle can age tickets. Exposes Restaurant/POS knobs (kitchenAutoFire, coursingEnabled, allergenWarningsEnabled, …)."
 
 type FieldSpec = { name : string!, label : string, variant : string, icon : string, format : string, key : string, header : string }
 type ItemAction = { label : string!, event : string!, variant : string, icon : string }
@@ -51,6 +51,34 @@ orbital KitchenTicketOrbital {
         @label "Row actions"
         @description "Buttons users can click on each ticket row"
         @tier "customization"
+      serviceCharge              : number   = 0
+        @label "Service charge (%)"
+        @description "Default service-charge percentage applied to ticket-resolved checks."
+        @tier "customization"
+      tipPresets                 : [number] = [15, 18, 20, 25]
+        @label "Tip presets (%)"
+        @description "Quick-select tip percentages shown when closing related checks."
+        @tier "customization"
+      allowSplitChecks           : boolean  = true
+        @label "Allow split checks"
+        @description "Permit splitting a check that originated from this ticket."
+        @tier "customization"
+      kitchenAutoFire            : boolean  = false
+        @label "Kitchen auto-fire"
+        @description "Auto-advance tickets from pending → preparing without manual fire."
+        @tier "customization"
+      coursingEnabled            : boolean  = false
+        @label "Coursing enabled"
+        @description "Honor course ordering (apps → mains → dessert) when pacing tickets."
+        @tier "customization"
+      allergenWarningsEnabled    : boolean  = true
+        @label "Allergen warnings"
+        @description "Highlight allergen warnings on ticket items in the kitchen view."
+        @tier "customization"
+      tableTurnoverTargetMinutes : number   = 60
+        @label "Table turnover target (min)"
+        @description "Target minutes between seatings; influences ticket aging severity."
+        @tier "advanced"
     }
     initial: loading
     state loading {
@@ -81,6 +109,11 @@ orbital KitchenTicketOrbital {
         (set @entity.servedAt @payload.servedAt)
         (persist update KitchenTicket @entity { emit: { success: "KitchenTicketUpdated", failure: "KitchenTicketUpdateFailed" } })
         (render-ui main { type: "stack", direction: "vertical", gap: "md", align: "center", className: "py-12", children: [{ type: "spinner" }, { type: "typography", variant: "caption", color: "muted", content: "Marking ticket served…" }] })
+      SET_STATUS -> loading
+        (set @entity.id @payload.entityId)
+        (set @entity.status @payload.newStatus)
+        (persist update KitchenTicket @entity { emit: { success: "KitchenTicketUpdated", failure: "KitchenTicketUpdateFailed" } })
+        (render-ui main { type: "stack", direction: "vertical", gap: "md", align: "center", className: "py-12", children: [{ type: "spinner" }, { type: "typography", variant: "caption", color: "muted", content: "Updating ticket status…" }] })
       KitchenTicketUpdated -> loading
         (fetch KitchenTicket { emit: { success: "KitchenTicketLoaded", failure: "KitchenTicketLoadFailed" } })
       KitchenTicketUpdateFailed -> browsing
@@ -130,6 +163,7 @@ orbital KitchenTicketOrbital {
       MARK_PREPARING { ticketId : string!, row : KitchenTicket }
       MARK_READY     { ticketId : string!, readyAt : string!, row : KitchenTicket }
       MARK_SERVED    { ticketId : string!, servedAt : string!, row : KitchenTicket }
+      SET_STATUS     { entityId : string!, newStatus : string! }
       KitchenTicketLoaded       { data : [KitchenTicket] }
       KitchenTicketLoadFailed   { error : string, code : string }
       KitchenTicketUpdated      { row : KitchenTicket }

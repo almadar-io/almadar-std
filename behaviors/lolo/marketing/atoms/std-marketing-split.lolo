@@ -1,0 +1,47 @@
+app std-marketing-split "1.0.0"
+"Split section atom for marketing pages. Renders a two-column layout with text and image alternating sides. Pick for feature deep-dives and alternating content sections."
+;; Config-driven split section using the `split-section` marketing pattern.
+;; The atom renders immediately on INIT with no fetch required.
+
+orbital SplitItemOrbital {
+  entity SplitItem [runtime] {
+    id : string!
+  }
+
+  trait SplitItemSplit -> SplitItem [interaction, instance] {
+    config {
+      title : string = "Powerful under the hood"
+        @label "Title"
+        @description "Section headline"
+        @tier "essential"
+      description : string = "Everything you need to build, deploy, and scale."
+        @label "Description"
+        @description "Body text"
+        @tier "essential"
+      bullets : [string] = ["Instant deployments", "Auto-scaling", "Global CDN"]
+        @label "Bullets"
+        @description "Feature bullet points"
+        @tier "customization"
+      imageSrc : string = ""
+        @label "Image Source"
+        @tier "customization"
+      imageAlt : string = ""
+        @label "Image Alt Text"
+        @tier "customization"
+      imagePosition : string = "right"
+        @label "Image Position"
+        @description "left or right"
+        @tier "customization"
+      background : string = "default"
+        @label "Background"
+        @description "default or alt"
+        @tier "customization"
+    }
+    initial: idle
+    state idle {
+      INIT -> idle
+        (render-ui main { type: "split-section", title: "@config.title", description: "@config.description", bullets: "@config.bullets", image: { src: "@config.imageSrc", alt: "@config.imageAlt" }, imagePosition: "@config.imagePosition", background: "@config.background" })
+    }
+  }
+  page "/split" as SplitItemSplitPage -> SplitItemSplit
+}

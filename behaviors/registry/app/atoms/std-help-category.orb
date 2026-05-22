@@ -1,7 +1,7 @@
 {
   "name": "std-help-category",
-  "version": "1.1.0",
-  "description": "std-help-category — Help center category directory grouping articles into sections like Getting Started, Billing, API Reference. Agents tune the list shape via `config.fields` + `config.itemActions`.",
+  "version": "1.2.0",
+  "description": "std-help-category — help center category directory grouping articles (Getting Started, Billing, API Reference…). Listens for SET_STATUS so std-lifecycle can drive transitions. Exposes Content/Knowledge knobs (visibilityScope, enabledLocales, …).",
   "orbitals": [
     {
       "name": "HelpCategoryOrbital",
@@ -170,6 +170,63 @@
                   "type": "string"
                 }
               ]
+            },
+            {
+              "event": "HelpCategoryUpdated",
+              "payloadSchema": [
+                {
+                  "name": "row.id",
+                  "type": "string",
+                  "required": true
+                },
+                {
+                  "name": "row.name",
+                  "type": "string",
+                  "required": true
+                },
+                {
+                  "name": "row.slug",
+                  "type": "string",
+                  "required": true
+                },
+                {
+                  "name": "row.description",
+                  "type": "string"
+                },
+                {
+                  "name": "row.icon",
+                  "type": "string"
+                },
+                {
+                  "name": "row.sortOrder",
+                  "type": "number"
+                },
+                {
+                  "name": "row.articleCount",
+                  "type": "number"
+                },
+                {
+                  "name": "row.status",
+                  "type": "string"
+                },
+                {
+                  "name": "row.updatedAt",
+                  "type": "string"
+                },
+                {
+                  "name": "row.pendingId",
+                  "type": "string"
+                }
+              ]
+            },
+            {
+              "event": "HelpCategoryUpdateFailed",
+              "payloadSchema": [
+                {
+                  "name": "message",
+                  "type": "string"
+                }
+              ]
             }
           ],
           "stateMachine": {
@@ -244,6 +301,42 @@
                 ]
               },
               {
+                "key": "SET_STATUS",
+                "name": "Set Status",
+                "payloadSchema": [
+                  {
+                    "name": "entityId",
+                    "type": "string",
+                    "required": true
+                  },
+                  {
+                    "name": "newStatus",
+                    "type": "string",
+                    "required": true
+                  }
+                ]
+              },
+              {
+                "key": "HelpCategoryUpdated",
+                "name": "HelpCategory updated",
+                "payloadSchema": [
+                  {
+                    "name": "row",
+                    "type": "HelpCategory"
+                  }
+                ]
+              },
+              {
+                "key": "HelpCategoryUpdateFailed",
+                "name": "HelpCategory update failed",
+                "payloadSchema": [
+                  {
+                    "name": "message",
+                    "type": "string"
+                  }
+                ]
+              },
+              {
                 "key": "CLOSE_VIEW",
                 "name": "Close View"
               },
@@ -270,8 +363,8 @@
                     "HelpCategory",
                     {
                       "emit": {
-                        "success": "HelpCategoryLoaded",
-                        "failure": "HelpCategoryLoadFailed"
+                        "failure": "HelpCategoryLoadFailed",
+                        "success": "HelpCategoryLoaded"
                       }
                     }
                   ],
@@ -280,21 +373,21 @@
                     "main",
                     {
                       "direction": "vertical",
+                      "gap": "md",
                       "align": "center",
-                      "type": "stack",
                       "className": "py-12",
                       "children": [
                         {
                           "type": "spinner"
                         },
                         {
-                          "color": "muted",
                           "content": "Loading help categories…",
-                          "variant": "caption",
-                          "type": "typography"
+                          "color": "muted",
+                          "type": "typography",
+                          "variant": "caption"
                         }
                       ],
-                      "gap": "md"
+                      "type": "stack"
                     }
                   ]
                 ]
@@ -308,9 +401,14 @@
                     "render-ui",
                     "main",
                     {
+                      "type": "stack",
+                      "direction": "vertical",
+                      "gap": "md",
                       "children": [
                         {
+                          "direction": "horizontal",
                           "align": "center",
+                          "gap": "sm",
                           "children": [
                             {
                               "type": "icon",
@@ -322,55 +420,50 @@
                               "content": "@config.title"
                             }
                           ],
-                          "gap": "sm",
-                          "type": "stack",
-                          "direction": "horizontal"
+                          "type": "stack"
                         },
                         {
+                          "cols": 4.0,
                           "type": "simple-grid",
                           "children": [
                             {
-                              "value": "@payload.data.length",
+                              "type": "stat-display",
                               "label": "Total categories",
                               "icon": "folder",
-                              "type": "stat-display"
+                              "value": "@payload.data.length"
                             },
                             {
+                              "value": "18",
                               "label": "Published",
                               "icon": "check-circle",
-                              "value": "18",
                               "type": "stat-display"
                             },
                             {
-                              "type": "stat-display",
-                              "label": "Articles",
                               "value": "246",
+                              "label": "Articles",
+                              "type": "stat-display",
                               "icon": "book-open"
                             },
                             {
                               "label": "Avg per category",
                               "icon": "bar-chart",
-                              "value": "13",
-                              "type": "stat-display"
+                              "type": "stat-display",
+                              "value": "13"
                             }
-                          ],
-                          "cols": 4.0
+                          ]
                         },
                         {
                           "type": "divider"
                         },
                         {
-                          "cols": 1.0,
-                          "itemActions": "@config.itemActions",
-                          "entity": "@payload.data",
+                          "type": "data-grid",
                           "fields": "@config.fields",
                           "gap": "sm",
-                          "type": "data-grid"
+                          "entity": "@payload.data",
+                          "itemActions": "@config.itemActions",
+                          "cols": 1.0
                         }
-                      ],
-                      "direction": "vertical",
-                      "gap": "md",
-                      "type": "stack"
+                      ]
                     }
                   ]
                 ]
@@ -385,8 +478,8 @@
                     "main",
                     {
                       "type": "alert",
-                      "message": "@payload.message",
-                      "variant": "error"
+                      "variant": "error",
+                      "message": "@payload.message"
                     }
                   ]
                 ]
@@ -445,154 +538,154 @@
                     "render-ui",
                     "main",
                     {
+                      "type": "stack",
                       "children": [
                         {
+                          "gap": "sm",
+                          "align": "center",
+                          "direction": "horizontal",
                           "children": [
                             {
-                              "variant": "ghost",
                               "action": "CLOSE_VIEW",
                               "type": "button",
-                              "label": "Back"
+                              "label": "Back",
+                              "variant": "ghost"
                             },
                             {
                               "name": "folder",
                               "type": "icon"
                             },
                             {
-                              "type": "typography",
+                              "variant": "h3",
                               "content": "@entity.name",
-                              "variant": "h3"
+                              "type": "typography"
                             },
                             {
-                              "label": "@entity.status",
                               "type": "badge",
+                              "label": "@entity.status",
                               "variant": "default"
                             }
                           ],
-                          "direction": "horizontal",
-                          "align": "center",
+                          "type": "stack"
+                        },
+                        {
+                          "type": "divider"
+                        },
+                        {
                           "type": "stack",
+                          "direction": "vertical",
+                          "children": [
+                            {
+                              "gap": "md",
+                              "type": "stack",
+                              "children": [
+                                {
+                                  "type": "typography",
+                                  "color": "muted",
+                                  "variant": "caption",
+                                  "content": "Slug"
+                                },
+                                {
+                                  "content": "@entity.slug",
+                                  "type": "typography",
+                                  "variant": "body"
+                                }
+                              ],
+                              "direction": "horizontal"
+                            },
+                            {
+                              "type": "stack",
+                              "children": [
+                                {
+                                  "type": "typography",
+                                  "color": "muted",
+                                  "variant": "caption",
+                                  "content": "Description"
+                                },
+                                {
+                                  "content": "@entity.description",
+                                  "type": "typography",
+                                  "variant": "body"
+                                }
+                              ],
+                              "gap": "md",
+                              "direction": "horizontal"
+                            },
+                            {
+                              "direction": "horizontal",
+                              "gap": "md",
+                              "type": "stack",
+                              "children": [
+                                {
+                                  "content": "Icon",
+                                  "color": "muted",
+                                  "variant": "caption",
+                                  "type": "typography"
+                                },
+                                {
+                                  "content": "@entity.icon",
+                                  "variant": "body",
+                                  "type": "typography"
+                                }
+                              ]
+                            }
+                          ],
                           "gap": "sm"
                         },
                         {
                           "type": "divider"
                         },
                         {
-                          "direction": "vertical",
-                          "gap": "sm",
-                          "type": "stack",
-                          "children": [
-                            {
-                              "direction": "horizontal",
-                              "children": [
-                                {
-                                  "content": "Slug",
-                                  "type": "typography",
-                                  "variant": "caption",
-                                  "color": "muted"
-                                },
-                                {
-                                  "variant": "body",
-                                  "content": "@entity.slug",
-                                  "type": "typography"
-                                }
-                              ],
-                              "type": "stack",
-                              "gap": "md"
-                            },
-                            {
-                              "type": "stack",
-                              "gap": "md",
-                              "children": [
-                                {
-                                  "type": "typography",
-                                  "variant": "caption",
-                                  "color": "muted",
-                                  "content": "Description"
-                                },
-                                {
-                                  "variant": "body",
-                                  "type": "typography",
-                                  "content": "@entity.description"
-                                }
-                              ],
-                              "direction": "horizontal"
-                            },
-                            {
-                              "gap": "md",
-                              "children": [
-                                {
-                                  "variant": "caption",
-                                  "content": "Icon",
-                                  "type": "typography",
-                                  "color": "muted"
-                                },
-                                {
-                                  "type": "typography",
-                                  "variant": "body",
-                                  "content": "@entity.icon"
-                                }
-                              ],
-                              "type": "stack",
-                              "direction": "horizontal"
-                            }
-                          ]
-                        },
-                        {
-                          "type": "divider"
-                        },
-                        {
                           "cols": 3.0,
+                          "type": "simple-grid",
                           "children": [
                             {
-                              "type": "stat-display",
                               "icon": "book-open",
+                              "type": "stat-display",
                               "label": "Articles",
                               "value": "@entity.articleCount"
                             },
                             {
+                              "type": "stat-display",
                               "value": "@entity.sortOrder",
                               "icon": "list-ordered",
-                              "type": "stat-display",
                               "label": "Sort order"
                             },
                             {
-                              "label": "Updated",
+                              "type": "stat-display",
                               "icon": "calendar",
                               "value": "@entity.updatedAt",
-                              "type": "stat-display"
+                              "label": "Updated"
                             }
-                          ],
-                          "type": "simple-grid"
+                          ]
                         },
                         {
+                          "gap": "sm",
                           "type": "stack",
                           "direction": "horizontal",
                           "children": [
                             {
-                              "type": "button",
                               "action": "PUBLISH",
-                              "variant": "primary",
+                              "type": "button",
                               "label": "Publish",
+                              "variant": "primary",
                               "actionPayload": {
                                 "id": "@entity.id"
                               }
                             },
                             {
-                              "label": "Archive",
-                              "variant": "danger",
-                              "action": "ARCHIVE",
                               "actionPayload": {
                                 "id": "@entity.id"
                               },
-                              "type": "button"
+                              "type": "button",
+                              "label": "Archive",
+                              "variant": "danger",
+                              "action": "ARCHIVE"
                             }
                           ],
-                          "gap": "sm",
                           "align": "center"
                         }
                       ],
-                      "type": "stack",
                       "direction": "vertical",
                       "gap": "md"
                     }
@@ -629,16 +722,100 @@
                         },
                         {
                           "content": "Archiving category…",
+                          "type": "typography",
                           "color": "muted",
-                          "variant": "caption",
-                          "type": "typography"
+                          "variant": "caption"
                         }
                       ],
                       "gap": "md",
+                      "align": "center",
                       "direction": "vertical",
                       "type": "stack",
-                      "align": "center",
                       "className": "py-12"
+                    }
+                  ]
+                ]
+              },
+              {
+                "from": "browsing",
+                "to": "loading",
+                "event": "SET_STATUS",
+                "effects": [
+                  [
+                    "set",
+                    "@entity.id",
+                    "@payload.entityId"
+                  ],
+                  [
+                    "set",
+                    "@entity.status",
+                    "@payload.newStatus"
+                  ],
+                  [
+                    "persist",
+                    "update",
+                    "HelpCategory",
+                    "@entity",
+                    {
+                      "emit": {
+                        "failure": "HelpCategoryUpdateFailed",
+                        "success": "HelpCategoryUpdated"
+                      }
+                    }
+                  ],
+                  [
+                    "render-ui",
+                    "main",
+                    {
+                      "type": "stack",
+                      "direction": "vertical",
+                      "gap": "md",
+                      "align": "center",
+                      "className": "py-12",
+                      "children": [
+                        {
+                          "type": "spinner"
+                        },
+                        {
+                          "variant": "caption",
+                          "content": "Updating category status…",
+                          "color": "muted",
+                          "type": "typography"
+                        }
+                      ]
+                    }
+                  ]
+                ]
+              },
+              {
+                "from": "browsing",
+                "to": "loading",
+                "event": "HelpCategoryUpdated",
+                "effects": [
+                  [
+                    "fetch",
+                    "HelpCategory",
+                    {
+                      "emit": {
+                        "success": "HelpCategoryLoaded",
+                        "failure": "HelpCategoryLoadFailed"
+                      }
+                    }
+                  ]
+                ]
+              },
+              {
+                "from": "browsing",
+                "to": "browsing",
+                "event": "HelpCategoryUpdateFailed",
+                "effects": [
+                  [
+                    "render-ui",
+                    "main",
+                    {
+                      "variant": "error",
+                      "message": "@payload.message",
+                      "type": "alert"
                     }
                   ]
                 ]
@@ -662,14 +839,14 @@
                     "render-ui",
                     "main",
                     {
-                      "gap": "md",
+                      "direction": "vertical",
                       "children": [
                         {
                           "type": "spinner"
                         },
                         {
-                          "color": "muted",
                           "variant": "caption",
+                          "color": "muted",
                           "type": "typography",
                           "content": "Loading help categories…"
                         }
@@ -677,7 +854,7 @@
                       "type": "stack",
                       "align": "center",
                       "className": "py-12",
-                      "direction": "vertical"
+                      "gap": "md"
                     }
                   ]
                 ]
@@ -706,22 +883,22 @@
                     "render-ui",
                     "main",
                     {
+                      "type": "stack",
+                      "gap": "md",
                       "className": "py-12",
+                      "direction": "vertical",
+                      "align": "center",
                       "children": [
                         {
                           "type": "spinner"
                         },
                         {
-                          "variant": "caption",
-                          "type": "typography",
+                          "content": "Publishing category…",
                           "color": "muted",
-                          "content": "Publishing category…"
+                          "type": "typography",
+                          "variant": "caption"
                         }
-                      ],
-                      "gap": "md",
-                      "type": "stack",
-                      "direction": "vertical",
-                      "align": "center"
+                      ]
                     }
                   ]
                 ]
@@ -741,8 +918,8 @@
                     "HelpCategory",
                     {
                       "emit": {
-                        "failure": "HelpCategoryLoadFailed",
-                        "success": "HelpCategoryLoaded"
+                        "success": "HelpCategoryLoaded",
+                        "failure": "HelpCategoryLoadFailed"
                       }
                     }
                   ],
@@ -751,21 +928,21 @@
                     "main",
                     {
                       "type": "stack",
-                      "direction": "vertical",
-                      "className": "py-12",
-                      "align": "center",
-                      "gap": "md",
                       "children": [
                         {
                           "type": "spinner"
                         },
                         {
-                          "color": "muted",
-                          "type": "typography",
+                          "content": "Archiving category…",
                           "variant": "caption",
-                          "content": "Archiving category…"
+                          "color": "muted",
+                          "type": "typography"
                         }
-                      ]
+                      ],
+                      "align": "center",
+                      "className": "py-12",
+                      "direction": "vertical",
+                      "gap": "md"
                     }
                   ]
                 ]
@@ -780,8 +957,8 @@
                     "HelpCategory",
                     {
                       "emit": {
-                        "success": "HelpCategoryLoaded",
-                        "failure": "HelpCategoryLoadFailed"
+                        "failure": "HelpCategoryLoadFailed",
+                        "success": "HelpCategoryLoaded"
                       }
                     }
                   ],
@@ -789,8 +966,8 @@
                     "render-ui",
                     "main",
                     {
-                      "size": "sm",
-                      "type": "spinner"
+                      "type": "spinner",
+                      "size": "sm"
                     }
                   ]
                 ]
@@ -798,21 +975,130 @@
             ]
           },
           "config": {
-            "title": {
-              "type": "string",
-              "default": "Help Categories",
-              "label": "Section title",
-              "description": "Heading shown above the help center categories",
+            "allowRollback": {
+              "type": "boolean",
+              "default": true,
+              "label": "Allow rollback",
+              "description": "Permit reverting a category to a prior version.",
               "tier": "customization"
+            },
+            "defaultLocale": {
+              "type": "string",
+              "default": "en",
+              "label": "Default locale",
+              "description": "Locale used when no translation matches the reader's language.",
+              "tier": "customization"
+            },
+            "visibilityScope": {
+              "type": "string",
+              "default": "public",
+              "label": "Visibility scope",
+              "description": "Who can see published categories: public web, internal staff, signed-in customers.",
+              "tier": "essential",
+              "values": [
+                "public",
+                "internal",
+                "customer"
+              ]
+            },
+            "enabledLocales": {
+              "type": "[string]",
+              "default": [
+                "en"
+              ],
+              "label": "Enabled locales",
+              "description": "Locales the category name/description can be translated into.",
+              "tier": "customization",
+              "items": {
+                "type": "string"
+              }
+            },
+            "fields": {
+              "type": "[FieldSpec]",
+              "default": [
+                {
+                  "variant": "caption",
+                  "label": "Name",
+                  "name": "name"
+                },
+                {
+                  "label": "Slug",
+                  "variant": "caption",
+                  "name": "slug"
+                },
+                {
+                  "variant": "caption",
+                  "name": "articleCount",
+                  "label": "Articles"
+                },
+                {
+                  "label": "Order",
+                  "name": "sortOrder",
+                  "variant": "caption"
+                },
+                {
+                  "name": "status",
+                  "variant": "badge",
+                  "label": "Status"
+                },
+                {
+                  "name": "updatedAt",
+                  "label": "Updated",
+                  "variant": "caption"
+                }
+              ],
+              "label": "Columns to show",
+              "description": "Each column maps to one field on the Help Category entity",
+              "tier": "customization",
+              "items": {
+                "type": "object",
+                "properties": {
+                  "icon": {
+                    "name": "icon",
+                    "type": "string",
+                    "required": false
+                  },
+                  "key": {
+                    "name": "key",
+                    "type": "string",
+                    "required": false
+                  },
+                  "name": {
+                    "name": "name",
+                    "type": "string",
+                    "required": true
+                  },
+                  "header": {
+                    "name": "header",
+                    "type": "string",
+                    "required": false
+                  },
+                  "variant": {
+                    "name": "variant",
+                    "type": "string",
+                    "required": false
+                  },
+                  "label": {
+                    "name": "label",
+                    "type": "string",
+                    "required": false
+                  },
+                  "format": {
+                    "name": "format",
+                    "type": "string",
+                    "required": false
+                  }
+                }
+              }
             },
             "itemActions": {
               "type": "[ItemAction]",
               "default": [
                 {
-                  "event": "OPEN_CATEGORY",
-                  "icon": "arrow-right",
+                  "variant": "primary",
                   "label": "Open",
-                  "variant": "primary"
+                  "event": "OPEN_CATEGORY",
+                  "icon": "arrow-right"
                 },
                 {
                   "event": "ARCHIVE",
@@ -826,16 +1112,6 @@
               "items": {
                 "type": "object",
                 "properties": {
-                  "variant": {
-                    "name": "variant",
-                    "type": "string",
-                    "required": false
-                  },
-                  "icon": {
-                    "name": "icon",
-                    "type": "string",
-                    "required": false
-                  },
                   "event": {
                     "name": "event",
                     "type": "string",
@@ -845,77 +1121,9 @@
                     "name": "label",
                     "type": "string",
                     "required": true
-                  }
-                }
-              }
-            },
-            "fields": {
-              "type": "[FieldSpec]",
-              "default": [
-                {
-                  "name": "name",
-                  "label": "Name",
-                  "variant": "caption"
-                },
-                {
-                  "variant": "caption",
-                  "name": "slug",
-                  "label": "Slug"
-                },
-                {
-                  "label": "Articles",
-                  "name": "articleCount",
-                  "variant": "caption"
-                },
-                {
-                  "label": "Order",
-                  "variant": "caption",
-                  "name": "sortOrder"
-                },
-                {
-                  "name": "status",
-                  "label": "Status",
-                  "variant": "badge"
-                },
-                {
-                  "variant": "caption",
-                  "name": "updatedAt",
-                  "label": "Updated"
-                }
-              ],
-              "label": "Columns to show",
-              "description": "Each column maps to one field on the Help Category entity",
-              "tier": "customization",
-              "items": {
-                "type": "object",
-                "properties": {
-                  "format": {
-                    "name": "format",
-                    "type": "string",
-                    "required": false
-                  },
-                  "key": {
-                    "name": "key",
-                    "type": "string",
-                    "required": false
                   },
                   "icon": {
                     "name": "icon",
-                    "type": "string",
-                    "required": false
-                  },
-                  "header": {
-                    "name": "header",
-                    "type": "string",
-                    "required": false
-                  },
-                  "name": {
-                    "name": "name",
-                    "type": "string",
-                    "required": true
-                  },
-                  "label": {
-                    "name": "label",
                     "type": "string",
                     "required": false
                   },
@@ -926,6 +1134,41 @@
                   }
                 }
               }
+            },
+            "seoEnabled": {
+              "type": "boolean",
+              "default": true,
+              "label": "SEO meta enabled",
+              "description": "Emit canonical + meta description tags on the category index page.",
+              "tier": "customization"
+            },
+            "scheduledPublishEnabled": {
+              "type": "boolean",
+              "default": false,
+              "label": "Scheduled publish",
+              "description": "Allow authors to schedule category publish. v1.2 declarative.",
+              "tier": "customization"
+            },
+            "title": {
+              "type": "string",
+              "default": "Help Categories",
+              "label": "Section title",
+              "description": "Heading shown above the help center categories",
+              "tier": "customization"
+            },
+            "keepVersions": {
+              "type": "number",
+              "default": 5.0,
+              "label": "Versions to retain",
+              "description": "Number of revisions to keep per category.",
+              "tier": "customization"
+            },
+            "draftAutosaveSeconds": {
+              "type": "number",
+              "default": 30.0,
+              "label": "Draft autosave interval (s)",
+              "description": "Seconds between draft autosaves in the editor.",
+              "tier": "advanced"
             }
           },
           "scope": "collection"

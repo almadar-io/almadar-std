@@ -1,0 +1,206 @@
+{
+  "name": "std-marketing-cta",
+  "version": "1.0.0",
+  "description": "Call-to-action banner atom for marketing pages. Renders a high-conversion CTA section with title, subtitle, and action buttons. Pick for conversion points at the end of pages or between sections.",
+  "orbitals": [
+    {
+      "name": "CTAItemOrbital",
+      "entity": {
+        "name": "CTAItem",
+        "persistence": "runtime",
+        "fields": [
+          {
+            "name": "id",
+            "type": "string",
+            "required": true
+          }
+        ]
+      },
+      "traits": [
+        {
+          "name": "CTAItemCTA",
+          "category": "interaction",
+          "linkedEntity": "CTAItem",
+          "emits": [
+            {
+              "event": "CTA_PRIMARY",
+              "scope": "external",
+              "payloadSchema": [
+                {
+                  "name": "href",
+                  "type": "string"
+                }
+              ]
+            },
+            {
+              "event": "CTA_SECONDARY",
+              "scope": "external",
+              "payloadSchema": [
+                {
+                  "name": "href",
+                  "type": "string"
+                }
+              ]
+            }
+          ],
+          "stateMachine": {
+            "states": [
+              {
+                "name": "idle",
+                "isInitial": true
+              }
+            ],
+            "events": [
+              {
+                "key": "INIT",
+                "name": "Initialize"
+              },
+              {
+                "key": "CTA_PRIMARY",
+                "name": "Cta Primary",
+                "payloadSchema": [
+                  {
+                    "name": "href",
+                    "type": "string"
+                  }
+                ]
+              },
+              {
+                "key": "CTA_SECONDARY",
+                "name": "Cta Secondary",
+                "payloadSchema": [
+                  {
+                    "name": "href",
+                    "type": "string"
+                  }
+                ]
+              }
+            ],
+            "transitions": [
+              {
+                "from": "idle",
+                "to": "idle",
+                "event": "INIT",
+                "effects": [
+                  [
+                    "render-ui",
+                    "main",
+                    {
+                      "title": "@config.title",
+                      "background": "@config.background",
+                      "secondaryAction": {
+                        "label": "@config.secondaryActionLabel",
+                        "href": "@config.secondaryActionHref"
+                      },
+                      "align": "@config.align",
+                      "type": "cta-banner",
+                      "primaryAction": {
+                        "label": "@config.primaryActionLabel",
+                        "href": "@config.primaryActionHref"
+                      },
+                      "subtitle": "@config.subtitle"
+                    }
+                  ]
+                ]
+              },
+              {
+                "from": "idle",
+                "to": "idle",
+                "event": "CTA_PRIMARY",
+                "effects": [
+                  [
+                    "emit",
+                    "CTA_PRIMARY",
+                    {
+                      "href": "@config.primaryActionHref"
+                    }
+                  ]
+                ]
+              },
+              {
+                "from": "idle",
+                "to": "idle",
+                "event": "CTA_SECONDARY",
+                "effects": [
+                  [
+                    "emit",
+                    "CTA_SECONDARY",
+                    {
+                      "href": "@config.secondaryActionHref"
+                    }
+                  ]
+                ]
+              }
+            ]
+          },
+          "config": {
+            "primaryActionHref": {
+              "type": "string",
+              "default": "#",
+              "label": "Primary Action Link",
+              "tier": "essential"
+            },
+            "background": {
+              "type": "string",
+              "default": "primary",
+              "label": "Background",
+              "description": "default, alt, dark, gradient, or primary",
+              "tier": "customization"
+            },
+            "title": {
+              "type": "string",
+              "default": "Ready to get started?",
+              "label": "Title",
+              "description": "Banner headline",
+              "tier": "essential"
+            },
+            "primaryActionLabel": {
+              "type": "string",
+              "default": "Get Started",
+              "label": "Primary Action Label",
+              "tier": "essential"
+            },
+            "secondaryActionHref": {
+              "type": "string",
+              "default": "",
+              "label": "Secondary Action Link",
+              "tier": "customization"
+            },
+            "secondaryActionLabel": {
+              "type": "string",
+              "default": "Learn More",
+              "label": "Secondary Action Label",
+              "tier": "customization"
+            },
+            "align": {
+              "type": "string",
+              "default": "center",
+              "label": "Alignment",
+              "description": "center or left",
+              "tier": "customization"
+            },
+            "subtitle": {
+              "type": "string",
+              "default": "Join thousands of teams shipping faster.",
+              "label": "Subtitle",
+              "description": "Supporting text below the title",
+              "tier": "essential"
+            }
+          },
+          "scope": "instance"
+        }
+      ],
+      "pages": [
+        {
+          "name": "CTAItemCTAPage",
+          "path": "/cta",
+          "traits": [
+            {
+              "ref": "CTAItemCTA"
+            }
+          ]
+        }
+      ]
+    }
+  ]
+}

@@ -1,5 +1,5 @@
-app std-applicant "1.1.0"
-"std-applicant — job applicant primitive tracking a person who applied to a job, their pipeline stage, and basic info. Lists applicants in `browsing`; opens applicant detail in `viewing_single` with Advance / Reject actions. Agents tune the list shape via `config.fields` + `config.itemActions`."
+app std-applicant "1.2.0"
+"std-applicant — job applicant pipeline (stage field, not status). Exposes HR knobs (backgroundCheckRequired, eVerifyRequired, anonymizeOnRejection, …)."
 
 type FieldSpec = { name : string!, label : string, variant : string, icon : string, format : string, key : string, header : string }
 type ItemAction = { label : string!, event : string!, variant : string, icon : string }
@@ -43,6 +43,30 @@ orbital ApplicantOrbital {
         @label "Row actions"
         @description "Buttons users can click on each applicant row"
         @tier "customization"
+      backgroundCheckRequired : boolean = false
+        @label "Background check required"
+        @description "Block ADVANCE_STAGE to 'hired' until a background check is on file."
+        @tier "customization"
+      eVerifyRequired : boolean = false
+        @label "E-Verify required"
+        @description "US I-9 / E-Verify gate. Block ADVANCE_STAGE to 'hired' until verification passes."
+        @tier "customization"
+      i9DocumentsRequired : boolean = false
+        @label "I-9 documents required"
+        @description "Require I-9 supporting documents at the hired stage."
+        @tier "customization"
+      anonymizeOnRejection : boolean = false
+        @label "Anonymize on rejection"
+        @description "When true, scrub PII (name, email, phone, resumeUrl) on REJECT_APPLICANT. Pair with std-data-erasure."
+        @tier "customization"
+      retentionAfterRejectionDays : number = 730
+        @label "Retention after rejection (days)"
+        @description "Days to keep rejected applicants. Default 730 (2 years) is typical EEOC retention."
+        @tier "advanced"
+      equalOpportunityTrackingEnabled : boolean = false
+        @label "Equal opportunity tracking"
+        @description "Capture demographic data separately for EEO reporting (sibling collection, not on Applicant entity)."
+        @tier "advanced"
     }
     initial: loading
     state loading {

@@ -1,5 +1,5 @@
-app std-tenant "1.1.0"
-"std-tenant — person/company occupying a leased unit. Lists tenants in `browsing`; opens tenant detail (name, contact, lease, move-in/out dates, status) in `viewing_single` with Activate / Move Out actions. Agents tune the list shape via `config.fields` + `config.itemActions`."
+app std-tenant "1.2.0"
+"std-tenant — person/company occupying a leased unit. Lists tenants; detail offers Activate / Move Out. Listens for SET_STATUS so std-lifecycle can drive transitions. Exposes Real-estate knobs (leaseRenewalNoticeDays, petPolicy, lateRentGraceDays, …)."
 
 type FieldSpec = { name : string!, label : string, variant : string, icon : string, format : string, key : string, header : string }
 type ItemAction = { label : string!, event : string!, variant : string, icon : string }
@@ -16,8 +16,10 @@ orbital TenantOrbital {
     status : "current" | "former" | "prospective" = "prospective"
     notes : string = ""
   }
-  type TenantLoaded = Event { data : [Tenant] }
-  type TenantLoadFailed = Event { error : string, code : string }
+  type TenantLoaded       = Event { data : [Tenant] }
+  type TenantLoadFailed   = Event { error : string, code : string }
+  type TenantUpdated      = Event { row : Tenant }                   "Fired after a tenant row's status persists (SET_STATUS / lifecycle)"
+  type TenantUpdateFailed = Event { error : string, code : string }  "Fired when a tenant row's status update fails to persist"
 
   trait TenantDirectory -> Tenant [interaction, collection] {
     config {
@@ -33,6 +35,30 @@ orbital TenantOrbital {
         @label "Row actions"
         @description "Buttons users can click on each tenant row"
         @tier "customization"
+      leaseRenewalNoticeDays    : number  = 60
+        @label "Renewal notice (days)"
+        @description "Days before lease end when a renewal nudge fires for this tenant."
+        @tier "customization"
+      securityDepositMonths     : number  = 1
+        @label "Security deposit (months)"
+        @description "Months of rent required as security deposit."
+        @tier "customization"
+      lateRentGraceDays         : number  = 5
+        @label "Late rent grace (days)"
+        @description "Days after rent due before a tenant rolls into a late status."
+        @tier "customization"
+      autoRenewEnabled          : boolean = false
+        @label "Auto-renew"
+        @description "Roll over the tenant's lease at term without an explicit non-renew notice."
+        @tier "customization"
+      petPolicy                 : "no-pets" | "cats-only" | "dogs-only" | "all" = "no-pets"
+        @label "Pet policy"
+        @description "Default pet policy enforced for new tenants."
+        @tier "customization"
+      inspectionFrequencyMonths : number  = 12
+        @label "Inspection cadence (months)"
+        @description "Months between scheduled unit inspections."
+        @tier "advanced"
     }
     initial: loading
     state loading {
@@ -60,6 +86,15 @@ orbital TenantOrbital {
         (set @entity.id @payload.id)
         (fetch Tenant { emit: { success: "TenantLoaded", failure: "TenantLoadFailed" } })
         (render-ui main { type: "stack", direction: "vertical", gap: "md", align: "center", className: "py-12", children: [{ type: "spinner" }, { type: "typography", variant: "caption", color: "muted", content: "Recording move-out…" }] })
+      SET_STATUS -> loading
+        (set @entity.id @payload.entityId)
+        (set @entity.status @payload.newStatus)
+        (persist update Tenant @entity { emit: { success: "TenantUpdated", failure: "TenantUpdateFailed" } })
+        (render-ui main { type: "stack", direction: "vertical", gap: "md", align: "center", className: "py-12", children: [{ type: "spinner" }, { type: "typography", variant: "caption", color: "muted", content: "Updating tenant status…" }] })
+      TenantUpdated -> loading
+        (fetch Tenant { emit: { success: "TenantLoaded", failure: "TenantLoadFailed" } })
+      TenantUpdateFailed -> browsing
+        (render-ui main { type: "alert", variant: "error", message: "@payload.error" })
     }
     state viewing_single {
       CLOSE_TENANT -> loading
@@ -81,20 +116,25 @@ orbital TenantOrbital {
     }
 
     emits {
-      OPEN_TENANT { id : string!, row : Tenant }
-      CLOSE_TENANT { }
-      ACTIVATE_TENANT { id : string! }
-      MOVE_OUT { id : string! }
-      TenantLoaded { data : [Tenant] }
-      TenantLoadFailed { error : string, code : string }
+      OPEN_TENANT        { id : string!, row : Tenant }
+      CLOSE_TENANT       { }
+      ACTIVATE_TENANT    { id : string! }
+      MOVE_OUT           { id : string! }
+      TenantLoaded       { data : [Tenant] }
+      TenantLoadFailed   { error : string, code : string }
+      TenantUpdated      { row : Tenant }
+      TenantUpdateFailed { error : string, code : string }
     }
     listens {
-      OPEN_TENANT { id : string!, row : Tenant }
-      CLOSE_TENANT { }
-      ACTIVATE_TENANT { id : string! }
-      MOVE_OUT { id : string! }
-      TenantLoaded { data : [Tenant] }
-      TenantLoadFailed { error : string, code : string }
+      OPEN_TENANT        { id : string!, row : Tenant }
+      CLOSE_TENANT       { }
+      ACTIVATE_TENANT    { id : string! }
+      MOVE_OUT           { id : string! }
+      SET_STATUS         { entityId : string!, newStatus : string! }
+      TenantLoaded       { data : [Tenant] }
+      TenantLoadFailed   { error : string, code : string }
+      TenantUpdated      { row : Tenant }
+      TenantUpdateFailed { error : string, code : string }
     }
   }
   page "/tenants" as TenantPage -> TenantDirectory

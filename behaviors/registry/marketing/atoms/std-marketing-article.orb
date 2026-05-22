@@ -1,0 +1,96 @@
+{
+  "name": "std-marketing-article",
+  "version": "1.0.0",
+  "description": "Article section atom for marketing pages. Renders a centered prose block with title and rich content. Pick for about pages, mission statements, and blog-style content.",
+  "orbitals": [
+    {
+      "name": "ArticleItemOrbital",
+      "entity": {
+        "name": "ArticleItem",
+        "persistence": "runtime",
+        "fields": [
+          {
+            "name": "id",
+            "type": "string",
+            "required": true
+          }
+        ]
+      },
+      "traits": [
+        {
+          "name": "ArticleItemArticle",
+          "category": "interaction",
+          "linkedEntity": "ArticleItem",
+          "stateMachine": {
+            "states": [
+              {
+                "name": "idle",
+                "isInitial": true
+              }
+            ],
+            "events": [
+              {
+                "key": "INIT",
+                "name": "Initialize"
+              }
+            ],
+            "transitions": [
+              {
+                "from": "idle",
+                "to": "idle",
+                "event": "INIT",
+                "effects": [
+                  [
+                    "render-ui",
+                    "main",
+                    {
+                      "type": "article-section",
+                      "children": "@config.content",
+                      "maxWidth": "@config.maxWidth",
+                      "title": "@config.title"
+                    }
+                  ]
+                ]
+              }
+            ]
+          },
+          "config": {
+            "content": {
+              "type": "string",
+              "default": "We believe building software should be as natural as describing it.",
+              "label": "Content",
+              "description": "Body text rendered as markdown",
+              "tier": "essential"
+            },
+            "title": {
+              "type": "string",
+              "default": "Our Mission",
+              "label": "Title",
+              "description": "Section headline",
+              "tier": "essential"
+            },
+            "maxWidth": {
+              "type": "string",
+              "default": "lg",
+              "label": "Max Width",
+              "description": "Content width constraint",
+              "tier": "customization"
+            }
+          },
+          "scope": "instance"
+        }
+      ],
+      "pages": [
+        {
+          "name": "ArticleItemArticlePage",
+          "path": "/article",
+          "traits": [
+            {
+              "ref": "ArticleItemArticle"
+            }
+          ]
+        }
+      ]
+    }
+  ]
+}

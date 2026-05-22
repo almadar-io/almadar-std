@@ -1,5 +1,5 @@
-app std-court-deadline "1.1.0"
-"std-court-deadline — statutory filing deadline tied to a legal matter. Lists deadlines in `browsing`; opens detail in `viewing_single` with Complete / Extend actions. Agents tune the list shape via `config.fields` + `config.itemActions`."
+app std-court-deadline "1.2.0"
+"std-court-deadline — statutory filing deadline tied to a legal matter. Listens for SET_STATUS so std-lifecycle can auto-miss / auto-complete. Exposes Scheduling + Legal knobs (bookingWindowDays, practiceArea, conflictCheckRequired, …)."
 
 type FieldSpec = { name : string!, label : string, variant : string, icon : string, format : string, key : string, header : string }
 type ItemAction = { label : string!, event : string!, variant : string, icon : string }
@@ -45,6 +45,58 @@ orbital CourtDeadlineOrbital {
         @label "Row actions"
         @description "Buttons users can click on each deadline row"
         @tier "customization"
+      bookingWindowDays : number = 365
+        @label "Booking window (days)"
+        @description "How far in advance deadlines can be scheduled."
+        @tier "customization"
+      leadTimeMinutes : number = 1440
+        @label "Lead time (minutes)"
+        @description "Minimum minutes before dueAt at which a deadline can still be created (default 1 day)."
+        @tier "customization"
+      bookingHours : string = "00:00-23:59"
+        @label "Booking hours"
+        @description "Daily window during which deadlines can be created (HH:MM-HH:MM)."
+        @tier "customization"
+      blackoutDates : [string] = []
+        @label "Blackout dates"
+        @description "ISO dates (court holidays) blocked from scheduling. Compose std-lifecycle to auto-shift."
+        @tier "customization"
+      noShowGracePeriodMinutes : number = 0
+        @label "No-show grace (minutes)"
+        @description "Minutes after dueAt before the deadline auto-marks missed. Wire via std-lifecycle."
+        @tier "customization"
+      rescheduleWindowHours : number = 72
+        @label "Reschedule window (hours)"
+        @description "Hours before dueAt during which an extension request is accepted."
+        @tier "customization"
+      maxReschedules : number = 2
+        @label "Max reschedules"
+        @description "Hard cap on extension count per deadline."
+        @tier "advanced"
+      cancellationPolicy : "free" | "partial-refund" | "no-refund" = "no-refund"
+        @label "Cancellation policy"
+        @description "Refund treatment when a deadline is cancelled (typically n/a for legal)."
+        @tier "customization"
+      practiceArea : string = ""
+        @label "Practice area"
+        @description "Practice area (e.g. litigation, IP, family). Drives docket grouping."
+        @tier "customization"
+      clientConfidentialityLevel : "standard" | "elevated" | "restricted" = "standard"
+        @label "Confidentiality level"
+        @description "Access control tier for related matter data."
+        @tier "customization"
+      conflictCheckRequired : boolean = true
+        @label "Conflict check required"
+        @description "Block creation until a conflict-of-interest check is on file."
+        @tier "essential"
+      billingRateDefault : number = 0
+        @label "Default billing rate"
+        @description "Default hourly billing rate applied to work logged against this deadline."
+        @tier "customization"
+      retainerRequired : boolean = false
+        @label "Retainer required"
+        @description "Require a signed retainer before work begins on the matter."
+        @tier "customization"
     }
     initial: loading
     state loading {
@@ -72,6 +124,11 @@ orbital CourtDeadlineOrbital {
         (set @entity.id @payload.id)
         (fetch CourtDeadline { emit: { success: "CourtDeadlineLoaded", failure: "CourtDeadlineLoadFailed" } })
         (render-ui main { type: "stack", direction: "vertical", gap: "md", align: "center", className: "py-12", children: [{ type: "spinner" }, { type: "typography", variant: "caption", color: "muted", content: "Completing deadline…" }] })
+      SET_STATUS -> loading
+        (set @entity.id @payload.entityId)
+        (set @entity.status @payload.newStatus)
+        (persist update CourtDeadline @entity { emit: { success: "CourtDeadlineLoaded", failure: "CourtDeadlineLoadFailed" } })
+        (render-ui main { type: "stack", direction: "vertical", gap: "md", align: "center", className: "py-12", children: [{ type: "spinner" }, { type: "typography", variant: "caption", color: "muted", content: "Updating deadline status…" }] })
     }
     state viewing_single {
       CLOSE_VIEW -> loading
@@ -104,6 +161,7 @@ orbital CourtDeadlineOrbital {
       CLOSE_VIEW              { }
       MARK_COMPLETED          { id : string! }
       EXTEND_DEADLINE         { id : string! }
+      SET_STATUS              { entityId : string!, newStatus : string! }
       CourtDeadlineLoaded     { data : [CourtDeadline] }
       CourtDeadlineLoadFailed { error : string, code : string }
     }

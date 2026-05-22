@@ -1,5 +1,5 @@
-app std-timesheet "1.1.0"
-"std-timesheet — weekly timesheet primitive holding total/billable hours for one employee. Lists timesheets in `browsing`; opens detail in `viewing_single` with Submit / Approve / Reject / Revise / Delete actions. Agents tune the list shape via `config.fields` + `config.itemActions`."
+app std-timesheet "1.2.0"
+"std-timesheet — weekly timesheet primitive. Listens for SET_STATUS so std-lifecycle can auto-close periods. Exposes HR knobs (backgroundCheckRequired, anonymizeOnRejection, …)."
 
 type FieldSpec = { name : string!, label : string, variant : string, icon : string, format : string, key : string, header : string }
 type ItemAction = { label : string!, event : string!, variant : string, icon : string }
@@ -38,6 +38,30 @@ orbital TimesheetOrbital {
         @label "Row actions"
         @description "Buttons users can click on each timesheet row"
         @tier "customization"
+      backgroundCheckRequired : boolean = false
+        @label "Background check required"
+        @description "Block SUBMIT until employee background check is on file."
+        @tier "customization"
+      eVerifyRequired : boolean = false
+        @label "E-Verify required"
+        @description "Block APPROVE until E-Verify confirms work eligibility."
+        @tier "customization"
+      i9DocumentsRequired : boolean = false
+        @label "I-9 documents required"
+        @description "Require I-9 on file before timesheet APPROVE."
+        @tier "customization"
+      anonymizeOnRejection : boolean = false
+        @label "Anonymize on rejection"
+        @description "When true, scrub employee PII on rejected timesheets. Pair with std-data-erasure."
+        @tier "customization"
+      retentionAfterRejectionDays : number = 1095
+        @label "Retention after rejection (days)"
+        @description "Days to keep rejected timesheets. Default 1095 (3 years) typical wage-and-hour."
+        @tier "advanced"
+      equalOpportunityTrackingEnabled : boolean = false
+        @label "Equal opportunity tracking"
+        @description "Capture demographic data separately for EEO reporting (sibling collection)."
+        @tier "advanced"
     }
     initial: loading
     state loading {
@@ -68,6 +92,11 @@ orbital TimesheetOrbital {
         (set @entity.id @payload.id)
         (fetch Timesheet { emit: { success: "TimesheetLoaded", failure: "TimesheetLoadFailed" } })
         (render-ui main { type: "stack", direction: "vertical", gap: "md", align: "center", className: "py-12", children: [{ type: "spinner" }, { type: "typography", variant: "caption", color: "muted", content: "Deleting timesheet…" }] })
+      SET_STATUS -> loading
+        (set @entity.id @payload.entityId)
+        (set @entity.status @payload.newStatus)
+        (persist update Timesheet @entity { emit: { success: "TimesheetLoaded", failure: "TimesheetLoadFailed" } })
+        (render-ui main { type: "stack", direction: "vertical", gap: "md", align: "center", className: "py-12", children: [{ type: "spinner" }, { type: "typography", variant: "caption", color: "muted", content: "Updating timesheet status…" }] })
     }
     state viewing_single {
       CLOSE_VIEW -> loading
@@ -118,6 +147,7 @@ orbital TimesheetOrbital {
       REJECT              { id : string!, row : Timesheet }
       REQUEST_REVISION    { id : string!, row : Timesheet }
       REQUEST_DELETE      { id : string! }
+      SET_STATUS          { entityId : string!, newStatus : string! }
       TimesheetLoaded     { data : [Timesheet], totalCount : number }
       TimesheetLoadFailed { error : string, code : string }
     }

@@ -1,7 +1,7 @@
 {
   "name": "std-interview-slot",
-  "version": "1.1.0",
-  "description": "std-interview-slot — scheduled interview between an applicant and one or more interviewers, with date/time, format, and status. Agents tune the list shape via `config.fields` + `config.itemActions`.",
+  "version": "1.2.0",
+  "description": "std-interview-slot — scheduled interview between applicant and interviewers. Listens for SET_STATUS so sibling std-lifecycle can drive automated transitions. Exposes Scheduling/Booking + HR knobs (bookingWindowDays, leadTimeMinutes, backgroundCheckRequired, …).",
   "orbitals": [
     {
       "name": "InterviewSlotOrbital",
@@ -241,6 +241,22 @@
                 ]
               },
               {
+                "key": "SET_STATUS",
+                "name": "Set Status",
+                "payloadSchema": [
+                  {
+                    "name": "entityId",
+                    "type": "string",
+                    "required": true
+                  },
+                  {
+                    "name": "newStatus",
+                    "type": "string",
+                    "required": true
+                  }
+                ]
+              },
+              {
                 "key": "CLOSE_VIEW",
                 "name": "Close View"
               },
@@ -267,8 +283,8 @@
                     "InterviewSlot",
                     {
                       "emit": {
-                        "failure": "InterviewSlotLoadFailed",
-                        "success": "InterviewSlotLoaded"
+                        "success": "InterviewSlotLoaded",
+                        "failure": "InterviewSlotLoadFailed"
                       }
                     }
                   ],
@@ -276,21 +292,21 @@
                     "render-ui",
                     "main",
                     {
+                      "direction": "vertical",
                       "type": "stack",
+                      "gap": "md",
                       "className": "py-12",
                       "children": [
                         {
                           "type": "spinner"
                         },
                         {
-                          "variant": "caption",
                           "type": "typography",
                           "content": "Loading interviews…",
+                          "variant": "caption",
                           "color": "muted"
                         }
                       ],
-                      "direction": "vertical",
-                      "gap": "md",
                       "align": "center"
                     }
                   ]
@@ -305,9 +321,14 @@
                     "render-ui",
                     "main",
                     {
+                      "type": "stack",
+                      "direction": "vertical",
+                      "gap": "md",
                       "children": [
                         {
+                          "type": "stack",
                           "direction": "horizontal",
+                          "gap": "sm",
                           "align": "center",
                           "children": [
                             {
@@ -315,39 +336,37 @@
                               "name": "calendar"
                             },
                             {
-                              "variant": "h3",
+                              "content": "@config.title",
                               "type": "typography",
-                              "content": "@config.title"
+                              "variant": "h3"
                             }
-                          ],
-                          "gap": "sm",
-                          "type": "stack"
+                          ]
                         },
                         {
                           "cols": 4.0,
                           "children": [
                             {
-                              "label": "Scheduled",
-                              "value": "@payload.data.length",
                               "icon": "calendar",
-                              "type": "stat-display"
+                              "value": "@payload.data.length",
+                              "type": "stat-display",
+                              "label": "Scheduled"
                             },
                             {
+                              "type": "stat-display",
                               "label": "Today",
-                              "type": "stat-display",
-                              "value": "9",
-                              "icon": "clock"
+                              "icon": "clock",
+                              "value": "9"
                             },
                             {
-                              "label": "Completed this week",
+                              "type": "stat-display",
                               "value": "37",
-                              "icon": "check-circle",
-                              "type": "stat-display"
+                              "label": "Completed this week",
+                              "icon": "check-circle"
                             },
                             {
-                              "value": "6%",
-                              "icon": "alert-triangle",
                               "type": "stat-display",
+                              "icon": "alert-triangle",
+                              "value": "6%",
                               "label": "No-show rate"
                             }
                           ],
@@ -357,17 +376,14 @@
                           "type": "divider"
                         },
                         {
-                          "type": "data-grid",
                           "fields": "@config.fields",
-                          "gap": "sm",
-                          "cols": 1.0,
                           "entity": "@payload.data",
+                          "type": "data-grid",
+                          "cols": 1.0,
+                          "gap": "sm",
                           "itemActions": "@config.itemActions"
                         }
-                      ],
-                      "gap": "md",
-                      "direction": "vertical",
-                      "type": "stack"
+                      ]
                     }
                   ]
                 ]
@@ -381,8 +397,8 @@
                     "render-ui",
                     "main",
                     {
-                      "type": "alert",
                       "variant": "error",
+                      "type": "alert",
                       "message": "@payload.error"
                     }
                   ]
@@ -443,15 +459,17 @@
                     "main",
                     {
                       "gap": "md",
+                      "type": "stack",
                       "direction": "vertical",
                       "children": [
                         {
-                          "align": "center",
+                          "gap": "sm",
+                          "type": "stack",
                           "children": [
                             {
-                              "label": "Back",
                               "type": "button",
                               "action": "CLOSE_VIEW",
+                              "label": "Back",
                               "variant": "ghost"
                             },
                             {
@@ -469,78 +487,77 @@
                               "label": "@entity.format"
                             },
                             {
-                              "label": "@entity.status",
                               "variant": "default",
-                              "type": "badge"
+                              "type": "badge",
+                              "label": "@entity.status"
                             }
                           ],
                           "direction": "horizontal",
-                          "type": "stack",
-                          "gap": "sm"
+                          "align": "center"
                         },
                         {
                           "type": "divider"
                         },
                         {
-                          "direction": "vertical",
                           "type": "stack",
                           "gap": "sm",
                           "children": [
                             {
+                              "gap": "md",
                               "type": "stack",
                               "children": [
                                 {
-                                  "color": "muted",
+                                  "content": "Interviewer",
                                   "variant": "caption",
                                   "type": "typography",
-                                  "content": "Interviewer"
+                                  "color": "muted"
                                 },
                                 {
-                                  "content": "@entity.interviewerName",
                                   "type": "typography",
-                                  "variant": "body"
+                                  "variant": "body",
+                                  "content": "@entity.interviewerName"
                                 }
                               ],
-                              "gap": "md",
                               "direction": "horizontal"
                             },
                             {
+                              "type": "stack",
                               "direction": "horizontal",
+                              "gap": "md",
                               "children": [
                                 {
-                                  "color": "muted",
-                                  "variant": "caption",
+                                  "content": "Applicant ID",
                                   "type": "typography",
-                                  "content": "Applicant ID"
+                                  "color": "muted",
+                                  "variant": "caption"
                                 },
                                 {
                                   "type": "typography",
                                   "content": "@entity.applicantId",
                                   "variant": "body"
                                 }
-                              ],
-                              "gap": "md",
-                              "type": "stack"
+                              ]
                             },
                             {
-                              "gap": "md",
-                              "type": "stack",
                               "children": [
                                 {
                                   "color": "muted",
-                                  "type": "typography",
                                   "content": "Notes",
-                                  "variant": "caption"
+                                  "variant": "caption",
+                                  "type": "typography"
                                 },
                                 {
-                                  "content": "@entity.notes",
                                   "type": "typography",
+                                  "content": "@entity.notes",
                                   "variant": "body"
                                 }
                               ],
-                              "direction": "horizontal"
+                              "type": "stack",
+                              "direction": "horizontal",
+                              "gap": "md"
                             }
-                          ]
+                          ],
+                          "direction": "vertical"
                         },
                         {
                           "type": "divider"
@@ -550,47 +567,46 @@
                           "cols": 2.0,
                           "children": [
                             {
-                              "type": "stat-display",
+                              "value": "@entity.scheduledAt",
                               "label": "Scheduled",
-                              "icon": "calendar",
-                              "value": "@entity.scheduledAt"
+                              "type": "stat-display",
+                              "icon": "calendar"
                             },
                             {
                               "label": "Duration (min)",
+                              "value": "@entity.durationMinutes",
                               "type": "stat-display",
-                              "icon": "clock",
-                              "value": "@entity.durationMinutes"
+                              "icon": "clock"
                             }
                           ]
                         },
                         {
-                          "type": "stack",
-                          "gap": "sm",
-                          "align": "center",
                           "children": [
                             {
+                              "type": "button",
+                              "action": "COMPLETE_INTERVIEW",
                               "actionPayload": {
                                 "id": "@entity.id"
                               },
-                              "type": "button",
-                              "variant": "primary",
                               "label": "Complete",
-                              "action": "COMPLETE_INTERVIEW"
+                              "variant": "primary"
                             },
                             {
                               "label": "Cancel",
-                              "action": "CANCEL_INTERVIEW",
+                              "type": "button",
                               "variant": "danger",
+                              "action": "CANCEL_INTERVIEW",
                               "actionPayload": {
                                 "id": "@entity.id"
-                              },
-                              "type": "button"
+                              }
                             }
                           ],
+                          "align": "center",
+                          "gap": "sm",
+                          "type": "stack",
                           "direction": "horizontal"
                         }
-                      ],
-                      "type": "stack"
+                      ]
                     }
                   ]
                 ]
@@ -610,6 +626,57 @@
                     "InterviewSlot",
                     {
                       "emit": {
+                        "failure": "InterviewSlotLoadFailed",
+                        "success": "InterviewSlotLoaded"
+                      }
+                    }
+                  ],
+                  [
+                    "render-ui",
+                    "main",
+                    {
+                      "className": "py-12",
+                      "children": [
+                        {
+                          "type": "spinner"
+                        },
+                        {
+                          "type": "typography",
+                          "variant": "caption",
+                          "color": "muted",
+                          "content": "Cancelling interview…"
+                        }
+                      ],
+                      "type": "stack",
+                      "direction": "vertical",
+                      "align": "center",
+                      "gap": "md"
+                    }
+                  ]
+                ]
+              },
+              {
+                "from": "browsing",
+                "to": "loading",
+                "event": "SET_STATUS",
+                "effects": [
+                  [
+                    "set",
+                    "@entity.id",
+                    "@payload.entityId"
+                  ],
+                  [
+                    "set",
+                    "@entity.status",
+                    "@payload.newStatus"
+                  ],
+                  [
+                    "persist",
+                    "update",
+                    "InterviewSlot",
+                    "@entity",
+                    {
+                      "emit": {
                         "success": "InterviewSlotLoaded",
                         "failure": "InterviewSlotLoadFailed"
                       }
@@ -619,11 +686,10 @@
                     "render-ui",
                     "main",
                     {
+                      "gap": "md",
+                      "type": "stack",
                       "align": "center",
                       "className": "py-12",
-                      "direction": "vertical",
-                      "type": "stack",
-                      "gap": "md",
                       "children": [
                         {
                           "type": "spinner"
@@ -631,10 +697,11 @@
                         {
                           "variant": "caption",
                           "type": "typography",
-                          "color": "muted",
-                          "content": "Cancelling interview…"
+                          "content": "Updating interview status…",
+                          "color": "muted"
                         }
-                      ]
+                      ],
+                      "direction": "vertical"
                     }
                   ]
                 ]
@@ -658,22 +725,22 @@
                     "render-ui",
                     "main",
                     {
-                      "gap": "md",
                       "className": "py-12",
                       "direction": "vertical",
-                      "type": "stack",
-                      "align": "center",
                       "children": [
                         {
                           "type": "spinner"
                         },
                         {
-                          "variant": "caption",
-                          "type": "typography",
+                          "content": "Loading interviews…",
                           "color": "muted",
-                          "content": "Loading interviews…"
+                          "variant": "caption",
+                          "type": "typography"
                         }
-                      ]
+                      ],
+                      "type": "stack",
+                      "align": "center",
+                      "gap": "md"
                     }
                   ]
                 ]
@@ -693,8 +760,8 @@
                     "InterviewSlot",
                     {
                       "emit": {
-                        "success": "InterviewSlotLoaded",
-                        "failure": "InterviewSlotLoadFailed"
+                        "failure": "InterviewSlotLoadFailed",
+                        "success": "InterviewSlotLoaded"
                       }
                     }
                   ],
@@ -702,22 +769,22 @@
                     "render-ui",
                     "main",
                     {
-                      "align": "center",
                       "children": [
                         {
                           "type": "spinner"
                         },
                         {
+                          "type": "typography",
                           "color": "muted",
                           "variant": "caption",
-                          "type": "typography",
                           "content": "Completing interview…"
                         }
                       ],
+                      "className": "py-12",
                       "gap": "md",
-                      "type": "stack",
                       "direction": "vertical",
-                      "className": "py-12"
+                      "align": "center",
+                      "type": "stack"
                     }
                   ]
                 ]
@@ -746,22 +813,22 @@
                     "render-ui",
                     "main",
                     {
-                      "align": "center",
-                      "direction": "vertical",
-                      "type": "stack",
-                      "gap": "md",
                       "className": "py-12",
+                      "align": "center",
                       "children": [
                         {
                           "type": "spinner"
                         },
                         {
-                          "type": "typography",
+                          "variant": "caption",
                           "color": "muted",
                           "content": "Cancelling interview…",
-                          "variant": "caption"
+                          "type": "typography"
                         }
-                      ]
+                      ],
+                      "direction": "vertical",
+                      "gap": "md",
+                      "type": "stack"
                     }
                   ]
                 ]
@@ -776,8 +843,8 @@
                     "InterviewSlot",
                     {
                       "emit": {
-                        "success": "InterviewSlotLoaded",
-                        "failure": "InterviewSlotLoadFailed"
+                        "failure": "InterviewSlotLoadFailed",
+                        "success": "InterviewSlotLoaded"
                       }
                     }
                   ],
@@ -785,8 +852,8 @@
                     "render-ui",
                     "main",
                     {
-                      "size": "sm",
-                      "type": "spinner"
+                      "type": "spinner",
+                      "size": "sm"
                     }
                   ]
                 ]
@@ -794,33 +861,80 @@
             ]
           },
           "config": {
+            "eVerifyRequired": {
+              "type": "boolean",
+              "default": false,
+              "label": "E-Verify required",
+              "description": "US I-9 / E-Verify gate. Block downstream offer until verification passes.",
+              "tier": "customization"
+            },
+            "maxReschedules": {
+              "type": "number",
+              "default": 2.0,
+              "label": "Max reschedules",
+              "description": "Hard cap on reschedule count per interview slot.",
+              "tier": "advanced"
+            },
+            "cancellationPolicy": {
+              "type": "string",
+              "default": "free",
+              "label": "Cancellation policy",
+              "description": "Refund treatment when a slot is cancelled inside the reschedule window.",
+              "tier": "customization",
+              "values": [
+                "free",
+                "partial-refund",
+                "no-refund"
+              ]
+            },
+            "backgroundCheckRequired": {
+              "type": "boolean",
+              "default": false,
+              "label": "Background check required",
+              "description": "Block COMPLETE_INTERVIEW until a background check is on file.",
+              "tier": "customization"
+            },
+            "title": {
+              "type": "string",
+              "default": "Interviews",
+              "label": "Section title",
+              "description": "Heading shown above the interview schedule",
+              "tier": "customization"
+            },
+            "retentionAfterRejectionDays": {
+              "type": "number",
+              "default": 730.0,
+              "label": "Retention after rejection (days)",
+              "description": "Days to keep rejected interview records. Default 730 (2 years) EEOC typical.",
+              "tier": "advanced"
+            },
             "fields": {
               "type": "[FieldSpec]",
               "default": [
                 {
-                  "name": "applicantName",
                   "variant": "caption",
+                  "name": "applicantName",
                   "label": "Applicant"
                 },
                 {
+                  "label": "Interviewer",
                   "name": "interviewerName",
-                  "variant": "caption",
-                  "label": "Interviewer"
+                  "variant": "caption"
                 },
                 {
                   "name": "scheduledAt",
-                  "variant": "caption",
-                  "label": "Scheduled"
+                  "label": "Scheduled",
+                  "variant": "caption"
                 },
                 {
-                  "label": "Format",
                   "variant": "badge",
-                  "name": "format"
+                  "name": "format",
+                  "label": "Format"
                 },
                 {
+                  "name": "status",
                   "label": "Status",
-                  "variant": "badge",
-                  "name": "status"
+                  "variant": "badge"
                 }
               ],
               "label": "Columns to show",
@@ -834,23 +948,18 @@
                     "type": "string",
                     "required": false
                   },
-                  "header": {
-                    "name": "header",
-                    "type": "string",
-                    "required": false
-                  },
-                  "icon": {
-                    "name": "icon",
-                    "type": "string",
-                    "required": false
-                  },
-                  "name": {
-                    "name": "name",
-                    "type": "string",
-                    "required": true
-                  },
                   "variant": {
                     "name": "variant",
+                    "type": "string",
+                    "required": false
+                  },
+                  "key": {
+                    "name": "key",
+                    "type": "string",
+                    "required": false
+                  },
+                  "header": {
+                    "name": "header",
                     "type": "string",
                     "required": false
                   },
@@ -859,19 +968,41 @@
                     "type": "string",
                     "required": false
                   },
-                  "key": {
-                    "name": "key",
+                  "name": {
+                    "name": "name",
+                    "type": "string",
+                    "required": true
+                  },
+                  "icon": {
+                    "name": "icon",
                     "type": "string",
                     "required": false
                   }
                 }
               }
             },
-            "title": {
-              "type": "string",
-              "default": "Interviews",
-              "label": "Section title",
-              "description": "Heading shown above the interview schedule",
+            "blackoutDates": {
+              "type": "[string]",
+              "default": [],
+              "label": "Blackout dates",
+              "description": "ISO dates blocked from booking (e.g. holidays). Compose std-lifecycle to enforce.",
+              "tier": "customization",
+              "items": {
+                "type": "string"
+              }
+            },
+            "equalOpportunityTrackingEnabled": {
+              "type": "boolean",
+              "default": false,
+              "label": "Equal opportunity tracking",
+              "description": "Capture demographic data separately for EEO reporting (sibling collection).",
+              "tier": "advanced"
+            },
+            "noShowGracePeriodMinutes": {
+              "type": "number",
+              "default": 15.0,
+              "label": "No-show grace (minutes)",
+              "description": "Minutes after scheduledAt before the slot auto-marks no_show. Wire via std-lifecycle.",
               "tier": "customization"
             },
             "itemActions": {
@@ -879,13 +1010,13 @@
               "default": [
                 {
                   "event": "OPEN_INTERVIEW",
-                  "icon": "arrow-right",
                   "label": "Open",
+                  "icon": "arrow-right",
                   "variant": "primary"
                 },
                 {
-                  "label": "Cancel",
                   "variant": "danger",
+                  "label": "Cancel",
                   "event": "CANCEL_INTERVIEW"
                 }
               ],
@@ -900,23 +1031,65 @@
                     "type": "string",
                     "required": false
                   },
-                  "variant": {
-                    "name": "variant",
+                  "event": {
+                    "name": "event",
                     "type": "string",
-                    "required": false
+                    "required": true
                   },
                   "label": {
                     "name": "label",
                     "type": "string",
                     "required": true
                   },
-                  "event": {
-                    "name": "event",
+                  "variant": {
+                    "name": "variant",
                     "type": "string",
-                    "required": true
+                    "required": false
                   }
                 }
               }
+            },
+            "leadTimeMinutes": {
+              "type": "number",
+              "default": 60.0,
+              "label": "Lead time (minutes)",
+              "description": "Minimum minutes before start time that a new booking is accepted.",
+              "tier": "customization"
+            },
+            "bookingHours": {
+              "type": "string",
+              "default": "09:00-17:00",
+              "label": "Booking hours",
+              "description": "Daily window during which interviews can be scheduled (HH:MM-HH:MM).",
+              "tier": "customization"
+            },
+            "bookingWindowDays": {
+              "type": "number",
+              "default": 30.0,
+              "label": "Booking window (days)",
+              "description": "How far in advance applicants can schedule interviews.",
+              "tier": "customization"
+            },
+            "anonymizeOnRejection": {
+              "type": "boolean",
+              "default": false,
+              "label": "Anonymize on rejection",
+              "description": "When true, scrub applicant PII on rejection. Pair with std-data-erasure.",
+              "tier": "customization"
+            },
+            "i9DocumentsRequired": {
+              "type": "boolean",
+              "default": false,
+              "label": "I-9 documents required",
+              "description": "Require I-9 supporting documents before accepting an offer downstream.",
+              "tier": "customization"
+            },
+            "rescheduleWindowHours": {
+              "type": "number",
+              "default": 24.0,
+              "label": "Reschedule window (hours)",
+              "description": "Hours before scheduledAt during which the applicant can self-reschedule.",
+              "tier": "customization"
             }
           },
           "scope": "collection"

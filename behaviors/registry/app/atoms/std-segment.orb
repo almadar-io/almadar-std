@@ -1,7 +1,7 @@
 {
   "name": "std-segment",
-  "version": "1.1.0",
-  "description": "std-segment — contact segment primitive. Defines a filter criteria for grouping contacts. Lists segments in `browsing`; opens segment detail in `viewing_single` with Recalculate action. Agents tune the list shape via `config.fields` + `config.itemActions`.",
+  "version": "1.2.0",
+  "description": "std-segment — contact segment primitive grouping contacts by criteria with Recalculate action. Exposes CRM-pattern knobs (health-score threshold, reminder cadence, archive policy, consent).",
   "orbitals": [
     {
       "name": "SegmentOrbital",
@@ -216,11 +216,9 @@
                     "render-ui",
                     "main",
                     {
-                      "align": "center",
-                      "type": "stack",
-                      "gap": "md",
-                      "direction": "vertical",
                       "className": "py-12",
+                      "type": "stack",
+                      "direction": "vertical",
                       "children": [
                         {
                           "type": "spinner"
@@ -231,7 +229,9 @@
                           "variant": "caption",
                           "type": "typography"
                         }
-                      ]
+                      ],
+                      "gap": "md",
+                      "align": "center"
                     }
                   ]
                 ]
@@ -250,8 +250,10 @@
                       "gap": "md",
                       "children": [
                         {
+                          "direction": "horizontal",
                           "type": "stack",
                           "align": "center",
+                          "gap": "sm",
                           "children": [
                             {
                               "name": "users",
@@ -259,53 +261,51 @@
                             },
                             {
                               "type": "typography",
-                              "content": "@config.title",
-                              "variant": "h3"
+                              "variant": "h3",
+                              "content": "@config.title"
                             }
-                          ],
-                          "direction": "horizontal",
-                          "gap": "sm"
+                          ]
                         },
                         {
+                          "type": "simple-grid",
+                          "cols": 4.0,
                           "children": [
                             {
-                              "icon": "users",
-                              "label": "Total segments",
                               "type": "stat-display",
-                              "value": "@payload.data.length"
+                              "value": "@payload.data.length",
+                              "label": "Total segments",
+                              "icon": "users"
                             },
                             {
                               "value": "12,480",
-                              "icon": "user-check",
                               "type": "stat-display",
-                              "label": "Active members"
+                              "label": "Active members",
+                              "icon": "user-check"
                             },
                             {
-                              "type": "stat-display",
-                              "icon": "bar-chart",
+                              "label": "Avg size",
                               "value": "1,560",
-                              "label": "Avg size"
+                              "type": "stat-display",
+                              "icon": "bar-chart"
                             },
                             {
                               "icon": "refresh-cw",
                               "value": "8",
-                              "label": "Updated 24h",
-                              "type": "stat-display"
+                              "type": "stat-display",
+                              "label": "Updated 24h"
                             }
-                          ],
-                          "type": "simple-grid",
-                          "cols": 4.0
+                          ]
                         },
                         {
                           "type": "divider"
                         },
                         {
-                          "itemActions": "@config.itemActions",
-                          "entity": "@payload.data",
-                          "cols": 1.0,
-                          "fields": "@config.fields",
                           "gap": "sm",
-                          "type": "data-grid"
+                          "fields": "@config.fields",
+                          "itemActions": "@config.itemActions",
+                          "type": "data-grid",
+                          "entity": "@payload.data",
+                          "cols": 1.0
                         }
                       ]
                     }
@@ -369,77 +369,77 @@
                     {
                       "children": [
                         {
-                          "gap": "sm",
-                          "type": "stack",
                           "direction": "horizontal",
                           "align": "center",
+                          "type": "stack",
                           "children": [
                             {
+                              "action": "CLOSE_VIEW",
                               "type": "button",
                               "label": "Back",
-                              "variant": "ghost",
-                              "action": "CLOSE_VIEW"
+                              "variant": "ghost"
                             },
                             {
-                              "name": "users",
-                              "type": "icon"
+                              "type": "icon",
+                              "name": "users"
                             },
                             {
+                              "variant": "h3",
                               "content": "@entity.name",
-                              "type": "typography",
-                              "variant": "h3"
+                              "type": "typography"
                             },
                             {
                               "type": "badge",
-                              "variant": "primary",
-                              "label": "@entity.memberCount"
+                              "label": "@entity.memberCount",
+                              "variant": "primary"
                             }
-                          ]
+                          ],
+                          "gap": "sm"
                         },
                         {
                           "type": "divider"
                         },
                         {
+                          "type": "stack",
+                          "direction": "vertical",
                           "children": [
                             {
+                              "type": "stack",
                               "gap": "md",
+                              "direction": "horizontal",
                               "children": [
                                 {
-                                  "content": "Description",
-                                  "color": "muted",
                                   "type": "typography",
-                                  "variant": "caption"
+                                  "color": "muted",
+                                  "variant": "caption",
+                                  "content": "Description"
                                 },
                                 {
                                   "type": "typography",
-                                  "content": "@entity.description",
-                                  "variant": "body"
+                                  "variant": "body",
+                                  "content": "@entity.description"
                                 }
-                              ],
-                              "type": "stack",
-                              "direction": "horizontal"
+                              ]
                             },
                             {
+                              "direction": "horizontal",
                               "gap": "md",
                               "children": [
                                 {
-                                  "color": "muted",
-                                  "type": "typography",
                                   "content": "Criteria",
-                                  "variant": "caption"
+                                  "variant": "caption",
+                                  "color": "muted",
+                                  "type": "typography"
                                 },
                                 {
                                   "variant": "body",
-                                  "type": "typography",
-                                  "content": "@entity.criteria"
+                                  "content": "@entity.criteria",
+                                  "type": "typography"
                                 }
                               ],
-                              "type": "stack",
-                              "direction": "horizontal"
+                              "type": "stack"
                             }
                           ],
-                          "type": "stack",
-                          "direction": "vertical",
                           "gap": "sm"
                         },
                         {
@@ -449,36 +449,36 @@
                           "children": [
                             {
                               "icon": "users",
-                              "label": "Members",
                               "type": "stat-display",
+                              "label": "Members",
                               "value": "@entity.memberCount"
                             },
                             {
                               "label": "Last updated",
                               "icon": "calendar",
-                              "value": "@entity.lastUpdated",
-                              "type": "stat-display"
+                              "type": "stat-display",
+                              "value": "@entity.lastUpdated"
                             }
                           ],
                           "type": "simple-grid",
                           "cols": 2.0
                         },
                         {
-                          "gap": "sm",
-                          "direction": "horizontal",
+                          "type": "stack",
+                          "align": "center",
                           "children": [
                             {
-                              "action": "RECALCULATE",
                               "actionPayload": {
                                 "id": "@entity.id"
                               },
                               "variant": "primary",
                               "type": "button",
+                              "action": "RECALCULATE",
                               "label": "Recalculate"
                             }
                           ],
-                          "type": "stack",
-                          "align": "center"
+                          "gap": "sm",
+                          "direction": "horizontal"
                         }
                       ],
                       "type": "stack",
@@ -503,8 +503,8 @@
                     "Segment",
                     {
                       "emit": {
-                        "failure": "SegmentLoadFailed",
-                        "success": "SegmentLoaded"
+                        "success": "SegmentLoaded",
+                        "failure": "SegmentLoadFailed"
                       }
                     }
                   ],
@@ -512,22 +512,22 @@
                     "render-ui",
                     "main",
                     {
-                      "className": "py-12",
-                      "gap": "md",
-                      "align": "center",
                       "type": "stack",
+                      "gap": "md",
+                      "className": "py-12",
+                      "direction": "vertical",
                       "children": [
                         {
                           "type": "spinner"
                         },
                         {
                           "variant": "caption",
-                          "content": "Recalculating segment…",
                           "color": "muted",
+                          "content": "Recalculating segment…",
                           "type": "typography"
                         }
                       ],
-                      "direction": "vertical"
+                      "align": "center"
                     }
                   ]
                 ]
@@ -552,21 +552,21 @@
                     "main",
                     {
                       "gap": "md",
-                      "align": "center",
-                      "type": "stack",
+                      "direction": "vertical",
+                      "className": "py-12",
                       "children": [
                         {
                           "type": "spinner"
                         },
                         {
+                          "color": "muted",
                           "variant": "caption",
-                          "type": "typography",
                           "content": "Loading segments…",
-                          "color": "muted"
+                          "type": "typography"
                         }
                       ],
-                      "direction": "vertical",
-                      "className": "py-12"
+                      "type": "stack",
+                      "align": "center"
                     }
                   ]
                 ]
@@ -595,21 +595,21 @@
                     "render-ui",
                     "main",
                     {
+                      "direction": "vertical",
                       "className": "py-12",
+                      "gap": "md",
+                      "align": "center",
                       "children": [
                         {
                           "type": "spinner"
                         },
                         {
+                          "variant": "caption",
                           "type": "typography",
-                          "color": "muted",
                           "content": "Recalculating segment…",
-                          "variant": "caption"
+                          "color": "muted"
                         }
                       ],
-                      "direction": "vertical",
-                      "align": "center",
-                      "gap": "md",
                       "type": "stack"
                     }
                   ]
@@ -643,18 +643,120 @@
             ]
           },
           "config": {
+            "consentTrackingEnabled": {
+              "type": "boolean",
+              "default": true,
+              "label": "Track consent",
+              "description": "Whether membership in this segment honors recorded consent. Declarative.",
+              "tier": "customization"
+            },
+            "renewalReminderDaysBefore": {
+              "type": "[number]",
+              "default": [
+                30.0,
+                7.0
+              ],
+              "label": "Reminder cadence (days)",
+              "description": "Days ahead of any segment-wide deadline to send reminders. Declarative; wire via sibling std-reminder-scheduler.",
+              "tier": "customization",
+              "items": {
+                "type": "number"
+              }
+            },
+            "archiveInactiveAfterDays": {
+              "type": "number",
+              "default": 365.0,
+              "label": "Archive inactive after (days)",
+              "description": "Days a segment may go unrecalculated before being archived. Declarative; wire via sibling std-lifecycle.",
+              "tier": "advanced"
+            },
+            "title": {
+              "type": "string",
+              "default": "Segments",
+              "label": "Section title",
+              "description": "Heading shown above the segment list",
+              "tier": "customization"
+            },
+            "fields": {
+              "type": "[FieldSpec]",
+              "default": [
+                {
+                  "variant": "caption",
+                  "label": "Name",
+                  "name": "name"
+                },
+                {
+                  "variant": "caption",
+                  "name": "description",
+                  "label": "Description"
+                },
+                {
+                  "label": "Members",
+                  "variant": "badge",
+                  "name": "memberCount"
+                },
+                {
+                  "variant": "caption",
+                  "label": "Updated",
+                  "name": "lastUpdated"
+                }
+              ],
+              "label": "Columns to show",
+              "description": "Each column maps to one field on the Segment entity",
+              "tier": "advanced",
+              "items": {
+                "type": "object",
+                "properties": {
+                  "key": {
+                    "name": "key",
+                    "type": "string",
+                    "required": false
+                  },
+                  "header": {
+                    "name": "header",
+                    "type": "string",
+                    "required": false
+                  },
+                  "icon": {
+                    "name": "icon",
+                    "type": "string",
+                    "required": false
+                  },
+                  "name": {
+                    "name": "name",
+                    "type": "string",
+                    "required": true
+                  },
+                  "label": {
+                    "name": "label",
+                    "type": "string",
+                    "required": false
+                  },
+                  "format": {
+                    "name": "format",
+                    "type": "string",
+                    "required": false
+                  },
+                  "variant": {
+                    "name": "variant",
+                    "type": "string",
+                    "required": false
+                  }
+                }
+              }
+            },
             "itemActions": {
               "type": "[ItemAction]",
               "default": [
                 {
-                  "icon": "arrow-right",
                   "label": "Open",
                   "event": "OPEN_SEGMENT",
-                  "variant": "primary"
+                  "variant": "primary",
+                  "icon": "arrow-right"
                 },
                 {
-                  "event": "RECALCULATE",
                   "variant": "danger",
+                  "event": "RECALCULATE",
                   "label": "Recalculate"
                 }
               ],
@@ -674,93 +776,25 @@
                     "type": "string",
                     "required": false
                   },
-                  "icon": {
-                    "name": "icon",
-                    "type": "string",
-                    "required": false
-                  },
                   "label": {
                     "name": "label",
                     "type": "string",
                     "required": true
+                  },
+                  "icon": {
+                    "name": "icon",
+                    "type": "string",
+                    "required": false
                   }
                 }
               }
             },
-            "title": {
-              "type": "string",
-              "default": "Segments",
-              "label": "Section title",
-              "description": "Heading shown above the segment list",
+            "healthScoreThresholdAlert": {
+              "type": "number",
+              "default": 50.0,
+              "label": "Health score threshold",
+              "description": "Trigger alert when segment-average health score drops below this. Declarative; wire via sibling std-notify.",
               "tier": "customization"
-            },
-            "fields": {
-              "type": "[FieldSpec]",
-              "default": [
-                {
-                  "variant": "caption",
-                  "name": "name",
-                  "label": "Name"
-                },
-                {
-                  "variant": "caption",
-                  "label": "Description",
-                  "name": "description"
-                },
-                {
-                  "name": "memberCount",
-                  "label": "Members",
-                  "variant": "badge"
-                },
-                {
-                  "name": "lastUpdated",
-                  "label": "Updated",
-                  "variant": "caption"
-                }
-              ],
-              "label": "Columns to show",
-              "description": "Each column maps to one field on the Segment entity",
-              "tier": "advanced",
-              "items": {
-                "type": "object",
-                "properties": {
-                  "name": {
-                    "name": "name",
-                    "type": "string",
-                    "required": true
-                  },
-                  "variant": {
-                    "name": "variant",
-                    "type": "string",
-                    "required": false
-                  },
-                  "format": {
-                    "name": "format",
-                    "type": "string",
-                    "required": false
-                  },
-                  "key": {
-                    "name": "key",
-                    "type": "string",
-                    "required": false
-                  },
-                  "header": {
-                    "name": "header",
-                    "type": "string",
-                    "required": false
-                  },
-                  "icon": {
-                    "name": "icon",
-                    "type": "string",
-                    "required": false
-                  },
-                  "label": {
-                    "name": "label",
-                    "type": "string",
-                    "required": false
-                  }
-                }
-              }
             }
           },
           "scope": "collection"

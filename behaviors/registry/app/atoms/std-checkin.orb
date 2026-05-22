@@ -1,7 +1,7 @@
 {
   "name": "std-checkin",
-  "version": "1.1.0",
-  "description": "std-checkin — arrival check-in atom listing recorded check-ins (qr or geo). Lists check-ins in `browsing`; opens detail in `viewing_single` with Verify / Revoke actions. Agents tune the list shape via `config.fields` + `config.itemActions`.",
+  "version": "1.2.0",
+  "description": "std-checkin — arrival check-in atom (qr / geo). Exposes Scheduling/Booking knobs (bookingWindowDays, leadTimeMinutes, noShowGracePeriodMinutes, …).",
   "orbitals": [
     {
       "name": "CheckinOrbital",
@@ -264,8 +264,8 @@
                     "Checkin",
                     {
                       "emit": {
-                        "failure": "CheckinLoadFailed",
-                        "success": "CheckinLoaded"
+                        "success": "CheckinLoaded",
+                        "failure": "CheckinLoadFailed"
                       }
                     }
                   ],
@@ -273,22 +273,22 @@
                     "render-ui",
                     "main",
                     {
-                      "direction": "vertical",
-                      "align": "center",
                       "className": "py-12",
+                      "align": "center",
+                      "type": "stack",
                       "children": [
                         {
                           "type": "spinner"
                         },
                         {
-                          "type": "typography",
-                          "variant": "caption",
                           "content": "Loading check-ins…",
-                          "color": "muted"
+                          "variant": "caption",
+                          "color": "muted",
+                          "type": "typography"
                         }
                       ],
-                      "gap": "md",
-                      "type": "stack"
+                      "direction": "vertical",
+                      "gap": "md"
                     }
                   ]
                 ]
@@ -306,25 +306,25 @@
                       "direction": "vertical",
                       "children": [
                         {
-                          "direction": "horizontal",
-                          "align": "center",
-                          "type": "stack",
                           "gap": "sm",
+                          "direction": "horizontal",
                           "children": [
                             {
                               "type": "icon",
                               "name": "map-pin"
                             },
                             {
-                              "type": "typography",
                               "content": "@config.title",
-                              "variant": "h3"
+                              "variant": "h3",
+                              "type": "typography"
                             }
-                          ]
+                          ],
+                          "type": "stack",
+                          "align": "center"
                         },
                         {
-                          "cols": 4.0,
                           "type": "simple-grid",
+                          "cols": 4.0,
                           "children": [
                             {
                               "icon": "map-pin",
@@ -333,21 +333,21 @@
                               "label": "Total check-ins"
                             },
                             {
+                              "icon": "check-circle",
                               "value": "92%",
                               "label": "Verified",
-                              "type": "stat-display",
-                              "icon": "check-circle"
+                              "type": "stat-display"
                             },
                             {
-                              "label": "Today",
                               "type": "stat-display",
+                              "label": "Today",
                               "value": "47",
                               "icon": "calendar"
                             },
                             {
-                              "icon": "globe",
                               "type": "stat-display",
                               "value": "18",
+                              "icon": "globe",
                               "label": "Sites covered"
                             }
                           ]
@@ -356,12 +356,12 @@
                           "type": "divider"
                         },
                         {
-                          "fields": "@config.fields",
-                          "itemActions": "@config.itemActions",
                           "entity": "@payload.data",
-                          "cols": 1.0,
+                          "gap": "sm",
                           "type": "data-grid",
-                          "gap": "sm"
+                          "cols": 1.0,
+                          "fields": "@config.fields",
+                          "itemActions": "@config.itemActions"
                         }
                       ],
                       "gap": "md"
@@ -379,8 +379,8 @@
                     "main",
                     {
                       "message": "@payload.error",
-                      "variant": "error",
-                      "type": "alert"
+                      "type": "alert",
+                      "variant": "error"
                     }
                   ]
                 ]
@@ -444,15 +444,13 @@
                     "render-ui",
                     "main",
                     {
-                      "direction": "vertical",
-                      "type": "stack",
                       "children": [
                         {
                           "children": [
                             {
-                              "type": "button",
                               "label": "Back",
                               "variant": "ghost",
+                              "type": "button",
                               "action": "CLOSE_VIEW"
                             },
                             {
@@ -465,24 +463,27 @@
                               "content": "@entity.targetId"
                             },
                             {
-                              "variant": "primary",
+                              "label": "@entity.mode",
                               "type": "badge",
-                              "label": "@entity.mode"
+                              "variant": "primary"
                             }
                           ],
+                          "type": "stack",
                           "gap": "sm",
-                          "direction": "horizontal",
                           "align": "center",
-                          "type": "stack"
+                          "direction": "horizontal"
                         },
                         {
                           "type": "divider"
                         },
                         {
                           "direction": "vertical",
-                          "gap": "sm",
+                          "type": "stack",
                           "children": [
                             {
+                              "gap": "md",
+                              "type": "stack",
+                              "direction": "horizontal",
                               "children": [
                                 {
                                   "type": "typography",
@@ -491,66 +492,61 @@
                                   "color": "muted"
                                 },
                                 {
-                                  "variant": "body",
                                   "content": "@entity.targetType",
+                                  "variant": "body",
                                   "type": "typography"
                                 }
-                              ],
-                              "type": "stack",
-                              "gap": "md",
-                              "direction": "horizontal"
+                              ]
                             },
                             {
-                              "type": "stack",
-                              "direction": "horizontal",
                               "gap": "md",
+                              "direction": "horizontal",
                               "children": [
                                 {
-                                  "variant": "caption",
-                                  "content": "User",
+                                  "color": "muted",
                                   "type": "typography",
-                                  "color": "muted"
+                                  "variant": "caption",
+                                  "content": "User"
                                 },
                                 {
                                   "type": "typography",
                                   "content": "@entity.userId",
                                   "variant": "body"
                                 }
-                              ]
+                              ],
+                              "type": "stack"
                             },
                             {
+                              "direction": "horizontal",
+                              "gap": "md",
+                              "type": "stack",
                               "children": [
                                 {
+                                  "type": "typography",
                                   "variant": "caption",
                                   "color": "muted",
-                                  "content": "QR code",
-                                  "type": "typography"
+                                  "content": "QR code"
                                 },
                                 {
                                   "content": "@entity.qrCode",
-                                  "type": "typography",
-                                  "variant": "body"
+                                  "variant": "body",
+                                  "type": "typography"
                                 }
-                              ],
-                              "gap": "md",
-                              "type": "stack",
-                              "direction": "horizontal"
+                              ]
                             }
                           ],
-                          "type": "stack"
+                          "gap": "sm"
                         },
                         {
                           "type": "divider"
                         },
                         {
-                          "type": "simple-grid",
-                          "cols": 3.0,
                           "children": [
                             {
-                              "value": "@entity.lat",
-                              "icon": "map",
                               "label": "Latitude",
-                              "type": "stat-display"
+                              "value": "@entity.lat",
+                              "type": "stat-display",
+                              "icon": "map"
                             },
                             {
                               "type": "stat-display",
@@ -559,40 +555,44 @@
                               "value": "@entity.lng"
                             },
                             {
-                              "value": "@entity.checkedInAt",
                               "type": "stat-display",
                               "icon": "clock",
-                              "label": "Checked in"
+                              "label": "Checked in",
+                              "value": "@entity.checkedInAt"
                             }
-                          ]
+                          ],
+                          "cols": 3.0,
+                          "type": "simple-grid"
                         },
                         {
                           "type": "stack",
-                          "gap": "sm",
                           "direction": "horizontal",
+                          "align": "center",
                           "children": [
                             {
+                              "label": "Verify",
+                              "variant": "primary",
                               "actionPayload": {
                                 "id": "@entity.id"
                               },
-                              "label": "Verify",
-                              "type": "button",
                               "action": "VERIFY_CHECKIN",
-                              "variant": "primary"
+                              "type": "button"
                             },
                             {
-                              "label": "Revoke",
                               "action": "REVOKE_CHECKIN",
-                              "type": "button",
+                              "label": "Revoke",
                               "actionPayload": {
                                 "id": "@entity.id"
                               },
-                              "variant": "danger"
+                              "variant": "danger",
+                              "type": "button"
                             }
                           ],
-                          "align": "center"
+                          "gap": "sm"
                         }
                       ],
+                      "type": "stack",
+                      "direction": "vertical",
                       "gap": "md"
                     }
                   ]
@@ -622,22 +622,22 @@
                     "render-ui",
                     "main",
                     {
-                      "direction": "vertical",
-                      "align": "center",
-                      "className": "py-12",
                       "children": [
                         {
                           "type": "spinner"
                         },
                         {
                           "variant": "caption",
-                          "type": "typography",
                           "content": "Revoking check-in…",
+                          "type": "typography",
                           "color": "muted"
                         }
                       ],
                       "gap": "md",
-                      "type": "stack"
+                      "direction": "vertical",
+                      "type": "stack",
+                      "align": "center",
+                      "className": "py-12"
                     }
                   ]
                 ]
@@ -652,8 +652,8 @@
                     "Checkin",
                     {
                       "emit": {
-                        "failure": "CheckinLoadFailed",
-                        "success": "CheckinLoaded"
+                        "success": "CheckinLoaded",
+                        "failure": "CheckinLoadFailed"
                       }
                     }
                   ],
@@ -661,22 +661,22 @@
                     "render-ui",
                     "main",
                     {
+                      "align": "center",
                       "children": [
                         {
                           "type": "spinner"
                         },
                         {
-                          "content": "Loading check-ins…",
-                          "color": "muted",
+                          "type": "typography",
                           "variant": "caption",
-                          "type": "typography"
+                          "color": "muted",
+                          "content": "Loading check-ins…"
                         }
                       ],
+                      "gap": "md",
                       "type": "stack",
-                      "direction": "vertical",
-                      "align": "center",
                       "className": "py-12",
-                      "gap": "md"
+                      "direction": "vertical"
                     }
                   ]
                 ]
@@ -696,8 +696,8 @@
                     "Checkin",
                     {
                       "emit": {
-                        "success": "CheckinLoaded",
-                        "failure": "CheckinLoadFailed"
+                        "failure": "CheckinLoadFailed",
+                        "success": "CheckinLoaded"
                       }
                     }
                   ],
@@ -705,21 +705,21 @@
                     "render-ui",
                     "main",
                     {
-                      "direction": "vertical",
-                      "gap": "md",
-                      "align": "center",
-                      "type": "stack",
                       "children": [
                         {
                           "type": "spinner"
                         },
                         {
-                          "type": "typography",
-                          "color": "muted",
                           "content": "Verifying check-in…",
-                          "variant": "caption"
+                          "type": "typography",
+                          "variant": "caption",
+                          "color": "muted"
                         }
                       ],
+                      "align": "center",
+                      "gap": "md",
+                      "direction": "vertical",
+                      "type": "stack",
                       "className": "py-12"
                     }
                   ]
@@ -749,22 +749,22 @@
                     "render-ui",
                     "main",
                     {
-                      "type": "stack",
                       "direction": "vertical",
-                      "className": "py-12",
-                      "gap": "md",
-                      "align": "center",
                       "children": [
                         {
                           "type": "spinner"
                         },
                         {
-                          "color": "muted",
-                          "type": "typography",
+                          "content": "Revoking check-in…",
                           "variant": "caption",
-                          "content": "Revoking check-in…"
+                          "color": "muted",
+                          "type": "typography"
                         }
-                      ]
+                      ],
+                      "gap": "md",
+                      "className": "py-12",
+                      "align": "center",
+                      "type": "stack"
                     }
                   ]
                 ]
@@ -779,8 +779,8 @@
                     "Checkin",
                     {
                       "emit": {
-                        "success": "CheckinLoaded",
-                        "failure": "CheckinLoadFailed"
+                        "failure": "CheckinLoadFailed",
+                        "success": "CheckinLoaded"
                       }
                     }
                   ],
@@ -797,11 +797,62 @@
             ]
           },
           "config": {
+            "itemActions": {
+              "type": "[ItemAction]",
+              "default": [
+                {
+                  "label": "Open",
+                  "event": "OPEN_CHECKIN",
+                  "icon": "arrow-right",
+                  "variant": "primary"
+                },
+                {
+                  "label": "Revoke",
+                  "event": "REVOKE_CHECKIN",
+                  "variant": "danger"
+                }
+              ],
+              "label": "Row actions",
+              "description": "Buttons users can click on each check-in row",
+              "tier": "customization",
+              "items": {
+                "type": "object",
+                "properties": {
+                  "variant": {
+                    "name": "variant",
+                    "type": "string",
+                    "required": false
+                  },
+                  "label": {
+                    "name": "label",
+                    "type": "string",
+                    "required": true
+                  },
+                  "icon": {
+                    "name": "icon",
+                    "type": "string",
+                    "required": false
+                  },
+                  "event": {
+                    "name": "event",
+                    "type": "string",
+                    "required": true
+                  }
+                }
+              }
+            },
             "title": {
               "type": "string",
               "default": "Check-ins",
               "label": "Section title",
               "description": "Heading shown above the check-in list",
+              "tier": "customization"
+            },
+            "leadTimeMinutes": {
+              "type": "number",
+              "default": 0.0,
+              "label": "Lead time (minutes)",
+              "description": "Minutes before scheduled arrival at which check-in is accepted.",
               "tier": "customization"
             },
             "mode": {
@@ -811,62 +862,46 @@
               "description": "How attendees check in (geo location or QR code)",
               "tier": "customization"
             },
-            "itemActions": {
-              "type": "[ItemAction]",
-              "default": [
-                {
-                  "label": "Open",
-                  "event": "OPEN_CHECKIN",
-                  "variant": "primary",
-                  "icon": "arrow-right"
-                },
-                {
-                  "label": "Revoke",
-                  "variant": "danger",
-                  "event": "REVOKE_CHECKIN"
-                }
-              ],
-              "label": "Row actions",
-              "description": "Buttons users can click on each check-in row",
-              "tier": "customization",
-              "items": {
-                "type": "object",
-                "properties": {
-                  "event": {
-                    "name": "event",
-                    "type": "string",
-                    "required": true
-                  },
-                  "variant": {
-                    "name": "variant",
-                    "type": "string",
-                    "required": false
-                  },
-                  "icon": {
-                    "name": "icon",
-                    "type": "string",
-                    "required": false
-                  },
-                  "label": {
-                    "name": "label",
-                    "type": "string",
-                    "required": true
-                  }
-                }
-              }
+            "bookingWindowDays": {
+              "type": "number",
+              "default": 1.0,
+              "label": "Booking window (days)",
+              "description": "How far in advance attendees can pre-register a check-in.",
+              "tier": "customization"
+            },
+            "rescheduleWindowHours": {
+              "type": "number",
+              "default": 24.0,
+              "label": "Reschedule window (hours)",
+              "description": "Hours during which an attendee can amend their pre-registered check-in.",
+              "tier": "customization"
+            },
+            "noShowGracePeriodMinutes": {
+              "type": "number",
+              "default": 15.0,
+              "label": "No-show grace (minutes)",
+              "description": "Minutes after the scheduled arrival window before a no-show is logged.",
+              "tier": "customization"
+            },
+            "maxReschedules": {
+              "type": "number",
+              "default": 2.0,
+              "label": "Max reschedules",
+              "description": "Hard cap on reschedule count per pre-registered check-in.",
+              "tier": "advanced"
             },
             "fields": {
               "type": "[FieldSpec]",
               "default": [
                 {
-                  "label": "Type",
                   "variant": "badge",
+                  "label": "Type",
                   "name": "targetType"
                 },
                 {
+                  "name": "targetId",
                   "variant": "caption",
-                  "label": "Target",
-                  "name": "targetId"
+                  "label": "Target"
                 },
                 {
                   "name": "userId",
@@ -874,9 +909,9 @@
                   "variant": "caption"
                 },
                 {
+                  "label": "Mode",
                   "variant": "badge",
-                  "name": "mode",
-                  "label": "Mode"
+                  "name": "mode"
                 },
                 {
                   "label": "When",
@@ -890,28 +925,8 @@
               "items": {
                 "type": "object",
                 "properties": {
-                  "header": {
-                    "name": "header",
-                    "type": "string",
-                    "required": false
-                  },
-                  "name": {
-                    "name": "name",
-                    "type": "string",
-                    "required": true
-                  },
                   "label": {
                     "name": "label",
-                    "type": "string",
-                    "required": false
-                  },
-                  "variant": {
-                    "name": "variant",
-                    "type": "string",
-                    "required": false
-                  },
-                  "icon": {
-                    "name": "icon",
                     "type": "string",
                     "required": false
                   },
@@ -924,9 +939,58 @@
                     "name": "key",
                     "type": "string",
                     "required": false
+                  },
+                  "header": {
+                    "name": "header",
+                    "type": "string",
+                    "required": false
+                  },
+                  "name": {
+                    "name": "name",
+                    "type": "string",
+                    "required": true
+                  },
+                  "icon": {
+                    "name": "icon",
+                    "type": "string",
+                    "required": false
+                  },
+                  "variant": {
+                    "name": "variant",
+                    "type": "string",
+                    "required": false
                   }
                 }
               }
+            },
+            "blackoutDates": {
+              "type": "[string]",
+              "default": [],
+              "label": "Blackout dates",
+              "description": "ISO dates blocked from check-in. Compose std-lifecycle to enforce.",
+              "tier": "customization",
+              "items": {
+                "type": "string"
+              }
+            },
+            "bookingHours": {
+              "type": "string",
+              "default": "06:00-23:00",
+              "label": "Booking hours",
+              "description": "Daily window during which check-ins are accepted (HH:MM-HH:MM).",
+              "tier": "customization"
+            },
+            "cancellationPolicy": {
+              "type": "string",
+              "default": "free",
+              "label": "Cancellation policy",
+              "description": "Refund treatment when a pre-registered check-in is cancelled.",
+              "tier": "customization",
+              "values": [
+                "free",
+                "partial-refund",
+                "no-refund"
+              ]
             }
           },
           "scope": "collection"

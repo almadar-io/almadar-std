@@ -1,5 +1,5 @@
-app std-recurring-charge "1.1.0"
-"std-recurring-charge — subscription cycle clock. Lists subscriptions in `browsing`; opens detail in `viewing_single` with Charge / Cancel actions. Agents tune the list shape via `config.fields` + `config.itemActions`."
+app std-recurring-charge "1.2.0"
+"std-recurring-charge — subscription cycle clock with Charge / Cancel actions. Listens for SET_STATUS so std-lifecycle can drive automated transitions. Exposes Financial-pattern knobs."
 
 type FieldSpec = { name : string!, label : string, variant : string, icon : string, format : string, key : string, header : string }
 type ItemAction = { label : string!, event : string!, variant : string, icon : string }
@@ -22,8 +22,10 @@ orbital SubscriptionOrbital {
     createdAt          : string
   }
 
-  type SubscriptionLoaded     = Event { data : [Subscription] }            "Fired when the subscription collection finishes loading"
-  type SubscriptionLoadFailed = Event { error : string, code : string }    "Fired when the subscription collection fails to load"
+  type SubscriptionLoaded       = Event { data : [Subscription] }            "Fired when the subscription collection finishes loading"
+  type SubscriptionLoadFailed   = Event { error : string, code : string }    "Fired when the subscription collection fails to load"
+  type SubscriptionUpdated      = Event { row : Subscription }               "Fired after a subscription's status persists"
+  type SubscriptionUpdateFailed = Event { error : string, code : string }    "Fired when a subscription's status update fails to persist"
 
   trait SubscriptionManage -> Subscription [interaction, collection] {
     config {
@@ -54,6 +56,38 @@ orbital SubscriptionOrbital {
         @label "Row actions"
         @description "Buttons users can click on each subscription row"
         @tier "customization"
+      currency        : string   = "USD"
+        @label "Default currency"
+        @description "ISO 4217 currency code (USD, EUR, GBP, …) for new subscriptions."
+        @tier "essential"
+      taxStrategy     : "inclusive" | "exclusive" | "none" = "exclusive"
+        @label "Tax strategy"
+        @description "inclusive = tax baked into the amount; exclusive = tax added on top; none = no tax."
+        @tier "customization"
+      roundingMode    : "bankers" | "half-up" | "down" = "half-up"
+        @label "Rounding mode"
+        @description "Sub-cent rounding behavior for subscription amounts."
+        @tier "advanced"
+      gracePeriodDays : number   = 3
+        @label "Grace period (days)"
+        @description "Days after a failed charge before the subscription is marked past-due. Wire via sibling std-lifecycle rule."
+        @tier "customization"
+      lateFeePolicy   : "none" | "flat" | "percent" = "none"
+        @label "Late fee policy"
+        @description "How late fees compute on overdue subscriptions. Declarative; wiring deferred."
+        @tier "customization"
+      lateFeeAmount   : number   = 0
+        @label "Late fee amount"
+        @description "Flat cash amount or percentage (per lateFeePolicy)."
+        @tier "customization"
+      complianceJurisdiction : string = ""
+        @label "Compliance jurisdiction"
+        @description "Drives subscription regulations per locale: 'US-CA', 'EU-DE', 'UK', etc. Declarative."
+        @tier "advanced"
+      retentionYears  : number   = 7
+        @label "Retention (years)"
+        @description "Years to keep subscription records for compliance."
+        @tier "advanced"
     }
     initial: loading
     state loading {
@@ -90,6 +124,15 @@ orbital SubscriptionOrbital {
         (set @entity.id @payload.id)
         (fetch Subscription { emit: { success: "SubscriptionLoaded", failure: "SubscriptionLoadFailed" } })
         (render-ui main { type: "stack", direction: "vertical", gap: "md", align: "center", className: "py-12", children: [{ type: "spinner" }, { type: "typography", variant: "caption", color: "muted", content: "Cancelling subscription…" }] })
+      SET_STATUS -> loading
+        (set @entity.id @payload.entityId)
+        (set @entity.status @payload.newStatus)
+        (persist update Subscription @entity { emit: { success: "SubscriptionUpdated", failure: "SubscriptionUpdateFailed" } })
+        (render-ui main { type: "stack", direction: "vertical", gap: "md", align: "center", className: "py-12", children: [{ type: "spinner" }, { type: "typography", variant: "caption", color: "muted", content: "Updating subscription status…" }] })
+      SubscriptionUpdated -> loading
+        (fetch Subscription { emit: { success: "SubscriptionLoaded", failure: "SubscriptionLoadFailed" } })
+      SubscriptionUpdateFailed -> browsing
+        (render-ui main { type: "alert", variant: "error", message: "@payload.error" })
     }
     state viewing_single {
       CLOSE_VIEW -> loading
@@ -110,20 +153,25 @@ orbital SubscriptionOrbital {
         (render-ui main { type: "spinner", size: "sm" })
     }
     emits {
-      OPEN_SUBSCRIPTION      { id : string!, row : Subscription }
-      CLOSE_VIEW             { }
-      CHARGE                 { id : string! }
-      CANCEL                 { id : string! }
-      SubscriptionLoaded     { data : [Subscription] }
-      SubscriptionLoadFailed { error : string, code : string }
+      OPEN_SUBSCRIPTION        { id : string!, row : Subscription }
+      CLOSE_VIEW               { }
+      CHARGE                   { id : string! }
+      CANCEL                   { id : string! }
+      SubscriptionLoaded       { data : [Subscription] }
+      SubscriptionLoadFailed   { error : string, code : string }
+      SubscriptionUpdated      { row : Subscription }
+      SubscriptionUpdateFailed { error : string, code : string }
     }
     listens {
-      OPEN_SUBSCRIPTION      { id : string!, row : Subscription }
-      CLOSE_VIEW             { }
-      CHARGE                 { id : string! }
-      CANCEL                 { id : string! }
-      SubscriptionLoaded     { data : [Subscription] }
-      SubscriptionLoadFailed { error : string, code : string }
+      OPEN_SUBSCRIPTION        { id : string!, row : Subscription }
+      CLOSE_VIEW               { }
+      CHARGE                   { id : string! }
+      CANCEL                   { id : string! }
+      SET_STATUS               { entityId : string!, newStatus : string! }
+      SubscriptionLoaded       { data : [Subscription] }
+      SubscriptionLoadFailed   { error : string, code : string }
+      SubscriptionUpdated      { row : Subscription }
+      SubscriptionUpdateFailed { error : string, code : string }
     }
   }
   page "/subscriptions/manage" as SubscriptionManagePage -> SubscriptionManage
