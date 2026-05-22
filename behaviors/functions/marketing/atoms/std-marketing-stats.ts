@@ -39,10 +39,10 @@ export type StdMarketingStatsEventKey = 'INIT';
  * without modifying its state-machine topology.
  */
 export interface StdMarketingStatsConfig {
+  /** Default: `[{"value":"10K+","label":"Developers"},{"label":"Uptime","value":"99.9%"},{"label":"Requests served","value":"50M+"},{"label":"Average rating","value":"4.9"}]` */
+  stats?: EntityRow[];
   /** Default: `4` */
   columns?: number;
-  /** Default: `[{"label":"Developers","value":"10K+"},{"label":"Uptime","value":"99.9%"},{"label":"Requests served","value":"50M+"},{"value":"4.9","label":"Average rating"}]` */
-  stats?: EntityRow[];
 }
 
 /**

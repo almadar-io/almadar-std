@@ -47,12 +47,12 @@ export interface StdMarketingFeaturesFeatureClickPayload {
  * without modifying its state-machine topology.
  */
 export interface StdMarketingFeaturesConfig {
-  /** Default: `3` */
-  columns?: number;
-  /** Default: `[{"title":"Lightning Fast","icon":"zap","href":"","linkLabel":"Learn more","description":"Build and deploy in minutes, not months."},{"description":"SOC-2 compliant with end-to-end encryption.","icon":"shield","linkLabel":"Learn more","href":"","title":"Enterprise Secure"},{"icon":"puzzle","href":"","description":"Plug in any service, any data source, any UI pattern.","linkLabel":"Learn more","title":"Infinitely Extensible"}]` */
+  /** Default: `[{"icon":"zap","href":"","title":"Lightning Fast","description":"Build and deploy in minutes, not months.","linkLabel":"Learn more"},{"href":"","description":"SOC-2 compliant with end-to-end encryption.","linkLabel":"Learn more","title":"Enterprise Secure","icon":"shield"},{"icon":"puzzle","title":"Infinitely Extensible","description":"Plug in any service, any data source, any UI pattern.","href":"","linkLabel":"Learn more"}]` */
   items?: EntityRow[];
   /** Default: `"lg"` */
   gap?: string;
+  /** Default: `3` */
+  columns?: number;
 }
 
 /**

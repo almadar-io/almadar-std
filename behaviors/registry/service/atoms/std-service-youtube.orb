@@ -1,6 +1,6 @@
 {
   "name": "std-service-youtube",
-  "version": "2.0.0",
+  "version": "2.0.1",
   "description": "std-service-youtube. YouTube embed service. Bind via `uses Youtube from \"std/behaviors/std-service-youtube\"` and configure `videoId` / `autoplay` / `controls` / `start` at the call site. SPECIAL: the default render IS the embed itself, so passing `uiTrait: \"@trait.YourPlayerSkin\"` OVERRIDES the embed (e.g., a custom player skin) rather than supplements it. Leave `uiTrait` unset to render the atom's default embed.",
   "orbitals": [
     {
@@ -120,12 +120,8 @@
                     "render-ui",
                     "main",
                     {
-                      "type": "card",
                       "children": [
                         {
-                          "align": "center",
-                          "direction": "vertical",
-                          "type": "stack",
                           "children": [
                             {
                               "name": "video",
@@ -133,34 +129,38 @@
                             },
                             {
                               "type": "typography",
-                              "content": "YouTube Video",
-                              "variant": "h2"
+                              "variant": "h2",
+                              "content": "YouTube Video"
                             },
                             {
-                              "content": "@config.videoId",
-                              "type": "typography",
+                              "color": "muted",
                               "variant": "body",
-                              "color": "muted"
+                              "content": "@config.videoId",
+                              "type": "typography"
                             },
                             {
+                              "gap": "sm",
                               "justify": "center",
-                              "type": "stack",
+                              "direction": "horizontal",
                               "children": [
                                 {
-                                  "label": "Play",
-                                  "action": "PLAY",
                                   "type": "button",
-                                  "icon": "play",
-                                  "variant": "primary"
+                                  "variant": "primary",
+                                  "action": "PLAY",
+                                  "label": "Play",
+                                  "icon": "play"
                                 }
                               ],
-                              "gap": "sm",
-                              "direction": "horizontal"
+                              "type": "stack"
                             }
                           ],
-                          "gap": "md"
+                          "type": "stack",
+                          "gap": "md",
+                          "direction": "vertical",
+                          "align": "center"
                         }
-                      ]
+                      ],
+                      "type": "card"
                     }
                   ]
                 ]
@@ -180,6 +180,15 @@
                 ]
               }
             ]
+          },
+          "config": {
+            "videoId": {
+              "type": "string",
+              "default": "",
+              "label": "Video ID",
+              "description": "Pass-through from the parent YouTube service trait so the placeholder card displays the active video",
+              "tier": "advanced"
+            }
           },
           "scope": "instance"
         },
@@ -366,8 +375,8 @@
                     "ServiceYoutube",
                     {
                       "emit": {
-                        "failure": "ServiceYoutubeLoadFailed",
-                        "success": "ServiceYoutubeLoaded"
+                        "success": "ServiceYoutubeLoaded",
+                        "failure": "ServiceYoutubeLoadFailed"
                       }
                     }
                   ],
@@ -375,8 +384,8 @@
                     "render-ui",
                     "main",
                     {
-                      "gap": "md",
                       "type": "stack",
+                      "gap": "md",
                       "direction": "vertical",
                       "children": [
                         "@config.uiTrait"
@@ -401,12 +410,12 @@
                     "render-ui",
                     "main",
                     {
-                      "direction": "vertical",
                       "type": "stack",
+                      "gap": "md",
                       "children": [
                         "@config.uiTrait"
                       ],
-                      "gap": "md"
+                      "direction": "vertical"
                     }
                   ]
                 ]
@@ -425,18 +434,18 @@
                     "emit",
                     "ServiceYoutubeYoutubeFailed",
                     {
-                      "error": "@entity.error",
-                      "code": "youtube_embed_failed"
+                      "code": "youtube_embed_failed",
+                      "error": "@entity.error"
                     }
                   ],
                   [
                     "render-ui",
                     "main",
                     {
-                      "type": "error-state",
-                      "title": "Video Failed",
                       "message": "@entity.error",
-                      "onRetry": "RETRY"
+                      "onRetry": "RETRY",
+                      "type": "error-state",
+                      "title": "Video Failed"
                     }
                   ]
                 ]
@@ -470,18 +479,18 @@
                     "emit",
                     "ServiceYoutubeYoutubeFailed",
                     {
-                      "code": "youtube_playback_failed",
-                      "error": "@entity.error"
+                      "error": "@entity.error",
+                      "code": "youtube_playback_failed"
                     }
                   ],
                   [
                     "render-ui",
                     "main",
                     {
-                      "title": "Video Failed",
-                      "type": "error-state",
                       "onRetry": "RETRY",
-                      "message": "@entity.error"
+                      "message": "@entity.error",
+                      "type": "error-state",
+                      "title": "Video Failed"
                     }
                   ]
                 ]
@@ -512,11 +521,11 @@
                     "render-ui",
                     "main",
                     {
-                      "type": "stack",
-                      "gap": "md",
                       "children": [
                         "@config.uiTrait"
                       ],
+                      "gap": "md",
+                      "type": "stack",
                       "direction": "vertical"
                     }
                   ]
@@ -525,11 +534,18 @@
             ]
           },
           "config": {
-            "autoplay": {
+            "uiTrait": {
+              "type": "trait",
+              "default": "@trait.ServiceYoutubeDefaultPlayer",
+              "label": "Player skin",
+              "description": "Trait that replaces the default YouTube embed surface",
+              "tier": "internal"
+            },
+            "controls": {
               "type": "boolean",
-              "default": false,
-              "label": "Autoplay",
-              "description": "Start playback automatically when the embed loads",
+              "default": true,
+              "label": "Show controls",
+              "description": "Display the YouTube player controls overlay",
               "tier": "customization"
             },
             "videoId": {
@@ -539,13 +555,6 @@
               "description": "Eleven-character YouTube ID from the share URL",
               "tier": "customization"
             },
-            "uiTrait": {
-              "type": "trait",
-              "default": "@trait.ServiceYoutubeDefaultPlayer",
-              "label": "Player skin",
-              "description": "Trait that replaces the default YouTube embed surface",
-              "tier": "internal"
-            },
             "start": {
               "type": "number",
               "default": 0.0,
@@ -553,11 +562,11 @@
               "description": "Number of seconds to skip in before playback begins",
               "tier": "advanced"
             },
-            "controls": {
+            "autoplay": {
               "type": "boolean",
-              "default": true,
-              "label": "Show controls",
-              "description": "Display the YouTube player controls overlay",
+              "default": false,
+              "label": "Autoplay",
+              "description": "Start playback automatically when the embed loads",
               "tier": "customization"
             }
           },

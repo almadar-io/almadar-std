@@ -40,21 +40,21 @@ export type StdMarketingCommunityEventKey = 'INIT';
  */
 export interface StdMarketingCommunityConfig {
   /** Default: `""` */
-  twitterFollowers?: string;
-  /** Default: `""` */
-  twitterUrl?: string;
-  /** Default: `"Connect with thousands of builders."` */
-  subtitle?: string;
-  /** Default: `"Join the community"` */
-  heading?: string;
-  /** Default: `""` */
   githubUrl?: string;
   /** Default: `""` */
-  githubStars?: string;
+  discordUrl?: string;
   /** Default: `""` */
   discordMembers?: string;
   /** Default: `""` */
-  discordUrl?: string;
+  twitterFollowers?: string;
+  /** Default: `""` */
+  twitterUrl?: string;
+  /** Default: `"Join the community"` */
+  heading?: string;
+  /** Default: `"Connect with thousands of builders."` */
+  subtitle?: string;
+  /** Default: `""` */
+  githubStars?: string;
 }
 
 /**

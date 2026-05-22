@@ -54,35 +54,35 @@ export interface StdMarketingHeroCtaSecondaryPayload {
  */
 export interface StdMarketingHeroConfig {
   /** Default: `""` */
-  imageAlt?: string;
+  installCommand?: string;
+  /** Default: `"center"` */
+  align?: string;
+  /** Default: `""` */
+  imageSrc?: string;
+  /** Default: `""` */
+  tag?: string;
+  /** Default: `"gradient"` */
+  background?: string;
+  /** Default: `"accent"` */
+  tagVariant?: string;
+  /** Default: `"Get Started"` */
+  primaryActionLabel?: string;
   /** Default: `""` */
   secondaryActionLabel?: string;
   /** Default: `"below"` */
   imagePosition?: string;
-  /** Default: `""` */
-  titleAccent?: string;
-  /** Default: `"Get Started"` */
-  primaryActionLabel?: string;
   /** Default: `"#"` */
   primaryActionHref?: string;
-  /** Default: `""` */
-  tag?: string;
+  /** Default: `"Build faster with Almadar"` */
+  title?: string;
   /** Default: `"From idea to production in minutes, not months."` */
   subtitle?: string;
   /** Default: `""` */
-  installCommand?: string;
-  /** Default: `"Build faster with Almadar"` */
-  title?: string;
-  /** Default: `"accent"` */
-  tagVariant?: string;
-  /** Default: `"gradient"` */
-  background?: string;
-  /** Default: `"center"` */
-  align?: string;
-  /** Default: `""` */
   secondaryActionHref?: string;
   /** Default: `""` */
-  imageSrc?: string;
+  titleAccent?: string;
+  /** Default: `""` */
+  imageAlt?: string;
 }
 
 /**
