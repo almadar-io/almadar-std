@@ -1,14 +1,14 @@
-app std-dashboard-grid-layout "5.0.0"
+app std-dashboard-grid-layout "5.0.1"
 "std-dashboard-grid-layout — dashboard-layout chrome mirroring Looker Studio / Power BI: top-right toolbar slots (export / share / settings — feed `headerActions`), horizontal filter row (date range, search, dropdown filters), divider, then 12 numbered tile slots in a responsive simple-grid below. Slots default to EmptyTile so callers only bind what they need via traitOverrides."
 
 type NavItem = { label : string!, href : string!, icon : string, badge : string }
 
 orbital DashboardGridLayoutOrbital {
-  entity DashboardGridLayoutState [runtime] {
+  entity DashboardGridLayoutData [runtime] {
     id : string!
   }
 
-  trait EmptyTile -> DashboardGridLayoutState [interaction, instance] {
+  trait EmptyTile -> DashboardGridLayoutData [interaction, instance] {
     initial: idle
     state idle {
       INIT -> idle
@@ -16,7 +16,7 @@ orbital DashboardGridLayoutOrbital {
     }
   }
 
-  trait DashboardGridLayout -> DashboardGridLayoutState [interaction, instance] {
+  trait DashboardGridLayout -> DashboardGridLayoutData [interaction, instance] {
     initial: composing
     config {
       toolbar1Trait : trait = "@trait.EmptyTile"

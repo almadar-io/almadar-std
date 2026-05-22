@@ -1,12 +1,12 @@
 {
   "name": "std-dashboard-grid-embedded",
-  "version": "1.0.0",
+  "version": "1.0.1",
   "description": "std-dashboard-grid-embedded — embeddable sibling of std-dashboard-grid-layout. Renders the same toolbar / filter / 12-tile grid contract WITHOUT wrapping it in dashboard-layout chrome (no sidebar, no appName, no nav). Use inside another app shell that already owns the surrounding chrome.",
   "orbitals": [
     {
       "name": "DashboardGridEmbeddedOrbital",
       "entity": {
-        "name": "DashboardGridEmbeddedState",
+        "name": "DashboardGridEmbeddedData",
         "persistence": "runtime",
         "fields": [
           {
@@ -20,7 +20,7 @@
         {
           "name": "EmptyTile",
           "category": "interaction",
-          "linkedEntity": "DashboardGridEmbeddedState",
+          "linkedEntity": "DashboardGridEmbeddedData",
           "stateMachine": {
             "states": [
               {
@@ -56,7 +56,7 @@
         {
           "name": "DashboardGridEmbedded",
           "category": "interaction",
-          "linkedEntity": "DashboardGridEmbeddedState",
+          "linkedEntity": "DashboardGridEmbeddedData",
           "stateMachine": {
             "states": [
               {
@@ -80,41 +80,43 @@
                     "render-ui",
                     "main",
                     {
+                      "direction": "vertical",
+                      "type": "stack",
                       "gap": "md",
                       "children": [
                         {
-                          "justify": "between",
-                          "direction": "horizontal",
-                          "wrap": true,
+                          "gap": "md",
                           "children": [
                             {
-                              "direction": "horizontal",
-                              "align": "center",
                               "type": "stack",
-                              "gap": "md",
-                              "wrap": true,
+                              "align": "center",
                               "children": [
                                 "@config.filter1Trait",
                                 "@config.filter2Trait",
                                 "@config.filter3Trait",
                                 "@config.filter4Trait"
-                              ]
+                              ],
+                              "gap": "md",
+                              "direction": "horizontal",
+                              "wrap": true
                             },
                             {
                               "direction": "horizontal",
-                              "type": "stack",
-                              "gap": "sm",
                               "align": "center",
+                              "gap": "sm",
                               "children": [
                                 "@config.toolbar1Trait",
                                 "@config.toolbar2Trait",
                                 "@config.toolbar3Trait"
-                              ]
+                              ],
+                              "type": "stack"
                             }
                           ],
                           "type": "stack",
-                          "gap": "md",
-                          "align": "center"
+                          "direction": "horizontal",
+                          "align": "center",
+                          "wrap": true,
+                          "justify": "between"
                         },
                         {
                           "type": "divider"
@@ -137,9 +139,7 @@
                           "minChildWidth": "@config.minTileWidth",
                           "type": "simple-grid"
                         }
-                      ],
-                      "type": "stack",
-                      "direction": "vertical"
+                      ]
                     }
                   ]
                 ]
@@ -147,25 +147,11 @@
             ]
           },
           "config": {
-            "toolbar3Trait": {
+            "tile12Trait": {
               "type": "trait",
               "default": "@trait.EmptyTile",
-              "label": "Toolbar slot 3",
-              "description": "Trait reference for the third top-right toolbar tile. Format '@trait.<TraitName>' picks any trait declared on the orbital (typical use: settings action); '@trait.EmptyTile' leaves the slot blank. Override THIS config to swap, remove, or reorder toolbar tiles — never edit other traits.",
-              "tier": "customization"
-            },
-            "toolbar1Trait": {
-              "type": "trait",
-              "default": "@trait.EmptyTile",
-              "label": "Toolbar slot 1",
-              "description": "Trait reference for the first top-right toolbar tile. Format '@trait.<TraitName>' picks any trait declared on the orbital (typical use: export action); '@trait.EmptyTile' leaves the slot blank. Override THIS config to swap, remove, or reorder toolbar tiles — never edit other traits.",
-              "tier": "customization"
-            },
-            "tile4Trait": {
-              "type": "trait",
-              "default": "@trait.EmptyTile",
-              "label": "Tile slot 4",
-              "description": "Trait reference for grid cell 4. Format '@trait.<TraitName>' picks any trait declared on the orbital; '@trait.EmptyTile' leaves the cell blank. Override THIS config to swap a chart, remove a tile, or reorder — never edit any other trait to move tile content.",
+              "label": "Tile slot 12",
+              "description": "Trait reference for grid cell 12. Format '@trait.<TraitName>' picks any trait declared on the orbital; '@trait.EmptyTile' leaves the cell blank. Override THIS config to swap a chart, remove a tile, or reorder — never edit any other trait to move tile content.",
               "tier": "customization"
             },
             "tile8Trait": {
@@ -175,13 +161,6 @@
               "description": "Trait reference for grid cell 8. Format '@trait.<TraitName>' picks any trait declared on the orbital; '@trait.EmptyTile' leaves the cell blank. Override THIS config to swap a chart, remove a tile, or reorder — never edit any other trait to move tile content.",
               "tier": "customization"
             },
-            "tile11Trait": {
-              "type": "trait",
-              "default": "@trait.EmptyTile",
-              "label": "Tile slot 11",
-              "description": "Trait reference for grid cell 11. Format '@trait.<TraitName>' picks any trait declared on the orbital; '@trait.EmptyTile' leaves the cell blank. Override THIS config to swap a chart, remove a tile, or reorder — never edit any other trait to move tile content.",
-              "tier": "customization"
-            },
             "filter1Trait": {
               "type": "trait",
               "default": "@trait.EmptyTile",
@@ -189,18 +168,32 @@
               "description": "Trait reference for the first filter-row position. Format '@trait.<TraitName>' picks any trait declared on the orbital (typical use: date range picker); '@trait.EmptyTile' leaves the slot blank. Override THIS config to add, swap, remove, or reorder filter controls — never edit other traits.",
               "tier": "customization"
             },
-            "filter2Trait": {
+            "toolbar2Trait": {
               "type": "trait",
               "default": "@trait.EmptyTile",
-              "label": "Filter slot 2",
-              "description": "Trait reference for the second filter-row position. Format '@trait.<TraitName>' picks any trait declared on the orbital (typical use: search input); '@trait.EmptyTile' leaves the slot blank. Override THIS config to add, swap, remove, or reorder filter controls — never edit other traits.",
+              "label": "Toolbar slot 2",
+              "description": "Trait reference for the second top-right toolbar tile. Format '@trait.<TraitName>' picks any trait declared on the orbital (typical use: share action); '@trait.EmptyTile' leaves the slot blank. Override THIS config to swap, remove, or reorder toolbar tiles — never edit other traits.",
               "tier": "customization"
             },
-            "filter3Trait": {
+            "tile4Trait": {
               "type": "trait",
               "default": "@trait.EmptyTile",
-              "label": "Filter slot 3",
-              "description": "Trait reference for the third filter-row position. Format '@trait.<TraitName>' picks any trait declared on the orbital (typical use: dropdown filter); '@trait.EmptyTile' leaves the slot blank. Override THIS config to add, swap, remove, or reorder filter controls — never edit other traits.",
+              "label": "Tile slot 4",
+              "description": "Trait reference for grid cell 4. Format '@trait.<TraitName>' picks any trait declared on the orbital; '@trait.EmptyTile' leaves the cell blank. Override THIS config to swap a chart, remove a tile, or reorder — never edit any other trait to move tile content.",
+              "tier": "customization"
+            },
+            "filter4Trait": {
+              "type": "trait",
+              "default": "@trait.EmptyTile",
+              "label": "Filter slot 4",
+              "description": "Trait reference for the fourth filter-row position. Format '@trait.<TraitName>' picks any trait declared on the orbital (typical use: secondary dropdown filter); '@trait.EmptyTile' leaves the slot blank. Override THIS config to add, swap, remove, or reorder filter controls — never edit other traits.",
+              "tier": "customization"
+            },
+            "tile11Trait": {
+              "type": "trait",
+              "default": "@trait.EmptyTile",
+              "label": "Tile slot 11",
+              "description": "Trait reference for grid cell 11. Format '@trait.<TraitName>' picks any trait declared on the orbital; '@trait.EmptyTile' leaves the cell blank. Override THIS config to swap a chart, remove a tile, or reorder — never edit any other trait to move tile content.",
               "tier": "customization"
             },
             "tile6Trait": {
@@ -217,11 +210,39 @@
               "description": "Trait reference for grid cell 1. Format '@trait.<TraitName>' picks any trait declared on the orbital; '@trait.EmptyTile' leaves the cell blank. Override THIS config to swap a chart, remove a tile, or reorder — never edit any other trait to move tile content.",
               "tier": "customization"
             },
+            "tile3Trait": {
+              "type": "trait",
+              "default": "@trait.EmptyTile",
+              "label": "Tile slot 3",
+              "description": "Trait reference for grid cell 3. Format '@trait.<TraitName>' picks any trait declared on the orbital; '@trait.EmptyTile' leaves the cell blank. Override THIS config to swap a chart, remove a tile, or reorder — never edit any other trait to move tile content.",
+              "tier": "customization"
+            },
+            "tile5Trait": {
+              "type": "trait",
+              "default": "@trait.EmptyTile",
+              "label": "Tile slot 5",
+              "description": "Trait reference for grid cell 5. Format '@trait.<TraitName>' picks any trait declared on the orbital; '@trait.EmptyTile' leaves the cell blank. Override THIS config to swap a chart, remove a tile, or reorder — never edit any other trait to move tile content.",
+              "tier": "customization"
+            },
             "tile2Trait": {
               "type": "trait",
               "default": "@trait.EmptyTile",
               "label": "Tile slot 2",
               "description": "Trait reference for grid cell 2. Format '@trait.<TraitName>' picks any trait declared on the orbital; '@trait.EmptyTile' leaves the cell blank. Override THIS config to swap a chart, remove a tile, or reorder — never edit any other trait to move tile content.",
+              "tier": "customization"
+            },
+            "filter2Trait": {
+              "type": "trait",
+              "default": "@trait.EmptyTile",
+              "label": "Filter slot 2",
+              "description": "Trait reference for the second filter-row position. Format '@trait.<TraitName>' picks any trait declared on the orbital (typical use: search input); '@trait.EmptyTile' leaves the slot blank. Override THIS config to add, swap, remove, or reorder filter controls — never edit other traits.",
+              "tier": "customization"
+            },
+            "toolbar3Trait": {
+              "type": "trait",
+              "default": "@trait.EmptyTile",
+              "label": "Toolbar slot 3",
+              "description": "Trait reference for the third top-right toolbar tile. Format '@trait.<TraitName>' picks any trait declared on the orbital (typical use: settings action); '@trait.EmptyTile' leaves the slot blank. Override THIS config to swap, remove, or reorder toolbar tiles — never edit other traits.",
               "tier": "customization"
             },
             "tile9Trait": {
@@ -231,46 +252,11 @@
               "description": "Trait reference for grid cell 9. Format '@trait.<TraitName>' picks any trait declared on the orbital; '@trait.EmptyTile' leaves the cell blank. Override THIS config to swap a chart, remove a tile, or reorder — never edit any other trait to move tile content.",
               "tier": "customization"
             },
-            "minTileWidth": {
-              "type": "number",
-              "default": 320.0,
-              "label": "Tile min width",
-              "description": "Minimum pixel width per tile before the grid re-flows",
-              "tier": "advanced"
-            },
-            "tile5Trait": {
-              "type": "trait",
-              "default": "@trait.EmptyTile",
-              "label": "Tile slot 5",
-              "description": "Trait reference for grid cell 5. Format '@trait.<TraitName>' picks any trait declared on the orbital; '@trait.EmptyTile' leaves the cell blank. Override THIS config to swap a chart, remove a tile, or reorder — never edit any other trait to move tile content.",
-              "tier": "customization"
-            },
-            "tile3Trait": {
-              "type": "trait",
-              "default": "@trait.EmptyTile",
-              "label": "Tile slot 3",
-              "description": "Trait reference for grid cell 3. Format '@trait.<TraitName>' picks any trait declared on the orbital; '@trait.EmptyTile' leaves the cell blank. Override THIS config to swap a chart, remove a tile, or reorder — never edit any other trait to move tile content.",
-              "tier": "customization"
-            },
-            "tile12Trait": {
-              "type": "trait",
-              "default": "@trait.EmptyTile",
-              "label": "Tile slot 12",
-              "description": "Trait reference for grid cell 12. Format '@trait.<TraitName>' picks any trait declared on the orbital; '@trait.EmptyTile' leaves the cell blank. Override THIS config to swap a chart, remove a tile, or reorder — never edit any other trait to move tile content.",
-              "tier": "customization"
-            },
             "tile10Trait": {
               "type": "trait",
               "default": "@trait.EmptyTile",
               "label": "Tile slot 10",
               "description": "Trait reference for grid cell 10. Format '@trait.<TraitName>' picks any trait declared on the orbital; '@trait.EmptyTile' leaves the cell blank. Override THIS config to swap a chart, remove a tile, or reorder — never edit any other trait to move tile content.",
-              "tier": "customization"
-            },
-            "toolbar2Trait": {
-              "type": "trait",
-              "default": "@trait.EmptyTile",
-              "label": "Toolbar slot 2",
-              "description": "Trait reference for the second top-right toolbar tile. Format '@trait.<TraitName>' picks any trait declared on the orbital (typical use: share action); '@trait.EmptyTile' leaves the slot blank. Override THIS config to swap, remove, or reorder toolbar tiles — never edit other traits.",
               "tier": "customization"
             },
             "tile7Trait": {
@@ -280,11 +266,25 @@
               "description": "Trait reference for grid cell 7. Format '@trait.<TraitName>' picks any trait declared on the orbital; '@trait.EmptyTile' leaves the cell blank. Override THIS config to swap a chart, remove a tile, or reorder — never edit any other trait to move tile content.",
               "tier": "customization"
             },
-            "filter4Trait": {
+            "filter3Trait": {
               "type": "trait",
               "default": "@trait.EmptyTile",
-              "label": "Filter slot 4",
-              "description": "Trait reference for the fourth filter-row position. Format '@trait.<TraitName>' picks any trait declared on the orbital (typical use: secondary dropdown filter); '@trait.EmptyTile' leaves the slot blank. Override THIS config to add, swap, remove, or reorder filter controls — never edit other traits.",
+              "label": "Filter slot 3",
+              "description": "Trait reference for the third filter-row position. Format '@trait.<TraitName>' picks any trait declared on the orbital (typical use: dropdown filter); '@trait.EmptyTile' leaves the slot blank. Override THIS config to add, swap, remove, or reorder filter controls — never edit other traits.",
+              "tier": "customization"
+            },
+            "minTileWidth": {
+              "type": "number",
+              "default": 320.0,
+              "label": "Tile min width",
+              "description": "Minimum pixel width per tile before the grid re-flows",
+              "tier": "advanced"
+            },
+            "toolbar1Trait": {
+              "type": "trait",
+              "default": "@trait.EmptyTile",
+              "label": "Toolbar slot 1",
+              "description": "Trait reference for the first top-right toolbar tile. Format '@trait.<TraitName>' picks any trait declared on the orbital (typical use: export action); '@trait.EmptyTile' leaves the slot blank. Override THIS config to swap, remove, or reorder toolbar tiles — never edit other traits.",
               "tier": "customization"
             }
           },

@@ -1,12 +1,12 @@
 {
   "name": "std-dashboard-grid-layout",
-  "version": "5.0.0",
+  "version": "5.0.1",
   "description": "std-dashboard-grid-layout — dashboard-layout chrome mirroring Looker Studio / Power BI: top-right toolbar slots (export / share / settings — feed `headerActions`), horizontal filter row (date range, search, dropdown filters), divider, then 12 numbered tile slots in a responsive simple-grid below. Slots default to EmptyTile so callers only bind what they need via traitOverrides.",
   "orbitals": [
     {
       "name": "DashboardGridLayoutOrbital",
       "entity": {
-        "name": "DashboardGridLayoutState",
+        "name": "DashboardGridLayoutData",
         "persistence": "runtime",
         "fields": [
           {
@@ -20,7 +20,7 @@
         {
           "name": "EmptyTile",
           "category": "interaction",
-          "linkedEntity": "DashboardGridLayoutState",
+          "linkedEntity": "DashboardGridLayoutData",
           "stateMachine": {
             "states": [
               {
@@ -56,7 +56,7 @@
         {
           "name": "DashboardGridLayout",
           "category": "interaction",
-          "linkedEntity": "DashboardGridLayoutState",
+          "linkedEntity": "DashboardGridLayoutData",
           "stateMachine": {
             "states": [
               {
@@ -80,35 +80,21 @@
                     "render-ui",
                     "main",
                     {
-                      "navItems": "@config.navItems",
-                      "headerActions": {
-                        "children": [
-                          "@config.toolbar1Trait",
-                          "@config.toolbar2Trait",
-                          "@config.toolbar3Trait"
-                        ],
-                        "direction": "horizontal",
-                        "align": "center",
-                        "gap": "sm",
-                        "type": "stack"
-                      },
-                      "appName": "@config.appName",
                       "children": [
                         {
-                          "type": "stack",
                           "children": [
                             {
-                              "direction": "horizontal",
-                              "type": "stack",
-                              "wrap": true,
                               "align": "center",
+                              "gap": "md",
                               "children": [
                                 "@config.filter1Trait",
                                 "@config.filter2Trait",
                                 "@config.filter3Trait",
                                 "@config.filter4Trait"
                               ],
-                              "gap": "md"
+                              "wrap": true,
+                              "type": "stack",
+                              "direction": "horizontal"
                             },
                             {
                               "type": "divider"
@@ -133,10 +119,24 @@
                             }
                           ],
                           "direction": "vertical",
-                          "gap": "md"
+                          "gap": "md",
+                          "type": "stack"
                         }
                       ],
-                      "type": "dashboard-layout"
+                      "type": "dashboard-layout",
+                      "appName": "@config.appName",
+                      "navItems": "@config.navItems",
+                      "headerActions": {
+                        "gap": "sm",
+                        "type": "stack",
+                        "align": "center",
+                        "direction": "horizontal",
+                        "children": [
+                          "@config.toolbar1Trait",
+                          "@config.toolbar2Trait",
+                          "@config.toolbar3Trait"
+                        ]
+                      }
                     }
                   ]
                 ]
@@ -144,11 +144,11 @@
             ]
           },
           "config": {
-            "filter2Trait": {
+            "tile11Trait": {
               "type": "trait",
               "default": "@trait.EmptyTile",
-              "label": "Filter slot 2",
-              "description": "Second filter-row trait (typical use: search input)",
+              "label": "Tile slot 11",
+              "description": "Trait rendered in the eleventh dashboard grid tile",
               "tier": "customization"
             },
             "tile10Trait": {
@@ -158,161 +158,11 @@
               "description": "Trait rendered in the tenth dashboard grid tile",
               "tier": "customization"
             },
-            "filter3Trait": {
-              "type": "trait",
-              "default": "@trait.EmptyTile",
-              "label": "Filter slot 3",
-              "description": "Third filter-row trait (typical use: dropdown filter)",
-              "tier": "customization"
-            },
-            "tile3Trait": {
-              "type": "trait",
-              "default": "@trait.EmptyTile",
-              "label": "Tile slot 3",
-              "description": "Trait rendered in the third dashboard grid tile",
-              "tier": "customization"
-            },
-            "tile11Trait": {
-              "type": "trait",
-              "default": "@trait.EmptyTile",
-              "label": "Tile slot 11",
-              "description": "Trait rendered in the eleventh dashboard grid tile",
-              "tier": "customization"
-            },
-            "tile1Trait": {
-              "type": "trait",
-              "default": "@trait.EmptyTile",
-              "label": "Tile slot 1",
-              "description": "Trait rendered in the first dashboard grid tile",
-              "tier": "customization"
-            },
-            "tile6Trait": {
-              "type": "trait",
-              "default": "@trait.EmptyTile",
-              "label": "Tile slot 6",
-              "description": "Trait rendered in the sixth dashboard grid tile",
-              "tier": "customization"
-            },
-            "toolbar2Trait": {
-              "type": "trait",
-              "default": "@trait.EmptyTile",
-              "label": "Toolbar slot 2",
-              "description": "Second top-right toolbar trait (typical use: share action)",
-              "tier": "customization"
-            },
-            "minTileWidth": {
-              "type": "number",
-              "default": 320.0,
-              "label": "Tile min width",
-              "description": "Minimum pixel width per tile before the grid re-flows",
-              "tier": "advanced"
-            },
-            "toolbar1Trait": {
-              "type": "trait",
-              "default": "@trait.EmptyTile",
-              "label": "Toolbar slot 1",
-              "description": "First top-right toolbar trait (typical use: export action)",
-              "tier": "customization"
-            },
-            "appName": {
-              "type": "string",
-              "default": "Dashboard",
-              "label": "App name",
-              "description": "Product name shown in the dashboard chrome",
-              "tier": "essential"
-            },
             "tile4Trait": {
               "type": "trait",
               "default": "@trait.EmptyTile",
               "label": "Tile slot 4",
               "description": "Trait rendered in the fourth dashboard grid tile",
-              "tier": "customization"
-            },
-            "tile7Trait": {
-              "type": "trait",
-              "default": "@trait.EmptyTile",
-              "label": "Tile slot 7",
-              "description": "Trait rendered in the seventh dashboard grid tile",
-              "tier": "customization"
-            },
-            "tile2Trait": {
-              "type": "trait",
-              "default": "@trait.EmptyTile",
-              "label": "Tile slot 2",
-              "description": "Trait rendered in the second dashboard grid tile",
-              "tier": "customization"
-            },
-            "filter1Trait": {
-              "type": "trait",
-              "default": "@trait.EmptyTile",
-              "label": "Filter slot 1",
-              "description": "First filter-row trait (typical use: date range picker)",
-              "tier": "customization"
-            },
-            "navItems": {
-              "type": "[NavItem]",
-              "default": [
-                {
-                  "label": "Dashboard",
-                  "href": "/dashboard",
-                  "icon": "bar-chart-3"
-                }
-              ],
-              "label": "Sidebar links",
-              "description": "Top-level nav entries on the left rail",
-              "tier": "essential",
-              "items": {
-                "type": "object",
-                "properties": {
-                  "icon": {
-                    "name": "icon",
-                    "type": "string",
-                    "required": false
-                  },
-                  "badge": {
-                    "name": "badge",
-                    "type": "string",
-                    "required": false
-                  },
-                  "label": {
-                    "name": "label",
-                    "type": "string",
-                    "required": true
-                  },
-                  "href": {
-                    "name": "href",
-                    "type": "string",
-                    "required": true
-                  }
-                }
-              }
-            },
-            "tile8Trait": {
-              "type": "trait",
-              "default": "@trait.EmptyTile",
-              "label": "Tile slot 8",
-              "description": "Trait rendered in the eighth dashboard grid tile",
-              "tier": "customization"
-            },
-            "tile12Trait": {
-              "type": "trait",
-              "default": "@trait.EmptyTile",
-              "label": "Tile slot 12",
-              "description": "Trait rendered in the twelfth dashboard grid tile",
-              "tier": "customization"
-            },
-            "toolbar3Trait": {
-              "type": "trait",
-              "default": "@trait.EmptyTile",
-              "label": "Toolbar slot 3",
-              "description": "Third top-right toolbar trait (typical use: settings action)",
-              "tier": "customization"
-            },
-            "filter4Trait": {
-              "type": "trait",
-              "default": "@trait.EmptyTile",
-              "label": "Filter slot 4",
-              "description": "Fourth filter-row trait (typical use: secondary dropdown filter)",
               "tier": "customization"
             },
             "tile5Trait": {
@@ -322,11 +172,161 @@
               "description": "Trait rendered in the fifth dashboard grid tile",
               "tier": "customization"
             },
+            "tile7Trait": {
+              "type": "trait",
+              "default": "@trait.EmptyTile",
+              "label": "Tile slot 7",
+              "description": "Trait rendered in the seventh dashboard grid tile",
+              "tier": "customization"
+            },
+            "filter4Trait": {
+              "type": "trait",
+              "default": "@trait.EmptyTile",
+              "label": "Filter slot 4",
+              "description": "Fourth filter-row trait (typical use: secondary dropdown filter)",
+              "tier": "customization"
+            },
+            "toolbar1Trait": {
+              "type": "trait",
+              "default": "@trait.EmptyTile",
+              "label": "Toolbar slot 1",
+              "description": "First top-right toolbar trait (typical use: export action)",
+              "tier": "customization"
+            },
+            "toolbar3Trait": {
+              "type": "trait",
+              "default": "@trait.EmptyTile",
+              "label": "Toolbar slot 3",
+              "description": "Third top-right toolbar trait (typical use: settings action)",
+              "tier": "customization"
+            },
+            "filter1Trait": {
+              "type": "trait",
+              "default": "@trait.EmptyTile",
+              "label": "Filter slot 1",
+              "description": "First filter-row trait (typical use: date range picker)",
+              "tier": "customization"
+            },
+            "tile6Trait": {
+              "type": "trait",
+              "default": "@trait.EmptyTile",
+              "label": "Tile slot 6",
+              "description": "Trait rendered in the sixth dashboard grid tile",
+              "tier": "customization"
+            },
+            "tile8Trait": {
+              "type": "trait",
+              "default": "@trait.EmptyTile",
+              "label": "Tile slot 8",
+              "description": "Trait rendered in the eighth dashboard grid tile",
+              "tier": "customization"
+            },
+            "minTileWidth": {
+              "type": "number",
+              "default": 320.0,
+              "label": "Tile min width",
+              "description": "Minimum pixel width per tile before the grid re-flows",
+              "tier": "advanced"
+            },
+            "toolbar2Trait": {
+              "type": "trait",
+              "default": "@trait.EmptyTile",
+              "label": "Toolbar slot 2",
+              "description": "Second top-right toolbar trait (typical use: share action)",
+              "tier": "customization"
+            },
+            "filter2Trait": {
+              "type": "trait",
+              "default": "@trait.EmptyTile",
+              "label": "Filter slot 2",
+              "description": "Second filter-row trait (typical use: search input)",
+              "tier": "customization"
+            },
+            "tile1Trait": {
+              "type": "trait",
+              "default": "@trait.EmptyTile",
+              "label": "Tile slot 1",
+              "description": "Trait rendered in the first dashboard grid tile",
+              "tier": "customization"
+            },
+            "tile2Trait": {
+              "type": "trait",
+              "default": "@trait.EmptyTile",
+              "label": "Tile slot 2",
+              "description": "Trait rendered in the second dashboard grid tile",
+              "tier": "customization"
+            },
+            "tile3Trait": {
+              "type": "trait",
+              "default": "@trait.EmptyTile",
+              "label": "Tile slot 3",
+              "description": "Trait rendered in the third dashboard grid tile",
+              "tier": "customization"
+            },
             "tile9Trait": {
               "type": "trait",
               "default": "@trait.EmptyTile",
               "label": "Tile slot 9",
               "description": "Trait rendered in the ninth dashboard grid tile",
+              "tier": "customization"
+            },
+            "tile12Trait": {
+              "type": "trait",
+              "default": "@trait.EmptyTile",
+              "label": "Tile slot 12",
+              "description": "Trait rendered in the twelfth dashboard grid tile",
+              "tier": "customization"
+            },
+            "navItems": {
+              "type": "[NavItem]",
+              "default": [
+                {
+                  "label": "Dashboard",
+                  "icon": "bar-chart-3",
+                  "href": "/dashboard"
+                }
+              ],
+              "label": "Sidebar links",
+              "description": "Top-level nav entries on the left rail",
+              "tier": "essential",
+              "items": {
+                "type": "object",
+                "properties": {
+                  "label": {
+                    "name": "label",
+                    "type": "string",
+                    "required": true
+                  },
+                  "badge": {
+                    "name": "badge",
+                    "type": "string",
+                    "required": false
+                  },
+                  "href": {
+                    "name": "href",
+                    "type": "string",
+                    "required": true
+                  },
+                  "icon": {
+                    "name": "icon",
+                    "type": "string",
+                    "required": false
+                  }
+                }
+              }
+            },
+            "appName": {
+              "type": "string",
+              "default": "Dashboard",
+              "label": "App name",
+              "description": "Product name shown in the dashboard chrome",
+              "tier": "essential"
+            },
+            "filter3Trait": {
+              "type": "trait",
+              "default": "@trait.EmptyTile",
+              "label": "Filter slot 3",
+              "description": "Third filter-row trait (typical use: dropdown filter)",
               "tier": "customization"
             }
           },
