@@ -106,28 +106,28 @@ export interface StdPatientPatientUpdateFailedPayload {
  * without modifying its state-machine topology.
  */
 export interface StdPatientConfig {
-  /** Default: `7` */
-  defaultRecordRetentionYears?: number;
-  /** Default: `[{"label":"Open","icon":"arrow-right","variant":"primary","event":"OPEN_PATIENT"},{"event":"DEACTIVATE","icon":"x","variant":"danger","label":"Deactivate"}]` */
-  itemActions?: EntityRow[];
-  /** Default: `"household"` */
-  dependentLinkagePolicy?: 'none' | 'household' | 'guardian';
   /** Default: `["emergency-physician","oncall-attending"]` */
   breakGlassRolesAllowed?: string[];
-  /** Default: `true` */
-  pseudonymizeOnExport?: boolean;
-  /** Default: `[{"variant":"caption","name":"firstName","label":"First name"},{"name":"lastName","label":"Last name","variant":"caption"},{"name":"mrn","variant":"caption","label":"MRN"},{"name":"primaryProvider","variant":"caption","label":"Provider"},{"variant":"badge","name":"consentType","label":"Consent"},{"variant":"badge","name":"status","label":"Status"}]` */
-  fields?: EntityRow[];
+  /** Default: `[{"label":"Open","icon":"arrow-right","variant":"primary","event":"OPEN_PATIENT"},{"variant":"danger","label":"Deactivate","icon":"x","event":"DEACTIVATE"}]` */
+  itemActions?: EntityRow[];
   /** Default: `"MRN-####-####"` */
   mrnFormat?: string;
+  /** Default: `[{"label":"First name","name":"firstName","variant":"caption"},{"name":"lastName","variant":"caption","label":"Last name"},{"name":"mrn","label":"MRN","variant":"caption"},{"name":"primaryProvider","label":"Provider","variant":"caption"},{"name":"consentType","label":"Consent","variant":"badge"},{"label":"Status","variant":"badge","name":"status"}]` */
+  fields?: EntityRow[];
+  /** Default: `7` */
+  defaultRecordRetentionYears?: number;
   /** Default: `["hipaa","treatment"]` */
   consentTypesRequired?: string[];
   /** Default: `true` */
   phiDisclosureLogRequired?: boolean;
-  /** Default: `"Patients"` */
-  title?: string;
   /** Default: `18` */
   parentalConsentMinorThresholdYears?: number;
+  /** Default: `"household"` */
+  dependentLinkagePolicy?: 'none' | 'household' | 'guardian';
+  /** Default: `"Patients"` */
+  title?: string;
+  /** Default: `true` */
+  pseudonymizeOnExport?: boolean;
 }
 
 /**

@@ -126,22 +126,22 @@ export interface StdPortfolioPortfolioLoadFailedPayload {
  * without modifying its state-machine topology.
  */
 export interface StdPortfolioConfig {
-  /** Default: `[{"variant":"caption","name":"name","label":"Name"},{"label":"Owner","variant":"caption","name":"ownerAccountId"},{"name":"currentValueUSD","label":"Value (USD)","variant":"caption"},{"name":"driftBps","label":"Drift (bps)","variant":"caption"},{"variant":"badge","label":"Status","name":"status"},{"name":"lastRebalancedAt","variant":"caption","label":"Last Rebalanced"}]` */
-  fields?: EntityRow[];
-  /** Default: `5` */
-  cashBufferPct?: number;
-  /** Default: `"Portfolios"` */
-  title?: string;
-  /** Default: `[{"icon":"arrow-right","event":"OPEN_PORTFOLIO","label":"Open","variant":"primary"},{"event":"REBALANCE","label":"Rebalance","icon":"refresh-cw","variant":"primary"}]` */
-  itemActions?: EntityRow[];
-  /** Default: `"auto"` */
-  dividendReinvestPolicy?: 'auto' | 'cash' | 'specified-fund';
-  /** Default: `"FIFO"` */
-  taxLotMethod?: 'FIFO' | 'LIFO' | 'HIFO' | 'specific-lot';
   /** Default: `90` */
   rebalancingFrequencyDays?: number;
+  /** Default: `[{"name":"name","variant":"caption","label":"Name"},{"variant":"caption","name":"ownerAccountId","label":"Owner"},{"name":"currentValueUSD","variant":"caption","label":"Value (USD)"},{"label":"Drift (bps)","variant":"caption","name":"driftBps"},{"variant":"badge","name":"status","label":"Status"},{"name":"lastRebalancedAt","label":"Last Rebalanced","variant":"caption"}]` */
+  fields?: EntityRow[];
   /** Default: `500` */
   driftThresholdBps?: number;
+  /** Default: `5` */
+  cashBufferPct?: number;
+  /** Default: `"FIFO"` */
+  taxLotMethod?: 'FIFO' | 'LIFO' | 'HIFO' | 'specific-lot';
+  /** Default: `"Portfolios"` */
+  title?: string;
+  /** Default: `"auto"` */
+  dividendReinvestPolicy?: 'auto' | 'cash' | 'specified-fund';
+  /** Default: `[{"icon":"arrow-right","event":"OPEN_PORTFOLIO","label":"Open","variant":"primary"},{"variant":"primary","icon":"refresh-cw","event":"REBALANCE","label":"Rebalance"}]` */
+  itemActions?: EntityRow[];
 }
 
 /**

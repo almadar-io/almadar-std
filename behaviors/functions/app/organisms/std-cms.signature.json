@@ -78,14 +78,14 @@
             "type": "unknown",
             "default": [
               {
-                "href": "/cms-hub",
                 "icon": "layout-grid",
-                "label": "CMS Hub"
+                "label": "CMS Hub",
+                "href": "/cms-hub"
               },
               {
                 "href": "/articles",
-                "icon": "file-text",
-                "label": "Articles"
+                "label": "Articles",
+                "icon": "file-text"
               },
               {
                 "href": "/media",
@@ -186,9 +186,9 @@
             "type": "unknown",
             "default": [
               {
-                "event": "VIEW",
+                "label": "View",
                 "variant": "ghost",
-                "label": "View"
+                "event": "VIEW"
               },
               {
                 "label": "Edit",
@@ -240,18 +240,18 @@
             "type": "unknown",
             "default": [
               {
+                "label": "Status",
+                "field": "status",
                 "values": [
                   "draft",
                   "published",
                   "archived"
-                ],
-                "label": "Status",
-                "field": "status"
+                ]
               },
               {
-                "values": [],
                 "field": "category",
-                "label": "Category"
+                "label": "Category",
+                "values": []
               }
             ]
           }
@@ -275,18 +275,18 @@
                 "label": "Total"
               },
               {
-                "aggregation": "count",
                 "filter": {
                   "status": "published"
                 },
-                "label": "Published"
+                "label": "Published",
+                "aggregation": "count"
               },
               {
+                "aggregation": "count",
                 "filter": {
                   "status": "draft"
                 },
-                "label": "Drafts",
-                "aggregation": "count"
+                "label": "Drafts"
               }
             ]
           }
@@ -498,6 +498,114 @@
         ],
         "overridableConfigKeys": [],
         "capabilities": []
+      },
+      {
+        "name": "ArticleAuditCapture",
+        "emittedEvents": [],
+        "listenedEvents": [],
+        "overridableConfigKeys": [
+          {
+            "key": "captureBeforeAfter",
+            "type": "unknown",
+            "default": true
+          },
+          {
+            "key": "captureEntity",
+            "type": "unknown",
+            "default": "Article"
+          },
+          {
+            "key": "captureEventTypes",
+            "type": "unknown",
+            "default": []
+          },
+          {
+            "key": "excludeFields",
+            "type": "unknown",
+            "default": []
+          },
+          {
+            "key": "retentionDays",
+            "type": "unknown",
+            "default": 2555
+          }
+        ],
+        "capabilities": [],
+        "ref": "Audit.traits.AuditCaptureListener"
+      },
+      {
+        "name": "ArticleLifecycleScan",
+        "emittedEvents": [],
+        "listenedEvents": [],
+        "overridableConfigKeys": [
+          {
+            "key": "dryRun",
+            "type": "unknown",
+            "default": false
+          },
+          {
+            "key": "rules",
+            "type": "unknown",
+            "default": [
+              {
+                "toStatus": "review",
+                "condition": {
+                  "kind": "ageDays",
+                  "value": 14,
+                  "dateField": "publishedAt"
+                },
+                "fromStatus": "draft"
+              },
+              {
+                "toStatus": "archived",
+                "condition": {
+                  "value": 365,
+                  "kind": "ageDays",
+                  "dateField": "publishedAt"
+                },
+                "fromStatus": "published"
+              }
+            ]
+          },
+          {
+            "key": "targetEntity",
+            "type": "unknown",
+            "default": "Article"
+          }
+        ],
+        "capabilities": [],
+        "ref": "Lifecycle.traits.LifecycleScheduler"
+      },
+      {
+        "name": "ArticleErasure",
+        "emittedEvents": [],
+        "listenedEvents": [],
+        "overridableConfigKeys": [
+          {
+            "key": "anonymizeVsDelete",
+            "type": "unknown",
+            "default": "anonymize"
+          },
+          {
+            "key": "gracePeriodDays",
+            "type": "unknown",
+            "default": 30
+          },
+          {
+            "key": "piiFields",
+            "type": "unknown",
+            "default": [
+              "author"
+            ]
+          },
+          {
+            "key": "targetEntity",
+            "type": "unknown",
+            "default": "Article"
+          }
+        ],
+        "capabilities": [],
+        "ref": "Erasure.traits.ErasureWorkflow"
       }
     ],
     "pages": [
@@ -592,9 +700,9 @@
             "type": "unknown",
             "default": [
               {
+                "href": "/cms-hub",
                 "label": "CMS Hub",
-                "icon": "layout-grid",
-                "href": "/cms-hub"
+                "icon": "layout-grid"
               },
               {
                 "href": "/articles",
@@ -602,13 +710,13 @@
                 "label": "Articles"
               },
               {
+                "href": "/media",
                 "icon": "image",
-                "label": "Media",
-                "href": "/media"
+                "label": "Media"
               },
               {
-                "label": "Categories",
                 "href": "/categories",
+                "label": "Categories",
                 "icon": "folder"
               }
             ]
@@ -857,23 +965,23 @@
             "type": "unknown",
             "default": [
               {
-                "icon": "layout-grid",
                 "label": "CMS Hub",
+                "icon": "layout-grid",
                 "href": "/cms-hub"
               },
               {
-                "href": "/articles",
                 "label": "Articles",
+                "href": "/articles",
                 "icon": "file-text"
               },
               {
-                "icon": "image",
                 "label": "Media",
-                "href": "/media"
+                "href": "/media",
+                "icon": "image"
               },
               {
-                "label": "Categories",
                 "icon": "folder",
+                "label": "Categories",
                 "href": "/categories"
               }
             ]
@@ -925,15 +1033,15 @@
             "type": "unknown",
             "default": [
               {
-                "variant": "h3",
                 "icon": "folder",
-                "name": "name"
+                "name": "name",
+                "variant": "h3"
               },
               {
+                "variant": "badge",
                 "format": "number",
                 "name": "articleCount",
-                "label": "Articles",
-                "variant": "badge"
+                "label": "Articles"
               },
               {
                 "name": "description",
@@ -965,9 +1073,9 @@
                 "label": "Edit"
               },
               {
+                "variant": "danger",
                 "event": "DELETE",
-                "label": "Delete",
-                "variant": "danger"
+                "label": "Delete"
               }
             ]
           },
@@ -1232,23 +1340,23 @@
             "type": "unknown",
             "default": [
               {
+                "href": "/cms-hub",
                 "label": "CMS Hub",
-                "icon": "layout-grid",
-                "href": "/cms-hub"
+                "icon": "layout-grid"
               },
               {
-                "href": "/articles",
+                "label": "Articles",
                 "icon": "file-text",
-                "label": "Articles"
+                "href": "/articles"
               },
               {
                 "label": "Media",
-                "href": "/media",
-                "icon": "image"
+                "icon": "image",
+                "href": "/media"
               },
               {
-                "icon": "folder",
                 "label": "Categories",
+                "icon": "folder",
                 "href": "/categories"
               }
             ]
@@ -1294,9 +1402,9 @@
             "type": "unknown",
             "default": [
               {
-                "icon": "file-text",
                 "name": "title",
-                "variant": "h3"
+                "variant": "h3",
+                "icon": "file-text"
               },
               {
                 "variant": "badge",
@@ -1307,8 +1415,8 @@
                 "variant": "caption"
               },
               {
-                "name": "category",
-                "variant": "badge"
+                "variant": "badge",
+                "name": "category"
               }
             ]
           },

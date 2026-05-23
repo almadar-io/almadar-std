@@ -69,18 +69,18 @@
             "default": [
               {
                 "label": "Routes",
-                "href": "/routes",
-                "icon": "git-branch"
+                "icon": "git-branch",
+                "href": "/routes"
               },
               {
-                "href": "/backends",
                 "icon": "server",
-                "label": "Backends"
+                "label": "Backends",
+                "href": "/backends"
               },
               {
+                "href": "/analytics",
                 "label": "Analytics",
-                "icon": "bar-chart-2",
-                "href": "/analytics"
+                "icon": "bar-chart-2"
               }
             ]
           },
@@ -149,24 +149,24 @@
             "type": "unknown",
             "default": [
               {
-                "filterType": "select",
-                "label": "Method",
                 "options": [
                   "GET",
                   "POST",
                   "PUT",
                   "DELETE"
                 ],
-                "field": "method"
+                "field": "method",
+                "label": "Method",
+                "filterType": "select"
               },
               {
                 "filterType": "select",
-                "label": "Status",
                 "field": "status",
                 "options": [
                   "active",
                   "disabled"
-                ]
+                ],
+                "label": "Status"
               }
             ]
           }
@@ -187,17 +187,15 @@
             "default": [
               {
                 "label": "Total",
-                "aggregation": "count",
                 "icon": "git-branch",
                 "variant": "primary",
+                "aggregation": "count",
                 "format": "number"
               },
               {
-                "label": "Active",
-                "icon": "check-circle",
-                "format": "number",
                 "aggregation": "count",
-                "variant": "success",
+                "format": "number",
+                "label": "Active",
                 "filter": [
                   "fn",
                   "row",
@@ -206,14 +204,14 @@
                     "@row.status",
                     "active"
                   ]
-                ]
+                ],
+                "variant": "success",
+                "icon": "check-circle"
               },
               {
-                "aggregation": "count",
-                "icon": "x-circle",
-                "variant": "warning",
                 "format": "number",
                 "label": "Disabled",
+                "aggregation": "count",
                 "filter": [
                   "fn",
                   "row",
@@ -222,7 +220,9 @@
                     "@row.status",
                     "disabled"
                   ]
-                ]
+                ],
+                "icon": "x-circle",
+                "variant": "warning"
               }
             ]
           },
@@ -302,27 +302,27 @@
             "type": "unknown",
             "default": [
               {
-                "variant": "h3",
+                "name": "path",
                 "icon": "git-branch",
-                "name": "path"
+                "variant": "h3"
+              },
+              {
+                "name": "method",
+                "variant": "badge"
               },
               {
                 "variant": "badge",
-                "name": "method"
-              },
-              {
-                "name": "status",
-                "variant": "badge"
+                "name": "status"
               },
               {
                 "variant": "body",
                 "name": "target"
               },
               {
+                "format": "number",
                 "name": "hits",
                 "variant": "caption",
-                "label": "Hits",
-                "format": "number"
+                "label": "Hits"
               }
             ]
           },
@@ -336,19 +336,19 @@
             "type": "unknown",
             "default": [
               {
+                "event": "VIEW",
                 "label": "View",
-                "variant": "ghost",
-                "event": "VIEW"
-              },
-              {
-                "label": "Edit",
-                "event": "EDIT",
                 "variant": "ghost"
               },
               {
+                "event": "EDIT",
+                "variant": "ghost",
+                "label": "Edit"
+              },
+              {
+                "variant": "danger",
                 "label": "Delete",
-                "event": "DELETE",
-                "variant": "danger"
+                "event": "DELETE"
               }
             ]
           }
@@ -512,6 +512,81 @@
         ],
         "overridableConfigKeys": [],
         "capabilities": []
+      },
+      {
+        "name": "RouteAuditCapture",
+        "emittedEvents": [],
+        "listenedEvents": [],
+        "overridableConfigKeys": [
+          {
+            "key": "captureBeforeAfter",
+            "type": "unknown",
+            "default": true
+          },
+          {
+            "key": "captureEntity",
+            "type": "unknown",
+            "default": "Route"
+          },
+          {
+            "key": "captureEventTypes",
+            "type": "unknown",
+            "default": []
+          },
+          {
+            "key": "excludeFields",
+            "type": "unknown",
+            "default": []
+          },
+          {
+            "key": "retentionDays",
+            "type": "unknown",
+            "default": 2555
+          }
+        ],
+        "capabilities": [],
+        "ref": "Audit.traits.AuditCaptureListener"
+      },
+      {
+        "name": "RouteUptimeNotifier",
+        "emittedEvents": [],
+        "listenedEvents": [],
+        "overridableConfigKeys": [
+          {
+            "key": "listensFor",
+            "type": "unknown",
+            "default": [
+              "ROUTE_UPDATED"
+            ]
+          },
+          {
+            "key": "notifyChannel",
+            "type": "unknown",
+            "default": "email"
+          },
+          {
+            "key": "recipients",
+            "type": "unknown",
+            "default": []
+          },
+          {
+            "key": "severity",
+            "type": "unknown",
+            "default": "warning"
+          },
+          {
+            "key": "suppressionList",
+            "type": "unknown",
+            "default": []
+          },
+          {
+            "key": "template",
+            "type": "unknown",
+            "default": "Route uptime alert"
+          }
+        ],
+        "capabilities": [],
+        "ref": "Notify.traits.NotifyOnEventListener"
       }
     ],
     "pages": [
@@ -603,19 +678,19 @@
             "type": "unknown",
             "default": [
               {
-                "icon": "git-branch",
                 "label": "Routes",
-                "href": "/routes"
+                "href": "/routes",
+                "icon": "git-branch"
               },
               {
-                "href": "/backends",
                 "label": "Backends",
-                "icon": "server"
+                "icon": "server",
+                "href": "/backends"
               },
               {
-                "label": "Analytics",
                 "icon": "bar-chart-2",
-                "href": "/analytics"
+                "href": "/analytics",
+                "label": "Analytics"
               }
             ]
           },
@@ -670,8 +745,8 @@
             "default": [
               {
                 "icon": "server",
-                "name": "name",
-                "variant": "h3"
+                "variant": "h3",
+                "name": "name"
               },
               {
                 "name": "url",
@@ -682,10 +757,10 @@
                 "variant": "badge"
               },
               {
-                "label": "Latency",
-                "name": "latency",
                 "variant": "caption",
-                "format": "number"
+                "label": "Latency",
+                "format": "number",
+                "name": "latency"
               }
             ]
           },
@@ -700,18 +775,18 @@
             "default": [
               {
                 "variant": "ghost",
-                "label": "View",
-                "event": "VIEW"
+                "event": "VIEW",
+                "label": "View"
               },
               {
+                "variant": "ghost",
                 "label": "Edit",
-                "event": "EDIT",
-                "variant": "ghost"
+                "event": "EDIT"
               },
               {
                 "variant": "danger",
-                "event": "DELETE",
-                "label": "Delete"
+                "label": "Delete",
+                "event": "DELETE"
               }
             ]
           }
@@ -985,18 +1060,18 @@
             "default": [
               {
                 "href": "/routes",
-                "label": "Routes",
-                "icon": "git-branch"
+                "icon": "git-branch",
+                "label": "Routes"
               },
               {
-                "href": "/backends",
                 "icon": "server",
+                "href": "/backends",
                 "label": "Backends"
               },
               {
-                "icon": "bar-chart-2",
                 "label": "Analytics",
-                "href": "/analytics"
+                "href": "/analytics",
+                "icon": "bar-chart-2"
               }
             ]
           },
@@ -1039,32 +1114,32 @@
             "type": "unknown",
             "default": [
               {
-                "name": "routePath",
-                "label": "Route",
                 "variant": "h4",
-                "icon": "bar-chart-2"
+                "name": "routePath",
+                "icon": "bar-chart-2",
+                "label": "Route"
               },
               {
+                "variant": "badge",
                 "name": "method",
-                "label": "Method",
-                "variant": "badge"
+                "label": "Method"
               },
               {
-                "name": "statusCode",
                 "label": "Status",
-                "variant": "badge"
+                "variant": "badge",
+                "name": "statusCode"
               },
               {
-                "variant": "caption",
                 "name": "latencyMs",
                 "label": "Latency",
-                "format": "number"
+                "format": "number",
+                "variant": "caption"
               },
               {
-                "label": "Time",
-                "variant": "caption",
+                "format": "date",
                 "name": "timestamp",
-                "format": "date"
+                "variant": "caption",
+                "label": "Time"
               }
             ]
           },

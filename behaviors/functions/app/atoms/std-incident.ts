@@ -134,28 +134,28 @@ export interface StdIncidentIncidentLoadFailedPayload {
  * without modifying its state-machine topology.
  */
 export interface StdIncidentConfig {
-  /** Default: `["oncall-primary"]` */
-  pagedRoles?: string[];
-  /** Default: `"sev2"` */
-  postmortemRequiredAbove?: 'sev1' | 'sev2' | 'sev3' | 'sev4' | 'sev5';
   /** Default: `"sev1-2"` */
   customerCommsRequired?: 'always' | 'sev1-only' | 'sev1-2' | 'never';
-  /** Default: `[{"name":"title","label":"Title","variant":"caption"},{"name":"severity","label":"Severity","variant":"badge"},{"variant":"badge","name":"status","label":"Status"},{"label":"Paged","name":"pagedTo","variant":"caption"},{"name":"runbookId","label":"Runbook","variant":"caption"}]` */
-  fields?: EntityRow[];
-  /** Default: `""` */
-  runbookId?: string;
-  /** Default: `5` */
-  acknowledgementDeadlineMinutes?: number;
+  /** Default: `[{"icon":"arrow-right","label":"Open","variant":"primary","event":"INCIDENT_OPEN"},{"label":"Resolve","variant":"primary","icon":"check","event":"RESOLVE"}]` */
+  itemActions?: EntityRow[];
+  /** Default: `"sev2"` */
+  postmortemRequiredAbove?: 'sev1' | 'sev2' | 'sev3' | 'sev4' | 'sev5';
   /** Default: `"Incidents"` */
   title?: string;
-  /** Default: `[{"label":"Open","variant":"primary","event":"INCIDENT_OPEN","icon":"arrow-right"},{"event":"RESOLVE","icon":"check","variant":"primary","label":"Resolve"}]` */
-  itemActions?: EntityRow[];
-  /** Default: `15` */
-  pageEscalationMinutes?: number;
+  /** Default: `["oncall-primary"]` */
+  pagedRoles?: string[];
   /** Default: `true` */
   autoCloseAfterResolution?: boolean;
   /** Default: `"sev3"` */
   severity?: 'sev1' | 'sev2' | 'sev3' | 'sev4' | 'sev5';
+  /** Default: `""` */
+  runbookId?: string;
+  /** Default: `15` */
+  pageEscalationMinutes?: number;
+  /** Default: `[{"variant":"caption","name":"title","label":"Title"},{"variant":"badge","label":"Severity","name":"severity"},{"name":"status","variant":"badge","label":"Status"},{"label":"Paged","name":"pagedTo","variant":"caption"},{"label":"Runbook","variant":"caption","name":"runbookId"}]` */
+  fields?: EntityRow[];
+  /** Default: `5` */
+  acknowledgementDeadlineMinutes?: number;
 }
 
 /**

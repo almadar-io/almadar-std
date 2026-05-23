@@ -79,17 +79,17 @@
             "default": [
               {
                 "href": "/services",
-                "icon": "server",
-                "label": "Services"
+                "label": "Services",
+                "icon": "server"
               },
               {
+                "icon": "bell",
                 "href": "/alerts",
-                "label": "Alerts",
-                "icon": "bell"
+                "label": "Alerts"
               },
               {
-                "label": "Logs",
                 "href": "/logs",
+                "label": "Logs",
                 "icon": "terminal"
               },
               {
@@ -164,25 +164,25 @@
             "type": "unknown",
             "default": [
               {
-                "label": "Status",
-                "field": "status",
-                "filterType": "select",
                 "options": [
                   "healthy",
                   "degraded",
                   "down"
-                ]
+                ],
+                "field": "status",
+                "label": "Status",
+                "filterType": "select"
               },
               {
-                "field": "region",
-                "label": "Region",
                 "filterType": "select",
+                "label": "Region",
                 "options": [
                   "us-east",
                   "us-west",
                   "eu-central",
                   "ap-south"
-                ]
+                ],
+                "field": "region"
               }
             ]
           }
@@ -202,18 +202,15 @@
             "type": "unknown",
             "default": [
               {
+                "icon": "server",
                 "variant": "primary",
                 "aggregation": "count",
-                "icon": "server",
-                "format": "number",
-                "label": "Total"
+                "label": "Total",
+                "format": "number"
               },
               {
-                "icon": "check-circle",
                 "label": "Healthy",
-                "format": "number",
-                "variant": "success",
-                "aggregation": "count",
+                "icon": "check-circle",
                 "filter": [
                   "fn",
                   "row",
@@ -222,12 +219,15 @@
                     "@row.status",
                     "healthy"
                   ]
-                ]
+                ],
+                "format": "number",
+                "aggregation": "count",
+                "variant": "success"
               },
               {
-                "label": "Degraded",
-                "format": "number",
                 "variant": "warning",
+                "icon": "alert-circle",
+                "label": "Degraded",
                 "filter": [
                   "fn",
                   "row",
@@ -238,12 +238,11 @@
                   ]
                 ],
                 "aggregation": "count",
-                "icon": "alert-circle"
+                "format": "number"
               },
               {
                 "aggregation": "count",
                 "label": "Down",
-                "icon": "alert-triangle",
                 "variant": "error",
                 "format": "number",
                 "filter": [
@@ -254,7 +253,8 @@
                     "@row.status",
                     "down"
                   ]
-                ]
+                ],
+                "icon": "alert-triangle"
               }
             ]
           },
@@ -334,22 +334,22 @@
             "type": "unknown",
             "default": [
               {
-                "variant": "h4",
                 "icon": "server",
-                "name": "name"
+                "name": "name",
+                "variant": "h4"
               },
               {
                 "variant": "badge",
                 "name": "status"
               },
               {
-                "variant": "body",
-                "name": "region"
+                "name": "region",
+                "variant": "body"
               },
               {
+                "name": "lastChecked",
                 "format": "date",
-                "variant": "caption",
-                "name": "lastChecked"
+                "variant": "caption"
               }
             ]
           },
@@ -363,14 +363,14 @@
             "type": "unknown",
             "default": [
               {
-                "event": "VIEW",
                 "variant": "ghost",
-                "label": "View"
+                "label": "View",
+                "event": "VIEW"
               },
               {
-                "label": "Edit",
                 "event": "EDIT",
-                "variant": "ghost"
+                "variant": "ghost",
+                "label": "Edit"
               },
               {
                 "label": "Delete",
@@ -552,6 +552,124 @@
         "listenedEvents": [],
         "overridableConfigKeys": [],
         "capabilities": []
+      },
+      {
+        "name": "DevopsNotifier",
+        "emittedEvents": [],
+        "listenedEvents": [],
+        "overridableConfigKeys": [
+          {
+            "key": "listensFor",
+            "type": "unknown",
+            "default": [
+              "SERVICE_UPDATED"
+            ]
+          },
+          {
+            "key": "notifyChannel",
+            "type": "unknown",
+            "default": "in-app"
+          },
+          {
+            "key": "recipients",
+            "type": "unknown",
+            "default": []
+          },
+          {
+            "key": "severity",
+            "type": "unknown",
+            "default": "warning"
+          },
+          {
+            "key": "suppressionList",
+            "type": "unknown",
+            "default": []
+          },
+          {
+            "key": "template",
+            "type": "unknown",
+            "default": "Incident or service status change"
+          }
+        ],
+        "capabilities": [],
+        "ref": "Notify.traits.NotifyOnEventListener"
+      },
+      {
+        "name": "DevopsAuditCapture",
+        "emittedEvents": [],
+        "listenedEvents": [],
+        "overridableConfigKeys": [
+          {
+            "key": "captureBeforeAfter",
+            "type": "unknown",
+            "default": false
+          },
+          {
+            "key": "captureEntity",
+            "type": "unknown",
+            "default": "ServiceNode"
+          },
+          {
+            "key": "captureEventTypes",
+            "type": "unknown",
+            "default": []
+          },
+          {
+            "key": "excludeFields",
+            "type": "unknown",
+            "default": []
+          },
+          {
+            "key": "retentionDays",
+            "type": "unknown",
+            "default": 2555
+          }
+        ],
+        "capabilities": [],
+        "ref": "Audit.traits.AuditCaptureListener"
+      },
+      {
+        "name": "DevopsApprovalGate",
+        "emittedEvents": [],
+        "listenedEvents": [],
+        "overridableConfigKeys": [
+          {
+            "key": "approverRoles",
+            "type": "unknown",
+            "default": [
+              "release-manager"
+            ]
+          },
+          {
+            "key": "autoApproveBelowThreshold",
+            "type": "unknown",
+            "default": false
+          },
+          {
+            "key": "escalationHours",
+            "type": "unknown",
+            "default": 4
+          },
+          {
+            "key": "escalationRoles",
+            "type": "unknown",
+            "default": [
+              "sre-lead"
+            ]
+          },
+          {
+            "key": "threshold",
+            "type": "unknown",
+            "default": 0
+          },
+          {
+            "key": "valueField",
+            "type": "unknown",
+            "default": ""
+          }
+        ],
+        "capabilities": [],
+        "ref": "Approval.traits.ApprovalGateReview"
       }
     ],
     "pages": [
@@ -645,9 +763,9 @@
             "type": "unknown",
             "default": [
               {
-                "href": "/services",
                 "label": "Services",
-                "icon": "server"
+                "icon": "server",
+                "href": "/services"
               },
               {
                 "icon": "bell",
@@ -655,14 +773,14 @@
                 "label": "Alerts"
               },
               {
-                "label": "Logs",
                 "icon": "terminal",
-                "href": "/logs"
+                "href": "/logs",
+                "label": "Logs"
               },
               {
-                "icon": "layout-list",
+                "label": "Metrics",
                 "href": "/metrics",
-                "label": "Metrics"
+                "icon": "layout-list"
               }
             ]
           },
@@ -713,17 +831,17 @@
             "type": "unknown",
             "default": [
               {
-                "variant": "badge",
-                "name": "severity"
+                "name": "severity",
+                "variant": "badge"
               },
               {
-                "name": "message",
+                "variant": "h4",
                 "icon": "alert-triangle",
-                "variant": "h4"
+                "name": "message"
               },
               {
-                "name": "source",
-                "variant": "body"
+                "variant": "body",
+                "name": "source"
               },
               {
                 "name": "timestamp",
@@ -742,19 +860,19 @@
             "type": "unknown",
             "default": [
               {
-                "event": "VIEW",
                 "label": "View",
+                "event": "VIEW",
                 "variant": "ghost"
               },
               {
-                "label": "Edit",
                 "variant": "ghost",
+                "label": "Edit",
                 "event": "EDIT"
               },
               {
-                "label": "Delete",
+                "variant": "danger",
                 "event": "DELETE",
-                "variant": "danger"
+                "label": "Delete"
               }
             ]
           }
@@ -1011,18 +1129,18 @@
               },
               {
                 "label": "Alerts",
-                "href": "/alerts",
-                "icon": "bell"
+                "icon": "bell",
+                "href": "/alerts"
               },
               {
+                "icon": "terminal",
                 "label": "Logs",
-                "href": "/logs",
-                "icon": "terminal"
+                "href": "/logs"
               },
               {
+                "label": "Metrics",
                 "href": "/metrics",
-                "icon": "layout-list",
-                "label": "Metrics"
+                "icon": "layout-list"
               }
             ]
           },
@@ -1072,12 +1190,12 @@
               },
               {
                 "variant": "body",
-                "name": "message",
-                "icon": "file-text"
+                "icon": "file-text",
+                "name": "message"
               },
               {
-                "variant": "caption",
-                "name": "service"
+                "name": "service",
+                "variant": "caption"
               },
               {
                 "name": "timestamp",
@@ -1165,14 +1283,14 @@
             "type": "unknown",
             "default": [
               {
+                "href": "/services",
                 "icon": "server",
-                "label": "Services",
-                "href": "/services"
+                "label": "Services"
               },
               {
-                "icon": "bell",
+                "label": "Alerts",
                 "href": "/alerts",
-                "label": "Alerts"
+                "icon": "bell"
               },
               {
                 "icon": "terminal",
@@ -1180,8 +1298,8 @@
                 "label": "Logs"
               },
               {
-                "icon": "layout-list",
                 "href": "/metrics",
+                "icon": "layout-list",
                 "label": "Metrics"
               }
             ]
@@ -1220,24 +1338,24 @@
             "type": "unknown",
             "default": [
               {
+                "label": "Metric",
                 "variant": "h4",
-                "name": "name",
-                "label": "Metric"
+                "name": "name"
               },
               {
-                "variant": "h3",
-                "label": "Value",
                 "name": "value",
-                "format": "number"
+                "format": "number",
+                "label": "Value",
+                "variant": "h3"
               },
               {
-                "name": "unit",
+                "label": "Unit",
                 "variant": "caption",
-                "label": "Unit"
+                "name": "unit"
               },
               {
-                "name": "trend",
                 "label": "Trend",
+                "name": "trend",
                 "variant": "badge"
               }
             ]
@@ -1264,6 +1382,299 @@
         "name": "Metrics",
         "defaultPath": "/metrics",
         "primaryEntity": "SystemMetric"
+      }
+    ],
+    "emittedEvents": [],
+    "listenedEvents": []
+  },
+  {
+    "organism": "std-devops-dashboard",
+    "orbital": "IncidentFromStdOrbital",
+    "tier": "organisms",
+    "factoryPath": "behaviors/functions/app/organisms/std-devops-dashboard.ts",
+    "entities": [
+      {
+        "name": "OncallIncident",
+        "fields": [
+          {
+            "name": "title",
+            "type": "string",
+            "required": true
+          },
+          {
+            "name": "description",
+            "type": "string",
+            "required": true
+          },
+          {
+            "name": "severity",
+            "type": "string",
+            "required": false
+          },
+          {
+            "name": "status",
+            "type": "string",
+            "required": false
+          },
+          {
+            "name": "pagedTo",
+            "type": "string",
+            "required": false
+          },
+          {
+            "name": "runbookId",
+            "type": "string",
+            "required": false
+          },
+          {
+            "name": "acknowledgedAt",
+            "type": "string",
+            "required": false
+          },
+          {
+            "name": "mitigatedAt",
+            "type": "string",
+            "required": false
+          },
+          {
+            "name": "resolvedAt",
+            "type": "string",
+            "required": false
+          }
+        ],
+        "persistence": "persistent"
+      }
+    ],
+    "traits": [
+      {
+        "name": "IncidentFromStdAppLayout",
+        "emittedEvents": [],
+        "listenedEvents": [],
+        "overridableConfigKeys": [
+          {
+            "key": "appName",
+            "type": "unknown",
+            "default": "DevOps Dashboard"
+          },
+          {
+            "key": "contentTrait",
+            "type": "unknown",
+            "default": "@trait.IncidentFromStdManageBlock"
+          },
+          {
+            "key": "navItems",
+            "type": "unknown",
+            "default": [
+              {
+                "label": "Services",
+                "href": "/services",
+                "icon": "server"
+              },
+              {
+                "icon": "bell",
+                "label": "Alerts",
+                "href": "/alerts"
+              },
+              {
+                "label": "Logs",
+                "href": "/logs",
+                "icon": "terminal"
+              },
+              {
+                "href": "/metrics",
+                "icon": "layout-list",
+                "label": "Metrics"
+              },
+              {
+                "label": "Incidents",
+                "icon": "alert-octagon",
+                "href": "/incidents"
+              }
+            ]
+          },
+          {
+            "key": "notificationClickEvent",
+            "type": "unknown",
+            "default": "INCIDENT_NOTIFICATIONS_OPEN"
+          },
+          {
+            "key": "notifications",
+            "type": "unknown",
+            "default": []
+          },
+          {
+            "key": "searchEvent",
+            "type": "unknown",
+            "default": "INCIDENT_SEARCH"
+          }
+        ],
+        "capabilities": [],
+        "ref": "AppShell.traits.AppLayout"
+      },
+      {
+        "name": "IncidentFromStdManageBlock",
+        "emittedEvents": [],
+        "listenedEvents": [],
+        "overridableConfigKeys": [
+          {
+            "key": "title",
+            "type": "unknown",
+            "default": "Incidents"
+          }
+        ],
+        "capabilities": [],
+        "ref": "Incidents.traits.IncidentManage"
+      }
+    ],
+    "pages": [
+      {
+        "name": "IncidentFromStdPage",
+        "defaultPath": "/incidents",
+        "primaryEntity": "OncallIncident"
+      }
+    ],
+    "emittedEvents": [],
+    "listenedEvents": []
+  },
+  {
+    "organism": "std-devops-dashboard",
+    "orbital": "RunbookFromStdOrbital",
+    "tier": "organisms",
+    "factoryPath": "behaviors/functions/app/organisms/std-devops-dashboard.ts",
+    "entities": [
+      {
+        "name": "Runbook",
+        "fields": [
+          {
+            "name": "title",
+            "type": "string",
+            "required": true
+          },
+          {
+            "name": "description",
+            "type": "string",
+            "required": false
+          },
+          {
+            "name": "triggerEvent",
+            "type": "string",
+            "required": false
+          },
+          {
+            "name": "status",
+            "type": "string",
+            "required": false
+          },
+          {
+            "name": "stepsJson",
+            "type": "string",
+            "required": false
+          },
+          {
+            "name": "lastExecutedAt",
+            "type": "string",
+            "required": false
+          },
+          {
+            "name": "executionCount",
+            "type": "number",
+            "required": false
+          }
+        ],
+        "persistence": "persistent"
+      }
+    ],
+    "traits": [
+      {
+        "name": "RunbookFromStdAppLayout",
+        "emittedEvents": [],
+        "listenedEvents": [],
+        "overridableConfigKeys": [
+          {
+            "key": "appName",
+            "type": "unknown",
+            "default": "DevOps Dashboard"
+          },
+          {
+            "key": "contentTrait",
+            "type": "unknown",
+            "default": "@trait.RunbookFromStdManageBlock"
+          },
+          {
+            "key": "navItems",
+            "type": "unknown",
+            "default": [
+              {
+                "href": "/services",
+                "icon": "server",
+                "label": "Services"
+              },
+              {
+                "icon": "bell",
+                "label": "Alerts",
+                "href": "/alerts"
+              },
+              {
+                "icon": "terminal",
+                "label": "Logs",
+                "href": "/logs"
+              },
+              {
+                "href": "/metrics",
+                "label": "Metrics",
+                "icon": "layout-list"
+              },
+              {
+                "href": "/incidents",
+                "icon": "alert-octagon",
+                "label": "Incidents"
+              },
+              {
+                "href": "/runbooks",
+                "label": "Runbooks",
+                "icon": "book-open"
+              }
+            ]
+          },
+          {
+            "key": "notificationClickEvent",
+            "type": "unknown",
+            "default": "RUNBOOK_NOTIFICATIONS_OPEN"
+          },
+          {
+            "key": "notifications",
+            "type": "unknown",
+            "default": []
+          },
+          {
+            "key": "searchEvent",
+            "type": "unknown",
+            "default": "RUNBOOK_SEARCH"
+          }
+        ],
+        "capabilities": [],
+        "ref": "AppShell.traits.AppLayout"
+      },
+      {
+        "name": "RunbookFromStdManageBlock",
+        "emittedEvents": [],
+        "listenedEvents": [],
+        "overridableConfigKeys": [
+          {
+            "key": "title",
+            "type": "unknown",
+            "default": "Runbooks"
+          }
+        ],
+        "capabilities": [],
+        "ref": "Books.traits.RunbookManage"
+      }
+    ],
+    "pages": [
+      {
+        "name": "RunbookFromStdPage",
+        "defaultPath": "/runbooks",
+        "primaryEntity": "Runbook"
       }
     ],
     "emittedEvents": [],

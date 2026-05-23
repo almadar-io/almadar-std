@@ -69,23 +69,23 @@
             "default": [
               {
                 "label": "Contacts",
-                "icon": "users",
-                "href": "/contacts"
+                "href": "/contacts",
+                "icon": "users"
               },
               {
+                "label": "Deals",
                 "href": "/deals",
-                "icon": "briefcase",
-                "label": "Deals"
+                "icon": "briefcase"
               },
               {
-                "label": "Pipeline",
+                "href": "/pipeline",
                 "icon": "bar-chart-2",
-                "href": "/pipeline"
+                "label": "Pipeline"
               },
               {
+                "label": "Notes",
                 "href": "/notes",
-                "icon": "file-text",
-                "label": "Notes"
+                "icon": "file-text"
               }
             ]
           },
@@ -156,7 +156,6 @@
             "type": "unknown",
             "default": [
               {
-                "filterType": "select",
                 "field": "industry",
                 "options": [
                   "technology",
@@ -166,6 +165,7 @@
                   "manufacturing",
                   "other"
                 ],
+                "filterType": "select",
                 "label": "Industry"
               },
               {
@@ -175,9 +175,9 @@
                   "sql",
                   "customer"
                 ],
-                "field": "lifecycleStage",
                 "label": "Lifecycle Stage",
-                "filterType": "select"
+                "filterType": "select",
+                "field": "lifecycleStage"
               }
             ]
           }
@@ -197,18 +197,18 @@
             "type": "unknown",
             "default": [
               {
-                "label": "Total",
                 "icon": "users",
-                "aggregation": "count",
                 "variant": "primary",
-                "format": "number"
+                "format": "number",
+                "aggregation": "count",
+                "label": "Total"
               },
               {
-                "aggregation": "count",
-                "variant": "warning",
-                "format": "number",
                 "label": "Hot Leads",
                 "icon": "flame",
+                "variant": "warning",
+                "format": "number",
+                "aggregation": "count",
                 "filter": [
                   "fn",
                   "row",
@@ -220,11 +220,8 @@
                 ]
               },
               {
-                "icon": "check-circle",
-                "aggregation": "count",
                 "variant": "success",
-                "label": "Customers",
-                "format": "number",
+                "icon": "check-circle",
                 "filter": [
                   "fn",
                   "row",
@@ -233,7 +230,10 @@
                     "@row.lifecycleStage",
                     "customer"
                   ]
-                ]
+                ],
+                "aggregation": "count",
+                "label": "Customers",
+                "format": "number"
               }
             ]
           },
@@ -351,13 +351,13 @@
               },
               {
                 "label": "Edit",
-                "variant": "ghost",
-                "event": "EDIT"
+                "event": "EDIT",
+                "variant": "ghost"
               },
               {
                 "variant": "danger",
-                "event": "DELETE",
-                "label": "Delete"
+                "label": "Delete",
+                "event": "DELETE"
               }
             ]
           },
@@ -539,6 +539,186 @@
         "listenedEvents": [],
         "overridableConfigKeys": [],
         "capabilities": []
+      },
+      {
+        "name": "ContactLifecycleScan",
+        "emittedEvents": [],
+        "listenedEvents": [],
+        "overridableConfigKeys": [
+          {
+            "key": "dryRun",
+            "type": "unknown",
+            "default": false
+          },
+          {
+            "key": "rules",
+            "type": "unknown",
+            "default": [
+              {
+                "toStatus": "mql",
+                "condition": {
+                  "dateField": "pendingId",
+                  "kind": "ageDays",
+                  "value": 30
+                },
+                "fromStatus": "lead"
+              },
+              {
+                "toStatus": "sql",
+                "condition": {
+                  "value": 60,
+                  "dateField": "pendingId",
+                  "kind": "ageDays"
+                },
+                "fromStatus": "mql"
+              },
+              {
+                "condition": {
+                  "dateField": "pendingId",
+                  "value": 180,
+                  "kind": "ageDays"
+                },
+                "fromStatus": "sql",
+                "toStatus": "customer"
+              }
+            ]
+          },
+          {
+            "key": "targetEntity",
+            "type": "unknown",
+            "default": "Contact"
+          }
+        ],
+        "capabilities": [],
+        "ref": "Lifecycle.traits.LifecycleScheduler"
+      },
+      {
+        "name": "ContactNotifier",
+        "emittedEvents": [],
+        "listenedEvents": [],
+        "overridableConfigKeys": [
+          {
+            "key": "listensFor",
+            "type": "unknown",
+            "default": [
+              "CONTACT_UPDATED"
+            ]
+          },
+          {
+            "key": "notifyChannel",
+            "type": "unknown",
+            "default": "in-app"
+          },
+          {
+            "key": "recipients",
+            "type": "unknown",
+            "default": []
+          },
+          {
+            "key": "severity",
+            "type": "unknown",
+            "default": "info"
+          },
+          {
+            "key": "suppressionList",
+            "type": "unknown",
+            "default": []
+          },
+          {
+            "key": "template",
+            "type": "unknown",
+            "default": "Lead activity update"
+          }
+        ],
+        "capabilities": [],
+        "ref": "Notify.traits.NotifyOnEventListener"
+      },
+      {
+        "name": "ContactErasureWorkflow",
+        "emittedEvents": [],
+        "listenedEvents": [],
+        "overridableConfigKeys": [
+          {
+            "key": "anonymizeVsDelete",
+            "type": "unknown",
+            "default": "anonymize"
+          },
+          {
+            "key": "gracePeriodDays",
+            "type": "unknown",
+            "default": 30
+          },
+          {
+            "key": "piiFields",
+            "type": "unknown",
+            "default": [
+              "email",
+              "phone",
+              "name"
+            ]
+          },
+          {
+            "key": "targetEntity",
+            "type": "unknown",
+            "default": "Contact"
+          }
+        ],
+        "capabilities": [],
+        "ref": "Erasure.traits.ErasureWorkflow"
+      },
+      {
+        "name": "ContactCustomerDirectory",
+        "emittedEvents": [],
+        "listenedEvents": [],
+        "overridableConfigKeys": [
+          {
+            "key": "archiveInactiveAfterDays",
+            "type": "unknown",
+            "default": 365
+          },
+          {
+            "key": "consentTrackingEnabled",
+            "type": "unknown",
+            "default": true
+          },
+          {
+            "key": "healthScoreThresholdAlert",
+            "type": "unknown",
+            "default": 50
+          },
+          {
+            "key": "renewalReminderDaysBefore",
+            "type": "unknown",
+            "default": [
+              30,
+              7,
+              1
+            ]
+          },
+          {
+            "key": "title",
+            "type": "unknown",
+            "default": "Customer accounts"
+          }
+        ],
+        "capabilities": [],
+        "ref": "CustomerAcct.traits.CustomerAccountDirectory"
+      },
+      {
+        "name": "ContactSegmentation",
+        "emittedEvents": [],
+        "listenedEvents": [],
+        "overridableConfigKeys": [],
+        "capabilities": [],
+        "ref": "Segment.traits.SegmentSegment"
+      },
+      {
+        "name": "ContactHealthScore",
+        "emittedEvents": [],
+        "listenedEvents": [],
+        "overridableConfigKeys": [],
+        "capabilities": [],
+        "ref": "HealthScore.traits.HealthScoreDashboard"
       }
     ],
     "pages": [
@@ -644,18 +824,18 @@
                 "label": "Contacts"
               },
               {
-                "icon": "briefcase",
                 "label": "Deals",
-                "href": "/deals"
+                "href": "/deals",
+                "icon": "briefcase"
               },
               {
-                "label": "Pipeline",
+                "href": "/pipeline",
                 "icon": "bar-chart-2",
-                "href": "/pipeline"
+                "label": "Pipeline"
               },
               {
-                "href": "/notes",
                 "label": "Notes",
+                "href": "/notes",
                 "icon": "file-text"
               }
             ]
@@ -712,29 +892,29 @@
             "type": "unknown",
             "default": [
               {
-                "variant": "h3",
                 "icon": "briefcase",
-                "name": "title"
+                "name": "title",
+                "variant": "h3"
               },
               {
-                "name": "stage",
-                "variant": "badge"
+                "variant": "badge",
+                "name": "stage"
               },
               {
-                "format": "currency",
                 "name": "amount",
-                "variant": "h4"
+                "variant": "h4",
+                "format": "currency"
               },
               {
+                "name": "contactId",
                 "label": "Contact",
-                "variant": "caption",
-                "name": "contactId"
+                "variant": "caption"
               },
               {
-                "label": "Closed At",
-                "name": "closedAt",
+                "variant": "caption",
                 "format": "date",
-                "variant": "caption"
+                "label": "Closed At",
+                "name": "closedAt"
               }
             ]
           },
@@ -748,9 +928,9 @@
             "type": "unknown",
             "default": [
               {
-                "variant": "ghost",
                 "label": "View",
-                "event": "VIEW"
+                "event": "VIEW",
+                "variant": "ghost"
               },
               {
                 "event": "EDIT",
@@ -758,9 +938,9 @@
                 "variant": "ghost"
               },
               {
+                "variant": "danger",
                 "label": "Delete",
-                "event": "DELETE",
-                "variant": "danger"
+                "event": "DELETE"
               }
             ]
           },
@@ -1016,13 +1196,13 @@
             "default": [
               {
                 "label": "Contacts",
-                "icon": "users",
-                "href": "/contacts"
+                "href": "/contacts",
+                "icon": "users"
               },
               {
-                "label": "Deals",
+                "href": "/deals",
                 "icon": "briefcase",
-                "href": "/deals"
+                "label": "Deals"
               },
               {
                 "label": "Pipeline",
@@ -1148,24 +1328,24 @@
             "type": "unknown",
             "default": [
               {
-                "label": "Contacts",
                 "href": "/contacts",
+                "label": "Contacts",
                 "icon": "users"
               },
               {
-                "label": "Deals",
+                "href": "/deals",
                 "icon": "briefcase",
-                "href": "/deals"
+                "label": "Deals"
               },
               {
+                "label": "Pipeline",
                 "href": "/pipeline",
-                "icon": "bar-chart-2",
-                "label": "Pipeline"
+                "icon": "bar-chart-2"
               },
               {
                 "icon": "file-text",
-                "label": "Notes",
-                "href": "/notes"
+                "href": "/notes",
+                "label": "Notes"
               }
             ]
           },
@@ -1234,16 +1414,16 @@
                 "variant": "caption"
               },
               {
+                "name": "followUpAt",
                 "label": "Follow-Up",
                 "variant": "caption",
-                "name": "followUpAt",
                 "format": "date"
               },
               {
-                "label": "Created",
-                "format": "date",
+                "variant": "caption",
                 "name": "createdAt",
-                "variant": "caption"
+                "label": "Created",
+                "format": "date"
               }
             ]
           },
@@ -1267,9 +1447,9 @@
                 "variant": "ghost"
               },
               {
-                "event": "DELETE",
                 "variant": "danger",
-                "label": "Delete"
+                "label": "Delete",
+                "event": "DELETE"
               }
             ]
           },

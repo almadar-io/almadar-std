@@ -73,19 +73,19 @@
             "type": "unknown",
             "default": [
               {
-                "href": "/products",
+                "icon": "package",
                 "label": "Products",
-                "icon": "package"
+                "href": "/products"
               },
               {
                 "icon": "shopping-cart",
-                "label": "Cart",
-                "href": "/cart"
+                "href": "/cart",
+                "label": "Cart"
               },
               {
-                "icon": "credit-card",
                 "label": "Checkout",
-                "href": "/checkout"
+                "href": "/checkout",
+                "icon": "credit-card"
               },
               {
                 "label": "Orders",
@@ -114,9 +114,9 @@
             "type": "unknown",
             "default": [
               {
-                "icon": "shopping-cart",
                 "label": "Cart",
-                "event": "CART_OPEN"
+                "event": "CART_OPEN",
+                "icon": "shopping-cart"
               }
             ]
           }
@@ -155,28 +155,28 @@
             "type": "unknown",
             "default": [
               {
-                "name": "name",
                 "icon": "package",
+                "name": "name",
                 "variant": "h3"
               },
               {
-                "variant": "badge",
-                "name": "category"
+                "name": "category",
+                "variant": "badge"
               },
               {
-                "format": "currency",
+                "variant": "h4",
                 "name": "price",
-                "variant": "h4"
+                "format": "currency"
               },
               {
                 "name": "sku",
                 "variant": "caption"
               },
               {
-                "variant": "body",
-                "label": "In Stock",
                 "name": "inStock",
-                "format": "boolean"
+                "format": "boolean",
+                "label": "In Stock",
+                "variant": "body"
               }
             ]
           },
@@ -195,18 +195,18 @@
             "type": "unknown",
             "default": [
               {
+                "label": "View",
                 "event": "VIEW",
-                "variant": "ghost",
-                "label": "View"
+                "variant": "ghost"
               },
               {
-                "variant": "ghost",
                 "event": "EDIT",
-                "label": "Edit"
+                "label": "Edit",
+                "variant": "ghost"
               },
               {
-                "label": "Delete",
                 "event": "DELETE",
+                "label": "Delete",
                 "variant": "danger"
               }
             ]
@@ -273,6 +273,81 @@
         ],
         "overridableConfigKeys": [],
         "capabilities": []
+      },
+      {
+        "name": "ProductAudit",
+        "emittedEvents": [],
+        "listenedEvents": [],
+        "overridableConfigKeys": [
+          {
+            "key": "captureBeforeAfter",
+            "type": "unknown",
+            "default": false
+          },
+          {
+            "key": "captureEntity",
+            "type": "unknown",
+            "default": "Product"
+          },
+          {
+            "key": "captureEventTypes",
+            "type": "unknown",
+            "default": []
+          },
+          {
+            "key": "excludeFields",
+            "type": "unknown",
+            "default": []
+          },
+          {
+            "key": "retentionDays",
+            "type": "unknown",
+            "default": 2555
+          }
+        ],
+        "capabilities": [],
+        "ref": "Audit.traits.AuditCaptureListener"
+      },
+      {
+        "name": "ProductLowStockNotifier",
+        "emittedEvents": [],
+        "listenedEvents": [],
+        "overridableConfigKeys": [
+          {
+            "key": "listensFor",
+            "type": "unknown",
+            "default": [
+              "ProductOutOfStock"
+            ]
+          },
+          {
+            "key": "notifyChannel",
+            "type": "unknown",
+            "default": "in-app"
+          },
+          {
+            "key": "recipients",
+            "type": "unknown",
+            "default": []
+          },
+          {
+            "key": "severity",
+            "type": "unknown",
+            "default": "warning"
+          },
+          {
+            "key": "suppressionList",
+            "type": "unknown",
+            "default": []
+          },
+          {
+            "key": "template",
+            "type": "unknown",
+            "default": "A product is out of stock"
+          }
+        ],
+        "capabilities": [],
+        "ref": "Notify.traits.NotifyOnEventListener"
       }
     ],
     "pages": [
@@ -661,6 +736,157 @@
         ],
         "overridableConfigKeys": [],
         "capabilities": []
+      },
+      {
+        "name": "OrderRefundApproval",
+        "emittedEvents": [],
+        "listenedEvents": [],
+        "overridableConfigKeys": [
+          {
+            "key": "approverRoles",
+            "type": "unknown",
+            "default": [
+              "store-manager"
+            ]
+          },
+          {
+            "key": "autoApproveBelowThreshold",
+            "type": "unknown",
+            "default": true
+          },
+          {
+            "key": "escalationHours",
+            "type": "unknown",
+            "default": 24
+          },
+          {
+            "key": "escalationRoles",
+            "type": "unknown",
+            "default": [
+              "operations-director"
+            ]
+          },
+          {
+            "key": "threshold",
+            "type": "unknown",
+            "default": 100
+          },
+          {
+            "key": "valueField",
+            "type": "unknown",
+            "default": "orderTotal"
+          }
+        ],
+        "capabilities": [],
+        "ref": "Approval.traits.ApprovalGateReview"
+      },
+      {
+        "name": "OrderErasure",
+        "emittedEvents": [],
+        "listenedEvents": [],
+        "overridableConfigKeys": [
+          {
+            "key": "anonymizeVsDelete",
+            "type": "unknown",
+            "default": "anonymize"
+          },
+          {
+            "key": "gracePeriodDays",
+            "type": "unknown",
+            "default": 30
+          },
+          {
+            "key": "piiFields",
+            "type": "unknown",
+            "default": [
+              "customerName",
+              "email",
+              "shippingAddress"
+            ]
+          },
+          {
+            "key": "targetEntity",
+            "type": "unknown",
+            "default": "OrderRecord"
+          }
+        ],
+        "capabilities": [],
+        "ref": "Erasure.traits.ErasureWorkflow"
+      },
+      {
+        "name": "OrderShippedNotifier",
+        "emittedEvents": [],
+        "listenedEvents": [],
+        "overridableConfigKeys": [
+          {
+            "key": "listensFor",
+            "type": "unknown",
+            "default": [
+              "OrderShipped"
+            ]
+          },
+          {
+            "key": "notifyChannel",
+            "type": "unknown",
+            "default": "in-app"
+          },
+          {
+            "key": "recipients",
+            "type": "unknown",
+            "default": []
+          },
+          {
+            "key": "severity",
+            "type": "unknown",
+            "default": "info"
+          },
+          {
+            "key": "suppressionList",
+            "type": "unknown",
+            "default": []
+          },
+          {
+            "key": "template",
+            "type": "unknown",
+            "default": "Your order has shipped"
+          }
+        ],
+        "capabilities": [],
+        "ref": "Notify.traits.NotifyOnEventListener"
+      },
+      {
+        "name": "OrderAudit",
+        "emittedEvents": [],
+        "listenedEvents": [],
+        "overridableConfigKeys": [
+          {
+            "key": "captureBeforeAfter",
+            "type": "unknown",
+            "default": false
+          },
+          {
+            "key": "captureEntity",
+            "type": "unknown",
+            "default": "OrderRecord"
+          },
+          {
+            "key": "captureEventTypes",
+            "type": "unknown",
+            "default": []
+          },
+          {
+            "key": "excludeFields",
+            "type": "unknown",
+            "default": []
+          },
+          {
+            "key": "retentionDays",
+            "type": "unknown",
+            "default": 2555
+          }
+        ],
+        "capabilities": [],
+        "ref": "Audit.traits.AuditCaptureListener"
       }
     ],
     "pages": [

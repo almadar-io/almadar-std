@@ -31,8 +31,8 @@ const ALIAS = 'Forum';
  * without modifying its state-machine topology.
  */
 export interface StdForumConfig {
-  navItems?: TraitConfig;
   notifications?: TraitConfig;
+  navItems?: TraitConfig;
 }
 
 /**
@@ -75,7 +75,7 @@ export interface StdForumQuestionOrbitalParams {
    * atom-owned (use `listens` via a sibling trait instead).
    */
   traitOverrides?: Partial<Record<
-    'QuestionAppLayout' | 'QuestionSearch' | 'QuestionFilter' | 'QuestionStats' | 'QuestionTagTree' | 'QuestionBrowseList' | 'QuestionThread' | 'QuestionVote' | 'QuestionCreate' | 'QuestionEdit' | 'QuestionView' | 'QuestionDeleteConfirm' | 'QuestionCatalog' | 'QuestionPersistor',
+    'QuestionAppLayout' | 'QuestionSearch' | 'QuestionFilter' | 'QuestionStats' | 'QuestionTagTree' | 'QuestionBrowseList' | 'QuestionThread' | 'QuestionVote' | 'QuestionCreate' | 'QuestionEdit' | 'QuestionView' | 'QuestionDeleteConfirm' | 'QuestionReplyNotifier' | 'QuestionErasure' | 'QuestionAudit' | 'QuestionCatalog' | 'QuestionPersistor',
     Pick<MakeTraitRefOpts, 'config' | 'linkedEntity' | 'events' | 'name' | 'emitsScope' | 'listens'>
   >>;
 }
@@ -127,6 +127,18 @@ export function stdForumQuestionOrbital(params: StdForumQuestionOrbitalParams = 
       {
         'from': 'std/behaviors/std-stats',
         'as': 'Stats',
+      },
+      {
+        'from': 'std/behaviors/std-notify-on-event',
+        'as': 'Notify',
+      },
+      {
+        'from': 'std/behaviors/std-data-erasure',
+        'as': 'Erasure',
+      },
+      {
+        'from': 'std/behaviors/std-audit-capture',
+        'as': 'Audit',
       },
     ],
     entity: {
@@ -207,12 +219,14 @@ export function stdForumQuestionOrbital(params: StdForumQuestionOrbitalParams = 
         'ref': 'AppShell.traits.AppLayout',
         'name': 'QuestionAppLayout',
         'config': {
+          'notifications': [],
           'contentTrait': '@trait.QuestionCatalog',
+          'notificationClickEvent': 'QUESTION_NOTIFICATIONS_OPEN',
           'navItems': [
             {
+              'icon': 'help-circle',
               'label': 'Questions',
               'href': '/questions',
-              'icon': 'help-circle',
             },
             {
               'label': 'Categories',
@@ -220,19 +234,17 @@ export function stdForumQuestionOrbital(params: StdForumQuestionOrbitalParams = 
               'icon': 'tag',
             },
             {
-              'href': '/moderation',
               'icon': 'shield-alert',
+              'href': '/moderation',
               'label': 'Moderation',
             },
           ],
           'searchEvent': 'QUESTION_SEARCH',
           'appName': 'Forum',
-          'notificationClickEvent': 'QUESTION_NOTIFICATIONS_OPEN',
-          'notifications': [],
         },
         'events': {
-          'NOTIFY_CLICK': 'QUESTION_NOTIFICATIONS_OPEN',
           'SEARCH': 'QUESTION_SEARCH',
+          'NOTIFY_CLICK': 'QUESTION_NOTIFICATIONS_OPEN',
         },
       }),
       rebindInlineTraitEntity({
@@ -315,59 +327,61 @@ export function stdForumQuestionOrbital(params: StdForumQuestionOrbitalParams = 
                   'render-ui',
                   'main',
                   {
+                    'gap': 'lg',
+                    'type': 'stack',
                     'children': [
                       {
+                        'direction': 'horizontal',
+                        'type': 'stack',
+                        'gap': 'md',
                         'children': [
                           {
-                            'align': 'center',
-                            'type': 'stack',
-                            'gap': 'sm',
-                            'direction': 'horizontal',
                             'children': [
                               {
                                 'type': 'icon',
                                 'name': 'help-circle',
                               },
                               {
-                                'variant': 'h2',
                                 'content': 'Questions',
+                                'variant': 'h2',
                                 'type': 'typography',
                               },
                             ],
+                            'type': 'stack',
+                            'align': 'center',
+                            'direction': 'horizontal',
+                            'gap': 'sm',
                           },
                           {
+                            'direction': 'horizontal',
+                            'gap': 'sm',
+                            'type': 'stack',
                             'children': [
                               {
-                                'icon': 'plus',
+                                'action': 'CREATE',
                                 'label': 'Ask Question',
                                 'variant': 'primary',
                                 'type': 'button',
-                                'action': 'CREATE',
+                                'icon': 'plus',
                               },
                             ],
-                            'type': 'stack',
-                            'gap': 'sm',
-                            'direction': 'horizontal',
                           },
                         ],
-                        'direction': 'horizontal',
-                        'gap': 'md',
-                        'type': 'stack',
-                        'justify': 'between',
                         'align': 'center',
+                        'justify': 'between',
                       },
                       {
                         'type': 'divider',
                       },
                       {
-                        'align': 'center',
+                        'type': 'stack',
                         'gap': 'md',
+                        'direction': 'horizontal',
+                        'align': 'center',
                         'children': [
                           '@trait.QuestionSearch',
                           '@trait.QuestionFilter',
                         ],
-                        'type': 'stack',
-                        'direction': 'horizontal',
                       },
                       '@trait.QuestionStats',
                       {
@@ -379,8 +393,6 @@ export function stdForumQuestionOrbital(params: StdForumQuestionOrbitalParams = 
                       },
                       '@trait.QuestionBrowseList',
                     ],
-                    'type': 'stack',
-                    'gap': 'lg',
                     'direction': 'vertical',
                   },
                 ],
@@ -400,34 +412,34 @@ export function stdForumQuestionOrbital(params: StdForumQuestionOrbitalParams = 
                   'render-ui',
                   'main',
                   {
+                    'direction': 'vertical',
+                    'type': 'stack',
                     'children': [
                       {
-                        'type': 'icon',
                         'name': 'bell',
+                        'type': 'icon',
                       },
                       {
-                        'variant': 'h3',
                         'content': 'No notifications',
+                        'variant': 'h3',
                         'type': 'typography',
                       },
                       {
-                        'color': 'muted',
                         'variant': 'caption',
-                        'content': 'You\'re all caught up.',
+                        'color': 'muted',
                         'type': 'typography',
+                        'content': 'You\'re all caught up.',
                       },
                       {
                         'variant': 'ghost',
+                        'label': 'Back to questions',
                         'type': 'button',
                         'action': 'INIT',
-                        'label': 'Back to questions',
                       },
                     ],
-                    'align': 'center',
-                    'gap': 'md',
-                    'type': 'stack',
-                    'direction': 'vertical',
                     'className': 'py-8',
+                    'gap': 'md',
+                    'align': 'center',
                   },
                 ],
               ],
@@ -450,19 +462,19 @@ export function stdForumQuestionOrbital(params: StdForumQuestionOrbitalParams = 
         'config': {
           'filters': [
             {
-              'field': 'status',
               'options': [
                 'open',
                 'answered',
                 'closed',
               ],
-              'filterType': 'select',
               'label': 'Status',
+              'filterType': 'select',
+              'field': 'status',
             },
             {
+              'field': 'tag',
               'filterType': 'select',
               'label': 'Tag',
-              'field': 'tag',
               'options': [],
             },
           ],
@@ -473,19 +485,18 @@ export function stdForumQuestionOrbital(params: StdForumQuestionOrbitalParams = 
         'ref': 'Stats.traits.StatsItemStats',
         'name': 'QuestionStats',
         'config': {
+          'title': 'Questions',
           'metrics': [
             {
-              'label': 'Total',
               'format': 'number',
               'icon': 'help-circle',
-              'aggregation': 'count',
               'variant': 'primary',
+              'label': 'Total',
+              'aggregation': 'count',
             },
             {
               'aggregation': 'count',
-              'label': 'Open',
-              'format': 'number',
-              'icon': 'circle',
+              'variant': 'warning',
               'filter': [
                 'fn',
                 'row',
@@ -495,14 +506,12 @@ export function stdForumQuestionOrbital(params: StdForumQuestionOrbitalParams = 
                   'open',
                 ],
               ],
-              'variant': 'warning',
+              'icon': 'circle',
+              'format': 'number',
+              'label': 'Open',
             },
             {
-              'aggregation': 'count',
               'format': 'number',
-              'variant': 'success',
-              'icon': 'check-circle',
-              'label': 'Answered',
               'filter': [
                 'fn',
                 'row',
@@ -512,9 +521,12 @@ export function stdForumQuestionOrbital(params: StdForumQuestionOrbitalParams = 
                   'answered',
                 ],
               ],
+              'icon': 'check-circle',
+              'variant': 'success',
+              'aggregation': 'count',
+              'label': 'Answered',
             },
           ],
-          'title': 'Questions',
         },
         'listens': [
           {
@@ -531,8 +543,8 @@ export function stdForumQuestionOrbital(params: StdForumQuestionOrbitalParams = 
         'ref': 'Tags.traits.TagBrowse',
         'name': 'QuestionTagTree',
         'config': {
-          'title': 'Categories',
           'allowEdit': false,
+          'title': 'Categories',
         },
       }),
       makeTraitRef({
@@ -540,11 +552,30 @@ export function stdForumQuestionOrbital(params: StdForumQuestionOrbitalParams = 
         'name': 'QuestionBrowseList',
         'linkedEntity': canonicalName,
         'config': {
+          'itemActions': [
+            {
+              'event': 'VIEW',
+              'label': 'View',
+              'variant': 'ghost',
+            },
+            {
+              'label': 'Edit',
+              'variant': 'ghost',
+              'event': 'EDIT',
+            },
+            {
+              'label': 'Delete',
+              'event': 'DELETE',
+              'variant': 'danger',
+            },
+          ],
+          'variant': 'card',
+          'gap': 'sm',
           'fields': [
             {
+              'variant': 'h3',
               'icon': 'help-circle',
               'name': 'title',
-              'variant': 'h3',
             },
             {
               'name': 'authorName',
@@ -559,36 +590,17 @@ export function stdForumQuestionOrbital(params: StdForumQuestionOrbitalParams = 
               'variant': 'badge',
             },
             {
-              'variant': 'caption',
               'format': 'number',
+              'variant': 'caption',
               'name': 'voteCount',
             },
             {
-              'name': 'replyCount',
               'variant': 'caption',
               'format': 'number',
+              'name': 'replyCount',
             },
           ],
-          'itemActions': [
-            {
-              'label': 'View',
-              'event': 'VIEW',
-              'variant': 'ghost',
-            },
-            {
-              'label': 'Edit',
-              'event': 'EDIT',
-              'variant': 'ghost',
-            },
-            {
-              'variant': 'danger',
-              'label': 'Delete',
-              'event': 'DELETE',
-            },
-          ],
-          'gap': 'sm',
           'cols': 1,
-          'variant': 'card',
         },
         'listens': [
           {
@@ -637,8 +649,8 @@ export function stdForumQuestionOrbital(params: StdForumQuestionOrbitalParams = 
         'ref': 'Thread.traits.ThreadPostBrowse',
         'name': 'QuestionThread',
         'config': {
-          'threadRootId': '',
           'flat': false,
+          'threadRootId': '',
         },
       }),
       makeTraitRef({
@@ -653,9 +665,6 @@ export function stdForumQuestionOrbital(params: StdForumQuestionOrbitalParams = 
         'name': 'QuestionCreate',
         'linkedEntity': canonicalName,
         'config': {
-          'title': 'Ask Question',
-          'mode': 'create',
-          'icon': 'plus-circle',
           'fields': [
             'title',
             'body',
@@ -663,6 +672,9 @@ export function stdForumQuestionOrbital(params: StdForumQuestionOrbitalParams = 
             'tag',
             'status',
           ],
+          'title': 'Ask Question',
+          'mode': 'create',
+          'icon': 'plus-circle',
         },
         'events': {
           'OPEN': 'CREATE',
@@ -683,9 +695,8 @@ export function stdForumQuestionOrbital(params: StdForumQuestionOrbitalParams = 
         'name': 'QuestionEdit',
         'linkedEntity': canonicalName,
         'config': {
-          'title': 'Edit Question',
-          'icon': 'edit',
           'mode': 'edit',
+          'title': 'Edit Question',
           'fields': [
             'title',
             'body',
@@ -693,6 +704,7 @@ export function stdForumQuestionOrbital(params: StdForumQuestionOrbitalParams = 
             'tag',
             'status',
           ],
+          'icon': 'edit',
         },
         'events': {
           'OPEN': 'EDIT',
@@ -714,8 +726,6 @@ export function stdForumQuestionOrbital(params: StdForumQuestionOrbitalParams = 
         'linkedEntity': canonicalName,
         'config': {
           'icon': 'eye',
-          'title': 'View Question',
-          'mode': 'edit',
           'fields': [
             'title',
             'body',
@@ -725,6 +735,8 @@ export function stdForumQuestionOrbital(params: StdForumQuestionOrbitalParams = 
             'voteCount',
             'replyCount',
           ],
+          'mode': 'edit',
+          'title': 'View Question',
         },
         'events': {
           'OPEN': 'VIEW',
@@ -745,10 +757,10 @@ export function stdForumQuestionOrbital(params: StdForumQuestionOrbitalParams = 
         'name': 'QuestionDeleteConfirm',
         'linkedEntity': canonicalName,
         'config': {
-          'alertMessage': 'This action cannot be undone. The question and all its replies will be removed.',
-          'title': 'Delete Question',
-          'confirmLabel': 'Delete',
           'icon': 'alert-triangle',
+          'confirmLabel': 'Delete',
+          'title': 'Delete Question',
+          'alertMessage': 'This action cannot be undone. The question and all its replies will be removed.',
         },
         'events': {
           'REQUEST': 'DELETE',
@@ -948,6 +960,50 @@ export function stdForumQuestionOrbital(params: StdForumQuestionOrbitalParams = 
         },
         'scope': 'instance',
       } as never, 'Question', canonicalName) as never,
+      makeTraitRef({
+        'ref': 'Notify.traits.NotifyOnEventListener',
+        'name': 'QuestionReplyNotifier',
+        'config': {
+          'suppressionList': [],
+          'listensFor': [
+            'ReplyAdded',
+          ],
+          'notifyChannel': 'in-app',
+          'template': 'A new reply was posted on your question',
+          'recipients': [],
+          'severity': 'info',
+        },
+        'events': {
+          'EventOccurred': 'ReplyAdded',
+        },
+      }),
+      makeTraitRef({
+        'ref': 'Erasure.traits.ErasureWorkflow',
+        'name': 'QuestionErasure',
+        'config': {
+          'anonymizeVsDelete': 'anonymize',
+          'piiFields': [
+            'authorName',
+            'body',
+          ],
+          'gracePeriodDays': 30,
+          'targetEntity': 'Question',
+        },
+      }),
+      makeTraitRef({
+        'ref': 'Audit.traits.AuditCaptureListener',
+        'name': 'QuestionAudit',
+        'config': {
+          'captureBeforeAfter': false,
+          'retentionDays': 2555,
+          'captureEntity': 'Question',
+          'captureEventTypes': [],
+          'excludeFields': [],
+        },
+        'events': {
+          'EntityMutated': 'QUESTION_UPDATED',
+        },
+      }),
     ],
     pages: [
       {
@@ -995,6 +1051,15 @@ export function stdForumQuestionOrbital(params: StdForumQuestionOrbitalParams = 
           },
           {
             'ref': 'QuestionPersistor',
+          },
+          {
+            'ref': 'QuestionReplyNotifier',
+          },
+          {
+            'ref': 'QuestionErasure',
+          },
+          {
+            'ref': 'QuestionAudit',
           },
         ],
       } as never,
@@ -1061,6 +1126,9 @@ export const StdForumQuestionOrbitalManifest = {
     'QuestionEdit',
     'QuestionView',
     'QuestionDeleteConfirm',
+    'QuestionReplyNotifier',
+    'QuestionErasure',
+    'QuestionAudit',
   ] as const,
   inlineTraitNames: [
     'QuestionCatalog',
@@ -1222,28 +1290,28 @@ export function stdForumModQueueOrbital(params: StdForumModQueueOrbitalParams = 
         'ref': 'AppShell.traits.AppLayout',
         'name': 'ModerationAppLayout',
         'config': {
-          'contentTrait': '@trait.ModerationDisplay',
-          'searchEvent': 'MODERATION_SEARCH',
-          'notificationClickEvent': 'MODERATION_NOTIFICATIONS_OPEN',
-          'notifications': [],
-          'appName': 'Forum',
           'navItems': [
             {
-              'label': 'Questions',
               'href': '/questions',
               'icon': 'help-circle',
+              'label': 'Questions',
             },
             {
+              'icon': 'tag',
               'label': 'Categories',
               'href': '/questions',
-              'icon': 'tag',
             },
             {
               'label': 'Moderation',
-              'href': '/moderation',
               'icon': 'shield-alert',
+              'href': '/moderation',
             },
           ],
+          'searchEvent': 'MODERATION_SEARCH',
+          'notificationClickEvent': 'MODERATION_NOTIFICATIONS_OPEN',
+          'notifications': [],
+          'contentTrait': '@trait.ModerationDisplay',
+          'appName': 'Forum',
         },
         'events': {
           'NOTIFY_CLICK': 'MODERATION_NOTIFICATIONS_OPEN',
@@ -1314,27 +1382,25 @@ export function stdForumModQueueOrbital(params: StdForumModQueueOrbitalParams = 
                   'render-ui',
                   'main',
                   {
-                    'className': 'max-w-6xl mx-auto w-full p-4',
-                    'direction': 'vertical',
-                    'gap': 'lg',
                     'type': 'stack',
+                    'className': 'max-w-6xl mx-auto w-full p-4',
                     'children': [
                       {
-                        'type': 'stack',
-                        'direction': 'horizontal',
+                        'gap': 'sm',
                         'align': 'center',
+                        'direction': 'horizontal',
+                        'type': 'stack',
                         'children': [
                           {
                             'name': 'shield-alert',
                             'type': 'icon',
                           },
                           {
-                            'content': 'Moderation Queue',
                             'type': 'typography',
                             'variant': 'h2',
+                            'content': 'Moderation Queue',
                           },
                         ],
-                        'gap': 'sm',
                       },
                       {
                         'type': 'divider',
@@ -1344,21 +1410,23 @@ export function stdForumModQueueOrbital(params: StdForumModQueueOrbitalParams = 
                         'type': 'divider',
                       },
                       {
-                        'variant': 'h3',
                         'content': 'Recent Flags',
                         'type': 'typography',
+                        'variant': 'h3',
                       },
                       '@trait.ModerationFlagBrowse',
                       {
                         'type': 'divider',
                       },
                       {
+                        'type': 'typography',
                         'variant': 'h3',
                         'content': 'Recorded Decisions',
-                        'type': 'typography',
                       },
                       '@trait.ModerationDecisionBrowse',
                     ],
+                    'direction': 'vertical',
+                    'gap': 'lg',
                   },
                 ],
               ],
@@ -1377,33 +1445,33 @@ export function stdForumModQueueOrbital(params: StdForumModQueueOrbitalParams = 
                   'render-ui',
                   'main',
                   {
-                    'gap': 'md',
                     'direction': 'vertical',
+                    'gap': 'md',
+                    'align': 'center',
                     'className': 'py-8',
                     'children': [
                       {
-                        'type': 'icon',
                         'name': 'bell',
+                        'type': 'icon',
                       },
                       {
-                        'type': 'typography',
                         'variant': 'h3',
+                        'type': 'typography',
                         'content': 'No notifications',
                       },
                       {
                         'type': 'typography',
                         'content': 'You\'re all caught up.',
-                        'color': 'muted',
                         'variant': 'caption',
+                        'color': 'muted',
                       },
                       {
-                        'label': 'Back to moderation',
                         'action': 'INIT',
                         'variant': 'ghost',
+                        'label': 'Back to moderation',
                         'type': 'button',
                       },
                     ],
-                    'align': 'center',
                     'type': 'stack',
                   },
                 ],
@@ -1441,29 +1509,29 @@ export function stdForumModQueueOrbital(params: StdForumModQueueOrbitalParams = 
         'name': 'ModerationDecisionBrowse',
         'linkedEntity': canonicalName,
         'config': {
+          'cols': 1,
+          'gap': 'sm',
           'itemActions': [
             {
               'label': 'Revert',
-              'event': 'DELETE',
               'variant': 'danger',
+              'event': 'DELETE',
             },
           ],
-          'gap': 'sm',
-          'cols': 1,
           'fields': [
             {
-              'name': 'targetType',
               'label': 'Target',
               'variant': 'badge',
+              'name': 'targetType',
             },
             {
+              'label': 'Verdict',
               'variant': 'badge',
               'name': 'verdict',
-              'label': 'Verdict',
             },
             {
-              'variant': 'caption',
               'label': 'Reviewer',
+              'variant': 'caption',
               'name': 'reviewerId',
             },
             {
@@ -1472,10 +1540,10 @@ export function stdForumModQueueOrbital(params: StdForumModQueueOrbitalParams = 
               'name': 'notes',
             },
             {
+              'format': 'date',
+              'name': 'createdAt',
               'label': 'When',
               'variant': 'caption',
-              'name': 'createdAt',
-              'format': 'date',
             },
           ],
         },
@@ -1503,14 +1571,14 @@ export function stdForumModQueueOrbital(params: StdForumModQueueOrbitalParams = 
         'name': 'ModerationRevertConfirm',
         'linkedEntity': canonicalName,
         'config': {
-          'title': 'Revert Decision',
           'icon': 'rotate-ccw',
+          'title': 'Revert Decision',
           'alertMessage': 'This will undo the recorded moderation verdict.',
           'confirmLabel': 'Revert',
         },
         'events': {
-          'REQUEST': 'REVERT',
           'CONFIRM': 'CONFIRM_REVERT',
+          'REQUEST': 'REVERT',
         },
         'listens': [
           {
@@ -1765,18 +1833,271 @@ export function isStdForumModQueueOrbitalParams(p: object): p is StdForumModQueu
 }
 
 /**
+ * Tunable params for the ModerationRuleFromStdOrbital orbital.
+ *
+ * Canonical entity: ModerationRule — overridable via
+ * `entityName`. The factory threads the effective name through every
+ * trait's `linkedEntity` binding; the `.orb` compiler's inline phase
+ * auto-rewrites every `@Entity.x`, `["ref",X]`, `["fetch",X,…]`,
+ * `["persist",…,X,…]` and payload type string accordingly.
+ *
+ * Override surface (mirrors `.lolo`'s native overrides 1:1):
+ *   fields         — extra entity fields (appended)
+ *   pagePath       — first-page URL override
+ *   persistence    — entity persistence mode
+ *   entityName     — rename the canonical entity
+ *   collection     — override the derived collection key
+ *   traitOverrides — per-imported-trait `config`, `linkedEntity`,
+ *                    `events`, `name`, `emitsScope`, `listens`.
+ *                    `effects` is NOT exposed — `.lolo` removed it
+ *                    in Phase 9.5.H. Use `listens` via a sibling
+ *                    trait to react to atom events.
+ */
+export interface StdForumModerationRuleFromStdOrbitalParams {
+  /** Extra fields appended to the canonical entity. */
+  fields?: EntityField[];
+  /** URL path override for the orbital's first page. */
+  pagePath?: string;
+  /** Override the canonical entity persistence mode. */
+  persistence?: EntityPersistence;
+  /** Rename the canonical entity (PascalCase singular, ≤32 chars). */
+  entityName?: string;
+  /** Override derived collection key (defaults to plural(entityName).toLowerCase()). */
+  collection?: string;
+  /**
+   * Per-imported-trait override surface keyed on each imported
+   * trait's canonical `name`. Accepts every override `.lolo`
+   * natively supports: `config`, `linkedEntity`, `events`,
+   * `name`, `emitsScope`, `listens`. `effects` is excluded —
+   * atom-owned (use `listens` via a sibling trait instead).
+   */
+  traitOverrides?: Partial<Record<
+    'ModerationRuleFromStdAppLayout' | 'ModerationRuleFromStdManageBlock',
+    Pick<MakeTraitRefOpts, 'config' | 'linkedEntity' | 'events' | 'name' | 'emitsScope' | 'listens'>
+  >>;
+}
+
+/** Per-orbital factory: builds the ModerationRuleFromStdOrbital orbital with consumer params. */
+export function stdForumModerationRuleFromStdOrbital(params: StdForumModerationRuleFromStdOrbitalParams = {}): OrbitalDefinition {
+  const canonicalName = params.entityName ?? 'ModerationRule';
+  const collectionName = params.collection
+    ?? (params.entityName ? `${params.entityName.toLowerCase()}s` : 'moderation_rules');
+  const built = makeOrbitalWithUses({
+    name: 'ModerationRuleFromStdOrbital',
+    uses: [
+      {
+        'from': 'std/behaviors/std-app-layout',
+        'as': 'AppShell',
+      },
+      {
+        'from': 'std/behaviors/std-moderation-rule',
+        'as': 'Rules',
+      },
+    ],
+    entity: {
+      name: canonicalName,
+      collection: collectionName,
+      persistence: params.persistence ?? 'persistent',
+      fields: ((): EntityField[] => {
+        const canonical: EntityField[] = [
+          {
+            'name': 'id',
+            'type': 'string',
+            'required': true,
+          },
+          {
+            'name': 'name',
+            'type': 'string',
+            'required': true,
+          },
+          {
+            'name': 'description',
+            'type': 'string',
+            'default': '',
+          },
+          {
+            'name': 'appliesTo',
+            'type': 'string',
+            'default': '',
+          },
+          {
+            'name': 'priority',
+            'type': 'number',
+            'default': 0,
+          },
+          {
+            'name': 'status',
+            'type': 'string',
+            'default': 'active',
+            'values': [
+              'active',
+              'testing',
+              'archived',
+            ],
+          },
+          {
+            'name': 'createdAt',
+            'type': 'string',
+            'default': '',
+          },
+        ];
+        const extras = params.fields ?? [];
+        if (extras.length === 0) return canonical;
+        const extraNames = new Set(extras.map((f) => f.name));
+        return [...canonical.filter((f) => !extraNames.has(f.name)), ...extras];
+      })(),
+    } as Entity,
+    traits: [
+      makeTraitRef({
+        'ref': 'AppShell.traits.AppLayout',
+        'name': 'ModerationRuleFromStdAppLayout',
+        'linkedEntity': canonicalName,
+        'config': {
+          'searchEvent': 'MODERATION_RULE_SEARCH',
+          'navItems': [
+            {
+              'icon': 'help-circle',
+              'label': 'Questions',
+              'href': '/questions',
+            },
+            {
+              'icon': 'tag',
+              'label': 'Categories',
+              'href': '/questions',
+            },
+            {
+              'icon': 'shield-alert',
+              'label': 'Moderation',
+              'href': '/moderation',
+            },
+            {
+              'label': 'Moderation Rules',
+              'icon': 'filter',
+              'href': '/moderation-rules',
+            },
+          ],
+          'contentTrait': '@trait.ModerationRuleFromStdManageBlock',
+          'notificationClickEvent': 'MODERATION_RULE_NOTIFICATIONS_OPEN',
+          'notifications': [],
+          'appName': 'Forum',
+        },
+        'events': {
+          'NOTIFY_CLICK': 'MODERATION_RULE_NOTIFICATIONS_OPEN',
+          'SEARCH': 'MODERATION_RULE_SEARCH',
+        },
+      }),
+      makeTraitRef({
+        'ref': 'Rules.traits.ModerationRuleManage',
+        'name': 'ModerationRuleFromStdManageBlock',
+        'linkedEntity': canonicalName,
+        'config': {
+          'title': 'Moderation Rules',
+        },
+      }),
+    ],
+    pages: [
+      {
+        'name': 'ModerationRuleFromStdPage',
+        'path': '/moderation-rules',
+        'traits': [
+          {
+            'ref': 'ModerationRuleFromStdAppLayout',
+          },
+          {
+            'ref': 'ModerationRuleFromStdManageBlock',
+          },
+        ],
+      } as never,
+    ],
+  });
+  type _OrbTrait = OrbitalDefinition["traits"][number];
+  type _OrbPage = NonNullable<OrbitalDefinition["pages"]>[number];
+  type _RefOverride = Pick<MakeTraitRefOpts, "config" | "linkedEntity" | "events" | "name" | "emitsScope" | "listens">;
+  if (built.traits && params.traitOverrides !== undefined) {
+    built.traits = (built.traits as _OrbTrait[]).map((t): _OrbTrait => {
+      if (!t || typeof t !== "object") return t;
+      const tr = t as TraitReference & { name?: string };
+      // Match by name so inline traits (no `ref`) and
+      // reference traits (with `ref`) both pick up the
+      // override surface keyed on the trait's `name`.
+      if (typeof tr.name !== "string") return t;
+      const overrides = params.traitOverrides as Record<string, _RefOverride | undefined> | undefined;
+      const override = overrides?.[tr.name];
+      if (!override) return t;
+      const merged: TraitReference = { ...tr };
+      if (override.config !== undefined) merged.config = { ...(tr.config ?? {}), ...override.config };
+      if (override.linkedEntity !== undefined) merged.linkedEntity = override.linkedEntity;
+      if (override.events !== undefined) merged.events = { ...(tr.events ?? {}), ...override.events };
+      if (override.name !== undefined) merged.name = override.name;
+      if (override.emitsScope !== undefined) merged.emitsScope = override.emitsScope;
+      if (override.listens !== undefined) merged.listens = override.listens;
+      return merged;
+    });
+  }
+  if (built.pages && params.pagePath !== undefined) {
+    built.pages = (built.pages as _OrbPage[]).map((p, idx) => {
+      if (!p || typeof p !== "object") return p;
+      if (idx !== 0) return p;
+      const out = { ...p } as _OrbPage & { path?: string };
+      out.path = params.pagePath;
+      return out;
+    });
+  }
+  return built;
+}
+
+/** Manifest — describes the params surface of stdForumModerationRuleFromStdOrbital. */
+export const StdForumModerationRuleFromStdOrbitalManifest = {
+  organism: 'std-forum',
+  orbitalName: 'ModerationRuleFromStdOrbital',
+  paramFields: [
+    { name: 'fields', type: 'EntityField[]', description: 'Extra fields appended to the canonical entity.' },
+    { name: 'pagePath', type: 'string', description: 'URL override for the orbital first page.' },
+    { name: 'persistence', type: "'persistent' | 'runtime' | 'singleton' | 'instance' | 'local'", description: 'Override the canonical entity persistence mode.' },
+    { name: 'entityName', type: 'string', description: 'Rename the canonical entity. PascalCase singular, ≤32 chars. Threads through every trait\'s linkedEntity binding; compiler rewrites @Entity.x refs.' },
+    { name: 'collection', type: 'string', description: 'Override derived collection key. Defaults to plural(entityName).toLowerCase().' },
+    { name: 'traitOverrides', type: "Partial<Record<TraitName, { config?, linkedEntity?, events?, name?, emitsScope?, listens? }>>", description: 'Per-imported-trait overrides — mirrors .lolo\'s native trait-composition surface 1:1. effects is excluded (atom-owned; use listens via a sibling trait).' },
+  ] as const,
+  traitNames: [
+    'ModerationRuleFromStdAppLayout',
+    'ModerationRuleFromStdManageBlock',
+  ] as const,
+  inlineTraitNames: [
+  ] as const,
+};
+
+/** Typed guard — runtime validates StdForumModerationRuleFromStdOrbitalParams keys. */
+export function isStdForumModerationRuleFromStdOrbitalParams(p: object): p is StdForumModerationRuleFromStdOrbitalParams {
+  type _OverrideRecord = NonNullable<StdForumModerationRuleFromStdOrbitalParams['traitOverrides']>;
+  const obj = p as { traitOverrides?: _OverrideRecord };
+  if (obj.traitOverrides !== undefined) {
+    if (typeof obj.traitOverrides !== "object" || obj.traitOverrides === null) return false;
+    const allowed: readonly string[] = [
+      ...StdForumModerationRuleFromStdOrbitalManifest.traitNames,
+      ...StdForumModerationRuleFromStdOrbitalManifest.inlineTraitNames,
+    ];
+    for (const k of Object.keys(obj.traitOverrides)) {
+      if (!allowed.includes(k)) return false;
+    }
+  }
+  return true;
+}
+
+/**
  * Bundled params for std-forum — one optional entry per orbital.
  * Each entry maps to its per-orbital factory above.
  */
 export interface StdForumParams {
   Question?: StdForumQuestionOrbitalParams;
   ModQueue?: StdForumModQueueOrbitalParams;
+  ModerationRuleFromStd?: StdForumModerationRuleFromStdOrbitalParams;
 }
 
-/** Whole-organism descriptor (2 orbitals). Composes per-orbital factories. */
+/** Whole-organism descriptor (3 orbitals). Composes per-orbital factories. */
 export function stdForum(params: StdForumParams = {}): OrbitalDefinition[] {
   return [
     stdForumQuestionOrbital(params.Question ?? {}),
     stdForumModQueueOrbital(params.ModQueue ?? {}),
+    stdForumModerationRuleFromStdOrbital(params.ModerationRuleFromStd ?? {}),
   ];
 }

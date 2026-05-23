@@ -117,28 +117,28 @@ export interface StdTradeOrderTradeOrderUpdateFailedPayload {
  * without modifying its state-machine topology.
  */
 export interface StdTradeOrderConfig {
-  /** Default: `"best-execution"` */
-  executionVenuePolicy?: 'best-execution' | 'primary-only' | 'dark-pool-preferred' | 'lit-only';
-  /** Default: `true` */
-  partialFillsAllowed?: boolean;
-  /** Default: `250000` */
-  dailyVarLimitUSD?: number;
-  /** Default: `[{"label":"Open","variant":"primary","event":"OPEN_ORDER","icon":"arrow-right"},{"variant":"danger","label":"Cancel","event":"CANCEL","icon":"x"}]` */
-  itemActions?: EntityRow[];
   /** Default: `"Trade Orders"` */
   title?: string;
-  /** Default: `"market"` */
-  orderType?: 'market' | 'limit' | 'stop' | 'stop-limit' | 'trailing';
+  /** Default: `"hard"` */
+  clientSideRiskCheck?: 'soft' | 'hard' | 'off';
   /** Default: `30` */
   washTradePreventionMinutes?: number;
-  /** Default: `500` */
-  priceCollarsBps?: number;
-  /** Default: `[{"variant":"caption","label":"Instrument","name":"instrument"},{"name":"side","label":"Side","variant":"badge"},{"variant":"badge","name":"orderType","label":"Type"},{"variant":"caption","name":"quantity","label":"Qty"},{"label":"Price","variant":"caption","name":"price"},{"variant":"badge","name":"status","label":"Status"},{"variant":"caption","name":"venue","label":"Venue"}]` */
+  /** Default: `"best-execution"` */
+  executionVenuePolicy?: 'best-execution' | 'primary-only' | 'dark-pool-preferred' | 'lit-only';
+  /** Default: `[{"label":"Open","event":"OPEN_ORDER","icon":"arrow-right","variant":"primary"},{"event":"CANCEL","label":"Cancel","icon":"x","variant":"danger"}]` */
+  itemActions?: EntityRow[];
+  /** Default: `"market"` */
+  orderType?: 'market' | 'limit' | 'stop' | 'stop-limit' | 'trailing';
+  /** Default: `[{"variant":"caption","name":"instrument","label":"Instrument"},{"label":"Side","variant":"badge","name":"side"},{"label":"Type","name":"orderType","variant":"badge"},{"name":"quantity","variant":"caption","label":"Qty"},{"variant":"caption","name":"price","label":"Price"},{"variant":"badge","name":"status","label":"Status"},{"variant":"caption","name":"venue","label":"Venue"}]` */
   fields?: EntityRow[];
   /** Default: `1000000` */
   positionLimitUSD?: number;
-  /** Default: `"hard"` */
-  clientSideRiskCheck?: 'soft' | 'hard' | 'off';
+  /** Default: `250000` */
+  dailyVarLimitUSD?: number;
+  /** Default: `500` */
+  priceCollarsBps?: number;
+  /** Default: `true` */
+  partialFillsAllowed?: boolean;
 }
 
 /**

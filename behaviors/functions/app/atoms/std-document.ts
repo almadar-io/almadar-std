@@ -154,28 +154,28 @@ export interface StdDocumentDocumentLoadFailedPayload {
  * without modifying its state-machine topology.
  */
 export interface StdDocumentConfig {
-  /** Default: `[{"name":"title","label":"Title","variant":"caption"},{"label":"Type","name":"mimeType","variant":"caption"},{"variant":"badge","label":"Classification","name":"classification"},{"variant":"caption","label":"Locked by","name":"lockedBy"},{"label":"Retention","name":"retentionUntil","variant":"caption"}]` */
-  fields?: EntityRow[];
-  /** Default: `7` */
-  defaultRetentionYears?: number;
-  /** Default: `["public","internal","confidential","restricted"]` */
-  classificationLevels?: string[];
-  /** Default: `"Documents"` */
-  title?: string;
   /** Default: `["application/pdf","application/msword","image/png","image/jpeg"]` */
   allowedMimeTypes?: string[];
   /** Default: `"soft"` */
   lockedStatus?: 'none' | 'soft' | 'hard';
-  /** Default: `false` */
-  requireReasonOnDownload?: boolean;
-  /** Default: `[{"label":"Open","variant":"primary","icon":"arrow-right","event":"OPEN_DOCUMENT"},{"event":"DOWNLOAD","variant":"secondary","icon":"download","label":"Download"}]` */
-  itemActions?: EntityRow[];
-  /** Default: `10` */
-  versionRetentionCount?: number;
+  /** Default: `7` */
+  defaultRetentionYears?: number;
+  /** Default: `["public","internal","confidential","restricted"]` */
+  classificationLevels?: string[];
   /** Default: `"none"` */
   watermarkPolicy?: 'none' | 'viewer-id' | 'viewer-id-timestamp';
+  /** Default: `"Documents"` */
+  title?: string;
   /** Default: `true` */
   legalHoldEnabled?: boolean;
+  /** Default: `[{"label":"Open","variant":"primary","event":"OPEN_DOCUMENT","icon":"arrow-right"},{"label":"Download","icon":"download","event":"DOWNLOAD","variant":"secondary"}]` */
+  itemActions?: EntityRow[];
+  /** Default: `[{"variant":"caption","name":"title","label":"Title"},{"name":"mimeType","label":"Type","variant":"caption"},{"variant":"badge","name":"classification","label":"Classification"},{"name":"lockedBy","label":"Locked by","variant":"caption"},{"label":"Retention","variant":"caption","name":"retentionUntil"}]` */
+  fields?: EntityRow[];
+  /** Default: `false` */
+  requireReasonOnDownload?: boolean;
+  /** Default: `10` */
+  versionRetentionCount?: number;
 }
 
 /**

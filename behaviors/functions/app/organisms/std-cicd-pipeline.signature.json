@@ -78,9 +78,9 @@
                 "icon": "hammer"
               },
               {
-                "icon": "layers",
+                "href": "/stages",
                 "label": "Stages",
-                "href": "/stages"
+                "icon": "layers"
               },
               {
                 "label": "Deploy",
@@ -155,13 +155,13 @@
             "default": [
               {
                 "field": "status",
+                "label": "Status",
+                "filterType": "select",
                 "options": [
                   "running",
                   "success",
                   "failed"
-                ],
-                "filterType": "select",
-                "label": "Status"
+                ]
               },
               {
                 "label": "Branch",
@@ -189,10 +189,11 @@
                 "aggregation": "count",
                 "label": "Total Today",
                 "variant": "primary",
-                "icon": "hammer",
-                "format": "number"
+                "format": "number",
+                "icon": "hammer"
               },
               {
+                "aggregation": "count",
                 "filter": [
                   "fn",
                   "row",
@@ -202,11 +203,10 @@
                     "success"
                   ]
                 ],
+                "format": "number",
                 "icon": "check-circle",
                 "variant": "success",
-                "label": "Success",
-                "aggregation": "count",
-                "format": "number"
+                "label": "Success"
               },
               {
                 "filter": [
@@ -218,19 +218,19 @@
                     "failed"
                   ]
                 ],
+                "icon": "x-circle",
                 "aggregation": "count",
-                "label": "Failed",
-                "format": "number",
                 "variant": "error",
-                "icon": "x-circle"
+                "format": "number",
+                "label": "Failed"
               },
               {
-                "aggregation": "avg",
-                "label": "Avg Duration",
-                "icon": "clock",
-                "field": "duration",
+                "variant": "default",
                 "format": "number",
-                "variant": "default"
+                "aggregation": "avg",
+                "field": "duration",
+                "label": "Avg Duration",
+                "icon": "clock"
               }
             ]
           },
@@ -310,13 +310,13 @@
             "type": "unknown",
             "default": [
               {
-                "name": "id",
-                "variant": "caption"
+                "variant": "caption",
+                "name": "id"
               },
               {
                 "name": "branch",
-                "icon": "git-branch",
-                "variant": "h4"
+                "variant": "h4",
+                "icon": "git-branch"
               },
               {
                 "name": "commit",
@@ -331,10 +331,10 @@
                 "name": "duration"
               },
               {
-                "name": "startedAt",
+                "label": "Started",
                 "variant": "caption",
-                "format": "date",
-                "label": "Started"
+                "name": "startedAt",
+                "format": "date"
               }
             ]
           },
@@ -348,19 +348,19 @@
             "type": "unknown",
             "default": [
               {
-                "variant": "ghost",
                 "label": "View",
-                "event": "VIEW"
+                "event": "VIEW",
+                "variant": "ghost"
               },
               {
-                "variant": "ghost",
                 "label": "Edit",
-                "event": "EDIT"
+                "event": "EDIT",
+                "variant": "ghost"
               },
               {
-                "variant": "danger",
+                "event": "DELETE",
                 "label": "Delete",
-                "event": "DELETE"
+                "variant": "danger"
               }
             ]
           }
@@ -524,6 +524,81 @@
         ],
         "overridableConfigKeys": [],
         "capabilities": []
+      },
+      {
+        "name": "BuildFailedNotifier",
+        "emittedEvents": [],
+        "listenedEvents": [],
+        "overridableConfigKeys": [
+          {
+            "key": "listensFor",
+            "type": "unknown",
+            "default": [
+              "BuildFailed"
+            ]
+          },
+          {
+            "key": "notifyChannel",
+            "type": "unknown",
+            "default": "in-app"
+          },
+          {
+            "key": "recipients",
+            "type": "unknown",
+            "default": []
+          },
+          {
+            "key": "severity",
+            "type": "unknown",
+            "default": "error"
+          },
+          {
+            "key": "suppressionList",
+            "type": "unknown",
+            "default": []
+          },
+          {
+            "key": "template",
+            "type": "unknown",
+            "default": "A build has failed"
+          }
+        ],
+        "capabilities": [],
+        "ref": "Notify.traits.NotifyOnEventListener"
+      },
+      {
+        "name": "BuildAudit",
+        "emittedEvents": [],
+        "listenedEvents": [],
+        "overridableConfigKeys": [
+          {
+            "key": "captureBeforeAfter",
+            "type": "unknown",
+            "default": false
+          },
+          {
+            "key": "captureEntity",
+            "type": "unknown",
+            "default": "Build"
+          },
+          {
+            "key": "captureEventTypes",
+            "type": "unknown",
+            "default": []
+          },
+          {
+            "key": "excludeFields",
+            "type": "unknown",
+            "default": []
+          },
+          {
+            "key": "retentionDays",
+            "type": "unknown",
+            "default": 2555
+          }
+        ],
+        "capabilities": [],
+        "ref": "Audit.traits.AuditCaptureListener"
       }
     ],
     "pages": [
@@ -620,19 +695,19 @@
             "type": "unknown",
             "default": [
               {
-                "icon": "hammer",
+                "label": "Builds",
                 "href": "/builds",
-                "label": "Builds"
+                "icon": "hammer"
               },
               {
-                "label": "Stages",
                 "href": "/stages",
-                "icon": "layers"
+                "icon": "layers",
+                "label": "Stages"
               },
               {
-                "href": "/deploy",
+                "icon": "rocket",
                 "label": "Deploy",
-                "icon": "rocket"
+                "href": "/deploy"
               }
             ]
           },
@@ -691,9 +766,9 @@
                 "name": "name"
               },
               {
-                "variant": "caption",
                 "name": "buildId",
-                "label": "Build"
+                "label": "Build",
+                "variant": "caption"
               },
               {
                 "name": "status",
@@ -719,14 +794,14 @@
             "type": "unknown",
             "default": [
               {
-                "event": "VIEW",
                 "label": "View",
+                "event": "VIEW",
                 "variant": "ghost"
               },
               {
-                "variant": "ghost",
                 "label": "Edit",
-                "event": "EDIT"
+                "event": "EDIT",
+                "variant": "ghost"
               },
               {
                 "event": "DELETE",
@@ -983,14 +1058,14 @@
                 "icon": "hammer"
               },
               {
-                "icon": "layers",
                 "label": "Stages",
-                "href": "/stages"
+                "href": "/stages",
+                "icon": "layers"
               },
               {
-                "href": "/deploy",
                 "icon": "rocket",
-                "label": "Deploy"
+                "label": "Deploy",
+                "href": "/deploy"
               }
             ]
           },
@@ -1028,9 +1103,9 @@
             "type": "unknown",
             "default": [
               {
+                "icon": "rocket",
                 "variant": "h4",
-                "name": "environment",
-                "icon": "rocket"
+                "name": "environment"
               },
               {
                 "name": "version",
@@ -1042,9 +1117,9 @@
               },
               {
                 "format": "date",
-                "name": "deployedAt",
+                "label": "Deployed",
                 "variant": "caption",
-                "label": "Deployed"
+                "name": "deployedAt"
               }
             ]
           },
@@ -1124,6 +1199,49 @@
         "listenedEvents": [],
         "overridableConfigKeys": [],
         "capabilities": []
+      },
+      {
+        "name": "DeploymentApproval",
+        "emittedEvents": [],
+        "listenedEvents": [],
+        "overridableConfigKeys": [
+          {
+            "key": "approverRoles",
+            "type": "unknown",
+            "default": [
+              "release-manager"
+            ]
+          },
+          {
+            "key": "autoApproveBelowThreshold",
+            "type": "unknown",
+            "default": false
+          },
+          {
+            "key": "escalationHours",
+            "type": "unknown",
+            "default": 2
+          },
+          {
+            "key": "escalationRoles",
+            "type": "unknown",
+            "default": [
+              "cto"
+            ]
+          },
+          {
+            "key": "threshold",
+            "type": "unknown",
+            "default": 0
+          },
+          {
+            "key": "valueField",
+            "type": "unknown",
+            "default": "environmentRiskScore"
+          }
+        ],
+        "capabilities": [],
+        "ref": "Approval.traits.ApprovalGateReview"
       }
     ],
     "pages": [

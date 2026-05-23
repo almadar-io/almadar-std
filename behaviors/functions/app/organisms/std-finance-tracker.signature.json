@@ -68,19 +68,19 @@
             "type": "unknown",
             "default": [
               {
+                "label": "Transactions",
                 "href": "/transactions",
-                "icon": "receipt",
-                "label": "Transactions"
+                "icon": "receipt"
               },
               {
+                "href": "/summary",
                 "icon": "layout-list",
-                "label": "Summary",
-                "href": "/summary"
+                "label": "Summary"
               },
               {
-                "href": "/reports",
+                "icon": "bar-chart",
                 "label": "Reports",
-                "icon": "bar-chart"
+                "href": "/reports"
               }
             ]
           },
@@ -149,23 +149,23 @@
             "type": "unknown",
             "default": [
               {
+                "field": "category",
                 "label": "Category",
-                "filterType": "text",
-                "field": "category"
-              },
-              {
-                "label": "Account",
-                "field": "account",
                 "filterType": "text"
               },
               {
+                "field": "account",
+                "label": "Account",
+                "filterType": "text"
+              },
+              {
+                "label": "Type",
+                "filterType": "select",
+                "field": "type",
                 "options": [
                   "income",
                   "expense"
-                ],
-                "field": "type",
-                "filterType": "select",
-                "label": "Type"
+                ]
               }
             ]
           }
@@ -185,6 +185,11 @@
             "type": "unknown",
             "default": [
               {
+                "icon": "trending-up",
+                "label": "Income",
+                "variant": "success",
+                "aggregation": "sum",
+                "field": "amount",
                 "format": "currency",
                 "filter": [
                   "fn",
@@ -194,15 +199,15 @@
                     "@row.type",
                     "income"
                   ]
-                ],
-                "label": "Income",
-                "field": "amount",
-                "aggregation": "sum",
-                "icon": "trending-up",
-                "variant": "success"
+                ]
               },
               {
+                "variant": "error",
+                "label": "Expenses",
+                "field": "amount",
                 "format": "currency",
+                "aggregation": "sum",
+                "icon": "trending-down",
                 "filter": [
                   "fn",
                   "row",
@@ -211,19 +216,14 @@
                     "@row.type",
                     "expense"
                   ]
-                ],
-                "label": "Expenses",
-                "aggregation": "sum",
-                "variant": "error",
-                "icon": "trending-down",
-                "field": "amount"
+                ]
               },
               {
-                "aggregation": "count",
-                "icon": "percent",
                 "label": "Savings Rate",
-                "variant": "primary",
-                "format": "number"
+                "format": "number",
+                "icon": "percent",
+                "aggregation": "count",
+                "variant": "primary"
               }
             ]
           },
@@ -308,13 +308,13 @@
             "type": "unknown",
             "default": [
               {
+                "variant": "caption",
                 "format": "date",
-                "name": "date",
-                "variant": "caption"
+                "name": "date"
               },
               {
-                "icon": "receipt",
                 "variant": "h4",
+                "icon": "receipt",
                 "name": "description"
               },
               {
@@ -342,19 +342,19 @@
             "type": "unknown",
             "default": [
               {
+                "variant": "ghost",
                 "label": "View",
-                "event": "VIEW",
+                "event": "VIEW"
+              },
+              {
+                "event": "EDIT",
+                "label": "Edit",
                 "variant": "ghost"
               },
               {
-                "variant": "ghost",
-                "label": "Edit",
-                "event": "EDIT"
-              },
-              {
-                "event": "DELETE",
                 "variant": "danger",
-                "label": "Delete"
+                "label": "Delete",
+                "event": "DELETE"
               }
             ]
           }
@@ -521,6 +521,64 @@
         ],
         "overridableConfigKeys": [],
         "capabilities": []
+      },
+      {
+        "name": "TransactionAuditCapture",
+        "emittedEvents": [],
+        "listenedEvents": [],
+        "overridableConfigKeys": [
+          {
+            "key": "captureBeforeAfter",
+            "type": "unknown",
+            "default": true
+          },
+          {
+            "key": "captureEntity",
+            "type": "unknown",
+            "default": "Transaction"
+          },
+          {
+            "key": "captureEventTypes",
+            "type": "unknown",
+            "default": []
+          },
+          {
+            "key": "excludeFields",
+            "type": "unknown",
+            "default": []
+          },
+          {
+            "key": "retentionDays",
+            "type": "unknown",
+            "default": 2555
+          }
+        ],
+        "capabilities": [],
+        "ref": "Audit.traits.AuditCaptureListener"
+      },
+      {
+        "name": "TransactionRecurringCharge",
+        "emittedEvents": [],
+        "listenedEvents": [],
+        "overridableConfigKeys": [],
+        "capabilities": [],
+        "ref": "Recurring.traits.SubscriptionManage"
+      },
+      {
+        "name": "TransactionReceiptIssuer",
+        "emittedEvents": [],
+        "listenedEvents": [],
+        "overridableConfigKeys": [],
+        "capabilities": [],
+        "ref": "Receipt.traits.ReceiptIssuer"
+      },
+      {
+        "name": "TransactionLedgerJournal",
+        "emittedEvents": [],
+        "listenedEvents": [],
+        "overridableConfigKeys": [],
+        "capabilities": [],
+        "ref": "Ledger.traits.LedgerEntryJournal"
       }
     ],
     "pages": [
@@ -607,19 +665,19 @@
             "type": "unknown",
             "default": [
               {
-                "label": "Transactions",
                 "href": "/transactions",
+                "label": "Transactions",
                 "icon": "receipt"
               },
               {
                 "label": "Summary",
-                "icon": "layout-list",
-                "href": "/summary"
+                "href": "/summary",
+                "icon": "layout-list"
               },
               {
-                "label": "Reports",
+                "href": "/reports",
                 "icon": "bar-chart",
-                "href": "/reports"
+                "label": "Reports"
               }
             ]
           },
@@ -735,9 +793,9 @@
             "type": "unknown",
             "default": [
               {
+                "label": "Transactions",
                 "href": "/transactions",
-                "icon": "receipt",
-                "label": "Transactions"
+                "icon": "receipt"
               },
               {
                 "label": "Summary",

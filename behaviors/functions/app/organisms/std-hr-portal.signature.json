@@ -73,9 +73,9 @@
             "type": "unknown",
             "default": [
               {
+                "href": "/employees",
                 "icon": "users",
-                "label": "Employees",
-                "href": "/employees"
+                "label": "Employees"
               },
               {
                 "label": "Onboarding",
@@ -88,9 +88,9 @@
                 "icon": "calendar"
               },
               {
-                "icon": "git-branch",
+                "label": "Org Chart",
                 "href": "/org-chart",
-                "label": "Org Chart"
+                "icon": "git-branch"
               }
             ]
           },
@@ -159,6 +159,7 @@
             "type": "unknown",
             "default": [
               {
+                "field": "department",
                 "label": "Department",
                 "options": [
                   "engineering",
@@ -168,11 +169,9 @@
                   "hr",
                   "finance"
                 ],
-                "field": "department",
                 "filterType": "select"
               },
               {
-                "field": "role",
                 "filterType": "select",
                 "options": [
                   "manager",
@@ -180,17 +179,18 @@
                   "ic",
                   "intern"
                 ],
+                "field": "role",
                 "label": "Role"
               },
               {
+                "label": "Status",
                 "options": [
                   "active",
                   "leave",
                   "terminated"
                 ],
                 "field": "status",
-                "filterType": "select",
-                "label": "Status"
+                "filterType": "select"
               }
             ]
           }
@@ -210,32 +210,31 @@
             "type": "unknown",
             "default": [
               {
+                "icon": "users",
                 "variant": "primary",
                 "label": "Total Employees",
                 "aggregation": "count",
-                "icon": "users",
                 "format": "number"
               },
               {
+                "aggregation": "count",
                 "icon": "layers",
                 "label": "By Department",
-                "format": "number",
-                "aggregation": "count",
-                "variant": "default"
-              },
-              {
-                "aggregation": "count",
-                "label": "New This Month",
-                "variant": "info",
-                "icon": "user-plus",
+                "variant": "default",
                 "format": "number"
               },
               {
                 "format": "number",
-                "aggregation": "count",
+                "variant": "info",
+                "icon": "user-plus",
+                "label": "New This Month",
+                "aggregation": "count"
+              },
+              {
                 "variant": "warning",
-                "label": "On Leave",
                 "icon": "calendar-off",
+                "aggregation": "count",
+                "format": "number",
                 "filter": [
                   "fn",
                   "row",
@@ -244,7 +243,8 @@
                     "@row.status",
                     "leave"
                   ]
-                ]
+                ],
+                "label": "On Leave"
               }
             ]
           },
@@ -320,25 +320,25 @@
             "type": "unknown",
             "default": [
               {
-                "icon": "user",
+                "variant": "h3",
                 "name": "name",
-                "variant": "h3"
+                "icon": "user"
               },
               {
                 "name": "role",
                 "variant": "body"
               },
               {
-                "variant": "badge",
-                "name": "department"
+                "name": "department",
+                "variant": "badge"
               },
               {
-                "variant": "caption",
-                "name": "email"
+                "name": "email",
+                "variant": "caption"
               },
               {
-                "label": "Joined",
                 "name": "hireDate",
+                "label": "Joined",
                 "format": "date",
                 "variant": "caption"
               }
@@ -359,13 +359,13 @@
             "type": "unknown",
             "default": [
               {
-                "event": "VIEW",
                 "variant": "ghost",
+                "event": "VIEW",
                 "label": "View"
               },
               {
-                "label": "Edit",
                 "variant": "ghost",
+                "label": "Edit",
                 "event": "EDIT"
               },
               {
@@ -585,6 +585,120 @@
         "listenedEvents": [],
         "overridableConfigKeys": [],
         "capabilities": []
+      },
+      {
+        "name": "EmployeeOfferApproval",
+        "emittedEvents": [],
+        "listenedEvents": [],
+        "overridableConfigKeys": [
+          {
+            "key": "approverRoles",
+            "type": "unknown",
+            "default": [
+              "hr-director",
+              "vp-people"
+            ]
+          },
+          {
+            "key": "autoApproveBelowThreshold",
+            "type": "unknown",
+            "default": false
+          },
+          {
+            "key": "escalationHours",
+            "type": "unknown",
+            "default": 72
+          },
+          {
+            "key": "escalationRoles",
+            "type": "unknown",
+            "default": [
+              "cfo"
+            ]
+          },
+          {
+            "key": "threshold",
+            "type": "unknown",
+            "default": 150000
+          },
+          {
+            "key": "valueField",
+            "type": "unknown",
+            "default": "offerAmount"
+          }
+        ],
+        "capabilities": [],
+        "ref": "Approval.traits.ApprovalGateReview"
+      },
+      {
+        "name": "EmployeeErasure",
+        "emittedEvents": [],
+        "listenedEvents": [],
+        "overridableConfigKeys": [
+          {
+            "key": "anonymizeVsDelete",
+            "type": "unknown",
+            "default": "anonymize"
+          },
+          {
+            "key": "gracePeriodDays",
+            "type": "unknown",
+            "default": 30
+          },
+          {
+            "key": "piiFields",
+            "type": "unknown",
+            "default": [
+              "ssn",
+              "address",
+              "phone",
+              "email"
+            ]
+          },
+          {
+            "key": "targetEntity",
+            "type": "unknown",
+            "default": "Employee"
+          }
+        ],
+        "capabilities": [],
+        "ref": "Erasure.traits.ErasureWorkflow"
+      },
+      {
+        "name": "EmployeeAuditCapture",
+        "emittedEvents": [],
+        "listenedEvents": [],
+        "overridableConfigKeys": [
+          {
+            "key": "captureBeforeAfter",
+            "type": "unknown",
+            "default": true
+          },
+          {
+            "key": "captureEntity",
+            "type": "unknown",
+            "default": "Employee"
+          },
+          {
+            "key": "captureEventTypes",
+            "type": "unknown",
+            "default": []
+          },
+          {
+            "key": "excludeFields",
+            "type": "unknown",
+            "default": [
+              "ssn"
+            ]
+          },
+          {
+            "key": "retentionDays",
+            "type": "unknown",
+            "default": 2555
+          }
+        ],
+        "capabilities": [],
+        "ref": "Audit.traits.AuditCaptureListener"
       }
     ],
     "pages": [
@@ -686,18 +800,18 @@
             "type": "unknown",
             "default": [
               {
-                "href": "/employees",
                 "icon": "users",
-                "label": "Employees"
+                "label": "Employees",
+                "href": "/employees"
               },
               {
+                "label": "Onboarding",
                 "href": "/onboarding",
-                "icon": "clipboard-check",
-                "label": "Onboarding"
+                "icon": "clipboard-check"
               },
               {
-                "href": "/timeoff",
                 "label": "Time Off",
+                "href": "/timeoff",
                 "icon": "calendar"
               },
               {
@@ -834,9 +948,9 @@
             "type": "unknown",
             "default": [
               {
+                "href": "/employees",
                 "icon": "users",
-                "label": "Employees",
-                "href": "/employees"
+                "label": "Employees"
               },
               {
                 "icon": "clipboard-check",
@@ -844,8 +958,8 @@
                 "href": "/onboarding"
               },
               {
-                "icon": "calendar",
                 "label": "Time Off",
+                "icon": "calendar",
                 "href": "/timeoff"
               },
               {
@@ -925,25 +1039,25 @@
             "type": "unknown",
             "default": [
               {
-                "icon": "user",
-                "variant": "h4",
+                "label": "Employee",
                 "name": "employeeName",
-                "label": "Employee"
+                "icon": "user",
+                "variant": "h4"
               },
               {
-                "label": "Type",
+                "variant": "badge",
                 "name": "leaveType",
-                "variant": "badge"
+                "label": "Type"
               },
               {
                 "name": "status",
                 "variant": "badge"
               },
               {
-                "label": "From",
-                "format": "date",
+                "name": "startDate",
                 "variant": "caption",
-                "name": "startDate"
+                "format": "date",
+                "label": "From"
               },
               {
                 "name": "endDate",
@@ -952,8 +1066,8 @@
                 "variant": "caption"
               },
               {
-                "variant": "caption",
-                "name": "reason"
+                "name": "reason",
+                "variant": "caption"
               }
             ]
           },
@@ -972,14 +1086,14 @@
                 "label": "View"
               },
               {
-                "variant": "ghost",
                 "event": "EDIT",
+                "variant": "ghost",
                 "label": "Edit"
               },
               {
-                "event": "DELETE",
                 "variant": "danger",
-                "label": "Delete"
+                "label": "Delete",
+                "event": "DELETE"
               }
             ]
           }
@@ -1238,13 +1352,13 @@
               },
               {
                 "icon": "clipboard-check",
-                "href": "/onboarding",
-                "label": "Onboarding"
+                "label": "Onboarding",
+                "href": "/onboarding"
               },
               {
+                "href": "/timeoff",
                 "icon": "calendar",
-                "label": "Time Off",
-                "href": "/timeoff"
+                "label": "Time Off"
               },
               {
                 "label": "Org Chart",

@@ -69,8 +69,8 @@
             "default": [
               {
                 "href": "/feed",
-                "icon": "rss",
-                "label": "Feed"
+                "label": "Feed",
+                "icon": "rss"
               },
               {
                 "label": "Comments",
@@ -141,17 +141,16 @@
             "type": "unknown",
             "default": [
               {
-                "variant": "primary",
-                "icon": "rss",
+                "format": "number",
                 "label": "Total Posts",
                 "aggregation": "count",
-                "format": "number"
+                "variant": "primary",
+                "icon": "rss"
               },
               {
                 "aggregation": "count",
-                "icon": "calendar",
                 "label": "Today",
-                "variant": "info",
+                "icon": "calendar",
                 "format": "number",
                 "filter": [
                   "fn",
@@ -161,7 +160,8 @@
                     "@row.timestamp",
                     "today"
                   ]
-                ]
+                ],
+                "variant": "info"
               }
             ]
           },
@@ -203,14 +203,14 @@
                 "variant": "body"
               },
               {
-                "format": "date",
                 "name": "timestamp",
-                "variant": "caption"
+                "variant": "caption",
+                "format": "date"
               },
               {
                 "format": "number",
-                "name": "likes",
-                "variant": "badge"
+                "variant": "badge",
+                "name": "likes"
               }
             ]
           },
@@ -229,19 +229,19 @@
             "type": "unknown",
             "default": [
               {
+                "variant": "ghost",
                 "label": "View",
-                "event": "VIEW",
-                "variant": "ghost"
+                "event": "VIEW"
               },
               {
-                "event": "EDIT",
                 "variant": "ghost",
+                "event": "EDIT",
                 "label": "Edit"
               },
               {
+                "variant": "danger",
                 "label": "Delete",
-                "event": "DELETE",
-                "variant": "danger"
+                "event": "DELETE"
               }
             ]
           },
@@ -466,6 +466,98 @@
         "listenedEvents": [],
         "overridableConfigKeys": [],
         "capabilities": []
+      },
+      {
+        "name": "PostModQueue",
+        "emittedEvents": [],
+        "listenedEvents": [],
+        "overridableConfigKeys": [
+          {
+            "key": "autoEscalateThreshold",
+            "type": "unknown",
+            "default": 3
+          },
+          {
+            "key": "title",
+            "type": "unknown",
+            "default": "Flagged Posts"
+          }
+        ],
+        "capabilities": [],
+        "ref": "ModQueue.traits.ModQueueItemReview"
+      },
+      {
+        "name": "PostFlaggedNotifier",
+        "emittedEvents": [],
+        "listenedEvents": [],
+        "overridableConfigKeys": [
+          {
+            "key": "listensFor",
+            "type": "unknown",
+            "default": [
+              "PostFlagged"
+            ]
+          },
+          {
+            "key": "notifyChannel",
+            "type": "unknown",
+            "default": "in-app"
+          },
+          {
+            "key": "recipients",
+            "type": "unknown",
+            "default": []
+          },
+          {
+            "key": "severity",
+            "type": "unknown",
+            "default": "warning"
+          },
+          {
+            "key": "suppressionList",
+            "type": "unknown",
+            "default": []
+          },
+          {
+            "key": "template",
+            "type": "unknown",
+            "default": "A post has been flagged for review"
+          }
+        ],
+        "capabilities": [],
+        "ref": "Notify.traits.NotifyOnEventListener"
+      },
+      {
+        "name": "PostErasure",
+        "emittedEvents": [],
+        "listenedEvents": [],
+        "overridableConfigKeys": [
+          {
+            "key": "anonymizeVsDelete",
+            "type": "unknown",
+            "default": "anonymize"
+          },
+          {
+            "key": "gracePeriodDays",
+            "type": "unknown",
+            "default": 30
+          },
+          {
+            "key": "piiFields",
+            "type": "unknown",
+            "default": [
+              "author",
+              "content"
+            ]
+          },
+          {
+            "key": "targetEntity",
+            "type": "unknown",
+            "default": "Post"
+          }
+        ],
+        "capabilities": [],
+        "ref": "Erasure.traits.ErasureWorkflow"
       }
     ],
     "pages": [
@@ -554,13 +646,13 @@
             "type": "unknown",
             "default": [
               {
+                "href": "/feed",
                 "label": "Feed",
-                "icon": "rss",
-                "href": "/feed"
+                "icon": "rss"
               },
               {
-                "label": "Comments",
                 "icon": "message-circle",
+                "label": "Comments",
                 "href": "/comments"
               }
             ]
@@ -616,17 +708,17 @@
             "default": [
               {
                 "variant": "h4",
-                "name": "author",
-                "icon": "user"
+                "icon": "user",
+                "name": "author"
               },
               {
                 "name": "body",
                 "variant": "body"
               },
               {
+                "format": "date",
                 "name": "createdAt",
-                "variant": "caption",
-                "format": "date"
+                "variant": "caption"
               }
             ]
           },
@@ -640,19 +732,19 @@
             "type": "unknown",
             "default": [
               {
-                "variant": "ghost",
                 "label": "View",
-                "event": "VIEW"
+                "event": "VIEW",
+                "variant": "ghost"
               },
               {
+                "event": "EDIT",
                 "variant": "ghost",
-                "label": "Edit",
-                "event": "EDIT"
+                "label": "Edit"
               },
               {
-                "event": "DELETE",
                 "label": "Delete",
-                "variant": "danger"
+                "variant": "danger",
+                "event": "DELETE"
               }
             ]
           },
@@ -844,5 +936,124 @@
       "SAVE",
       "VIEW"
     ]
+  },
+  {
+    "organism": "std-social-feed",
+    "orbital": "ModerationRuleFromStdOrbital",
+    "tier": "organisms",
+    "factoryPath": "behaviors/functions/app/organisms/std-social-feed.ts",
+    "entities": [
+      {
+        "name": "ModerationRule",
+        "fields": [
+          {
+            "name": "name",
+            "type": "string",
+            "required": true
+          },
+          {
+            "name": "description",
+            "type": "string",
+            "required": false
+          },
+          {
+            "name": "appliesTo",
+            "type": "string",
+            "required": false
+          },
+          {
+            "name": "priority",
+            "type": "number",
+            "required": false
+          },
+          {
+            "name": "status",
+            "type": "string",
+            "required": false
+          }
+        ],
+        "persistence": "persistent"
+      }
+    ],
+    "traits": [
+      {
+        "name": "ModerationRuleFromStdAppLayout",
+        "emittedEvents": [],
+        "listenedEvents": [],
+        "overridableConfigKeys": [
+          {
+            "key": "appName",
+            "type": "unknown",
+            "default": "SocialFeed"
+          },
+          {
+            "key": "contentTrait",
+            "type": "unknown",
+            "default": "@trait.ModerationRuleFromStdManageBlock"
+          },
+          {
+            "key": "navItems",
+            "type": "unknown",
+            "default": [
+              {
+                "href": "/feed",
+                "label": "Feed",
+                "icon": "rss"
+              },
+              {
+                "icon": "message-circle",
+                "label": "Comments",
+                "href": "/comments"
+              },
+              {
+                "label": "Moderation Rules",
+                "href": "/moderation-rules",
+                "icon": "shield-alert"
+              }
+            ]
+          },
+          {
+            "key": "notificationClickEvent",
+            "type": "unknown",
+            "default": "MODERATION_RULE_NOTIFICATIONS_OPEN"
+          },
+          {
+            "key": "notifications",
+            "type": "unknown",
+            "default": []
+          },
+          {
+            "key": "searchEvent",
+            "type": "unknown",
+            "default": "MODERATION_RULE_SEARCH"
+          }
+        ],
+        "capabilities": [],
+        "ref": "AppShell.traits.AppLayout"
+      },
+      {
+        "name": "ModerationRuleFromStdManageBlock",
+        "emittedEvents": [],
+        "listenedEvents": [],
+        "overridableConfigKeys": [
+          {
+            "key": "title",
+            "type": "unknown",
+            "default": "Moderation Rules"
+          }
+        ],
+        "capabilities": [],
+        "ref": "Rules.traits.ModerationRuleManage"
+      }
+    ],
+    "pages": [
+      {
+        "name": "ModerationRuleFromStdPage",
+        "defaultPath": "/moderation-rules",
+        "primaryEntity": "ModerationRule"
+      }
+    ],
+    "emittedEvents": [],
+    "listenedEvents": []
   }
 ]

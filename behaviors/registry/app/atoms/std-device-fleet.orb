@@ -381,8 +381,8 @@
                     "Device",
                     {
                       "emit": {
-                        "failure": "DeviceLoadFailed",
-                        "success": "DeviceLoaded"
+                        "success": "DeviceLoaded",
+                        "failure": "DeviceLoadFailed"
                       }
                     }
                   ],
@@ -390,22 +390,22 @@
                     "render-ui",
                     "main",
                     {
-                      "type": "stack",
                       "direction": "vertical",
-                      "className": "py-12",
-                      "gap": "md",
                       "align": "center",
+                      "className": "py-12",
                       "children": [
                         {
                           "type": "spinner"
                         },
                         {
-                          "content": "Loading devices…",
                           "color": "muted",
+                          "type": "typography",
                           "variant": "caption",
-                          "type": "typography"
+                          "content": "Loading devices…"
                         }
-                      ]
+                      ],
+                      "gap": "md",
+                      "type": "stack"
                     }
                   ]
                 ]
@@ -419,13 +419,8 @@
                     "render-ui",
                     "main",
                     {
-                      "type": "stack",
-                      "gap": "md",
-                      "direction": "vertical",
                       "children": [
                         {
-                          "direction": "horizontal",
-                          "gap": "sm",
                           "type": "stack",
                           "align": "center",
                           "children": [
@@ -434,54 +429,59 @@
                               "name": "cpu"
                             },
                             {
-                              "content": "@config.title",
+                              "type": "typography",
                               "variant": "h3",
-                              "type": "typography"
+                              "content": "@config.title"
                             }
-                          ]
+                          ],
+                          "gap": "sm",
+                          "direction": "horizontal"
                         },
                         {
-                          "type": "simple-grid",
+                          "cols": 4.0,
                           "children": [
                             {
-                              "value": "@payload.data.length",
                               "label": "Total devices",
                               "icon": "cpu",
+                              "value": "@payload.data.length",
                               "type": "stat-display"
                             },
                             {
-                              "type": "stat-display",
-                              "value": "0",
                               "label": "Active",
+                              "value": "0",
+                              "type": "stat-display",
                               "icon": "check-circle"
                             },
                             {
-                              "label": "Offline",
+                              "value": "0",
                               "type": "stat-display",
                               "icon": "wifi-off",
-                              "value": "0"
+                              "label": "Offline"
                             },
                             {
-                              "type": "stat-display",
                               "icon": "alert-triangle",
+                              "type": "stat-display",
                               "label": "Cert expiring",
                               "value": "0"
                             }
                           ],
-                          "cols": 4.0
+                          "type": "simple-grid"
                         },
                         {
                           "type": "divider"
                         },
                         {
-                          "itemActions": "@config.itemActions",
+                          "fields": "@config.fields",
+                          "entity": "@payload.data",
                           "type": "data-grid",
                           "cols": 1.0,
-                          "entity": "@payload.data",
-                          "fields": "@config.fields",
+                          "itemActions": "@config.itemActions",
                           "gap": "sm"
                         }
-                      ]
+                      ],
+                      "type": "stack",
+                      "direction": "vertical",
+                      "gap": "md"
                     }
                   ]
                 ]
@@ -496,8 +496,8 @@
                     "main",
                     {
                       "message": "@payload.error",
-                      "type": "alert",
-                      "variant": "error"
+                      "variant": "error",
+                      "type": "alert"
                     }
                   ]
                 ]
@@ -556,99 +556,98 @@
                     "render-ui",
                     "main",
                     {
-                      "direction": "vertical",
                       "children": [
                         {
+                          "type": "stack",
+                          "gap": "sm",
+                          "direction": "horizontal",
+                          "align": "center",
                           "children": [
                             {
+                              "action": "CLOSE_VIEW",
                               "variant": "ghost",
                               "type": "button",
-                              "label": "Back",
-                              "action": "CLOSE_VIEW"
+                              "label": "Back"
                             },
                             {
                               "type": "icon",
                               "name": "cpu"
                             },
                             {
-                              "variant": "h3",
                               "type": "typography",
+                              "variant": "h3",
                               "content": "@entity.name"
                             },
                             {
-                              "variant": "primary",
                               "type": "badge",
-                              "label": "@entity.status"
+                              "label": "@entity.status",
+                              "variant": "primary"
                             }
-                          ],
-                          "direction": "horizontal",
-                          "gap": "sm",
-                          "type": "stack",
-                          "align": "center"
+                          ]
                         },
                         {
                           "type": "divider"
                         },
                         {
+                          "type": "stack",
+                          "gap": "sm",
                           "children": [
                             {
-                              "gap": "md",
                               "children": [
                                 {
                                   "type": "typography",
-                                  "variant": "caption",
                                   "content": "Type",
-                                  "color": "muted"
+                                  "color": "muted",
+                                  "variant": "caption"
                                 },
                                 {
-                                  "content": "@entity.deviceType",
+                                  "variant": "body",
                                   "type": "typography",
-                                  "variant": "body"
+                                  "content": "@entity.deviceType"
                                 }
                               ],
                               "type": "stack",
-                              "direction": "horizontal"
+                              "direction": "horizontal",
+                              "gap": "md"
                             },
                             {
-                              "direction": "horizontal",
-                              "gap": "md",
                               "type": "stack",
                               "children": [
                                 {
-                                  "type": "typography",
                                   "variant": "caption",
-                                  "color": "muted",
-                                  "content": "Firmware"
+                                  "content": "Firmware",
+                                  "type": "typography",
+                                  "color": "muted"
                                 },
                                 {
-                                  "content": "@entity.firmwareVersion",
+                                  "variant": "body",
                                   "type": "typography",
-                                  "variant": "body"
+                                  "content": "@entity.firmwareVersion"
                                 }
-                              ]
+                              ],
+                              "direction": "horizontal",
+                              "gap": "md"
                             },
                             {
-                              "type": "stack",
-                              "direction": "horizontal",
-                              "gap": "md",
                               "children": [
                                 {
-                                  "type": "typography",
-                                  "content": "Provisioned by",
                                   "variant": "caption",
-                                  "color": "muted"
+                                  "type": "typography",
+                                  "color": "muted",
+                                  "content": "Provisioned by"
                                 },
                                 {
                                   "content": "@entity.provisionedBy",
                                   "type": "typography",
                                   "variant": "body"
                                 }
-                              ]
+                              ],
+                              "direction": "horizontal",
+                              "type": "stack",
+                              "gap": "md"
                             }
                           ],
-                          "direction": "vertical",
-                          "type": "stack",
-                          "gap": "sm"
+                          "direction": "vertical"
                         },
                         {
                           "type": "divider"
@@ -657,63 +656,64 @@
                           "cols": 3.0,
                           "children": [
                             {
-                              "value": "@entity.lastSeenAt",
+                              "icon": "clock",
                               "type": "stat-display",
                               "label": "Last seen",
-                              "icon": "clock"
+                              "value": "@entity.lastSeenAt"
                             },
                             {
                               "icon": "shield",
-                              "label": "Cert expires",
                               "value": "@entity.certExpiresAt",
+                              "label": "Cert expires",
                               "type": "stat-display"
                             },
                             {
-                              "label": "Created",
-                              "type": "stat-display",
                               "icon": "calendar-plus",
-                              "value": "@entity.createdAt"
+                              "label": "Created",
+                              "value": "@entity.createdAt",
+                              "type": "stat-display"
                             }
                           ],
                           "type": "simple-grid"
                         },
                         {
+                          "align": "center",
                           "direction": "horizontal",
-                          "type": "stack",
                           "gap": "sm",
+                          "type": "stack",
                           "children": [
                             {
-                              "type": "button",
                               "action": "REPROVISION",
                               "variant": "secondary",
-                              "actionPayload": {
-                                "id": "@entity.id"
-                              },
-                              "label": "Reprovision"
-                            },
-                            {
                               "type": "button",
-                              "label": "Push Firmware",
-                              "variant": "primary",
-                              "action": "PUSH_FIRMWARE",
+                              "label": "Reprovision",
                               "actionPayload": {
                                 "id": "@entity.id"
                               }
                             },
                             {
+                              "variant": "primary",
+                              "action": "PUSH_FIRMWARE",
+                              "label": "Push Firmware",
                               "type": "button",
-                              "variant": "danger",
+                              "actionPayload": {
+                                "id": "@entity.id"
+                              }
+                            },
+                            {
                               "action": "RETIRE",
+                              "type": "button",
                               "actionPayload": {
                                 "id": "@entity.id"
                               },
-                              "label": "Retire"
+                              "label": "Retire",
+                              "variant": "danger"
                             }
-                          ],
-                          "align": "center"
+                          ]
                         }
                       ],
                       "type": "stack",
+                      "direction": "vertical",
                       "gap": "md"
                     }
                   ]
@@ -741,8 +741,8 @@
                     "@entity",
                     {
                       "emit": {
-                        "failure": "DeviceUpdateFailed",
-                        "success": "DeviceUpdated"
+                        "success": "DeviceUpdated",
+                        "failure": "DeviceUpdateFailed"
                       }
                     }
                   ],
@@ -750,22 +750,22 @@
                     "render-ui",
                     "main",
                     {
-                      "type": "stack",
-                      "direction": "vertical",
                       "gap": "md",
                       "align": "center",
+                      "type": "stack",
+                      "direction": "vertical",
+                      "className": "py-12",
                       "children": [
                         {
                           "type": "spinner"
                         },
                         {
-                          "content": "Retiring device…",
-                          "variant": "caption",
+                          "type": "typography",
                           "color": "muted",
-                          "type": "typography"
+                          "content": "Retiring device…",
+                          "variant": "caption"
                         }
-                      ],
-                      "className": "py-12"
+                      ]
                     }
                   ]
                 ]
@@ -780,8 +780,8 @@
                     "Device",
                     {
                       "emit": {
-                        "failure": "DeviceLoadFailed",
-                        "success": "DeviceLoaded"
+                        "success": "DeviceLoaded",
+                        "failure": "DeviceLoadFailed"
                       }
                     }
                   ]
@@ -796,9 +796,9 @@
                     "render-ui",
                     "main",
                     {
+                      "variant": "error",
                       "message": "@payload.error",
-                      "type": "alert",
-                      "variant": "error"
+                      "type": "alert"
                     }
                   ]
                 ]
@@ -825,8 +825,8 @@
                     "@entity",
                     {
                       "emit": {
-                        "success": "DeviceUpdated",
-                        "failure": "DeviceUpdateFailed"
+                        "failure": "DeviceUpdateFailed",
+                        "success": "DeviceUpdated"
                       }
                     }
                   ],
@@ -835,21 +835,21 @@
                     "main",
                     {
                       "direction": "vertical",
-                      "type": "stack",
                       "align": "center",
-                      "className": "py-12",
+                      "type": "stack",
                       "children": [
                         {
                           "type": "spinner"
                         },
                         {
-                          "variant": "caption",
-                          "type": "typography",
                           "content": "Updating device status…",
-                          "color": "muted"
+                          "type": "typography",
+                          "color": "muted",
+                          "variant": "caption"
                         }
                       ],
-                      "gap": "md"
+                      "gap": "md",
+                      "className": "py-12"
                     }
                   ]
                 ]
@@ -864,8 +864,8 @@
                     "Device",
                     {
                       "emit": {
-                        "success": "DeviceLoaded",
-                        "failure": "DeviceLoadFailed"
+                        "failure": "DeviceLoadFailed",
+                        "success": "DeviceLoaded"
                       }
                     }
                   ],
@@ -873,22 +873,22 @@
                     "render-ui",
                     "main",
                     {
+                      "type": "stack",
+                      "gap": "md",
+                      "className": "py-12",
                       "children": [
                         {
                           "type": "spinner"
                         },
                         {
-                          "color": "muted",
-                          "type": "typography",
+                          "content": "Loading devices…",
                           "variant": "caption",
-                          "content": "Loading devices…"
+                          "color": "muted",
+                          "type": "typography"
                         }
                       ],
-                      "type": "stack",
                       "align": "center",
-                      "gap": "md",
-                      "direction": "vertical",
-                      "className": "py-12"
+                      "direction": "vertical"
                     }
                   ]
                 ]
@@ -915,8 +915,8 @@
                     "@entity",
                     {
                       "emit": {
-                        "success": "DeviceUpdated",
-                        "failure": "DeviceUpdateFailed"
+                        "failure": "DeviceUpdateFailed",
+                        "success": "DeviceUpdated"
                       }
                     }
                   ],
@@ -924,10 +924,6 @@
                     "render-ui",
                     "main",
                     {
-                      "direction": "vertical",
-                      "type": "stack",
-                      "align": "center",
-                      "className": "py-12",
                       "gap": "md",
                       "children": [
                         {
@@ -936,10 +932,14 @@
                         {
                           "content": "Reprovisioning device…",
                           "variant": "caption",
-                          "color": "muted",
-                          "type": "typography"
+                          "type": "typography",
+                          "color": "muted"
                         }
-                      ]
+                      ],
+                      "align": "center",
+                      "type": "stack",
+                      "direction": "vertical",
+                      "className": "py-12"
                     }
                   ]
                 ]
@@ -961,8 +961,8 @@
                     "@entity",
                     {
                       "emit": {
-                        "success": "DeviceUpdated",
-                        "failure": "DeviceUpdateFailed"
+                        "failure": "DeviceUpdateFailed",
+                        "success": "DeviceUpdated"
                       }
                     }
                   ],
@@ -970,22 +970,22 @@
                     "render-ui",
                     "main",
                     {
+                      "align": "center",
                       "children": [
                         {
                           "type": "spinner"
                         },
                         {
                           "color": "muted",
-                          "type": "typography",
                           "variant": "caption",
+                          "type": "typography",
                           "content": "Pushing firmware…"
                         }
                       ],
                       "direction": "vertical",
-                      "align": "center",
+                      "type": "stack",
                       "gap": "md",
-                      "className": "py-12",
-                      "type": "stack"
+                      "className": "py-12"
                     }
                   ]
                 ]
@@ -1012,8 +1012,8 @@
                     "@entity",
                     {
                       "emit": {
-                        "failure": "DeviceUpdateFailed",
-                        "success": "DeviceUpdated"
+                        "success": "DeviceUpdated",
+                        "failure": "DeviceUpdateFailed"
                       }
                     }
                   ],
@@ -1021,22 +1021,22 @@
                     "render-ui",
                     "main",
                     {
+                      "type": "stack",
+                      "align": "center",
+                      "gap": "md",
+                      "direction": "vertical",
+                      "className": "py-12",
                       "children": [
                         {
                           "type": "spinner"
                         },
                         {
+                          "type": "typography",
                           "variant": "caption",
-                          "color": "muted",
                           "content": "Retiring device…",
-                          "type": "typography"
+                          "color": "muted"
                         }
-                      ],
-                      "direction": "vertical",
-                      "gap": "md",
-                      "className": "py-12",
-                      "type": "stack",
-                      "align": "center"
+                      ]
                     }
                   ]
                 ]
@@ -1051,8 +1051,8 @@
                     "Device",
                     {
                       "emit": {
-                        "failure": "DeviceLoadFailed",
-                        "success": "DeviceLoaded"
+                        "success": "DeviceLoaded",
+                        "failure": "DeviceLoadFailed"
                       }
                     }
                   ],
@@ -1069,6 +1069,22 @@
             ]
           },
           "config": {
+            "certificateRotationDays": {
+              "type": "number",
+              "default": 90.0,
+              "label": "Certificate rotation (days)",
+              "description": "Days before cert expiry to trigger renewal.",
+              "synonyms": "cert renewal window",
+              "tier": "domain"
+            },
+            "otaUpdateCadenceDays": {
+              "type": "number",
+              "default": 30.0,
+              "label": "OTA update cadence (days)",
+              "description": "Default cadence for over-the-air firmware push.",
+              "synonyms": "firmware refresh, update interval",
+              "tier": "domain"
+            },
             "fields": {
               "type": "[FieldSpec]",
               "default": [
@@ -1078,29 +1094,29 @@
                   "name": "name"
                 },
                 {
-                  "label": "Type",
                   "variant": "caption",
-                  "name": "deviceType"
+                  "name": "deviceType",
+                  "label": "Type"
                 },
                 {
-                  "variant": "caption",
+                  "label": "Firmware",
                   "name": "firmwareVersion",
-                  "label": "Firmware"
+                  "variant": "caption"
                 },
                 {
                   "variant": "badge",
-                  "name": "status",
-                  "label": "Status"
+                  "label": "Status",
+                  "name": "status"
                 },
                 {
+                  "label": "Last seen",
                   "name": "lastSeenAt",
-                  "variant": "caption",
-                  "label": "Last seen"
+                  "variant": "caption"
                 },
                 {
-                  "label": "Cert expires",
+                  "variant": "caption",
                   "name": "certExpiresAt",
-                  "variant": "caption"
+                  "label": "Cert expires"
                 }
               ],
               "label": "Columns to show",
@@ -1109,28 +1125,28 @@
               "items": {
                 "type": "object",
                 "properties": {
-                  "name": {
-                    "name": "name",
+                  "format": {
+                    "name": "format",
                     "type": "string",
-                    "required": true
+                    "required": false
                   },
                   "label": {
                     "name": "label",
                     "type": "string",
                     "required": false
                   },
-                  "format": {
-                    "name": "format",
+                  "key": {
+                    "name": "key",
                     "type": "string",
                     "required": false
+                  },
+                  "name": {
+                    "name": "name",
+                    "type": "string",
+                    "required": true
                   },
                   "header": {
                     "name": "header",
-                    "type": "string",
-                    "required": false
-                  },
-                  "key": {
-                    "name": "key",
                     "type": "string",
                     "required": false
                   },
@@ -1146,6 +1162,26 @@
                   }
                 }
               }
+            },
+            "dataRetentionDays": {
+              "type": "number",
+              "default": 90.0,
+              "label": "Device data retention (days)",
+              "description": "Days to keep device telemetry. Compose std-lifecycle for cleanup.",
+              "tier": "domain"
+            },
+            "offlineActionPolicy": {
+              "type": "string",
+              "default": "queue",
+              "label": "Offline action policy",
+              "description": "How commands behave when the device is offline.",
+              "synonyms": "disconnect handling",
+              "tier": "domain",
+              "values": [
+                "queue",
+                "drop",
+                "fail-fast"
+              ]
             },
             "title": {
               "type": "string",
@@ -1171,16 +1207,16 @@
               "type": "[ItemAction]",
               "default": [
                 {
-                  "event": "OPEN_DEVICE",
-                  "variant": "primary",
                   "icon": "arrow-right",
-                  "label": "Open"
+                  "label": "Open",
+                  "event": "OPEN_DEVICE",
+                  "variant": "primary"
                 },
                 {
-                  "event": "RETIRE",
                   "icon": "x",
-                  "label": "Retire",
-                  "variant": "danger"
+                  "event": "RETIRE",
+                  "variant": "danger",
+                  "label": "Retire"
                 }
               ],
               "label": "Row actions",
@@ -1194,6 +1230,11 @@
                     "type": "string",
                     "required": true
                   },
+                  "variant": {
+                    "name": "variant",
+                    "type": "string",
+                    "required": false
+                  },
                   "icon": {
                     "name": "icon",
                     "type": "string",
@@ -1203,50 +1244,9 @@
                     "name": "label",
                     "type": "string",
                     "required": true
-                  },
-                  "variant": {
-                    "name": "variant",
-                    "type": "string",
-                    "required": false
                   }
                 }
               }
-            },
-            "offlineActionPolicy": {
-              "type": "string",
-              "default": "queue",
-              "label": "Offline action policy",
-              "description": "How commands behave when the device is offline.",
-              "synonyms": "disconnect handling",
-              "tier": "domain",
-              "values": [
-                "queue",
-                "drop",
-                "fail-fast"
-              ]
-            },
-            "otaUpdateCadenceDays": {
-              "type": "number",
-              "default": 30.0,
-              "label": "OTA update cadence (days)",
-              "description": "Default cadence for over-the-air firmware push.",
-              "synonyms": "firmware refresh, update interval",
-              "tier": "domain"
-            },
-            "dataRetentionDays": {
-              "type": "number",
-              "default": 90.0,
-              "label": "Device data retention (days)",
-              "description": "Days to keep device telemetry. Compose std-lifecycle for cleanup.",
-              "tier": "domain"
-            },
-            "certificateRotationDays": {
-              "type": "number",
-              "default": 90.0,
-              "label": "Certificate rotation (days)",
-              "description": "Days before cert expiry to trigger renewal.",
-              "synonyms": "cert renewal window",
-              "tier": "domain"
             }
           },
           "scope": "collection"

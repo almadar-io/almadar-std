@@ -83,13 +83,13 @@
             "type": "unknown",
             "default": [
               {
+                "href": "/wiki",
                 "icon": "book-open",
-                "label": "Pages",
-                "href": "/wiki"
+                "label": "Pages"
               },
               {
-                "icon": "history",
                 "label": "History",
+                "icon": "history",
                 "href": "/revisions"
               },
               {
@@ -164,24 +164,24 @@
             "type": "unknown",
             "default": [
               {
-                "filterType": "select",
                 "options": [
                   "page",
                   "doc",
                   "post"
                 ],
-                "label": "Kind",
-                "field": "kind"
+                "filterType": "select",
+                "field": "kind",
+                "label": "Kind"
               },
               {
-                "label": "Status",
-                "filterType": "select",
                 "field": "status",
                 "options": [
                   "draft",
                   "published",
                   "archived"
-                ]
+                ],
+                "label": "Status",
+                "filterType": "select"
               }
             ]
           }
@@ -225,26 +225,26 @@
             "default": [
               {
                 "name": "title",
-                "icon": "file-text",
-                "variant": "h3"
+                "variant": "h3",
+                "icon": "file-text"
               },
               {
-                "name": "kind",
-                "variant": "badge"
+                "variant": "badge",
+                "name": "kind"
               },
               {
-                "name": "status",
-                "variant": "badge"
+                "variant": "badge",
+                "name": "status"
               },
               {
-                "variant": "caption",
                 "label": "v",
+                "variant": "caption",
                 "name": "version"
               },
               {
                 "label": "Updated",
-                "variant": "caption",
-                "name": "updatedAt"
+                "name": "updatedAt",
+                "variant": "caption"
               }
             ]
           },
@@ -258,28 +258,28 @@
             "type": "unknown",
             "default": [
               {
-                "icon": "eye",
-                "label": "Open",
+                "event": "VIEW",
                 "variant": "ghost",
-                "event": "VIEW"
+                "icon": "eye",
+                "label": "Open"
               },
               {
                 "icon": "edit",
-                "label": "Edit",
                 "variant": "ghost",
+                "label": "Edit",
                 "event": "EDIT"
               },
               {
-                "label": "History",
-                "icon": "history",
                 "event": "VIEW_HISTORY",
-                "variant": "ghost"
+                "variant": "ghost",
+                "label": "History",
+                "icon": "history"
               },
               {
                 "icon": "trash",
                 "event": "DELETE",
-                "label": "Delete",
-                "variant": "danger"
+                "variant": "danger",
+                "label": "Delete"
               }
             ]
           }
@@ -491,6 +491,114 @@
         ],
         "overridableConfigKeys": [],
         "capabilities": []
+      },
+      {
+        "name": "WikiAuditCapture",
+        "emittedEvents": [],
+        "listenedEvents": [],
+        "overridableConfigKeys": [
+          {
+            "key": "captureBeforeAfter",
+            "type": "unknown",
+            "default": true
+          },
+          {
+            "key": "captureEntity",
+            "type": "unknown",
+            "default": "WikiPage"
+          },
+          {
+            "key": "captureEventTypes",
+            "type": "unknown",
+            "default": []
+          },
+          {
+            "key": "excludeFields",
+            "type": "unknown",
+            "default": []
+          },
+          {
+            "key": "retentionDays",
+            "type": "unknown",
+            "default": 2555
+          }
+        ],
+        "capabilities": [],
+        "ref": "Audit.traits.AuditCaptureListener"
+      },
+      {
+        "name": "WikiLifecycleScan",
+        "emittedEvents": [],
+        "listenedEvents": [],
+        "overridableConfigKeys": [
+          {
+            "key": "dryRun",
+            "type": "unknown",
+            "default": false
+          },
+          {
+            "key": "rules",
+            "type": "unknown",
+            "default": [
+              {
+                "condition": {
+                  "value": 365,
+                  "dateField": "updatedAt",
+                  "kind": "ageDays"
+                },
+                "toStatus": "archived",
+                "fromStatus": "published"
+              },
+              {
+                "toStatus": "deleted",
+                "fromStatus": "archived",
+                "condition": {
+                  "value": 730,
+                  "dateField": "updatedAt",
+                  "kind": "ageDays"
+                }
+              }
+            ]
+          },
+          {
+            "key": "targetEntity",
+            "type": "unknown",
+            "default": "WikiPage"
+          }
+        ],
+        "capabilities": [],
+        "ref": "Lifecycle.traits.LifecycleScheduler"
+      },
+      {
+        "name": "WikiErasure",
+        "emittedEvents": [],
+        "listenedEvents": [],
+        "overridableConfigKeys": [
+          {
+            "key": "anonymizeVsDelete",
+            "type": "unknown",
+            "default": "anonymize"
+          },
+          {
+            "key": "gracePeriodDays",
+            "type": "unknown",
+            "default": 30
+          },
+          {
+            "key": "piiFields",
+            "type": "unknown",
+            "default": [
+              "authorId"
+            ]
+          },
+          {
+            "key": "targetEntity",
+            "type": "unknown",
+            "default": "WikiPage"
+          }
+        ],
+        "capabilities": [],
+        "ref": "Erasure.traits.ErasureWorkflow"
       }
     ],
     "pages": [
@@ -611,9 +719,9 @@
                 "icon": "book-open"
               },
               {
+                "icon": "history",
                 "label": "History",
-                "href": "/revisions",
-                "icon": "history"
+                "href": "/revisions"
               },
               {
                 "href": "/wiki/tags",
@@ -667,27 +775,27 @@
             "type": "unknown",
             "default": [
               {
+                "icon": "history",
                 "variant": "h4",
-                "name": "summary",
-                "icon": "history"
+                "name": "summary"
               },
               {
                 "name": "documentType",
                 "variant": "badge"
               },
               {
+                "label": "v",
                 "variant": "badge",
-                "name": "versionNumber",
-                "label": "v"
-              },
-              {
-                "name": "authorName",
-                "variant": "caption"
+                "name": "versionNumber"
               },
               {
                 "variant": "caption",
+                "name": "authorName"
+              },
+              {
                 "name": "createdAt",
-                "label": "Saved"
+                "label": "Saved",
+                "variant": "caption"
               }
             ]
           },
@@ -701,8 +809,8 @@
             "type": "unknown",
             "default": [
               {
-                "event": "VIEW",
                 "variant": "ghost",
+                "event": "VIEW",
                 "label": "Inspect",
                 "icon": "eye"
               }

@@ -59,18 +59,18 @@
             "default": [
               {
                 "icon": "message-circle",
-                "href": "/chat",
-                "label": "Chat"
+                "label": "Chat",
+                "href": "/chat"
               },
               {
-                "label": "Channels",
                 "icon": "hash",
+                "label": "Channels",
                 "href": "/channels"
               },
               {
                 "label": "Online",
-                "href": "/online",
-                "icon": "users"
+                "icon": "users",
+                "href": "/online"
               }
             ]
           },
@@ -138,23 +138,23 @@
               {
                 "label": "Messages",
                 "icon": "message-circle",
+                "aggregation": "count",
                 "variant": "primary",
-                "format": "number",
-                "aggregation": "count"
+                "format": "number"
               },
               {
+                "variant": "info",
+                "aggregation": "count",
                 "label": "Active Channels",
                 "icon": "hash",
-                "variant": "info",
-                "format": "number",
-                "aggregation": "count"
+                "format": "number"
               },
               {
-                "icon": "user",
                 "aggregation": "count",
-                "format": "number",
                 "variant": "success",
-                "label": "Top Author"
+                "format": "number",
+                "label": "Top Author",
+                "icon": "user"
               }
             ]
           },
@@ -284,6 +284,113 @@
         "listenedEvents": [],
         "overridableConfigKeys": [],
         "capabilities": []
+      },
+      {
+        "name": "ChatErasure",
+        "emittedEvents": [],
+        "listenedEvents": [],
+        "overridableConfigKeys": [
+          {
+            "key": "anonymizeVsDelete",
+            "type": "unknown",
+            "default": "anonymize"
+          },
+          {
+            "key": "gracePeriodDays",
+            "type": "unknown",
+            "default": 30
+          },
+          {
+            "key": "piiFields",
+            "type": "unknown",
+            "default": [
+              "sender",
+              "content"
+            ]
+          },
+          {
+            "key": "targetEntity",
+            "type": "unknown",
+            "default": "ChatMessage"
+          }
+        ],
+        "capabilities": [],
+        "ref": "Erasure.traits.ErasureWorkflow"
+      },
+      {
+        "name": "ChatAudit",
+        "emittedEvents": [],
+        "listenedEvents": [],
+        "overridableConfigKeys": [
+          {
+            "key": "captureBeforeAfter",
+            "type": "unknown",
+            "default": false
+          },
+          {
+            "key": "captureEntity",
+            "type": "unknown",
+            "default": "ChatMessage"
+          },
+          {
+            "key": "captureEventTypes",
+            "type": "unknown",
+            "default": []
+          },
+          {
+            "key": "excludeFields",
+            "type": "unknown",
+            "default": []
+          },
+          {
+            "key": "retentionDays",
+            "type": "unknown",
+            "default": 2555
+          }
+        ],
+        "capabilities": [],
+        "ref": "Audit.traits.AuditCaptureListener"
+      },
+      {
+        "name": "ChatMentionNotifier",
+        "emittedEvents": [],
+        "listenedEvents": [],
+        "overridableConfigKeys": [
+          {
+            "key": "listensFor",
+            "type": "unknown",
+            "default": [
+              "MessageMention"
+            ]
+          },
+          {
+            "key": "notifyChannel",
+            "type": "unknown",
+            "default": "in-app"
+          },
+          {
+            "key": "recipients",
+            "type": "unknown",
+            "default": []
+          },
+          {
+            "key": "severity",
+            "type": "unknown",
+            "default": "info"
+          },
+          {
+            "key": "suppressionList",
+            "type": "unknown",
+            "default": []
+          },
+          {
+            "key": "template",
+            "type": "unknown",
+            "default": "You were mentioned in a message"
+          }
+        ],
+        "capabilities": [],
+        "ref": "Notify.traits.NotifyOnEventListener"
       }
     ],
     "pages": [
@@ -375,9 +482,9 @@
             "type": "unknown",
             "default": [
               {
-                "label": "Chat",
+                "icon": "message-circle",
                 "href": "/chat",
-                "icon": "message-circle"
+                "label": "Chat"
               },
               {
                 "label": "Channels",
@@ -385,9 +492,9 @@
                 "href": "/channels"
               },
               {
-                "href": "/online",
                 "label": "Online",
-                "icon": "users"
+                "icon": "users",
+                "href": "/online"
               }
             ]
           },
@@ -441,24 +548,24 @@
             "default": [
               {
                 "variant": "h3",
-                "icon": "hash",
-                "name": "name"
+                "name": "name",
+                "icon": "hash"
               },
               {
-                "variant": "badge",
-                "name": "memberCount",
+                "label": "Members",
                 "format": "number",
-                "label": "Members"
+                "variant": "badge",
+                "name": "memberCount"
+              },
+              {
+                "name": "description",
+                "variant": "body"
               },
               {
                 "variant": "body",
-                "name": "description"
-              },
-              {
-                "label": "Private",
                 "format": "boolean",
                 "name": "isPrivate",
-                "variant": "body"
+                "label": "Private"
               }
             ]
           },
@@ -477,14 +584,14 @@
                 "label": "View"
               },
               {
-                "event": "EDIT",
                 "variant": "ghost",
+                "event": "EDIT",
                 "label": "Edit"
               },
               {
-                "event": "DELETE",
                 "variant": "danger",
-                "label": "Delete"
+                "label": "Delete",
+                "event": "DELETE"
               }
             ]
           }
@@ -727,19 +834,19 @@
             "type": "unknown",
             "default": [
               {
-                "icon": "message-circle",
+                "href": "/chat",
                 "label": "Chat",
-                "href": "/chat"
+                "icon": "message-circle"
               },
               {
                 "label": "Channels",
-                "icon": "hash",
-                "href": "/channels"
+                "href": "/channels",
+                "icon": "hash"
               },
               {
+                "icon": "users",
                 "label": "Online",
-                "href": "/online",
-                "icon": "users"
+                "href": "/online"
               }
             ]
           },
@@ -784,6 +891,125 @@
       "OnlineUserLoadFailed",
       "OnlineUserLoaded"
     ],
+    "listenedEvents": []
+  },
+  {
+    "organism": "std-realtime-chat",
+    "orbital": "ConversationPolicyFromStdOrbital",
+    "tier": "organisms",
+    "factoryPath": "behaviors/functions/app/organisms/std-realtime-chat.ts",
+    "entities": [
+      {
+        "name": "ConversationPolicy",
+        "fields": [
+          {
+            "name": "name",
+            "type": "string",
+            "required": true
+          },
+          {
+            "name": "description",
+            "type": "string",
+            "required": false
+          },
+          {
+            "name": "appliesTo",
+            "type": "string",
+            "required": false
+          },
+          {
+            "name": "status",
+            "type": "string",
+            "required": false
+          }
+        ],
+        "persistence": "persistent"
+      }
+    ],
+    "traits": [
+      {
+        "name": "ConversationPolicyFromStdAppLayout",
+        "emittedEvents": [],
+        "listenedEvents": [],
+        "overridableConfigKeys": [
+          {
+            "key": "appName",
+            "type": "unknown",
+            "default": "Realtime Chat"
+          },
+          {
+            "key": "contentTrait",
+            "type": "unknown",
+            "default": "@trait.ConversationPolicyFromStdManageBlock"
+          },
+          {
+            "key": "navItems",
+            "type": "unknown",
+            "default": [
+              {
+                "href": "/chat",
+                "icon": "message-circle",
+                "label": "Chat"
+              },
+              {
+                "label": "Channels",
+                "icon": "hash",
+                "href": "/channels"
+              },
+              {
+                "label": "Online",
+                "href": "/online",
+                "icon": "users"
+              },
+              {
+                "icon": "shield",
+                "label": "Conversation Policies",
+                "href": "/conversation-policies"
+              }
+            ]
+          },
+          {
+            "key": "notificationClickEvent",
+            "type": "unknown",
+            "default": "CONVERSATION_POLICY_NOTIFICATIONS_OPEN"
+          },
+          {
+            "key": "notifications",
+            "type": "unknown",
+            "default": []
+          },
+          {
+            "key": "searchEvent",
+            "type": "unknown",
+            "default": "CONVERSATION_POLICY_SEARCH"
+          }
+        ],
+        "capabilities": [],
+        "ref": "AppShell.traits.AppLayout"
+      },
+      {
+        "name": "ConversationPolicyFromStdManageBlock",
+        "emittedEvents": [],
+        "listenedEvents": [],
+        "overridableConfigKeys": [
+          {
+            "key": "title",
+            "type": "unknown",
+            "default": "Conversation Policies"
+          }
+        ],
+        "capabilities": [],
+        "ref": "Policies.traits.ConversationPolicyManage"
+      }
+    ],
+    "pages": [
+      {
+        "name": "ConversationPolicyFromStdPage",
+        "defaultPath": "/conversation-policies",
+        "primaryEntity": "ConversationPolicy"
+      }
+    ],
+    "emittedEvents": [],
     "listenedEvents": []
   }
 ]

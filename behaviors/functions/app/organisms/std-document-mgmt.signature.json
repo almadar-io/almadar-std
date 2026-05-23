@@ -68,29 +68,29 @@
             "type": "unknown",
             "default": [
               {
-                "icon": "file-text",
+                "label": "Documents",
                 "href": "/documents",
-                "label": "Documents"
+                "icon": "file-text"
               },
               {
-                "href": "/esign-flow",
                 "label": "E-Sign Flow",
+                "href": "/esign-flow",
                 "icon": "file-signature"
               },
               {
-                "href": "/files",
+                "icon": "folder",
                 "label": "Files",
-                "icon": "folder"
+                "href": "/files"
               },
               {
-                "icon": "pen-tool",
+                "label": "Signatures",
                 "href": "/esign",
-                "label": "Signatures"
+                "icon": "pen-tool"
               },
               {
-                "icon": "history",
                 "label": "Versions",
-                "href": "/revisions/manage"
+                "href": "/revisions/manage",
+                "icon": "history"
               }
             ]
           },
@@ -159,9 +159,9 @@
             "type": "unknown",
             "default": [
               {
-                "field": "status",
                 "label": "Status",
                 "filterType": "select",
+                "field": "status",
                 "options": [
                   "active",
                   "archived",
@@ -169,7 +169,6 @@
                 ]
               },
               {
-                "field": "mimeType",
                 "filterType": "select",
                 "options": [
                   "pdf",
@@ -177,7 +176,8 @@
                   "text",
                   "image"
                 ],
-                "label": "Type"
+                "label": "Type",
+                "field": "mimeType"
               }
             ]
           }
@@ -197,16 +197,16 @@
             "type": "unknown",
             "default": [
               {
-                "variant": "primary",
-                "aggregation": "count",
+                "format": "number",
                 "label": "Total",
                 "icon": "file-text",
-                "format": "number"
+                "aggregation": "count",
+                "variant": "primary"
               },
               {
+                "variant": "success",
                 "format": "number",
                 "aggregation": "count",
-                "label": "Active",
                 "filter": [
                   "fn",
                   "row",
@@ -216,14 +216,13 @@
                     "active"
                   ]
                 ],
-                "variant": "success",
-                "icon": "check-circle"
+                "icon": "check-circle",
+                "label": "Active"
               },
               {
-                "aggregation": "count",
                 "label": "Pending Review",
-                "icon": "clock",
                 "format": "number",
+                "aggregation": "count",
                 "variant": "warning",
                 "filter": [
                   "fn",
@@ -233,15 +232,16 @@
                     "@row.status",
                     "pending-review"
                   ]
-                ]
+                ],
+                "icon": "clock"
               },
               {
                 "field": "sizeBytes",
-                "icon": "hard-drive",
+                "aggregation": "sum",
                 "label": "Total Size",
+                "icon": "hard-drive",
                 "variant": "primary",
-                "format": "number",
-                "aggregation": "sum"
+                "format": "number"
               }
             ]
           },
@@ -321,13 +321,13 @@
             "type": "unknown",
             "default": [
               {
-                "variant": "h3",
                 "name": "name",
+                "variant": "h3",
                 "icon": "file-text"
               },
               {
-                "name": "status",
-                "variant": "badge"
+                "variant": "badge",
+                "name": "status"
               },
               {
                 "name": "mimeType",
@@ -338,8 +338,8 @@
                 "variant": "body"
               },
               {
-                "format": "date",
                 "variant": "caption",
+                "format": "date",
                 "name": "lastModified"
               }
             ]
@@ -354,19 +354,19 @@
             "type": "unknown",
             "default": [
               {
+                "label": "View",
                 "event": "VIEW",
-                "variant": "ghost",
-                "label": "View"
+                "variant": "ghost"
               },
               {
-                "variant": "ghost",
                 "event": "EDIT",
+                "variant": "ghost",
                 "label": "Edit"
               },
               {
-                "label": "Delete",
                 "event": "DELETE",
-                "variant": "danger"
+                "variant": "danger",
+                "label": "Delete"
               }
             ]
           }
@@ -617,6 +617,196 @@
         ],
         "overridableConfigKeys": [],
         "capabilities": []
+      },
+      {
+        "name": "DocumentLifecycleScan",
+        "emittedEvents": [],
+        "listenedEvents": [],
+        "overridableConfigKeys": [
+          {
+            "key": "dryRun",
+            "type": "unknown",
+            "default": false
+          },
+          {
+            "key": "rules",
+            "type": "unknown",
+            "default": [
+              {
+                "condition": {
+                  "dateField": "lastModified",
+                  "kind": "ageDays",
+                  "value": 365
+                },
+                "fromStatus": "active",
+                "toStatus": "pending-review"
+              },
+              {
+                "fromStatus": "pending-review",
+                "toStatus": "archived",
+                "condition": {
+                  "kind": "ageDays",
+                  "dateField": "lastModified",
+                  "value": 730
+                }
+              }
+            ]
+          },
+          {
+            "key": "targetEntity",
+            "type": "unknown",
+            "default": "Document"
+          }
+        ],
+        "capabilities": [],
+        "ref": "Lifecycle.traits.LifecycleScheduler"
+      },
+      {
+        "name": "DocumentNotifier",
+        "emittedEvents": [],
+        "listenedEvents": [],
+        "overridableConfigKeys": [
+          {
+            "key": "listensFor",
+            "type": "unknown",
+            "default": [
+              "DOCUMENT_UPDATED"
+            ]
+          },
+          {
+            "key": "notifyChannel",
+            "type": "unknown",
+            "default": "in-app"
+          },
+          {
+            "key": "recipients",
+            "type": "unknown",
+            "default": []
+          },
+          {
+            "key": "severity",
+            "type": "unknown",
+            "default": "info"
+          },
+          {
+            "key": "suppressionList",
+            "type": "unknown",
+            "default": []
+          },
+          {
+            "key": "template",
+            "type": "unknown",
+            "default": "Document shared or updated"
+          }
+        ],
+        "capabilities": [],
+        "ref": "Notify.traits.NotifyOnEventListener"
+      },
+      {
+        "name": "DocumentAuditCapture",
+        "emittedEvents": [],
+        "listenedEvents": [],
+        "overridableConfigKeys": [
+          {
+            "key": "captureBeforeAfter",
+            "type": "unknown",
+            "default": true
+          },
+          {
+            "key": "captureEntity",
+            "type": "unknown",
+            "default": "Document"
+          },
+          {
+            "key": "captureEventTypes",
+            "type": "unknown",
+            "default": []
+          },
+          {
+            "key": "excludeFields",
+            "type": "unknown",
+            "default": []
+          },
+          {
+            "key": "retentionDays",
+            "type": "unknown",
+            "default": 2555
+          }
+        ],
+        "capabilities": [],
+        "ref": "Audit.traits.AuditCaptureListener"
+      },
+      {
+        "name": "DocumentApprovalGate",
+        "emittedEvents": [],
+        "listenedEvents": [],
+        "overridableConfigKeys": [
+          {
+            "key": "approverRoles",
+            "type": "unknown",
+            "default": [
+              "records-officer"
+            ]
+          },
+          {
+            "key": "autoApproveBelowThreshold",
+            "type": "unknown",
+            "default": false
+          },
+          {
+            "key": "escalationHours",
+            "type": "unknown",
+            "default": 48
+          },
+          {
+            "key": "escalationRoles",
+            "type": "unknown",
+            "default": [
+              "compliance-lead"
+            ]
+          },
+          {
+            "key": "threshold",
+            "type": "unknown",
+            "default": 0
+          },
+          {
+            "key": "valueField",
+            "type": "unknown",
+            "default": ""
+          }
+        ],
+        "capabilities": [],
+        "ref": "Approval.traits.ApprovalGateReview"
+      },
+      {
+        "name": "DocumentErasureWorkflow",
+        "emittedEvents": [],
+        "listenedEvents": [],
+        "overridableConfigKeys": [
+          {
+            "key": "anonymizeVsDelete",
+            "type": "unknown",
+            "default": "delete"
+          },
+          {
+            "key": "gracePeriodDays",
+            "type": "unknown",
+            "default": 30
+          },
+          {
+            "key": "piiFields",
+            "type": "unknown",
+            "default": []
+          },
+          {
+            "key": "targetEntity",
+            "type": "unknown",
+            "default": "Document"
+          }
+        ],
+        "capabilities": [],
+        "ref": "Erasure.traits.ErasureWorkflow"
       }
     ],
     "pages": [
@@ -673,5 +863,154 @@
       "SESSION_RESENT",
       "VIEW"
     ]
+  },
+  {
+    "organism": "std-document-mgmt",
+    "orbital": "ClassifiedDocumentFromStdOrbital",
+    "tier": "organisms",
+    "factoryPath": "behaviors/functions/app/organisms/std-document-mgmt.ts",
+    "entities": [
+      {
+        "name": "ClassifiedDocument",
+        "fields": [
+          {
+            "name": "title",
+            "type": "string",
+            "required": true
+          },
+          {
+            "name": "description",
+            "type": "string",
+            "required": false
+          },
+          {
+            "name": "mimeType",
+            "type": "string",
+            "required": false
+          },
+          {
+            "name": "classification",
+            "type": "string",
+            "required": false
+          },
+          {
+            "name": "lockedBy",
+            "type": "string",
+            "required": false
+          },
+          {
+            "name": "lockedAt",
+            "type": "string",
+            "required": false
+          },
+          {
+            "name": "retentionUntil",
+            "type": "string",
+            "required": false
+          },
+          {
+            "name": "legalHold",
+            "type": "boolean",
+            "required": false
+          }
+        ],
+        "persistence": "persistent"
+      }
+    ],
+    "traits": [
+      {
+        "name": "ClassifiedDocumentFromStdAppLayout",
+        "emittedEvents": [],
+        "listenedEvents": [],
+        "overridableConfigKeys": [
+          {
+            "key": "appName",
+            "type": "unknown",
+            "default": "Documents"
+          },
+          {
+            "key": "contentTrait",
+            "type": "unknown",
+            "default": "@trait.ClassifiedDocumentFromStdManageBlock"
+          },
+          {
+            "key": "navItems",
+            "type": "unknown",
+            "default": [
+              {
+                "href": "/documents",
+                "icon": "file-text",
+                "label": "Documents"
+              },
+              {
+                "href": "/esign-flow",
+                "icon": "file-signature",
+                "label": "E-Sign Flow"
+              },
+              {
+                "icon": "folder",
+                "label": "Files",
+                "href": "/files"
+              },
+              {
+                "icon": "pen-tool",
+                "href": "/esign",
+                "label": "Signatures"
+              },
+              {
+                "icon": "history",
+                "label": "Versions",
+                "href": "/revisions/manage"
+              },
+              {
+                "href": "/documents-classified",
+                "icon": "shield",
+                "label": "Classified"
+              }
+            ]
+          },
+          {
+            "key": "notificationClickEvent",
+            "type": "unknown",
+            "default": "CLASSIFIED_DOC_NOTIFICATIONS_OPEN"
+          },
+          {
+            "key": "notifications",
+            "type": "unknown",
+            "default": []
+          },
+          {
+            "key": "searchEvent",
+            "type": "unknown",
+            "default": "CLASSIFIED_DOC_SEARCH"
+          }
+        ],
+        "capabilities": [],
+        "ref": "AppShell.traits.AppLayout"
+      },
+      {
+        "name": "ClassifiedDocumentFromStdManageBlock",
+        "emittedEvents": [],
+        "listenedEvents": [],
+        "overridableConfigKeys": [
+          {
+            "key": "title",
+            "type": "unknown",
+            "default": "Classified Documents"
+          }
+        ],
+        "capabilities": [],
+        "ref": "Documents.traits.DocumentManage"
+      }
+    ],
+    "pages": [
+      {
+        "name": "ClassifiedDocumentFromStdPage",
+        "defaultPath": "/documents-classified",
+        "primaryEntity": "ClassifiedDocument"
+      }
+    ],
+    "emittedEvents": [],
+    "listenedEvents": []
   }
 ]

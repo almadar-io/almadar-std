@@ -102,22 +102,22 @@ export interface StdModerationRuleModerationRuleLoadFailedPayload {
  * without modifying its state-machine topology.
  */
 export interface StdModerationRuleConfig {
-  /** Default: `48` */
-  appealWindowHours?: number;
-  /** Default: `[{"variant":"primary","event":"OPEN_RULE","icon":"arrow-right","label":"Open"},{"label":"Archive","variant":"danger","event":"ARCHIVE_RULE"}]` */
-  itemActions?: EntityRow[];
-  /** Default: `0.6` */
-  humanReviewThreshold?: number;
-  /** Default: `"flag"` */
-  autoAction?: 'flag' | 'hide' | 'shadow-ban' | 'delete' | 'ban-user';
-  /** Default: `0.85` */
-  toxicityThreshold?: number;
-  /** Default: `"Moderation Rules"` */
-  title?: string;
   /** Default: `"tempban"` */
   repeatOffenderEscalation?: 'warn' | 'tempban' | 'ban';
-  /** Default: `[{"label":"Rule","name":"name","variant":"caption"},{"label":"Applies to","variant":"caption","name":"appliesTo"},{"variant":"caption","name":"priority","label":"Priority"},{"name":"status","label":"Status","variant":"badge"}]` */
+  /** Default: `"Moderation Rules"` */
+  title?: string;
+  /** Default: `48` */
+  appealWindowHours?: number;
+  /** Default: `[{"event":"OPEN_RULE","variant":"primary","label":"Open","icon":"arrow-right"},{"label":"Archive","variant":"danger","event":"ARCHIVE_RULE"}]` */
+  itemActions?: EntityRow[];
+  /** Default: `[{"label":"Rule","variant":"caption","name":"name"},{"label":"Applies to","name":"appliesTo","variant":"caption"},{"label":"Priority","variant":"caption","name":"priority"},{"name":"status","variant":"badge","label":"Status"}]` */
   fields?: EntityRow[];
+  /** Default: `0.6` */
+  humanReviewThreshold?: number;
+  /** Default: `0.85` */
+  toxicityThreshold?: number;
+  /** Default: `"flag"` */
+  autoAction?: 'flag' | 'hide' | 'shadow-ban' | 'delete' | 'ban-user';
 }
 
 /**

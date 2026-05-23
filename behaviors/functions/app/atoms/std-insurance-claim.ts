@@ -161,24 +161,24 @@ export interface StdInsuranceClaimInsuranceClaimUpdateFailedPayload {
  * without modifying its state-machine topology.
  */
 export interface StdInsuranceClaimConfig {
-  /** Default: `""` */
-  payerId?: string;
+  /** Default: `"EDI-837P"` */
+  claimSubmissionFormat?: 'CMS-1500' | 'UB-04' | 'EDI-837P' | 'EDI-837I';
+  /** Default: `30` */
+  denialAppealWindowDays?: number;
   /** Default: `"Insurance Claims"` */
   title?: string;
-  /** Default: `[{"icon":"arrow-right","label":"Open","event":"OPEN_CLAIM","variant":"primary"},{"variant":"primary","event":"SUBMIT","icon":"send","label":"Submit"}]` */
+  /** Default: `[{"variant":"caption","label":"Patient","name":"patientId"},{"name":"payerId","variant":"caption","label":"Payer"},{"variant":"badge","name":"status","label":"Status"},{"name":"claimAmount","variant":"caption","label":"Amount"},{"variant":"caption","label":"Service","name":"serviceDate"}]` */
+  fields?: EntityRow[];
+  /** Default: `false` */
+  autoResubmitOnDenial?: boolean;
+  /** Default: `[{"event":"OPEN_CLAIM","label":"Open","icon":"arrow-right","variant":"primary"},{"variant":"primary","icon":"send","label":"Submit","event":"SUBMIT"}]` */
   itemActions?: EntityRow[];
+  /** Default: `""` */
+  payerId?: string;
   /** Default: `24` */
   eligibilityCheckCadenceHours?: number;
   /** Default: `5` */
   priorAuthLeadTimeDays?: number;
-  /** Default: `30` */
-  denialAppealWindowDays?: number;
-  /** Default: `"EDI-837P"` */
-  claimSubmissionFormat?: 'CMS-1500' | 'UB-04' | 'EDI-837P' | 'EDI-837I';
-  /** Default: `[{"variant":"caption","name":"patientId","label":"Patient"},{"name":"payerId","variant":"caption","label":"Payer"},{"variant":"badge","name":"status","label":"Status"},{"label":"Amount","name":"claimAmount","variant":"caption"},{"variant":"caption","label":"Service","name":"serviceDate"}]` */
-  fields?: EntityRow[];
-  /** Default: `false` */
-  autoResubmitOnDenial?: boolean;
 }
 
 /**

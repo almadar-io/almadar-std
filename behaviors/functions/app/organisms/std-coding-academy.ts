@@ -316,8 +316,8 @@ export function stdCodingAcademySeqChallengeOrbital(params: StdCodingAcademySeqC
                   'SeqChallenge',
                   {
                     'emit': {
-                      'success': 'SeqChallengeLoaded',
                       'failure': 'SeqChallengeLoadFailed',
+                      'success': 'SeqChallengeLoaded',
                     },
                   },
                 ],
@@ -325,22 +325,22 @@ export function stdCodingAcademySeqChallengeOrbital(params: StdCodingAcademySeqC
                   'render-ui',
                   'main',
                   {
+                    'appName': 'Coding Academy',
+                    'showTopBar': true,
                     'children': [
                       {
                         'type': 'game-menu',
                         'title': 'Sequencer Challenge',
                         'menuItems': [
                           {
-                            'variant': 'primary',
                             'label': 'Start',
                             'event': 'START',
+                            'variant': 'primary',
                           },
                         ],
                       },
                     ],
-                    'appName': 'Coding Academy',
                     'type': 'game-shell',
-                    'showTopBar': true,
                   },
                 ],
               ],
@@ -354,63 +354,63 @@ export function stdCodingAcademySeqChallengeOrbital(params: StdCodingAcademySeqC
                   'render-ui',
                   'main',
                   {
-                    'showTopBar': true,
-                    'type': 'game-shell',
                     'children': [
                       {
+                        'type': 'stack',
                         'children': [
                           {
+                            'type': 'game-hud',
                             'stats': [
                               {
-                                'value': '@entity.score',
                                 'label': 'Score',
+                                'value': '@entity.score',
                               },
                               {
                                 'label': 'Level',
                                 'value': '@entity.level',
                               },
                             ],
-                            'type': 'game-hud',
                           },
                           '@trait.SeqLessonVideo',
                           {
-                            'type': 'card',
                             'children': [
                               {
-                                'align': 'center',
-                                'direction': 'vertical',
                                 'gap': 'md',
+                                'align': 'center',
                                 'type': 'stack',
                                 'children': [
                                   {
                                     'type': 'typography',
-                                    'variant': 'h3',
                                     'content': 'Sequencer Challenge',
+                                    'variant': 'h3',
                                   },
                                   {
-                                    'type': 'typography',
                                     'content': 'Arrange the action blocks in the correct order.',
-                                    'variant': 'body',
+                                    'type': 'typography',
                                     'color': 'muted',
+                                    'variant': 'body',
                                   },
                                   {
+                                    'action': 'COMPLETE',
+                                    'icon': 'check',
                                     'variant': 'primary',
                                     'type': 'button',
-                                    'icon': 'check',
                                     'label': 'Complete',
-                                    'action': 'COMPLETE',
                                   },
                                 ],
+                                'direction': 'vertical',
                               },
                             ],
+                            'type': 'card',
                           },
                         ],
-                        'type': 'stack',
-                        'gap': 'md',
                         'direction': 'vertical',
+                        'gap': 'md',
                       },
                     ],
                     'appName': 'Coding Academy',
+                    'type': 'game-shell',
+                    'showTopBar': true,
                   },
                 ],
               ],
@@ -429,22 +429,22 @@ export function stdCodingAcademySeqChallengeOrbital(params: StdCodingAcademySeqC
                   'render-ui',
                   'main',
                   {
+                    'appName': 'Coding Academy',
+                    'type': 'game-shell',
                     'children': [
                       {
                         'title': 'Well Done!',
                         'type': 'game-over-screen',
                         'menuItems': [
                           {
-                            'event': 'RESTART',
                             'variant': 'primary',
                             'label': 'Play Again',
+                            'event': 'RESTART',
                           },
                         ],
                       },
                     ],
                     'showTopBar': true,
-                    'type': 'game-shell',
-                    'appName': 'Coding Academy',
                   },
                 ],
               ],
@@ -458,22 +458,22 @@ export function stdCodingAcademySeqChallengeOrbital(params: StdCodingAcademySeqC
                   'render-ui',
                   'main',
                   {
-                    'showTopBar': true,
+                    'type': 'game-shell',
                     'children': [
                       {
+                        'type': 'game-menu',
                         'title': 'Sequencer Challenge',
                         'menuItems': [
                           {
+                            'variant': 'primary',
                             'label': 'Start',
                             'event': 'START',
-                            'variant': 'primary',
                           },
                         ],
-                        'type': 'game-menu',
                       },
                     ],
-                    'type': 'game-shell',
                     'appName': 'Coding Academy',
+                    'showTopBar': true,
                   },
                 ],
               ],
@@ -486,10 +486,10 @@ export function stdCodingAcademySeqChallengeOrbital(params: StdCodingAcademySeqC
         'ref': 'YouTube.traits.ServiceYoutubeYoutube',
         'name': 'SeqLessonVideo',
         'config': {
-          'autoplay': false,
-          'videoId': '@entity.videoId',
           'controls': true,
+          'autoplay': false,
           'uiTrait': '@trait.SeqLessonPlayer',
+          'videoId': '@entity.videoId',
         },
       }),
       rebindInlineTraitEntity({
@@ -518,32 +518,32 @@ export function stdCodingAcademySeqChallengeOrbital(params: StdCodingAcademySeqC
                   'render-ui',
                   'main',
                   {
-                    'type': 'card',
                     'children': [
                       {
-                        'type': 'stack',
-                        'align': 'center',
-                        'gap': 'sm',
-                        'direction': 'vertical',
                         'children': [
                           {
                             'type': 'icon',
                             'name': 'video',
                           },
                           {
-                            'content': 'Lesson video',
-                            'color': 'muted',
-                            'variant': 'caption',
                             'type': 'typography',
+                            'color': 'muted',
+                            'content': 'Lesson video',
+                            'variant': 'caption',
                           },
                           {
                             'type': 'typography',
-                            'content': '@config.videoId',
                             'variant': 'body',
+                            'content': '@config.videoId',
                           },
                         ],
+                        'type': 'stack',
+                        'direction': 'vertical',
+                        'align': 'center',
+                        'gap': 'sm',
                       },
                     ],
+                    'type': 'card',
                   },
                 ],
               ],
@@ -565,13 +565,13 @@ export function stdCodingAcademySeqChallengeOrbital(params: StdCodingAcademySeqC
         'ref': 'Storage.traits.ServiceStorageStorage',
         'name': 'SeqProgressStorage',
         'config': {
+          'maxSize': 102400,
+          'uiTrait': '@trait.SeqProgressForm',
+          'bucket': 'coding-academy-progress',
+          'acl': 'private',
           'allowedMimeTypes': [
             'application/json',
           ],
-          'bucket': 'coding-academy-progress',
-          'uiTrait': '@trait.SeqProgressForm',
-          'acl': 'private',
-          'maxSize': 102400,
         },
         'listens': [
           {
@@ -630,6 +630,9 @@ export function stdCodingAcademySeqChallengeOrbital(params: StdCodingAcademySeqC
                   'render-ui',
                   'main',
                   {
+                    'type': 'stack',
+                    'align': 'center',
+                    'gap': 'sm',
                     'children': [
                       {
                         'name': 'save',
@@ -637,16 +640,13 @@ export function stdCodingAcademySeqChallengeOrbital(params: StdCodingAcademySeqC
                       },
                       {
                         'type': 'button',
-                        'variant': 'ghost',
-                        'label': 'Save Progress',
-                        'icon': 'save',
                         'action': 'UPLOAD',
+                        'variant': 'ghost',
+                        'icon': 'save',
+                        'label': 'Save Progress',
                       },
                     ],
-                    'type': 'stack',
                     'direction': 'horizontal',
-                    'align': 'center',
-                    'gap': 'sm',
                   },
                 ],
               ],
@@ -1012,13 +1012,13 @@ export function stdCodingAcademyBuildChallengeOrbital(params: StdCodingAcademyBu
                       {
                         'menuItems': [
                           {
-                            'label': 'Start',
                             'event': 'START',
                             'variant': 'primary',
+                            'label': 'Start',
                           },
                         ],
-                        'title': 'Builder Challenge',
                         'type': 'game-menu',
+                        'title': 'Builder Challenge',
                       },
                     ],
                     'type': 'game-shell',
@@ -1036,16 +1036,17 @@ export function stdCodingAcademyBuildChallengeOrbital(params: StdCodingAcademyBu
                   'render-ui',
                   'main',
                   {
+                    'type': 'game-shell',
+                    'showTopBar': true,
                     'children': [
                       {
-                        'direction': 'vertical',
                         'children': [
                           {
                             'type': 'game-hud',
                             'stats': [
                               {
-                                'value': '@entity.score',
                                 'label': 'Score',
+                                'value': '@entity.score',
                               },
                               {
                                 'value': '@entity.level',
@@ -1061,21 +1062,21 @@ export function stdCodingAcademyBuildChallengeOrbital(params: StdCodingAcademyBu
                                 'align': 'center',
                                 'children': [
                                   {
-                                    'variant': 'h3',
-                                    'type': 'typography',
                                     'content': 'Builder Challenge',
+                                    'type': 'typography',
+                                    'variant': 'h3',
                                   },
                                   {
-                                    'type': 'typography',
-                                    'variant': 'body',
                                     'content': 'Drag components into the slots to build the solution.',
+                                    'variant': 'body',
+                                    'type': 'typography',
                                     'color': 'muted',
                                   },
                                   {
-                                    'action': 'COMPLETE',
-                                    'type': 'button',
-                                    'icon': 'check',
                                     'label': 'Complete',
+                                    'icon': 'check',
+                                    'type': 'button',
+                                    'action': 'COMPLETE',
                                     'variant': 'primary',
                                   },
                                 ],
@@ -1085,12 +1086,11 @@ export function stdCodingAcademyBuildChallengeOrbital(params: StdCodingAcademyBu
                             'type': 'card',
                           },
                         ],
-                        'type': 'stack',
                         'gap': 'md',
+                        'direction': 'vertical',
+                        'type': 'stack',
                       },
                     ],
-                    'showTopBar': true,
-                    'type': 'game-shell',
                     'appName': 'Coding Academy',
                   },
                 ],
@@ -1110,20 +1110,20 @@ export function stdCodingAcademyBuildChallengeOrbital(params: StdCodingAcademyBu
                   'render-ui',
                   'main',
                   {
-                    'appName': 'Coding Academy',
-                    'type': 'game-shell',
                     'showTopBar': true,
+                    'type': 'game-shell',
+                    'appName': 'Coding Academy',
                     'children': [
                       {
+                        'title': 'Well Done!',
                         'menuItems': [
                           {
-                            'label': 'Play Again',
-                            'variant': 'primary',
                             'event': 'RESTART',
+                            'variant': 'primary',
+                            'label': 'Play Again',
                           },
                         ],
                         'type': 'game-over-screen',
-                        'title': 'Well Done!',
                       },
                     ],
                   },
@@ -1139,13 +1139,10 @@ export function stdCodingAcademyBuildChallengeOrbital(params: StdCodingAcademyBu
                   'render-ui',
                   'main',
                   {
-                    'appName': 'Coding Academy',
-                    'type': 'game-shell',
                     'showTopBar': true,
+                    'appName': 'Coding Academy',
                     'children': [
                       {
-                        'title': 'Builder Challenge',
-                        'type': 'game-menu',
                         'menuItems': [
                           {
                             'variant': 'primary',
@@ -1153,8 +1150,11 @@ export function stdCodingAcademyBuildChallengeOrbital(params: StdCodingAcademyBu
                             'label': 'Start',
                           },
                         ],
+                        'type': 'game-menu',
+                        'title': 'Builder Challenge',
                       },
                     ],
+                    'type': 'game-shell',
                   },
                 ],
               ],
@@ -1490,8 +1490,8 @@ export function stdCodingAcademyEventChallengeOrbital(params: StdCodingAcademyEv
                   'EventChallenge',
                   {
                     'emit': {
-                      'failure': 'EventChallengeLoadFailed',
                       'success': 'EventChallengeLoaded',
+                      'failure': 'EventChallengeLoadFailed',
                     },
                   },
                 ],
@@ -1499,9 +1499,7 @@ export function stdCodingAcademyEventChallengeOrbital(params: StdCodingAcademyEv
                   'render-ui',
                   'main',
                   {
-                    'appName': 'Coding Academy',
                     'showTopBar': true,
-                    'type': 'game-shell',
                     'children': [
                       {
                         'type': 'game-menu',
@@ -1509,12 +1507,14 @@ export function stdCodingAcademyEventChallengeOrbital(params: StdCodingAcademyEv
                         'menuItems': [
                           {
                             'label': 'Start',
-                            'event': 'START',
                             'variant': 'primary',
+                            'event': 'START',
                           },
                         ],
                       },
                     ],
+                    'type': 'game-shell',
+                    'appName': 'Coding Academy',
                   },
                 ],
               ],
@@ -1528,10 +1528,10 @@ export function stdCodingAcademyEventChallengeOrbital(params: StdCodingAcademyEv
                   'render-ui',
                   'main',
                   {
-                    'type': 'game-shell',
-                    'showTopBar': true,
+                    'appName': 'Coding Academy',
                     'children': [
                       {
+                        'direction': 'vertical',
                         'gap': 'md',
                         'type': 'stack',
                         'children': [
@@ -1539,8 +1539,8 @@ export function stdCodingAcademyEventChallengeOrbital(params: StdCodingAcademyEv
                             'type': 'game-hud',
                             'stats': [
                               {
-                                'label': 'Score',
                                 'value': '@entity.score',
+                                'label': 'Score',
                               },
                               {
                                 'label': 'Level',
@@ -1549,11 +1549,10 @@ export function stdCodingAcademyEventChallengeOrbital(params: StdCodingAcademyEv
                             ],
                           },
                           {
-                            'type': 'card',
                             'children': [
                               {
-                                'type': 'stack',
                                 'gap': 'md',
+                                'direction': 'vertical',
                                 'children': [
                                   {
                                     'variant': 'h3',
@@ -1561,29 +1560,30 @@ export function stdCodingAcademyEventChallengeOrbital(params: StdCodingAcademyEv
                                     'type': 'typography',
                                   },
                                   {
+                                    'color': 'muted',
                                     'variant': 'body',
                                     'type': 'typography',
-                                    'color': 'muted',
                                     'content': 'Wire the event handlers to fire on the right triggers.',
                                   },
                                   {
-                                    'type': 'button',
                                     'variant': 'primary',
-                                    'icon': 'check',
                                     'label': 'Complete',
+                                    'icon': 'check',
                                     'action': 'COMPLETE',
+                                    'type': 'button',
                                   },
                                 ],
                                 'align': 'center',
-                                'direction': 'vertical',
+                                'type': 'stack',
                               },
                             ],
+                            'type': 'card',
                           },
                         ],
-                        'direction': 'vertical',
                       },
                     ],
-                    'appName': 'Coding Academy',
+                    'showTopBar': true,
+                    'type': 'game-shell',
                   },
                 ],
               ],
@@ -1604,20 +1604,20 @@ export function stdCodingAcademyEventChallengeOrbital(params: StdCodingAcademyEv
                   {
                     'children': [
                       {
-                        'title': 'Well Done!',
                         'type': 'game-over-screen',
                         'menuItems': [
                           {
-                            'label': 'Play Again',
                             'event': 'RESTART',
                             'variant': 'primary',
+                            'label': 'Play Again',
                           },
                         ],
+                        'title': 'Well Done!',
                       },
                     ],
-                    'appName': 'Coding Academy',
                     'type': 'game-shell',
                     'showTopBar': true,
+                    'appName': 'Coding Academy',
                   },
                 ],
               ],
@@ -1631,22 +1631,22 @@ export function stdCodingAcademyEventChallengeOrbital(params: StdCodingAcademyEv
                   'render-ui',
                   'main',
                   {
+                    'type': 'game-shell',
+                    'appName': 'Coding Academy',
                     'children': [
                       {
-                        'type': 'game-menu',
                         'title': 'Event Handler Challenge',
                         'menuItems': [
                           {
-                            'event': 'START',
                             'label': 'Start',
                             'variant': 'primary',
+                            'event': 'START',
                           },
                         ],
+                        'type': 'game-menu',
                       },
                     ],
                     'showTopBar': true,
-                    'appName': 'Coding Academy',
-                    'type': 'game-shell',
                   },
                 ],
               ],
@@ -1780,7 +1780,7 @@ export interface StdCodingAcademyStudentProgressOrbitalParams {
    * atom-owned (use `listens` via a sibling trait instead).
    */
   traitOverrides?: Partial<Record<
-    'StudentProgressAppLayout' | 'StudentProgressStats' | 'StudentProgressGraphs' | 'StudentProgressBrowseList' | 'StudentProgressView' | 'StudentProgressEdit' | 'StudentProgressDelete' | 'StudentProgressCatalog' | 'StudentProgressPersistor',
+    'StudentProgressAppLayout' | 'StudentProgressStats' | 'StudentProgressGraphs' | 'StudentProgressBrowseList' | 'StudentProgressView' | 'StudentProgressEdit' | 'StudentProgressDelete' | 'StudentReminder' | 'StudentGradeNotifier' | 'StudentInstructorApproval' | 'StudentProgressCatalog' | 'StudentProgressPersistor',
     Pick<MakeTraitRefOpts, 'config' | 'linkedEntity' | 'events' | 'name' | 'emitsScope' | 'listens'>
   >>;
 }
@@ -1816,6 +1816,18 @@ export function stdCodingAcademyStudentProgressOrbital(params: StdCodingAcademyS
       {
         'from': 'std/behaviors/std-graphs',
         'as': 'Graphs',
+      },
+      {
+        'from': 'std/behaviors/std-reminder-scheduler',
+        'as': 'Reminder',
+      },
+      {
+        'from': 'std/behaviors/std-notify-on-event',
+        'as': 'Notify',
+      },
+      {
+        'from': 'std/behaviors/std-approval-gate',
+        'as': 'Approval',
       },
     ],
     entity: {
@@ -1881,37 +1893,37 @@ export function stdCodingAcademyStudentProgressOrbital(params: StdCodingAcademyS
         'ref': 'AppShell.traits.AppLayout',
         'name': 'StudentProgressAppLayout',
         'config': {
-          'notifications': [],
           'notificationClickEvent': 'STUDENT_PROGRESS_NOTIFICATIONS_OPEN',
-          'appName': 'Coding Academy',
+          'contentTrait': '@trait.StudentProgressCatalog',
           'navItems': [
             {
-              'icon': 'list-ordered',
-              'href': '/sequencer',
               'label': 'Sequencer',
+              'href': '/sequencer',
+              'icon': 'list-ordered',
             },
             {
+              'label': 'Builder',
               'href': '/builder',
               'icon': 'wrench',
-              'label': 'Builder',
             },
             {
-              'icon': 'zap',
               'label': 'Events',
               'href': '/events',
+              'icon': 'zap',
             },
             {
-              'icon': 'trending-up',
-              'href': '/progress',
               'label': 'Progress',
+              'href': '/progress',
+              'icon': 'trending-up',
             },
           ],
-          'contentTrait': '@trait.StudentProgressCatalog',
+          'appName': 'Coding Academy',
           'searchEvent': 'STUDENT_PROGRESS_SEARCH',
+          'notifications': [],
         },
         'events': {
-          'SEARCH': 'STUDENT_PROGRESS_SEARCH',
           'NOTIFY_CLICK': 'STUDENT_PROGRESS_NOTIFICATIONS_OPEN',
+          'SEARCH': 'STUDENT_PROGRESS_SEARCH',
         },
       }),
       rebindInlineTraitEntity({
@@ -1978,35 +1990,34 @@ export function stdCodingAcademyStudentProgressOrbital(params: StdCodingAcademyS
                   'render-ui',
                   'main',
                   {
-                    'direction': 'vertical',
-                    'gap': 'lg',
                     'type': 'stack',
+                    'direction': 'vertical',
                     'children': [
                       {
-                        'gap': 'md',
                         'justify': 'between',
-                        'align': 'center',
                         'type': 'stack',
                         'children': [
                           {
-                            'type': 'stack',
                             'align': 'center',
+                            'type': 'stack',
+                            'direction': 'horizontal',
                             'children': [
                               {
-                                'name': 'trending-up',
                                 'type': 'icon',
+                                'name': 'trending-up',
                               },
                               {
                                 'variant': 'h2',
-                                'content': 'Progress',
                                 'type': 'typography',
+                                'content': 'Progress',
                               },
                             ],
-                            'direction': 'horizontal',
                             'gap': 'sm',
                           },
                         ],
                         'direction': 'horizontal',
+                        'gap': 'md',
+                        'align': 'center',
                       },
                       {
                         'type': 'divider',
@@ -2018,6 +2029,7 @@ export function stdCodingAcademyStudentProgressOrbital(params: StdCodingAcademyS
                       },
                       '@trait.StudentProgressBrowseList',
                     ],
+                    'gap': 'lg',
                   },
                 ],
               ],
@@ -2036,34 +2048,34 @@ export function stdCodingAcademyStudentProgressOrbital(params: StdCodingAcademyS
                   'render-ui',
                   'main',
                   {
+                    'align': 'center',
                     'gap': 'md',
-                    'type': 'stack',
                     'children': [
                       {
-                        'type': 'icon',
                         'name': 'bell',
+                        'type': 'icon',
                       },
                       {
-                        'content': 'No notifications',
                         'type': 'typography',
                         'variant': 'h3',
+                        'content': 'No notifications',
                       },
                       {
-                        'content': 'You\'re all caught up.',
                         'color': 'muted',
-                        'type': 'typography',
                         'variant': 'caption',
+                        'type': 'typography',
+                        'content': 'You\'re all caught up.',
                       },
                       {
-                        'variant': 'ghost',
                         'label': 'Back to progress',
                         'action': 'INIT',
                         'type': 'button',
+                        'variant': 'ghost',
                       },
                     ],
-                    'direction': 'vertical',
                     'className': 'py-8',
-                    'align': 'center',
+                    'type': 'stack',
+                    'direction': 'vertical',
                   },
                 ],
               ],
@@ -2079,38 +2091,38 @@ export function stdCodingAcademyStudentProgressOrbital(params: StdCodingAcademyS
           'title': 'Student Progress',
           'metrics': [
             {
-              'variant': 'success',
+              'field': 'lessonsCompleted',
+              'label': 'Lessons Completed',
               'format': 'number',
               'aggregation': 'sum',
               'icon': 'check-circle',
-              'label': 'Lessons Completed',
-              'field': 'lessonsCompleted',
+              'variant': 'success',
             },
             {
               'variant': 'primary',
               'format': 'number',
-              'label': 'Average Score',
-              'aggregation': 'avg',
-              'icon': 'star',
               'field': 'avgScore',
+              'aggregation': 'avg',
+              'label': 'Average Score',
+              'icon': 'star',
             },
             {
+              'variant': 'warning',
+              'icon': 'flame',
+              'format': 'number',
               'aggregation': 'max',
               'field': 'streak',
-              'icon': 'flame',
-              'variant': 'warning',
               'label': 'Streak',
-              'format': 'number',
               'suffix': 'd',
             },
             {
-              'label': 'Total Time',
               'icon': 'clock',
-              'aggregation': 'sum',
-              'variant': 'info',
-              'suffix': 'm',
               'field': 'totalTimeMinutes',
+              'variant': 'info',
               'format': 'number',
+              'suffix': 'm',
+              'label': 'Total Time',
+              'aggregation': 'sum',
             },
           ],
         },
@@ -2129,13 +2141,13 @@ export function stdCodingAcademyStudentProgressOrbital(params: StdCodingAcademyS
         'ref': 'Graphs.traits.GraphItemGraph',
         'name': 'StudentProgressGraphs',
         'config': {
-          'height': 280,
-          'valueField': 'progressPct',
-          'subtitle': 'Daily progress %',
-          'showLegend': true,
           'chartType': 'line',
           'dateField': 'day',
           'title': 'Progress over time',
+          'height': 280,
+          'showLegend': true,
+          'valueField': 'progressPct',
+          'subtitle': 'Daily progress %',
         },
         'listens': [
           {
@@ -2153,45 +2165,27 @@ export function stdCodingAcademyStudentProgressOrbital(params: StdCodingAcademyS
         'name': 'StudentProgressBrowseList',
         'linkedEntity': canonicalName,
         'config': {
-          'gap': 'sm',
-          'itemActions': [
-            {
-              'label': 'View',
-              'variant': 'ghost',
-              'event': 'VIEW',
-            },
-            {
-              'variant': 'ghost',
-              'event': 'EDIT',
-              'label': 'Edit',
-            },
-            {
-              'event': 'DELETE',
-              'variant': 'danger',
-              'label': 'Delete',
-            },
-          ],
           'fields': [
             {
-              'icon': 'user',
-              'name': 'student',
-              'label': 'Student',
               'variant': 'h4',
+              'name': 'student',
+              'icon': 'user',
+              'label': 'Student',
             },
             {
-              'variant': 'body',
               'label': 'Lessons Completed',
+              'variant': 'body',
               'name': 'lessonsCompleted',
             },
             {
+              'label': 'Avg Score',
               'variant': 'badge',
               'name': 'avgScore',
-              'label': 'Avg Score',
             },
             {
+              'name': 'streak',
               'variant': 'body',
               'label': 'Streak',
-              'name': 'streak',
             },
             {
               'variant': 'caption',
@@ -2201,6 +2195,24 @@ export function stdCodingAcademyStudentProgressOrbital(params: StdCodingAcademyS
             },
           ],
           'cols': 1,
+          'itemActions': [
+            {
+              'event': 'VIEW',
+              'variant': 'ghost',
+              'label': 'View',
+            },
+            {
+              'label': 'Edit',
+              'event': 'EDIT',
+              'variant': 'ghost',
+            },
+            {
+              'variant': 'danger',
+              'event': 'DELETE',
+              'label': 'Delete',
+            },
+          ],
+          'gap': 'sm',
         },
         'listens': [
           {
@@ -2226,7 +2238,6 @@ export function stdCodingAcademyStudentProgressOrbital(params: StdCodingAcademyS
         'name': 'StudentProgressView',
         'linkedEntity': canonicalName,
         'config': {
-          'mode': 'edit',
           'fields': [
             'student',
             'lessonsCompleted',
@@ -2236,8 +2247,9 @@ export function stdCodingAcademyStudentProgressOrbital(params: StdCodingAcademyS
             'progressPct',
             'lastActiveAt',
           ],
-          'title': 'View Progress',
           'icon': 'eye',
+          'title': 'View Progress',
+          'mode': 'edit',
         },
         'events': {
           'OPEN': 'VIEW',
@@ -2258,8 +2270,7 @@ export function stdCodingAcademyStudentProgressOrbital(params: StdCodingAcademyS
         'name': 'StudentProgressEdit',
         'linkedEntity': canonicalName,
         'config': {
-          'icon': 'edit',
-          'title': 'Edit Progress',
+          'mode': 'edit',
           'fields': [
             'student',
             'lessonsCompleted',
@@ -2269,7 +2280,8 @@ export function stdCodingAcademyStudentProgressOrbital(params: StdCodingAcademyS
             'progressPct',
             'lastActiveAt',
           ],
-          'mode': 'edit',
+          'title': 'Edit Progress',
+          'icon': 'edit',
         },
         'events': {
           'OPEN': 'EDIT',
@@ -2290,10 +2302,10 @@ export function stdCodingAcademyStudentProgressOrbital(params: StdCodingAcademyS
         'name': 'StudentProgressDelete',
         'linkedEntity': canonicalName,
         'config': {
+          'alertMessage': 'This action cannot be undone.',
+          'confirmLabel': 'Delete',
           'icon': 'alert-triangle',
           'title': 'Delete Progress',
-          'confirmLabel': 'Delete',
-          'alertMessage': 'This action cannot be undone.',
         },
         'events': {
           'REQUEST': 'DELETE',
@@ -2442,6 +2454,54 @@ export function stdCodingAcademyStudentProgressOrbital(params: StdCodingAcademyS
         },
         'scope': 'instance',
       } as never, 'StudentProgress', canonicalName) as never,
+      makeTraitRef({
+        'ref': 'Reminder.traits.ReminderScheduler',
+        'name': 'StudentReminder',
+        'config': {
+          'severity': 'info',
+          'offsetsHours': [
+            168,
+            24,
+          ],
+          'dateField': 'lastActiveAt',
+          'template': 'Assignment due soon',
+          'targetEntity': 'StudentProgress',
+          'windowToleranceMinutes': 60,
+        },
+      }),
+      makeTraitRef({
+        'ref': 'Notify.traits.NotifyOnEventListener',
+        'name': 'StudentGradeNotifier',
+        'config': {
+          'recipients': [],
+          'template': 'Grade posted',
+          'notifyChannel': 'in-app',
+          'suppressionList': [],
+          'listensFor': [
+            'PROGRESS_UPDATED',
+          ],
+          'severity': 'success',
+        },
+        'events': {
+          'EventOccurred': 'PROGRESS_UPDATED',
+        },
+      }),
+      makeTraitRef({
+        'ref': 'Approval.traits.ApprovalGateReview',
+        'name': 'StudentInstructorApproval',
+        'config': {
+          'threshold': 70,
+          'autoApproveBelowThreshold': false,
+          'escalationHours': 72,
+          'escalationRoles': [
+            'program-director',
+          ],
+          'approverRoles': [
+            'instructor',
+          ],
+          'valueField': 'avgScore',
+        },
+      }),
     ],
     pages: [
       {
@@ -2474,6 +2534,15 @@ export function stdCodingAcademyStudentProgressOrbital(params: StdCodingAcademyS
           },
           {
             'ref': 'StudentProgressPersistor',
+          },
+          {
+            'ref': 'StudentReminder',
+          },
+          {
+            'ref': 'StudentGradeNotifier',
+          },
+          {
+            'ref': 'StudentInstructorApproval',
           },
         ],
       } as never,
@@ -2535,6 +2604,9 @@ export const StdCodingAcademyStudentProgressOrbitalManifest = {
     'StudentProgressView',
     'StudentProgressEdit',
     'StudentProgressDelete',
+    'StudentReminder',
+    'StudentGradeNotifier',
+    'StudentInstructorApproval',
   ] as const,
   inlineTraitNames: [
     'StudentProgressCatalog',
@@ -2560,6 +2632,285 @@ export function isStdCodingAcademyStudentProgressOrbitalParams(p: object): p is 
 }
 
 /**
+ * Tunable params for the AppointmentPolicyFromStdOrbital orbital.
+ *
+ * Canonical entity: AppointmentPolicy — overridable via
+ * `entityName`. The factory threads the effective name through every
+ * trait's `linkedEntity` binding; the `.orb` compiler's inline phase
+ * auto-rewrites every `@Entity.x`, `["ref",X]`, `["fetch",X,…]`,
+ * `["persist",…,X,…]` and payload type string accordingly.
+ *
+ * Override surface (mirrors `.lolo`'s native overrides 1:1):
+ *   fields         — extra entity fields (appended)
+ *   pagePath       — first-page URL override
+ *   persistence    — entity persistence mode
+ *   entityName     — rename the canonical entity
+ *   collection     — override the derived collection key
+ *   traitOverrides — per-imported-trait `config`, `linkedEntity`,
+ *                    `events`, `name`, `emitsScope`, `listens`.
+ *                    `effects` is NOT exposed — `.lolo` removed it
+ *                    in Phase 9.5.H. Use `listens` via a sibling
+ *                    trait to react to atom events.
+ */
+export interface StdCodingAcademyAppointmentPolicyFromStdOrbitalParams {
+  /** Extra fields appended to the canonical entity. */
+  fields?: EntityField[];
+  /** URL path override for the orbital's first page. */
+  pagePath?: string;
+  /** Override the canonical entity persistence mode. */
+  persistence?: EntityPersistence;
+  /** Rename the canonical entity (PascalCase singular, ≤32 chars). */
+  entityName?: string;
+  /** Override derived collection key (defaults to plural(entityName).toLowerCase()). */
+  collection?: string;
+  /**
+   * Per-imported-trait override surface keyed on each imported
+   * trait's canonical `name`. Accepts every override `.lolo`
+   * natively supports: `config`, `linkedEntity`, `events`,
+   * `name`, `emitsScope`, `listens`. `effects` is excluded —
+   * atom-owned (use `listens` via a sibling trait instead).
+   */
+  traitOverrides?: Partial<Record<
+    'AppointmentPolicyFromStdAppLayout' | 'AppointmentPolicyFromStdManageBlock',
+    Pick<MakeTraitRefOpts, 'config' | 'linkedEntity' | 'events' | 'name' | 'emitsScope' | 'listens'>
+  >>;
+}
+
+/** Per-orbital factory: builds the AppointmentPolicyFromStdOrbital orbital with consumer params. */
+export function stdCodingAcademyAppointmentPolicyFromStdOrbital(params: StdCodingAcademyAppointmentPolicyFromStdOrbitalParams = {}): OrbitalDefinition {
+  const canonicalName = params.entityName ?? 'AppointmentPolicy';
+  const collectionName = params.collection
+    ?? (params.entityName ? `${params.entityName.toLowerCase()}s` : 'appointment_policies');
+  const built = makeOrbitalWithUses({
+    name: 'AppointmentPolicyFromStdOrbital',
+    uses: [
+      {
+        'from': 'std/behaviors/std-app-layout',
+        'as': 'AppShell',
+      },
+      {
+        'from': 'std/behaviors/std-appointment-policy',
+        'as': 'Policies',
+      },
+    ],
+    entity: {
+      name: canonicalName,
+      collection: collectionName,
+      persistence: params.persistence ?? 'persistent',
+      fields: ((): EntityField[] => {
+        const canonical: EntityField[] = [
+          {
+            'name': 'id',
+            'type': 'string',
+            'required': true,
+          },
+          {
+            'name': 'name',
+            'type': 'string',
+            'required': true,
+          },
+          {
+            'name': 'description',
+            'type': 'string',
+            'default': '',
+          },
+          {
+            'name': 'rescheduleWindowHours',
+            'type': 'number',
+            'default': 24,
+          },
+          {
+            'name': 'maxReschedules',
+            'type': 'number',
+            'default': 2,
+          },
+          {
+            'name': 'cancellationPolicy',
+            'type': 'string',
+            'default': 'free',
+            'values': [
+              'free',
+              'partial-refund',
+              'no-refund',
+            ],
+          },
+          {
+            'name': 'noShowGracePeriodMinutes',
+            'type': 'number',
+            'default': 15,
+          },
+          {
+            'name': 'noShowFeeAmount',
+            'type': 'number',
+            'default': 0,
+          },
+          {
+            'name': 'lateArrivalGraceMinutes',
+            'type': 'number',
+            'default': 10,
+          },
+          {
+            'name': 'status',
+            'type': 'string',
+            'default': 'active',
+            'values': [
+              'active',
+              'archived',
+            ],
+          },
+          {
+            'name': 'createdAt',
+            'type': 'string',
+          },
+        ];
+        const extras = params.fields ?? [];
+        if (extras.length === 0) return canonical;
+        const extraNames = new Set(extras.map((f) => f.name));
+        return [...canonical.filter((f) => !extraNames.has(f.name)), ...extras];
+      })(),
+    } as Entity,
+    traits: [
+      makeTraitRef({
+        'ref': 'AppShell.traits.AppLayout',
+        'name': 'AppointmentPolicyFromStdAppLayout',
+        'linkedEntity': canonicalName,
+        'config': {
+          'notifications': [],
+          'notificationClickEvent': 'APPOINTMENT_POLICY_NOTIFICATIONS_OPEN',
+          'searchEvent': 'APPOINTMENT_POLICY_SEARCH',
+          'contentTrait': '@trait.AppointmentPolicyFromStdManageBlock',
+          'appName': 'Coding Academy',
+          'navItems': [
+            {
+              'label': 'Sequencer',
+              'href': '/sequencer',
+              'icon': 'list-ordered',
+            },
+            {
+              'href': '/builder',
+              'label': 'Builder',
+              'icon': 'wrench',
+            },
+            {
+              'href': '/events',
+              'icon': 'zap',
+              'label': 'Events',
+            },
+            {
+              'href': '/progress',
+              'label': 'Progress',
+              'icon': 'trending-up',
+            },
+            {
+              'href': '/appointment-policies-from-std',
+              'icon': 'calendar-check',
+              'label': 'Appointment Policies',
+            },
+          ],
+        },
+        'events': {
+          'SEARCH': 'APPOINTMENT_POLICY_SEARCH',
+          'NOTIFY_CLICK': 'APPOINTMENT_POLICY_NOTIFICATIONS_OPEN',
+        },
+      }),
+      makeTraitRef({
+        'ref': 'Policies.traits.AppointmentPolicyManage',
+        'name': 'AppointmentPolicyFromStdManageBlock',
+        'linkedEntity': canonicalName,
+        'config': {
+          'title': 'Appointment Policies',
+        },
+      }),
+    ],
+    pages: [
+      {
+        'name': 'AppointmentPolicyFromStdPage',
+        'path': '/appointment-policies-from-std',
+        'traits': [
+          {
+            'ref': 'AppointmentPolicyFromStdAppLayout',
+          },
+          {
+            'ref': 'AppointmentPolicyFromStdManageBlock',
+          },
+        ],
+      } as never,
+    ],
+  });
+  type _OrbTrait = OrbitalDefinition["traits"][number];
+  type _OrbPage = NonNullable<OrbitalDefinition["pages"]>[number];
+  type _RefOverride = Pick<MakeTraitRefOpts, "config" | "linkedEntity" | "events" | "name" | "emitsScope" | "listens">;
+  if (built.traits && params.traitOverrides !== undefined) {
+    built.traits = (built.traits as _OrbTrait[]).map((t): _OrbTrait => {
+      if (!t || typeof t !== "object") return t;
+      const tr = t as TraitReference & { name?: string };
+      // Match by name so inline traits (no `ref`) and
+      // reference traits (with `ref`) both pick up the
+      // override surface keyed on the trait's `name`.
+      if (typeof tr.name !== "string") return t;
+      const overrides = params.traitOverrides as Record<string, _RefOverride | undefined> | undefined;
+      const override = overrides?.[tr.name];
+      if (!override) return t;
+      const merged: TraitReference = { ...tr };
+      if (override.config !== undefined) merged.config = { ...(tr.config ?? {}), ...override.config };
+      if (override.linkedEntity !== undefined) merged.linkedEntity = override.linkedEntity;
+      if (override.events !== undefined) merged.events = { ...(tr.events ?? {}), ...override.events };
+      if (override.name !== undefined) merged.name = override.name;
+      if (override.emitsScope !== undefined) merged.emitsScope = override.emitsScope;
+      if (override.listens !== undefined) merged.listens = override.listens;
+      return merged;
+    });
+  }
+  if (built.pages && params.pagePath !== undefined) {
+    built.pages = (built.pages as _OrbPage[]).map((p, idx) => {
+      if (!p || typeof p !== "object") return p;
+      if (idx !== 0) return p;
+      const out = { ...p } as _OrbPage & { path?: string };
+      out.path = params.pagePath;
+      return out;
+    });
+  }
+  return built;
+}
+
+/** Manifest — describes the params surface of stdCodingAcademyAppointmentPolicyFromStdOrbital. */
+export const StdCodingAcademyAppointmentPolicyFromStdOrbitalManifest = {
+  organism: 'std-coding-academy',
+  orbitalName: 'AppointmentPolicyFromStdOrbital',
+  paramFields: [
+    { name: 'fields', type: 'EntityField[]', description: 'Extra fields appended to the canonical entity.' },
+    { name: 'pagePath', type: 'string', description: 'URL override for the orbital first page.' },
+    { name: 'persistence', type: "'persistent' | 'runtime' | 'singleton' | 'instance' | 'local'", description: 'Override the canonical entity persistence mode.' },
+    { name: 'entityName', type: 'string', description: 'Rename the canonical entity. PascalCase singular, ≤32 chars. Threads through every trait\'s linkedEntity binding; compiler rewrites @Entity.x refs.' },
+    { name: 'collection', type: 'string', description: 'Override derived collection key. Defaults to plural(entityName).toLowerCase().' },
+    { name: 'traitOverrides', type: "Partial<Record<TraitName, { config?, linkedEntity?, events?, name?, emitsScope?, listens? }>>", description: 'Per-imported-trait overrides — mirrors .lolo\'s native trait-composition surface 1:1. effects is excluded (atom-owned; use listens via a sibling trait).' },
+  ] as const,
+  traitNames: [
+    'AppointmentPolicyFromStdAppLayout',
+    'AppointmentPolicyFromStdManageBlock',
+  ] as const,
+  inlineTraitNames: [
+  ] as const,
+};
+
+/** Typed guard — runtime validates StdCodingAcademyAppointmentPolicyFromStdOrbitalParams keys. */
+export function isStdCodingAcademyAppointmentPolicyFromStdOrbitalParams(p: object): p is StdCodingAcademyAppointmentPolicyFromStdOrbitalParams {
+  type _OverrideRecord = NonNullable<StdCodingAcademyAppointmentPolicyFromStdOrbitalParams['traitOverrides']>;
+  const obj = p as { traitOverrides?: _OverrideRecord };
+  if (obj.traitOverrides !== undefined) {
+    if (typeof obj.traitOverrides !== "object" || obj.traitOverrides === null) return false;
+    const allowed: readonly string[] = [
+      ...StdCodingAcademyAppointmentPolicyFromStdOrbitalManifest.traitNames,
+      ...StdCodingAcademyAppointmentPolicyFromStdOrbitalManifest.inlineTraitNames,
+    ];
+    for (const k of Object.keys(obj.traitOverrides)) {
+      if (!allowed.includes(k)) return false;
+    }
+  }
+  return true;
+}
+
+/**
  * Bundled params for std-coding-academy — one optional entry per orbital.
  * Each entry maps to its per-orbital factory above.
  */
@@ -2568,14 +2919,16 @@ export interface StdCodingAcademyParams {
   BuildChallenge?: StdCodingAcademyBuildChallengeOrbitalParams;
   EventChallenge?: StdCodingAcademyEventChallengeOrbitalParams;
   StudentProgress?: StdCodingAcademyStudentProgressOrbitalParams;
+  AppointmentPolicyFromStd?: StdCodingAcademyAppointmentPolicyFromStdOrbitalParams;
 }
 
-/** Whole-organism descriptor (4 orbitals). Composes per-orbital factories. */
+/** Whole-organism descriptor (5 orbitals). Composes per-orbital factories. */
 export function stdCodingAcademy(params: StdCodingAcademyParams = {}): OrbitalDefinition[] {
   return [
     stdCodingAcademySeqChallengeOrbital(params.SeqChallenge ?? {}),
     stdCodingAcademyBuildChallengeOrbital(params.BuildChallenge ?? {}),
     stdCodingAcademyEventChallengeOrbital(params.EventChallenge ?? {}),
     stdCodingAcademyStudentProgressOrbital(params.StudentProgress ?? {}),
+    stdCodingAcademyAppointmentPolicyFromStdOrbital(params.AppointmentPolicyFromStd ?? {}),
   ];
 }
