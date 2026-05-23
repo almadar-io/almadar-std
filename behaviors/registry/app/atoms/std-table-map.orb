@@ -406,22 +406,22 @@
                     "render-ui",
                     "main",
                     {
-                      "gap": "md",
                       "type": "stack",
                       "direction": "vertical",
-                      "align": "center",
+                      "className": "py-12",
+                      "gap": "md",
                       "children": [
                         {
                           "type": "spinner"
                         },
                         {
-                          "color": "muted",
-                          "type": "typography",
                           "variant": "caption",
-                          "content": "Loading floor plan…"
+                          "color": "muted",
+                          "content": "Loading floor plan…",
+                          "type": "typography"
                         }
                       ],
-                      "className": "py-12"
+                      "align": "center"
                     }
                   ]
                 ]
@@ -435,13 +435,12 @@
                     "render-ui",
                     "main",
                     {
+                      "gap": "md",
+                      "direction": "vertical",
                       "type": "stack",
                       "children": [
                         {
                           "gap": "sm",
-                          "type": "stack",
-                          "direction": "horizontal",
-                          "align": "center",
                           "children": [
                             {
                               "name": "layout-grid",
@@ -452,82 +451,83 @@
                               "type": "typography",
                               "content": "@config.title"
                             }
-                          ]
+                          ],
+                          "align": "center",
+                          "direction": "horizontal",
+                          "type": "stack"
                         },
                         {
+                          "cols": 4.0,
+                          "type": "simple-grid",
                           "children": [
                             {
-                              "label": "Tables",
                               "type": "stat-display",
+                              "label": "Tables",
                               "icon": "grid",
                               "value": "@payload.data.length"
                             },
                             {
-                              "label": "Seated",
+                              "icon": "users",
                               "value": "18",
                               "type": "stat-display",
-                              "icon": "users"
+                              "label": "Seated"
                             },
                             {
                               "type": "stat-display",
                               "label": "Awaiting bill",
-                              "icon": "receipt",
-                              "value": "4"
+                              "value": "4",
+                              "icon": "receipt"
                             },
                             {
-                              "value": "3.2",
                               "type": "stat-display",
-                              "icon": "user-plus",
-                              "label": "Avg party size"
+                              "value": "3.2",
+                              "label": "Avg party size",
+                              "icon": "user-plus"
                             }
-                          ],
-                          "cols": 4.0,
-                          "type": "simple-grid"
+                          ]
                         },
                         {
                           "type": "divider"
                         },
                         {
-                          "width": "@config.canvasWidth",
-                          "onMove": "MOVE_TABLE",
-                          "selectedId": "@entity.id",
-                          "onSelect": "SELECT_TABLE",
                           "editable": true,
-                          "type": "positioned-canvas",
+                          "items": "@payload.data",
                           "height": "@config.canvasHeight",
-                          "items": "@payload.data"
+                          "onSelect": "SELECT_TABLE",
+                          "selectedId": "@entity.id",
+                          "onMove": "MOVE_TABLE",
+                          "type": "positioned-canvas",
+                          "width": "@config.canvasWidth"
                         },
                         {
-                          "direction": "horizontal",
-                          "type": "stack",
                           "gap": "sm",
                           "children": [
                             {
                               "actionPayload": {
                                 "id": "@entity.id"
                               },
-                              "label": "Seat Party",
                               "type": "button",
-                              "icon": "users",
                               "action": "SEAT",
+                              "label": "Seat Party",
+                              "icon": "users",
                               "variant": "primary"
                             },
                             {
-                              "label": "Clear Table",
-                              "type": "button",
                               "variant": "secondary",
+                              "label": "Clear Table",
+                              "action": "CLEAR_TABLE",
+                              "icon": "eraser",
                               "actionPayload": {
                                 "id": "@entity.id"
                               },
-                              "icon": "eraser",
-                              "action": "CLEAR_TABLE"
+                              "type": "button"
                             }
                           ],
-                          "justify": "end"
+                          "direction": "horizontal",
+                          "justify": "end",
+                          "type": "stack"
                         }
-                      ],
-                      "direction": "vertical",
-                      "gap": "md"
+                      ]
                     }
                   ]
                 ]
@@ -541,9 +541,9 @@
                     "render-ui",
                     "main",
                     {
-                      "variant": "error",
                       "type": "alert",
-                      "message": "@payload.error"
+                      "message": "@payload.error",
+                      "variant": "error"
                     }
                   ]
                 ]
@@ -598,8 +598,8 @@
                     },
                     {
                       "emit": {
-                        "failure": "TableWriteFailed",
-                        "success": "TableUpdated"
+                        "success": "TableUpdated",
+                        "failure": "TableWriteFailed"
                       }
                     }
                   ]
@@ -636,9 +636,9 @@
                     "TableNode",
                     {
                       "status": "seated",
+                      "id": "@payload.id",
                       "serverName": "@payload.serverName",
-                      "partySize": "@payload.partySize",
-                      "id": "@payload.id"
+                      "partySize": "@payload.partySize"
                     },
                     {
                       "emit": {
@@ -674,8 +674,8 @@
                     "update",
                     "TableNode",
                     {
-                      "id": "@payload.id",
                       "status": "empty",
+                      "id": "@payload.id",
                       "partySize": 0.0
                     },
                     {
@@ -718,22 +718,22 @@
                     "render-ui",
                     "main",
                     {
-                      "gap": "md",
-                      "type": "stack",
-                      "align": "center",
-                      "direction": "vertical",
-                      "className": "py-12",
                       "children": [
                         {
                           "type": "spinner"
                         },
                         {
-                          "content": "Updating table status…",
+                          "type": "typography",
                           "color": "muted",
                           "variant": "caption",
-                          "type": "typography"
+                          "content": "Updating table status…"
                         }
-                      ]
+                      ],
+                      "direction": "vertical",
+                      "className": "py-12",
+                      "gap": "md",
+                      "type": "stack",
+                      "align": "center"
                     }
                   ]
                 ]
@@ -811,47 +811,33 @@
             ]
           },
           "config": {
-            "allowSplitChecks": {
-              "type": "boolean",
-              "default": true,
-              "label": "Allow split checks",
-              "description": "Permit splitting a table check across multiple payments.",
-              "tier": "customization"
-            },
-            "tableTurnoverTargetMinutes": {
-              "type": "number",
-              "default": 60.0,
-              "label": "Table turnover target (min)",
-              "description": "Target minutes between seatings on a single table. v1.1 declarative.",
-              "tier": "advanced"
-            },
-            "coursingEnabled": {
-              "type": "boolean",
-              "default": false,
-              "label": "Coursing enabled",
-              "description": "Track courses for table pacing.",
-              "tier": "customization"
-            },
             "title": {
               "type": "string",
               "default": "Floor Plan",
               "label": "Section title",
               "description": "Heading shown above the restaurant floor plan",
-              "tier": "customization"
+              "tier": "presentation"
+            },
+            "canvasWidth": {
+              "type": "number",
+              "default": 800.0,
+              "label": "Canvas width",
+              "description": "Floor plan canvas width in pixels",
+              "tier": "presentation"
             },
             "canvasHeight": {
               "type": "number",
               "default": 600.0,
               "label": "Canvas height",
               "description": "Floor plan canvas height in pixels",
-              "tier": "advanced"
+              "tier": "presentation"
             },
-            "allergenWarningsEnabled": {
+            "kitchenAutoFire": {
               "type": "boolean",
-              "default": true,
-              "label": "Allergen warnings",
-              "description": "Surface allergen warnings on items selected for a seated table.",
-              "tier": "customization"
+              "default": false,
+              "label": "Kitchen auto-fire",
+              "description": "Auto-fire courses to the kitchen display when a table moves to ordered.",
+              "tier": "domain"
             },
             "tipPresets": {
               "type": "[number]",
@@ -863,31 +849,45 @@
               ],
               "label": "Tip presets (%)",
               "description": "Quick-select tip percentages shown when closing a table check.",
-              "tier": "customization",
+              "tier": "domain",
               "items": {
                 "type": "number"
               }
-            },
-            "canvasWidth": {
-              "type": "number",
-              "default": 800.0,
-              "label": "Canvas width",
-              "description": "Floor plan canvas width in pixels",
-              "tier": "advanced"
-            },
-            "kitchenAutoFire": {
-              "type": "boolean",
-              "default": false,
-              "label": "Kitchen auto-fire",
-              "description": "Auto-fire courses to the kitchen display when a table moves to ordered.",
-              "tier": "customization"
             },
             "serviceCharge": {
               "type": "number",
               "default": 0.0,
               "label": "Service charge (%)",
               "description": "Default service-charge percentage applied to checks for these tables.",
-              "tier": "customization"
+              "tier": "domain"
+            },
+            "allowSplitChecks": {
+              "type": "boolean",
+              "default": true,
+              "label": "Allow split checks",
+              "description": "Permit splitting a table check across multiple payments.",
+              "tier": "domain"
+            },
+            "tableTurnoverTargetMinutes": {
+              "type": "number",
+              "default": 60.0,
+              "label": "Table turnover target (min)",
+              "description": "Target minutes between seatings on a single table. v1.1 declarative.",
+              "tier": "domain"
+            },
+            "coursingEnabled": {
+              "type": "boolean",
+              "default": false,
+              "label": "Coursing enabled",
+              "description": "Track courses for table pacing.",
+              "tier": "domain"
+            },
+            "allergenWarningsEnabled": {
+              "type": "boolean",
+              "default": true,
+              "label": "Allergen warnings",
+              "description": "Surface allergen warnings on items selected for a seated table.",
+              "tier": "domain"
             }
           },
           "scope": "collection"

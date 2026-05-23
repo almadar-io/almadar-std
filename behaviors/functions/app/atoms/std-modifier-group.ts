@@ -157,26 +157,26 @@ export interface StdModifierGroupModifierGroupWriteFailedPayload {
  * without modifying its state-machine topology.
  */
 export interface StdModifierGroupConfig {
-  /** Default: `[15,18,20,25]` */
-  tipPresets?: number[];
-  /** Default: `true` */
-  allowSplitChecks?: boolean;
-  /** Default: `false` */
-  kitchenAutoFire?: boolean;
-  /** Default: `60` */
-  tableTurnoverTargetMinutes?: number;
-  /** Default: `[{"icon":"arrow-right","event":"OPEN_GROUP","label":"Open","variant":"primary"},{"event":"DELETE","label":"Delete","icon":"trash","variant":"danger"}]` */
-  itemActions?: EntityRow[];
-  /** Default: `[{"variant":"caption","name":"name","label":"Group"},{"label":"Constraint","variant":"badge","name":"constraintType"},{"name":"required","label":"Required","variant":"badge"},{"name":"minSelect","label":"Min","variant":"caption"},{"name":"maxSelect","variant":"caption","label":"Max"}]` */
-  fields?: EntityRow[];
-  /** Default: `true` */
-  allergenWarningsEnabled?: boolean;
-  /** Default: `0` */
-  serviceCharge?: number;
   /** Default: `false` */
   coursingEnabled?: boolean;
+  /** Default: `[15,18,20,25]` */
+  tipPresets?: number[];
+  /** Default: `[{"name":"name","variant":"caption","label":"Group"},{"name":"constraintType","variant":"badge","label":"Constraint"},{"name":"required","label":"Required","variant":"badge"},{"label":"Min","variant":"caption","name":"minSelect"},{"label":"Max","name":"maxSelect","variant":"caption"}]` */
+  fields?: EntityRow[];
+  /** Default: `[{"icon":"arrow-right","event":"OPEN_GROUP","variant":"primary","label":"Open"},{"event":"DELETE","variant":"danger","label":"Delete","icon":"trash"}]` */
+  itemActions?: EntityRow[];
+  /** Default: `60` */
+  tableTurnoverTargetMinutes?: number;
+  /** Default: `0` */
+  serviceCharge?: number;
+  /** Default: `true` */
+  allergenWarningsEnabled?: boolean;
+  /** Default: `true` */
+  allowSplitChecks?: boolean;
   /** Default: `"Modifier Groups"` */
   title?: string;
+  /** Default: `false` */
+  kitchenAutoFire?: boolean;
 }
 
 /**

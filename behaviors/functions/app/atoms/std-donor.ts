@@ -87,19 +87,19 @@ export interface StdDonorDonorLoadFailedPayload {
  * without modifying its state-machine topology.
  */
 export interface StdDonorConfig {
-  /** Default: `50` */
-  healthScoreThresholdAlert?: number;
-  /** Default: `[{"label":"Name","variant":"h4","name":"name"},{"variant":"badge","name":"donorType","label":"Type"},{"variant":"body","name":"email","label":"Email"},{"variant":"caption","name":"lifetimeAmount","label":"Lifetime"},{"name":"lastDonationAt","label":"Last gift","variant":"caption"}]` */
-  fields?: EntityRow[];
   /** Default: `1825` */
   archiveInactiveAfterDays?: number;
-  /** Default: `true` */
-  consentTrackingEnabled?: boolean;
   /** Default: `"Donors"` */
   title?: string;
+  /** Default: `true` */
+  consentTrackingEnabled?: boolean;
+  /** Default: `50` */
+  healthScoreThresholdAlert?: number;
   /** Default: `[365,180,30]` */
   renewalReminderDaysBefore?: number[];
-  /** Default: `[{"event":"OPEN_DONOR","variant":"primary","label":"Open","icon":"arrow-right"},{"label":"Thank","event":"THANK_DONOR","variant":"secondary"}]` */
+  /** Default: `[{"variant":"h4","label":"Name","name":"name"},{"name":"donorType","label":"Type","variant":"badge"},{"label":"Email","name":"email","variant":"body"},{"variant":"caption","name":"lifetimeAmount","label":"Lifetime"},{"variant":"caption","name":"lastDonationAt","label":"Last gift"}]` */
+  fields?: EntityRow[];
+  /** Default: `[{"icon":"arrow-right","event":"OPEN_DONOR","variant":"primary","label":"Open"},{"label":"Thank","variant":"secondary","event":"THANK_DONOR"}]` */
   itemActions?: EntityRow[];
 }
 

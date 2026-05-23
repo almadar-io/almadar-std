@@ -84,23 +84,23 @@ export interface StdTimeEntryTimeEntryLoadFailedPayload {
  */
 export interface StdTimeEntryConfig {
   /** Default: `false` */
-  i9DocumentsRequired?: boolean;
-  /** Default: `false` */
-  equalOpportunityTrackingEnabled?: boolean;
-  /** Default: `false` */
-  eVerifyRequired?: boolean;
-  /** Default: `[{"icon":"arrow-right","event":"OPEN_ENTRY","variant":"primary","label":"Open"},{"label":"Delete","event":"REQUEST_DELETE","variant":"danger"}]` */
-  itemActions?: EntityRow[];
+  backgroundCheckRequired?: boolean;
   /** Default: `1095` */
   retentionAfterRejectionDays?: number;
-  /** Default: `[{"variant":"caption","name":"projectName","label":"Project"},{"variant":"caption","name":"taskDescription","label":"Task"},{"name":"workDate","label":"Date","variant":"caption"},{"name":"hours","variant":"caption","label":"Hours"},{"name":"billable","label":"Billable","variant":"badge"},{"variant":"caption","name":"hourlyRate","label":"Rate"},{"name":"status","variant":"badge","label":"Status"}]` */
+  /** Default: `[{"variant":"caption","label":"Project","name":"projectName"},{"name":"taskDescription","label":"Task","variant":"caption"},{"variant":"caption","name":"workDate","label":"Date"},{"variant":"caption","name":"hours","label":"Hours"},{"name":"billable","variant":"badge","label":"Billable"},{"name":"hourlyRate","variant":"caption","label":"Rate"},{"variant":"badge","name":"status","label":"Status"}]` */
   fields?: EntityRow[];
+  /** Default: `[{"event":"OPEN_ENTRY","label":"Open","icon":"arrow-right","variant":"primary"},{"event":"REQUEST_DELETE","variant":"danger","label":"Delete"}]` */
+  itemActions?: EntityRow[];
+  /** Default: `false` */
+  equalOpportunityTrackingEnabled?: boolean;
   /** Default: `"Time Entries"` */
   title?: string;
   /** Default: `false` */
   anonymizeOnRejection?: boolean;
   /** Default: `false` */
-  backgroundCheckRequired?: boolean;
+  eVerifyRequired?: boolean;
+  /** Default: `false` */
+  i9DocumentsRequired?: boolean;
 }
 
 /**

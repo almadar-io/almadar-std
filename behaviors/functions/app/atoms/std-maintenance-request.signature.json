@@ -89,7 +89,6 @@
             "default": [],
             "label": "Blackout dates",
             "description": "ISO dates blocked from scheduling. Compose std-lifecycle to enforce.",
-            "tier": "customization",
             "items": {
               "type": "string"
             }
@@ -99,16 +98,14 @@
             "type": "string",
             "default": "08:00-18:00",
             "label": "Booking hours",
-            "description": "Daily window during which maintenance visits can be scheduled (HH:MM-HH:MM).",
-            "tier": "customization"
+            "description": "Daily window during which maintenance visits can be scheduled (HH:MM-HH:MM)."
           },
           {
             "key": "bookingWindowDays",
             "type": "number",
             "default": 30,
             "label": "Booking window (days)",
-            "description": "How far in advance tenants can schedule maintenance visits.",
-            "tier": "customization"
+            "description": "How far in advance tenants can schedule maintenance visits."
           },
           {
             "key": "cancellationPolicy",
@@ -116,7 +113,6 @@
             "default": "free",
             "label": "Cancellation policy",
             "description": "Fee treatment when a visit is cancelled inside the reschedule window.",
-            "tier": "customization",
             "enumValues": [
               "free",
               "partial-refund",
@@ -133,7 +129,6 @@
             ],
             "label": "Customer-visible statuses",
             "description": "Subset of statuses tenants see in their portal. Internal statuses are filtered.",
-            "tier": "customization",
             "items": {
               "type": "string"
             }
@@ -144,7 +139,6 @@
             "default": "nearest",
             "label": "Dispatch strategy",
             "description": "How techs are assigned to a maintenance request.",
-            "tier": "customization",
             "enumValues": [
               "nearest",
               "round-robin",
@@ -156,8 +150,7 @@
             "type": "number",
             "default": 72,
             "label": "Escalation threshold (hours)",
-            "description": "Hours after which an unresolved request auto-escalates. Compose std-lifecycle for wiring.",
-            "tier": "customization"
+            "description": "Hours after which an unresolved request auto-escalates. Compose std-lifecycle for wiring."
           },
           {
             "key": "fields",
@@ -169,19 +162,19 @@
                 "label": "Unit"
               },
               {
-                "name": "requesterName",
-                "label": "Requester",
-                "variant": "caption"
-              },
-              {
-                "label": "Description",
                 "variant": "caption",
-                "name": "description"
+                "name": "requesterName",
+                "label": "Requester"
               },
               {
+                "variant": "caption",
+                "name": "description",
+                "label": "Description"
+              },
+              {
+                "variant": "badge",
                 "name": "priority",
-                "label": "Priority",
-                "variant": "badge"
+                "label": "Priority"
               },
               {
                 "variant": "badge",
@@ -189,29 +182,33 @@
                 "label": "Status"
               },
               {
-                "name": "requestedAt",
                 "label": "Requested",
+                "name": "requestedAt",
                 "variant": "caption"
               }
             ],
             "label": "Columns to show",
             "description": "Each column maps to one field on the Maintenance Request entity",
-            "tier": "customization",
             "items": {
               "properties": {
+                "name": {
+                  "name": "name",
+                  "required": true,
+                  "type": "string"
+                },
                 "variant": {
                   "name": "variant",
+                  "required": false,
+                  "type": "string"
+                },
+                "format": {
+                  "name": "format",
                   "required": false,
                   "type": "string"
                 },
                 "key": {
                   "name": "key",
                   "required": false,
-                  "type": "string"
-                },
-                "name": {
-                  "name": "name",
-                  "required": true,
                   "type": "string"
                 },
                 "label": {
@@ -221,11 +218,6 @@
                 },
                 "icon": {
                   "name": "icon",
-                  "required": false,
-                  "type": "string"
-                },
-                "format": {
-                  "name": "format",
                   "required": false,
                   "type": "string"
                 },
@@ -244,27 +236,21 @@
             "default": [
               {
                 "label": "Open",
-                "variant": "primary",
                 "event": "OPEN_REQUEST",
-                "icon": "arrow-right"
+                "icon": "arrow-right",
+                "variant": "primary"
               },
               {
-                "variant": "danger",
-                "event": "CANCEL_REQUEST",
                 "icon": "x",
-                "label": "Cancel"
+                "variant": "danger",
+                "label": "Cancel",
+                "event": "CANCEL_REQUEST"
               }
             ],
             "label": "Row actions",
             "description": "Buttons users can click on each request row",
-            "tier": "customization",
             "items": {
               "properties": {
-                "icon": {
-                  "name": "icon",
-                  "required": false,
-                  "type": "string"
-                },
                 "label": {
                   "name": "label",
                   "required": true,
@@ -273,6 +259,11 @@
                 "event": {
                   "name": "event",
                   "required": true,
+                  "type": "string"
+                },
+                "icon": {
+                  "name": "icon",
+                  "required": false,
                   "type": "string"
                 },
                 "variant": {
@@ -289,72 +280,63 @@
             "type": "number",
             "default": 120,
             "label": "Lead time (minutes)",
-            "description": "Minimum minutes before scheduledAt that a new visit can be booked.",
-            "tier": "customization"
+            "description": "Minimum minutes before scheduledAt that a new visit can be booked."
           },
           {
             "key": "maxReschedules",
             "type": "number",
             "default": 2,
             "label": "Max reschedules",
-            "description": "Hard cap on reschedule count per request.",
-            "tier": "advanced"
+            "description": "Hard cap on reschedule count per request."
           },
           {
             "key": "noShowGracePeriodMinutes",
             "type": "number",
             "default": 30,
             "label": "No-show grace (minutes)",
-            "description": "Minutes after scheduledAt before the request flags no_show. Wire via std-lifecycle.",
-            "tier": "customization"
+            "description": "Minutes after scheduledAt before the request flags no_show. Wire via std-lifecycle."
           },
           {
             "key": "requirePhotoOnComplete",
             "type": "boolean",
             "default": false,
             "label": "Require photo on complete",
-            "description": "Block COMPLETE_REQUEST unless a completion photo is attached.",
-            "tier": "customization"
+            "description": "Block COMPLETE_REQUEST unless a completion photo is attached."
           },
           {
             "key": "requireSignatureOnComplete",
             "type": "boolean",
             "default": false,
             "label": "Require tenant signature on complete",
-            "description": "Block COMPLETE_REQUEST unless tenant signature is captured (compose std-signature-capture).",
-            "tier": "customization"
+            "description": "Block COMPLETE_REQUEST unless tenant signature is captured (compose std-signature-capture)."
           },
           {
             "key": "rescheduleWindowHours",
             "type": "number",
             "default": 12,
             "label": "Reschedule window (hours)",
-            "description": "Hours before scheduledAt during which the tenant can self-reschedule.",
-            "tier": "customization"
+            "description": "Hours before scheduledAt during which the tenant can self-reschedule."
           },
           {
             "key": "resolutionSLAHours",
             "type": "number",
             "default": 48,
             "label": "Resolution SLA (hours)",
-            "description": "Target time from request open to completed. Compose std-lifecycle to auto-escalate.",
-            "tier": "essential"
+            "description": "Target time from request open to completed. Compose std-lifecycle to auto-escalate."
           },
           {
             "key": "responseTimeMinutes",
             "type": "number",
             "default": 240,
             "label": "Response time SLA (min)",
-            "description": "Target time from request open to first acknowledgement.",
-            "tier": "essential"
+            "description": "Target time from request open to first acknowledgement."
           },
           {
             "key": "serviceAreaRadius",
             "type": "number",
             "default": 25,
             "label": "Service area radius (mi)",
-            "description": "Maximum distance from the property hub for tech dispatch eligibility.",
-            "tier": "customization"
+            "description": "Maximum distance from the property hub for tech dispatch eligibility."
           },
           {
             "key": "serviceZones",
@@ -362,7 +344,6 @@
             "default": [],
             "label": "Service zones",
             "description": "Named geographic zones for dispatch grouping.",
-            "tier": "customization",
             "items": {
               "type": "string"
             }
@@ -373,7 +354,6 @@
             "default": [],
             "label": "Required skills",
             "description": "Capability tags a tech must have (e.g. 'plumbing', 'electrical', 'hvac').",
-            "tier": "customization",
             "items": {
               "type": "string"
             }
@@ -383,8 +363,7 @@
             "type": "string",
             "default": "Maintenance Requests",
             "label": "Section title",
-            "description": "Heading shown above the maintenance request queue",
-            "tier": "customization"
+            "description": "Heading shown above the maintenance request queue"
           }
         ],
         "capabilities": []

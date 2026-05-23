@@ -49,10 +49,10 @@ export interface StdDateRangeDateRangeChangedPayload {
 export interface StdDateRangeConfig {
   /** Default: `"DATE_RANGE_CHANGED"` */
   event?: string;
-  /** Default: `"From"` */
-  fromLabel?: string;
   /** Default: `"To"` */
   toLabel?: string;
+  /** Default: `"From"` */
+  fromLabel?: string;
   /** Default: `"Date range"` */
   buttonLabel?: string;
 }

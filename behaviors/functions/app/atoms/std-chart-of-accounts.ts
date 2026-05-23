@@ -83,28 +83,28 @@ export interface StdChartOfAccountsAccountLoadFailedPayload {
  * without modifying its state-machine topology.
  */
 export interface StdChartOfAccountsConfig {
-  /** Default: `"USD"` */
-  currency?: string;
-  /** Default: `0` */
-  lateFeeAmount?: number;
-  /** Default: `0` */
-  gracePeriodDays?: number;
-  /** Default: `""` */
-  complianceJurisdiction?: string;
-  /** Default: `"bankers"` */
-  roundingMode?: 'bankers' | 'half-up' | 'down';
-  /** Default: `[{"name":"code","label":"Code","variant":"caption"},{"name":"name","label":"Name","variant":"caption"},{"name":"type","variant":"badge","label":"Type"},{"name":"parentCode","label":"Parent","variant":"caption"},{"name":"balance","variant":"caption","label":"Balance"}]` */
-  fields?: EntityRow[];
   /** Default: `"none"` */
   taxStrategy?: 'inclusive' | 'exclusive' | 'none';
   /** Default: `"none"` */
   lateFeePolicy?: 'none' | 'flat' | 'percent';
+  /** Default: `0` */
+  lateFeeAmount?: number;
+  /** Default: `""` */
+  complianceJurisdiction?: string;
+  /** Default: `[{"icon":"arrow-right","label":"Open","variant":"primary","event":"OPEN_ACCOUNT"},{"event":"DEACTIVATE_ACCOUNT","label":"Deactivate","variant":"danger"}]` */
+  itemActions?: EntityRow[];
+  /** Default: `"bankers"` */
+  roundingMode?: 'bankers' | 'half-up' | 'down';
+  /** Default: `"USD"` */
+  currency?: string;
   /** Default: `7` */
   retentionYears?: number;
+  /** Default: `0` */
+  gracePeriodDays?: number;
+  /** Default: `[{"name":"code","label":"Code","variant":"caption"},{"variant":"caption","name":"name","label":"Name"},{"label":"Type","name":"type","variant":"badge"},{"name":"parentCode","label":"Parent","variant":"caption"},{"name":"balance","label":"Balance","variant":"caption"}]` */
+  fields?: EntityRow[];
   /** Default: `"Chart of Accounts"` */
   title?: string;
-  /** Default: `[{"variant":"primary","event":"OPEN_ACCOUNT","label":"Open","icon":"arrow-right"},{"label":"Deactivate","event":"DEACTIVATE_ACCOUNT","variant":"danger"}]` */
-  itemActions?: EntityRow[];
 }
 
 /**

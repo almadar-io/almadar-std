@@ -111,22 +111,22 @@ export interface StdTenantTenantUpdateFailedPayload {
  * without modifying its state-machine topology.
  */
 export interface StdTenantConfig {
-  /** Default: `"no-pets"` */
-  petPolicy?: 'no-pets' | 'cats-only' | 'dogs-only' | 'all';
-  /** Default: `12` */
-  inspectionFrequencyMonths?: number;
   /** Default: `1` */
   securityDepositMonths?: number;
+  /** Default: `[{"label":"Name","name":"name","variant":"h4"},{"label":"Email","variant":"body","name":"email"},{"variant":"caption","name":"phone","label":"Phone"},{"label":"Status","variant":"badge","name":"status"},{"name":"moveInDate","variant":"caption","label":"Move-In"}]` */
+  fields?: EntityRow[];
+  /** Default: `12` */
+  inspectionFrequencyMonths?: number;
   /** Default: `60` */
   leaseRenewalNoticeDays?: number;
-  /** Default: `[{"variant":"h4","name":"name","label":"Name"},{"name":"email","variant":"body","label":"Email"},{"name":"phone","label":"Phone","variant":"caption"},{"variant":"badge","name":"status","label":"Status"},{"name":"moveInDate","label":"Move-In","variant":"caption"}]` */
-  fields?: EntityRow[];
-  /** Default: `[{"label":"Open","variant":"primary","event":"OPEN_TENANT","icon":"arrow-right"},{"event":"MOVE_OUT","variant":"danger","label":"Move Out"}]` */
-  itemActions?: EntityRow[];
-  /** Default: `false` */
-  autoRenewEnabled?: boolean;
+  /** Default: `"no-pets"` */
+  petPolicy?: 'no-pets' | 'cats-only' | 'dogs-only' | 'all';
   /** Default: `5` */
   lateRentGraceDays?: number;
+  /** Default: `false` */
+  autoRenewEnabled?: boolean;
+  /** Default: `[{"variant":"primary","event":"OPEN_TENANT","icon":"arrow-right","label":"Open"},{"variant":"danger","event":"MOVE_OUT","label":"Move Out"}]` */
+  itemActions?: EntityRow[];
   /** Default: `"Tenants"` */
   title?: string;
 }

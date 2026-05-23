@@ -121,30 +121,30 @@ export interface StdRecurringChargeSubscriptionUpdateFailedPayload {
  * without modifying its state-machine topology.
  */
 export interface StdRecurringChargeConfig {
+  /** Default: `3` */
+  gracePeriodDays?: number;
+  /** Default: `4` */
+  maxRetries?: number;
+  /** Default: `"Subscriptions"` */
+  title?: string;
+  /** Default: `[{"label":"Customer","name":"customerId","variant":"caption"},{"variant":"caption","label":"Plan","name":"planId"},{"label":"Status","variant":"badge","name":"status"},{"name":"amount","label":"Amount","variant":"caption"},{"variant":"badge","label":"Interval","name":"interval"},{"label":"Next Bill","name":"nextBillingAt","variant":"caption"},{"name":"attemptCount","label":"Retries","variant":"caption"}]` */
+  fields?: EntityRow[];
+  /** Default: `"exclusive"` */
+  taxStrategy?: 'inclusive' | 'exclusive' | 'none';
+  /** Default: `"none"` */
+  lateFeePolicy?: 'none' | 'flat' | 'percent';
+  /** Default: `0` */
+  lateFeeAmount?: number;
+  /** Default: `[{"icon":"arrow-right","variant":"primary","label":"Open","event":"OPEN_SUBSCRIPTION"},{"event":"CANCEL","label":"Cancel","variant":"danger"}]` */
+  itemActions?: EntityRow[];
+  /** Default: `"USD"` */
+  currency?: string;
   /** Default: `""` */
   complianceJurisdiction?: string;
   /** Default: `7` */
   retentionYears?: number;
-  /** Default: `4` */
-  maxRetries?: number;
-  /** Default: `0` */
-  lateFeeAmount?: number;
-  /** Default: `[{"icon":"arrow-right","label":"Open","event":"OPEN_SUBSCRIPTION","variant":"primary"},{"event":"CANCEL","label":"Cancel","variant":"danger"}]` */
-  itemActions?: EntityRow[];
-  /** Default: `[{"variant":"caption","name":"customerId","label":"Customer"},{"label":"Plan","variant":"caption","name":"planId"},{"name":"status","label":"Status","variant":"badge"},{"variant":"caption","name":"amount","label":"Amount"},{"name":"interval","label":"Interval","variant":"badge"},{"variant":"caption","name":"nextBillingAt","label":"Next Bill"},{"label":"Retries","name":"attemptCount","variant":"caption"}]` */
-  fields?: EntityRow[];
-  /** Default: `"Subscriptions"` */
-  title?: string;
-  /** Default: `"USD"` */
-  currency?: string;
-  /** Default: `"exclusive"` */
-  taxStrategy?: 'inclusive' | 'exclusive' | 'none';
   /** Default: `"half-up"` */
   roundingMode?: 'bankers' | 'half-up' | 'down';
-  /** Default: `3` */
-  gracePeriodDays?: number;
-  /** Default: `"none"` */
-  lateFeePolicy?: 'none' | 'flat' | 'percent';
 }
 
 /**

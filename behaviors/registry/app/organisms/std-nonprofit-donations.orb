@@ -109,37 +109,37 @@
           "ref": "AppShell.traits.AppLayout",
           "name": "CampaignAppLayout",
           "config": {
-            "appName": "Donations",
             "searchEvent": "CAMPAIGN_SEARCH",
+            "notifications": [],
             "navItems": [
               {
-                "href": "/campaigns",
+                "icon": "target",
                 "label": "Campaigns",
-                "icon": "target"
+                "href": "/campaigns"
               },
               {
+                "label": "Donors",
                 "icon": "heart-handshake",
-                "href": "/donors",
-                "label": "Donors"
+                "href": "/donors"
               },
               {
-                "label": "Goals",
+                "icon": "flag",
                 "href": "/goals",
-                "icon": "flag"
+                "label": "Goals"
               },
               {
-                "label": "Receipts",
                 "href": "/receipts",
-                "icon": "receipt"
+                "icon": "receipt",
+                "label": "Receipts"
               }
             ],
-            "notifications": [],
+            "appName": "Donations",
             "notificationClickEvent": "CAMPAIGN_NOTIFICATIONS_OPEN",
             "contentTrait": "@trait.CampaignCatalog"
           },
           "events": {
-            "SEARCH": "CAMPAIGN_SEARCH",
-            "NOTIFY_CLICK": "CAMPAIGN_NOTIFICATIONS_OPEN"
+            "NOTIFY_CLICK": "CAMPAIGN_NOTIFICATIONS_OPEN",
+            "SEARCH": "CAMPAIGN_SEARCH"
           }
         },
         {
@@ -222,59 +222,61 @@
                     "render-ui",
                     "main",
                     {
+                      "direction": "vertical",
+                      "type": "stack",
                       "children": [
                         {
-                          "align": "center",
+                          "gap": "md",
                           "type": "stack",
                           "direction": "horizontal",
+                          "justify": "between",
+                          "align": "center",
                           "children": [
                             {
-                              "direction": "horizontal",
                               "children": [
                                 {
-                                  "type": "icon",
-                                  "name": "target"
+                                  "name": "target",
+                                  "type": "icon"
                                 },
                                 {
-                                  "variant": "h2",
+                                  "content": "Fundraising Campaigns",
                                   "type": "typography",
-                                  "content": "Fundraising Campaigns"
+                                  "variant": "h2"
                                 }
                               ],
                               "gap": "sm",
+                              "type": "stack",
                               "align": "center",
-                              "type": "stack"
+                              "direction": "horizontal"
                             },
                             {
                               "children": [
                                 {
+                                  "variant": "primary",
                                   "type": "button",
-                                  "icon": "plus",
-                                  "label": "New Campaign",
                                   "action": "CREATE",
-                                  "variant": "primary"
+                                  "label": "New Campaign",
+                                  "icon": "plus"
                                 }
                               ],
-                              "direction": "horizontal",
                               "type": "stack",
+                              "direction": "horizontal",
                               "gap": "sm"
                             }
-                          ],
-                          "gap": "md",
-                          "justify": "between"
+                          ]
                         },
                         {
                           "type": "divider"
                         },
                         {
+                          "gap": "md",
+                          "type": "stack",
                           "direction": "horizontal",
+                          "align": "center",
                           "children": [
                             "@trait.CampaignSearch",
                             "@trait.CampaignFilter"
-                          ],
-                          "gap": "md",
-                          "align": "center",
-                          "type": "stack"
+                          ]
                         },
                         "@trait.CampaignStats",
                         "@trait.CampaignGraphs",
@@ -283,9 +285,7 @@
                         },
                         "@trait.CampaignBrowseList"
                       ],
-                      "type": "stack",
-                      "gap": "lg",
-                      "direction": "vertical"
+                      "gap": "lg"
                     }
                   ]
                 ]
@@ -304,34 +304,34 @@
                     "render-ui",
                     "main",
                     {
-                      "className": "py-8",
                       "gap": "md",
-                      "align": "center",
+                      "type": "stack",
+                      "direction": "vertical",
                       "children": [
                         {
-                          "name": "bell",
-                          "type": "icon"
+                          "type": "icon",
+                          "name": "bell"
                         },
                         {
-                          "variant": "h3",
                           "content": "No notifications",
+                          "variant": "h3",
                           "type": "typography"
                         },
                         {
+                          "type": "typography",
                           "variant": "caption",
                           "color": "muted",
-                          "type": "typography",
                           "content": "You're all caught up."
                         },
                         {
-                          "action": "INIT",
-                          "label": "Back to campaigns",
+                          "variant": "ghost",
                           "type": "button",
-                          "variant": "ghost"
+                          "action": "INIT",
+                          "label": "Back to campaigns"
                         }
                       ],
-                      "type": "stack",
-                      "direction": "vertical"
+                      "className": "py-8",
+                      "align": "center"
                     }
                   ]
                 ]
@@ -344,14 +344,15 @@
           "ref": "Search.traits.SearchResultSearch",
           "name": "CampaignSearch",
           "config": {
-            "placeholder": "Search campaigns…",
-            "event": "CAMPAIGN_SEARCH"
+            "event": "CAMPAIGN_SEARCH",
+            "placeholder": "Search campaigns…"
           }
         },
         {
           "ref": "Filter.traits.FilterTargetFilter",
           "name": "CampaignFilter",
           "config": {
+            "event": "CAMPAIGN_FILTER",
             "filters": [
               {
                 "options": [
@@ -360,29 +361,31 @@
                   "paused",
                   "draft"
                 ],
+                "field": "status",
                 "label": "Status",
-                "filterType": "select",
-                "field": "status"
+                "filterType": "select"
               }
-            ],
-            "event": "CAMPAIGN_FILTER"
+            ]
           }
         },
         {
           "ref": "Stats.traits.StatsItemStats",
           "name": "CampaignStats",
           "config": {
+            "title": "Campaigns",
             "metrics": [
               {
+                "variant": "primary",
+                "format": "number",
                 "label": "Total",
                 "icon": "target",
-                "variant": "primary",
-                "aggregation": "count",
-                "format": "number"
+                "aggregation": "count"
               },
               {
+                "variant": "success",
+                "aggregation": "count",
                 "format": "number",
-                "label": "Active",
+                "icon": "zap",
                 "filter": [
                   "fn",
                   "row",
@@ -392,28 +395,25 @@
                     "active"
                   ]
                 ],
-                "variant": "success",
-                "icon": "zap",
-                "aggregation": "count"
+                "label": "Active"
               },
               {
-                "aggregation": "sum",
                 "format": "number",
                 "field": "goalAmount",
                 "icon": "flag",
+                "aggregation": "sum",
                 "label": "Goal",
                 "variant": "info"
               },
               {
-                "label": "Raised",
-                "format": "number",
-                "variant": "success",
-                "field": "raisedAmount",
                 "aggregation": "sum",
+                "label": "Raised",
+                "variant": "success",
+                "format": "number",
+                "field": "raisedAmount",
                 "icon": "trending-up"
               }
-            ],
-            "title": "Campaigns"
+            ]
           },
           "listens": [
             {
@@ -430,13 +430,13 @@
           "ref": "Graphs.traits.GraphItemGraph",
           "name": "CampaignGraphs",
           "config": {
-            "showLegend": false,
-            "subtitle": "Volume across campaign lifecycle",
-            "title": "Campaigns by Status",
             "categoryField": "status",
-            "chartType": "bar",
+            "subtitle": "Volume across campaign lifecycle",
             "aggregation": "count",
-            "height": 240.0
+            "chartType": "bar",
+            "title": "Campaigns by Status",
+            "height": 240.0,
+            "showLegend": false
           },
           "listens": [
             {
@@ -456,53 +456,53 @@
           "config": {
             "fields": [
               {
-                "variant": "h3",
+                "icon": "target",
                 "name": "name",
-                "icon": "target"
+                "variant": "h3"
               },
               {
-                "name": "status",
-                "variant": "badge"
+                "variant": "badge",
+                "name": "status"
               },
               {
-                "format": "number",
                 "name": "goalAmount",
-                "variant": "body"
-              },
-              {
-                "name": "raisedAmount",
                 "variant": "body",
                 "format": "number"
               },
               {
-                "format": "date",
+                "name": "raisedAmount",
+                "format": "number",
+                "variant": "body"
+              },
+              {
                 "name": "startDate",
+                "format": "date",
                 "variant": "caption"
               },
               {
-                "name": "endDate",
                 "format": "date",
+                "name": "endDate",
                 "variant": "caption"
               }
             ],
-            "cols": 1.0,
             "itemActions": [
               {
-                "variant": "ghost",
                 "label": "View",
-                "event": "VIEW"
+                "event": "VIEW",
+                "variant": "ghost"
               },
               {
-                "label": "Edit",
                 "event": "EDIT",
+                "label": "Edit",
                 "variant": "ghost"
               },
               {
                 "label": "Delete",
-                "variant": "danger",
-                "event": "DELETE"
+                "event": "DELETE",
+                "variant": "danger"
               }
             ],
+            "cols": 1.0,
             "gap": "sm"
           },
           "listens": [
@@ -553,7 +553,9 @@
           "name": "CampaignCreate",
           "linkedEntity": "FundraisingCampaign",
           "config": {
+            "mode": "create",
             "title": "New Campaign",
+            "icon": "plus-circle",
             "fields": [
               "name",
               "goalAmount",
@@ -561,9 +563,7 @@
               "status",
               "startDate",
               "endDate"
-            ],
-            "mode": "create",
-            "icon": "plus-circle"
+            ]
           },
           "events": {
             "OPEN": "CREATE"
@@ -584,9 +584,6 @@
           "name": "CampaignEdit",
           "linkedEntity": "FundraisingCampaign",
           "config": {
-            "title": "Edit Campaign",
-            "icon": "edit",
-            "mode": "edit",
             "fields": [
               "name",
               "goalAmount",
@@ -594,7 +591,10 @@
               "status",
               "startDate",
               "endDate"
-            ]
+            ],
+            "mode": "edit",
+            "icon": "edit",
+            "title": "Edit Campaign"
           },
           "events": {
             "OPEN": "EDIT"
@@ -615,7 +615,6 @@
           "name": "CampaignView",
           "linkedEntity": "FundraisingCampaign",
           "config": {
-            "mode": "edit",
             "fields": [
               "name",
               "goalAmount",
@@ -624,8 +623,9 @@
               "startDate",
               "endDate"
             ],
-            "icon": "eye",
-            "title": "View Campaign"
+            "mode": "edit",
+            "title": "View Campaign",
+            "icon": "eye"
           },
           "events": {
             "OPEN": "VIEW"
@@ -646,9 +646,9 @@
           "name": "CampaignDelete",
           "linkedEntity": "FundraisingCampaign",
           "config": {
-            "title": "Delete Campaign",
             "icon": "alert-triangle",
             "alertMessage": "This action cannot be undone.",
+            "title": "Delete Campaign",
             "confirmLabel": "Delete"
           },
           "events": {

@@ -76,20 +76,20 @@ export interface StdSegmentSegmentLoadFailedPayload {
  * without modifying its state-machine topology.
  */
 export interface StdSegmentConfig {
-  /** Default: `true` */
-  consentTrackingEnabled?: boolean;
-  /** Default: `[30,7]` */
-  renewalReminderDaysBefore?: number[];
-  /** Default: `365` */
-  archiveInactiveAfterDays?: number;
   /** Default: `"Segments"` */
   title?: string;
-  /** Default: `[{"variant":"caption","label":"Name","name":"name"},{"variant":"caption","name":"description","label":"Description"},{"label":"Members","variant":"badge","name":"memberCount"},{"variant":"caption","label":"Updated","name":"lastUpdated"}]` */
-  fields?: EntityRow[];
-  /** Default: `[{"label":"Open","event":"OPEN_SEGMENT","variant":"primary","icon":"arrow-right"},{"variant":"danger","event":"RECALCULATE","label":"Recalculate"}]` */
+  /** Default: `365` */
+  archiveInactiveAfterDays?: number;
+  /** Default: `true` */
+  consentTrackingEnabled?: boolean;
+  /** Default: `[{"label":"Open","icon":"arrow-right","variant":"primary","event":"OPEN_SEGMENT"},{"event":"RECALCULATE","variant":"danger","label":"Recalculate"}]` */
   itemActions?: EntityRow[];
+  /** Default: `[{"label":"Name","variant":"caption","name":"name"},{"name":"description","variant":"caption","label":"Description"},{"name":"memberCount","label":"Members","variant":"badge"},{"label":"Updated","name":"lastUpdated","variant":"caption"}]` */
+  fields?: EntityRow[];
   /** Default: `50` */
   healthScoreThresholdAlert?: number;
+  /** Default: `[30,7]` */
+  renewalReminderDaysBefore?: number[];
 }
 
 /**

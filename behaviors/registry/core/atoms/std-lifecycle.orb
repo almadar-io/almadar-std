@@ -193,8 +193,8 @@
                     "@entity",
                     {
                       "emit": {
-                        "failure": "LifecycleRunFailed",
-                        "success": "LifecycleRunLogged"
+                        "success": "LifecycleRunLogged",
+                        "failure": "LifecycleRunFailed"
                       }
                     }
                   ]
@@ -265,25 +265,22 @@
             }
           ],
           "config": {
+            "targetEntity": {
+              "type": "string",
+              "default": "",
+              "label": "Target entity",
+              "description": "Entity name to scan (e.g. 'InvoiceRecord'). v1.1 will drive SET_STATUS transitions on this entity.",
+              "tier": "domain"
+            },
             "rules": {
               "type": "[LifecycleRule]",
               "default": [],
               "label": "Lifecycle rules",
               "description": "When a record's status is fromStatus and its dateField is older than condition.value days (kind='ageDays'), transition to toStatus. v1.0 declarative only — wiring lands in v1.1 (gap).",
-              "tier": "essential",
+              "tier": "domain",
               "items": {
                 "type": "object",
                 "properties": {
-                  "fromStatus": {
-                    "name": "fromStatus",
-                    "type": "string",
-                    "required": false
-                  },
-                  "toStatus": {
-                    "name": "toStatus",
-                    "type": "string",
-                    "required": false
-                  },
                   "condition": {
                     "name": "condition",
                     "type": "object",
@@ -294,17 +291,27 @@
                         "type": "string",
                         "required": false
                       },
-                      "value": {
-                        "name": "value",
-                        "type": "number",
-                        "required": false
-                      },
                       "dateField": {
                         "name": "dateField",
                         "type": "string",
                         "required": false
+                      },
+                      "value": {
+                        "name": "value",
+                        "type": "number",
+                        "required": false
                       }
                     }
+                  },
+                  "fromStatus": {
+                    "name": "fromStatus",
+                    "type": "string",
+                    "required": false
+                  },
+                  "toStatus": {
+                    "name": "toStatus",
+                    "type": "string",
+                    "required": false
                   }
                 }
               }
@@ -314,14 +321,7 @@
               "default": false,
               "label": "Dry-run mode",
               "description": "When true, log scan results without emitting transitions.",
-              "tier": "advanced"
-            },
-            "targetEntity": {
-              "type": "string",
-              "default": "",
-              "label": "Target entity",
-              "description": "Entity name to scan (e.g. 'InvoiceRecord'). v1.1 will drive SET_STATUS transitions on this entity.",
-              "tier": "essential"
+              "tier": "domain"
             }
           },
           "scope": "instance"

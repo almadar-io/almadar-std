@@ -83,7 +83,6 @@
             ],
             "label": "Customer-visible statuses",
             "description": "Subset of statuses the customer can see in their tracking view. Internal-only statuses are filtered.",
-            "tier": "customization",
             "items": {
               "type": "string"
             }
@@ -94,7 +93,6 @@
             "default": "nearest",
             "label": "Dispatch strategy",
             "description": "How techs are assigned: nearest = closest available, round-robin = even distribution, manual = dispatcher picks.",
-            "tier": "customization",
             "enumValues": [
               "nearest",
               "round-robin",
@@ -106,22 +104,21 @@
             "type": "number",
             "default": 48,
             "label": "Escalation threshold (hours)",
-            "description": "Hours after which an open order auto-escalates to escalationRoles. Compose std-lifecycle for wiring.",
-            "tier": "customization"
+            "description": "Hours after which an open order auto-escalates to escalationRoles. Compose std-lifecycle for wiring."
           },
           {
             "key": "fields",
             "type": "[FieldSpec]",
             "default": [
               {
-                "variant": "caption",
+                "name": "customerName",
                 "label": "Customer",
-                "name": "customerName"
+                "variant": "caption"
               },
               {
+                "variant": "caption",
                 "name": "serviceType",
-                "label": "Service",
-                "variant": "caption"
+                "label": "Service"
               },
               {
                 "variant": "caption",
@@ -129,13 +126,13 @@
                 "label": "Address"
               },
               {
-                "label": "Priority",
                 "name": "priority",
+                "label": "Priority",
                 "variant": "badge"
               },
               {
-                "label": "Status",
                 "variant": "badge",
+                "label": "Status",
                 "name": "status"
               },
               {
@@ -151,21 +148,10 @@
             ],
             "label": "Columns to show",
             "description": "Each column maps to one field on the Work Order entity",
-            "tier": "advanced",
             "items": {
               "properties": {
                 "variant": {
                   "name": "variant",
-                  "required": false,
-                  "type": "string"
-                },
-                "format": {
-                  "name": "format",
-                  "required": false,
-                  "type": "string"
-                },
-                "label": {
-                  "name": "label",
                   "required": false,
                   "type": "string"
                 },
@@ -174,18 +160,28 @@
                   "required": true,
                   "type": "string"
                 },
+                "key": {
+                  "name": "key",
+                  "required": false,
+                  "type": "string"
+                },
                 "icon": {
                   "name": "icon",
                   "required": false,
                   "type": "string"
                 },
-                "header": {
-                  "name": "header",
+                "label": {
+                  "name": "label",
                   "required": false,
                   "type": "string"
                 },
-                "key": {
-                  "name": "key",
+                "format": {
+                  "name": "format",
+                  "required": false,
+                  "type": "string"
+                },
+                "header": {
+                  "name": "header",
                   "required": false,
                   "type": "string"
                 }
@@ -198,31 +194,30 @@
             "type": "[ItemAction]",
             "default": [
               {
+                "label": "Open",
                 "variant": "primary",
-                "event": "OPEN_ORDER",
                 "icon": "arrow-right",
-                "label": "Open"
+                "event": "OPEN_ORDER"
               },
               {
-                "variant": "danger",
                 "event": "CANCEL",
+                "icon": "x",
                 "label": "Cancel",
-                "icon": "x"
+                "variant": "danger"
               }
             ],
             "label": "Row actions",
             "description": "Buttons users can click on each work order row",
-            "tier": "customization",
             "items": {
               "properties": {
-                "label": {
-                  "name": "label",
-                  "required": true,
-                  "type": "string"
-                },
                 "variant": {
                   "name": "variant",
                   "required": false,
+                  "type": "string"
+                },
+                "event": {
+                  "name": "event",
+                  "required": true,
                   "type": "string"
                 },
                 "icon": {
@@ -230,8 +225,8 @@
                   "required": false,
                   "type": "string"
                 },
-                "event": {
-                  "name": "event",
+                "label": {
+                  "name": "label",
                   "required": true,
                   "type": "string"
                 }
@@ -244,40 +239,35 @@
             "type": "boolean",
             "default": false,
             "label": "Require photo on complete",
-            "description": "Block COMPLETE action unless a completion photo is attached.",
-            "tier": "customization"
+            "description": "Block COMPLETE action unless a completion photo is attached."
           },
           {
             "key": "requireSignatureOnComplete",
             "type": "boolean",
             "default": false,
             "label": "Require customer signature on complete",
-            "description": "Block COMPLETE action unless customer signature is captured (compose std-signature-capture).",
-            "tier": "customization"
+            "description": "Block COMPLETE action unless customer signature is captured (compose std-signature-capture)."
           },
           {
             "key": "resolutionSLAHours",
             "type": "number",
             "default": 24,
             "label": "Resolution SLA (hours)",
-            "description": "Target time from order created to completed. Compose sibling std-lifecycle to auto-escalate at threshold.",
-            "tier": "essential"
+            "description": "Target time from order created to completed. Compose sibling std-lifecycle to auto-escalate at threshold."
           },
           {
             "key": "responseTimeMinutes",
             "type": "number",
             "default": 60,
             "label": "Response time SLA (min)",
-            "description": "Target time from order created to first response (assigned + acknowledged). Drives SLA dashboards and escalation.",
-            "tier": "essential"
+            "description": "Target time from order created to first response (assigned + acknowledged). Drives SLA dashboards and escalation."
           },
           {
             "key": "serviceAreaRadius",
             "type": "number",
             "default": 50,
             "label": "Service area radius (mi)",
-            "description": "Maximum distance from the service hub for dispatch eligibility.",
-            "tier": "customization"
+            "description": "Maximum distance from the service hub for dispatch eligibility."
           },
           {
             "key": "serviceZones",
@@ -285,7 +275,6 @@
             "default": [],
             "label": "Service zones",
             "description": "Named geographic zones for dispatch grouping. Empty = no zone restriction.",
-            "tier": "customization",
             "items": {
               "type": "string"
             }
@@ -296,7 +285,6 @@
             "default": [],
             "label": "Required skills",
             "description": "Capability tags a tech must have to be assigned (e.g. 'plumbing', 'electrical', 'hvac').",
-            "tier": "customization",
             "items": {
               "type": "string"
             }
@@ -306,8 +294,7 @@
             "type": "string",
             "default": "Work Orders",
             "label": "Section title",
-            "description": "Heading shown above the field service work orders",
-            "tier": "customization"
+            "description": "Heading shown above the field service work orders"
           }
         ],
         "capabilities": []

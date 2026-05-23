@@ -39,7 +39,7 @@ export type StdMarketingStepsEventKey = 'INIT';
  * without modifying its state-machine topology.
  */
 export interface StdMarketingStepsConfig {
-  /** Default: `[{"description":"Describe your app in natural language.","id":"1","number":1,"icon":"pen-tool","title":"Design"},{"number":2,"icon":"hammer","description":"Almadar generates the full stack automatically.","id":"2","title":"Build"},{"number":3,"description":"Deploy to production with one click.","icon":"rocket","title":"Ship","id":"3"}]` */
+  /** Default: `[{"description":"Describe your app in natural language.","id":"1","title":"Design","icon":"pen-tool","number":1},{"icon":"hammer","title":"Build","number":2,"description":"Almadar generates the full stack automatically.","id":"2"},{"id":"3","number":3,"description":"Deploy to production with one click.","icon":"rocket","title":"Ship"}]` */
   steps?: EntityRow[];
   /** Default: `"horizontal"` */
   orientation?: string;

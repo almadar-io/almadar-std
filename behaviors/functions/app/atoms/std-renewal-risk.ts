@@ -117,20 +117,20 @@ export interface StdRenewalRiskRenewalRiskUpdateFailedPayload {
  * without modifying its state-machine topology.
  */
 export interface StdRenewalRiskConfig {
-  /** Default: `"Renewal Risk"` */
-  title?: string;
   /** Default: `[90,60,30,14]` */
   renewalReminderDaysBefore?: number[];
-  /** Default: `false` */
-  consentTrackingEnabled?: boolean;
   /** Default: `40` */
   healthScoreThresholdAlert?: number;
+  /** Default: `false` */
+  consentTrackingEnabled?: boolean;
+  /** Default: `"Renewal Risk"` */
+  title?: string;
+  /** Default: `[{"label":"Customer","variant":"caption","name":"customerName"},{"label":"Renewal","variant":"caption","name":"renewalDate"},{"name":"arrAmount","label":"ARR","variant":"caption"},{"label":"Risk","name":"riskLevel","variant":"badge"},{"variant":"badge","name":"status","label":"Status"},{"variant":"caption","name":"assignedCsm","label":"CSM"}]` */
+  fields?: EntityRow[];
+  /** Default: `[{"label":"Open","variant":"primary","icon":"arrow-right","event":"OPEN_RISK"},{"label":"Mark Churned","variant":"danger","event":"MARK_CHURNED"}]` */
+  itemActions?: EntityRow[];
   /** Default: `540` */
   archiveInactiveAfterDays?: number;
-  /** Default: `[{"name":"customerName","label":"Customer","variant":"caption"},{"label":"Renewal","name":"renewalDate","variant":"caption"},{"name":"arrAmount","label":"ARR","variant":"caption"},{"label":"Risk","name":"riskLevel","variant":"badge"},{"variant":"badge","name":"status","label":"Status"},{"variant":"caption","name":"assignedCsm","label":"CSM"}]` */
-  fields?: EntityRow[];
-  /** Default: `[{"label":"Open","icon":"arrow-right","event":"OPEN_RISK","variant":"primary"},{"event":"MARK_CHURNED","label":"Mark Churned","variant":"danger"}]` */
-  itemActions?: EntityRow[];
 }
 
 /**

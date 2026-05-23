@@ -120,12 +120,17 @@
                     "render-ui",
                     "main",
                     {
+                      "type": "card",
                       "children": [
                         {
+                          "align": "center",
+                          "gap": "md",
+                          "direction": "vertical",
+                          "type": "stack",
                           "children": [
                             {
-                              "name": "video",
-                              "type": "icon"
+                              "type": "icon",
+                              "name": "video"
                             },
                             {
                               "type": "typography",
@@ -133,34 +138,29 @@
                               "content": "YouTube Video"
                             },
                             {
-                              "color": "muted",
-                              "variant": "body",
                               "content": "@config.videoId",
+                              "variant": "body",
+                              "color": "muted",
                               "type": "typography"
                             },
                             {
-                              "gap": "sm",
-                              "justify": "center",
-                              "direction": "horizontal",
+                              "type": "stack",
                               "children": [
                                 {
-                                  "type": "button",
-                                  "variant": "primary",
                                   "action": "PLAY",
-                                  "label": "Play",
-                                  "icon": "play"
+                                  "icon": "play",
+                                  "variant": "primary",
+                                  "type": "button",
+                                  "label": "Play"
                                 }
                               ],
-                              "type": "stack"
+                              "direction": "horizontal",
+                              "gap": "sm",
+                              "justify": "center"
                             }
-                          ],
-                          "type": "stack",
-                          "gap": "md",
-                          "direction": "vertical",
-                          "align": "center"
+                          ]
                         }
-                      ],
-                      "type": "card"
+                      ]
                     }
                   ]
                 ]
@@ -187,7 +187,7 @@
               "default": "",
               "label": "Video ID",
               "description": "Pass-through from the parent YouTube service trait so the placeholder card displays the active video",
-              "tier": "advanced"
+              "tier": "presentation"
             }
           },
           "scope": "instance"
@@ -375,8 +375,8 @@
                     "ServiceYoutube",
                     {
                       "emit": {
-                        "success": "ServiceYoutubeLoaded",
-                        "failure": "ServiceYoutubeLoadFailed"
+                        "failure": "ServiceYoutubeLoadFailed",
+                        "success": "ServiceYoutubeLoaded"
                       }
                     }
                   ],
@@ -385,11 +385,11 @@
                     "main",
                     {
                       "type": "stack",
-                      "gap": "md",
                       "direction": "vertical",
                       "children": [
                         "@config.uiTrait"
-                      ]
+                      ],
+                      "gap": "md"
                     }
                   ]
                 ]
@@ -443,8 +443,8 @@
                     "main",
                     {
                       "message": "@entity.error",
-                      "onRetry": "RETRY",
                       "type": "error-state",
+                      "onRetry": "RETRY",
                       "title": "Video Failed"
                     }
                   ]
@@ -488,9 +488,9 @@
                     "main",
                     {
                       "onRetry": "RETRY",
-                      "message": "@entity.error",
+                      "title": "Video Failed",
                       "type": "error-state",
-                      "title": "Video Failed"
+                      "message": "@entity.error"
                     }
                   ]
                 ]
@@ -524,9 +524,9 @@
                       "children": [
                         "@config.uiTrait"
                       ],
+                      "direction": "vertical",
                       "gap": "md",
-                      "type": "stack",
-                      "direction": "vertical"
+                      "type": "stack"
                     }
                   ]
                 ]
@@ -534,6 +534,13 @@
             ]
           },
           "config": {
+            "start": {
+              "type": "number",
+              "default": 0.0,
+              "label": "Start at seconds",
+              "description": "Number of seconds to skip in before playback begins",
+              "tier": "presentation"
+            },
             "uiTrait": {
               "type": "trait",
               "default": "@trait.ServiceYoutubeDefaultPlayer",
@@ -546,28 +553,21 @@
               "default": true,
               "label": "Show controls",
               "description": "Display the YouTube player controls overlay",
-              "tier": "customization"
+              "tier": "presentation"
             },
             "videoId": {
               "type": "string",
               "default": "",
               "label": "YouTube video ID",
               "description": "Eleven-character YouTube ID from the share URL",
-              "tier": "customization"
-            },
-            "start": {
-              "type": "number",
-              "default": 0.0,
-              "label": "Start at seconds",
-              "description": "Number of seconds to skip in before playback begins",
-              "tier": "advanced"
+              "tier": "presentation"
             },
             "autoplay": {
               "type": "boolean",
               "default": false,
               "label": "Autoplay",
               "description": "Start playback automatically when the embed loads",
-              "tier": "customization"
+              "tier": "presentation"
             }
           },
           "scope": "instance"

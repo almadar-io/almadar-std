@@ -130,26 +130,26 @@ export interface StdDriverDriverUpdateFailedPayload {
  * without modifying its state-machine topology.
  */
 export interface StdDriverConfig {
-  /** Default: `[{"event":"OPEN_DRIVER","variant":"primary","label":"Open","icon":"arrow-right"},{"label":"Suspend","variant":"danger","event":"SUSPEND"}]` */
-  itemActions?: EntityRow[];
+  /** Default: `"Drivers"` */
+  title?: string;
+  /** Default: `false` */
+  lotTrackingEnabled?: boolean;
+  /** Default: `false` */
+  hazmatEnabled?: boolean;
+  /** Default: `[{"name":"name","label":"Name","variant":"caption"},{"variant":"caption","label":"License","name":"licenseNumber"},{"label":"Class","variant":"badge","name":"licenseClass"},{"name":"licenseExpiresAt","label":"Expires","variant":"caption"},{"name":"status","label":"Status","variant":"badge"},{"label":"Vehicle","name":"assignedVehicleId","variant":"caption"}]` */
+  fields?: EntityRow[];
+  /** Default: `""` */
+  defaultWarehouse?: string;
   /** Default: `30` */
   cycleCountFrequencyDays?: number;
   /** Default: `false` */
   serialTrackingEnabled?: boolean;
   /** Default: `false` */
-  hazmatEnabled?: boolean;
+  multiLocationEnabled?: boolean;
+  /** Default: `[{"event":"OPEN_DRIVER","variant":"primary","icon":"arrow-right","label":"Open"},{"variant":"danger","label":"Suspend","event":"SUSPEND"}]` */
+  itemActions?: EntityRow[];
   /** Default: `false` */
   expiryTrackingEnabled?: boolean;
-  /** Default: `"Drivers"` */
-  title?: string;
-  /** Default: `""` */
-  defaultWarehouse?: string;
-  /** Default: `false` */
-  multiLocationEnabled?: boolean;
-  /** Default: `false` */
-  lotTrackingEnabled?: boolean;
-  /** Default: `[{"name":"name","variant":"caption","label":"Name"},{"variant":"caption","label":"License","name":"licenseNumber"},{"variant":"badge","label":"Class","name":"licenseClass"},{"name":"licenseExpiresAt","variant":"caption","label":"Expires"},{"variant":"badge","label":"Status","name":"status"},{"variant":"caption","name":"assignedVehicleId","label":"Vehicle"}]` */
-  fields?: EntityRow[];
 }
 
 /**

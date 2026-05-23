@@ -169,48 +169,48 @@ export interface StdMaintenanceRequestMaintenanceRequestUpdateFailedPayload {
  * without modifying its state-machine topology.
  */
 export interface StdMaintenanceRequestConfig {
-  /** Default: `12` */
-  rescheduleWindowHours?: number;
   /** Default: `240` */
   responseTimeMinutes?: number;
-  /** Default: `[]` */
-  blackoutDates?: string[];
-  /** Default: `30` */
-  noShowGracePeriodMinutes?: number;
+  /** Default: `["scheduled","in_progress","completed"]` */
+  customerVisibleStatuses?: string[];
+  /** Default: `[{"label":"Open","event":"OPEN_REQUEST","icon":"arrow-right","variant":"primary"},{"icon":"x","variant":"danger","label":"Cancel","event":"CANCEL_REQUEST"}]` */
+  itemActions?: EntityRow[];
   /** Default: `48` */
   resolutionSLAHours?: number;
-  /** Default: `72` */
-  escalationThresholdHours?: number;
-  /** Default: `[{"variant":"caption","name":"unitId","label":"Unit"},{"name":"requesterName","label":"Requester","variant":"caption"},{"label":"Description","variant":"caption","name":"description"},{"name":"priority","label":"Priority","variant":"badge"},{"variant":"badge","name":"status","label":"Status"},{"name":"requestedAt","label":"Requested","variant":"caption"}]` */
-  fields?: EntityRow[];
-  /** Default: `"Maintenance Requests"` */
-  title?: string;
+  /** Default: `120` */
+  leadTimeMinutes?: number;
+  /** Default: `[]` */
+  blackoutDates?: string[];
   /** Default: `false` */
   requirePhotoOnComplete?: boolean;
   /** Default: `[]` */
   skillsRequired?: string[];
-  /** Default: `false` */
-  requireSignatureOnComplete?: boolean;
+  /** Default: `12` */
+  rescheduleWindowHours?: number;
+  /** Default: `30` */
+  noShowGracePeriodMinutes?: number;
   /** Default: `"free"` */
   cancellationPolicy?: 'free' | 'partial-refund' | 'no-refund';
-  /** Default: `["scheduled","in_progress","completed"]` */
-  customerVisibleStatuses?: string[];
-  /** Default: `"nearest"` */
-  dispatchStrategy?: 'nearest' | 'round-robin' | 'manual';
-  /** Default: `[{"label":"Open","variant":"primary","event":"OPEN_REQUEST","icon":"arrow-right"},{"variant":"danger","event":"CANCEL_REQUEST","icon":"x","label":"Cancel"}]` */
-  itemActions?: EntityRow[];
-  /** Default: `[]` */
-  serviceZones?: string[];
-  /** Default: `120` */
-  leadTimeMinutes?: number;
-  /** Default: `30` */
-  bookingWindowDays?: number;
-  /** Default: `2` */
-  maxReschedules?: number;
-  /** Default: `25` */
-  serviceAreaRadius?: number;
   /** Default: `"08:00-18:00"` */
   bookingHours?: string;
+  /** Default: `[{"variant":"caption","name":"unitId","label":"Unit"},{"variant":"caption","name":"requesterName","label":"Requester"},{"variant":"caption","name":"description","label":"Description"},{"variant":"badge","name":"priority","label":"Priority"},{"variant":"badge","name":"status","label":"Status"},{"label":"Requested","name":"requestedAt","variant":"caption"}]` */
+  fields?: EntityRow[];
+  /** Default: `"Maintenance Requests"` */
+  title?: string;
+  /** Default: `30` */
+  bookingWindowDays?: number;
+  /** Default: `25` */
+  serviceAreaRadius?: number;
+  /** Default: `[]` */
+  serviceZones?: string[];
+  /** Default: `2` */
+  maxReschedules?: number;
+  /** Default: `72` */
+  escalationThresholdHours?: number;
+  /** Default: `false` */
+  requireSignatureOnComplete?: boolean;
+  /** Default: `"nearest"` */
+  dispatchStrategy?: 'nearest' | 'round-robin' | 'manual';
 }
 
 /**

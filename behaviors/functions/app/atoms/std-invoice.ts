@@ -166,30 +166,30 @@ export interface StdInvoiceInvoiceRefundFailedPayload {
  * without modifying its state-machine topology.
  */
 export interface StdInvoiceConfig {
-  /** Default: `"none"` */
-  lateFeePolicy?: 'none' | 'flat' | 'percent';
+  /** Default: `"exclusive"` */
+  taxStrategy?: 'inclusive' | 'exclusive' | 'none';
+  /** Default: `30` */
+  gracePeriodDays?: number;
   /** Default: `7` */
   retentionYears?: number;
+  /** Default: `"half-up"` */
+  roundingMode?: 'bankers' | 'half-up' | 'down';
+  /** Default: `[{"name":"invoiceNumber","variant":"caption","label":"Invoice #"},{"variant":"caption","name":"customerId","label":"Customer"},{"name":"status","label":"Status","variant":"badge"},{"variant":"caption","name":"total","label":"Total"},{"name":"currency","label":"Currency","variant":"badge"},{"label":"Due","name":"dueAt","variant":"caption"}]` */
+  fields?: EntityRow[];
+  /** Default: `[{"event":"OPEN_INVOICE","icon":"arrow-right","label":"Open","variant":"primary"},{"icon":"x","event":"VOID","label":"Void","variant":"danger"}]` */
+  itemActions?: EntityRow[];
+  /** Default: `"[]"` */
+  refundTiersJson?: string;
+  /** Default: `"none"` */
+  lateFeePolicy?: 'none' | 'flat' | 'percent';
+  /** Default: `0` */
+  lateFeeAmount?: number;
   /** Default: `"USD"` */
   currency?: string;
   /** Default: `""` */
   complianceJurisdiction?: string;
-  /** Default: `0` */
-  lateFeeAmount?: number;
-  /** Default: `"[]"` */
-  refundTiersJson?: string;
-  /** Default: `[{"variant":"caption","name":"invoiceNumber","label":"Invoice #"},{"variant":"caption","name":"customerId","label":"Customer"},{"label":"Status","name":"status","variant":"badge"},{"label":"Total","variant":"caption","name":"total"},{"variant":"badge","label":"Currency","name":"currency"},{"label":"Due","variant":"caption","name":"dueAt"}]` */
-  fields?: EntityRow[];
-  /** Default: `30` */
-  gracePeriodDays?: number;
   /** Default: `"Invoices"` */
   title?: string;
-  /** Default: `[{"variant":"primary","icon":"arrow-right","label":"Open","event":"OPEN_INVOICE"},{"icon":"x","label":"Void","event":"VOID","variant":"danger"}]` */
-  itemActions?: EntityRow[];
-  /** Default: `"half-up"` */
-  roundingMode?: 'bankers' | 'half-up' | 'down';
-  /** Default: `"exclusive"` */
-  taxStrategy?: 'inclusive' | 'exclusive' | 'none';
 }
 
 /**

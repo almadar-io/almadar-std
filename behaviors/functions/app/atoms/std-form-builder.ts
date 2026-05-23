@@ -138,27 +138,27 @@ export interface StdFormBuilderSurveyPublishedPayload {
  * without modifying its state-machine topology.
  */
 export interface StdFormBuilderConfig {
-  /** Default: `15` */
-  draftAutosaveSeconds?: number;
-  /** Default: `10` */
-  keepVersions?: number;
-  /** Default: `"internal"` */
-  visibilityScope?: 'public' | 'internal' | 'customer';
-  /** Default: `[{"label":"Open","event":"OPEN_SURVEY","variant":"primary","icon":"arrow-right"},{"variant":"secondary","event":"PUBLISH","icon":"send","label":"Publish"}]` */
-  itemActions?: EntityRow[];
-  /** Default: `false` */
-  seoEnabled?: boolean;
-  /** Default: `"en"` */
-  defaultLocale?: string;
-  /** Default: `["en"]` */
-  enabledLocales?: string[];
   /** Default: `"Survey Builder"` */
   title?: string;
+  /** Default: `10` */
+  keepVersions?: number;
+  /** Default: `[{"label":"Open","icon":"arrow-right","event":"OPEN_SURVEY","variant":"primary"},{"variant":"secondary","icon":"send","label":"Publish","event":"PUBLISH"}]` */
+  itemActions?: EntityRow[];
+  /** Default: `"internal"` */
+  visibilityScope?: 'public' | 'internal' | 'customer';
+  /** Default: `false` */
+  seoEnabled?: boolean;
+  /** Default: `15` */
+  draftAutosaveSeconds?: number;
   /** Default: `true` */
   allowRollback?: boolean;
+  /** Default: `["en"]` */
+  enabledLocales?: string[];
+  /** Default: `"en"` */
+  defaultLocale?: string;
   /** Default: `false` */
   scheduledPublishEnabled?: boolean;
-  /** Default: `[{"label":"Title","variant":"caption","name":"title"},{"label":"Description","variant":"caption","name":"description"},{"label":"Status","name":"status","variant":"badge"},{"variant":"caption","name":"createdAt","label":"Created"}]` */
+  /** Default: `[{"variant":"caption","name":"title","label":"Title"},{"label":"Description","name":"description","variant":"caption"},{"name":"status","variant":"badge","label":"Status"},{"label":"Created","variant":"caption","name":"createdAt"}]` */
   fields?: EntityRow[];
 }
 

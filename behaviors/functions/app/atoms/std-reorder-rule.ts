@@ -85,32 +85,32 @@ export interface StdReorderRuleReorderRuleLoadFailedPayload {
  * without modifying its state-machine topology.
  */
 export interface StdReorderRuleConfig {
-  /** Default: `""` */
-  defaultWarehouse?: string;
+  /** Default: `[{"variant":"primary","label":"Open","event":"OPEN_RULE","icon":"arrow-right"},{"event":"DISABLE_RULE","variant":"danger","label":"Disable"}]` */
+  itemActions?: EntityRow[];
   /** Default: `false` */
   serialTrackingEnabled?: boolean;
   /** Default: `false` */
   hazmatEnabled?: boolean;
-  /** Default: `false` */
-  lotTrackingEnabled?: boolean;
-  /** Default: `[{"label":"Open","event":"OPEN_RULE","variant":"primary","icon":"arrow-right"},{"variant":"danger","label":"Disable","event":"DISABLE_RULE"}]` */
-  itemActions?: EntityRow[];
-  /** Default: `false` */
-  expiryTrackingEnabled?: boolean;
-  /** Default: `false` */
-  multiLocationEnabled?: boolean;
+  /** Default: `30` */
+  cycleCountFrequencyDays?: number;
   /** Default: `7` */
   safetyStockDays?: number;
+  /** Default: `[{"name":"sku","variant":"caption","label":"SKU"},{"name":"locationId","label":"Location","variant":"caption"},{"name":"thresholdQty","label":"Threshold","variant":"caption"},{"label":"Reorder Qty","name":"reorderQty","variant":"caption"},{"label":"Vendor","variant":"caption","name":"vendor"},{"name":"leadTimeDays","label":"Lead (d)","variant":"caption"}]` */
+  fields?: EntityRow[];
+  /** Default: `10` */
+  lowStockThreshold?: number;
+  /** Default: `false` */
+  multiLocationEnabled?: boolean;
+  /** Default: `false` */
+  lotTrackingEnabled?: boolean;
+  /** Default: `false` */
+  expiryTrackingEnabled?: boolean;
   /** Default: `5` */
   reorderPoint?: number;
   /** Default: `"Reorder Rules"` */
   title?: string;
-  /** Default: `10` */
-  lowStockThreshold?: number;
-  /** Default: `30` */
-  cycleCountFrequencyDays?: number;
-  /** Default: `[{"label":"SKU","name":"sku","variant":"caption"},{"variant":"caption","name":"locationId","label":"Location"},{"label":"Threshold","name":"thresholdQty","variant":"caption"},{"label":"Reorder Qty","variant":"caption","name":"reorderQty"},{"variant":"caption","label":"Vendor","name":"vendor"},{"label":"Lead (d)","name":"leadTimeDays","variant":"caption"}]` */
-  fields?: EntityRow[];
+  /** Default: `""` */
+  defaultWarehouse?: string;
 }
 
 /**

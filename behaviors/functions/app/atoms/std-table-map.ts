@@ -119,26 +119,26 @@ export interface StdTableMapTableWriteFailedPayload {
  * without modifying its state-machine topology.
  */
 export interface StdTableMapConfig {
+  /** Default: `"Floor Plan"` */
+  title?: string;
+  /** Default: `800` */
+  canvasWidth?: number;
+  /** Default: `600` */
+  canvasHeight?: number;
+  /** Default: `false` */
+  kitchenAutoFire?: boolean;
+  /** Default: `[15,18,20,25]` */
+  tipPresets?: number[];
+  /** Default: `0` */
+  serviceCharge?: number;
   /** Default: `true` */
   allowSplitChecks?: boolean;
   /** Default: `60` */
   tableTurnoverTargetMinutes?: number;
   /** Default: `false` */
   coursingEnabled?: boolean;
-  /** Default: `"Floor Plan"` */
-  title?: string;
-  /** Default: `600` */
-  canvasHeight?: number;
   /** Default: `true` */
   allergenWarningsEnabled?: boolean;
-  /** Default: `[15,18,20,25]` */
-  tipPresets?: number[];
-  /** Default: `800` */
-  canvasWidth?: number;
-  /** Default: `false` */
-  kitchenAutoFire?: boolean;
-  /** Default: `0` */
-  serviceCharge?: number;
 }
 
 /**

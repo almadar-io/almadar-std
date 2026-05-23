@@ -120,20 +120,20 @@ export interface StdMembershipMembershipUpdateFailedPayload {
  * without modifying its state-machine topology.
  */
 export interface StdMembershipConfig {
-  /** Default: `50` */
-  healthScoreThresholdAlert?: number;
-  /** Default: `[30,14,7]` */
-  renewalReminderDaysBefore?: number[];
-  /** Default: `365` */
-  archiveInactiveAfterDays?: number;
-  /** Default: `[{"event":"OPEN_MEMBERSHIP","icon":"arrow-right","label":"Open","variant":"primary"},{"event":"CANCEL_MEMBERSHIP","label":"Cancel","variant":"danger"}]` */
-  itemActions?: EntityRow[];
-  /** Default: `true` */
-  consentTrackingEnabled?: boolean;
   /** Default: `"Memberships"` */
   title?: string;
-  /** Default: `[{"name":"memberName","variant":"caption","label":"Member"},{"label":"Tier","name":"tier","variant":"badge"},{"variant":"caption","label":"Monthly Dues","name":"monthlyDues"},{"label":"Renews","variant":"caption","name":"renewalDate"},{"name":"status","label":"Status","variant":"badge"}]` */
+  /** Default: `365` */
+  archiveInactiveAfterDays?: number;
+  /** Default: `[30,14,7]` */
+  renewalReminderDaysBefore?: number[];
+  /** Default: `[{"variant":"primary","event":"OPEN_MEMBERSHIP","label":"Open","icon":"arrow-right"},{"label":"Cancel","variant":"danger","event":"CANCEL_MEMBERSHIP"}]` */
+  itemActions?: EntityRow[];
+  /** Default: `[{"name":"memberName","label":"Member","variant":"caption"},{"label":"Tier","name":"tier","variant":"badge"},{"label":"Monthly Dues","name":"monthlyDues","variant":"caption"},{"label":"Renews","name":"renewalDate","variant":"caption"},{"label":"Status","variant":"badge","name":"status"}]` */
   fields?: EntityRow[];
+  /** Default: `true` */
+  consentTrackingEnabled?: boolean;
+  /** Default: `50` */
+  healthScoreThresholdAlert?: number;
 }
 
 /**

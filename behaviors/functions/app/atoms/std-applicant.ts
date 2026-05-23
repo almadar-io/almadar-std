@@ -108,24 +108,24 @@ export interface StdApplicantApplicantLoadFailedPayload {
  * without modifying its state-machine topology.
  */
 export interface StdApplicantConfig {
-  /** Default: `[{"label":"Name","name":"name","variant":"caption"},{"label":"Email","name":"email","variant":"caption"},{"variant":"caption","name":"jobId","label":"Job"},{"label":"Stage","name":"stage","variant":"badge"},{"name":"appliedAt","label":"Applied","variant":"caption"}]` */
-  fields?: EntityRow[];
   /** Default: `false` */
-  eVerifyRequired?: boolean;
+  i9DocumentsRequired?: boolean;
   /** Default: `"Applicants"` */
   title?: string;
-  /** Default: `730` */
-  retentionAfterRejectionDays?: number;
-  /** Default: `[{"icon":"arrow-right","label":"Open","event":"OPEN_APPLICANT","variant":"primary"},{"variant":"danger","label":"Reject","event":"REJECT_APPLICANT"}]` */
-  itemActions?: EntityRow[];
-  /** Default: `false` */
-  anonymizeOnRejection?: boolean;
-  /** Default: `false` */
-  equalOpportunityTrackingEnabled?: boolean;
+  /** Default: `[{"variant":"caption","label":"Name","name":"name"},{"variant":"caption","label":"Email","name":"email"},{"label":"Job","variant":"caption","name":"jobId"},{"variant":"badge","label":"Stage","name":"stage"},{"label":"Applied","name":"appliedAt","variant":"caption"}]` */
+  fields?: EntityRow[];
   /** Default: `false` */
   backgroundCheckRequired?: boolean;
   /** Default: `false` */
-  i9DocumentsRequired?: boolean;
+  eVerifyRequired?: boolean;
+  /** Default: `[{"label":"Open","event":"OPEN_APPLICANT","variant":"primary","icon":"arrow-right"},{"event":"REJECT_APPLICANT","variant":"danger","label":"Reject"}]` */
+  itemActions?: EntityRow[];
+  /** Default: `false` */
+  anonymizeOnRejection?: boolean;
+  /** Default: `730` */
+  retentionAfterRejectionDays?: number;
+  /** Default: `false` */
+  equalOpportunityTrackingEnabled?: boolean;
 }
 
 /**

@@ -108,26 +108,24 @@
           "ref": "AppShell.traits.AppLayout",
           "name": "PropertyAppLayout",
           "config": {
+            "notifications": [],
             "notificationClickEvent": "PROPERTY_NOTIFICATIONS_OPEN",
             "contentTrait": "@trait.PropertyCatalog",
-            "appName": "Property Management",
-            "searchEvent": "PROPERTY_SEARCH",
-            "notifications": [],
             "navItems": [
               {
+                "label": "Properties",
                 "icon": "home",
-                "href": "/properties",
-                "label": "Properties"
+                "href": "/properties"
               },
               {
+                "href": "/leases",
                 "icon": "file-text",
-                "label": "Leases",
-                "href": "/leases"
+                "label": "Leases"
               },
               {
+                "href": "/tenants",
                 "label": "Tenants",
-                "icon": "users",
-                "href": "/tenants"
+                "icon": "users"
               },
               {
                 "icon": "credit-card",
@@ -135,11 +133,13 @@
                 "href": "/rent-charges"
               },
               {
-                "label": "Maintenance",
+                "icon": "wrench",
                 "href": "/maintenance",
-                "icon": "wrench"
+                "label": "Maintenance"
               }
-            ]
+            ],
+            "appName": "Property Management",
+            "searchEvent": "PROPERTY_SEARCH"
           },
           "events": {
             "SEARCH": "PROPERTY_SEARCH",
@@ -226,12 +226,16 @@
                     "render-ui",
                     "main",
                     {
+                      "gap": "lg",
+                      "type": "stack",
                       "children": [
                         {
-                          "gap": "md",
                           "children": [
                             {
+                              "type": "stack",
                               "direction": "horizontal",
+                              "align": "center",
+                              "gap": "sm",
                               "children": [
                                 {
                                   "name": "home",
@@ -242,43 +246,41 @@
                                   "variant": "h2",
                                   "content": "Properties"
                                 }
-                              ],
-                              "gap": "sm",
-                              "align": "center",
-                              "type": "stack"
+                              ]
                             },
                             {
-                              "gap": "sm",
-                              "direction": "horizontal",
                               "children": [
                                 {
-                                  "action": "CREATE",
-                                  "label": "New Property",
                                   "type": "button",
+                                  "label": "New Property",
+                                  "action": "CREATE",
                                   "icon": "plus",
                                   "variant": "primary"
                                 }
                               ],
+                              "direction": "horizontal",
+                              "gap": "sm",
                               "type": "stack"
                             }
                           ],
-                          "direction": "horizontal",
+                          "type": "stack",
                           "justify": "between",
-                          "align": "center",
-                          "type": "stack"
+                          "direction": "horizontal",
+                          "gap": "md",
+                          "align": "center"
                         },
                         {
                           "type": "divider"
                         },
                         {
                           "gap": "md",
+                          "align": "center",
+                          "type": "stack",
                           "direction": "horizontal",
                           "children": [
                             "@trait.PropertySearch",
                             "@trait.PropertyFilter"
-                          ],
-                          "align": "center",
-                          "type": "stack"
+                          ]
                         },
                         "@trait.PropertyStats",
                         "@trait.PropertyGraphs",
@@ -287,9 +289,7 @@
                         },
                         "@trait.PropertyBrowseList"
                       ],
-                      "type": "stack",
-                      "direction": "vertical",
-                      "gap": "lg"
+                      "direction": "vertical"
                     }
                   ]
                 ]
@@ -308,34 +308,34 @@
                     "render-ui",
                     "main",
                     {
-                      "gap": "md",
                       "type": "stack",
+                      "direction": "vertical",
                       "align": "center",
+                      "className": "py-8",
                       "children": [
                         {
                           "name": "bell",
                           "type": "icon"
                         },
                         {
+                          "type": "typography",
                           "content": "No notifications",
-                          "variant": "h3",
-                          "type": "typography"
+                          "variant": "h3"
                         },
                         {
-                          "color": "muted",
-                          "content": "You're all caught up.",
                           "variant": "caption",
-                          "type": "typography"
+                          "content": "You're all caught up.",
+                          "type": "typography",
+                          "color": "muted"
                         },
                         {
-                          "label": "Back to properties",
                           "variant": "ghost",
-                          "type": "button",
-                          "action": "INIT"
+                          "label": "Back to properties",
+                          "action": "INIT",
+                          "type": "button"
                         }
                       ],
-                      "className": "py-8",
-                      "direction": "vertical"
+                      "gap": "md"
                     }
                   ]
                 ]
@@ -348,8 +348,8 @@
           "ref": "Search.traits.SearchResultSearch",
           "name": "PropertySearch",
           "config": {
-            "event": "PROPERTY_SEARCH",
-            "placeholder": "Search properties…"
+            "placeholder": "Search properties…",
+            "event": "PROPERTY_SEARCH"
           }
         },
         {
@@ -358,25 +358,25 @@
           "config": {
             "filters": [
               {
+                "field": "propertyType",
+                "label": "Type",
                 "filterType": "select",
                 "options": [
                   "single-family",
                   "multi-family",
                   "commercial",
                   "mixed-use"
-                ],
-                "field": "propertyType",
-                "label": "Type"
+                ]
               },
               {
-                "label": "Status",
-                "filterType": "select",
                 "field": "status",
+                "filterType": "select",
                 "options": [
                   "active",
                   "vacant",
                   "under-renovation"
-                ]
+                ],
+                "label": "Status"
               }
             ],
             "event": "PROPERTY_FILTER"
@@ -390,17 +390,15 @@
             "metrics": [
               {
                 "icon": "home",
-                "variant": "primary",
-                "label": "Total",
                 "aggregation": "count",
-                "format": "number"
+                "variant": "primary",
+                "format": "number",
+                "label": "Total"
               },
               {
                 "icon": "check-circle",
-                "variant": "success",
-                "format": "number",
                 "aggregation": "count",
-                "label": "Active",
+                "format": "number",
                 "filter": [
                   "fn",
                   "row",
@@ -409,14 +407,13 @@
                     "@row.status",
                     "active"
                   ]
-                ]
+                ],
+                "variant": "success",
+                "label": "Active"
               },
               {
-                "variant": "warning",
-                "format": "number",
-                "aggregation": "count",
-                "label": "Vacant",
                 "icon": "circle",
+                "variant": "warning",
                 "filter": [
                   "fn",
                   "row",
@@ -425,15 +422,18 @@
                     "@row.status",
                     "vacant"
                   ]
-                ]
+                ],
+                "aggregation": "count",
+                "format": "number",
+                "label": "Vacant"
               },
               {
                 "aggregation": "sum",
-                "variant": "info",
-                "format": "number",
-                "field": "unitCount",
                 "icon": "layers",
-                "label": "Total Units"
+                "variant": "info",
+                "label": "Total Units",
+                "format": "number",
+                "field": "unitCount"
               }
             ]
           },
@@ -452,13 +452,13 @@
           "ref": "Graphs.traits.GraphItemGraph",
           "name": "PropertyGraphs",
           "config": {
+            "categoryField": "propertyType",
             "subtitle": "Portfolio composition across property types",
             "aggregation": "count",
             "height": 240.0,
+            "title": "Properties by Type",
             "showLegend": false,
-            "chartType": "bar",
-            "categoryField": "propertyType",
-            "title": "Properties by Type"
+            "chartType": "bar"
           },
           "listens": [
             {
@@ -476,33 +476,15 @@
           "name": "PropertyBrowseList",
           "linkedEntity": "Property",
           "config": {
-            "itemActions": [
-              {
-                "label": "View",
-                "variant": "ghost",
-                "event": "VIEW"
-              },
-              {
-                "event": "EDIT",
-                "label": "Edit",
-                "variant": "ghost"
-              },
-              {
-                "label": "Delete",
-                "event": "DELETE",
-                "variant": "danger"
-              }
-            ],
-            "gap": "sm",
             "fields": [
               {
-                "name": "address",
                 "variant": "h3",
+                "name": "address",
                 "icon": "home"
               },
               {
-                "variant": "badge",
-                "name": "propertyType"
+                "name": "propertyType",
+                "variant": "badge"
               },
               {
                 "name": "status",
@@ -513,7 +495,25 @@
                 "name": "unitCount"
               }
             ],
-            "cols": 1.0
+            "cols": 1.0,
+            "gap": "sm",
+            "itemActions": [
+              {
+                "event": "VIEW",
+                "variant": "ghost",
+                "label": "View"
+              },
+              {
+                "variant": "ghost",
+                "label": "Edit",
+                "event": "EDIT"
+              },
+              {
+                "event": "DELETE",
+                "variant": "danger",
+                "label": "Delete"
+              }
+            ]
           },
           "listens": [
             {
@@ -563,7 +563,7 @@
           "name": "PropertyCreate",
           "linkedEntity": "Property",
           "config": {
-            "title": "New Property",
+            "mode": "create",
             "fields": [
               "address",
               "unitCount",
@@ -571,7 +571,7 @@
               "status"
             ],
             "icon": "plus-circle",
-            "mode": "create"
+            "title": "New Property"
           },
           "events": {
             "OPEN": "CREATE"
@@ -594,13 +594,13 @@
           "config": {
             "title": "Edit Property",
             "icon": "edit",
+            "mode": "edit",
             "fields": [
               "address",
               "unitCount",
               "propertyType",
               "status"
-            ],
-            "mode": "edit"
+            ]
           },
           "events": {
             "OPEN": "EDIT"
@@ -652,12 +652,12 @@
           "config": {
             "alertMessage": "This action cannot be undone.",
             "icon": "alert-triangle",
-            "title": "Delete Property",
-            "confirmLabel": "Delete"
+            "confirmLabel": "Delete",
+            "title": "Delete Property"
           },
           "events": {
-            "CONFIRM": "CONFIRM_DELETE",
-            "REQUEST": "DELETE"
+            "REQUEST": "DELETE",
+            "CONFIRM": "CONFIRM_DELETE"
           },
           "listens": [
             {
@@ -979,42 +979,42 @@
           "ref": "AppShell.traits.AppLayout",
           "name": "LeaseAppLayout",
           "config": {
-            "searchEvent": "LEASE_SEARCH",
+            "notifications": [],
+            "contentTrait": "@trait.LeasePanel",
             "notificationClickEvent": "LEASE_NOTIFICATIONS_OPEN",
+            "searchEvent": "LEASE_SEARCH",
+            "appName": "Property Management",
             "navItems": [
               {
-                "href": "/properties",
                 "icon": "home",
-                "label": "Properties"
+                "label": "Properties",
+                "href": "/properties"
               },
               {
+                "label": "Leases",
                 "href": "/leases",
-                "icon": "file-text",
-                "label": "Leases"
+                "icon": "file-text"
               },
               {
+                "icon": "users",
                 "href": "/tenants",
-                "label": "Tenants",
-                "icon": "users"
+                "label": "Tenants"
               },
               {
+                "icon": "credit-card",
                 "href": "/rent-charges",
-                "label": "Rent Charges",
-                "icon": "credit-card"
+                "label": "Rent Charges"
               },
               {
-                "label": "Maintenance",
                 "href": "/maintenance",
-                "icon": "wrench"
+                "icon": "wrench",
+                "label": "Maintenance"
               }
-            ],
-            "contentTrait": "@trait.LeasePanel",
-            "notifications": [],
-            "appName": "Property Management"
+            ]
           },
           "events": {
-            "SEARCH": "LEASE_SEARCH",
-            "NOTIFY_CLICK": "LEASE_NOTIFICATIONS_OPEN"
+            "NOTIFY_CLICK": "LEASE_NOTIFICATIONS_OPEN",
+            "SEARCH": "LEASE_SEARCH"
           }
         },
         {
@@ -1043,11 +1043,11 @@
                     "render-ui",
                     "main",
                     {
-                      "gap": "lg",
+                      "className": "max-w-6xl mx-auto w-full p-4",
                       "children": [
                         {
-                          "align": "center",
                           "direction": "horizontal",
+                          "align": "center",
                           "children": [
                             {
                               "type": "icon",
@@ -1068,8 +1068,8 @@
                         "@trait.LeaseView"
                       ],
                       "type": "stack",
-                      "direction": "vertical",
-                      "className": "max-w-6xl mx-auto w-full p-4"
+                      "gap": "lg",
+                      "direction": "vertical"
                     }
                   ]
                 ]
@@ -1181,19 +1181,19 @@
             "notifications": [],
             "navItems": [
               {
-                "icon": "home",
                 "label": "Properties",
-                "href": "/properties"
+                "href": "/properties",
+                "icon": "home"
               },
               {
                 "href": "/leases",
-                "label": "Leases",
-                "icon": "file-text"
+                "icon": "file-text",
+                "label": "Leases"
               },
               {
+                "label": "Tenants",
                 "icon": "users",
-                "href": "/tenants",
-                "label": "Tenants"
+                "href": "/tenants"
               },
               {
                 "label": "Rent Charges",
@@ -1201,14 +1201,14 @@
                 "icon": "credit-card"
               },
               {
+                "icon": "wrench",
                 "label": "Maintenance",
-                "href": "/maintenance",
-                "icon": "wrench"
+                "href": "/maintenance"
               }
             ],
             "contentTrait": "@trait.TenantPanel",
-            "searchEvent": "TENANT_SEARCH",
             "notificationClickEvent": "TENANT_NOTIFICATIONS_OPEN",
+            "searchEvent": "TENANT_SEARCH",
             "appName": "Property Management"
           },
           "events": {
@@ -1242,13 +1242,10 @@
                     "render-ui",
                     "main",
                     {
-                      "gap": "lg",
                       "children": [
                         {
-                          "gap": "sm",
                           "type": "stack",
                           "direction": "horizontal",
-                          "align": "center",
                           "children": [
                             {
                               "name": "users",
@@ -1256,16 +1253,19 @@
                             },
                             {
                               "variant": "h2",
-                              "content": "Tenants",
-                              "type": "typography"
+                              "type": "typography",
+                              "content": "Tenants"
                             }
-                          ]
+                          ],
+                          "gap": "sm",
+                          "align": "center"
                         },
                         {
                           "type": "divider"
                         },
                         "@trait.TenantView"
                       ],
+                      "gap": "lg",
                       "type": "stack",
                       "className": "max-w-6xl mx-auto w-full p-4",
                       "direction": "vertical"
@@ -1378,37 +1378,37 @@
           "ref": "AppShell.traits.AppLayout",
           "name": "RentChargeAppLayout",
           "config": {
-            "appName": "Property Management",
             "contentTrait": "@trait.RentChargePanel",
             "navItems": [
               {
-                "label": "Properties",
                 "href": "/properties",
+                "label": "Properties",
                 "icon": "home"
               },
               {
                 "label": "Leases",
-                "href": "/leases",
-                "icon": "file-text"
+                "icon": "file-text",
+                "href": "/leases"
               },
               {
-                "icon": "users",
                 "label": "Tenants",
-                "href": "/tenants"
+                "href": "/tenants",
+                "icon": "users"
               },
               {
                 "href": "/rent-charges",
-                "icon": "credit-card",
-                "label": "Rent Charges"
+                "label": "Rent Charges",
+                "icon": "credit-card"
               },
               {
                 "label": "Maintenance",
-                "href": "/maintenance",
-                "icon": "wrench"
+                "icon": "wrench",
+                "href": "/maintenance"
               }
             ],
             "searchEvent": "RENT_CHARGE_SEARCH",
             "notificationClickEvent": "RENT_CHARGE_NOTIFICATIONS_OPEN",
+            "appName": "Property Management",
             "notifications": []
           },
           "events": {
@@ -1443,32 +1443,32 @@
                     "main",
                     {
                       "className": "max-w-6xl mx-auto w-full p-4",
-                      "direction": "vertical",
                       "children": [
                         {
-                          "type": "stack",
+                          "align": "center",
+                          "gap": "sm",
                           "children": [
                             {
-                              "name": "credit-card",
-                              "type": "icon"
+                              "type": "icon",
+                              "name": "credit-card"
                             },
                             {
-                              "content": "Rent Charges",
                               "type": "typography",
-                              "variant": "h2"
+                              "variant": "h2",
+                              "content": "Rent Charges"
                             }
                           ],
-                          "align": "center",
-                          "direction": "horizontal",
-                          "gap": "sm"
+                          "type": "stack",
+                          "direction": "horizontal"
                         },
                         {
                           "type": "divider"
                         },
                         "@trait.RentChargeView"
                       ],
-                      "type": "stack",
-                      "gap": "lg"
+                      "direction": "vertical",
+                      "gap": "lg",
+                      "type": "stack"
                     }
                   ]
                 ]
@@ -1600,17 +1600,18 @@
           "ref": "AppShell.traits.AppLayout",
           "name": "MaintenanceRequestAppLayout",
           "config": {
-            "searchEvent": "MAINTENANCE_REQUEST_SEARCH",
+            "notifications": [],
+            "contentTrait": "@trait.MaintenanceRequestPanel",
             "navItems": [
               {
+                "icon": "home",
                 "href": "/properties",
-                "label": "Properties",
-                "icon": "home"
+                "label": "Properties"
               },
               {
-                "icon": "file-text",
                 "label": "Leases",
-                "href": "/leases"
+                "href": "/leases",
+                "icon": "file-text"
               },
               {
                 "label": "Tenants",
@@ -1618,24 +1619,23 @@
                 "icon": "users"
               },
               {
-                "href": "/rent-charges",
                 "label": "Rent Charges",
+                "href": "/rent-charges",
                 "icon": "credit-card"
               },
               {
-                "href": "/maintenance",
                 "icon": "wrench",
-                "label": "Maintenance"
+                "label": "Maintenance",
+                "href": "/maintenance"
               }
             ],
-            "notifications": [],
-            "contentTrait": "@trait.MaintenanceRequestPanel",
             "notificationClickEvent": "MAINTENANCE_REQUEST_NOTIFICATIONS_OPEN",
+            "searchEvent": "MAINTENANCE_REQUEST_SEARCH",
             "appName": "Property Management"
           },
           "events": {
-            "NOTIFY_CLICK": "MAINTENANCE_REQUEST_NOTIFICATIONS_OPEN",
-            "SEARCH": "MAINTENANCE_REQUEST_SEARCH"
+            "SEARCH": "MAINTENANCE_REQUEST_SEARCH",
+            "NOTIFY_CLICK": "MAINTENANCE_REQUEST_NOTIFICATIONS_OPEN"
           }
         },
         {
@@ -1665,24 +1665,22 @@
                     "main",
                     {
                       "type": "stack",
-                      "direction": "vertical",
-                      "className": "max-w-6xl mx-auto w-full p-4",
                       "children": [
                         {
                           "align": "center",
+                          "gap": "sm",
                           "children": [
                             {
-                              "name": "tool",
-                              "type": "icon"
+                              "type": "icon",
+                              "name": "tool"
                             },
                             {
-                              "content": "Maintenance Requests",
                               "type": "typography",
+                              "content": "Maintenance Requests",
                               "variant": "h2"
                             }
                           ],
                           "type": "stack",
-                          "gap": "sm",
                           "direction": "horizontal"
                         },
                         {
@@ -1690,7 +1688,9 @@
                         },
                         "@trait.MaintenanceRequestView"
                       ],
-                      "gap": "lg"
+                      "direction": "vertical",
+                      "gap": "lg",
+                      "className": "max-w-6xl mx-auto w-full p-4"
                     }
                   ]
                 ]

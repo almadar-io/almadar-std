@@ -210,11 +210,11 @@
                         "create",
                         "NotificationRecord",
                         {
-                          "channel": "@config.notifyChannel",
                           "recipient": "@entity.recipient",
+                          "message": "@config.template",
+                          "channel": "@config.notifyChannel",
                           "severity": "@config.severity",
                           "dispatched": false,
-                          "message": "@config.template",
                           "recordedAt": 0.0
                         }
                       ]
@@ -224,9 +224,9 @@
                     "emit",
                     "NotificationDispatched",
                     {
-                      "recipient": "@entity.recipient",
                       "severity": "@config.severity",
                       "message": "@config.template",
+                      "recipient": "@entity.recipient",
                       "channel": "@config.notifyChannel"
                     }
                   ]
@@ -235,85 +235,85 @@
             ]
           },
           "config": {
-            "quietHours": {
-              "type": "QuietHoursSpec",
-              "default": {
-                "start": "",
-                "end": ""
-              },
-              "label": "Quiet hours",
-              "description": "Local-time window during which dispatch is suppressed. Both start and end required to activate. WIRING DEFERRED: needs @now-aware time comparison primitive (gap — docs/Almadar_Std_Factories.md).",
-              "tier": "customization",
-              "properties": {
-                "end": {
-                  "name": "end",
-                  "type": "string",
-                  "required": false
-                },
-                "start": {
-                  "name": "start",
-                  "type": "string",
-                  "required": false
-                }
-              }
-            },
-            "template": {
+            "notifyChannel": {
               "type": "string",
-              "default": "",
-              "label": "Message template",
-              "description": "Text shown to the recipient; supports payload interpolation",
-              "tier": "essential"
-            },
-            "recipients": {
-              "type": "[string]",
-              "default": [],
-              "label": "Recipients",
-              "description": "Recipient ids/addresses. v1.1 uses the first entry; multi-recipient fan-out lands in v1.2 (gap). When empty, falls back to the authenticated user.",
-              "tier": "customization",
-              "items": {
-                "type": "string"
-              }
-            },
-            "listensFor": {
-              "type": "[string]",
-              "default": [],
-              "label": "Trigger events",
-              "description": "Event names that should fire a notification",
-              "tier": "essential",
-              "items": {
-                "type": "string"
-              }
+              "default": "in-app",
+              "label": "Channel",
+              "description": "Delivery channel: in-app, email, or sms",
+              "tier": "domain"
             },
             "suppressionList": {
               "type": "[string]",
               "default": [],
               "label": "Suppression list",
               "description": "Recipient ids/addresses to skip (e.g. unsubscribed users). Suppression check runs before dispatch.",
-              "tier": "customization",
+              "tier": "domain",
               "items": {
                 "type": "string"
               }
-            },
-            "notifyChannel": {
-              "type": "string",
-              "default": "in-app",
-              "label": "Channel",
-              "description": "Delivery channel: in-app, email, or sms",
-              "tier": "customization"
-            },
-            "severity": {
-              "type": "string",
-              "default": "info",
-              "label": "Severity",
-              "description": "info, success, warning, or error — controls styling",
-              "tier": "customization"
             },
             "frequencyCapPerWeek": {
               "type": "number",
               "default": 0.0,
               "label": "Frequency cap (per week)",
               "description": "Max sends per (channel, recipient) per rolling 7-day window. 0 = uncapped. WIRING DEFERRED: needs stateful history query (gap — docs/Almadar_Std_Factories.md).",
-              "tier": "customization"
+              "tier": "domain"
+            },
+            "severity": {
+              "type": "string",
+              "default": "info",
+              "label": "Severity",
+              "description": "info, success, warning, or error — controls styling",
+              "tier": "domain"
+            },
+            "template": {
+              "type": "string",
+              "default": "",
+              "label": "Message template",
+              "description": "Text shown to the recipient; supports payload interpolation",
+              "tier": "presentation"
+            },
+            "listensFor": {
+              "type": "[string]",
+              "default": [],
+              "label": "Trigger events",
+              "description": "Event names that should fire a notification",
+              "tier": "domain",
+              "items": {
+                "type": "string"
+              }
+            },
+            "quietHours": {
+              "type": "QuietHoursSpec",
+              "default": {
+                "end": "",
+                "start": ""
+              },
+              "label": "Quiet hours",
+              "description": "Local-time window during which dispatch is suppressed. Both start and end required to activate. WIRING DEFERRED: needs @now-aware time comparison primitive (gap — docs/Almadar_Std_Factories.md).",
+              "tier": "domain",
+              "properties": {
+                "start": {
+                  "name": "start",
+                  "type": "string",
+                  "required": false
+                },
+                "end": {
+                  "name": "end",
+                  "type": "string",
+                  "required": false
+                }
+              }
+            },
+            "recipients": {
+              "type": "[string]",
+              "default": [],
+              "label": "Recipients",
+              "description": "Recipient ids/addresses. v1.1 uses the first entry; multi-recipient fan-out lands in v1.2 (gap). When empty, falls back to the authenticated user.",
+              "tier": "domain",
+              "items": {
+                "type": "string"
+              }
             }
           },
           "scope": "instance"

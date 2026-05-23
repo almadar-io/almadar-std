@@ -301,11 +301,11 @@ export function stdStemLabExperimentOrbital(params: StdStemLabExperimentOrbitalP
                   'render-ui',
                   'main',
                   {
-                    'appName': 'STEM Lab',
+                    'type': 'game-shell',
                     'showTopBar': true,
+                    'appName': 'STEM Lab',
                     'children': [
                       {
-                        'title': 'Experiment Simulator',
                         'menuItems': [
                           {
                             'variant': 'primary',
@@ -314,9 +314,9 @@ export function stdStemLabExperimentOrbital(params: StdStemLabExperimentOrbitalP
                           },
                         ],
                         'type': 'game-menu',
+                        'title': 'Experiment Simulator',
                       },
                     ],
-                    'type': 'game-shell',
                   },
                 ],
               ],
@@ -330,42 +330,42 @@ export function stdStemLabExperimentOrbital(params: StdStemLabExperimentOrbitalP
                   'render-ui',
                   'main',
                   {
-                    'type': 'game-shell',
                     'showTopBar': true,
+                    'type': 'game-shell',
                     'appName': 'STEM Lab',
                     'children': [
                       {
                         'type': 'stack',
-                        'direction': 'vertical',
                         'gap': 'md',
+                        'direction': 'vertical',
                         'children': [
                           {
-                            'type': 'game-hud',
                             'stats': [
                               {
-                                'value': '@entity.score',
                                 'label': 'Score',
+                                'value': '@entity.score',
                               },
                               {
                                 'label': 'Level',
                                 'value': '@entity.level',
                               },
                             ],
+                            'type': 'game-hud',
                           },
                           {
                             'completeEvent': 'COMPLETE',
+                            'type': 'simulator-board',
                             'entity': {
-                              'targetTolerance': 0.1,
+                              'description': 'Run the simulation',
+                              'parameters': [],
+                              'outputUnit': 'units',
+                              'targetValue': 0,
+                              'computeExpression': '0',
+                              'id': 'puzzle-1',
                               'outputLabel': 'Result',
                               'title': 'Experiment',
-                              'outputUnit': 'units',
-                              'id': 'puzzle-1',
-                              'computeExpression': '0',
-                              'description': 'Run the simulation',
-                              'targetValue': 0,
-                              'parameters': [],
+                              'targetTolerance': 0.1,
                             },
-                            'type': 'simulator-board',
                           },
                         ],
                       },
@@ -388,22 +388,22 @@ export function stdStemLabExperimentOrbital(params: StdStemLabExperimentOrbitalP
                   'render-ui',
                   'main',
                   {
+                    'appName': 'STEM Lab',
+                    'type': 'game-shell',
+                    'showTopBar': true,
                     'children': [
                       {
+                        'title': 'Well Done!',
                         'menuItems': [
                           {
-                            'label': 'Play Again',
-                            'event': 'RESTART',
                             'variant': 'primary',
+                            'event': 'RESTART',
+                            'label': 'Play Again',
                           },
                         ],
-                        'title': 'Well Done!',
                         'type': 'game-over-screen',
                       },
                     ],
-                    'type': 'game-shell',
-                    'appName': 'STEM Lab',
-                    'showTopBar': true,
                   },
                 ],
               ],
@@ -417,18 +417,18 @@ export function stdStemLabExperimentOrbital(params: StdStemLabExperimentOrbitalP
                   'render-ui',
                   'main',
                   {
-                    'appName': 'STEM Lab',
-                    'showTopBar': true,
                     'type': 'game-shell',
+                    'showTopBar': true,
+                    'appName': 'STEM Lab',
                     'children': [
                       {
                         'type': 'game-menu',
                         'title': 'Experiment Simulator',
                         'menuItems': [
                           {
-                            'event': 'START',
-                            'label': 'Start',
                             'variant': 'primary',
+                            'label': 'Start',
+                            'event': 'START',
                           },
                         ],
                       },
@@ -775,20 +775,20 @@ export function stdStemLabClassificationOrbital(params: StdStemLabClassification
                   'render-ui',
                   'main',
                   {
-                    'type': 'game-shell',
                     'appName': 'STEM Lab',
+                    'type': 'game-shell',
                     'showTopBar': true,
                     'children': [
                       {
+                        'type': 'game-menu',
+                        'title': 'Classification Lab',
                         'menuItems': [
                           {
-                            'label': 'Start',
                             'event': 'START',
                             'variant': 'primary',
+                            'label': 'Start',
                           },
                         ],
-                        'title': 'Classification Lab',
-                        'type': 'game-menu',
                       },
                     ],
                   },
@@ -805,41 +805,41 @@ export function stdStemLabClassificationOrbital(params: StdStemLabClassification
                   'main',
                   {
                     'appName': 'STEM Lab',
+                    'type': 'game-shell',
+                    'showTopBar': true,
                     'children': [
                       {
                         'gap': 'md',
-                        'direction': 'vertical',
                         'type': 'stack',
+                        'direction': 'vertical',
                         'children': [
                           {
+                            'type': 'game-hud',
                             'stats': [
                               {
-                                'label': 'Score',
                                 'value': '@entity.score',
+                                'label': 'Score',
                               },
                               {
-                                'label': 'Level',
                                 'value': '@entity.level',
+                                'label': 'Level',
                               },
                             ],
-                            'type': 'game-hud',
                           },
                           {
-                            'type': 'classifier-board',
                             'entity': {
-                              'id': 'puzzle-1',
                               'items': [],
-                              'categories': [],
                               'title': 'Classification',
+                              'categories': [],
+                              'id': 'puzzle-1',
                               'description': 'Classify items into categories',
                             },
                             'completeEvent': 'COMPLETE',
+                            'type': 'classifier-board',
                           },
                         ],
                       },
                     ],
-                    'type': 'game-shell',
-                    'showTopBar': true,
                   },
                 ],
               ],
@@ -858,22 +858,22 @@ export function stdStemLabClassificationOrbital(params: StdStemLabClassification
                   'render-ui',
                   'main',
                   {
+                    'type': 'game-shell',
                     'appName': 'STEM Lab',
                     'children': [
                       {
+                        'title': 'Well Done!',
                         'menuItems': [
                           {
-                            'label': 'Play Again',
                             'event': 'RESTART',
                             'variant': 'primary',
+                            'label': 'Play Again',
                           },
                         ],
-                        'title': 'Well Done!',
                         'type': 'game-over-screen',
                       },
                     ],
                     'showTopBar': true,
-                    'type': 'game-shell',
                   },
                 ],
               ],
@@ -887,11 +887,13 @@ export function stdStemLabClassificationOrbital(params: StdStemLabClassification
                   'render-ui',
                   'main',
                   {
+                    'type': 'game-shell',
                     'appName': 'STEM Lab',
+                    'showTopBar': true,
                     'children': [
                       {
-                        'type': 'game-menu',
                         'title': 'Classification Lab',
+                        'type': 'game-menu',
                         'menuItems': [
                           {
                             'label': 'Start',
@@ -901,8 +903,6 @@ export function stdStemLabClassificationOrbital(params: StdStemLabClassification
                         ],
                       },
                     ],
-                    'showTopBar': true,
-                    'type': 'game-shell',
                   },
                 ],
               ],
@@ -1234,23 +1234,19 @@ export function stdStemLabLabResultOrbital(params: StdStemLabLabResultOrbitalPar
                   'render-ui',
                   'main',
                   {
-                    'appName': 'STEM Lab',
-                    'type': 'game-shell',
-                    'showTopBar': true,
                     'children': [
                       {
-                        'type': 'scaled-diagram',
                         'children': [
                           {
-                            'gap': 'lg',
                             'direction': 'vertical',
+                            'gap': 'lg',
                             'type': 'stack',
                             'children': [
                               {
                                 'items': [
                                   {
-                                    'label': 'Home',
                                     'href': '/',
+                                    'label': 'Home',
                                   },
                                   {
                                     'label': 'Lab Results',
@@ -1259,33 +1255,33 @@ export function stdStemLabLabResultOrbital(params: StdStemLabLabResultOrbitalPar
                                 'type': 'breadcrumb',
                               },
                               {
-                                'type': 'stack',
-                                'gap': 'md',
                                 'justify': 'between',
                                 'direction': 'horizontal',
+                                'gap': 'md',
+                                'type': 'stack',
                                 'children': [
                                   {
-                                    'gap': 'md',
                                     'children': [
                                       {
                                         'type': 'icon',
                                         'name': 'clipboard',
                                       },
                                       {
+                                        'type': 'typography',
                                         'content': 'Lab Results',
                                         'variant': 'h2',
-                                        'type': 'typography',
                                       },
                                     ],
-                                    'direction': 'horizontal',
                                     'type': 'stack',
+                                    'direction': 'horizontal',
+                                    'gap': 'md',
                                   },
                                   {
-                                    'action': 'REFRESH',
                                     'label': 'Refresh',
                                     'variant': 'secondary',
-                                    'icon': 'refresh-cw',
                                     'type': 'button',
+                                    'icon': 'refresh-cw',
+                                    'action': 'REFRESH',
                                   },
                                 ],
                               },
@@ -1293,15 +1289,15 @@ export function stdStemLabLabResultOrbital(params: StdStemLabLabResultOrbitalPar
                                 'type': 'divider',
                               },
                               {
-                                'type': 'stack',
+                                'gap': 'sm',
                                 'children': [
                                   {
-                                    'cols': 3,
                                     'type': 'simple-grid',
+                                    'cols': 3,
                                     'children': [
                                       {
-                                        'type': 'stat-display',
                                         'label': 'ExperimentCount',
+                                        'type': 'stat-display',
                                         'value': '@entity.experimentCount',
                                       },
                                       {
@@ -1315,57 +1311,57 @@ export function stdStemLabLabResultOrbital(params: StdStemLabLabResultOrbitalPar
                                         'value': '@entity.totalScore',
                                       },
                                       {
-                                        'type': 'card',
                                         'children': [
                                           {
-                                            'gap': 'sm',
-                                            'type': 'stack',
-                                            'direction': 'vertical',
                                             'children': [
                                               {
                                                 'type': 'typography',
-                                                'variant': 'caption',
                                                 'content': 'Grade',
+                                                'variant': 'caption',
                                               },
                                               {
                                                 'type': 'typography',
-                                                'content': '@entity.grade',
                                                 'variant': 'h3',
+                                                'content': '@entity.grade',
                                               },
                                             ],
+                                            'gap': 'sm',
+                                            'type': 'stack',
+                                            'direction': 'vertical',
                                           },
                                         ],
+                                        'type': 'card',
                                       },
                                     ],
                                   },
                                 ],
+                                'type': 'stack',
                                 'direction': 'vertical',
-                                'gap': 'sm',
                               },
                               {
                                 'type': 'divider',
                               },
                               {
-                                'cols': 2,
                                 'gap': 'md',
+                                'cols': 2,
                                 'type': 'grid',
                                 'children': [
                                   {
                                     'type': 'card',
                                     'children': [
                                       {
+                                        'type': 'typography',
                                         'variant': 'caption',
                                         'content': 'Chart View',
-                                        'type': 'typography',
                                       },
                                     ],
                                   },
                                   {
                                     'children': [
                                       {
+                                        'content': 'Graph View',
                                         'type': 'typography',
                                         'variant': 'caption',
-                                        'content': 'Graph View',
                                       },
                                     ],
                                     'type': 'card',
@@ -1376,24 +1372,24 @@ export function stdStemLabLabResultOrbital(params: StdStemLabLabResultOrbitalPar
                                 'type': 'line-chart',
                                 'data': [
                                   {
-                                    'value': 12,
                                     'date': 'Jan',
+                                    'value': 12,
                                   },
                                   {
                                     'value': 19,
                                     'date': 'Feb',
                                   },
                                   {
-                                    'date': 'Mar',
                                     'value': 15,
+                                    'date': 'Mar',
                                   },
                                   {
-                                    'value': 25,
                                     'date': 'Apr',
+                                    'value': 25,
                                   },
                                   {
-                                    'value': 22,
                                     'date': 'May',
+                                    'value': 22,
                                   },
                                   {
                                     'date': 'Jun',
@@ -1415,9 +1411,8 @@ export function stdStemLabLabResultOrbital(params: StdStemLabLabResultOrbitalPar
                                 ],
                               },
                               {
-                                'type': 'graph-view',
-                                'width': 400,
                                 'height': 200,
+                                'width': 400,
                                 'nodes': [
                                   {
                                     'label': 'Start',
@@ -1434,20 +1429,25 @@ export function stdStemLabLabResultOrbital(params: StdStemLabLabResultOrbitalPar
                                 ],
                                 'edges': [
                                   {
-                                    'target': 'b',
                                     'source': 'a',
+                                    'target': 'b',
                                   },
                                   {
-                                    'target': 'c',
                                     'source': 'b',
+                                    'target': 'c',
                                   },
                                 ],
+                                'type': 'graph-view',
                               },
                             ],
                           },
                         ],
+                        'type': 'scaled-diagram',
                       },
                     ],
+                    'showTopBar': true,
+                    'type': 'game-shell',
+                    'appName': 'STEM Lab',
                   },
                 ],
               ],
@@ -1462,8 +1462,8 @@ export function stdStemLabLabResultOrbital(params: StdStemLabLabResultOrbitalPar
                   'LabResult',
                   {
                     'emit': {
-                      'failure': 'LabResultLoadFailed',
                       'success': 'LabResultLoaded',
+                      'failure': 'LabResultLoadFailed',
                     },
                   },
                 ],
@@ -1472,14 +1472,14 @@ export function stdStemLabLabResultOrbital(params: StdStemLabLabResultOrbitalPar
                   'main',
                   {
                     'type': 'game-shell',
-                    'showTopBar': true,
+                    'appName': 'STEM Lab',
                     'children': [
                       {
+                        'type': 'scaled-diagram',
                         'children': [
                           {
-                            'type': 'stack',
                             'direction': 'vertical',
-                            'gap': 'lg',
+                            'type': 'stack',
                             'children': [
                               {
                                 'type': 'breadcrumb',
@@ -1495,16 +1495,16 @@ export function stdStemLabLabResultOrbital(params: StdStemLabLabResultOrbitalPar
                               },
                               {
                                 'direction': 'horizontal',
-                                'type': 'stack',
                                 'gap': 'md',
+                                'justify': 'between',
                                 'children': [
                                   {
-                                    'direction': 'horizontal',
                                     'type': 'stack',
+                                    'gap': 'md',
                                     'children': [
                                       {
-                                        'type': 'icon',
                                         'name': 'clipboard',
+                                        'type': 'icon',
                                       },
                                       {
                                         'variant': 'h2',
@@ -1512,33 +1512,30 @@ export function stdStemLabLabResultOrbital(params: StdStemLabLabResultOrbitalPar
                                         'type': 'typography',
                                       },
                                     ],
-                                    'gap': 'md',
+                                    'direction': 'horizontal',
                                   },
                                   {
                                     'variant': 'secondary',
-                                    'action': 'REFRESH',
-                                    'type': 'button',
                                     'label': 'Refresh',
                                     'icon': 'refresh-cw',
+                                    'action': 'REFRESH',
+                                    'type': 'button',
                                   },
                                 ],
-                                'justify': 'between',
+                                'type': 'stack',
                               },
                               {
                                 'type': 'divider',
                               },
                               {
-                                'direction': 'vertical',
-                                'gap': 'sm',
+                                'type': 'stack',
                                 'children': [
                                   {
-                                    'type': 'simple-grid',
-                                    'cols': 3,
                                     'children': [
                                       {
-                                        'value': '@entity.experimentCount',
                                         'type': 'stat-display',
                                         'label': 'ExperimentCount',
+                                        'value': '@entity.experimentCount',
                                       },
                                       {
                                         'type': 'stat-display',
@@ -1551,31 +1548,34 @@ export function stdStemLabLabResultOrbital(params: StdStemLabLabResultOrbitalPar
                                         'value': '@entity.totalScore',
                                       },
                                       {
+                                        'type': 'card',
                                         'children': [
                                           {
-                                            'gap': 'sm',
                                             'direction': 'vertical',
                                             'type': 'stack',
+                                            'gap': 'sm',
                                             'children': [
                                               {
-                                                'type': 'typography',
-                                                'content': 'Grade',
                                                 'variant': 'caption',
+                                                'content': 'Grade',
+                                                'type': 'typography',
                                               },
                                               {
-                                                'variant': 'h3',
-                                                'content': '@entity.grade',
                                                 'type': 'typography',
+                                                'content': '@entity.grade',
+                                                'variant': 'h3',
                                               },
                                             ],
                                           },
                                         ],
-                                        'type': 'card',
                                       },
                                     ],
+                                    'cols': 3,
+                                    'type': 'simple-grid',
                                   },
                                 ],
-                                'type': 'stack',
+                                'direction': 'vertical',
+                                'gap': 'sm',
                               },
                               {
                                 'type': 'divider',
@@ -1586,9 +1586,9 @@ export function stdStemLabLabResultOrbital(params: StdStemLabLabResultOrbitalPar
                                     'type': 'card',
                                     'children': [
                                       {
-                                        'variant': 'caption',
                                         'type': 'typography',
                                         'content': 'Chart View',
+                                        'variant': 'caption',
                                       },
                                     ],
                                   },
@@ -1596,27 +1596,26 @@ export function stdStemLabLabResultOrbital(params: StdStemLabLabResultOrbitalPar
                                     'children': [
                                       {
                                         'variant': 'caption',
-                                        'content': 'Graph View',
                                         'type': 'typography',
+                                        'content': 'Graph View',
                                       },
                                     ],
                                     'type': 'card',
                                   },
                                 ],
-                                'type': 'grid',
-                                'gap': 'md',
                                 'cols': 2,
+                                'gap': 'md',
+                                'type': 'grid',
                               },
                               {
-                                'type': 'line-chart',
                                 'data': [
                                   {
-                                    'date': 'Jan',
                                     'value': 12,
+                                    'date': 'Jan',
                                   },
                                   {
-                                    'value': 19,
                                     'date': 'Feb',
+                                    'value': 19,
                                   },
                                   {
                                     'date': 'Mar',
@@ -1631,10 +1630,11 @@ export function stdStemLabLabResultOrbital(params: StdStemLabLabResultOrbitalPar
                                     'value': 22,
                                   },
                                   {
-                                    'value': 30,
                                     'date': 'Jun',
+                                    'value': 30,
                                   },
                                 ],
+                                'type': 'line-chart',
                               },
                               {
                                 'type': 'chart-legend',
@@ -1650,22 +1650,11 @@ export function stdStemLabLabResultOrbital(params: StdStemLabLabResultOrbitalPar
                                 ],
                               },
                               {
-                                'edges': [
-                                  {
-                                    'target': 'b',
-                                    'source': 'a',
-                                  },
-                                  {
-                                    'source': 'b',
-                                    'target': 'c',
-                                  },
-                                ],
                                 'width': 400,
-                                'type': 'graph-view',
                                 'nodes': [
                                   {
-                                    'label': 'Start',
                                     'id': 'a',
+                                    'label': 'Start',
                                   },
                                   {
                                     'id': 'b',
@@ -1676,15 +1665,26 @@ export function stdStemLabLabResultOrbital(params: StdStemLabLabResultOrbitalPar
                                     'label': 'End',
                                   },
                                 ],
+                                'edges': [
+                                  {
+                                    'target': 'b',
+                                    'source': 'a',
+                                  },
+                                  {
+                                    'source': 'b',
+                                    'target': 'c',
+                                  },
+                                ],
                                 'height': 200,
+                                'type': 'graph-view',
                               },
                             ],
+                            'gap': 'lg',
                           },
                         ],
-                        'type': 'scaled-diagram',
                       },
                     ],
-                    'appName': 'STEM Lab',
+                    'showTopBar': true,
                   },
                 ],
               ],
@@ -1699,8 +1699,8 @@ export function stdStemLabLabResultOrbital(params: StdStemLabLabResultOrbitalPar
                   'LabResult',
                   {
                     'emit': {
-                      'success': 'LabResultLoaded',
                       'failure': 'LabResultLoadFailed',
+                      'success': 'LabResultLoaded',
                     },
                   },
                 ],
@@ -1708,14 +1708,14 @@ export function stdStemLabLabResultOrbital(params: StdStemLabLabResultOrbitalPar
                   'render-ui',
                   'main',
                   {
+                    'type': 'game-shell',
+                    'appName': 'STEM Lab',
+                    'showTopBar': true,
                     'children': [
                       {
                         'type': 'scaled-diagram',
                         'children': [
                           {
-                            'gap': 'lg',
-                            'type': 'stack',
-                            'direction': 'vertical',
                             'children': [
                               {
                                 'items': [
@@ -1732,94 +1732,94 @@ export function stdStemLabLabResultOrbital(params: StdStemLabLabResultOrbitalPar
                               {
                                 'gap': 'md',
                                 'type': 'stack',
+                                'justify': 'between',
                                 'children': [
                                   {
+                                    'type': 'stack',
+                                    'direction': 'horizontal',
+                                    'gap': 'md',
                                     'children': [
                                       {
                                         'type': 'icon',
                                         'name': 'clipboard',
                                       },
                                       {
-                                        'type': 'typography',
                                         'content': 'Lab Results',
                                         'variant': 'h2',
+                                        'type': 'typography',
                                       },
                                     ],
-                                    'gap': 'md',
-                                    'type': 'stack',
-                                    'direction': 'horizontal',
                                   },
                                   {
                                     'icon': 'refresh-cw',
-                                    'variant': 'secondary',
+                                    'label': 'Refresh',
                                     'action': 'REFRESH',
                                     'type': 'button',
-                                    'label': 'Refresh',
+                                    'variant': 'secondary',
                                   },
                                 ],
                                 'direction': 'horizontal',
-                                'justify': 'between',
                               },
                               {
                                 'type': 'divider',
                               },
                               {
-                                'type': 'stack',
+                                'gap': 'sm',
+                                'direction': 'vertical',
                                 'children': [
                                   {
                                     'children': [
                                       {
                                         'type': 'stat-display',
-                                        'value': '@entity.experimentCount',
                                         'label': 'ExperimentCount',
+                                        'value': '@entity.experimentCount',
                                       },
                                       {
-                                        'value': '@entity.avgAccuracy',
                                         'label': 'AvgAccuracy',
+                                        'value': '@entity.avgAccuracy',
                                         'type': 'stat-display',
                                       },
                                       {
                                         'value': '@entity.totalScore',
-                                        'label': 'TotalScore',
                                         'type': 'stat-display',
+                                        'label': 'TotalScore',
                                       },
                                       {
                                         'type': 'card',
                                         'children': [
                                           {
+                                            'type': 'stack',
                                             'direction': 'vertical',
-                                            'gap': 'sm',
                                             'children': [
                                               {
-                                                'content': 'Grade',
-                                                'variant': 'caption',
                                                 'type': 'typography',
+                                                'variant': 'caption',
+                                                'content': 'Grade',
                                               },
                                               {
-                                                'variant': 'h3',
                                                 'content': '@entity.grade',
                                                 'type': 'typography',
+                                                'variant': 'h3',
                                               },
                                             ],
-                                            'type': 'stack',
+                                            'gap': 'sm',
                                           },
                                         ],
                                       },
                                     ],
-                                    'cols': 3,
                                     'type': 'simple-grid',
+                                    'cols': 3,
                                   },
                                 ],
-                                'direction': 'vertical',
-                                'gap': 'sm',
+                                'type': 'stack',
                               },
                               {
                                 'type': 'divider',
                               },
                               {
+                                'cols': 2,
                                 'type': 'grid',
                                 'gap': 'md',
-                                'cols': 2,
                                 'children': [
                                   {
                                     'type': 'card',
@@ -1835,8 +1835,8 @@ export function stdStemLabLabResultOrbital(params: StdStemLabLabResultOrbitalPar
                                     'children': [
                                       {
                                         'content': 'Graph View',
-                                        'variant': 'caption',
                                         'type': 'typography',
+                                        'variant': 'caption',
                                       },
                                     ],
                                     'type': 'card',
@@ -1844,15 +1844,14 @@ export function stdStemLabLabResultOrbital(params: StdStemLabLabResultOrbitalPar
                                 ],
                               },
                               {
-                                'type': 'line-chart',
                                 'data': [
                                   {
-                                    'value': 12,
                                     'date': 'Jan',
+                                    'value': 12,
                                   },
                                   {
-                                    'date': 'Feb',
                                     'value': 19,
+                                    'date': 'Feb',
                                   },
                                   {
                                     'value': 15,
@@ -1863,14 +1862,15 @@ export function stdStemLabLabResultOrbital(params: StdStemLabLabResultOrbitalPar
                                     'value': 25,
                                   },
                                   {
-                                    'value': 22,
                                     'date': 'May',
+                                    'value': 22,
                                   },
                                   {
-                                    'value': 30,
                                     'date': 'Jun',
+                                    'value': 30,
                                   },
                                 ],
+                                'type': 'line-chart',
                               },
                               {
                                 'type': 'chart-legend',
@@ -1888,8 +1888,8 @@ export function stdStemLabLabResultOrbital(params: StdStemLabLabResultOrbitalPar
                               {
                                 'nodes': [
                                   {
-                                    'label': 'Start',
                                     'id': 'a',
+                                    'label': 'Start',
                                   },
                                   {
                                     'id': 'b',
@@ -1900,28 +1900,28 @@ export function stdStemLabLabResultOrbital(params: StdStemLabLabResultOrbitalPar
                                     'id': 'c',
                                   },
                                 ],
-                                'width': 400,
-                                'type': 'graph-view',
                                 'edges': [
                                   {
                                     'target': 'b',
                                     'source': 'a',
                                   },
                                   {
-                                    'source': 'b',
                                     'target': 'c',
+                                    'source': 'b',
                                   },
                                 ],
+                                'width': 400,
+                                'type': 'graph-view',
                                 'height': 200,
                               },
                             ],
+                            'type': 'stack',
+                            'gap': 'lg',
+                            'direction': 'vertical',
                           },
                         ],
                       },
                     ],
-                    'type': 'game-shell',
-                    'showTopBar': true,
-                    'appName': 'STEM Lab',
                   },
                 ],
               ],
@@ -1945,14 +1945,11 @@ export function stdStemLabLabResultOrbital(params: StdStemLabLabResultOrbitalPar
                   'render-ui',
                   'main',
                   {
-                    'appName': 'STEM Lab',
-                    'type': 'game-shell',
-                    'showTopBar': true,
                     'children': [
                       {
                         'children': [
                           {
-                            'type': 'stack',
+                            'direction': 'vertical',
                             'children': [
                               {
                                 'type': 'breadcrumb',
@@ -1967,35 +1964,35 @@ export function stdStemLabLabResultOrbital(params: StdStemLabLabResultOrbitalPar
                                 ],
                               },
                               {
-                                'gap': 'md',
+                                'type': 'stack',
+                                'direction': 'horizontal',
+                                'justify': 'between',
                                 'children': [
                                   {
+                                    'type': 'stack',
                                     'direction': 'horizontal',
+                                    'gap': 'md',
                                     'children': [
                                       {
-                                        'type': 'icon',
                                         'name': 'clipboard',
+                                        'type': 'icon',
                                       },
                                       {
-                                        'content': 'Lab Results',
                                         'type': 'typography',
+                                        'content': 'Lab Results',
                                         'variant': 'h2',
                                       },
                                     ],
-                                    'gap': 'md',
-                                    'type': 'stack',
                                   },
                                   {
-                                    'variant': 'secondary',
-                                    'icon': 'refresh-cw',
-                                    'label': 'Refresh',
                                     'type': 'button',
+                                    'label': 'Refresh',
                                     'action': 'REFRESH',
+                                    'icon': 'refresh-cw',
+                                    'variant': 'secondary',
                                   },
                                 ],
-                                'justify': 'between',
-                                'type': 'stack',
-                                'direction': 'horizontal',
+                                'gap': 'md',
                               },
                               {
                                 'type': 'divider',
@@ -2003,13 +2000,11 @@ export function stdStemLabLabResultOrbital(params: StdStemLabLabResultOrbitalPar
                               {
                                 'children': [
                                   {
-                                    'type': 'simple-grid',
-                                    'cols': 3,
                                     'children': [
                                       {
-                                        'value': '@entity.experimentCount',
-                                        'type': 'stat-display',
                                         'label': 'ExperimentCount',
+                                        'type': 'stat-display',
+                                        'value': '@entity.experimentCount',
                                       },
                                       {
                                         'value': '@entity.avgAccuracy',
@@ -2017,14 +2012,16 @@ export function stdStemLabLabResultOrbital(params: StdStemLabLabResultOrbitalPar
                                         'label': 'AvgAccuracy',
                                       },
                                       {
-                                        'value': '@entity.totalScore',
-                                        'type': 'stat-display',
                                         'label': 'TotalScore',
+                                        'type': 'stat-display',
+                                        'value': '@entity.totalScore',
                                       },
                                       {
                                         'type': 'card',
                                         'children': [
                                           {
+                                            'type': 'stack',
+                                            'direction': 'vertical',
                                             'gap': 'sm',
                                             'children': [
                                               {
@@ -2033,17 +2030,17 @@ export function stdStemLabLabResultOrbital(params: StdStemLabLabResultOrbitalPar
                                                 'type': 'typography',
                                               },
                                               {
-                                                'variant': 'h3',
-                                                'content': '@entity.grade',
                                                 'type': 'typography',
+                                                'content': '@entity.grade',
+                                                'variant': 'h3',
                                               },
                                             ],
-                                            'direction': 'vertical',
-                                            'type': 'stack',
                                           },
                                         ],
                                       },
                                     ],
+                                    'type': 'simple-grid',
+                                    'cols': 3,
                                   },
                                 ],
                                 'type': 'stack',
@@ -2054,14 +2051,16 @@ export function stdStemLabLabResultOrbital(params: StdStemLabLabResultOrbitalPar
                                 'type': 'divider',
                               },
                               {
+                                'gap': 'md',
+                                'cols': 2,
                                 'children': [
                                   {
                                     'type': 'card',
                                     'children': [
                                       {
-                                        'type': 'typography',
                                         'variant': 'caption',
                                         'content': 'Chart View',
+                                        'type': 'typography',
                                       },
                                     ],
                                   },
@@ -2069,26 +2068,25 @@ export function stdStemLabLabResultOrbital(params: StdStemLabLabResultOrbitalPar
                                     'type': 'card',
                                     'children': [
                                       {
+                                        'content': 'Graph View',
                                         'variant': 'caption',
                                         'type': 'typography',
-                                        'content': 'Graph View',
                                       },
                                     ],
                                   },
                                 ],
-                                'gap': 'md',
                                 'type': 'grid',
-                                'cols': 2,
                               },
                               {
+                                'type': 'line-chart',
                                 'data': [
                                   {
                                     'date': 'Jan',
                                     'value': 12,
                                   },
                                   {
-                                    'date': 'Feb',
                                     'value': 19,
+                                    'date': 'Feb',
                                   },
                                   {
                                     'date': 'Mar',
@@ -2099,18 +2097,16 @@ export function stdStemLabLabResultOrbital(params: StdStemLabLabResultOrbitalPar
                                     'date': 'Apr',
                                   },
                                   {
-                                    'date': 'May',
                                     'value': 22,
+                                    'date': 'May',
                                   },
                                   {
-                                    'value': 30,
                                     'date': 'Jun',
+                                    'value': 30,
                                   },
                                 ],
-                                'type': 'line-chart',
                               },
                               {
-                                'type': 'chart-legend',
                                 'items': [
                                   {
                                     'color': 'primary',
@@ -2121,6 +2117,7 @@ export function stdStemLabLabResultOrbital(params: StdStemLabLabResultOrbitalPar
                                     'label': 'Previous',
                                   },
                                 ],
+                                'type': 'chart-legend',
                               },
                               {
                                 'nodes': [
@@ -2137,28 +2134,31 @@ export function stdStemLabLabResultOrbital(params: StdStemLabLabResultOrbitalPar
                                     'label': 'End',
                                   },
                                 ],
-                                'type': 'graph-view',
-                                'width': 400,
+                                'height': 200,
                                 'edges': [
                                   {
                                     'source': 'a',
                                     'target': 'b',
                                   },
                                   {
-                                    'source': 'b',
                                     'target': 'c',
+                                    'source': 'b',
                                   },
                                 ],
-                                'height': 200,
+                                'type': 'graph-view',
+                                'width': 400,
                               },
                             ],
+                            'type': 'stack',
                             'gap': 'lg',
-                            'direction': 'vertical',
                           },
                         ],
                         'type': 'scaled-diagram',
                       },
                     ],
+                    'appName': 'STEM Lab',
+                    'type': 'game-shell',
+                    'showTopBar': true,
                   },
                 ],
               ],
@@ -2173,8 +2173,8 @@ export function stdStemLabLabResultOrbital(params: StdStemLabLabResultOrbitalPar
                   'LabResult',
                   {
                     'emit': {
-                      'success': 'LabResultLoaded',
                       'failure': 'LabResultLoadFailed',
+                      'success': 'LabResultLoaded',
                     },
                   },
                 ],
@@ -2187,19 +2187,18 @@ export function stdStemLabLabResultOrbital(params: StdStemLabLabResultOrbitalPar
                     'appName': 'STEM Lab',
                     'children': [
                       {
-                        'type': 'scaled-diagram',
                         'children': [
                           {
                             'direction': 'vertical',
-                            'type': 'stack',
                             'gap': 'lg',
+                            'type': 'stack',
                             'children': [
                               {
                                 'type': 'breadcrumb',
                                 'items': [
                                   {
-                                    'href': '/',
                                     'label': 'Home',
+                                    'href': '/',
                                   },
                                   {
                                     'label': 'Lab Results',
@@ -2207,35 +2206,35 @@ export function stdStemLabLabResultOrbital(params: StdStemLabLabResultOrbitalPar
                                 ],
                               },
                               {
-                                'gap': 'md',
-                                'direction': 'horizontal',
-                                'justify': 'between',
-                                'type': 'stack',
                                 'children': [
                                   {
-                                    'gap': 'md',
-                                    'type': 'stack',
                                     'children': [
                                       {
-                                        'name': 'clipboard',
                                         'type': 'icon',
+                                        'name': 'clipboard',
                                       },
                                       {
                                         'type': 'typography',
-                                        'variant': 'h2',
                                         'content': 'Lab Results',
+                                        'variant': 'h2',
                                       },
                                     ],
+                                    'type': 'stack',
                                     'direction': 'horizontal',
+                                    'gap': 'md',
                                   },
                                   {
-                                    'action': 'REFRESH',
                                     'variant': 'secondary',
-                                    'icon': 'refresh-cw',
-                                    'label': 'Refresh',
                                     'type': 'button',
+                                    'action': 'REFRESH',
+                                    'label': 'Refresh',
+                                    'icon': 'refresh-cw',
                                   },
                                 ],
+                                'direction': 'horizontal',
+                                'gap': 'md',
+                                'justify': 'between',
+                                'type': 'stack',
                               },
                               {
                                 'type': 'divider',
@@ -2243,22 +2242,21 @@ export function stdStemLabLabResultOrbital(params: StdStemLabLabResultOrbitalPar
                               {
                                 'children': [
                                   {
-                                    'type': 'simple-grid',
                                     'children': [
                                       {
-                                        'label': 'ExperimentCount',
                                         'value': '@entity.experimentCount',
+                                        'label': 'ExperimentCount',
                                         'type': 'stat-display',
                                       },
                                       {
-                                        'type': 'stat-display',
                                         'value': '@entity.avgAccuracy',
                                         'label': 'AvgAccuracy',
+                                        'type': 'stat-display',
                                       },
                                       {
                                         'type': 'stat-display',
-                                        'value': '@entity.totalScore',
                                         'label': 'TotalScore',
+                                        'value': '@entity.totalScore',
                                       },
                                       {
                                         'type': 'card',
@@ -2272,8 +2270,8 @@ export function stdStemLabLabResultOrbital(params: StdStemLabLabResultOrbitalPar
                                               },
                                               {
                                                 'content': '@entity.grade',
-                                                'variant': 'h3',
                                                 'type': 'typography',
+                                                'variant': 'h3',
                                               },
                                             ],
                                             'type': 'stack',
@@ -2283,28 +2281,30 @@ export function stdStemLabLabResultOrbital(params: StdStemLabLabResultOrbitalPar
                                         ],
                                       },
                                     ],
+                                    'type': 'simple-grid',
                                     'cols': 3,
                                   },
                                 ],
-                                'gap': 'sm',
                                 'type': 'stack',
+                                'gap': 'sm',
                                 'direction': 'vertical',
                               },
                               {
                                 'type': 'divider',
                               },
                               {
+                                'gap': 'md',
                                 'type': 'grid',
                                 'children': [
                                   {
-                                    'type': 'card',
                                     'children': [
                                       {
-                                        'variant': 'caption',
                                         'type': 'typography',
+                                        'variant': 'caption',
                                         'content': 'Chart View',
                                       },
                                     ],
+                                    'type': 'card',
                                   },
                                   {
                                     'type': 'card',
@@ -2318,7 +2318,6 @@ export function stdStemLabLabResultOrbital(params: StdStemLabLabResultOrbitalPar
                                   },
                                 ],
                                 'cols': 2,
-                                'gap': 'md',
                               },
                               {
                                 'data': [
@@ -2335,12 +2334,12 @@ export function stdStemLabLabResultOrbital(params: StdStemLabLabResultOrbitalPar
                                     'value': 15,
                                   },
                                   {
-                                    'date': 'Apr',
                                     'value': 25,
+                                    'date': 'Apr',
                                   },
                                   {
-                                    'value': 22,
                                     'date': 'May',
+                                    'value': 22,
                                   },
                                   {
                                     'date': 'Jun',
@@ -2350,50 +2349,51 @@ export function stdStemLabLabResultOrbital(params: StdStemLabLabResultOrbitalPar
                                 'type': 'line-chart',
                               },
                               {
+                                'type': 'chart-legend',
                                 'items': [
                                   {
                                     'label': 'Current',
                                     'color': 'primary',
                                   },
                                   {
-                                    'label': 'Previous',
                                     'color': 'muted',
+                                    'label': 'Previous',
                                   },
                                 ],
-                                'type': 'chart-legend',
                               },
                               {
-                                'nodes': [
-                                  {
-                                    'label': 'Start',
-                                    'id': 'a',
-                                  },
-                                  {
-                                    'id': 'b',
-                                    'label': 'Process',
-                                  },
-                                  {
-                                    'id': 'c',
-                                    'label': 'End',
-                                  },
-                                ],
-                                'type': 'graph-view',
-                                'width': 400,
-                                'height': 200,
                                 'edges': [
                                   {
-                                    'source': 'a',
                                     'target': 'b',
+                                    'source': 'a',
                                   },
                                   {
                                     'target': 'c',
                                     'source': 'b',
                                   },
                                 ],
+                                'nodes': [
+                                  {
+                                    'label': 'Start',
+                                    'id': 'a',
+                                  },
+                                  {
+                                    'label': 'Process',
+                                    'id': 'b',
+                                  },
+                                  {
+                                    'label': 'End',
+                                    'id': 'c',
+                                  },
+                                ],
+                                'type': 'graph-view',
+                                'width': 400,
+                                'height': 200,
                               },
                             ],
                           },
                         ],
+                        'type': 'scaled-diagram',
                       },
                     ],
                   },

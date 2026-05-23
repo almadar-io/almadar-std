@@ -75,8 +75,7 @@
             "type": "number",
             "default": 0,
             "label": "Default billing rate",
-            "description": "Default hourly billing rate applied to work logged against this deadline.",
-            "tier": "customization"
+            "description": "Default hourly billing rate applied to work logged against this deadline."
           },
           {
             "key": "blackoutDates",
@@ -84,7 +83,6 @@
             "default": [],
             "label": "Blackout dates",
             "description": "ISO dates (court holidays) blocked from scheduling. Compose std-lifecycle to auto-shift.",
-            "tier": "customization",
             "items": {
               "type": "string"
             }
@@ -94,16 +92,14 @@
             "type": "string",
             "default": "00:00-23:59",
             "label": "Booking hours",
-            "description": "Daily window during which deadlines can be created (HH:MM-HH:MM).",
-            "tier": "customization"
+            "description": "Daily window during which deadlines can be created (HH:MM-HH:MM)."
           },
           {
             "key": "bookingWindowDays",
             "type": "number",
             "default": 365,
             "label": "Booking window (days)",
-            "description": "How far in advance deadlines can be scheduled.",
-            "tier": "customization"
+            "description": "How far in advance deadlines can be scheduled."
           },
           {
             "key": "cancellationPolicy",
@@ -111,7 +107,6 @@
             "default": "no-refund",
             "label": "Cancellation policy",
             "description": "Refund treatment when a deadline is cancelled (typically n/a for legal).",
-            "tier": "customization",
             "enumValues": [
               "free",
               "partial-refund",
@@ -124,7 +119,6 @@
             "default": "standard",
             "label": "Confidentiality level",
             "description": "Access control tier for related matter data.",
-            "tier": "customization",
             "enumValues": [
               "standard",
               "elevated",
@@ -136,16 +130,15 @@
             "type": "boolean",
             "default": true,
             "label": "Conflict check required",
-            "description": "Block creation until a conflict-of-interest check is on file.",
-            "tier": "essential"
+            "description": "Block creation until a conflict-of-interest check is on file."
           },
           {
             "key": "fields",
             "type": "[FieldSpec]",
             "default": [
               {
-                "variant": "caption",
                 "label": "Title",
+                "variant": "caption",
                 "name": "title"
               },
               {
@@ -154,39 +147,33 @@
                 "label": "Type"
               },
               {
+                "variant": "caption",
                 "name": "dueAt",
-                "label": "Due",
+                "label": "Due"
+              },
+              {
+                "name": "jurisdiction",
+                "label": "Jurisdiction",
                 "variant": "caption"
               },
               {
-                "variant": "caption",
-                "name": "jurisdiction",
-                "label": "Jurisdiction"
-              },
-              {
+                "name": "assignedTo",
                 "label": "Assigned",
-                "variant": "caption",
-                "name": "assignedTo"
+                "variant": "caption"
               },
               {
-                "name": "status",
                 "label": "Status",
-                "variant": "badge"
+                "variant": "badge",
+                "name": "status"
               }
             ],
             "label": "Columns to show",
             "description": "Each column maps to one field on the Court Deadline entity",
-            "tier": "customization",
             "items": {
               "properties": {
                 "name": {
                   "name": "name",
                   "required": true,
-                  "type": "string"
-                },
-                "key": {
-                  "name": "key",
-                  "required": false,
                   "type": "string"
                 },
                 "variant": {
@@ -201,6 +188,11 @@
                 },
                 "format": {
                   "name": "format",
+                  "required": false,
+                  "type": "string"
+                },
+                "key": {
+                  "name": "key",
                   "required": false,
                   "type": "string"
                 },
@@ -223,27 +215,21 @@
             "type": "[ItemAction]",
             "default": [
               {
+                "variant": "primary",
                 "icon": "arrow-right",
                 "event": "OPEN_DEADLINE",
-                "variant": "primary",
                 "label": "Open"
               },
               {
+                "event": "MARK_COMPLETED",
                 "variant": "danger",
-                "label": "Complete",
-                "event": "MARK_COMPLETED"
+                "label": "Complete"
               }
             ],
             "label": "Row actions",
             "description": "Buttons users can click on each deadline row",
-            "tier": "customization",
             "items": {
               "properties": {
-                "label": {
-                  "name": "label",
-                  "required": true,
-                  "type": "string"
-                },
                 "event": {
                   "name": "event",
                   "required": true,
@@ -258,6 +244,11 @@
                   "name": "icon",
                   "required": false,
                   "type": "string"
+                },
+                "label": {
+                  "name": "label",
+                  "required": true,
+                  "type": "string"
                 }
               },
               "type": "object"
@@ -268,56 +259,49 @@
             "type": "number",
             "default": 1440,
             "label": "Lead time (minutes)",
-            "description": "Minimum minutes before dueAt at which a deadline can still be created (default 1 day).",
-            "tier": "customization"
+            "description": "Minimum minutes before dueAt at which a deadline can still be created (default 1 day)."
           },
           {
             "key": "maxReschedules",
             "type": "number",
             "default": 2,
             "label": "Max reschedules",
-            "description": "Hard cap on extension count per deadline.",
-            "tier": "advanced"
+            "description": "Hard cap on extension count per deadline."
           },
           {
             "key": "noShowGracePeriodMinutes",
             "type": "number",
             "default": 0,
             "label": "No-show grace (minutes)",
-            "description": "Minutes after dueAt before the deadline auto-marks missed. Wire via std-lifecycle.",
-            "tier": "customization"
+            "description": "Minutes after dueAt before the deadline auto-marks missed. Wire via std-lifecycle."
           },
           {
             "key": "practiceArea",
             "type": "string",
             "default": "",
             "label": "Practice area",
-            "description": "Practice area (e.g. litigation, IP, family). Drives docket grouping.",
-            "tier": "customization"
+            "description": "Practice area (e.g. litigation, IP, family). Drives docket grouping."
           },
           {
             "key": "rescheduleWindowHours",
             "type": "number",
             "default": 72,
             "label": "Reschedule window (hours)",
-            "description": "Hours before dueAt during which an extension request is accepted.",
-            "tier": "customization"
+            "description": "Hours before dueAt during which an extension request is accepted."
           },
           {
             "key": "retainerRequired",
             "type": "boolean",
             "default": false,
             "label": "Retainer required",
-            "description": "Require a signed retainer before work begins on the matter.",
-            "tier": "customization"
+            "description": "Require a signed retainer before work begins on the matter."
           },
           {
             "key": "title",
             "type": "string",
             "default": "Deadlines",
             "label": "Section title",
-            "description": "Heading shown above the legal deadlines docket",
-            "tier": "customization"
+            "description": "Heading shown above the legal deadlines docket"
           }
         ],
         "capabilities": []

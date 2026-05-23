@@ -86,24 +86,24 @@ export interface StdOfferLetterOfferLetterLoadFailedPayload {
  * without modifying its state-machine topology.
  */
 export interface StdOfferLetterConfig {
-  /** Default: `[{"variant":"caption","name":"applicantName","label":"Applicant"},{"name":"position","variant":"caption","label":"Position"},{"label":"Salary","name":"salary","variant":"caption"},{"name":"startDate","label":"Start Date","variant":"caption"},{"variant":"badge","name":"status","label":"Status"}]` */
+  /** Default: `1825` */
+  retentionAfterRejectionDays?: number;
+  /** Default: `[{"name":"applicantName","label":"Applicant","variant":"caption"},{"label":"Position","variant":"caption","name":"position"},{"label":"Salary","variant":"caption","name":"salary"},{"name":"startDate","label":"Start Date","variant":"caption"},{"variant":"badge","name":"status","label":"Status"}]` */
   fields?: EntityRow[];
-  /** Default: `false` */
-  eVerifyRequired?: boolean;
+  /** Default: `"Offer Letters"` */
+  title?: string;
+  /** Default: `true` */
+  backgroundCheckRequired?: boolean;
   /** Default: `true` */
   i9DocumentsRequired?: boolean;
   /** Default: `false` */
   anonymizeOnRejection?: boolean;
   /** Default: `false` */
   equalOpportunityTrackingEnabled?: boolean;
-  /** Default: `1825` */
-  retentionAfterRejectionDays?: number;
-  /** Default: `"Offer Letters"` */
-  title?: string;
-  /** Default: `[{"label":"Open","variant":"primary","event":"OPEN_OFFER","icon":"arrow-right"},{"variant":"danger","label":"Revoke","event":"REVOKE_OFFER"}]` */
+  /** Default: `false` */
+  eVerifyRequired?: boolean;
+  /** Default: `[{"icon":"arrow-right","variant":"primary","event":"OPEN_OFFER","label":"Open"},{"event":"REVOKE_OFFER","variant":"danger","label":"Revoke"}]` */
   itemActions?: EntityRow[];
-  /** Default: `true` */
-  backgroundCheckRequired?: boolean;
 }
 
 /**

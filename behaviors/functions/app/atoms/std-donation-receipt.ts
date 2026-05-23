@@ -88,28 +88,28 @@ export interface StdDonationReceiptDonationReceiptLoadFailedPayload {
  * without modifying its state-machine topology.
  */
 export interface StdDonationReceiptConfig {
-  /** Default: `0` */
-  gracePeriodDays?: number;
-  /** Default: `[{"variant":"primary","event":"OPEN_RECEIPT","label":"Open","icon":"arrow-right"},{"event":"VOID_RECEIPT","label":"Void","variant":"danger"}]` */
-  itemActions?: EntityRow[];
-  /** Default: `"USD"` */
-  currency?: string;
-  /** Default: `0` */
-  lateFeeAmount?: number;
-  /** Default: `7` */
-  retentionYears?: number;
-  /** Default: `[{"name":"receiptNumber","label":"Receipt #","variant":"caption"},{"label":"Donor","variant":"caption","name":"donorName"},{"name":"amount","label":"Amount","variant":"caption"},{"name":"donationDate","label":"Date","variant":"caption"},{"variant":"caption","label":"Tax Year","name":"taxYear"},{"label":"Emailed","variant":"badge","name":"isEmailed"}]` */
-  fields?: EntityRow[];
-  /** Default: `"half-up"` */
-  roundingMode?: 'bankers' | 'half-up' | 'down';
-  /** Default: `"Donation Receipts"` */
-  title?: string;
-  /** Default: `"none"` */
-  lateFeePolicy?: 'none' | 'flat' | 'percent';
-  /** Default: `"none"` */
-  taxStrategy?: 'inclusive' | 'exclusive' | 'none';
   /** Default: `"US-IRS"` */
   complianceJurisdiction?: string;
+  /** Default: `"none"` */
+  lateFeePolicy?: 'none' | 'flat' | 'percent';
+  /** Default: `7` */
+  retentionYears?: number;
+  /** Default: `0` */
+  lateFeeAmount?: number;
+  /** Default: `"USD"` */
+  currency?: string;
+  /** Default: `"half-up"` */
+  roundingMode?: 'bankers' | 'half-up' | 'down';
+  /** Default: `[{"label":"Receipt #","name":"receiptNumber","variant":"caption"},{"variant":"caption","label":"Donor","name":"donorName"},{"variant":"caption","label":"Amount","name":"amount"},{"variant":"caption","label":"Date","name":"donationDate"},{"label":"Tax Year","variant":"caption","name":"taxYear"},{"label":"Emailed","name":"isEmailed","variant":"badge"}]` */
+  fields?: EntityRow[];
+  /** Default: `"none"` */
+  taxStrategy?: 'inclusive' | 'exclusive' | 'none';
+  /** Default: `0` */
+  gracePeriodDays?: number;
+  /** Default: `"Donation Receipts"` */
+  title?: string;
+  /** Default: `[{"event":"OPEN_RECEIPT","label":"Open","icon":"arrow-right","variant":"primary"},{"label":"Void","variant":"danger","event":"VOID_RECEIPT"}]` */
+  itemActions?: EntityRow[];
 }
 
 /**

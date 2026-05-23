@@ -31,8 +31,8 @@ const ALIAS = 'Ecommerce';
  * without modifying its state-machine topology.
  */
 export interface StdEcommerceConfig {
-  navItems?: TraitConfig;
   notifications?: TraitConfig;
+  navItems?: TraitConfig;
   topBarActions?: TraitConfig;
 }
 
@@ -158,16 +158,18 @@ export function stdEcommerceProductOrbital(params: StdEcommerceProductOrbitalPar
         'ref': 'AppShell.traits.AppLayout',
         'name': 'ProductAppLayout',
         'config': {
+          'notifications': [],
+          'notificationClickEvent': 'PRODUCT_NOTIFICATIONS_OPEN',
           'navItems': [
             {
-              'icon': 'package',
               'href': '/products',
               'label': 'Products',
+              'icon': 'package',
             },
             {
-              'href': '/cart',
-              'label': 'Cart',
               'icon': 'shopping-cart',
+              'label': 'Cart',
+              'href': '/cart',
             },
             {
               'icon': 'credit-card',
@@ -175,27 +177,25 @@ export function stdEcommerceProductOrbital(params: StdEcommerceProductOrbitalPar
               'href': '/checkout',
             },
             {
-              'icon': 'clipboard-list',
               'label': 'Orders',
               'href': '/orders',
+              'icon': 'clipboard-list',
             },
           ],
-          'notifications': [],
           'appName': 'EcommerceApp',
           'searchEvent': 'PRODUCT_SEARCH',
+          'contentTrait': '@trait.ProductCatalog',
           'topBarActions': [
             {
               'icon': 'shopping-cart',
-              'event': 'CART_OPEN',
               'label': 'Cart',
+              'event': 'CART_OPEN',
             },
           ],
-          'notificationClickEvent': 'PRODUCT_NOTIFICATIONS_OPEN',
-          'contentTrait': '@trait.ProductCatalog',
         },
         'events': {
-          'NOTIFY_CLICK': 'PRODUCT_NOTIFICATIONS_OPEN',
           'SEARCH': 'PRODUCT_SEARCH',
+          'NOTIFY_CLICK': 'PRODUCT_NOTIFICATIONS_OPEN',
         },
       }),
       rebindInlineTraitEntity({
@@ -278,24 +278,19 @@ export function stdEcommerceProductOrbital(params: StdEcommerceProductOrbitalPar
                   'render-ui',
                   'main',
                   {
+                    'direction': 'vertical',
                     'type': 'stack',
                     'children': [
                       {
-                        'gap': 'md',
-                        'justify': 'between',
-                        'direction': 'horizontal',
-                        'align': 'center',
-                        'type': 'stack',
                         'children': [
                           {
-                            'direction': 'horizontal',
                             'type': 'stack',
+                            'direction': 'horizontal',
                             'align': 'center',
-                            'gap': 'sm',
                             'children': [
                               {
-                                'name': 'package',
                                 'type': 'icon',
+                                'name': 'package',
                               },
                               {
                                 'content': 'Products',
@@ -303,29 +298,34 @@ export function stdEcommerceProductOrbital(params: StdEcommerceProductOrbitalPar
                                 'type': 'typography',
                               },
                             ],
+                            'gap': 'sm',
                           },
                           {
-                            'direction': 'horizontal',
-                            'type': 'stack',
-                            'gap': 'sm',
                             'children': [
                               {
                                 'type': 'button',
-                                'icon': 'plus',
                                 'label': 'Create Product',
-                                'action': 'CREATE',
+                                'icon': 'plus',
                                 'variant': 'primary',
+                                'action': 'CREATE',
                               },
                             ],
+                            'direction': 'horizontal',
+                            'gap': 'sm',
+                            'type': 'stack',
                           },
                         ],
+                        'gap': 'md',
+                        'type': 'stack',
+                        'justify': 'between',
+                        'direction': 'horizontal',
+                        'align': 'center',
                       },
                       {
                         'type': 'divider',
                       },
                       '@trait.ProductBrowseList',
                     ],
-                    'direction': 'vertical',
                     'gap': 'lg',
                   },
                 ],
@@ -345,34 +345,34 @@ export function stdEcommerceProductOrbital(params: StdEcommerceProductOrbitalPar
                   'render-ui',
                   'main',
                   {
+                    'children': [
+                      {
+                        'name': 'bell',
+                        'type': 'icon',
+                      },
+                      {
+                        'type': 'typography',
+                        'content': 'No notifications',
+                        'variant': 'h3',
+                      },
+                      {
+                        'type': 'typography',
+                        'content': 'You\'re all caught up.',
+                        'color': 'muted',
+                        'variant': 'caption',
+                      },
+                      {
+                        'action': 'INIT',
+                        'type': 'button',
+                        'variant': 'ghost',
+                        'label': 'Back to products',
+                      },
+                    ],
+                    'align': 'center',
                     'type': 'stack',
                     'gap': 'md',
                     'direction': 'vertical',
                     'className': 'py-8',
-                    'align': 'center',
-                    'children': [
-                      {
-                        'type': 'icon',
-                        'name': 'bell',
-                      },
-                      {
-                        'variant': 'h3',
-                        'type': 'typography',
-                        'content': 'No notifications',
-                      },
-                      {
-                        'content': 'You\'re all caught up.',
-                        'type': 'typography',
-                        'variant': 'caption',
-                        'color': 'muted',
-                      },
-                      {
-                        'action': 'INIT',
-                        'label': 'Back to products',
-                        'type': 'button',
-                        'variant': 'ghost',
-                      },
-                    ],
                   },
                 ],
               ],
@@ -386,19 +386,16 @@ export function stdEcommerceProductOrbital(params: StdEcommerceProductOrbitalPar
         'name': 'ProductBrowseList',
         'linkedEntity': canonicalName,
         'config': {
-          'cols': 3,
-          'imageField': 'imageUrl',
-          'gap': 'md',
           'itemActions': [
             {
+              'event': 'VIEW',
               'variant': 'ghost',
               'label': 'View',
-              'event': 'VIEW',
             },
             {
+              'variant': 'ghost',
               'event': 'EDIT',
               'label': 'Edit',
-              'variant': 'ghost',
             },
             {
               'label': 'Delete',
@@ -406,6 +403,9 @@ export function stdEcommerceProductOrbital(params: StdEcommerceProductOrbitalPar
               'variant': 'danger',
             },
           ],
+          'cols': 3,
+          'imageField': 'imageUrl',
+          'gap': 'md',
           'fields': [
             {
               'name': 'name',
@@ -413,23 +413,23 @@ export function stdEcommerceProductOrbital(params: StdEcommerceProductOrbitalPar
               'variant': 'h3',
             },
             {
-              'name': 'category',
               'variant': 'badge',
+              'name': 'category',
             },
             {
-              'variant': 'h4',
               'format': 'currency',
               'name': 'price',
+              'variant': 'h4',
             },
             {
               'name': 'sku',
               'variant': 'caption',
             },
             {
-              'format': 'boolean',
               'variant': 'body',
               'label': 'In Stock',
               'name': 'inStock',
+              'format': 'boolean',
             },
           ],
         },
@@ -634,8 +634,8 @@ export function stdEcommerceProductOrbital(params: StdEcommerceProductOrbitalPar
                   'Product',
                   {
                     'emit': {
-                      'success': 'ProductLoaded',
                       'failure': 'ProductLoadFailed',
+                      'success': 'ProductLoaded',
                     },
                   },
                 ],
@@ -660,32 +660,33 @@ export function stdEcommerceProductOrbital(params: StdEcommerceProductOrbitalPar
                   'render-ui',
                   'modal',
                   {
+                    'type': 'stack',
                     'direction': 'vertical',
                     'gap': 'md',
                     'children': [
                       {
-                        'type': 'stack',
-                        'gap': 'sm',
                         'children': [
                           {
-                            'name': 'plus-circle',
                             'type': 'icon',
+                            'name': 'plus-circle',
                           },
                           {
-                            'type': 'typography',
                             'content': 'Create Product',
                             'variant': 'h3',
+                            'type': 'typography',
                           },
                         ],
                         'direction': 'horizontal',
+                        'gap': 'sm',
+                        'type': 'stack',
                       },
                       {
                         'type': 'divider',
                       },
                       {
-                        'mode': 'create',
-                        'submitEvent': 'SAVE',
+                        'type': 'form-section',
                         'cancelEvent': 'CLOSE',
+                        'submitEvent': 'SAVE',
                         'fields': [
                           'name',
                           'description',
@@ -694,10 +695,9 @@ export function stdEcommerceProductOrbital(params: StdEcommerceProductOrbitalPar
                           'sku',
                           'inStock',
                         ],
-                        'type': 'form-section',
+                        'mode': 'create',
                       },
                     ],
-                    'type': 'stack',
                   },
                 ],
               ],
@@ -976,8 +976,8 @@ export function stdEcommerceProductOrbital(params: StdEcommerceProductOrbitalPar
                   {
                     'id': '@payload.id',
                     'emit': {
-                      'success': 'ProductLoaded',
                       'failure': 'ProductLoadFailed',
+                      'success': 'ProductLoaded',
                     },
                   },
                 ],
@@ -985,14 +985,10 @@ export function stdEcommerceProductOrbital(params: StdEcommerceProductOrbitalPar
                   'render-ui',
                   'modal',
                   {
-                    'direction': 'vertical',
-                    'type': 'stack',
-                    'gap': 'md',
                     'children': [
                       {
                         'gap': 'sm',
                         'direction': 'horizontal',
-                        'type': 'stack',
                         'children': [
                           {
                             'type': 'icon',
@@ -1004,12 +1000,12 @@ export function stdEcommerceProductOrbital(params: StdEcommerceProductOrbitalPar
                             'type': 'typography',
                           },
                         ],
+                        'type': 'stack',
                       },
                       {
                         'type': 'divider',
                       },
                       {
-                        'submitEvent': 'SAVE',
                         'fields': [
                           'name',
                           'description',
@@ -1018,12 +1014,16 @@ export function stdEcommerceProductOrbital(params: StdEcommerceProductOrbitalPar
                           'sku',
                           'inStock',
                         ],
-                        'mode': 'edit',
                         'type': 'form-section',
                         'entity': '@payload.row',
+                        'submitEvent': 'SAVE',
                         'cancelEvent': 'CLOSE',
+                        'mode': 'edit',
                       },
                     ],
+                    'direction': 'vertical',
+                    'gap': 'md',
+                    'type': 'stack',
                   },
                 ],
               ],
@@ -1064,8 +1064,8 @@ export function stdEcommerceProductOrbital(params: StdEcommerceProductOrbitalPar
                   '@payload.data',
                   {
                     'emit': {
-                      'failure': 'ProductUpdateFailed',
                       'success': 'ProductUpdated',
+                      'failure': 'ProductUpdateFailed',
                     },
                   },
                 ],
@@ -1257,8 +1257,8 @@ export function stdEcommerceProductOrbital(params: StdEcommerceProductOrbitalPar
                   'Product',
                   {
                     'emit': {
-                      'failure': 'ProductLoadFailed',
                       'success': 'ProductLoaded',
+                      'failure': 'ProductLoadFailed',
                     },
                   },
                 ],
@@ -1303,21 +1303,22 @@ export function stdEcommerceProductOrbital(params: StdEcommerceProductOrbitalPar
                   'fetch',
                   'Product',
                   {
-                    'id': '@payload.id',
                     'emit': {
-                      'failure': 'ProductLoadFailed',
                       'success': 'ProductLoaded',
+                      'failure': 'ProductLoadFailed',
                     },
+                    'id': '@payload.id',
                   },
                 ],
                 [
                   'render-ui',
                   'modal',
                   {
-                    'direction': 'vertical',
-                    'type': 'stack',
                     'children': [
                       {
+                        'gap': 'sm',
+                        'type': 'stack',
+                        'align': 'center',
                         'children': [
                           {
                             'type': 'icon',
@@ -1329,39 +1330,37 @@ export function stdEcommerceProductOrbital(params: StdEcommerceProductOrbitalPar
                             'content': '@entity.name',
                           },
                         ],
-                        'type': 'stack',
                         'direction': 'horizontal',
-                        'gap': 'sm',
-                        'align': 'center',
                       },
                       {
                         'type': 'divider',
                       },
                       {
-                        'gap': 'md',
                         'type': 'stack',
-                        'direction': 'horizontal',
                         'children': [
                           {
-                            'type': 'typography',
                             'variant': 'caption',
                             'content': 'Name',
+                            'type': 'typography',
                           },
                           {
-                            'variant': 'body',
                             'type': 'typography',
+                            'variant': 'body',
                             'content': '@entity.name',
                           },
                         ],
+                        'direction': 'horizontal',
+                        'gap': 'md',
                       },
                       {
                         'direction': 'horizontal',
                         'gap': 'md',
+                        'type': 'stack',
                         'children': [
                           {
                             'type': 'typography',
-                            'variant': 'caption',
                             'content': 'Description',
+                            'variant': 'caption',
                           },
                           {
                             'variant': 'body',
@@ -1369,63 +1368,61 @@ export function stdEcommerceProductOrbital(params: StdEcommerceProductOrbitalPar
                             'content': '@entity.description',
                           },
                         ],
-                        'type': 'stack',
                       },
                       {
                         'type': 'stack',
-                        'gap': 'md',
                         'direction': 'horizontal',
+                        'gap': 'md',
                         'children': [
                           {
-                            'variant': 'caption',
                             'content': 'Price',
+                            'variant': 'caption',
                             'type': 'typography',
                           },
                           {
-                            'variant': 'body',
                             'content': '@entity.price',
                             'type': 'typography',
+                            'variant': 'body',
                           },
                         ],
                       },
                       {
-                        'direction': 'horizontal',
                         'type': 'stack',
+                        'direction': 'horizontal',
+                        'gap': 'md',
                         'children': [
                           {
+                            'variant': 'caption',
                             'content': 'Category',
                             'type': 'typography',
-                            'variant': 'caption',
                           },
                           {
-                            'content': '@entity.category',
                             'variant': 'body',
                             'type': 'typography',
+                            'content': '@entity.category',
                           },
                         ],
-                        'gap': 'md',
                       },
                       {
-                        'direction': 'horizontal',
                         'children': [
                           {
                             'type': 'typography',
-                            'variant': 'caption',
                             'content': 'Sku',
+                            'variant': 'caption',
                           },
                           {
-                            'variant': 'body',
                             'content': '@entity.sku',
                             'type': 'typography',
+                            'variant': 'body',
                           },
                         ],
-                        'gap': 'md',
+                        'direction': 'horizontal',
                         'type': 'stack',
+                        'gap': 'md',
                       },
                       {
                         'gap': 'md',
                         'type': 'stack',
-                        'direction': 'horizontal',
                         'children': [
                           {
                             'variant': 'caption',
@@ -1433,37 +1430,40 @@ export function stdEcommerceProductOrbital(params: StdEcommerceProductOrbitalPar
                             'type': 'typography',
                           },
                           {
-                            'content': '@entity.inStock',
-                            'variant': 'body',
                             'type': 'typography',
+                            'variant': 'body',
+                            'content': '@entity.inStock',
                           },
                         ],
+                        'direction': 'horizontal',
                       },
                       {
                         'type': 'divider',
                       },
                       {
+                        'gap': 'sm',
+                        'type': 'stack',
+                        'direction': 'horizontal',
                         'justify': 'end',
                         'children': [
                           {
-                            'variant': 'primary',
                             'label': 'Edit',
-                            'action': 'EDIT',
                             'icon': 'edit',
+                            'action': 'EDIT',
                             'type': 'button',
+                            'variant': 'primary',
                           },
                           {
-                            'action': 'CLOSE',
                             'variant': 'ghost',
+                            'action': 'CLOSE',
                             'type': 'button',
                             'label': 'Close',
                           },
                         ],
-                        'type': 'stack',
-                        'direction': 'horizontal',
-                        'gap': 'sm',
                       },
                     ],
+                    'direction': 'vertical',
+                    'type': 'stack',
                     'gap': 'md',
                   },
                 ],
@@ -1694,8 +1694,8 @@ export function stdEcommerceProductOrbital(params: StdEcommerceProductOrbitalPar
                   'Product',
                   {
                     'emit': {
-                      'failure': 'ProductLoadFailed',
                       'success': 'ProductLoaded',
+                      'failure': 'ProductLoadFailed',
                     },
                   },
                 ],
@@ -1717,8 +1717,8 @@ export function stdEcommerceProductOrbital(params: StdEcommerceProductOrbitalPar
                   {
                     'id': '@payload.id',
                     'emit': {
-                      'success': 'ProductLoaded',
                       'failure': 'ProductLoadFailed',
+                      'success': 'ProductLoaded',
                     },
                   },
                 ],
@@ -1726,20 +1726,23 @@ export function stdEcommerceProductOrbital(params: StdEcommerceProductOrbitalPar
                   'render-ui',
                   'modal',
                   {
+                    'type': 'stack',
+                    'direction': 'vertical',
+                    'gap': 'md',
                     'children': [
                       {
-                        'type': 'stack',
                         'direction': 'horizontal',
                         'gap': 'sm',
+                        'type': 'stack',
                         'children': [
                           {
                             'name': 'alert-triangle',
                             'type': 'icon',
                           },
                           {
-                            'variant': 'h3',
                             'content': 'Delete Product',
                             'type': 'typography',
+                            'variant': 'h3',
                           },
                         ],
                         'align': 'center',
@@ -1748,35 +1751,32 @@ export function stdEcommerceProductOrbital(params: StdEcommerceProductOrbitalPar
                         'type': 'divider',
                       },
                       {
-                        'type': 'alert',
                         'variant': 'error',
                         'message': 'This action cannot be undone.',
+                        'type': 'alert',
                       },
                       {
-                        'direction': 'horizontal',
                         'gap': 'sm',
-                        'type': 'stack',
-                        'justify': 'end',
+                        'direction': 'horizontal',
                         'children': [
                           {
                             'variant': 'ghost',
-                            'label': 'Cancel',
                             'action': 'CANCEL',
+                            'label': 'Cancel',
                             'type': 'button',
                           },
                           {
-                            'type': 'button',
-                            'action': 'CONFIRM_DELETE',
                             'variant': 'danger',
                             'label': 'Delete',
+                            'type': 'button',
                             'icon': 'check',
+                            'action': 'CONFIRM_DELETE',
                           },
                         ],
+                        'justify': 'end',
+                        'type': 'stack',
                       },
                     ],
-                    'direction': 'vertical',
-                    'type': 'stack',
-                    'gap': 'md',
                   },
                 ],
               ],
@@ -1793,8 +1793,8 @@ export function stdEcommerceProductOrbital(params: StdEcommerceProductOrbitalPar
                   '@entity.pendingId',
                   {
                     'emit': {
-                      'failure': 'ProductDeleteFailed',
                       'success': 'ProductDeleted',
+                      'failure': 'ProductDeleteFailed',
                     },
                   },
                 ],
@@ -1848,8 +1848,8 @@ export function stdEcommerceProductOrbital(params: StdEcommerceProductOrbitalPar
                   'Product',
                   {
                     'emit': {
-                      'failure': 'ProductLoadFailed',
                       'success': 'ProductLoaded',
+                      'failure': 'ProductLoadFailed',
                     },
                   },
                 ],
@@ -2251,8 +2251,8 @@ export function stdEcommerceCartItemOrbital(params: StdEcommerceCartItemOrbitalP
                   'CartItem',
                   {
                     'emit': {
-                      'failure': 'CartItemLoadFailed',
                       'success': 'CartItemLoaded',
+                      'failure': 'CartItemLoadFailed',
                     },
                   },
                 ],
@@ -2265,17 +2265,17 @@ export function stdEcommerceCartItemOrbital(params: StdEcommerceCartItemOrbitalP
                         'type': 'spinner',
                       },
                       {
-                        'variant': 'caption',
                         'color': 'muted',
+                        'variant': 'caption',
                         'type': 'typography',
                         'content': 'Loading…',
                       },
                     ],
                     'type': 'stack',
-                    'gap': 'md',
-                    'align': 'center',
-                    'className': 'py-12',
                     'direction': 'vertical',
+                    'gap': 'md',
+                    'className': 'py-12',
+                    'align': 'center',
                   },
                 ],
               ],
@@ -2289,11 +2289,13 @@ export function stdEcommerceCartItemOrbital(params: StdEcommerceCartItemOrbitalP
                   'render-ui',
                   'main',
                   {
+                    'appName': 'EcommerceApp',
+                    'type': 'dashboard-layout',
                     'navItems': [
                       {
-                        'icon': 'package',
                         'label': 'Products',
                         'href': '/products',
+                        'icon': 'package',
                       },
                       {
                         'icon': 'shopping-cart',
@@ -2301,104 +2303,105 @@ export function stdEcommerceCartItemOrbital(params: StdEcommerceCartItemOrbitalP
                         'label': 'Cart',
                       },
                       {
-                        'icon': 'credit-card',
                         'href': '/checkout',
                         'label': 'Checkout',
+                        'icon': 'credit-card',
                       },
                       {
                         'label': 'Orders',
-                        'href': '/orders',
                         'icon': 'clipboard-list',
+                        'href': '/orders',
                       },
                     ],
-                    'type': 'dashboard-layout',
                     'children': [
                       {
-                        'type': 'stack',
                         'direction': 'vertical',
+                        'gap': 'lg',
+                        'type': 'stack',
                         'children': [
                           {
+                            'type': 'stack',
                             'children': [
                               {
-                                'type': 'stack',
+                                'direction': 'horizontal',
                                 'children': [
                                   {
-                                    'name': 'shopping-cart',
                                     'type': 'icon',
+                                    'name': 'shopping-cart',
                                   },
                                   {
                                     'content': 'Shopping Cart',
-                                    'type': 'typography',
                                     'variant': 'h2',
+                                    'type': 'typography',
                                   },
                                 ],
+                                'type': 'stack',
                                 'gap': 'md',
-                                'direction': 'horizontal',
                               },
                               {
-                                'icon': 'plus',
                                 'type': 'button',
                                 'variant': 'primary',
+                                'icon': 'plus',
                                 'label': 'Add Item',
                                 'action': 'ADD_ITEM',
                               },
                             ],
-                            'type': 'stack',
                             'direction': 'horizontal',
-                            'gap': 'md',
                             'justify': 'between',
+                            'gap': 'md',
                           },
                           {
                             'type': 'divider',
                           },
                           {
+                            'type': 'simple-grid',
                             'cols': 3,
                             'children': [
                               {
                                 'value': '@payload.data.length',
-                                'type': 'stat-display',
                                 'icon': 'package',
+                                'type': 'stat-display',
                                 'label': 'Items',
                               },
                               {
-                                'value': '@payload.data.length',
-                                'label': 'Subtotal',
                                 'type': 'stat-display',
+                                'label': 'Subtotal',
                                 'icon': 'dollar-sign',
+                                'value': '@payload.data.length',
                               },
                               {
-                                'label': 'Total',
                                 'type': 'stat-display',
+                                'label': 'Total',
                                 'value': '@payload.data.length',
                                 'icon': 'receipt',
                               },
                             ],
-                            'type': 'simple-grid',
                           },
                           {
                             'type': 'divider',
                           },
                           {
-                            'entity': '@payload.data',
                             'itemActions': [
                               {
                                 'event': 'REQUEST_REMOVE',
-                                'label': 'Remove',
                                 'variant': 'danger',
+                                'label': 'Remove',
                               },
                             ],
+                            'entity': '@payload.data',
+                            'type': 'data-grid',
                             'fields': [
                               {
                                 'icon': 'shopping-cart',
-                                'name': 'productName',
                                 'label': 'Product Name',
                                 'variant': 'h4',
+                                'name': 'productName',
                               },
                               {
+                                'name': 'quantity',
                                 'label': 'Quantity',
                                 'format': 'currency',
                                 'variant': 'caption',
-                                'name': 'quantity',
                               },
                               {
                                 'variant': 'badge',
@@ -2406,20 +2409,17 @@ export function stdEcommerceCartItemOrbital(params: StdEcommerceCartItemOrbitalP
                                 'label': 'Unit Price',
                               },
                             ],
-                            'type': 'data-grid',
                           },
                           {
-                            'action': 'PROCEED_CHECKOUT',
                             'type': 'button',
                             'label': 'Proceed to Checkout',
                             'variant': 'primary',
                             'icon': 'arrow-right',
+                            'action': 'PROCEED_CHECKOUT',
                           },
                         ],
-                        'gap': 'lg',
                       },
                     ],
-                    'appName': 'EcommerceApp',
                   },
                 ],
               ],
@@ -2433,7 +2433,7 @@ export function stdEcommerceCartItemOrbital(params: StdEcommerceCartItemOrbitalP
                   'render-ui',
                   'main',
                   {
-                    'align': 'center',
+                    'type': 'stack',
                     'children': [
                       {
                         'type': 'icon',
@@ -2441,28 +2441,28 @@ export function stdEcommerceCartItemOrbital(params: StdEcommerceCartItemOrbitalP
                         'name': 'alert-triangle',
                       },
                       {
+                        'type': 'typography',
                         'variant': 'h3',
                         'content': 'Failed to load cartitem',
-                        'type': 'typography',
                       },
                       {
                         'type': 'typography',
                         'variant': 'body',
-                        'content': '@payload.error',
                         'color': 'muted',
+                        'content': '@payload.error',
                       },
                       {
-                        'variant': 'primary',
+                        'action': 'INIT',
                         'label': 'Retry',
                         'icon': 'rotate-ccw',
-                        'action': 'INIT',
                         'type': 'button',
+                        'variant': 'primary',
                       },
                     ],
-                    'type': 'stack',
-                    'gap': 'md',
-                    'className': 'py-12',
                     'direction': 'vertical',
+                    'align': 'center',
+                    'className': 'py-12',
+                    'gap': 'md',
                   },
                 ],
               ],
@@ -2486,22 +2486,22 @@ export function stdEcommerceCartItemOrbital(params: StdEcommerceCartItemOrbitalP
                   'render-ui',
                   'main',
                   {
+                    'className': 'py-12',
+                    'type': 'stack',
+                    'gap': 'md',
+                    'direction': 'vertical',
                     'align': 'center',
                     'children': [
                       {
                         'type': 'spinner',
                       },
                       {
-                        'content': 'Preparing checkout…',
-                        'color': 'muted',
                         'variant': 'caption',
                         'type': 'typography',
+                        'color': 'muted',
+                        'content': 'Preparing checkout…',
                       },
                     ],
-                    'gap': 'md',
-                    'type': 'stack',
-                    'className': 'py-12',
-                    'direction': 'vertical',
                   },
                 ],
               ],
@@ -2515,35 +2515,32 @@ export function stdEcommerceCartItemOrbital(params: StdEcommerceCartItemOrbitalP
                   'render-ui',
                   'main',
                   {
-                    'type': 'dashboard-layout',
-                    'appName': 'EcommerceApp',
                     'children': [
                       {
-                        'type': 'stack',
                         'direction': 'vertical',
+                        'type': 'stack',
                         'children': [
                           {
-                            'children': [
-                              {
-                                'name': 'clipboard',
-                                'type': 'icon',
-                              },
-                              {
-                                'content': 'Checkout',
-                                'variant': 'h2',
-                                'type': 'typography',
-                              },
-                            ],
+                            'gap': 'sm',
                             'type': 'stack',
                             'direction': 'horizontal',
-                            'gap': 'sm',
+                            'children': [
+                              {
+                                'type': 'icon',
+                                'name': 'clipboard',
+                              },
+                              {
+                                'type': 'typography',
+                                'content': 'Checkout',
+                                'variant': 'h2',
+                              },
+                            ],
                           },
                           {
                             'type': 'divider',
                           },
                           {
                             'type': 'data-grid',
-                            'entity': '@payload.data',
                             'fields': [
                               {
                                 'label': 'Product Name',
@@ -2552,73 +2549,76 @@ export function stdEcommerceCartItemOrbital(params: StdEcommerceCartItemOrbitalP
                                 'variant': 'h4',
                               },
                               {
-                                'label': 'Quantity',
-                                'variant': 'caption',
-                                'format': 'currency',
                                 'name': 'quantity',
+                                'variant': 'caption',
+                                'label': 'Quantity',
+                                'format': 'currency',
                               },
                               {
-                                'label': 'Unit Price',
-                                'variant': 'badge',
                                 'name': 'unitPrice',
+                                'variant': 'badge',
+                                'label': 'Unit Price',
                               },
                             ],
+                            'entity': '@payload.data',
                             'itemActions': [
                               {
+                                'variant': 'danger',
                                 'label': 'Remove',
                                 'event': 'REQUEST_REMOVE',
-                                'variant': 'danger',
                               },
                             ],
                           },
                           {
-                            'gap': 'sm',
-                            'justify': 'end',
-                            'type': 'stack',
                             'direction': 'horizontal',
                             'children': [
                               {
+                                'type': 'button',
+                                'action': 'BACK_TO_CART',
+                                'label': 'Back to Cart',
                                 'variant': 'ghost',
                                 'icon': 'arrow-left',
-                                'action': 'BACK_TO_CART',
-                                'type': 'button',
-                                'label': 'Back to Cart',
                               },
                               {
-                                'action': 'CONFIRM_ORDER',
-                                'icon': 'check',
                                 'variant': 'primary',
-                                'type': 'button',
+                                'icon': 'check',
                                 'label': 'Confirm Order',
+                                'type': 'button',
+                                'action': 'CONFIRM_ORDER',
                               },
                             ],
+                            'type': 'stack',
+                            'justify': 'end',
+                            'gap': 'sm',
                           },
                         ],
                         'gap': 'lg',
                       },
                     ],
+                    'type': 'dashboard-layout',
                     'navItems': [
                       {
+                        'label': 'Products',
                         'href': '/products',
                         'icon': 'package',
-                        'label': 'Products',
                       },
                       {
-                        'icon': 'shopping-cart',
                         'label': 'Cart',
                         'href': '/cart',
+                        'icon': 'shopping-cart',
                       },
                       {
                         'icon': 'credit-card',
-                        'href': '/checkout',
                         'label': 'Checkout',
+                        'href': '/checkout',
                       },
                       {
-                        'href': '/orders',
                         'label': 'Orders',
+                        'href': '/orders',
                         'icon': 'clipboard-list',
                       },
                     ],
+                    'appName': 'EcommerceApp',
                   },
                 ],
               ],
@@ -2633,8 +2633,8 @@ export function stdEcommerceCartItemOrbital(params: StdEcommerceCartItemOrbitalP
                   'CartItem',
                   {
                     'emit': {
-                      'failure': 'CartItemLoadFailed',
                       'success': 'CartItemLoaded',
+                      'failure': 'CartItemLoadFailed',
                     },
                   },
                 ],
@@ -2650,8 +2650,8 @@ export function stdEcommerceCartItemOrbital(params: StdEcommerceCartItemOrbitalP
                   'CartItem',
                   {
                     'emit': {
-                      'failure': 'CartItemLoadFailed',
                       'success': 'CartItemLoaded',
+                      'failure': 'CartItemLoadFailed',
                     },
                   },
                 ],
@@ -2659,15 +2659,47 @@ export function stdEcommerceCartItemOrbital(params: StdEcommerceCartItemOrbitalP
                   'render-ui',
                   'main',
                   {
+                    'appName': 'EcommerceApp',
+                    'children': [
+                      {
+                        'children': [
+                          {
+                            'type': 'icon',
+                            'name': 'check-circle',
+                          },
+                          {
+                            'content': 'Order Confirmed',
+                            'type': 'typography',
+                            'variant': 'h2',
+                          },
+                          {
+                            'type': 'typography',
+                            'variant': 'body',
+                            'content': 'Your order has been placed successfully.',
+                          },
+                          {
+                            'action': 'INIT',
+                            'variant': 'primary',
+                            'label': 'Continue Shopping',
+                            'type': 'button',
+                          },
+                        ],
+                        'type': 'stack',
+                        'gap': 'lg',
+                        'align': 'center',
+                        'direction': 'vertical',
+                      },
+                    ],
+                    'type': 'dashboard-layout',
                     'navItems': [
                       {
                         'href': '/products',
-                        'icon': 'package',
                         'label': 'Products',
+                        'icon': 'package',
                       },
                       {
-                        'label': 'Cart',
                         'href': '/cart',
+                        'label': 'Cart',
                         'icon': 'shopping-cart',
                       },
                       {
@@ -2679,38 +2711,6 @@ export function stdEcommerceCartItemOrbital(params: StdEcommerceCartItemOrbitalP
                         'href': '/orders',
                         'label': 'Orders',
                         'icon': 'clipboard-list',
-                      },
-                    ],
-                    'type': 'dashboard-layout',
-                    'appName': 'EcommerceApp',
-                    'children': [
-                      {
-                        'type': 'stack',
-                        'gap': 'lg',
-                        'children': [
-                          {
-                            'name': 'check-circle',
-                            'type': 'icon',
-                          },
-                          {
-                            'type': 'typography',
-                            'content': 'Order Confirmed',
-                            'variant': 'h2',
-                          },
-                          {
-                            'type': 'typography',
-                            'variant': 'body',
-                            'content': 'Your order has been placed successfully.',
-                          },
-                          {
-                            'label': 'Continue Shopping',
-                            'action': 'INIT',
-                            'type': 'button',
-                            'variant': 'primary',
-                          },
-                        ],
-                        'direction': 'vertical',
-                        'align': 'center',
                       },
                     ],
                   },
@@ -2880,8 +2880,8 @@ export function stdEcommerceCartItemOrbital(params: StdEcommerceCartItemOrbitalP
                   'CartItem',
                   {
                     'emit': {
-                      'failure': 'CartItemLoadFailed',
                       'success': 'CartItemLoaded',
+                      'failure': 'CartItemLoadFailed',
                     },
                   },
                 ],
@@ -2906,9 +2906,10 @@ export function stdEcommerceCartItemOrbital(params: StdEcommerceCartItemOrbitalP
                   'render-ui',
                   'modal',
                   {
+                    'type': 'stack',
+                    'gap': 'md',
                     'children': [
                       {
-                        'direction': 'horizontal',
                         'children': [
                           {
                             'type': 'icon',
@@ -2920,28 +2921,27 @@ export function stdEcommerceCartItemOrbital(params: StdEcommerceCartItemOrbitalP
                             'content': 'Add Item',
                           },
                         ],
-                        'type': 'stack',
+                        'direction': 'horizontal',
                         'gap': 'sm',
+                        'type': 'stack',
                       },
                       {
                         'type': 'divider',
                       },
                       {
-                        'mode': 'create',
-                        'submitEvent': 'SAVE',
                         'type': 'form-section',
-                        'cancelEvent': 'CLOSE',
+                        'submitEvent': 'SAVE',
                         'fields': [
                           'productName',
                           'quantity',
                           'unitPrice',
                           'totalPrice',
                         ],
+                        'cancelEvent': 'CLOSE',
+                        'mode': 'create',
                       },
                     ],
                     'direction': 'vertical',
-                    'gap': 'md',
-                    'type': 'stack',
                   },
                 ],
               ],
@@ -2982,8 +2982,8 @@ export function stdEcommerceCartItemOrbital(params: StdEcommerceCartItemOrbitalP
                   '@payload.data',
                   {
                     'emit': {
-                      'success': 'CartItemSaved',
                       'failure': 'CartItemSaveFailed',
+                      'success': 'CartItemSaved',
                     },
                   },
                 ],
@@ -3168,8 +3168,8 @@ export function stdEcommerceCartItemOrbital(params: StdEcommerceCartItemOrbitalP
                   'CartItem',
                   {
                     'emit': {
-                      'failure': 'CartItemLoadFailed',
                       'success': 'CartItemLoaded',
+                      'failure': 'CartItemLoadFailed',
                     },
                   },
                 ],
@@ -3191,8 +3191,8 @@ export function stdEcommerceCartItemOrbital(params: StdEcommerceCartItemOrbitalP
                   {
                     'id': '@payload.id',
                     'emit': {
-                      'success': 'CartItemLoaded',
                       'failure': 'CartItemLoadFailed',
+                      'success': 'CartItemLoaded',
                     },
                   },
                 ],
@@ -3200,57 +3200,57 @@ export function stdEcommerceCartItemOrbital(params: StdEcommerceCartItemOrbitalP
                   'render-ui',
                   'modal',
                   {
-                    'type': 'stack',
                     'direction': 'vertical',
                     'children': [
                       {
+                        'gap': 'sm',
+                        'type': 'stack',
+                        'direction': 'horizontal',
+                        'align': 'center',
                         'children': [
                           {
-                            'name': 'alert-triangle',
                             'type': 'icon',
+                            'name': 'alert-triangle',
                           },
                           {
                             'variant': 'h3',
-                            'content': 'Remove Item',
                             'type': 'typography',
+                            'content': 'Remove Item',
                           },
                         ],
-                        'type': 'stack',
-                        'direction': 'horizontal',
-                        'gap': 'sm',
-                        'align': 'center',
                       },
                       {
                         'type': 'divider',
                       },
                       {
-                        'variant': 'error',
-                        'type': 'alert',
                         'message': 'Are you sure you want to remove this item from your cart?',
+                        'type': 'alert',
+                        'variant': 'error',
                       },
                       {
-                        'children': [
-                          {
-                            'variant': 'ghost',
-                            'action': 'CANCEL',
-                            'type': 'button',
-                            'label': 'Cancel',
-                          },
-                          {
-                            'action': 'CONFIRM_REMOVE',
-                            'type': 'button',
-                            'label': 'Remove',
-                            'variant': 'danger',
-                            'icon': 'check',
-                          },
-                        ],
-                        'justify': 'end',
                         'gap': 'sm',
                         'type': 'stack',
                         'direction': 'horizontal',
+                        'justify': 'end',
+                        'children': [
+                          {
+                            'type': 'button',
+                            'label': 'Cancel',
+                            'action': 'CANCEL',
+                            'variant': 'ghost',
+                          },
+                          {
+                            'variant': 'danger',
+                            'label': 'Remove',
+                            'action': 'CONFIRM_REMOVE',
+                            'type': 'button',
+                            'icon': 'check',
+                          },
+                        ],
                       },
                     ],
                     'gap': 'md',
+                    'type': 'stack',
                   },
                 ],
               ],
@@ -3267,8 +3267,8 @@ export function stdEcommerceCartItemOrbital(params: StdEcommerceCartItemOrbitalP
                   '@entity.pendingId',
                   {
                     'emit': {
-                      'success': 'CartItemDeleted',
                       'failure': 'CartItemDeleteFailed',
+                      'success': 'CartItemDeleted',
                     },
                   },
                 ],
@@ -3289,8 +3289,8 @@ export function stdEcommerceCartItemOrbital(params: StdEcommerceCartItemOrbitalP
                   'CartItem',
                   {
                     'emit': {
-                      'success': 'CartItemLoaded',
                       'failure': 'CartItemLoadFailed',
+                      'success': 'CartItemLoaded',
                     },
                   },
                 ],
@@ -3551,13 +3551,13 @@ export function stdEcommerceCheckoutOrbital(params: StdEcommerceCheckoutOrbitalP
         'ref': 'Stripe.traits.ServiceStripeStripe',
         'name': 'CheckoutPayment',
         'config': {
-          'amount': 0,
+          'currency': 'usd',
+          'uiTrait': '@trait.CheckoutPaymentForm',
           'metadata': {
             'customerEmail': '',
             'orderId': '',
           },
-          'uiTrait': '@trait.CheckoutPaymentForm',
-          'currency': 'usd',
+          'amount': 0,
         },
         'listens': [
           {
@@ -3612,6 +3612,8 @@ export function stdEcommerceCheckoutOrbital(params: StdEcommerceCheckoutOrbitalP
                   'render-ui',
                   'main',
                   {
+                    'gap': 'md',
+                    'direction': 'vertical',
                     'children': [
                       {
                         'message': 'Enter card details to complete your order.',
@@ -3620,37 +3622,35 @@ export function stdEcommerceCheckoutOrbital(params: StdEcommerceCheckoutOrbitalP
                       },
                       {
                         'placeholder': 'Card number',
-                        'type': 'input',
                         'inputType': 'text',
+                        'type': 'input',
                       },
                       {
-                        'direction': 'horizontal',
-                        'gap': 'sm',
-                        'type': 'stack',
                         'children': [
                           {
                             'type': 'input',
-                            'inputType': 'text',
                             'placeholder': 'MM/YY',
+                            'inputType': 'text',
                           },
                           {
-                            'inputType': 'text',
                             'type': 'input',
+                            'inputType': 'text',
                             'placeholder': 'CVC',
                           },
                         ],
+                        'gap': 'sm',
+                        'type': 'stack',
+                        'direction': 'horizontal',
                       },
                       {
-                        'type': 'button',
-                        'label': 'Pay now',
-                        'variant': 'primary',
                         'action': 'CREATE_PAYMENT',
+                        'variant': 'primary',
                         'icon': 'credit-card',
+                        'label': 'Pay now',
+                        'type': 'button',
                       },
                     ],
                     'type': 'stack',
-                    'direction': 'vertical',
-                    'gap': 'md',
                   },
                 ],
               ],
@@ -3891,14 +3891,16 @@ export function stdEcommerceCheckoutOrbital(params: StdEcommerceCheckoutOrbitalP
                   'render-ui',
                   'main',
                   {
+                    'type': 'stack',
+                    'className': 'max-w-xl mx-auto w-full',
+                    'gap': 'lg',
                     'children': [
                       {
+                        'variant': 'h2',
                         'type': 'typography',
                         'content': 'Checkout',
-                        'variant': 'h2',
                       },
                       {
-                        'type': 'wizard-progress',
                         'steps': [
                           'Customer Info',
                           'Shipping',
@@ -3906,24 +3908,22 @@ export function stdEcommerceCheckoutOrbital(params: StdEcommerceCheckoutOrbitalP
                           'Review',
                         ],
                         'currentStep': 0,
+                        'type': 'wizard-progress',
                       },
                       {
                         'type': 'divider',
                       },
                       {
-                        'type': 'typography',
-                        'content': 'Customer Info',
                         'variant': 'h3',
+                        'content': 'Customer Info',
+                        'type': 'typography',
                       },
                       {
-                        'mode': 'create',
                         'type': 'form-section',
-                        'submitLabel': 'Continue',
-                        'showCancel': false,
                         'fields': [
                           {
-                            'required': true,
                             'name': 'customerName',
+                            'required': true,
                             'min': 2,
                           },
                           {
@@ -3932,12 +3932,12 @@ export function stdEcommerceCheckoutOrbital(params: StdEcommerceCheckoutOrbitalP
                             'name': 'email',
                           },
                         ],
+                        'submitLabel': 'Continue',
+                        'mode': 'create',
                         'submitEvent': 'NEXT',
+                        'showCancel': false,
                       },
                     ],
-                    'gap': 'lg',
-                    'type': 'stack',
-                    'className': 'max-w-xl mx-auto w-full',
                     'direction': 'vertical',
                   },
                 ],
@@ -3967,15 +3967,14 @@ export function stdEcommerceCheckoutOrbital(params: StdEcommerceCheckoutOrbitalP
                   'render-ui',
                   'main',
                   {
-                    'className': 'max-w-xl mx-auto w-full',
-                    'gap': 'lg',
                     'children': [
                       {
+                        'variant': 'h2',
                         'content': 'Checkout',
                         'type': 'typography',
-                        'variant': 'h2',
                       },
                       {
+                        'currentStep': 1,
                         'type': 'wizard-progress',
                         'steps': [
                           'Customer Info',
@@ -3983,35 +3982,36 @@ export function stdEcommerceCheckoutOrbital(params: StdEcommerceCheckoutOrbitalP
                           'Payment',
                           'Review',
                         ],
-                        'currentStep': 1,
                       },
                       {
                         'type': 'divider',
                       },
                       {
                         'type': 'typography',
-                        'content': 'Shipping Address',
                         'variant': 'h3',
+                        'content': 'Shipping Address',
                       },
                       {
-                        'type': 'form-section',
-                        'cancelEvent': 'PREV',
-                        'cancelLabel': 'Back',
+                        'submitLabel': 'Continue',
                         'mode': 'edit',
                         'submitEvent': 'NEXT',
                         'fields': [
                           {
                             'name': 'shippingAddress',
-                            'min': 5,
                             'required': true,
+                            'min': 5,
                           },
                         ],
+                        'type': 'form-section',
+                        'cancelEvent': 'PREV',
                         'entity': '@entity',
-                        'submitLabel': 'Continue',
+                        'cancelLabel': 'Back',
                       },
                     ],
                     'direction': 'vertical',
+                    'gap': 'lg',
                     'type': 'stack',
+                    'className': 'max-w-xl mx-auto w-full',
                   },
                 ],
               ],
@@ -4036,51 +4036,51 @@ export function stdEcommerceCheckoutOrbital(params: StdEcommerceCheckoutOrbitalP
                   'render-ui',
                   'main',
                   {
+                    'className': 'max-w-xl mx-auto w-full',
+                    'type': 'stack',
+                    'gap': 'lg',
                     'children': [
                       {
-                        'variant': 'h2',
-                        'type': 'typography',
                         'content': 'Checkout',
+                        'type': 'typography',
+                        'variant': 'h2',
                       },
                       {
-                        'type': 'wizard-progress',
-                        'currentStep': 2,
                         'steps': [
                           'Customer Info',
                           'Shipping',
                           'Payment',
                           'Review',
                         ],
+                        'type': 'wizard-progress',
+                        'currentStep': 2,
                       },
                       {
                         'type': 'divider',
                       },
                       {
-                        'variant': 'h3',
-                        'type': 'typography',
                         'content': 'Payment',
+                        'type': 'typography',
+                        'variant': 'h3',
                       },
                       '@trait.CheckoutPayment',
                       {
-                        'direction': 'horizontal',
+                        'gap': 'sm',
+                        'justify': 'start',
                         'children': [
                           {
-                            'action': 'PREV',
-                            'icon': 'arrow-left',
-                            'type': 'button',
-                            'label': 'Back',
                             'variant': 'ghost',
+                            'icon': 'arrow-left',
+                            'label': 'Back',
+                            'action': 'PREV',
+                            'type': 'button',
                           },
                         ],
                         'type': 'stack',
-                        'justify': 'start',
-                        'gap': 'sm',
+                        'direction': 'horizontal',
                       },
                     ],
                     'direction': 'vertical',
-                    'gap': 'lg',
-                    'type': 'stack',
-                    'className': 'max-w-xl mx-auto w-full',
                   },
                 ],
               ],
@@ -4095,54 +4095,54 @@ export function stdEcommerceCheckoutOrbital(params: StdEcommerceCheckoutOrbitalP
                   'main',
                   {
                     'className': 'max-w-xl mx-auto w-full',
-                    'direction': 'vertical',
                     'type': 'stack',
+                    'gap': 'lg',
+                    'direction': 'vertical',
                     'children': [
                       {
-                        'variant': 'h2',
-                        'content': 'Checkout',
                         'type': 'typography',
+                        'content': 'Checkout',
+                        'variant': 'h2',
                       },
                       {
-                        'type': 'wizard-progress',
                         'steps': [
                           'Customer Info',
                           'Shipping',
                           'Payment',
                           'Review',
                         ],
+                        'type': 'wizard-progress',
                         'currentStep': 0,
                       },
                       {
                         'type': 'divider',
                       },
                       {
-                        'variant': 'h3',
                         'type': 'typography',
+                        'variant': 'h3',
                         'content': 'Customer Info',
                       },
                       {
-                        'fields': [
-                          {
-                            'name': 'customerName',
-                            'required': true,
-                            'min': 2,
-                          },
-                          {
-                            'required': true,
-                            'name': 'email',
-                            'type': 'email',
-                          },
-                        ],
-                        'entity': '@entity',
-                        'submitEvent': 'NEXT',
-                        'submitLabel': 'Continue',
                         'type': 'form-section',
                         'mode': 'edit',
+                        'entity': '@entity',
+                        'submitLabel': 'Continue',
+                        'fields': [
+                          {
+                            'min': 2,
+                            'name': 'customerName',
+                            'required': true,
+                          },
+                          {
+                            'type': 'email',
+                            'name': 'email',
+                            'required': true,
+                          },
+                        ],
+                        'submitEvent': 'NEXT',
                         'showCancel': false,
                       },
                     ],
-                    'gap': 'lg',
                   },
                 ],
               ],
@@ -4163,6 +4163,7 @@ export function stdEcommerceCheckoutOrbital(params: StdEcommerceCheckoutOrbitalP
                   'main',
                   {
                     'className': 'max-w-xl mx-auto w-full',
+                    'direction': 'vertical',
                     'gap': 'lg',
                     'children': [
                       {
@@ -4185,32 +4186,34 @@ export function stdEcommerceCheckoutOrbital(params: StdEcommerceCheckoutOrbitalP
                       },
                       {
                         'direction': 'vertical',
-                        'gap': 'sm',
                         'type': 'stack',
+                        'gap': 'sm',
                         'children': [
                           {
-                            'direction': 'horizontal',
-                            'type': 'stack',
-                            'gap': 'md',
-                            'justify': 'between',
                             'children': [
                               {
-                                'variant': 'caption',
                                 'content': 'Customer',
+                                'variant': 'caption',
                                 'type': 'typography',
                               },
                               {
                                 'variant': 'body',
-                                'content': '@entity.customerName',
                                 'type': 'typography',
+                                'content': '@entity.customerName',
                               },
                             ],
+                            'direction': 'horizontal',
+                            'justify': 'between',
+                            'gap': 'md',
+                            'type': 'stack',
                           },
                           {
+                            'justify': 'between',
+                            'direction': 'horizontal',
                             'children': [
                               {
-                                'type': 'typography',
                                 'variant': 'caption',
+                                'type': 'typography',
                                 'content': 'Email',
                               },
                               {
@@ -4219,13 +4222,14 @@ export function stdEcommerceCheckoutOrbital(params: StdEcommerceCheckoutOrbitalP
                                 'variant': 'body',
                               },
                             ],
-                            'direction': 'horizontal',
                             'type': 'stack',
                             'gap': 'md',
-                            'justify': 'between',
                           },
                           {
                             'type': 'stack',
+                            'direction': 'horizontal',
+                            'gap': 'md',
+                            'justify': 'between',
                             'children': [
                               {
                                 'type': 'typography',
@@ -4233,32 +4237,29 @@ export function stdEcommerceCheckoutOrbital(params: StdEcommerceCheckoutOrbitalP
                                 'content': 'Shipping',
                               },
                               {
-                                'content': '@entity.shippingAddress',
-                                'type': 'typography',
                                 'variant': 'body',
+                                'type': 'typography',
+                                'content': '@entity.shippingAddress',
                               },
                             ],
-                            'justify': 'between',
-                            'direction': 'horizontal',
-                            'gap': 'md',
                           },
                           {
+                            'gap': 'md',
                             'type': 'stack',
                             'justify': 'between',
-                            'gap': 'md',
-                            'direction': 'horizontal',
                             'children': [
                               {
-                                'content': 'Order total',
-                                'type': 'typography',
                                 'variant': 'caption',
+                                'type': 'typography',
+                                'content': 'Order total',
                               },
                               {
-                                'variant': 'body',
                                 'content': '@entity.orderTotal',
+                                'variant': 'body',
                                 'type': 'typography',
                               },
                             ],
+                            'direction': 'horizontal',
                           },
                         ],
                       },
@@ -4267,29 +4268,28 @@ export function stdEcommerceCheckoutOrbital(params: StdEcommerceCheckoutOrbitalP
                       },
                       {
                         'type': 'stack',
-                        'gap': 'sm',
+                        'direction': 'horizontal',
                         'children': [
                           {
-                            'type': 'button',
                             'icon': 'arrow-left',
-                            'label': 'Back',
                             'action': 'PREV',
+                            'type': 'button',
+                            'label': 'Back',
                             'variant': 'ghost',
                           },
                           {
+                            'variant': 'primary',
                             'type': 'button',
                             'action': 'COMPLETE',
                             'label': 'Place order',
                             'icon': 'check',
-                            'variant': 'primary',
                           },
                         ],
-                        'direction': 'horizontal',
                         'justify': 'between',
+                        'gap': 'sm',
                       },
                     ],
                     'type': 'stack',
-                    'direction': 'vertical',
                   },
                 ],
               ],
@@ -4304,9 +4304,6 @@ export function stdEcommerceCheckoutOrbital(params: StdEcommerceCheckoutOrbitalP
                   'main',
                   {
                     'className': 'max-w-xl mx-auto w-full',
-                    'gap': 'lg',
-                    'direction': 'vertical',
-                    'type': 'stack',
                     'children': [
                       {
                         'content': 'Checkout',
@@ -4314,40 +4311,43 @@ export function stdEcommerceCheckoutOrbital(params: StdEcommerceCheckoutOrbitalP
                         'variant': 'h2',
                       },
                       {
+                        'type': 'wizard-progress',
                         'steps': [
                           'Customer Info',
                           'Shipping',
                           'Payment',
                           'Review',
                         ],
-                        'type': 'wizard-progress',
                         'currentStep': 1,
                       },
                       {
                         'type': 'divider',
                       },
                       {
-                        'content': 'Shipping Address',
                         'variant': 'h3',
+                        'content': 'Shipping Address',
                         'type': 'typography',
                       },
                       {
-                        'type': 'form-section',
+                        'submitLabel': 'Continue',
+                        'cancelLabel': 'Back',
+                        'entity': '@entity',
+                        'mode': 'edit',
+                        'submitEvent': 'NEXT',
                         'fields': [
                           {
                             'name': 'shippingAddress',
-                            'min': 5,
                             'required': true,
+                            'min': 5,
                           },
                         ],
-                        'submitEvent': 'NEXT',
-                        'entity': '@entity',
-                        'submitLabel': 'Continue',
-                        'mode': 'edit',
+                        'type': 'form-section',
                         'cancelEvent': 'PREV',
-                        'cancelLabel': 'Back',
                       },
                     ],
+                    'type': 'stack',
+                    'gap': 'lg',
+                    'direction': 'vertical',
                   },
                 ],
               ],
@@ -4397,7 +4397,9 @@ export function stdEcommerceCheckoutOrbital(params: StdEcommerceCheckoutOrbitalP
                   'main',
                   {
                     'type': 'stack',
+                    'gap': 'lg',
                     'className': 'max-w-xl mx-auto w-full py-12',
+                    'align': 'center',
                     'children': [
                       {
                         'type': 'icon',
@@ -4410,21 +4412,19 @@ export function stdEcommerceCheckoutOrbital(params: StdEcommerceCheckoutOrbitalP
                       },
                       {
                         'type': 'typography',
+                        'variant': 'body',
                         'color': 'muted',
                         'content': 'Your order is confirmed and on its way.',
-                        'variant': 'body',
                       },
                       {
-                        'label': 'Start new order',
-                        'action': 'RESTART',
-                        'icon': 'rotate-ccw',
                         'type': 'button',
+                        'action': 'RESTART',
+                        'label': 'Start new order',
                         'variant': 'ghost',
+                        'icon': 'rotate-ccw',
                       },
                     ],
                     'direction': 'vertical',
-                    'align': 'center',
-                    'gap': 'lg',
                   },
                 ],
               ],
@@ -4438,51 +4438,51 @@ export function stdEcommerceCheckoutOrbital(params: StdEcommerceCheckoutOrbitalP
                   'render-ui',
                   'main',
                   {
-                    'className': 'max-w-xl mx-auto w-full',
-                    'type': 'stack',
                     'children': [
                       {
                         'variant': 'h2',
-                        'type': 'typography',
                         'content': 'Checkout',
+                        'type': 'typography',
                       },
                       {
-                        'type': 'wizard-progress',
                         'steps': [
                           'Customer Info',
                           'Shipping',
                           'Payment',
                           'Review',
                         ],
+                        'type': 'wizard-progress',
                         'currentStep': 2,
                       },
                       {
                         'type': 'divider',
                       },
                       {
+                        'content': 'Payment',
                         'type': 'typography',
                         'variant': 'h3',
-                        'content': 'Payment',
                       },
                       '@trait.CheckoutPayment',
                       {
+                        'justify': 'start',
                         'direction': 'horizontal',
                         'gap': 'sm',
                         'children': [
                           {
                             'icon': 'arrow-left',
-                            'type': 'button',
-                            'action': 'PREV',
                             'label': 'Back',
                             'variant': 'ghost',
+                            'action': 'PREV',
+                            'type': 'button',
                           },
                         ],
                         'type': 'stack',
-                        'justify': 'start',
                       },
                     ],
-                    'gap': 'lg',
                     'direction': 'vertical',
+                    'type': 'stack',
+                    'gap': 'lg',
+                    'className': 'max-w-xl mx-auto w-full',
                   },
                 ],
               ],
@@ -4521,14 +4521,15 @@ export function stdEcommerceCheckoutOrbital(params: StdEcommerceCheckoutOrbitalP
                   'render-ui',
                   'main',
                   {
-                    'direction': 'vertical',
+                    'type': 'stack',
                     'children': [
                       {
                         'content': 'Checkout',
-                        'type': 'typography',
                         'variant': 'h2',
+                        'type': 'typography',
                       },
                       {
+                        'type': 'wizard-progress',
                         'steps': [
                           'Customer Info',
                           'Shipping',
@@ -4536,21 +4537,20 @@ export function stdEcommerceCheckoutOrbital(params: StdEcommerceCheckoutOrbitalP
                           'Review',
                         ],
                         'currentStep': 0,
-                        'type': 'wizard-progress',
                       },
                       {
                         'type': 'divider',
                       },
                       {
-                        'content': 'Customer Info',
                         'type': 'typography',
                         'variant': 'h3',
+                        'content': 'Customer Info',
                       },
                       {
                         'type': 'form-section',
-                        'submitLabel': 'Continue',
-                        'showCancel': false,
                         'submitEvent': 'NEXT',
+                        'showCancel': false,
+                        'submitLabel': 'Continue',
                         'fields': [
                           {
                             'name': 'customerName',
@@ -4558,17 +4558,17 @@ export function stdEcommerceCheckoutOrbital(params: StdEcommerceCheckoutOrbitalP
                             'min': 2,
                           },
                           {
-                            'name': 'email',
-                            'type': 'email',
                             'required': true,
+                            'type': 'email',
+                            'name': 'email',
                           },
                         ],
                         'mode': 'create',
                       },
                     ],
-                    'className': 'max-w-xl mx-auto w-full',
-                    'type': 'stack',
+                    'direction': 'vertical',
                     'gap': 'lg',
+                    'className': 'max-w-xl mx-auto w-full',
                   },
                 ],
               ],
@@ -5050,8 +5050,8 @@ export function stdEcommerceOrderRecordOrbital(params: StdEcommerceOrderRecordOr
                   'OrderRecord',
                   {
                     'emit': {
-                      'success': 'OrderRecordLoaded',
                       'failure': 'OrderRecordLoadFailed',
+                      'success': 'OrderRecordLoaded',
                     },
                   },
                 ],
@@ -5059,22 +5059,22 @@ export function stdEcommerceOrderRecordOrbital(params: StdEcommerceOrderRecordOr
                   'render-ui',
                   'main',
                   {
-                    'type': 'stack',
-                    'align': 'center',
-                    'direction': 'vertical',
-                    'className': 'py-12',
                     'children': [
                       {
                         'type': 'spinner',
                       },
                       {
-                        'type': 'typography',
-                        'content': 'Loading…',
-                        'variant': 'caption',
                         'color': 'muted',
+                        'variant': 'caption',
+                        'content': 'Loading…',
+                        'type': 'typography',
                       },
                     ],
+                    'align': 'center',
+                    'type': 'stack',
                     'gap': 'md',
+                    'direction': 'vertical',
+                    'className': 'py-12',
                   },
                 ],
               ],
@@ -5088,79 +5088,116 @@ export function stdEcommerceOrderRecordOrbital(params: StdEcommerceOrderRecordOr
                   'render-ui',
                   'main',
                   {
+                    'navItems': [
+                      {
+                        'href': '/products',
+                        'icon': 'package',
+                        'label': 'Products',
+                      },
+                      {
+                        'icon': 'shopping-cart',
+                        'label': 'Cart',
+                        'href': '/cart',
+                      },
+                      {
+                        'href': '/checkout',
+                        'icon': 'credit-card',
+                        'label': 'Checkout',
+                      },
+                      {
+                        'href': '/orders',
+                        'icon': 'clipboard-list',
+                        'label': 'Orders',
+                      },
+                    ],
                     'type': 'dashboard-layout',
                     'appName': 'EcommerceApp',
                     'children': [
                       {
-                        'direction': 'vertical',
-                        'className': 'max-w-5xl mx-auto w-full',
                         'children': [
                           {
+                            'align': 'center',
                             'type': 'stack',
-                            'children': [
-                              {
-                                'children': [
-                                  {
-                                    'name': 'clipboard-list',
-                                    'type': 'icon',
-                                  },
-                                  {
-                                    'variant': 'h2',
-                                    'content': 'Order History',
-                                    'type': 'typography',
-                                  },
-                                ],
-                                'align': 'center',
-                                'gap': 'sm',
-                                'direction': 'horizontal',
-                                'type': 'stack',
-                              },
-                              {
-                                'children': [
-                                  {
-                                    'type': 'button',
-                                    'variant': 'primary',
-                                    'label': 'Create OrderRecord',
-                                    'icon': 'plus',
-                                    'action': 'CREATE',
-                                  },
-                                ],
-                                'gap': 'sm',
-                                'type': 'stack',
-                                'direction': 'horizontal',
-                              },
-                            ],
                             'gap': 'md',
                             'direction': 'horizontal',
                             'justify': 'between',
-                            'align': 'center',
+                            'children': [
+                              {
+                                'align': 'center',
+                                'children': [
+                                  {
+                                    'type': 'icon',
+                                    'name': 'clipboard-list',
+                                  },
+                                  {
+                                    'content': 'Order History',
+                                    'type': 'typography',
+                                    'variant': 'h2',
+                                  },
+                                ],
+                                'type': 'stack',
+                                'gap': 'sm',
+                                'direction': 'horizontal',
+                              },
+                              {
+                                'children': [
+                                  {
+                                    'variant': 'primary',
+                                    'action': 'CREATE',
+                                    'type': 'button',
+                                    'icon': 'plus',
+                                    'label': 'Create OrderRecord',
+                                  },
+                                ],
+                                'direction': 'horizontal',
+                                'type': 'stack',
+                                'gap': 'sm',
+                              },
+                            ],
                           },
                           {
                             'type': 'divider',
                           },
                           {
-                            'type': 'data-list',
-                            'gap': 'sm',
-                            'fields': [
+                            'variant': 'card',
+                            'itemActions': [
                               {
-                                'icon': 'clipboard-list',
-                                'variant': 'h3',
-                                'label': 'Customer',
-                                'name': 'customerName',
+                                'event': 'VIEW',
+                                'variant': 'ghost',
+                                'label': 'View',
                               },
                               {
-                                'variant': 'badge',
+                                'label': 'Edit',
+                                'event': 'EDIT',
+                                'variant': 'ghost',
+                              },
+                              {
+                                'variant': 'danger',
+                                'label': 'Delete',
+                                'event': 'DELETE',
+                              },
+                            ],
+                            'type': 'data-list',
+                            'fields': [
+                              {
+                                'variant': 'h3',
+                                'icon': 'clipboard-list',
+                                'name': 'customerName',
+                                'label': 'Customer',
+                              },
+                              {
                                 'name': 'status',
+                                'variant': 'badge',
                               },
                               {
                                 'format': 'currency',
-                                'label': 'Total',
                                 'variant': 'h4',
+                                'label': 'Total',
                                 'name': 'orderTotal',
                               },
                               {
-                                'name': 'email',
                                 'variant': 'caption',
+                                'name': 'email',
                               },
                               {
                                 'name': 'shippingAddress',
@@ -5168,51 +5205,14 @@ export function stdEcommerceOrderRecordOrbital(params: StdEcommerceOrderRecordOr
                                 'variant': 'caption',
                               },
                             ],
-                            'variant': 'card',
-                            'itemActions': [
-                              {
-                                'variant': 'ghost',
-                                'event': 'VIEW',
-                                'label': 'View',
-                              },
-                              {
-                                'variant': 'ghost',
-                                'event': 'EDIT',
-                                'label': 'Edit',
-                              },
-                              {
-                                'event': 'DELETE',
-                                'variant': 'danger',
-                                'label': 'Delete',
-                              },
-                            ],
                             'entity': '@payload.data',
+                            'gap': 'sm',
                           },
                         ],
-                        'gap': 'lg',
+                        'className': 'max-w-5xl mx-auto w-full',
                         'type': 'stack',
-                      },
-                    ],
-                    'navItems': [
-                      {
-                        'label': 'Products',
-                        'icon': 'package',
-                        'href': '/products',
-                      },
-                      {
-                        'href': '/cart',
-                        'label': 'Cart',
-                        'icon': 'shopping-cart',
-                      },
-                      {
-                        'icon': 'credit-card',
-                        'label': 'Checkout',
-                        'href': '/checkout',
-                      },
-                      {
-                        'icon': 'clipboard-list',
-                        'label': 'Orders',
-                        'href': '/orders',
+                        'direction': 'vertical',
+                        'gap': 'lg',
                       },
                     ],
                   },
@@ -5228,36 +5228,36 @@ export function stdEcommerceOrderRecordOrbital(params: StdEcommerceOrderRecordOr
                   'render-ui',
                   'main',
                   {
-                    'gap': 'md',
-                    'align': 'center',
                     'children': [
                       {
-                        'color': 'destructive',
                         'name': 'alert-triangle',
+                        'color': 'destructive',
                         'type': 'icon',
                       },
                       {
                         'variant': 'h3',
-                        'type': 'typography',
                         'content': 'Failed to load orderrecord',
+                        'type': 'typography',
                       },
                       {
+                        'type': 'typography',
                         'color': 'muted',
                         'content': '@payload.error',
                         'variant': 'body',
-                        'type': 'typography',
                       },
                       {
-                        'type': 'button',
                         'action': 'INIT',
                         'icon': 'rotate-ccw',
+                        'type': 'button',
                         'label': 'Retry',
                         'variant': 'primary',
                       },
                     ],
+                    'gap': 'md',
                     'className': 'py-12',
-                    'direction': 'vertical',
                     'type': 'stack',
+                    'direction': 'vertical',
+                    'align': 'center',
                   },
                 ],
               ],
@@ -5458,32 +5458,31 @@ export function stdEcommerceOrderRecordOrbital(params: StdEcommerceOrderRecordOr
                   'render-ui',
                   'modal',
                   {
-                    'gap': 'md',
                     'direction': 'vertical',
                     'type': 'stack',
                     'children': [
                       {
-                        'type': 'stack',
-                        'gap': 'sm',
                         'children': [
                           {
-                            'type': 'icon',
                             'name': 'plus-circle',
+                            'type': 'icon',
                           },
                           {
-                            'content': 'Create OrderRecord',
                             'variant': 'h3',
+                            'content': 'Create OrderRecord',
                             'type': 'typography',
                           },
                         ],
+                        'type': 'stack',
                         'direction': 'horizontal',
+                        'gap': 'sm',
                       },
                       {
                         'type': 'divider',
                       },
                       {
-                        'mode': 'create',
                         'cancelEvent': 'CLOSE',
+                        'type': 'form-section',
                         'fields': [
                           'customerName',
                           'email',
@@ -5493,9 +5492,10 @@ export function stdEcommerceOrderRecordOrbital(params: StdEcommerceOrderRecordOr
                           'status',
                         ],
                         'submitEvent': 'SAVE',
-                        'type': 'form-section',
+                        'mode': 'create',
                       },
                     ],
+                    'gap': 'md',
                   },
                 ],
               ],
@@ -5747,8 +5747,8 @@ export function stdEcommerceOrderRecordOrbital(params: StdEcommerceOrderRecordOr
                   'OrderRecord',
                   {
                     'emit': {
-                      'failure': 'OrderRecordLoadFailed',
                       'success': 'OrderRecordLoaded',
+                      'failure': 'OrderRecordLoadFailed',
                     },
                   },
                 ],
@@ -5763,43 +5763,42 @@ export function stdEcommerceOrderRecordOrbital(params: StdEcommerceOrderRecordOr
                   'fetch',
                   'OrderRecord',
                   {
-                    'id': '@payload.id',
                     'emit': {
                       'success': 'OrderRecordLoaded',
                       'failure': 'OrderRecordLoadFailed',
                     },
+                    'id': '@payload.id',
                   },
                 ],
                 [
                   'render-ui',
                   'modal',
                   {
+                    'direction': 'vertical',
+                    'type': 'stack',
+                    'gap': 'md',
                     'children': [
                       {
+                        'type': 'stack',
                         'gap': 'sm',
-                        'direction': 'horizontal',
                         'children': [
                           {
-                            'type': 'icon',
                             'name': 'edit',
+                            'type': 'icon',
                           },
                           {
-                            'type': 'typography',
-                            'content': 'Edit OrderRecord',
                             'variant': 'h3',
+                            'content': 'Edit OrderRecord',
+                            'type': 'typography',
                           },
                         ],
-                        'type': 'stack',
+                        'direction': 'horizontal',
                       },
                       {
                         'type': 'divider',
                       },
                       {
-                        'type': 'form-section',
-                        'submitEvent': 'SAVE',
                         'cancelEvent': 'CLOSE',
-                        'entity': '@payload.row',
-                        'mode': 'edit',
                         'fields': [
                           'customerName',
                           'email',
@@ -5808,11 +5807,12 @@ export function stdEcommerceOrderRecordOrbital(params: StdEcommerceOrderRecordOr
                           'orderTotal',
                           'status',
                         ],
+                        'type': 'form-section',
+                        'entity': '@payload.row',
+                        'submitEvent': 'SAVE',
+                        'mode': 'edit',
                       },
                     ],
-                    'gap': 'md',
-                    'direction': 'vertical',
-                    'type': 'stack',
                   },
                 ],
               ],
@@ -5853,8 +5853,8 @@ export function stdEcommerceOrderRecordOrbital(params: StdEcommerceOrderRecordOr
                   '@payload.data',
                   {
                     'emit': {
-                      'failure': 'OrderRecordUpdateFailed',
                       'success': 'OrderRecordUpdated',
+                      'failure': 'OrderRecordUpdateFailed',
                     },
                   },
                 ],
@@ -6095,33 +6095,32 @@ export function stdEcommerceOrderRecordOrbital(params: StdEcommerceOrderRecordOr
                   'render-ui',
                   'modal',
                   {
-                    'direction': 'vertical',
-                    'type': 'stack',
                     'gap': 'md',
+                    'direction': 'vertical',
                     'children': [
                       {
+                        'type': 'stack',
+                        'align': 'center',
+                        'gap': 'sm',
                         'children': [
                           {
                             'type': 'icon',
                             'name': 'eye',
                           },
                           {
-                            'type': 'typography',
-                            'variant': 'h3',
                             'content': '@entity.customerName',
+                            'variant': 'h3',
+                            'type': 'typography',
                           },
                         ],
                         'direction': 'horizontal',
-                        'gap': 'sm',
-                        'align': 'center',
-                        'type': 'stack',
                       },
                       {
                         'type': 'divider',
                       },
                       {
+                        'direction': 'horizontal',
                         'gap': 'md',
-                        'type': 'stack',
                         'children': [
                           {
                             'content': 'Customer Name',
@@ -6129,31 +6128,33 @@ export function stdEcommerceOrderRecordOrbital(params: StdEcommerceOrderRecordOr
                             'variant': 'caption',
                           },
                           {
-                            'variant': 'body',
+                            'type': 'typography',
                             'content': '@entity.customerName',
+                            'variant': 'body',
+                          },
+                        ],
+                        'type': 'stack',
+                      },
+                      {
+                        'gap': 'md',
+                        'type': 'stack',
+                        'direction': 'horizontal',
+                        'children': [
+                          {
+                            'content': 'Email',
+                            'variant': 'caption',
+                            'type': 'typography',
+                          },
+                          {
+                            'variant': 'body',
+                            'content': '@entity.email',
                             'type': 'typography',
                           },
                         ],
-                        'direction': 'horizontal',
                       },
                       {
                         'direction': 'horizontal',
                         'type': 'stack',
-                        'children': [
-                          {
-                            'type': 'typography',
-                            'variant': 'caption',
-                            'content': 'Email',
-                          },
-                          {
-                            'type': 'typography',
-                            'content': '@entity.email',
-                            'variant': 'body',
-                          },
-                        ],
-                        'gap': 'md',
-                      },
-                      {
                         'children': [
                           {
                             'type': 'typography',
@@ -6162,55 +6163,52 @@ export function stdEcommerceOrderRecordOrbital(params: StdEcommerceOrderRecordOr
                           },
                           {
                             'variant': 'body',
-                            'type': 'typography',
                             'content': '@entity.shippingAddress',
+                            'type': 'typography',
                           },
                         ],
-                        'direction': 'horizontal',
                         'gap': 'md',
-                        'type': 'stack',
                       },
                       {
+                        'type': 'stack',
                         'children': [
                           {
                             'type': 'typography',
-                            'variant': 'caption',
                             'content': 'Payment Method',
+                            'variant': 'caption',
                           },
                           {
                             'type': 'typography',
-                            'variant': 'body',
                             'content': '@entity.paymentMethod',
-                          },
-                        ],
-                        'direction': 'horizontal',
-                        'type': 'stack',
-                        'gap': 'md',
-                      },
-                      {
-                        'children': [
-                          {
-                            'type': 'typography',
-                            'content': 'Order Total',
-                            'variant': 'caption',
-                          },
-                          {
-                            'type': 'typography',
-                            'content': '@entity.orderTotal',
                             'variant': 'body',
                           },
                         ],
-                        'type': 'stack',
-                        'direction': 'horizontal',
                         'gap': 'md',
+                        'direction': 'horizontal',
                       },
                       {
+                        'direction': 'horizontal',
+                        'type': 'stack',
                         'gap': 'md',
                         'children': [
                           {
-                            'content': 'Status',
+                            'type': 'typography',
+                            'variant': 'caption',
+                            'content': 'Order Total',
+                          },
+                          {
+                            'type': 'typography',
+                            'variant': 'body',
+                            'content': '@entity.orderTotal',
+                          },
+                        ],
+                      },
+                      {
+                        'children': [
+                          {
                             'variant': 'caption',
                             'type': 'typography',
+                            'content': 'Status',
                           },
                           {
                             'content': '@entity.status',
@@ -6218,8 +6216,9 @@ export function stdEcommerceOrderRecordOrbital(params: StdEcommerceOrderRecordOr
                             'variant': 'body',
                           },
                         ],
-                        'direction': 'horizontal',
                         'type': 'stack',
+                        'direction': 'horizontal',
+                        'gap': 'md',
                       },
                       {
                         'type': 'divider',
@@ -6230,22 +6229,23 @@ export function stdEcommerceOrderRecordOrbital(params: StdEcommerceOrderRecordOr
                           {
                             'icon': 'edit',
                             'type': 'button',
-                            'label': 'Edit',
                             'variant': 'primary',
+                            'label': 'Edit',
                             'action': 'EDIT',
                           },
                           {
                             'type': 'button',
-                            'action': 'CLOSE',
-                            'variant': 'ghost',
                             'label': 'Close',
+                            'variant': 'ghost',
+                            'action': 'CLOSE',
                           },
                         ],
-                        'type': 'stack',
                         'direction': 'horizontal',
+                        'type': 'stack',
                         'justify': 'end',
                       },
                     ],
+                    'type': 'stack',
                   },
                 ],
               ],
@@ -6499,57 +6499,57 @@ export function stdEcommerceOrderRecordOrbital(params: StdEcommerceOrderRecordOr
                   'render-ui',
                   'modal',
                   {
+                    'type': 'stack',
+                    'gap': 'md',
+                    'direction': 'vertical',
                     'children': [
                       {
-                        'type': 'stack',
                         'align': 'center',
                         'children': [
                           {
-                            'name': 'alert-triangle',
                             'type': 'icon',
+                            'name': 'alert-triangle',
                           },
                           {
-                            'variant': 'h3',
-                            'type': 'typography',
                             'content': 'Delete OrderRecord',
+                            'type': 'typography',
+                            'variant': 'h3',
                           },
                         ],
-                        'direction': 'horizontal',
                         'gap': 'sm',
+                        'direction': 'horizontal',
+                        'type': 'stack',
                       },
                       {
                         'type': 'divider',
                       },
                       {
+                        'variant': 'error',
                         'type': 'alert',
                         'message': 'This action cannot be undone.',
-                        'variant': 'error',
                       },
                       {
-                        'gap': 'sm',
-                        'direction': 'horizontal',
                         'type': 'stack',
+                        'direction': 'horizontal',
+                        'gap': 'sm',
                         'justify': 'end',
                         'children': [
                           {
-                            'label': 'Cancel',
-                            'variant': 'ghost',
-                            'action': 'CANCEL',
                             'type': 'button',
+                            'action': 'CANCEL',
+                            'variant': 'ghost',
+                            'label': 'Cancel',
                           },
                           {
+                            'action': 'CONFIRM_DELETE',
                             'label': 'Delete',
                             'type': 'button',
                             'variant': 'danger',
                             'icon': 'check',
-                            'action': 'CONFIRM_DELETE',
                           },
                         ],
                       },
                     ],
-                    'direction': 'vertical',
-                    'type': 'stack',
-                    'gap': 'md',
                   },
                 ],
               ],
@@ -6588,8 +6588,8 @@ export function stdEcommerceOrderRecordOrbital(params: StdEcommerceOrderRecordOr
                   'OrderRecord',
                   {
                     'emit': {
-                      'success': 'OrderRecordLoaded',
                       'failure': 'OrderRecordLoadFailed',
+                      'success': 'OrderRecordLoaded',
                     },
                   },
                 ],
@@ -6650,8 +6650,8 @@ export function stdEcommerceOrderRecordOrbital(params: StdEcommerceOrderRecordOr
                   'OrderRecord',
                   {
                     'emit': {
-                      'success': 'OrderRecordLoaded',
                       'failure': 'OrderRecordLoadFailed',
+                      'success': 'OrderRecordLoaded',
                     },
                   },
                 ],

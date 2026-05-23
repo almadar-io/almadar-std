@@ -84,18 +84,18 @@ export interface StdTelematicsEventTelematicsEventLoadFailedPayload {
 export interface StdTelematicsEventConfig {
   /** Default: `false` */
   multiLocationEnabled?: boolean;
-  /** Default: `[{"label":"Vehicle","name":"vehicleId","variant":"caption"},{"name":"eventType","label":"Type","variant":"badge"},{"name":"severity","label":"Severity","variant":"badge"},{"label":"Speed","variant":"caption","name":"speed"},{"name":"occurredAt","label":"Occurred","variant":"caption"},{"variant":"badge","name":"acknowledged","label":"Ack"}]` */
-  fields?: EntityRow[];
-  /** Default: `[{"label":"Open","icon":"arrow-right","variant":"primary","event":"OPEN_EVENT"},{"event":"ACKNOWLEDGE","variant":"secondary","label":"Acknowledge"}]` */
-  itemActions?: EntityRow[];
-  /** Default: `30` */
-  cycleCountFrequencyDays?: number;
-  /** Default: `""` */
-  defaultWarehouse?: string;
-  /** Default: `false` */
-  hazmatEnabled?: boolean;
   /** Default: `"Telematics Events"` */
   title?: string;
+  /** Default: `""` */
+  defaultWarehouse?: string;
+  /** Default: `30` */
+  cycleCountFrequencyDays?: number;
+  /** Default: `[{"name":"vehicleId","variant":"caption","label":"Vehicle"},{"name":"eventType","variant":"badge","label":"Type"},{"name":"severity","variant":"badge","label":"Severity"},{"variant":"caption","name":"speed","label":"Speed"},{"variant":"caption","name":"occurredAt","label":"Occurred"},{"name":"acknowledged","variant":"badge","label":"Ack"}]` */
+  fields?: EntityRow[];
+  /** Default: `false` */
+  hazmatEnabled?: boolean;
+  /** Default: `[{"label":"Open","variant":"primary","event":"OPEN_EVENT","icon":"arrow-right"},{"label":"Acknowledge","event":"ACKNOWLEDGE","variant":"secondary"}]` */
+  itemActions?: EntityRow[];
 }
 
 /**

@@ -47,7 +47,7 @@ export interface StdMarketingPricingPlanSelectPayload {
  * without modifying its state-machine topology.
  */
 export interface StdMarketingPricingConfig {
-  /** Default: `[{"price":"$0","description":"For individuals and small projects.","highlighted":false,"name":"Starter","features":["1 project","Community support","Basic analytics"],"action":{"label":"Get Started","href":"#"},"badge":""},{"description":"For growing teams that need more power.","action":{"href":"#","label":"Start Trial"},"badge":"Most Popular","highlighted":true,"price":"$49","name":"Pro","features":["Unlimited projects","Priority support","Advanced analytics","Custom domains"]},{"highlighted":false,"badge":"","description":"For organizations with advanced needs.","price":"Custom","features":["Dedicated infra","SLA guarantee","SSO & SAML","Audit logs","Custom contracts"],"action":{"label":"Contact Sales","href":"#"},"name":"Enterprise"}]` */
+  /** Default: `[{"action":{"label":"Get Started","href":"#"},"highlighted":false,"badge":"","price":"$0","features":["1 project","Community support","Basic analytics"],"description":"For individuals and small projects.","name":"Starter"},{"highlighted":true,"features":["Unlimited projects","Priority support","Advanced analytics","Custom domains"],"badge":"Most Popular","name":"Pro","description":"For growing teams that need more power.","price":"$49","action":{"href":"#","label":"Start Trial"}},{"highlighted":false,"badge":"","name":"Enterprise","price":"Custom","features":["Dedicated infra","SLA guarantee","SSO & SAML","Audit logs","Custom contracts"],"action":{"label":"Contact Sales","href":"#"},"description":"For organizations with advanced needs."}]` */
   plans?: EntityRow[];
 }
 

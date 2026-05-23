@@ -215,23 +215,23 @@ export function stdAgentReviewerReviewOrbital(params: StdAgentReviewerReviewOrbi
             'items': {
               'type': 'object',
               'properties': {
-                'label': {
-                  'name': 'label',
+                'icon': {
+                  'name': 'icon',
                   'type': 'string',
-                  'required': true,
+                  'required': false,
                 },
                 'id': {
                   'name': 'id',
                   'type': 'string',
                   'required': false,
                 },
+                'label': {
+                  'name': 'label',
+                  'type': 'string',
+                  'required': true,
+                },
                 'value': {
                   'name': 'value',
-                  'type': 'string',
-                  'required': false,
-                },
-                'icon': {
-                  'name': 'icon',
                   'type': 'string',
                   'required': false,
                 },
@@ -526,78 +526,78 @@ export function stdAgentReviewerReviewOrbital(params: StdAgentReviewerReviewOrbi
                   'render-ui',
                   'main',
                   {
-                    'type': 'dashboard-layout',
                     'appName': 'Code Reviewer',
-                    'navItems': [
-                      {
-                        'href': '/review',
-                        'icon': 'file-search',
-                        'label': 'Review',
-                      },
-                      {
-                        'label': 'Analysis',
-                        'icon': 'tag',
-                        'href': '/analysis',
-                      },
-                      {
-                        'label': 'Issues',
-                        'href': '/issues',
-                        'icon': 'alert-triangle',
-                      },
-                    ],
                     'children': [
                       {
                         'direction': 'vertical',
-                        'type': 'stack',
                         'children': [
                           {
                             'type': 'stack',
-                            'align': 'center',
-                            'gap': 'sm',
                             'children': [
                               {
                                 'type': 'icon',
                                 'name': 'file-search',
                               },
                               {
+                                'content': 'Code Review',
                                 'type': 'typography',
                                 'variant': 'h2',
-                                'content': 'Code Review',
                               },
                             ],
                             'direction': 'horizontal',
+                            'align': 'center',
+                            'gap': 'sm',
                           },
                           {
                             'type': 'divider',
                           },
                           {
-                            'type': 'card',
                             'children': [
                               {
-                                'direction': 'vertical',
-                                'gap': 'md',
                                 'children': [
                                   {
-                                    'type': 'typography',
                                     'content': 'Paste schema or code to review. The agent will classify, search for patterns, and generate a structured review.',
                                     'variant': 'body',
+                                    'type': 'typography',
                                   },
                                   {
                                     'submitEvent': 'SUBMIT_REVIEW',
                                     'fields': [
                                       'target',
                                     ],
-                                    'mode': 'edit',
-                                    'entity': '@entity',
                                     'type': 'form-section',
+                                    'entity': '@entity',
+                                    'mode': 'edit',
                                   },
                                 ],
                                 'type': 'stack',
+                                'direction': 'vertical',
+                                'gap': 'md',
                               },
                             ],
+                            'type': 'card',
                           },
                         ],
+                        'type': 'stack',
                         'gap': 'lg',
+                      },
+                    ],
+                    'type': 'dashboard-layout',
+                    'navItems': [
+                      {
+                        'icon': 'file-search',
+                        'label': 'Review',
+                        'href': '/review',
+                      },
+                      {
+                        'label': 'Analysis',
+                        'href': '/analysis',
+                        'icon': 'tag',
+                      },
+                      {
+                        'href': '/issues',
+                        'label': 'Issues',
+                        'icon': 'alert-triangle',
                       },
                     ],
                   },
@@ -634,14 +634,14 @@ export function stdAgentReviewerReviewOrbital(params: StdAgentReviewerReviewOrbi
                     'type': 'dashboard-layout',
                     'navItems': [
                       {
-                        'label': 'Review',
                         'href': '/review',
                         'icon': 'file-search',
+                        'label': 'Review',
                       },
                       {
                         'label': 'Analysis',
-                        'href': '/analysis',
                         'icon': 'tag',
+                        'href': '/analysis',
                       },
                       {
                         'icon': 'alert-triangle',
@@ -651,7 +651,8 @@ export function stdAgentReviewerReviewOrbital(params: StdAgentReviewerReviewOrbi
                     ],
                     'children': [
                       {
-                        'gap': 'lg',
+                        'type': 'stack',
+                        'align': 'center',
                         'children': [
                           {
                             'type': 'icon',
@@ -659,8 +660,8 @@ export function stdAgentReviewerReviewOrbital(params: StdAgentReviewerReviewOrbi
                           },
                           {
                             'type': 'typography',
-                            'content': 'Analyzing input...',
                             'variant': 'h3',
+                            'content': 'Analyzing input...',
                           },
                           {
                             'type': 'spinner',
@@ -671,9 +672,8 @@ export function stdAgentReviewerReviewOrbital(params: StdAgentReviewerReviewOrbi
                             'type': 'typography',
                           },
                         ],
-                        'type': 'stack',
                         'direction': 'vertical',
-                        'align': 'center',
+                        'gap': 'lg',
                       },
                     ],
                     'appName': 'Code Reviewer',
@@ -699,50 +699,50 @@ export function stdAgentReviewerReviewOrbital(params: StdAgentReviewerReviewOrbi
                   'render-ui',
                   'main',
                   {
-                    'type': 'dashboard-layout',
                     'appName': 'Code Reviewer',
                     'children': [
                       {
-                        'align': 'center',
                         'gap': 'lg',
+                        'type': 'stack',
                         'children': [
                           {
-                            'name': 'cpu',
                             'type': 'icon',
+                            'name': 'cpu',
                           },
                           {
-                            'variant': 'h3',
                             'content': 'Generating review...',
+                            'variant': 'h3',
                             'type': 'typography',
                           },
                           {
                             'type': 'spinner',
                           },
                           {
+                            'variant': 'caption',
                             'type': 'typography',
                             'content': 'Category: @entity.category',
-                            'variant': 'caption',
                           },
                         ],
                         'direction': 'vertical',
-                        'type': 'stack',
+                        'align': 'center',
                       },
                     ],
+                    'type': 'dashboard-layout',
                     'navItems': [
                       {
                         'label': 'Review',
-                        'href': '/review',
                         'icon': 'file-search',
+                        'href': '/review',
                       },
                       {
                         'label': 'Analysis',
-                        'icon': 'tag',
                         'href': '/analysis',
+                        'icon': 'tag',
                       },
                       {
+                        'href': '/issues',
                         'label': 'Issues',
                         'icon': 'alert-triangle',
-                        'href': '/issues',
                       },
                     ],
                   },
@@ -768,22 +768,39 @@ export function stdAgentReviewerReviewOrbital(params: StdAgentReviewerReviewOrbi
                   'render-ui',
                   'main',
                   {
+                    'appName': 'Code Reviewer',
+                    'navItems': [
+                      {
+                        'label': 'Review',
+                        'href': '/review',
+                        'icon': 'file-search',
+                      },
+                      {
+                        'href': '/analysis',
+                        'icon': 'tag',
+                        'label': 'Analysis',
+                      },
+                      {
+                        'icon': 'alert-triangle',
+                        'label': 'Issues',
+                        'href': '/issues',
+                      },
+                    ],
                     'type': 'dashboard-layout',
                     'children': [
                       {
+                        'type': 'stack',
                         'gap': 'lg',
                         'direction': 'vertical',
                         'children': [
                           {
-                            'gap': 'sm',
-                            'direction': 'horizontal',
                             'align': 'center',
+                            'direction': 'horizontal',
                             'justify': 'between',
                             'type': 'stack',
+                            'gap': 'sm',
                             'children': [
                               {
-                                'type': 'stack',
-                                'direction': 'horizontal',
                                 'gap': 'sm',
                                 'children': [
                                   {
@@ -791,12 +808,14 @@ export function stdAgentReviewerReviewOrbital(params: StdAgentReviewerReviewOrbi
                                     'name': 'check-circle',
                                   },
                                   {
+                                    'variant': 'h2',
                                     'type': 'typography',
                                     'content': 'Review Complete',
-                                    'variant': 'h2',
                                   },
                                 ],
                                 'align': 'center',
+                                'type': 'stack',
+                                'direction': 'horizontal',
                               },
                               {
                                 'label': '@entity.score',
@@ -813,19 +832,19 @@ export function stdAgentReviewerReviewOrbital(params: StdAgentReviewerReviewOrbi
                               {
                                 'children': [
                                   {
+                                    'gap': 'sm',
+                                    'direction': 'horizontal',
                                     'children': [
                                       {
-                                        'type': 'badge',
                                         'label': '@entity.category',
+                                        'type': 'badge',
                                       },
                                       {
-                                        'label': '@entity.reviewStatus',
                                         'type': 'badge',
+                                        'label': '@entity.reviewStatus',
                                       },
                                     ],
-                                    'direction': 'horizontal',
                                     'type': 'stack',
-                                    'gap': 'sm',
                                   },
                                   {
                                     'variant': 'h4',
@@ -841,49 +860,30 @@ export function stdAgentReviewerReviewOrbital(params: StdAgentReviewerReviewOrbi
                                     'type': 'divider',
                                   },
                                   {
-                                    'variant': 'h4',
                                     'type': 'typography',
                                     'content': 'Suggestions',
+                                    'variant': 'h4',
                                   },
                                   {
                                     'content': '@entity.suggestions',
-                                    'variant': 'body',
                                     'type': 'typography',
+                                    'variant': 'body',
                                   },
                                 ],
-                                'type': 'stack',
                                 'direction': 'vertical',
+                                'type': 'stack',
                                 'gap': 'md',
                               },
                             ],
                           },
                           {
                             'label': 'New Review',
-                            'variant': 'ghost',
-                            'type': 'button',
                             'icon': 'rotate-ccw',
                             'action': 'RESET',
+                            'type': 'button',
+                            'variant': 'ghost',
                           },
                         ],
-                        'type': 'stack',
-                      },
-                    ],
-                    'appName': 'Code Reviewer',
-                    'navItems': [
-                      {
-                        'label': 'Review',
-                        'href': '/review',
-                        'icon': 'file-search',
-                      },
-                      {
-                        'label': 'Analysis',
-                        'href': '/analysis',
-                        'icon': 'tag',
-                      },
-                      {
-                        'label': 'Issues',
-                        'href': '/issues',
-                        'icon': 'alert-triangle',
                       },
                     ],
                   },
@@ -924,46 +924,26 @@ export function stdAgentReviewerReviewOrbital(params: StdAgentReviewerReviewOrbi
                   'render-ui',
                   'main',
                   {
-                    'type': 'dashboard-layout',
-                    'navItems': [
-                      {
-                        'href': '/review',
-                        'icon': 'file-search',
-                        'label': 'Review',
-                      },
-                      {
-                        'label': 'Analysis',
-                        'href': '/analysis',
-                        'icon': 'tag',
-                      },
-                      {
-                        'label': 'Issues',
-                        'href': '/issues',
-                        'icon': 'alert-triangle',
-                      },
-                    ],
+                    'appName': 'Code Reviewer',
                     'children': [
                       {
-                        'type': 'stack',
-                        'direction': 'vertical',
-                        'gap': 'lg',
                         'children': [
                           {
+                            'direction': 'horizontal',
                             'gap': 'sm',
-                            'align': 'center',
                             'children': [
                               {
                                 'name': 'file-search',
                                 'type': 'icon',
                               },
                               {
-                                'content': 'Code Review',
                                 'type': 'typography',
+                                'content': 'Code Review',
                                 'variant': 'h2',
                               },
                             ],
                             'type': 'stack',
-                            'direction': 'horizontal',
+                            'align': 'center',
                           },
                           {
                             'type': 'divider',
@@ -980,13 +960,13 @@ export function stdAgentReviewerReviewOrbital(params: StdAgentReviewerReviewOrbi
                                     'variant': 'body',
                                   },
                                   {
-                                    'type': 'form-section',
                                     'entity': '@entity',
-                                    'submitEvent': 'SUBMIT_REVIEW',
-                                    'mode': 'edit',
+                                    'type': 'form-section',
                                     'fields': [
                                       'target',
                                     ],
+                                    'mode': 'edit',
+                                    'submitEvent': 'SUBMIT_REVIEW',
                                   },
                                 ],
                                 'direction': 'vertical',
@@ -995,9 +975,29 @@ export function stdAgentReviewerReviewOrbital(params: StdAgentReviewerReviewOrbi
                             'type': 'card',
                           },
                         ],
+                        'direction': 'vertical',
+                        'gap': 'lg',
+                        'type': 'stack',
                       },
                     ],
-                    'appName': 'Code Reviewer',
+                    'navItems': [
+                      {
+                        'href': '/review',
+                        'label': 'Review',
+                        'icon': 'file-search',
+                      },
+                      {
+                        'href': '/analysis',
+                        'label': 'Analysis',
+                        'icon': 'tag',
+                      },
+                      {
+                        'label': 'Issues',
+                        'href': '/issues',
+                        'icon': 'alert-triangle',
+                      },
+                    ],
+                    'type': 'dashboard-layout',
                   },
                 ],
               ],
@@ -1331,14 +1331,34 @@ export function stdAgentReviewerReviewRagOrbital(params: StdAgentReviewerReviewR
                   'render-ui',
                   'main',
                   {
+                    'navItems': [
+                      {
+                        'href': '/review',
+                        'icon': 'file-search',
+                        'label': 'Review',
+                      },
+                      {
+                        'href': '/analysis',
+                        'label': 'Analysis',
+                        'icon': 'tag',
+                      },
+                      {
+                        'label': 'Issues',
+                        'href': '/issues',
+                        'icon': 'alert-triangle',
+                      },
+                    ],
+                    'appName': 'Code Reviewer',
+                    'type': 'dashboard-layout',
                     'children': [
                       {
-                        'direction': 'vertical',
                         'gap': 'lg',
                         'children': [
                           {
+                            'gap': 'sm',
                             'direction': 'horizontal',
                             'align': 'center',
+                            'type': 'stack',
                             'children': [
                               {
                                 'type': 'icon',
@@ -1346,22 +1366,20 @@ export function stdAgentReviewerReviewRagOrbital(params: StdAgentReviewerReviewR
                               },
                               {
                                 'type': 'typography',
-                                'content': 'RAG Pipeline',
                                 'variant': 'h2',
+                                'content': 'RAG Pipeline',
                               },
                             ],
-                            'type': 'stack',
-                            'gap': 'sm',
                           },
                           {
                             'type': 'divider',
                           },
                           {
+                            'type': 'card',
                             'children': [
                               {
-                                'gap': 'md',
-                                'type': 'stack',
                                 'direction': 'vertical',
+                                'type': 'stack',
                                 'children': [
                                   {
                                     'content': 'Enter a query to retrieve context and generate a response',
@@ -1369,42 +1387,24 @@ export function stdAgentReviewerReviewRagOrbital(params: StdAgentReviewerReviewR
                                     'variant': 'body',
                                   },
                                   {
+                                    'entity': '@entity',
                                     'fields': [
                                       'query',
                                     ],
-                                    'mode': 'edit',
-                                    'entity': '@entity',
-                                    'type': 'form-section',
                                     'submitEvent': 'GENERATE',
+                                    'mode': 'edit',
+                                    'type': 'form-section',
                                   },
                                 ],
+                                'gap': 'md',
                               },
                             ],
-                            'type': 'card',
                           },
                         ],
+                        'direction': 'vertical',
                         'type': 'stack',
                       },
                     ],
-                    'appName': 'Code Reviewer',
-                    'navItems': [
-                      {
-                        'icon': 'file-search',
-                        'label': 'Review',
-                        'href': '/review',
-                      },
-                      {
-                        'href': '/analysis',
-                        'icon': 'tag',
-                        'label': 'Analysis',
-                      },
-                      {
-                        'href': '/issues',
-                        'label': 'Issues',
-                        'icon': 'alert-triangle',
-                      },
-                    ],
-                    'type': 'dashboard-layout',
                   },
                 ],
               ],
@@ -1434,9 +1434,6 @@ export function stdAgentReviewerReviewRagOrbital(params: StdAgentReviewerReviewR
                   {
                     'children': [
                       {
-                        'gap': 'lg',
-                        'direction': 'vertical',
-                        'align': 'center',
                         'children': [
                           {
                             'name': 'search',
@@ -1451,41 +1448,44 @@ export function stdAgentReviewerReviewRagOrbital(params: StdAgentReviewerReviewR
                             'type': 'spinner',
                           },
                           {
+                            'justify': 'center',
+                            'gap': 'md',
                             'children': [
                               {
-                                'label': 'Recalling memories',
                                 'type': 'badge',
+                                'label': 'Recalling memories',
                               },
                               {
-                                'label': 'Searching code',
                                 'type': 'badge',
+                                'label': 'Searching code',
                               },
                             ],
-                            'gap': 'md',
                             'type': 'stack',
-                            'justify': 'center',
                             'direction': 'horizontal',
                           },
                         ],
+                        'gap': 'lg',
                         'type': 'stack',
+                        'direction': 'vertical',
+                        'align': 'center',
                       },
                     ],
                     'type': 'dashboard-layout',
                     'navItems': [
                       {
+                        'icon': 'file-search',
                         'href': '/review',
                         'label': 'Review',
-                        'icon': 'file-search',
                       },
                       {
-                        'label': 'Analysis',
-                        'icon': 'tag',
                         'href': '/analysis',
+                        'icon': 'tag',
+                        'label': 'Analysis',
                       },
                       {
-                        'icon': 'alert-triangle',
                         'label': 'Issues',
                         'href': '/issues',
+                        'icon': 'alert-triangle',
                       },
                     ],
                     'appName': 'Code Reviewer',
@@ -1534,26 +1534,11 @@ export function stdAgentReviewerReviewRagOrbital(params: StdAgentReviewerReviewR
                   'main',
                   {
                     'type': 'dashboard-layout',
-                    'navItems': [
-                      {
-                        'label': 'Review',
-                        'href': '/review',
-                        'icon': 'file-search',
-                      },
-                      {
-                        'href': '/analysis',
-                        'label': 'Analysis',
-                        'icon': 'tag',
-                      },
-                      {
-                        'icon': 'alert-triangle',
-                        'label': 'Issues',
-                        'href': '/issues',
-                      },
-                    ],
+                    'appName': 'Code Reviewer',
                     'children': [
                       {
-                        'direction': 'vertical',
+                        'type': 'stack',
+                        'gap': 'lg',
                         'children': [
                           {
                             'type': 'icon',
@@ -1569,8 +1554,8 @@ export function stdAgentReviewerReviewRagOrbital(params: StdAgentReviewerReviewR
                           },
                           {
                             'gap': 'md',
-                            'justify': 'center',
                             'direction': 'horizontal',
+                            'justify': 'center',
                             'children': [
                               {
                                 'label': '@entity.memoryHits',
@@ -1584,12 +1569,27 @@ export function stdAgentReviewerReviewRagOrbital(params: StdAgentReviewerReviewR
                             'type': 'stack',
                           },
                         ],
-                        'type': 'stack',
                         'align': 'center',
-                        'gap': 'lg',
+                        'direction': 'vertical',
                       },
                     ],
-                    'appName': 'Code Reviewer',
+                    'navItems': [
+                      {
+                        'label': 'Review',
+                        'href': '/review',
+                        'icon': 'file-search',
+                      },
+                      {
+                        'icon': 'tag',
+                        'label': 'Analysis',
+                        'href': '/analysis',
+                      },
+                      {
+                        'icon': 'alert-triangle',
+                        'label': 'Issues',
+                        'href': '/issues',
+                      },
+                    ],
                   },
                 ],
               ],
@@ -1613,10 +1613,29 @@ export function stdAgentReviewerReviewRagOrbital(params: StdAgentReviewerReviewR
                   'render-ui',
                   'main',
                   {
-                    'appName': 'Code Reviewer',
+                    'navItems': [
+                      {
+                        'href': '/review',
+                        'label': 'Review',
+                        'icon': 'file-search',
+                      },
+                      {
+                        'href': '/analysis',
+                        'icon': 'tag',
+                        'label': 'Analysis',
+                      },
+                      {
+                        'label': 'Issues',
+                        'href': '/issues',
+                        'icon': 'alert-triangle',
+                      },
+                    ],
                     'type': 'dashboard-layout',
+                    'appName': 'Code Reviewer',
                     'children': [
                       {
+                        'type': 'stack',
+                        'gap': 'lg',
                         'children': [
                           {
                             'type': 'icon',
@@ -1628,39 +1647,20 @@ export function stdAgentReviewerReviewRagOrbital(params: StdAgentReviewerReviewR
                             'content': 'RAG Pipeline Error',
                           },
                           {
-                            'message': '@entity.error',
                             'variant': 'error',
+                            'message': '@entity.error',
                             'type': 'alert',
                           },
                           {
-                            'type': 'button',
-                            'icon': 'rotate-ccw',
+                            'label': 'Try Again',
                             'action': 'RESET',
                             'variant': 'primary',
-                            'label': 'Try Again',
+                            'icon': 'rotate-ccw',
+                            'type': 'button',
                           },
                         ],
                         'direction': 'vertical',
-                        'gap': 'lg',
                         'align': 'center',
-                        'type': 'stack',
-                      },
-                    ],
-                    'navItems': [
-                      {
-                        'href': '/review',
-                        'label': 'Review',
-                        'icon': 'file-search',
-                      },
-                      {
-                        'label': 'Analysis',
-                        'href': '/analysis',
-                        'icon': 'tag',
-                      },
-                      {
-                        'icon': 'alert-triangle',
-                        'label': 'Issues',
-                        'href': '/issues',
                       },
                     ],
                   },
@@ -1695,17 +1695,15 @@ export function stdAgentReviewerReviewRagOrbital(params: StdAgentReviewerReviewR
                   'render-ui',
                   'main',
                   {
-                    'type': 'dashboard-layout',
-                    'appName': 'Code Reviewer',
                     'navItems': [
                       {
-                        'href': '/review',
                         'icon': 'file-search',
                         'label': 'Review',
+                        'href': '/review',
                       },
                       {
-                        'href': '/analysis',
                         'icon': 'tag',
+                        'href': '/analysis',
                         'label': 'Analysis',
                       },
                       {
@@ -1714,41 +1712,46 @@ export function stdAgentReviewerReviewRagOrbital(params: StdAgentReviewerReviewR
                         'label': 'Issues',
                       },
                     ],
+                    'appName': 'Code Reviewer',
+                    'type': 'dashboard-layout',
                     'children': [
                       {
+                        'direction': 'vertical',
+                        'gap': 'lg',
+                        'type': 'stack',
                         'children': [
                           {
-                            'type': 'stack',
+                            'direction': 'horizontal',
                             'justify': 'between',
                             'gap': 'sm',
                             'align': 'center',
                             'children': [
                               {
+                                'type': 'stack',
+                                'align': 'center',
                                 'children': [
                                   {
                                     'type': 'icon',
                                     'name': 'check-circle',
                                   },
                                   {
-                                    'variant': 'h2',
                                     'type': 'typography',
+                                    'variant': 'h2',
                                     'content': 'RAG Complete',
                                   },
                                 ],
-                                'direction': 'horizontal',
-                                'type': 'stack',
                                 'gap': 'sm',
-                                'align': 'center',
+                                'direction': 'horizontal',
                               },
                               {
-                                'label': 'New Query',
                                 'action': 'RESET',
-                                'icon': 'rotate-ccw',
-                                'variant': 'ghost',
                                 'type': 'button',
+                                'variant': 'ghost',
+                                'icon': 'rotate-ccw',
+                                'label': 'New Query',
                               },
                             ],
-                            'direction': 'horizontal',
+                            'type': 'stack',
                           },
                           {
                             'type': 'divider',
@@ -1758,16 +1761,16 @@ export function stdAgentReviewerReviewRagOrbital(params: StdAgentReviewerReviewR
                             'cols': 2,
                             'children': [
                               {
-                                'type': 'stat-display',
                                 'icon': 'brain',
                                 'label': 'Memory Hits',
                                 'value': '@entity.memoryHits',
+                                'type': 'stat-display',
                               },
                               {
-                                'icon': 'code',
-                                'type': 'stat-display',
                                 'label': 'Code Hits',
+                                'type': 'stat-display',
                                 'value': '@entity.searchHits',
+                                'icon': 'code',
                               },
                             ],
                           },
@@ -1777,47 +1780,49 @@ export function stdAgentReviewerReviewRagOrbital(params: StdAgentReviewerReviewR
                           {
                             'children': [
                               {
-                                'direction': 'vertical',
-                                'type': 'stack',
                                 'children': [
                                   {
-                                    'type': 'typography',
                                     'content': 'Query',
                                     'variant': 'caption',
+                                    'type': 'typography',
                                   },
                                   {
                                     'type': 'typography',
-                                    'content': '@entity.query',
                                     'variant': 'body',
+                                    'content': '@entity.query',
                                   },
                                   {
                                     'type': 'divider',
                                   },
                                   {
-                                    'content': 'Response',
                                     'type': 'typography',
+                                    'content': 'Response',
                                     'variant': 'caption',
                                   },
                                   {
-                                    'content': '@entity.response',
                                     'variant': 'body',
                                     'type': 'typography',
+                                    'content': '@entity.response',
                                   },
                                 ],
                                 'gap': 'md',
+                                'type': 'stack',
+                                'direction': 'vertical',
                               },
                             ],
                             'type': 'card',
                           },
                           {
-                            'type': 'card',
                             'children': [
                               {
+                                'gap': 'sm',
+                                'type': 'stack',
+                                'direction': 'vertical',
                                 'children': [
                                   {
+                                    'content': 'Retrieved Context',
                                     'type': 'typography',
                                     'variant': 'caption',
-                                    'content': 'Retrieved Context',
                                   },
                                   {
                                     'variant': 'body',
@@ -1825,16 +1830,11 @@ export function stdAgentReviewerReviewRagOrbital(params: StdAgentReviewerReviewR
                                     'type': 'typography',
                                   },
                                 ],
-                                'type': 'stack',
-                                'direction': 'vertical',
-                                'gap': 'sm',
                               },
                             ],
+                            'type': 'card',
                           },
                         ],
-                        'direction': 'vertical',
-                        'gap': 'lg',
-                        'type': 'stack',
                       },
                     ],
                   },
@@ -1860,44 +1860,13 @@ export function stdAgentReviewerReviewRagOrbital(params: StdAgentReviewerReviewR
                   'render-ui',
                   'main',
                   {
-                    'type': 'dashboard-layout',
                     'appName': 'Code Reviewer',
-                    'children': [
-                      {
-                        'align': 'center',
-                        'gap': 'lg',
-                        'type': 'stack',
-                        'direction': 'vertical',
-                        'children': [
-                          {
-                            'type': 'icon',
-                            'name': 'alert-triangle',
-                          },
-                          {
-                            'type': 'typography',
-                            'content': 'RAG Pipeline Error',
-                            'variant': 'h2',
-                          },
-                          {
-                            'message': '@entity.error',
-                            'type': 'alert',
-                            'variant': 'error',
-                          },
-                          {
-                            'icon': 'rotate-ccw',
-                            'type': 'button',
-                            'label': 'Try Again',
-                            'action': 'RESET',
-                            'variant': 'primary',
-                          },
-                        ],
-                      },
-                    ],
+                    'type': 'dashboard-layout',
                     'navItems': [
                       {
                         'icon': 'file-search',
-                        'label': 'Review',
                         'href': '/review',
+                        'label': 'Review',
                       },
                       {
                         'href': '/analysis',
@@ -1908,6 +1877,37 @@ export function stdAgentReviewerReviewRagOrbital(params: StdAgentReviewerReviewR
                         'href': '/issues',
                         'icon': 'alert-triangle',
                         'label': 'Issues',
+                      },
+                    ],
+                    'children': [
+                      {
+                        'type': 'stack',
+                        'gap': 'lg',
+                        'align': 'center',
+                        'children': [
+                          {
+                            'name': 'alert-triangle',
+                            'type': 'icon',
+                          },
+                          {
+                            'content': 'RAG Pipeline Error',
+                            'variant': 'h2',
+                            'type': 'typography',
+                          },
+                          {
+                            'type': 'alert',
+                            'variant': 'error',
+                            'message': '@entity.error',
+                          },
+                          {
+                            'action': 'RESET',
+                            'icon': 'rotate-ccw',
+                            'type': 'button',
+                            'label': 'Try Again',
+                            'variant': 'primary',
+                          },
+                        ],
+                        'direction': 'vertical',
                       },
                     ],
                   },
@@ -1954,32 +1954,31 @@ export function stdAgentReviewerReviewRagOrbital(params: StdAgentReviewerReviewR
                   'main',
                   {
                     'appName': 'Code Reviewer',
-                    'type': 'dashboard-layout',
                     'navItems': [
                       {
-                        'icon': 'file-search',
                         'label': 'Review',
+                        'icon': 'file-search',
                         'href': '/review',
                       },
                       {
-                        'label': 'Analysis',
                         'href': '/analysis',
                         'icon': 'tag',
+                        'label': 'Analysis',
                       },
                       {
-                        'icon': 'alert-triangle',
                         'href': '/issues',
+                        'icon': 'alert-triangle',
                         'label': 'Issues',
                       },
                     ],
+                    'type': 'dashboard-layout',
                     'children': [
                       {
                         'gap': 'lg',
+                        'type': 'stack',
+                        'direction': 'vertical',
                         'children': [
                           {
-                            'type': 'stack',
-                            'direction': 'horizontal',
-                            'align': 'center',
                             'children': [
                               {
                                 'type': 'icon',
@@ -1991,40 +1990,41 @@ export function stdAgentReviewerReviewRagOrbital(params: StdAgentReviewerReviewR
                                 'variant': 'h2',
                               },
                             ],
+                            'direction': 'horizontal',
+                            'type': 'stack',
+                            'align': 'center',
                             'gap': 'sm',
                           },
                           {
                             'type': 'divider',
                           },
                           {
-                            'type': 'card',
                             'children': [
                               {
+                                'gap': 'md',
                                 'children': [
                                   {
-                                    'variant': 'body',
                                     'type': 'typography',
                                     'content': 'Enter a query to retrieve context and generate a response',
+                                    'variant': 'body',
                                   },
                                   {
+                                    'submitEvent': 'GENERATE',
+                                    'entity': '@entity',
+                                    'type': 'form-section',
                                     'fields': [
                                       'query',
                                     ],
-                                    'type': 'form-section',
-                                    'submitEvent': 'GENERATE',
                                     'mode': 'edit',
-                                    'entity': '@entity',
                                   },
                                 ],
-                                'type': 'stack',
                                 'direction': 'vertical',
-                                'gap': 'md',
+                                'type': 'stack',
                               },
                             ],
+                            'type': 'card',
                           },
                         ],
-                        'direction': 'vertical',
-                        'type': 'stack',
                       },
                     ],
                   },
@@ -2143,22 +2143,22 @@ export function stdAgentReviewerReviewRagOrbital(params: StdAgentReviewerReviewR
                   'render-ui',
                   'main',
                   {
+                    'gap': 'md',
+                    'direction': 'vertical',
+                    'align': 'center',
+                    'type': 'stack',
+                    'className': 'py-12',
                     'children': [
                       {
                         'type': 'spinner',
                       },
                       {
                         'variant': 'caption',
+                        'content': 'Loading RAG pipeline…',
                         'type': 'typography',
                         'color': 'muted',
-                        'content': 'Loading RAG pipeline…',
                       },
                     ],
-                    'type': 'stack',
-                    'direction': 'vertical',
-                    'align': 'center',
-                    'gap': 'md',
-                    'className': 'py-12',
                   },
                 ],
               ],
@@ -2172,6 +2172,25 @@ export function stdAgentReviewerReviewRagOrbital(params: StdAgentReviewerReviewR
                   'render-ui',
                   'main',
                   {
+                    'navItems': [
+                      {
+                        'href': '/review',
+                        'icon': 'file-search',
+                        'label': 'Review',
+                      },
+                      {
+                        'label': 'Analysis',
+                        'href': '/analysis',
+                        'icon': 'tag',
+                      },
+                      {
+                        'label': 'Issues',
+                        'icon': 'alert-triangle',
+                        'href': '/issues',
+                      },
+                    ],
+                    'type': 'dashboard-layout',
+                    'appName': 'Code Reviewer',
                     'children': [
                       {
                         'direction': 'vertical',
@@ -2179,42 +2198,42 @@ export function stdAgentReviewerReviewRagOrbital(params: StdAgentReviewerReviewR
                         'gap': 'lg',
                         'children': [
                           {
-                            'direction': 'horizontal',
                             'children': [
                               {
-                                'type': 'icon',
                                 'name': 'brain',
+                                'type': 'icon',
                               },
                               {
-                                'variant': 'h2',
-                                'content': 'RAG Pipeline',
                                 'type': 'typography',
+                                'content': 'RAG Pipeline',
+                                'variant': 'h2',
                               },
                             ],
-                            'type': 'stack',
                             'align': 'center',
+                            'type': 'stack',
+                            'direction': 'horizontal',
                             'gap': 'sm',
                           },
                           {
                             'type': 'divider',
                           },
                           {
-                            'tabChangeEvent': 'SELECT_TAB',
+                            'type': 'tabs',
                             'tabs': [
                               {
                                 'label': 'Query',
                                 'value': 'query',
                               },
                               {
-                                'value': 'sources',
                                 'label': 'Sources',
+                                'value': 'sources',
                               },
                               {
-                                'value': 'response',
                                 'label': 'Response',
+                                'value': 'response',
                               },
                             ],
-                            'type': 'tabs',
+                            'tabChangeEvent': 'SELECT_TAB',
                             'defaultActiveTab': 'query',
                           },
                           {
@@ -2223,6 +2242,7 @@ export function stdAgentReviewerReviewRagOrbital(params: StdAgentReviewerReviewR
                           {
                             'type': 'data-grid',
                             'entity': '@payload.data',
+                            'fields': [],
                             'className': 'transition-shadow hover:shadow-md cursor-pointer',
                             'renderItem': [
                               'fn',
@@ -2232,44 +2252,24 @@ export function stdAgentReviewerReviewRagOrbital(params: StdAgentReviewerReviewR
                                 'children': [
                                   {
                                     'content': '@item.query',
-                                    'type': 'typography',
                                     'variant': 'h4',
+                                    'type': 'typography',
                                   },
                                   {
-                                    'color': 'muted',
+                                    'variant': 'caption',
                                     'content': '@item.query',
                                     'type': 'typography',
-                                    'variant': 'caption',
+                                    'color': 'muted',
                                   },
                                 ],
-                                'type': 'stack',
                                 'gap': 'sm',
+                                'type': 'stack',
                               },
                             ],
-                            'fields': [],
                           },
                         ],
                       },
                     ],
-                    'navItems': [
-                      {
-                        'label': 'Review',
-                        'href': '/review',
-                        'icon': 'file-search',
-                      },
-                      {
-                        'icon': 'tag',
-                        'href': '/analysis',
-                        'label': 'Analysis',
-                      },
-                      {
-                        'label': 'Issues',
-                        'href': '/issues',
-                        'icon': 'alert-triangle',
-                      },
-                    ],
-                    'type': 'dashboard-layout',
-                    'appName': 'Code Reviewer',
                   },
                 ],
               ],
@@ -2283,36 +2283,36 @@ export function stdAgentReviewerReviewRagOrbital(params: StdAgentReviewerReviewR
                   'render-ui',
                   'main',
                   {
-                    'gap': 'md',
-                    'direction': 'vertical',
                     'children': [
                       {
                         'color': 'destructive',
-                        'type': 'icon',
                         'name': 'alert-triangle',
+                        'type': 'icon',
                       },
                       {
-                        'content': 'Failed to load RAG pipeline',
                         'type': 'typography',
                         'variant': 'h3',
+                        'content': 'Failed to load RAG pipeline',
                       },
                       {
                         'color': 'muted',
-                        'type': 'typography',
-                        'variant': 'body',
                         'content': '@payload.error',
+                        'variant': 'body',
+                        'type': 'typography',
                       },
                       {
-                        'type': 'button',
-                        'icon': 'rotate-ccw',
                         'label': 'Retry',
+                        'icon': 'rotate-ccw',
                         'action': 'INIT',
+                        'type': 'button',
                         'variant': 'primary',
                       },
                     ],
                     'type': 'stack',
-                    'align': 'center',
                     'className': 'py-12',
+                    'align': 'center',
+                    'gap': 'md',
+                    'direction': 'vertical',
                   },
                 ],
               ],
@@ -2327,8 +2327,8 @@ export function stdAgentReviewerReviewRagOrbital(params: StdAgentReviewerReviewR
                   'ReviewRag',
                   {
                     'emit': {
-                      'success': 'ReviewRagLoaded',
                       'failure': 'ReviewRagLoadFailed',
+                      'success': 'ReviewRagLoaded',
                     },
                   },
                 ],
@@ -2434,22 +2434,22 @@ export function stdAgentReviewerReviewRagOrbital(params: StdAgentReviewerReviewR
                   'render-ui',
                   'main',
                   {
+                    'type': 'stack',
+                    'direction': 'vertical',
+                    'gap': 'md',
                     'children': [
                       {
                         'type': 'spinner',
                       },
                       {
-                        'variant': 'caption',
-                        'color': 'muted',
                         'content': 'Loading…',
                         'type': 'typography',
+                        'color': 'muted',
+                        'variant': 'caption',
                       },
                     ],
-                    'type': 'stack',
-                    'className': 'py-12',
                     'align': 'center',
-                    'gap': 'md',
-                    'direction': 'vertical',
+                    'className': 'py-12',
                   },
                 ],
               ],
@@ -2463,95 +2463,95 @@ export function stdAgentReviewerReviewRagOrbital(params: StdAgentReviewerReviewR
                   'render-ui',
                   'main',
                   {
+                    'appName': 'Code Reviewer',
                     'navItems': [
                       {
-                        'href': '/review',
                         'label': 'Review',
+                        'href': '/review',
                         'icon': 'file-search',
                       },
                       {
                         'label': 'Analysis',
-                        'icon': 'tag',
                         'href': '/analysis',
+                        'icon': 'tag',
                       },
                       {
-                        'icon': 'alert-triangle',
-                        'href': '/issues',
                         'label': 'Issues',
+                        'href': '/issues',
+                        'icon': 'alert-triangle',
                       },
                     ],
                     'type': 'dashboard-layout',
-                    'appName': 'Code Reviewer',
                     'children': [
                       {
-                        'type': 'stack',
-                        'gap': 'lg',
                         'className': 'max-w-5xl mx-auto w-full',
+                        'gap': 'lg',
+                        'type': 'stack',
                         'children': [
                           {
-                            'type': 'stack',
                             'justify': 'between',
-                            'direction': 'horizontal',
-                            'align': 'center',
                             'children': [
                               {
-                                'type': 'stack',
-                                'align': 'center',
                                 'direction': 'horizontal',
+                                'align': 'center',
                                 'gap': 'sm',
+                                'type': 'stack',
                                 'children': [
                                   {
-                                    'type': 'icon',
                                     'name': 'brain',
+                                    'type': 'icon',
                                   },
                                   {
+                                    'type': 'typography',
                                     'content': 'ReviewRag Manager',
                                     'variant': 'h2',
-                                    'type': 'typography',
                                   },
                                 ],
                               },
                             ],
                             'gap': 'md',
+                            'direction': 'horizontal',
+                            'align': 'center',
+                            'type': 'stack',
                           },
                           {
                             'type': 'divider',
                           },
                           {
-                            'entity': '@payload.data',
-                            'type': 'data-grid',
                             'fields': [
                               {
                                 'name': 'content',
-                                'variant': 'h4',
-                                'icon': 'brain',
                                 'label': 'Content',
+                                'icon': 'brain',
+                                'variant': 'h4',
                               },
                               {
-                                'label': 'Category',
-                                'colorMap': {
-                                  'disabled': 'neutral',
-                                  'cancelled': 'destructive',
-                                  'done': 'success',
-                                  'pending': 'warning',
-                                  'inactive': 'neutral',
-                                  'failed': 'destructive',
-                                  'error': 'destructive',
-                                  'archived': 'neutral',
-                                  'active': 'success',
-                                  'draft': 'warning',
-                                  'scheduled': 'warning',
-                                  'completed': 'success',
-                                },
-                                'variant': 'badge',
                                 'name': 'category',
+                                'colorMap': {
+                                  'done': 'success',
+                                  'scheduled': 'warning',
+                                  'archived': 'neutral',
+                                  'cancelled': 'destructive',
+                                  'failed': 'destructive',
+                                  'inactive': 'neutral',
+                                  'completed': 'success',
+                                  'draft': 'warning',
+                                  'pending': 'warning',
+                                  'error': 'destructive',
+                                  'active': 'success',
+                                  'disabled': 'neutral',
+                                },
+                                'label': 'Category',
+                                'variant': 'badge',
                               },
                               {
                                 'label': 'Strength',
-                                'variant': 'caption',
                                 'name': 'strength',
+                                'variant': 'caption',
                               },
                             ],
+                            'type': 'data-grid',
+                            'entity': '@payload.data',
                           },
                         ],
                         'direction': 'vertical',
@@ -2570,36 +2570,36 @@ export function stdAgentReviewerReviewRagOrbital(params: StdAgentReviewerReviewR
                   'render-ui',
                   'main',
                   {
-                    'className': 'py-12',
                     'direction': 'vertical',
+                    'gap': 'md',
+                    'align': 'center',
+                    'className': 'py-12',
                     'children': [
                       {
-                        'color': 'destructive',
-                        'name': 'alert-triangle',
                         'type': 'icon',
+                        'name': 'alert-triangle',
+                        'color': 'destructive',
                       },
                       {
-                        'content': 'Failed to load reviewrag',
                         'type': 'typography',
+                        'content': 'Failed to load reviewrag',
                         'variant': 'h3',
                       },
                       {
                         'type': 'typography',
-                        'content': '@payload.error',
                         'color': 'muted',
+                        'content': '@payload.error',
                         'variant': 'body',
                       },
                       {
                         'variant': 'primary',
-                        'action': 'INIT',
                         'icon': 'rotate-ccw',
-                        'type': 'button',
                         'label': 'Retry',
+                        'type': 'button',
+                        'action': 'INIT',
                       },
                     ],
                     'type': 'stack',
-                    'gap': 'md',
-                    'align': 'center',
                   },
                 ],
               ],
@@ -2697,21 +2697,21 @@ export function stdAgentReviewerReviewRagOrbital(params: StdAgentReviewerReviewR
                   'render-ui',
                   'main',
                   {
-                    'align': 'center',
+                    'type': 'stack',
+                    'className': 'py-12',
                     'gap': 'md',
+                    'align': 'center',
                     'children': [
                       {
                         'type': 'spinner',
                       },
                       {
-                        'variant': 'caption',
-                        'content': 'Loading…',
-                        'color': 'muted',
                         'type': 'typography',
+                        'content': 'Loading…',
+                        'variant': 'caption',
+                        'color': 'muted',
                       },
                     ],
-                    'className': 'py-12',
-                    'type': 'stack',
                     'direction': 'vertical',
                   },
                 ],
@@ -2726,37 +2726,24 @@ export function stdAgentReviewerReviewRagOrbital(params: StdAgentReviewerReviewR
                   'render-ui',
                   'main',
                   {
-                    'navItems': [
-                      {
-                        'icon': 'file-search',
-                        'label': 'Review',
-                        'href': '/review',
-                      },
-                      {
-                        'icon': 'tag',
-                        'href': '/analysis',
-                        'label': 'Analysis',
-                      },
-                      {
-                        'icon': 'alert-triangle',
-                        'href': '/issues',
-                        'label': 'Issues',
-                      },
-                    ],
-                    'type': 'dashboard-layout',
                     'appName': 'Code Reviewer',
                     'children': [
                       {
+                        'direction': 'vertical',
+                        'gap': 'lg',
+                        'className': 'max-w-5xl mx-auto w-full',
                         'children': [
                           {
-                            'type': 'stack',
                             'direction': 'horizontal',
+                            'justify': 'between',
                             'gap': 'md',
                             'align': 'center',
                             'children': [
                               {
                                 'direction': 'horizontal',
                                 'align': 'center',
+                                'type': 'stack',
+                                'gap': 'sm',
                                 'children': [
                                   {
                                     'type': 'icon',
@@ -2764,15 +2751,13 @@ export function stdAgentReviewerReviewRagOrbital(params: StdAgentReviewerReviewR
                                   },
                                   {
                                     'variant': 'h2',
-                                    'type': 'typography',
                                     'content': 'ReviewRag',
+                                    'type': 'typography',
                                   },
                                 ],
-                                'gap': 'sm',
-                                'type': 'stack',
                               },
                             ],
-                            'justify': 'between',
+                            'type': 'stack',
                           },
                           {
                             'type': 'divider',
@@ -2781,29 +2766,29 @@ export function stdAgentReviewerReviewRagOrbital(params: StdAgentReviewerReviewR
                             'type': 'data-grid',
                             'fields': [
                               {
-                                'variant': 'h4',
-                                'icon': 'search',
-                                'name': 'query',
                                 'label': 'Query',
+                                'variant': 'h4',
+                                'name': 'query',
+                                'icon': 'search',
                               },
                               {
-                                'variant': 'badge',
                                 'name': 'language',
+                                'variant': 'badge',
+                                'label': 'Language',
                                 'colorMap': {
-                                  'archived': 'neutral',
-                                  'done': 'success',
-                                  'pending': 'warning',
-                                  'disabled': 'neutral',
-                                  'scheduled': 'warning',
-                                  'active': 'success',
-                                  'draft': 'warning',
-                                  'failed': 'destructive',
-                                  'cancelled': 'destructive',
                                   'completed': 'success',
+                                  'archived': 'neutral',
+                                  'active': 'success',
+                                  'pending': 'warning',
+                                  'done': 'success',
+                                  'draft': 'warning',
+                                  'scheduled': 'warning',
                                   'inactive': 'neutral',
                                   'error': 'destructive',
+                                  'cancelled': 'destructive',
+                                  'failed': 'destructive',
+                                  'disabled': 'neutral',
                                 },
-                                'label': 'Language',
                               },
                               {
                                 'label': 'Result Count',
@@ -2814,12 +2799,27 @@ export function stdAgentReviewerReviewRagOrbital(params: StdAgentReviewerReviewR
                             'entity': '@payload.data',
                           },
                         ],
-                        'direction': 'vertical',
                         'type': 'stack',
-                        'gap': 'lg',
-                        'className': 'max-w-5xl mx-auto w-full',
                       },
                     ],
+                    'navItems': [
+                      {
+                        'label': 'Review',
+                        'icon': 'file-search',
+                        'href': '/review',
+                      },
+                      {
+                        'icon': 'tag',
+                        'label': 'Analysis',
+                        'href': '/analysis',
+                      },
+                      {
+                        'label': 'Issues',
+                        'icon': 'alert-triangle',
+                        'href': '/issues',
+                      },
+                    ],
+                    'type': 'dashboard-layout',
                   },
                 ],
               ],
@@ -2833,18 +2833,19 @@ export function stdAgentReviewerReviewRagOrbital(params: StdAgentReviewerReviewR
                   'render-ui',
                   'main',
                   {
-                    'type': 'stack',
+                    'direction': 'vertical',
+                    'align': 'center',
                     'className': 'py-12',
                     'children': [
                       {
-                        'type': 'icon',
-                        'name': 'alert-triangle',
                         'color': 'destructive',
+                        'name': 'alert-triangle',
+                        'type': 'icon',
                       },
                       {
+                        'variant': 'h3',
                         'type': 'typography',
                         'content': 'Failed to load reviewrag',
-                        'variant': 'h3',
                       },
                       {
                         'variant': 'body',
@@ -2855,14 +2856,13 @@ export function stdAgentReviewerReviewRagOrbital(params: StdAgentReviewerReviewR
                       {
                         'type': 'button',
                         'variant': 'primary',
-                        'icon': 'rotate-ccw',
                         'action': 'INIT',
+                        'icon': 'rotate-ccw',
                         'label': 'Retry',
                       },
                     ],
-                    'align': 'center',
+                    'type': 'stack',
                     'gap': 'md',
-                    'direction': 'vertical',
                   },
                 ],
               ],
@@ -3054,15 +3054,14 @@ export function stdAgentReviewerReviewRagOrbital(params: StdAgentReviewerReviewR
                   'render-ui',
                   'main',
                   {
+                    'type': 'dashboard-layout',
                     'children': [
                       {
-                        'direction': 'vertical',
-                        'type': 'stack',
-                        'gap': 'lg',
                         'children': [
                           {
                             'gap': 'md',
-                            'justify': 'between',
+                            'type': 'stack',
+                            'direction': 'horizontal',
                             'children': [
                               {
                                 'direction': 'horizontal',
@@ -3081,39 +3080,41 @@ export function stdAgentReviewerReviewRagOrbital(params: StdAgentReviewerReviewR
                                 'type': 'stack',
                               },
                               {
-                                'action': 'GENERATE',
-                                'variant': 'primary',
                                 'type': 'button',
-                                'icon': 'sparkles',
                                 'label': 'Open',
+                                'variant': 'primary',
+                                'icon': 'sparkles',
+                                'action': 'GENERATE',
                               },
                             ],
-                            'type': 'stack',
-                            'direction': 'horizontal',
+                            'justify': 'between',
                           },
                           {
                             'type': 'divider',
                           },
                           {
-                            'icon': 'sparkles',
-                            'type': 'empty-state',
                             'description': 'Click Open to view details in a modal overlay.',
+                            'type': 'empty-state',
+                            'icon': 'sparkles',
                             'title': 'Nothing open',
                           },
                         ],
+                        'gap': 'lg',
+                        'type': 'stack',
+                        'direction': 'vertical',
                       },
                     ],
-                    'type': 'dashboard-layout',
+                    'appName': 'Code Reviewer',
                     'navItems': [
                       {
-                        'icon': 'file-search',
                         'href': '/review',
+                        'icon': 'file-search',
                         'label': 'Review',
                       },
                       {
-                        'href': '/analysis',
                         'icon': 'tag',
                         'label': 'Analysis',
+                        'href': '/analysis',
                       },
                       {
                         'label': 'Issues',
@@ -3121,7 +3122,6 @@ export function stdAgentReviewerReviewRagOrbital(params: StdAgentReviewerReviewR
                         'icon': 'alert-triangle',
                       },
                     ],
-                    'appName': 'Code Reviewer',
                   },
                 ],
               ],
@@ -3135,54 +3135,54 @@ export function stdAgentReviewerReviewRagOrbital(params: StdAgentReviewerReviewR
                   'render-ui',
                   'modal',
                   {
-                    'type': 'stack',
-                    'gap': 'md',
+                    'direction': 'vertical',
                     'children': [
                       {
+                        'direction': 'horizontal',
                         'type': 'stack',
                         'gap': 'sm',
                         'children': [
                           {
-                            'name': 'sparkles',
                             'type': 'icon',
+                            'name': 'sparkles',
                           },
                           {
+                            'type': 'typography',
                             'variant': 'h3',
                             'content': 'ReviewRag',
-                            'type': 'typography',
                           },
                         ],
-                        'direction': 'horizontal',
                       },
                       {
                         'type': 'divider',
                       },
                       {
+                        'direction': 'horizontal',
+                        'gap': 'sm',
+                        'type': 'stack',
                         'children': [
                           {
-                            'type': 'badge',
                             'label': '@entity.provider',
+                            'type': 'badge',
                           },
                           {
                             'type': 'badge',
                             'label': '@entity.model',
                           },
                         ],
-                        'type': 'stack',
-                        'direction': 'horizontal',
-                        'gap': 'sm',
                       },
                       {
                         'fields': [
                           'prompt',
                         ],
-                        'cancelEvent': 'CLOSE',
                         'type': 'form-section',
-                        'mode': 'create',
                         'submitEvent': 'SAVE',
+                        'cancelEvent': 'CLOSE',
+                        'mode': 'create',
                       },
                     ],
-                    'direction': 'vertical',
+                    'gap': 'md',
+                    'type': 'stack',
                   },
                 ],
               ],
@@ -3207,8 +3207,8 @@ export function stdAgentReviewerReviewRagOrbital(params: StdAgentReviewerReviewR
                   'ReviewRag',
                   {
                     'emit': {
-                      'success': 'ReviewRagLoaded',
                       'failure': 'ReviewRagLoadFailed',
+                      'success': 'ReviewRagLoaded',
                     },
                   },
                 ],
@@ -3216,35 +3216,21 @@ export function stdAgentReviewerReviewRagOrbital(params: StdAgentReviewerReviewR
                   'render-ui',
                   'main',
                   {
-                    'navItems': [
-                      {
-                        'href': '/review',
-                        'label': 'Review',
-                        'icon': 'file-search',
-                      },
-                      {
-                        'label': 'Analysis',
-                        'href': '/analysis',
-                        'icon': 'tag',
-                      },
-                      {
-                        'href': '/issues',
-                        'icon': 'alert-triangle',
-                        'label': 'Issues',
-                      },
-                    ],
-                    'type': 'dashboard-layout',
                     'appName': 'Code Reviewer',
                     'children': [
                       {
+                        'type': 'stack',
                         'gap': 'lg',
                         'children': [
                           {
+                            'direction': 'horizontal',
+                            'type': 'stack',
+                            'gap': 'md',
+                            'justify': 'between',
                             'children': [
                               {
-                                'type': 'stack',
-                                'direction': 'horizontal',
                                 'gap': 'md',
+                                'type': 'stack',
                                 'children': [
                                   {
                                     'name': 'sparkles',
@@ -3256,34 +3242,48 @@ export function stdAgentReviewerReviewRagOrbital(params: StdAgentReviewerReviewR
                                     'content': 'ReviewRag',
                                   },
                                 ],
+                                'direction': 'horizontal',
                               },
                               {
-                                'variant': 'primary',
-                                'label': 'Open',
-                                'action': 'GENERATE',
-                                'type': 'button',
                                 'icon': 'sparkles',
+                                'type': 'button',
+                                'action': 'GENERATE',
+                                'label': 'Open',
+                                'variant': 'primary',
                               },
                             ],
-                            'direction': 'horizontal',
-                            'gap': 'md',
-                            'type': 'stack',
-                            'justify': 'between',
                           },
                           {
                             'type': 'divider',
                           },
                           {
-                            'description': 'Click Open to view details in a modal overlay.',
                             'type': 'empty-state',
+                            'description': 'Click Open to view details in a modal overlay.',
                             'icon': 'sparkles',
                             'title': 'Nothing open',
                           },
                         ],
-                        'type': 'stack',
                         'direction': 'vertical',
                       },
                     ],
+                    'navItems': [
+                      {
+                        'icon': 'file-search',
+                        'label': 'Review',
+                        'href': '/review',
+                      },
+                      {
+                        'href': '/analysis',
+                        'icon': 'tag',
+                        'label': 'Analysis',
+                      },
+                      {
+                        'label': 'Issues',
+                        'icon': 'alert-triangle',
+                        'href': '/issues',
+                      },
+                    ],
+                    'type': 'dashboard-layout',
                   },
                 ],
               ],
@@ -3300,8 +3300,8 @@ export function stdAgentReviewerReviewRagOrbital(params: StdAgentReviewerReviewR
                   '@payload.data',
                   {
                     'emit': {
-                      'success': 'ReviewRagSaved',
                       'failure': 'ReviewRagSaveFailed',
+                      'success': 'ReviewRagSaved',
                     },
                   },
                 ],
@@ -3330,50 +3330,50 @@ export function stdAgentReviewerReviewRagOrbital(params: StdAgentReviewerReviewR
                   {
                     'children': [
                       {
+                        'type': 'stack',
                         'direction': 'vertical',
                         'children': [
                           {
-                            'direction': 'horizontal',
-                            'justify': 'between',
                             'type': 'stack',
-                            'gap': 'md',
                             'children': [
                               {
-                                'gap': 'md',
+                                'type': 'stack',
+                                'direction': 'horizontal',
                                 'children': [
                                   {
-                                    'name': 'sparkles',
                                     'type': 'icon',
+                                    'name': 'sparkles',
                                   },
                                   {
+                                    'variant': 'h2',
                                     'content': 'ReviewRag',
                                     'type': 'typography',
-                                    'variant': 'h2',
                                   },
                                 ],
-                                'direction': 'horizontal',
-                                'type': 'stack',
+                                'gap': 'md',
                               },
                               {
+                                'icon': 'sparkles',
                                 'type': 'button',
                                 'label': 'Open',
                                 'action': 'GENERATE',
                                 'variant': 'primary',
-                                'icon': 'sparkles',
                               },
                             ],
+                            'justify': 'between',
+                            'gap': 'md',
+                            'direction': 'horizontal',
                           },
                           {
                             'type': 'divider',
                           },
                           {
-                            'title': 'Nothing open',
-                            'description': 'Click Open to view details in a modal overlay.',
-                            'type': 'empty-state',
                             'icon': 'sparkles',
+                            'description': 'Click Open to view details in a modal overlay.',
+                            'title': 'Nothing open',
+                            'type': 'empty-state',
                           },
                         ],
-                        'type': 'stack',
                         'gap': 'lg',
                       },
                     ],
@@ -3381,14 +3381,14 @@ export function stdAgentReviewerReviewRagOrbital(params: StdAgentReviewerReviewR
                     'type': 'dashboard-layout',
                     'navItems': [
                       {
-                        'icon': 'file-search',
                         'label': 'Review',
                         'href': '/review',
+                        'icon': 'file-search',
                       },
                       {
+                        'label': 'Analysis',
                         'href': '/analysis',
                         'icon': 'tag',
-                        'label': 'Analysis',
                       },
                       {
                         'icon': 'alert-triangle',
@@ -3776,6 +3776,56 @@ export function stdAgentReviewerAnalysisOrbital(params: StdAgentReviewerAnalysis
                   'render-ui',
                   'main',
                   {
+                    'appName': 'Code Reviewer',
+                    'children': [
+                      {
+                        'gap': 'lg',
+                        'children': [
+                          {
+                            'type': 'stack',
+                            'justify': 'between',
+                            'children': [
+                              {
+                                'gap': 'md',
+                                'children': [
+                                  {
+                                    'name': 'tag',
+                                    'type': 'icon',
+                                  },
+                                  {
+                                    'content': 'Analysis',
+                                    'variant': 'h2',
+                                    'type': 'typography',
+                                  },
+                                ],
+                                'type': 'stack',
+                                'direction': 'horizontal',
+                              },
+                              {
+                                'label': 'Open',
+                                'variant': 'primary',
+                                'icon': 'tag',
+                                'action': 'CLASSIFY',
+                                'type': 'button',
+                              },
+                            ],
+                            'direction': 'horizontal',
+                            'gap': 'md',
+                          },
+                          {
+                            'type': 'divider',
+                          },
+                          {
+                            'title': 'Nothing open',
+                            'icon': 'tag',
+                            'type': 'empty-state',
+                            'description': 'Click Open to view details in a modal overlay.',
+                          },
+                        ],
+                        'direction': 'vertical',
+                        'type': 'stack',
+                      },
+                    ],
                     'type': 'dashboard-layout',
                     'navItems': [
                       {
@@ -3789,61 +3839,11 @@ export function stdAgentReviewerAnalysisOrbital(params: StdAgentReviewerAnalysis
                         'icon': 'tag',
                       },
                       {
-                        'href': '/issues',
                         'label': 'Issues',
+                        'href': '/issues',
                         'icon': 'alert-triangle',
                       },
                     ],
-                    'children': [
-                      {
-                        'children': [
-                          {
-                            'type': 'stack',
-                            'direction': 'horizontal',
-                            'gap': 'md',
-                            'children': [
-                              {
-                                'gap': 'md',
-                                'type': 'stack',
-                                'direction': 'horizontal',
-                                'children': [
-                                  {
-                                    'name': 'tag',
-                                    'type': 'icon',
-                                  },
-                                  {
-                                    'type': 'typography',
-                                    'variant': 'h2',
-                                    'content': 'Analysis',
-                                  },
-                                ],
-                              },
-                              {
-                                'variant': 'primary',
-                                'icon': 'tag',
-                                'action': 'CLASSIFY',
-                                'type': 'button',
-                                'label': 'Open',
-                              },
-                            ],
-                            'justify': 'between',
-                          },
-                          {
-                            'type': 'divider',
-                          },
-                          {
-                            'title': 'Nothing open',
-                            'type': 'empty-state',
-                            'icon': 'tag',
-                            'description': 'Click Open to view details in a modal overlay.',
-                          },
-                        ],
-                        'gap': 'lg',
-                        'type': 'stack',
-                        'direction': 'vertical',
-                      },
-                    ],
-                    'appName': 'Code Reviewer',
                   },
                 ],
               ],
@@ -3857,22 +3857,24 @@ export function stdAgentReviewerAnalysisOrbital(params: StdAgentReviewerAnalysis
                   'render-ui',
                   'modal',
                   {
+                    'type': 'stack',
+                    'gap': 'md',
                     'direction': 'vertical',
                     'children': [
                       {
+                        'type': 'stack',
                         'gap': 'sm',
                         'children': [
                           {
-                            'type': 'icon',
                             'name': 'tag',
+                            'type': 'icon',
                           },
                           {
-                            'variant': 'h3',
-                            'content': 'Analysis',
                             'type': 'typography',
+                            'content': 'Analysis',
+                            'variant': 'h3',
                           },
                         ],
-                        'type': 'stack',
                         'direction': 'horizontal',
                       },
                       {
@@ -3881,12 +3883,11 @@ export function stdAgentReviewerAnalysisOrbital(params: StdAgentReviewerAnalysis
                       {
                         'type': 'stack',
                         'gap': 'sm',
-                        'direction': 'horizontal',
                         'children': [
                           {
                             'variant': 'caption',
-                            'type': 'typography',
                             'content': 'Categories:',
+                            'type': 'typography',
                           },
                           {
                             'type': 'badge',
@@ -3899,39 +3900,38 @@ export function stdAgentReviewerAnalysisOrbital(params: StdAgentReviewerAnalysis
                             'variant': 'secondary',
                           },
                           {
+                            'variant': 'secondary',
                             'label': 'trait',
                             'type': 'badge',
-                            'variant': 'secondary',
                           },
                           {
-                            'type': 'badge',
-                            'variant': 'secondary',
                             'label': 'page',
+                            'variant': 'secondary',
+                            'type': 'badge',
                           },
                           {
+                            'label': 'behavior',
                             'type': 'badge',
                             'variant': 'secondary',
-                            'label': 'behavior',
                           },
                           {
+                            'variant': 'secondary',
                             'label': 'style',
                             'type': 'badge',
-                            'variant': 'secondary',
                           },
                         ],
+                        'direction': 'horizontal',
                       },
                       {
-                        'mode': 'create',
-                        'cancelEvent': 'CLOSE',
-                        'type': 'form-section',
                         'submitEvent': 'SAVE',
+                        'cancelEvent': 'CLOSE',
+                        'mode': 'create',
+                        'type': 'form-section',
                         'fields': [
                           'input',
                         ],
                       },
                     ],
-                    'gap': 'md',
-                    'type': 'stack',
                   },
                 ],
               ],
@@ -3956,8 +3956,8 @@ export function stdAgentReviewerAnalysisOrbital(params: StdAgentReviewerAnalysis
                   'Analysis',
                   {
                     'emit': {
-                      'success': 'AnalysisLoaded',
                       'failure': 'AnalysisLoadFailed',
+                      'success': 'AnalysisLoaded',
                     },
                   },
                 ],
@@ -3966,71 +3966,71 @@ export function stdAgentReviewerAnalysisOrbital(params: StdAgentReviewerAnalysis
                   'main',
                   {
                     'appName': 'Code Reviewer',
-                    'type': 'dashboard-layout',
-                    'navItems': [
-                      {
-                        'icon': 'file-search',
-                        'label': 'Review',
-                        'href': '/review',
-                      },
-                      {
-                        'href': '/analysis',
-                        'icon': 'tag',
-                        'label': 'Analysis',
-                      },
-                      {
-                        'href': '/issues',
-                        'icon': 'alert-triangle',
-                        'label': 'Issues',
-                      },
-                    ],
                     'children': [
                       {
-                        'gap': 'lg',
                         'direction': 'vertical',
+                        'gap': 'lg',
+                        'type': 'stack',
                         'children': [
                           {
+                            'type': 'stack',
+                            'direction': 'horizontal',
                             'children': [
                               {
                                 'type': 'stack',
+                                'gap': 'md',
                                 'children': [
                                   {
                                     'type': 'icon',
                                     'name': 'tag',
                                   },
                                   {
-                                    'content': 'Analysis',
                                     'type': 'typography',
+                                    'content': 'Analysis',
                                     'variant': 'h2',
                                   },
                                 ],
                                 'direction': 'horizontal',
-                                'gap': 'md',
                               },
                               {
-                                'label': 'Open',
-                                'icon': 'tag',
-                                'type': 'button',
                                 'action': 'CLASSIFY',
+                                'label': 'Open',
+                                'type': 'button',
                                 'variant': 'primary',
+                                'icon': 'tag',
                               },
                             ],
-                            'justify': 'between',
-                            'direction': 'horizontal',
                             'gap': 'md',
-                            'type': 'stack',
+                            'justify': 'between',
                           },
                           {
                             'type': 'divider',
                           },
                           {
-                            'type': 'empty-state',
+                            'icon': 'tag',
                             'title': 'Nothing open',
                             'description': 'Click Open to view details in a modal overlay.',
-                            'icon': 'tag',
+                            'type': 'empty-state',
                           },
                         ],
-                        'type': 'stack',
+                      },
+                    ],
+                    'type': 'dashboard-layout',
+                    'navItems': [
+                      {
+                        'icon': 'file-search',
+                        'href': '/review',
+                        'label': 'Review',
+                      },
+                      {
+                        'icon': 'tag',
+                        'label': 'Analysis',
+                        'href': '/analysis',
+                      },
+                      {
+                        'href': '/issues',
+                        'icon': 'alert-triangle',
+                        'label': 'Issues',
                       },
                     ],
                   },
@@ -4049,8 +4049,8 @@ export function stdAgentReviewerAnalysisOrbital(params: StdAgentReviewerAnalysis
                   '@payload.data',
                   {
                     'emit': {
-                      'failure': 'AnalysisSaveFailed',
                       'success': 'AnalysisSaved',
+                      'failure': 'AnalysisSaveFailed',
                     },
                   },
                 ],
@@ -4068,8 +4068,8 @@ export function stdAgentReviewerAnalysisOrbital(params: StdAgentReviewerAnalysis
                   'Analysis',
                   {
                     'emit': {
-                      'failure': 'AnalysisLoadFailed',
                       'success': 'AnalysisLoaded',
+                      'failure': 'AnalysisLoadFailed',
                     },
                   },
                 ],
@@ -4078,71 +4078,71 @@ export function stdAgentReviewerAnalysisOrbital(params: StdAgentReviewerAnalysis
                   'main',
                   {
                     'appName': 'Code Reviewer',
-                    'navItems': [
-                      {
-                        'icon': 'file-search',
-                        'label': 'Review',
-                        'href': '/review',
-                      },
-                      {
-                        'label': 'Analysis',
-                        'icon': 'tag',
-                        'href': '/analysis',
-                      },
-                      {
-                        'label': 'Issues',
-                        'href': '/issues',
-                        'icon': 'alert-triangle',
-                      },
-                    ],
-                    'type': 'dashboard-layout',
                     'children': [
                       {
-                        'gap': 'lg',
+                        'type': 'stack',
+                        'direction': 'vertical',
                         'children': [
                           {
                             'gap': 'md',
                             'direction': 'horizontal',
                             'type': 'stack',
-                            'justify': 'between',
                             'children': [
                               {
+                                'gap': 'md',
                                 'direction': 'horizontal',
                                 'children': [
                                   {
-                                    'type': 'icon',
                                     'name': 'tag',
+                                    'type': 'icon',
                                   },
                                   {
-                                    'type': 'typography',
                                     'content': 'Analysis',
+                                    'type': 'typography',
                                     'variant': 'h2',
                                   },
                                 ],
-                                'gap': 'md',
                                 'type': 'stack',
                               },
                               {
                                 'action': 'CLASSIFY',
-                                'icon': 'tag',
                                 'type': 'button',
-                                'label': 'Open',
+                                'icon': 'tag',
                                 'variant': 'primary',
+                                'label': 'Open',
                               },
                             ],
+                            'justify': 'between',
                           },
                           {
                             'type': 'divider',
                           },
                           {
-                            'icon': 'tag',
-                            'title': 'Nothing open',
                             'description': 'Click Open to view details in a modal overlay.',
+                            'icon': 'tag',
                             'type': 'empty-state',
+                            'title': 'Nothing open',
                           },
                         ],
-                        'type': 'stack',
-                        'direction': 'vertical',
+                        'gap': 'lg',
+                      },
+                    ],
+                    'type': 'dashboard-layout',
+                    'navItems': [
+                      {
+                        'label': 'Review',
+                        'href': '/review',
+                        'icon': 'file-search',
+                      },
+                      {
+                        'label': 'Analysis',
+                        'href': '/analysis',
+                        'icon': 'tag',
+                      },
+                      {
+                        'label': 'Issues',
+                        'icon': 'alert-triangle',
+                        'href': '/issues',
                       },
                     ],
                   },
@@ -4254,8 +4254,8 @@ export function stdAgentReviewerAnalysisOrbital(params: StdAgentReviewerAnalysis
                   'Analysis',
                   {
                     'emit': {
-                      'success': 'AnalysisLoaded',
                       'failure': 'AnalysisLoadFailed',
+                      'success': 'AnalysisLoaded',
                     },
                   },
                 ],
@@ -4280,16 +4280,16 @@ export function stdAgentReviewerAnalysisOrbital(params: StdAgentReviewerAnalysis
                   'render-ui',
                   'main',
                   {
-                    'type': 'dashboard-layout',
+                    'appName': 'Code Reviewer',
                     'navItems': [
                       {
+                        'icon': 'file-search',
                         'label': 'Review',
                         'href': '/review',
-                        'icon': 'file-search',
                       },
                       {
-                        'icon': 'tag',
                         'href': '/analysis',
+                        'icon': 'tag',
                         'label': 'Analysis',
                       },
                       {
@@ -4300,39 +4300,40 @@ export function stdAgentReviewerAnalysisOrbital(params: StdAgentReviewerAnalysis
                     ],
                     'children': [
                       {
+                        'direction': 'vertical',
                         'children': [
                           {
-                            'justify': 'between',
                             'direction': 'horizontal',
+                            'justify': 'between',
                             'children': [
                               {
-                                'direction': 'horizontal',
+                                'align': 'center',
                                 'children': [
                                   {
-                                    'type': 'icon',
                                     'name': 'tag',
+                                    'type': 'icon',
                                   },
                                   {
-                                    'variant': 'h2',
                                     'type': 'typography',
                                     'content': 'Analysis Result',
+                                    'variant': 'h2',
                                   },
                                 ],
                                 'type': 'stack',
-                                'align': 'center',
+                                'direction': 'horizontal',
                                 'gap': 'md',
                               },
                               {
-                                'action': 'HIDE',
-                                'variant': 'ghost',
                                 'type': 'button',
-                                'icon': 'x',
                                 'label': 'Dismiss',
+                                'variant': 'ghost',
+                                'action': 'HIDE',
+                                'icon': 'x',
                               },
                             ],
                             'align': 'center',
-                            'gap': 'md',
                             'type': 'stack',
+                            'gap': 'md',
                           },
                           {
                             'type': 'divider',
@@ -4347,16 +4348,15 @@ export function stdAgentReviewerAnalysisOrbital(params: StdAgentReviewerAnalysis
                           },
                           {
                             'type': 'alert',
-                            'message': '@entity.message',
                             'variant': 'warning',
+                            'message': '@entity.message',
                           },
                         ],
-                        'direction': 'vertical',
-                        'gap': 'lg',
                         'type': 'stack',
+                        'gap': 'lg',
                       },
                     ],
-                    'appName': 'Code Reviewer',
+                    'type': 'dashboard-layout',
                   },
                 ],
               ],
@@ -4380,8 +4380,65 @@ export function stdAgentReviewerAnalysisOrbital(params: StdAgentReviewerAnalysis
                   'render-ui',
                   'main',
                   {
-                    'type': 'dashboard-layout',
                     'appName': 'Code Reviewer',
+                    'children': [
+                      {
+                        'direction': 'vertical',
+                        'gap': 'lg',
+                        'children': [
+                          {
+                            'direction': 'horizontal',
+                            'justify': 'between',
+                            'type': 'stack',
+                            'children': [
+                              {
+                                'type': 'stack',
+                                'direction': 'horizontal',
+                                'gap': 'md',
+                                'align': 'center',
+                                'children': [
+                                  {
+                                    'type': 'icon',
+                                    'name': 'tag',
+                                  },
+                                  {
+                                    'variant': 'h2',
+                                    'type': 'typography',
+                                    'content': 'Analysis Result',
+                                  },
+                                ],
+                              },
+                              {
+                                'label': 'Dismiss',
+                                'variant': 'ghost',
+                                'action': 'HIDE',
+                                'icon': 'x',
+                                'type': 'button',
+                              },
+                            ],
+                            'align': 'center',
+                            'gap': 'md',
+                          },
+                          {
+                            'type': 'divider',
+                          },
+                          {
+                            'type': 'alert',
+                            'variant': '@entity.notificationType',
+                            'message': '@entity.message',
+                          },
+                          {
+                            'type': 'toast-slot',
+                          },
+                          {
+                            'variant': 'warning',
+                            'message': '@entity.message',
+                            'type': 'alert',
+                          },
+                        ],
+                        'type': 'stack',
+                      },
+                    ],
                     'navItems': [
                       {
                         'label': 'Review',
@@ -4389,74 +4446,17 @@ export function stdAgentReviewerAnalysisOrbital(params: StdAgentReviewerAnalysis
                         'icon': 'file-search',
                       },
                       {
-                        'icon': 'tag',
-                        'label': 'Analysis',
                         'href': '/analysis',
+                        'label': 'Analysis',
+                        'icon': 'tag',
                       },
                       {
                         'href': '/issues',
-                        'label': 'Issues',
                         'icon': 'alert-triangle',
+                        'label': 'Issues',
                       },
                     ],
-                    'children': [
-                      {
-                        'type': 'stack',
-                        'direction': 'vertical',
-                        'gap': 'lg',
-                        'children': [
-                          {
-                            'type': 'stack',
-                            'direction': 'horizontal',
-                            'align': 'center',
-                            'gap': 'md',
-                            'justify': 'between',
-                            'children': [
-                              {
-                                'align': 'center',
-                                'type': 'stack',
-                                'gap': 'md',
-                                'children': [
-                                  {
-                                    'type': 'icon',
-                                    'name': 'tag',
-                                  },
-                                  {
-                                    'content': 'Analysis Result',
-                                    'variant': 'h2',
-                                    'type': 'typography',
-                                  },
-                                ],
-                                'direction': 'horizontal',
-                              },
-                              {
-                                'action': 'HIDE',
-                                'variant': 'ghost',
-                                'label': 'Dismiss',
-                                'icon': 'x',
-                                'type': 'button',
-                              },
-                            ],
-                          },
-                          {
-                            'type': 'divider',
-                          },
-                          {
-                            'variant': '@entity.notificationType',
-                            'message': '@entity.message',
-                            'type': 'alert',
-                          },
-                          {
-                            'type': 'toast-slot',
-                          },
-                          {
-                            'message': '@entity.message',
-                            'variant': 'warning',
-                            'type': 'alert',
-                          },
-                        ],
-                      },
-                    ],
+                    'type': 'dashboard-layout',
                   },
                 ],
               ],
@@ -4619,33 +4619,33 @@ export function stdAgentReviewerAnalysisOrbital(params: StdAgentReviewerAnalysis
                   'render-ui',
                   'main',
                   {
-                    'type': 'dashboard-layout',
                     'appName': 'Code Reviewer',
+                    'children': [
+                      {
+                        'title': 'Classifier',
+                        'type': 'empty-state',
+                        'description': 'Classifier is ready',
+                        'icon': 'tag',
+                      },
+                    ],
                     'navItems': [
                       {
                         'label': 'Review',
-                        'href': '/review',
                         'icon': 'file-search',
+                        'href': '/review',
                       },
                       {
                         'icon': 'tag',
-                        'label': 'Analysis',
                         'href': '/analysis',
+                        'label': 'Analysis',
                       },
                       {
-                        'label': 'Issues',
                         'href': '/issues',
                         'icon': 'alert-triangle',
+                        'label': 'Issues',
                       },
                     ],
-                    'children': [
-                      {
-                        'description': 'Classifier is ready',
-                        'type': 'empty-state',
-                        'title': 'Classifier',
-                        'icon': 'tag',
-                      },
-                    ],
+                    'type': 'dashboard-layout',
                   },
                 ],
               ],
@@ -4700,8 +4700,8 @@ export function stdAgentReviewerAnalysisOrbital(params: StdAgentReviewerAnalysis
                   'emit',
                   'SHOW',
                   {
-                    'message': 'Input classified',
                     'notificationType': 'success',
+                    'message': 'Input classified',
                   },
                 ],
               ],
@@ -5094,8 +5094,8 @@ export function stdAgentReviewerReviewCompletionOrbital(params: StdAgentReviewer
                   'ReviewCompletion',
                   {
                     'emit': {
-                      'success': 'ReviewCompletionLoaded',
                       'failure': 'ReviewCompletionLoadFailed',
+                      'success': 'ReviewCompletionLoaded',
                     },
                   },
                 ],
@@ -5103,62 +5103,62 @@ export function stdAgentReviewerReviewCompletionOrbital(params: StdAgentReviewer
                   'render-ui',
                   'main',
                   {
-                    'type': 'dashboard-layout',
                     'appName': 'Code Reviewer',
                     'children': [
                       {
-                        'gap': 'lg',
                         'type': 'stack',
                         'direction': 'vertical',
                         'children': [
                           {
-                            'type': 'stack',
+                            'direction': 'horizontal',
                             'justify': 'between',
-                            'gap': 'md',
+                            'type': 'stack',
                             'children': [
                               {
-                                'gap': 'md',
+                                'type': 'stack',
                                 'children': [
                                   {
                                     'type': 'icon',
                                     'name': 'sparkles',
                                   },
                                   {
-                                    'type': 'typography',
                                     'variant': 'h2',
                                     'content': 'ReviewCompletion',
+                                    'type': 'typography',
                                   },
                                 ],
-                                'type': 'stack',
+                                'gap': 'md',
                                 'direction': 'horizontal',
                               },
                               {
+                                'variant': 'primary',
+                                'icon': 'sparkles',
                                 'label': 'Open',
                                 'action': 'GENERATE',
-                                'icon': 'sparkles',
                                 'type': 'button',
-                                'variant': 'primary',
                               },
                             ],
-                            'direction': 'horizontal',
+                            'gap': 'md',
                           },
                           {
                             'type': 'divider',
                           },
                           {
-                            'title': 'Nothing open',
-                            'type': 'empty-state',
-                            'icon': 'sparkles',
                             'description': 'Click Open to view details in a modal overlay.',
+                            'type': 'empty-state',
+                            'title': 'Nothing open',
+                            'icon': 'sparkles',
                           },
                         ],
+                        'gap': 'lg',
                       },
                     ],
+                    'type': 'dashboard-layout',
                     'navItems': [
                       {
                         'label': 'Review',
-                        'href': '/review',
                         'icon': 'file-search',
+                        'href': '/review',
                       },
                       {
                         'href': '/analysis',
@@ -5184,52 +5184,52 @@ export function stdAgentReviewerReviewCompletionOrbital(params: StdAgentReviewer
                   'render-ui',
                   'modal',
                   {
-                    'type': 'stack',
                     'direction': 'vertical',
                     'gap': 'md',
+                    'type': 'stack',
                     'children': [
                       {
                         'children': [
                           {
-                            'type': 'icon',
                             'name': 'sparkles',
+                            'type': 'icon',
                           },
                           {
+                            'type': 'typography',
                             'content': 'ReviewCompletion',
                             'variant': 'h3',
-                            'type': 'typography',
                           },
                         ],
-                        'gap': 'sm',
                         'direction': 'horizontal',
+                        'gap': 'sm',
                         'type': 'stack',
                       },
                       {
                         'type': 'divider',
                       },
                       {
+                        'type': 'stack',
+                        'direction': 'horizontal',
+                        'gap': 'sm',
                         'children': [
                           {
-                            'type': 'badge',
                             'label': '@entity.provider',
+                            'type': 'badge',
                           },
                           {
-                            'label': '@entity.model',
                             'type': 'badge',
+                            'label': '@entity.model',
                           },
                         ],
-                        'gap': 'sm',
-                        'direction': 'horizontal',
-                        'type': 'stack',
                       },
                       {
-                        'cancelEvent': 'CLOSE',
+                        'type': 'form-section',
                         'fields': [
                           'prompt',
                         ],
-                        'submitEvent': 'SAVE',
-                        'type': 'form-section',
                         'mode': 'create',
+                        'cancelEvent': 'CLOSE',
+                        'submitEvent': 'SAVE',
                       },
                     ],
                   },
@@ -5256,8 +5256,8 @@ export function stdAgentReviewerReviewCompletionOrbital(params: StdAgentReviewer
                   'ReviewCompletion',
                   {
                     'emit': {
-                      'failure': 'ReviewCompletionLoadFailed',
                       'success': 'ReviewCompletionLoaded',
+                      'failure': 'ReviewCompletionLoadFailed',
                     },
                   },
                 ],
@@ -5265,72 +5265,72 @@ export function stdAgentReviewerReviewCompletionOrbital(params: StdAgentReviewer
                   'render-ui',
                   'main',
                   {
-                    'type': 'dashboard-layout',
-                    'navItems': [
-                      {
-                        'href': '/review',
-                        'icon': 'file-search',
-                        'label': 'Review',
-                      },
-                      {
-                        'label': 'Analysis',
-                        'href': '/analysis',
-                        'icon': 'tag',
-                      },
-                      {
-                        'href': '/issues',
-                        'icon': 'alert-triangle',
-                        'label': 'Issues',
-                      },
-                    ],
                     'appName': 'Code Reviewer',
+                    'type': 'dashboard-layout',
                     'children': [
                       {
-                        'type': 'stack',
+                        'direction': 'vertical',
+                        'gap': 'lg',
                         'children': [
                           {
                             'type': 'stack',
-                            'gap': 'md',
+                            'justify': 'between',
                             'children': [
                               {
+                                'type': 'stack',
                                 'direction': 'horizontal',
+                                'gap': 'md',
                                 'children': [
                                   {
                                     'type': 'icon',
                                     'name': 'sparkles',
                                   },
                                   {
-                                    'content': 'ReviewCompletion',
                                     'variant': 'h2',
                                     'type': 'typography',
+                                    'content': 'ReviewCompletion',
                                   },
                                 ],
-                                'type': 'stack',
-                                'gap': 'md',
                               },
                               {
-                                'variant': 'primary',
                                 'icon': 'sparkles',
-                                'label': 'Open',
                                 'type': 'button',
+                                'label': 'Open',
                                 'action': 'GENERATE',
+                                'variant': 'primary',
                               },
                             ],
-                            'justify': 'between',
+                            'gap': 'md',
                             'direction': 'horizontal',
                           },
                           {
                             'type': 'divider',
                           },
                           {
+                            'title': 'Nothing open',
+                            'icon': 'sparkles',
                             'description': 'Click Open to view details in a modal overlay.',
                             'type': 'empty-state',
-                            'icon': 'sparkles',
-                            'title': 'Nothing open',
                           },
                         ],
-                        'direction': 'vertical',
-                        'gap': 'lg',
+                        'type': 'stack',
+                      },
+                    ],
+                    'navItems': [
+                      {
+                        'label': 'Review',
+                        'href': '/review',
+                        'icon': 'file-search',
+                      },
+                      {
+                        'href': '/analysis',
+                        'label': 'Analysis',
+                        'icon': 'tag',
+                      },
+                      {
+                        'href': '/issues',
+                        'label': 'Issues',
+                        'icon': 'alert-triangle',
                       },
                     ],
                   },
@@ -5377,23 +5377,6 @@ export function stdAgentReviewerReviewCompletionOrbital(params: StdAgentReviewer
                   'render-ui',
                   'main',
                   {
-                    'navItems': [
-                      {
-                        'label': 'Review',
-                        'href': '/review',
-                        'icon': 'file-search',
-                      },
-                      {
-                        'label': 'Analysis',
-                        'href': '/analysis',
-                        'icon': 'tag',
-                      },
-                      {
-                        'label': 'Issues',
-                        'icon': 'alert-triangle',
-                        'href': '/issues',
-                      },
-                    ],
                     'type': 'dashboard-layout',
                     'children': [
                       {
@@ -5402,33 +5385,33 @@ export function stdAgentReviewerReviewCompletionOrbital(params: StdAgentReviewer
                         'gap': 'lg',
                         'children': [
                           {
-                            'type': 'stack',
                             'justify': 'between',
+                            'type': 'stack',
                             'direction': 'horizontal',
                             'gap': 'md',
                             'children': [
                               {
+                                'gap': 'md',
+                                'type': 'stack',
+                                'direction': 'horizontal',
                                 'children': [
                                   {
                                     'type': 'icon',
                                     'name': 'sparkles',
                                   },
                                   {
+                                    'variant': 'h2',
                                     'type': 'typography',
                                     'content': 'ReviewCompletion',
-                                    'variant': 'h2',
                                   },
                                 ],
-                                'type': 'stack',
-                                'direction': 'horizontal',
-                                'gap': 'md',
                               },
                               {
-                                'variant': 'primary',
-                                'icon': 'sparkles',
                                 'type': 'button',
+                                'variant': 'primary',
                                 'label': 'Open',
                                 'action': 'GENERATE',
+                                'icon': 'sparkles',
                               },
                             ],
                           },
@@ -5436,8 +5419,8 @@ export function stdAgentReviewerReviewCompletionOrbital(params: StdAgentReviewer
                             'type': 'divider',
                           },
                           {
-                            'type': 'empty-state',
                             'description': 'Click Open to view details in a modal overlay.',
+                            'type': 'empty-state',
                             'icon': 'sparkles',
                             'title': 'Nothing open',
                           },
@@ -5445,6 +5428,23 @@ export function stdAgentReviewerReviewCompletionOrbital(params: StdAgentReviewer
                       },
                     ],
                     'appName': 'Code Reviewer',
+                    'navItems': [
+                      {
+                        'label': 'Review',
+                        'href': '/review',
+                        'icon': 'file-search',
+                      },
+                      {
+                        'href': '/analysis',
+                        'icon': 'tag',
+                        'label': 'Analysis',
+                      },
+                      {
+                        'label': 'Issues',
+                        'href': '/issues',
+                        'icon': 'alert-triangle',
+                      },
+                    ],
                   },
                 ],
               ],
@@ -5554,8 +5554,8 @@ export function stdAgentReviewerReviewCompletionOrbital(params: StdAgentReviewer
                   'ReviewCompletion',
                   {
                     'emit': {
-                      'success': 'ReviewCompletionLoaded',
                       'failure': 'ReviewCompletionLoadFailed',
+                      'success': 'ReviewCompletionLoaded',
                     },
                   },
                 ],
@@ -5581,7 +5581,6 @@ export function stdAgentReviewerReviewCompletionOrbital(params: StdAgentReviewer
                   'main',
                   {
                     'appName': 'Code Reviewer',
-                    'type': 'dashboard-layout',
                     'navItems': [
                       {
                         'icon': 'file-search',
@@ -5589,30 +5588,30 @@ export function stdAgentReviewerReviewCompletionOrbital(params: StdAgentReviewer
                         'href': '/review',
                       },
                       {
-                        'label': 'Analysis',
                         'href': '/analysis',
                         'icon': 'tag',
+                        'label': 'Analysis',
                       },
                       {
-                        'label': 'Issues',
                         'icon': 'alert-triangle',
                         'href': '/issues',
+                        'label': 'Issues',
                       },
                     ],
                     'children': [
                       {
+                        'type': 'stack',
                         'children': [
                           {
                             'justify': 'between',
-                            'gap': 'md',
                             'type': 'stack',
-                            'direction': 'horizontal',
                             'align': 'center',
                             'children': [
                               {
-                                'type': 'stack',
-                                'direction': 'horizontal',
+                                'align': 'center',
                                 'gap': 'md',
+                                'direction': 'horizontal',
+                                'type': 'stack',
                                 'children': [
                                   {
                                     'type': 'icon',
@@ -5624,24 +5623,25 @@ export function stdAgentReviewerReviewCompletionOrbital(params: StdAgentReviewer
                                     'variant': 'h2',
                                   },
                                 ],
-                                'align': 'center',
                               },
                               {
                                 'type': 'button',
-                                'variant': 'ghost',
+                                'label': 'Dismiss',
                                 'action': 'HIDE',
                                 'icon': 'x',
-                                'label': 'Dismiss',
+                                'variant': 'ghost',
                               },
                             ],
+                            'direction': 'horizontal',
+                            'gap': 'md',
                           },
                           {
                             'type': 'divider',
                           },
                           {
-                            'message': '@entity.message',
-                            'type': 'alert',
                             'variant': '@entity.notificationType',
+                            'type': 'alert',
+                            'message': '@entity.message',
                           },
                           {
                             'type': 'toast-slot',
@@ -5652,11 +5652,11 @@ export function stdAgentReviewerReviewCompletionOrbital(params: StdAgentReviewer
                             'variant': 'warning',
                           },
                         ],
-                        'direction': 'vertical',
-                        'type': 'stack',
                         'gap': 'lg',
+                        'direction': 'vertical',
                       },
                     ],
+                    'type': 'dashboard-layout',
                   },
                 ],
               ],
@@ -5680,51 +5680,67 @@ export function stdAgentReviewerReviewCompletionOrbital(params: StdAgentReviewer
                   'render-ui',
                   'main',
                   {
+                    'navItems': [
+                      {
+                        'href': '/review',
+                        'icon': 'file-search',
+                        'label': 'Review',
+                      },
+                      {
+                        'label': 'Analysis',
+                        'href': '/analysis',
+                        'icon': 'tag',
+                      },
+                      {
+                        'label': 'Issues',
+                        'icon': 'alert-triangle',
+                        'href': '/issues',
+                      },
+                    ],
+                    'type': 'dashboard-layout',
                     'children': [
                       {
                         'type': 'stack',
-                        'gap': 'lg',
-                        'direction': 'vertical',
                         'children': [
                           {
                             'direction': 'horizontal',
-                            'align': 'center',
-                            'justify': 'between',
+                            'gap': 'md',
                             'children': [
                               {
-                                'type': 'stack',
+                                'align': 'center',
+                                'gap': 'md',
+                                'direction': 'horizontal',
                                 'children': [
                                   {
-                                    'name': 'sparkles',
                                     'type': 'icon',
+                                    'name': 'sparkles',
                                   },
                                   {
-                                    'type': 'typography',
                                     'content': 'ReviewCompletion Status',
                                     'variant': 'h2',
+                                    'type': 'typography',
                                   },
                                 ],
-                                'align': 'center',
-                                'direction': 'horizontal',
-                                'gap': 'md',
+                                'type': 'stack',
                               },
                               {
-                                'type': 'button',
                                 'label': 'Dismiss',
-                                'action': 'HIDE',
                                 'variant': 'ghost',
                                 'icon': 'x',
+                                'type': 'button',
+                                'action': 'HIDE',
                               },
                             ],
-                            'gap': 'md',
+                            'align': 'center',
                             'type': 'stack',
+                            'justify': 'between',
                           },
                           {
                             'type': 'divider',
                           },
                           {
-                            'message': '@entity.message',
                             'variant': '@entity.notificationType',
+                            'message': '@entity.message',
                             'type': 'alert',
                           },
                           {
@@ -5736,24 +5752,8 @@ export function stdAgentReviewerReviewCompletionOrbital(params: StdAgentReviewer
                             'message': '@entity.message',
                           },
                         ],
-                      },
-                    ],
-                    'type': 'dashboard-layout',
-                    'navItems': [
-                      {
-                        'icon': 'file-search',
-                        'label': 'Review',
-                        'href': '/review',
-                      },
-                      {
-                        'label': 'Analysis',
-                        'icon': 'tag',
-                        'href': '/analysis',
-                      },
-                      {
-                        'icon': 'alert-triangle',
-                        'label': 'Issues',
-                        'href': '/issues',
+                        'direction': 'vertical',
+                        'gap': 'lg',
                       },
                     ],
                     'appName': 'Code Reviewer',
@@ -5917,8 +5917,8 @@ export function stdAgentReviewerReviewCompletionOrbital(params: StdAgentReviewer
                   'ReviewCompletion',
                   {
                     'emit': {
-                      'failure': 'ReviewCompletionLoadFailed',
                       'success': 'ReviewCompletionLoaded',
+                      'failure': 'ReviewCompletionLoadFailed',
                     },
                   },
                 ],
@@ -5926,15 +5926,6 @@ export function stdAgentReviewerReviewCompletionOrbital(params: StdAgentReviewer
                   'render-ui',
                   'main',
                   {
-                    'children': [
-                      {
-                        'title': 'Completion',
-                        'type': 'empty-state',
-                        'icon': 'sparkles',
-                        'description': 'Completion is ready',
-                      },
-                    ],
-                    'type': 'dashboard-layout',
                     'navItems': [
                       {
                         'icon': 'file-search',
@@ -5953,6 +5944,15 @@ export function stdAgentReviewerReviewCompletionOrbital(params: StdAgentReviewer
                       },
                     ],
                     'appName': 'Code Reviewer',
+                    'type': 'dashboard-layout',
+                    'children': [
+                      {
+                        'icon': 'sparkles',
+                        'title': 'Completion',
+                        'type': 'empty-state',
+                        'description': 'Completion is ready',
+                      },
+                    ],
                   },
                 ],
               ],
@@ -6008,8 +6008,8 @@ export function stdAgentReviewerReviewCompletionOrbital(params: StdAgentReviewer
                   'emit',
                   'SHOW',
                   {
-                    'notificationType': 'success',
                     'message': 'Review complete',
+                    'notificationType': 'success',
                   },
                 ],
               ],

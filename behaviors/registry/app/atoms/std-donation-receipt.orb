@@ -275,8 +275,8 @@
                     "DonationReceipt",
                     {
                       "emit": {
-                        "failure": "DonationReceiptLoadFailed",
-                        "success": "DonationReceiptLoaded"
+                        "success": "DonationReceiptLoaded",
+                        "failure": "DonationReceiptLoadFailed"
                       }
                     }
                   ],
@@ -284,22 +284,22 @@
                     "render-ui",
                     "main",
                     {
+                      "type": "stack",
                       "align": "center",
                       "className": "py-12",
+                      "direction": "vertical",
                       "children": [
                         {
                           "type": "spinner"
                         },
                         {
+                          "content": "Loading donation receipts…",
                           "color": "muted",
                           "type": "typography",
-                          "variant": "caption",
-                          "content": "Loading donation receipts…"
+                          "variant": "caption"
                         }
                       ],
-                      "direction": "vertical",
-                      "gap": "md",
-                      "type": "stack"
+                      "gap": "md"
                     }
                   ]
                 ]
@@ -314,9 +314,12 @@
                     "main",
                     {
                       "gap": "md",
-                      "direction": "vertical",
+                      "type": "stack",
                       "children": [
                         {
+                          "type": "stack",
+                          "direction": "horizontal",
+                          "align": "center",
                           "children": [
                             {
                               "type": "icon",
@@ -324,58 +327,55 @@
                             },
                             {
                               "variant": "h3",
-                              "content": "@config.title",
-                              "type": "typography"
+                              "type": "typography",
+                              "content": "@config.title"
                             }
                           ],
-                          "gap": "sm",
-                          "type": "stack",
-                          "direction": "horizontal",
-                          "align": "center"
+                          "gap": "sm"
                         },
                         {
                           "cols": 4.0,
-                          "type": "simple-grid",
                           "children": [
                             {
-                              "type": "stat-display",
-                              "value": "@payload.data.length",
+                              "label": "Receipts",
                               "icon": "receipt",
-                              "label": "Receipts"
+                              "type": "stat-display",
+                              "value": "@payload.data.length"
                             },
                             {
+                              "type": "stat-display",
                               "label": "Total deductible",
-                              "icon": "dollar-sign",
-                              "type": "stat-display",
-                              "value": "$482,300"
+                              "value": "$482,300",
+                              "icon": "dollar-sign"
                             },
                             {
-                              "value": "2025",
                               "label": "Tax year",
+                              "icon": "calendar",
                               "type": "stat-display",
-                              "icon": "calendar"
+                              "value": "2025"
                             },
                             {
+                              "type": "stat-display",
                               "icon": "send",
                               "value": "94%",
-                              "type": "stat-display",
                               "label": "Emailed"
                             }
-                          ]
+                          ],
+                          "type": "simple-grid"
                         },
                         {
                           "type": "divider"
                         },
                         {
+                          "gap": "sm",
+                          "fields": "@config.fields",
                           "entity": "@payload.data",
                           "cols": 1.0,
-                          "gap": "sm",
                           "itemActions": "@config.itemActions",
-                          "type": "data-grid",
-                          "fields": "@config.fields"
+                          "type": "data-grid"
                         }
                       ],
-                      "type": "stack"
+                      "direction": "vertical"
                     }
                   ]
                 ]
@@ -389,9 +389,9 @@
                     "render-ui",
                     "main",
                     {
-                      "type": "alert",
                       "message": "@payload.error",
-                      "variant": "error"
+                      "variant": "error",
+                      "type": "alert"
                     }
                   ]
                 ]
@@ -450,30 +450,27 @@
                     "render-ui",
                     "main",
                     {
-                      "direction": "vertical",
-                      "gap": "md",
-                      "type": "stack",
                       "children": [
                         {
-                          "direction": "horizontal",
+                          "type": "stack",
                           "align": "center",
                           "gap": "sm",
-                          "type": "stack",
+                          "direction": "horizontal",
                           "children": [
                             {
-                              "variant": "ghost",
-                              "action": "CLOSE_VIEW",
                               "type": "button",
-                              "label": "Back"
+                              "label": "Back",
+                              "action": "CLOSE_VIEW",
+                              "variant": "ghost"
                             },
                             {
                               "type": "icon",
                               "name": "receipt"
                             },
                             {
-                              "type": "typography",
+                              "variant": "h3",
                               "content": "@entity.receiptNumber",
-                              "variant": "h3"
+                              "type": "typography"
                             }
                           ]
                         },
@@ -481,16 +478,18 @@
                           "type": "divider"
                         },
                         {
+                          "gap": "sm",
                           "direction": "vertical",
                           "children": [
                             {
-                              "direction": "horizontal",
+                              "gap": "md",
+                              "type": "stack",
                               "children": [
                                 {
-                                  "content": "Donor",
-                                  "type": "typography",
                                   "variant": "caption",
-                                  "color": "muted"
+                                  "color": "muted",
+                                  "type": "typography",
+                                  "content": "Donor"
                                 },
                                 {
                                   "type": "typography",
@@ -498,65 +497,63 @@
                                   "variant": "body"
                                 }
                               ],
+                              "direction": "horizontal"
+                            },
+                            {
                               "type": "stack",
+                              "direction": "horizontal",
+                              "children": [
+                                {
+                                  "color": "muted",
+                                  "type": "typography",
+                                  "content": "Donor ID",
+                                  "variant": "caption"
+                                },
+                                {
+                                  "content": "@entity.donorId",
+                                  "variant": "body",
+                                  "type": "typography"
+                                }
+                              ],
                               "gap": "md"
                             },
                             {
                               "children": [
                                 {
-                                  "type": "typography",
-                                  "variant": "caption",
-                                  "color": "muted",
-                                  "content": "Donor ID"
-                                },
-                                {
-                                  "variant": "body",
-                                  "type": "typography",
-                                  "content": "@entity.donorId"
-                                }
-                              ],
-                              "gap": "md",
-                              "direction": "horizontal",
-                              "type": "stack"
-                            },
-                            {
-                              "direction": "horizontal",
-                              "gap": "md",
-                              "children": [
-                                {
-                                  "type": "typography",
-                                  "color": "muted",
                                   "content": "Campaign",
-                                  "variant": "caption"
+                                  "variant": "caption",
+                                  "type": "typography",
+                                  "color": "muted"
                                 },
                                 {
-                                  "variant": "body",
                                   "content": "@entity.campaignId",
+                                  "variant": "body",
                                   "type": "typography"
                                 }
                               ],
-                              "type": "stack"
+                              "type": "stack",
+                              "direction": "horizontal",
+                              "gap": "md"
                             },
                             {
+                              "type": "stack",
+                              "direction": "horizontal",
+                              "gap": "md",
                               "children": [
                                 {
-                                  "type": "typography",
                                   "color": "muted",
+                                  "variant": "caption",
                                   "content": "Nonprofit EIN",
-                                  "variant": "caption"
+                                  "type": "typography"
                                 },
                                 {
                                   "variant": "body",
                                   "type": "typography",
                                   "content": "@entity.nonprofitEin"
                                 }
-                              ],
-                              "direction": "horizontal",
-                              "type": "stack",
-                              "gap": "md"
+                              ]
                             }
                           ],
-                          "gap": "sm",
                           "type": "stack"
                         },
                         {
@@ -564,55 +561,58 @@
                         },
                         {
                           "type": "simple-grid",
+                          "cols": 3.0,
                           "children": [
                             {
-                              "type": "stat-display",
-                              "label": "Amount",
                               "value": "@entity.amount",
-                              "icon": "dollar-sign"
+                              "label": "Amount",
+                              "icon": "dollar-sign",
+                              "type": "stat-display"
                             },
                             {
-                              "icon": "calendar",
+                              "label": "Date",
                               "value": "@entity.donationDate",
                               "type": "stat-display",
-                              "label": "Date"
+                              "icon": "calendar"
                             },
                             {
-                              "label": "Tax year",
                               "type": "stat-display",
-                              "icon": "file-text",
-                              "value": "@entity.taxYear"
+                              "label": "Tax year",
+                              "value": "@entity.taxYear",
+                              "icon": "file-text"
                             }
-                          ],
-                          "cols": 3.0
+                          ]
                         },
                         {
-                          "align": "center",
                           "type": "stack",
+                          "direction": "horizontal",
+                          "gap": "sm",
+                          "align": "center",
                           "children": [
                             {
-                              "label": "Email Receipt",
-                              "type": "button",
                               "action": "EMAIL_RECEIPT",
+                              "variant": "primary",
+                              "label": "Email Receipt",
                               "actionPayload": {
                                 "id": "@entity.id"
                               },
-                              "variant": "primary"
+                              "type": "button"
                             },
                             {
                               "variant": "danger",
-                              "type": "button",
-                              "action": "VOID_RECEIPT",
-                              "label": "Void",
                               "actionPayload": {
                                 "id": "@entity.id"
-                              }
+                              },
+                              "label": "Void",
+                              "type": "button",
+                              "action": "VOID_RECEIPT"
                             }
-                          ],
-                          "direction": "horizontal",
-                          "gap": "sm"
+                          ]
                         }
-                      ]
+                      ],
+                      "gap": "md",
+                      "type": "stack",
+                      "direction": "vertical"
                     }
                   ]
                 ]
@@ -632,8 +632,8 @@
                     "DonationReceipt",
                     {
                       "emit": {
-                        "failure": "DonationReceiptLoadFailed",
-                        "success": "DonationReceiptLoaded"
+                        "success": "DonationReceiptLoaded",
+                        "failure": "DonationReceiptLoadFailed"
                       }
                     }
                   ],
@@ -641,22 +641,22 @@
                     "render-ui",
                     "main",
                     {
-                      "className": "py-12",
-                      "gap": "md",
                       "children": [
                         {
                           "type": "spinner"
                         },
                         {
-                          "color": "muted",
-                          "type": "typography",
                           "variant": "caption",
-                          "content": "Voiding receipt…"
+                          "type": "typography",
+                          "content": "Voiding receipt…",
+                          "color": "muted"
                         }
                       ],
-                      "type": "stack",
+                      "direction": "vertical",
+                      "gap": "md",
+                      "className": "py-12",
                       "align": "center",
-                      "direction": "vertical"
+                      "type": "stack"
                     }
                   ]
                 ]
@@ -671,8 +671,8 @@
                     "DonationReceipt",
                     {
                       "emit": {
-                        "success": "DonationReceiptLoaded",
-                        "failure": "DonationReceiptLoadFailed"
+                        "failure": "DonationReceiptLoadFailed",
+                        "success": "DonationReceiptLoaded"
                       }
                     }
                   ],
@@ -680,22 +680,22 @@
                     "render-ui",
                     "main",
                     {
-                      "type": "stack",
-                      "align": "center",
-                      "className": "py-12",
-                      "gap": "md",
-                      "direction": "vertical",
                       "children": [
                         {
                           "type": "spinner"
                         },
                         {
-                          "color": "muted",
                           "content": "Loading receipts…",
-                          "variant": "caption",
-                          "type": "typography"
+                          "type": "typography",
+                          "color": "muted",
+                          "variant": "caption"
                         }
-                      ]
+                      ],
+                      "gap": "md",
+                      "type": "stack",
+                      "direction": "vertical",
+                      "className": "py-12",
+                      "align": "center"
                     }
                   ]
                 ]
@@ -715,8 +715,8 @@
                     "DonationReceipt",
                     {
                       "emit": {
-                        "failure": "DonationReceiptLoadFailed",
-                        "success": "DonationReceiptLoaded"
+                        "success": "DonationReceiptLoaded",
+                        "failure": "DonationReceiptLoadFailed"
                       }
                     }
                   ],
@@ -724,22 +724,22 @@
                     "render-ui",
                     "main",
                     {
-                      "className": "py-12",
+                      "type": "stack",
                       "direction": "vertical",
+                      "align": "center",
+                      "className": "py-12",
                       "children": [
                         {
                           "type": "spinner"
                         },
                         {
-                          "type": "typography",
                           "variant": "caption",
+                          "type": "typography",
                           "color": "muted",
                           "content": "Emailing receipt…"
                         }
                       ],
-                      "gap": "md",
-                      "align": "center",
-                      "type": "stack"
+                      "gap": "md"
                     }
                   ]
                 ]
@@ -759,8 +759,8 @@
                     "DonationReceipt",
                     {
                       "emit": {
-                        "success": "DonationReceiptLoaded",
-                        "failure": "DonationReceiptLoadFailed"
+                        "failure": "DonationReceiptLoadFailed",
+                        "success": "DonationReceiptLoaded"
                       }
                     }
                   ],
@@ -769,21 +769,21 @@
                     "main",
                     {
                       "type": "stack",
-                      "direction": "vertical",
-                      "gap": "md",
-                      "align": "center",
-                      "className": "py-12",
                       "children": [
                         {
                           "type": "spinner"
                         },
                         {
-                          "variant": "caption",
+                          "color": "muted",
                           "type": "typography",
                           "content": "Voiding receipt…",
-                          "color": "muted"
+                          "variant": "caption"
                         }
-                      ]
+                      ],
+                      "direction": "vertical",
+                      "align": "center",
+                      "className": "py-12",
+                      "gap": "md"
                     }
                   ]
                 ]
@@ -798,8 +798,8 @@
                     "DonationReceipt",
                     {
                       "emit": {
-                        "failure": "DonationReceiptLoadFailed",
-                        "success": "DonationReceiptLoaded"
+                        "success": "DonationReceiptLoaded",
+                        "failure": "DonationReceiptLoadFailed"
                       }
                     }
                   ],
@@ -807,8 +807,8 @@
                     "render-ui",
                     "main",
                     {
-                      "type": "spinner",
-                      "size": "sm"
+                      "size": "sm",
+                      "type": "spinner"
                     }
                   ]
                 ]
@@ -816,130 +816,115 @@
             ]
           },
           "config": {
-            "gracePeriodDays": {
-              "type": "number",
-              "default": 0.0,
-              "label": "Grace period (days)",
-              "description": "Days a receipt is editable before it locks. Declarative.",
-              "tier": "customization"
-            },
-            "itemActions": {
-              "type": "[ItemAction]",
-              "default": [
-                {
-                  "variant": "primary",
-                  "event": "OPEN_RECEIPT",
-                  "label": "Open",
-                  "icon": "arrow-right"
-                },
-                {
-                  "event": "VOID_RECEIPT",
-                  "label": "Void",
-                  "variant": "danger"
-                }
-              ],
-              "label": "Row actions",
-              "description": "Buttons users can click on each receipt row",
-              "tier": "customization",
-              "items": {
-                "type": "object",
-                "properties": {
-                  "label": {
-                    "name": "label",
-                    "type": "string",
-                    "required": true
-                  },
-                  "variant": {
-                    "name": "variant",
-                    "type": "string",
-                    "required": false
-                  },
-                  "event": {
-                    "name": "event",
-                    "type": "string",
-                    "required": true
-                  },
-                  "icon": {
-                    "name": "icon",
-                    "type": "string",
-                    "required": false
-                  }
-                }
-              }
-            },
-            "currency": {
+            "complianceJurisdiction": {
               "type": "string",
-              "default": "USD",
-              "label": "Default currency",
-              "description": "ISO 4217 currency code for donation amounts.",
-              "tier": "essential"
+              "default": "US-IRS",
+              "label": "Compliance jurisdiction",
+              "description": "Drives charitable-deduction rules per locale: 'US-IRS', 'UK-HMRC', 'CA-CRA', etc. Declarative.",
+              "tier": "domain"
             },
-            "lateFeeAmount": {
-              "type": "number",
-              "default": 0.0,
-              "label": "Late fee amount",
-              "description": "Flat cash amount or percentage (per lateFeePolicy).",
-              "tier": "customization"
+            "lateFeePolicy": {
+              "type": "string",
+              "default": "none",
+              "label": "Late fee policy",
+              "description": "Not typically applicable to donation receipts. Declarative; wiring deferred.",
+              "tier": "domain",
+              "values": [
+                "none",
+                "flat",
+                "percent"
+              ]
             },
             "retentionYears": {
               "type": "number",
               "default": 7.0,
               "label": "Retention (years)",
               "description": "Years to keep donation receipts for compliance (IRS recommends 7).",
-              "tier": "advanced"
+              "tier": "domain"
+            },
+            "lateFeeAmount": {
+              "type": "number",
+              "default": 0.0,
+              "label": "Late fee amount",
+              "description": "Flat cash amount or percentage (per lateFeePolicy).",
+              "tier": "domain"
+            },
+            "currency": {
+              "type": "string",
+              "default": "USD",
+              "label": "Default currency",
+              "description": "ISO 4217 currency code for donation amounts.",
+              "tier": "domain"
+            },
+            "roundingMode": {
+              "type": "string",
+              "default": "half-up",
+              "label": "Rounding mode",
+              "description": "Sub-cent rounding behavior for donation amounts.",
+              "tier": "domain",
+              "values": [
+                "bankers",
+                "half-up",
+                "down"
+              ]
             },
             "fields": {
               "type": "[FieldSpec]",
               "default": [
                 {
-                  "name": "receiptNumber",
                   "label": "Receipt #",
+                  "name": "receiptNumber",
                   "variant": "caption"
                 },
                 {
-                  "label": "Donor",
                   "variant": "caption",
+                  "label": "Donor",
                   "name": "donorName"
                 },
                 {
-                  "name": "amount",
+                  "variant": "caption",
                   "label": "Amount",
-                  "variant": "caption"
-                },
-                {
-                  "name": "donationDate",
-                  "label": "Date",
-                  "variant": "caption"
+                  "name": "amount"
                 },
                 {
                   "variant": "caption",
+                  "label": "Date",
+                  "name": "donationDate"
+                },
+                {
                   "label": "Tax Year",
+                  "variant": "caption",
                   "name": "taxYear"
                 },
                 {
                   "label": "Emailed",
-                  "variant": "badge",
-                  "name": "isEmailed"
+                  "name": "isEmailed",
+                  "variant": "badge"
                 }
               ],
               "label": "Columns to show",
               "description": "Each column maps to one field on the Donation Receipt entity",
-              "tier": "customization",
+              "tier": "presentation",
               "items": {
                 "type": "object",
                 "properties": {
+                  "icon": {
+                    "name": "icon",
+                    "type": "string",
+                    "required": false
+                  },
                   "key": {
                     "name": "key",
                     "type": "string",
                     "required": false
                   },
-                  "header": {
-                    "name": "header",
+                  "variant": {
+                    "name": "variant",
                     "type": "string",
                     "required": false
                   },
-                  "icon": {
-                    "name": "icon",
+                  "format": {
+                    "name": "format",
                     "type": "string",
                     "required": false
                   },
@@ -948,6 +933,71 @@
                     "type": "string",
                     "required": true
                   },
+                  "label": {
+                    "name": "label",
+                    "type": "string",
+                    "required": false
+                  },
+                  "header": {
+                    "name": "header",
+                    "type": "string",
+                    "required": false
+                  }
+                }
+              }
+            },
+            "taxStrategy": {
+              "type": "string",
+              "default": "none",
+              "label": "Tax strategy",
+              "description": "Donations are usually tax-free at source. inclusive/exclusive/none.",
+              "tier": "domain",
+              "values": [
+                "inclusive",
+                "exclusive",
+                "none"
+              ]
+            },
+            "gracePeriodDays": {
+              "type": "number",
+              "default": 0.0,
+              "label": "Grace period (days)",
+              "description": "Days a receipt is editable before it locks. Declarative.",
+              "tier": "domain"
+            },
+            "title": {
+              "type": "string",
+              "default": "Donation Receipts",
+              "label": "Section title",
+              "description": "Heading shown above the tax receipt list",
+              "tier": "presentation"
+            },
+            "itemActions": {
+              "type": "[ItemAction]",
+              "default": [
+                {
+                  "event": "OPEN_RECEIPT",
+                  "label": "Open",
+                  "icon": "arrow-right",
+                  "variant": "primary"
+                },
+                {
+                  "label": "Void",
+                  "variant": "danger",
+                  "event": "VOID_RECEIPT"
+                }
+              ],
+              "label": "Row actions",
+              "description": "Buttons users can click on each receipt row",
+              "tier": "presentation",
+              "items": {
+                "type": "object",
+                "properties": {
+                  "icon": {
+                    "name": "icon",
+                    "type": "string",
+                    "required": false
+                  },
                   "variant": {
                     "name": "variant",
                     "type": "string",
@@ -956,65 +1006,15 @@
                   "label": {
                     "name": "label",
                     "type": "string",
-                    "required": false
+                    "required": true
                   },
-                  "format": {
-                    "name": "format",
+                  "event": {
+                    "name": "event",
                     "type": "string",
-                    "required": false
+                    "required": true
                   }
                 }
               }
-            },
-            "roundingMode": {
-              "type": "string",
-              "default": "half-up",
-              "label": "Rounding mode",
-              "description": "Sub-cent rounding behavior for donation amounts.",
-              "tier": "advanced",
-              "values": [
-                "bankers",
-                "half-up",
-                "down"
-              ]
-            },
-            "title": {
-              "type": "string",
-              "default": "Donation Receipts",
-              "label": "Section title",
-              "description": "Heading shown above the tax receipt list",
-              "tier": "customization"
-            },
-            "lateFeePolicy": {
-              "type": "string",
-              "default": "none",
-              "label": "Late fee policy",
-              "description": "Not typically applicable to donation receipts. Declarative; wiring deferred.",
-              "tier": "customization",
-              "values": [
-                "none",
-                "flat",
-                "percent"
-              ]
-            },
-            "taxStrategy": {
-              "type": "string",
-              "default": "none",
-              "label": "Tax strategy",
-              "description": "Donations are usually tax-free at source. inclusive/exclusive/none.",
-              "tier": "customization",
-              "values": [
-                "inclusive",
-                "exclusive",
-                "none"
-              ]
-            },
-            "complianceJurisdiction": {
-              "type": "string",
-              "default": "US-IRS",
-              "label": "Compliance jurisdiction",
-              "description": "Drives charitable-deduction rules per locale: 'US-IRS', 'UK-HMRC', 'CA-CRA', etc. Declarative.",
-              "tier": "advanced"
             }
           },
           "scope": "collection"

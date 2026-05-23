@@ -118,40 +118,40 @@ export interface StdRentChargeRentChargeUpdateFailedPayload {
  * without modifying its state-machine topology.
  */
 export interface StdRentChargeConfig {
-  /** Default: `7` */
-  retentionYears?: number;
-  /** Default: `"Rent Charges"` */
-  title?: string;
-  /** Default: `[{"name":"tenantId","label":"Tenant","variant":"caption"},{"label":"Amount","variant":"caption","name":"amount"},{"name":"dueDate","variant":"caption","label":"Due"},{"variant":"badge","name":"status","label":"Status"},{"name":"paidAt","variant":"caption","label":"Paid"},{"name":"lateFee","label":"Late Fee","variant":"caption"}]` */
-  fields?: EntityRow[];
-  /** Default: `"USD"` */
-  currency?: string;
-  /** Default: `[{"event":"OPEN_CHARGE","variant":"primary","icon":"arrow-right","label":"Open"},{"variant":"danger","label":"Waive","event":"WAIVE_CHARGE"}]` */
-  itemActions?: EntityRow[];
-  /** Default: `false` */
-  autoRenewEnabled?: boolean;
-  /** Default: `1` */
-  securityDepositMonths?: number;
-  /** Default: `12` */
-  inspectionFrequencyMonths?: number;
-  /** Default: `"flat"` */
-  lateFeePolicy?: 'none' | 'flat' | 'percent';
   /** Default: `"half-up"` */
   roundingMode?: 'bankers' | 'half-up' | 'down';
-  /** Default: `""` */
-  complianceJurisdiction?: string;
+  /** Default: `25` */
+  lateFeeAmount?: number;
+  /** Default: `"USD"` */
+  currency?: string;
+  /** Default: `"none"` */
+  taxStrategy?: 'inclusive' | 'exclusive' | 'none';
+  /** Default: `"Rent Charges"` */
+  title?: string;
+  /** Default: `7` */
+  retentionYears?: number;
+  /** Default: `[{"event":"OPEN_CHARGE","icon":"arrow-right","variant":"primary","label":"Open"},{"event":"WAIVE_CHARGE","variant":"danger","label":"Waive"}]` */
+  itemActions?: EntityRow[];
+  /** Default: `5` */
+  gracePeriodDays?: number;
+  /** Default: `[{"name":"tenantId","variant":"caption","label":"Tenant"},{"name":"amount","variant":"caption","label":"Amount"},{"name":"dueDate","label":"Due","variant":"caption"},{"name":"status","variant":"badge","label":"Status"},{"name":"paidAt","label":"Paid","variant":"caption"},{"name":"lateFee","label":"Late Fee","variant":"caption"}]` */
+  fields?: EntityRow[];
+  /** Default: `1` */
+  securityDepositMonths?: number;
+  /** Default: `false` */
+  autoRenewEnabled?: boolean;
+  /** Default: `"no-pets"` */
+  petPolicy?: 'no-pets' | 'cats-only' | 'dogs-only' | 'all';
+  /** Default: `"flat"` */
+  lateFeePolicy?: 'none' | 'flat' | 'percent';
+  /** Default: `12` */
+  inspectionFrequencyMonths?: number;
   /** Default: `60` */
   leaseRenewalNoticeDays?: number;
   /** Default: `5` */
-  gracePeriodDays?: number;
-  /** Default: `"none"` */
-  taxStrategy?: 'inclusive' | 'exclusive' | 'none';
-  /** Default: `25` */
-  lateFeeAmount?: number;
-  /** Default: `5` */
   lateRentGraceDays?: number;
-  /** Default: `"no-pets"` */
-  petPolicy?: 'no-pets' | 'cats-only' | 'dogs-only' | 'all';
+  /** Default: `""` */
+  complianceJurisdiction?: string;
 }
 
 /**

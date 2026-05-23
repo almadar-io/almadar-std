@@ -141,32 +141,32 @@ export interface StdTechnicianDispatchAssignmentRejectedPayload {
  * without modifying its state-machine topology.
  */
 export interface StdTechnicianDispatchConfig {
-  /** Default: `30` */
-  responseTimeMinutes?: number;
-  /** Default: `[]` */
-  serviceZones?: string[];
-  /** Default: `"Dispatch Board"` */
-  title?: string;
-  /** Default: `50` */
-  serviceAreaRadius?: number;
+  /** Default: `[{"name":"name","label":"Technician","variant":"body"},{"label":"Skills","variant":"caption","name":"skills"},{"variant":"badge","name":"available","label":"Available"},{"variant":"caption","name":"currentOrderId","label":"Current Order"},{"label":"Last Seen","variant":"caption","name":"lastSeenAt"}]` */
+  fields?: EntityRow[];
   /** Default: `"nearest"` */
   dispatchStrategy?: 'nearest' | 'round-robin' | 'manual';
-  /** Default: `[]` */
-  skillsRequired?: string[];
-  /** Default: `12` */
-  escalationThresholdHours?: number;
-  /** Default: `["available","en-route","on-site"]` */
-  customerVisibleStatuses?: string[];
-  /** Default: `false` */
-  requireSignatureOnComplete?: boolean;
-  /** Default: `8` */
-  resolutionSLAHours?: number;
   /** Default: `false` */
   requirePhotoOnComplete?: boolean;
-  /** Default: `[{"variant":"body","label":"Technician","name":"name"},{"variant":"caption","name":"skills","label":"Skills"},{"variant":"badge","label":"Available","name":"available"},{"label":"Current Order","variant":"caption","name":"currentOrderId"},{"label":"Last Seen","name":"lastSeenAt","variant":"caption"}]` */
-  fields?: EntityRow[];
-  /** Default: `[{"variant":"primary","event":"OPEN_TECHNICIAN","icon":"arrow-right","label":"Open"},{"label":"Assign","variant":"danger","event":"ASSIGN"}]` */
+  /** Default: `false` */
+  requireSignatureOnComplete?: boolean;
+  /** Default: `[]` */
+  serviceZones?: string[];
+  /** Default: `[]` */
+  skillsRequired?: string[];
+  /** Default: `"Dispatch Board"` */
+  title?: string;
+  /** Default: `["available","en-route","on-site"]` */
+  customerVisibleStatuses?: string[];
+  /** Default: `[{"event":"OPEN_TECHNICIAN","icon":"arrow-right","label":"Open","variant":"primary"},{"event":"ASSIGN","variant":"danger","label":"Assign"}]` */
   itemActions?: EntityRow[];
+  /** Default: `12` */
+  escalationThresholdHours?: number;
+  /** Default: `50` */
+  serviceAreaRadius?: number;
+  /** Default: `30` */
+  responseTimeMinutes?: number;
+  /** Default: `8` */
+  resolutionSLAHours?: number;
 }
 
 /**

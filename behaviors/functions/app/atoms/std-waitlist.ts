@@ -108,28 +108,28 @@ export interface StdWaitlistWaitlistEntryLoadFailedPayload {
  * without modifying its state-machine topology.
  */
 export interface StdWaitlistConfig {
-  /** Default: `30` */
-  bookingWindowDays?: number;
-  /** Default: `[{"icon":"arrow-right","event":"OPEN_ENTRY","label":"Open","variant":"primary"},{"event":"CANCEL","label":"Cancel","variant":"danger","icon":"x"}]` */
-  itemActions?: EntityRow[];
-  /** Default: `[]` */
-  blackoutDates?: string[];
   /** Default: `24` */
   rescheduleWindowHours?: number;
+  /** Default: `"free"` */
+  cancellationPolicy?: 'free' | 'partial-refund' | 'no-refund';
+  /** Default: `[{"name":"position","variant":"badge","label":"#"},{"label":"User","name":"userId","variant":"caption"},{"label":"Type","name":"targetType","variant":"badge"},{"label":"Status","name":"status","variant":"badge"},{"variant":"caption","label":"Joined","name":"joinedAt"}]` */
+  fields?: EntityRow[];
+  /** Default: `[{"label":"Open","variant":"primary","event":"OPEN_ENTRY","icon":"arrow-right"},{"event":"CANCEL","variant":"danger","label":"Cancel","icon":"x"}]` */
+  itemActions?: EntityRow[];
+  /** Default: `30` */
+  bookingWindowDays?: number;
+  /** Default: `1` */
+  maxReschedules?: number;
   /** Default: `"Waitlist"` */
   title?: string;
   /** Default: `"00:00-23:59"` */
   bookingHours?: string;
   /** Default: `60` */
   noShowGracePeriodMinutes?: number;
-  /** Default: `1` */
-  maxReschedules?: number;
-  /** Default: `[{"name":"position","label":"#","variant":"badge"},{"label":"User","variant":"caption","name":"userId"},{"name":"targetType","label":"Type","variant":"badge"},{"name":"status","label":"Status","variant":"badge"},{"name":"joinedAt","variant":"caption","label":"Joined"}]` */
-  fields?: EntityRow[];
   /** Default: `0` */
   leadTimeMinutes?: number;
-  /** Default: `"free"` */
-  cancellationPolicy?: 'free' | 'partial-refund' | 'no-refund';
+  /** Default: `[]` */
+  blackoutDates?: string[];
 }
 
 /**

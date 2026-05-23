@@ -214,24 +214,24 @@ export interface StdApplicationApplicationRejectedPayload {
  * without modifying its state-machine topology.
  */
 export interface StdApplicationConfig {
-  /** Default: `[{"label":"Applicant","name":"applicantName","icon":"user","variant":"caption"},{"variant":"caption","name":"applicantEmail","label":"Email"},{"label":"Target","name":"targetType","variant":"caption"},{"label":"Status","name":"status","variant":"badge"},{"name":"submittedAt","label":"Submitted","variant":"caption"}]` */
+  /** Default: `[{"name":"applicantName","icon":"user","label":"Applicant","variant":"caption"},{"name":"applicantEmail","variant":"caption","label":"Email"},{"label":"Target","name":"targetType","variant":"caption"},{"variant":"badge","name":"status","label":"Status"},{"name":"submittedAt","variant":"caption","label":"Submitted"}]` */
   fields?: EntityRow[];
-  /** Default: `false` */
-  anonymizeOnRejection?: boolean;
-  /** Default: `[{"event":"EDIT","variant":"ghost","label":"Edit"},{"label":"Submit","variant":"primary","event":"SUBMIT"},{"label":"Accept","event":"ACCEPT","variant":"primary"},{"event":"REJECT","variant":"danger","label":"Reject"}]` */
-  itemActions?: EntityRow[];
   /** Default: `730` */
   retentionAfterRejectionDays?: number;
-  /** Default: `"Applications"` */
-  title?: string;
-  /** Default: `false` */
-  equalOpportunityTrackingEnabled?: boolean;
-  /** Default: `false` */
-  eVerifyRequired?: boolean;
   /** Default: `false` */
   backgroundCheckRequired?: boolean;
   /** Default: `false` */
   i9DocumentsRequired?: boolean;
+  /** Default: `false` */
+  anonymizeOnRejection?: boolean;
+  /** Default: `[{"event":"EDIT","variant":"ghost","label":"Edit"},{"label":"Submit","event":"SUBMIT","variant":"primary"},{"label":"Accept","event":"ACCEPT","variant":"primary"},{"variant":"danger","label":"Reject","event":"REJECT"}]` */
+  itemActions?: EntityRow[];
+  /** Default: `false` */
+  equalOpportunityTrackingEnabled?: boolean;
+  /** Default: `false` */
+  eVerifyRequired?: boolean;
+  /** Default: `"Applications"` */
+  title?: string;
 }
 
 /**

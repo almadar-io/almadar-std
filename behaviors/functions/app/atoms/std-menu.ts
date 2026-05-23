@@ -228,26 +228,26 @@ export interface StdMenuMenuItemWriteFailedPayload {
  * without modifying its state-machine topology.
  */
 export interface StdMenuConfig {
-  /** Default: `"Menu"` */
-  title?: string;
-  /** Default: `false` */
-  kitchenAutoFire?: boolean;
-  /** Default: `60` */
-  tableTurnoverTargetMinutes?: number;
-  /** Default: `[15,18,20,25]` */
-  tipPresets?: number[];
+  /** Default: `true` */
+  allowSplitChecks?: boolean;
   /** Default: `true` */
   allergenWarningsEnabled?: boolean;
+  /** Default: `60` */
+  tableTurnoverTargetMinutes?: number;
+  /** Default: `[{"variant":"caption","label":"Item","name":"name"},{"label":"Category","variant":"badge","name":"category"},{"variant":"caption","name":"price","label":"Price"},{"variant":"badge","name":"currency","label":"Currency"},{"label":"Prep (min)","name":"prepTimeMinutes","variant":"caption"},{"variant":"badge","name":"available","label":"Available"}]` */
+  fields?: EntityRow[];
+  /** Default: `false` */
+  coursingEnabled?: boolean;
+  /** Default: `[15,18,20,25]` */
+  tipPresets?: number[];
+  /** Default: `[{"variant":"primary","event":"OPEN_ITEM","label":"Open","icon":"arrow-right"},{"event":"DELETE","label":"Delete","icon":"trash","variant":"danger"}]` */
+  itemActions?: EntityRow[];
+  /** Default: `"Menu"` */
+  title?: string;
   /** Default: `0` */
   serviceCharge?: number;
   /** Default: `false` */
-  coursingEnabled?: boolean;
-  /** Default: `[{"name":"name","label":"Item","variant":"caption"},{"label":"Category","variant":"badge","name":"category"},{"label":"Price","name":"price","variant":"caption"},{"label":"Currency","variant":"badge","name":"currency"},{"name":"prepTimeMinutes","label":"Prep (min)","variant":"caption"},{"label":"Available","variant":"badge","name":"available"}]` */
-  fields?: EntityRow[];
-  /** Default: `[{"event":"OPEN_ITEM","icon":"arrow-right","label":"Open","variant":"primary"},{"variant":"danger","label":"Delete","icon":"trash","event":"DELETE"}]` */
-  itemActions?: EntityRow[];
-  /** Default: `true` */
-  allowSplitChecks?: boolean;
+  kitchenAutoFire?: boolean;
 }
 
 /**

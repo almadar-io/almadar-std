@@ -91,28 +91,28 @@ export interface StdTemplateEditorMessageTemplateLoadFailedPayload {
  * without modifying its state-machine topology.
  */
 export interface StdTemplateEditorConfig {
-  /** Default: `false` */
-  seoEnabled?: boolean;
-  /** Default: `["en"]` */
-  enabledLocales?: string[];
+  /** Default: `[{"label":"Name","variant":"caption","name":"name"},{"name":"channel","variant":"badge","label":"Channel"},{"name":"subject","label":"Subject","variant":"caption"},{"name":"lastEditedAt","variant":"caption","label":"Updated"}]` */
+  fields?: EntityRow[];
   /** Default: `"internal"` */
   visibilityScope?: 'public' | 'internal' | 'customer';
   /** Default: `false` */
+  seoEnabled?: boolean;
+  /** Default: `10` */
+  keepVersions?: number;
+  /** Default: `["en"]` */
+  enabledLocales?: string[];
+  /** Default: `false` */
   scheduledPublishEnabled?: boolean;
-  /** Default: `"en"` */
-  defaultLocale?: string;
-  /** Default: `15` */
-  draftAutosaveSeconds?: number;
-  /** Default: `true` */
-  allowRollback?: boolean;
-  /** Default: `[{"variant":"primary","event":"OPEN_TEMPLATE","label":"Open","icon":"arrow-right"},{"label":"Delete","variant":"danger","event":"DELETE_TEMPLATE"}]` */
+  /** Default: `[{"label":"Open","event":"OPEN_TEMPLATE","variant":"primary","icon":"arrow-right"},{"variant":"danger","label":"Delete","event":"DELETE_TEMPLATE"}]` */
   itemActions?: EntityRow[];
   /** Default: `"Templates"` */
   title?: string;
-  /** Default: `10` */
-  keepVersions?: number;
-  /** Default: `[{"variant":"caption","name":"name","label":"Name"},{"variant":"badge","name":"channel","label":"Channel"},{"label":"Subject","name":"subject","variant":"caption"},{"label":"Updated","name":"lastEditedAt","variant":"caption"}]` */
-  fields?: EntityRow[];
+  /** Default: `"en"` */
+  defaultLocale?: string;
+  /** Default: `true` */
+  allowRollback?: boolean;
+  /** Default: `15` */
+  draftAutosaveSeconds?: number;
 }
 
 /**

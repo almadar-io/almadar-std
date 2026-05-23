@@ -152,20 +152,20 @@ export interface StdTrialTrialUpdateFailedPayload {
  * without modifying its state-machine topology.
  */
 export interface StdTrialConfig {
-  /** Default: `[{"icon":"arrow-right","label":"Open","event":"OPEN_TRIAL","variant":"primary"},{"icon":"x","label":"Cancel","event":"CANCEL","variant":"danger"}]` */
-  itemActions?: EntityRow[];
-  /** Default: `[{"label":"Customer","name":"customerId","variant":"caption"},{"variant":"caption","label":"Plan","name":"planId"},{"label":"Status","variant":"badge","name":"status"},{"name":"startedAt","label":"Started","variant":"caption"},{"label":"Expires","variant":"caption","name":"expiresAt"},{"variant":"caption","label":"Converted","name":"convertedAt"},{"name":"notifiedAt","variant":"caption","label":"Notified"}]` */
-  fields?: EntityRow[];
   /** Default: `30` */
   healthScoreThresholdAlert?: number;
   /** Default: `[7,3,1]` */
   renewalReminderDaysBefore?: number[];
-  /** Default: `90` */
-  archiveInactiveAfterDays?: number;
   /** Default: `"Trials"` */
   title?: string;
   /** Default: `true` */
   consentTrackingEnabled?: boolean;
+  /** Default: `90` */
+  archiveInactiveAfterDays?: number;
+  /** Default: `[{"label":"Customer","variant":"caption","name":"customerId"},{"label":"Plan","variant":"caption","name":"planId"},{"name":"status","label":"Status","variant":"badge"},{"name":"startedAt","variant":"caption","label":"Started"},{"name":"expiresAt","label":"Expires","variant":"caption"},{"name":"convertedAt","label":"Converted","variant":"caption"},{"name":"notifiedAt","variant":"caption","label":"Notified"}]` */
+  fields?: EntityRow[];
+  /** Default: `[{"label":"Open","event":"OPEN_TRIAL","icon":"arrow-right","variant":"primary"},{"label":"Cancel","event":"CANCEL","variant":"danger","icon":"x"}]` */
+  itemActions?: EntityRow[];
 }
 
 /**

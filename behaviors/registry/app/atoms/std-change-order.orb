@@ -521,8 +521,8 @@
                     "ChangeOrder",
                     {
                       "emit": {
-                        "success": "ChangeOrderLoaded",
-                        "failure": "ChangeOrderLoadFailed"
+                        "failure": "ChangeOrderLoadFailed",
+                        "success": "ChangeOrderLoaded"
                       }
                     }
                   ],
@@ -530,22 +530,22 @@
                     "render-ui",
                     "main",
                     {
-                      "align": "center",
-                      "direction": "vertical",
-                      "type": "stack",
-                      "className": "py-12",
                       "children": [
                         {
                           "type": "spinner"
                         },
                         {
+                          "type": "typography",
                           "content": "Loading change orders…",
                           "variant": "caption",
-                          "type": "typography",
                           "color": "muted"
                         }
                       ],
-                      "gap": "md"
+                      "gap": "md",
+                      "direction": "vertical",
+                      "className": "py-12",
+                      "align": "center",
+                      "type": "stack"
                     }
                   ]
                 ]
@@ -562,41 +562,43 @@
                       "direction": "vertical",
                       "children": [
                         {
+                          "align": "center",
+                          "type": "stack",
+                          "direction": "horizontal",
                           "gap": "sm",
                           "children": [
                             {
-                              "name": "file-text",
-                              "type": "icon"
+                              "type": "icon",
+                              "name": "file-text"
                             },
                             {
-                              "type": "typography",
                               "content": "@config.title",
-                              "variant": "h3"
+                              "variant": "h3",
+                              "type": "typography"
                             }
-                          ],
-                          "direction": "horizontal",
-                          "type": "stack",
-                          "align": "center"
+                          ]
                         },
                         {
+                          "type": "simple-grid",
+                          "cols": 4.0,
                           "children": [
                             {
+                              "label": "Total orders",
                               "type": "stat-display",
-                              "value": "@payload.data.length",
                               "icon": "file-text",
-                              "label": "Total orders"
+                              "value": "@payload.data.length"
                             },
                             {
+                              "icon": "clock",
                               "value": "11",
                               "label": "Pending approval",
-                              "icon": "clock",
                               "type": "stat-display"
                             },
                             {
                               "type": "stat-display",
                               "value": "$184,500",
-                              "label": "Cost impact",
-                              "icon": "dollar-sign"
+                              "icon": "dollar-sign",
+                              "label": "Cost impact"
                             },
                             {
                               "label": "Days added",
@@ -604,24 +606,22 @@
                               "type": "stat-display",
                               "icon": "calendar"
                             }
-                          ],
-                          "type": "simple-grid",
-                          "cols": 4.0
+                          ]
                         },
                         {
                           "type": "divider"
                         },
                         {
+                          "gap": "sm",
                           "itemActions": "@config.itemActions",
-                          "cols": 1.0,
-                          "fields": "@config.fields",
                           "entity": "@payload.data",
+                          "fields": "@config.fields",
                           "type": "data-grid",
-                          "gap": "sm"
+                          "cols": 1.0
                         }
                       ],
-                      "type": "stack",
-                      "gap": "md"
+                      "gap": "md",
+                      "type": "stack"
                     }
                   ]
                 ]
@@ -635,9 +635,9 @@
                     "render-ui",
                     "main",
                     {
-                      "variant": "error",
+                      "message": "@payload.error",
                       "type": "alert",
-                      "message": "@payload.error"
+                      "variant": "error"
                     }
                   ]
                 ]
@@ -706,21 +706,15 @@
                     "render-ui",
                     "main",
                     {
-                      "type": "stack",
-                      "direction": "vertical",
                       "gap": "md",
                       "children": [
                         {
-                          "type": "stack",
-                          "gap": "sm",
-                          "direction": "horizontal",
-                          "align": "center",
                           "children": [
                             {
-                              "variant": "ghost",
                               "type": "button",
-                              "label": "Back",
-                              "action": "CLOSE_VIEW"
+                              "variant": "ghost",
+                              "action": "CLOSE_VIEW",
+                              "label": "Back"
                             },
                             {
                               "type": "icon",
@@ -728,28 +722,31 @@
                             },
                             {
                               "type": "typography",
-                              "variant": "h3",
-                              "content": "@entity.coNumber"
+                              "content": "@entity.coNumber",
+                              "variant": "h3"
                             },
                             {
-                              "label": "@entity.status",
+                              "type": "badge",
                               "variant": "primary",
-                              "type": "badge"
+                              "label": "@entity.status"
                             }
-                          ]
+                          ],
+                          "gap": "sm",
+                          "direction": "horizontal",
+                          "align": "center",
+                          "type": "stack"
                         },
                         {
                           "type": "divider"
                         },
                         {
-                          "gap": "sm",
-                          "type": "stack",
                           "children": [
                             {
+                              "direction": "horizontal",
                               "children": [
                                 {
-                                  "type": "typography",
                                   "variant": "caption",
+                                  "type": "typography",
                                   "color": "muted",
                                   "content": "Description"
                                 },
@@ -759,78 +756,80 @@
                                   "variant": "body"
                                 }
                               ],
-                              "direction": "horizontal",
                               "type": "stack",
                               "gap": "md"
                             },
                             {
-                              "children": [
-                                {
-                                  "variant": "caption",
-                                  "content": "Reason",
-                                  "type": "typography",
-                                  "color": "muted"
-                                },
-                                {
-                                  "variant": "body",
-                                  "content": "@entity.reason",
-                                  "type": "typography"
-                                }
-                              ],
-                              "direction": "horizontal",
                               "gap": "md",
-                              "type": "stack"
-                            },
-                            {
                               "children": [
                                 {
                                   "color": "muted",
-                                  "content": "Requested by",
                                   "type": "typography",
+                                  "content": "Reason",
                                   "variant": "caption"
                                 },
                                 {
-                                  "content": "@entity.requestedBy",
                                   "type": "typography",
+                                  "content": "@entity.reason",
                                   "variant": "body"
                                 }
                               ],
-                              "gap": "md",
-                              "direction": "horizontal",
-                              "type": "stack"
+                              "type": "stack",
+                              "direction": "horizontal"
                             },
                             {
-                              "type": "stack",
-                              "gap": "md",
-                              "direction": "horizontal",
                               "children": [
                                 {
-                                  "content": "Approved by",
-                                  "variant": "caption",
+                                  "type": "typography",
+                                  "content": "Requested by",
                                   "color": "muted",
-                                  "type": "typography"
+                                  "variant": "caption"
                                 },
                                 {
                                   "variant": "body",
+                                  "type": "typography",
+                                  "content": "@entity.requestedBy"
+                                }
+                              ],
+                              "type": "stack",
+                              "direction": "horizontal",
+                              "gap": "md"
+                            },
+                            {
+                              "direction": "horizontal",
+                              "gap": "md",
+                              "type": "stack",
+                              "children": [
+                                {
+                                  "type": "typography",
+                                  "color": "muted",
+                                  "variant": "caption",
+                                  "content": "Approved by"
+                                },
+                                {
+                                  "type": "typography",
                                   "content": "@entity.approvedBy",
-                                  "type": "typography"
+                                  "variant": "body"
                                 }
                               ]
                             }
                           ],
-                          "direction": "vertical"
+                          "direction": "vertical",
+                          "gap": "sm",
+                          "type": "stack"
                         },
                         {
                           "type": "divider"
                         },
                         {
                           "type": "simple-grid",
+                          "cols": 4.0,
                           "children": [
                             {
                               "icon": "dollar-sign",
+                              "type": "stat-display",
                               "label": "Cost impact",
-                              "value": "@entity.costImpact",
-                              "type": "stat-display"
+                              "value": "@entity.costImpact"
                             },
                             {
                               "type": "stat-display",
@@ -839,74 +838,75 @@
                               "icon": "calendar"
                             },
                             {
-                              "icon": "clock",
                               "label": "Requested",
                               "type": "stat-display",
-                              "value": "@entity.requestedAt"
+                              "value": "@entity.requestedAt",
+                              "icon": "clock"
                             },
                             {
-                              "value": "@entity.approvedAt",
-                              "label": "Approved",
                               "icon": "check-circle",
-                              "type": "stat-display"
+                              "type": "stat-display",
+                              "value": "@entity.approvedAt",
+                              "label": "Approved"
                             }
-                          ],
-                          "cols": 4.0
+                          ]
                         },
                         {
-                          "direction": "horizontal",
-                          "align": "center",
-                          "gap": "sm",
-                          "type": "stack",
                           "children": [
                             {
-                              "label": "Submit",
-                              "action": "SUBMIT_FOR_APPROVAL",
-                              "variant": "primary",
                               "type": "button",
+                              "label": "Submit",
+                              "variant": "primary",
+                              "action": "SUBMIT_FOR_APPROVAL",
                               "actionPayload": {
                                 "id": "@entity.id"
                               }
                             },
                             {
-                              "type": "button",
-                              "action": "APPROVE",
                               "actionPayload": {
                                 "id": "@entity.id"
                               },
                               "label": "Approve",
+                              "type": "button",
+                              "action": "APPROVE",
                               "variant": "primary"
                             },
                             {
-                              "variant": "danger",
                               "type": "button",
-                              "action": "REJECT",
                               "actionPayload": {
                                 "id": "@entity.id"
                               },
-                              "label": "Reject"
+                              "label": "Reject",
+                              "action": "REJECT",
+                              "variant": "danger"
                             },
                             {
+                              "actionPayload": {
+                                "id": "@entity.id"
+                              },
+                              "label": "Execute",
                               "type": "button",
                               "variant": "primary",
-                              "action": "EXECUTE",
-                              "actionPayload": {
-                                "id": "@entity.id"
-                              },
-                              "label": "Execute"
+                              "action": "EXECUTE"
                             },
                             {
+                              "variant": "danger",
+                              "label": "Delete",
                               "action": "REQUEST_DELETE",
                               "actionPayload": {
                                 "id": "@entity.id"
                               },
-                              "label": "Delete",
-                              "variant": "danger",
                               "type": "button"
                             }
-                          ]
+                          ],
+                          "type": "stack",
+                          "direction": "horizontal",
+                          "align": "center",
+                          "gap": "sm"
                         }
-                      ]
+                      ],
+                      "type": "stack",
+                      "direction": "vertical"
                     }
                   ]
                 ]
@@ -926,8 +926,8 @@
                     "ChangeOrder",
                     {
                       "emit": {
-                        "failure": "ChangeOrderLoadFailed",
-                        "success": "ChangeOrderLoaded"
+                        "success": "ChangeOrderLoaded",
+                        "failure": "ChangeOrderLoadFailed"
                       }
                     }
                   ],
@@ -935,22 +935,22 @@
                     "render-ui",
                     "main",
                     {
-                      "direction": "vertical",
+                      "gap": "md",
                       "align": "center",
+                      "direction": "vertical",
+                      "className": "py-12",
                       "children": [
                         {
                           "type": "spinner"
                         },
                         {
-                          "type": "typography",
+                          "content": "Deleting change order…",
                           "variant": "caption",
                           "color": "muted",
-                          "content": "Deleting change order…"
+                          "type": "typography"
                         }
                       ],
-                      "type": "stack",
-                      "className": "py-12",
-                      "gap": "md"
+                      "type": "stack"
                     }
                   ]
                 ]
@@ -986,20 +986,20 @@
                     "render-ui",
                     "main",
                     {
+                      "type": "stack",
+                      "className": "py-12",
+                      "align": "center",
                       "children": [
                         {
                           "type": "spinner"
                         },
                         {
-                          "color": "muted",
                           "content": "Updating change-order status…",
                           "type": "typography",
-                          "variant": "caption"
+                          "variant": "caption",
+                          "color": "muted"
                         }
                       ],
-                      "align": "center",
-                      "type": "stack",
-                      "className": "py-12",
                       "gap": "md",
                       "direction": "vertical"
                     }
@@ -1058,22 +1058,22 @@
                     "render-ui",
                     "main",
                     {
-                      "type": "stack",
                       "className": "py-12",
                       "gap": "md",
-                      "direction": "vertical",
+                      "type": "stack",
                       "align": "center",
                       "children": [
                         {
                           "type": "spinner"
                         },
                         {
-                          "color": "muted",
-                          "content": "Loading change orders…",
+                          "variant": "caption",
                           "type": "typography",
-                          "variant": "caption"
+                          "color": "muted",
+                          "content": "Loading change orders…"
                         }
-                      ]
+                      ],
+                      "direction": "vertical"
                     }
                   ]
                 ]
@@ -1102,22 +1102,22 @@
                     "render-ui",
                     "main",
                     {
-                      "gap": "md",
-                      "direction": "vertical",
-                      "align": "center",
-                      "type": "stack",
-                      "className": "py-12",
                       "children": [
                         {
                           "type": "spinner"
                         },
                         {
                           "variant": "caption",
-                          "type": "typography",
                           "color": "muted",
+                          "type": "typography",
                           "content": "Submitting for approval…"
                         }
-                      ]
+                      ],
+                      "className": "py-12",
+                      "direction": "vertical",
+                      "gap": "md",
+                      "align": "center",
+                      "type": "stack"
                     }
                   ]
                 ]
@@ -1137,8 +1137,8 @@
                     "ChangeOrder",
                     {
                       "emit": {
-                        "failure": "ChangeOrderLoadFailed",
-                        "success": "ChangeOrderLoaded"
+                        "success": "ChangeOrderLoaded",
+                        "failure": "ChangeOrderLoadFailed"
                       }
                     }
                   ],
@@ -1146,22 +1146,22 @@
                     "render-ui",
                     "main",
                     {
-                      "align": "center",
+                      "type": "stack",
+                      "className": "py-12",
                       "children": [
                         {
                           "type": "spinner"
                         },
                         {
+                          "content": "Approving change order…",
                           "type": "typography",
                           "variant": "caption",
-                          "color": "muted",
-                          "content": "Approving change order…"
+                          "color": "muted"
                         }
                       ],
-                      "type": "stack",
-                      "direction": "vertical",
-                      "className": "py-12",
-                      "gap": "md"
+                      "align": "center",
+                      "gap": "md",
+                      "direction": "vertical"
                     }
                   ]
                 ]
@@ -1181,8 +1181,8 @@
                     "ChangeOrder",
                     {
                       "emit": {
-                        "failure": "ChangeOrderLoadFailed",
-                        "success": "ChangeOrderLoaded"
+                        "success": "ChangeOrderLoaded",
+                        "failure": "ChangeOrderLoadFailed"
                       }
                     }
                   ],
@@ -1190,21 +1190,21 @@
                     "render-ui",
                     "main",
                     {
-                      "className": "py-12",
+                      "align": "center",
+                      "type": "stack",
+                      "direction": "vertical",
                       "children": [
                         {
                           "type": "spinner"
                         },
                         {
-                          "content": "Rejecting change order…",
+                          "type": "typography",
                           "variant": "caption",
                           "color": "muted",
-                          "type": "typography"
+                          "content": "Rejecting change order…"
                         }
                       ],
-                      "direction": "vertical",
-                      "type": "stack",
-                      "align": "center",
+                      "className": "py-12",
                       "gap": "md"
                     }
                   ]
@@ -1225,8 +1225,8 @@
                     "ChangeOrder",
                     {
                       "emit": {
-                        "failure": "ChangeOrderLoadFailed",
-                        "success": "ChangeOrderLoaded"
+                        "success": "ChangeOrderLoaded",
+                        "failure": "ChangeOrderLoadFailed"
                       }
                     }
                   ],
@@ -1234,22 +1234,22 @@
                     "render-ui",
                     "main",
                     {
-                      "align": "center",
-                      "gap": "md",
                       "type": "stack",
                       "direction": "vertical",
+                      "gap": "md",
                       "className": "py-12",
                       "children": [
                         {
                           "type": "spinner"
                         },
                         {
-                          "type": "typography",
                           "content": "Executing change order…",
-                          "variant": "caption",
-                          "color": "muted"
+                          "type": "typography",
+                          "color": "muted",
+                          "variant": "caption"
                         }
-                      ]
+                      ],
+                      "align": "center"
                     }
                   ]
                 ]
@@ -1278,22 +1278,22 @@
                     "render-ui",
                     "main",
                     {
-                      "align": "center",
-                      "type": "stack",
+                      "direction": "vertical",
                       "className": "py-12",
                       "gap": "md",
-                      "direction": "vertical",
                       "children": [
                         {
                           "type": "spinner"
                         },
                         {
+                          "variant": "caption",
                           "type": "typography",
                           "color": "muted",
-                          "content": "Deleting change order…",
-                          "variant": "caption"
+                          "content": "Deleting change order…"
                         }
-                      ]
+                      ],
+                      "type": "stack",
+                      "align": "center"
                     }
                   ]
                 ]
@@ -1317,8 +1317,8 @@
                     "render-ui",
                     "main",
                     {
-                      "type": "spinner",
-                      "size": "sm"
+                      "size": "sm",
+                      "type": "spinner"
                     }
                   ]
                 ]
@@ -1326,140 +1326,32 @@
             ]
           },
           "config": {
-            "lateFeePolicy": {
+            "complianceJurisdiction": {
               "type": "string",
-              "default": "none",
-              "label": "Late fee policy",
-              "description": "Penalty when change order execution slips past approved date. Declarative; wiring deferred.",
-              "tier": "customization",
-              "values": [
-                "none",
-                "flat",
-                "percent"
-              ]
-            },
-            "retentionYears": {
-              "type": "number",
-              "default": 7.0,
-              "label": "Retention (years)",
-              "description": "Years to keep change-order records for compliance.",
-              "tier": "advanced"
-            },
-            "currency": {
-              "type": "string",
-              "default": "USD",
-              "label": "Default currency",
-              "description": "ISO 4217 currency code (USD, EUR, GBP, …) for cost impact.",
-              "tier": "essential"
-            },
-            "gracePeriodDays": {
-              "type": "number",
-              "default": 7.0,
-              "label": "Grace period (days)",
-              "description": "Days a pending approval can sit before escalation. Wire via sibling std-lifecycle rule.",
-              "tier": "customization"
+              "default": "",
+              "label": "Compliance jurisdiction",
+              "description": "Drives contracting + retention rules per locale: 'US-CA', 'EU-DE', 'UK', etc. Declarative.",
+              "tier": "domain"
             },
             "lateFeeAmount": {
               "type": "number",
               "default": 0.0,
               "label": "Late fee amount",
               "description": "Flat cash amount or percentage (per lateFeePolicy).",
-              "tier": "customization"
-            },
-            "complianceJurisdiction": {
-              "type": "string",
-              "default": "",
-              "label": "Compliance jurisdiction",
-              "description": "Drives contracting + retention rules per locale: 'US-CA', 'EU-DE', 'UK', etc. Declarative.",
-              "tier": "advanced"
-            },
-            "taxStrategy": {
-              "type": "string",
-              "default": "exclusive",
-              "label": "Tax strategy",
-              "description": "inclusive = tax baked into the cost impact; exclusive = tax added on top; none = no tax.",
-              "tier": "customization",
-              "values": [
-                "inclusive",
-                "exclusive",
-                "none"
-              ]
-            },
-            "title": {
-              "type": "string",
-              "default": "Change Orders",
-              "label": "Section title",
-              "description": "Heading shown above the change-order log",
-              "tier": "customization"
-            },
-            "itemActions": {
-              "type": "[ItemAction]",
-              "default": [
-                {
-                  "icon": "arrow-right",
-                  "variant": "primary",
-                  "label": "Open",
-                  "event": "OPEN_CHANGE_ORDER"
-                },
-                {
-                  "variant": "danger",
-                  "label": "Delete",
-                  "event": "REQUEST_DELETE"
-                }
-              ],
-              "label": "Row actions",
-              "description": "Buttons users can click on each change-order row",
-              "tier": "customization",
-              "items": {
-                "type": "object",
-                "properties": {
-                  "event": {
-                    "name": "event",
-                    "type": "string",
-                    "required": true
-                  },
-                  "icon": {
-                    "name": "icon",
-                    "type": "string",
-                    "required": false
-                  },
-                  "label": {
-                    "name": "label",
-                    "type": "string",
-                    "required": true
-                  },
-                  "variant": {
-                    "name": "variant",
-                    "type": "string",
-                    "required": false
-                  }
-                }
-              }
-            },
-            "roundingMode": {
-              "type": "string",
-              "default": "half-up",
-              "label": "Rounding mode",
-              "description": "Sub-cent rounding behavior for cost impact calculations.",
-              "tier": "advanced",
-              "values": [
-                "bankers",
-                "half-up",
-                "down"
-              ]
+              "tier": "domain"
             },
             "fields": {
               "type": "[FieldSpec]",
               "default": [
                 {
-                  "variant": "caption",
                   "name": "coNumber",
-                  "label": "CO #"
+                  "label": "CO #",
+                  "variant": "caption"
                 },
                 {
+                  "name": "description",
                   "label": "Description",
-                  "variant": "caption",
-                  "name": "description"
+                  "variant": "caption"
                 },
                 {
                   "label": "Cost Impact",
@@ -1468,8 +1360,8 @@
                 },
                 {
                   "name": "scheduleImpactDays",
-                  "variant": "caption",
-                  "label": "Days"
+                  "label": "Days",
+                  "variant": "caption"
                 },
                 {
                   "label": "Status",
@@ -1484,12 +1376,17 @@
               ],
               "label": "Columns to show",
               "description": "Each column maps to one field on the Change Order entity",
-              "tier": "customization",
+              "tier": "presentation",
               "items": {
                 "type": "object",
                 "properties": {
-                  "variant": {
-                    "name": "variant",
+                  "header": {
+                    "name": "header",
+                    "type": "string",
+                    "required": false
+                  },
+                  "icon": {
+                    "name": "icon",
                     "type": "string",
                     "required": false
                   },
@@ -1498,13 +1395,13 @@
                     "type": "string",
                     "required": true
                   },
-                  "icon": {
-                    "name": "icon",
+                  "label": {
+                    "name": "label",
                     "type": "string",
                     "required": false
                   },
-                  "label": {
-                    "name": "label",
+                  "variant": {
+                    "name": "variant",
                     "type": "string",
                     "required": false
                   },
@@ -1517,14 +1414,117 @@
                     "name": "key",
                     "type": "string",
                     "required": false
-                  },
-                  "header": {
-                    "name": "header",
-                    "type": "string",
-                    "required": false
                   }
                 }
               }
+            },
+            "retentionYears": {
+              "type": "number",
+              "default": 7.0,
+              "label": "Retention (years)",
+              "description": "Years to keep change-order records for compliance.",
+              "tier": "domain"
+            },
+            "itemActions": {
+              "type": "[ItemAction]",
+              "default": [
+                {
+                  "event": "OPEN_CHANGE_ORDER",
+                  "label": "Open",
+                  "variant": "primary",
+                  "icon": "arrow-right"
+                },
+                {
+                  "event": "REQUEST_DELETE",
+                  "variant": "danger",
+                  "label": "Delete"
+                }
+              ],
+              "label": "Row actions",
+              "description": "Buttons users can click on each change-order row",
+              "tier": "presentation",
+              "items": {
+                "type": "object",
+                "properties": {
+                  "label": {
+                    "name": "label",
+                    "type": "string",
+                    "required": true
+                  },
+                  "variant": {
+                    "name": "variant",
+                    "type": "string",
+                    "required": false
+                  },
+                  "icon": {
+                    "name": "icon",
+                    "type": "string",
+                    "required": false
+                  },
+                  "event": {
+                    "name": "event",
+                    "type": "string",
+                    "required": true
+                  }
+                }
+              }
+            },
+            "taxStrategy": {
+              "type": "string",
+              "default": "exclusive",
+              "label": "Tax strategy",
+              "description": "inclusive = tax baked into the cost impact; exclusive = tax added on top; none = no tax.",
+              "tier": "domain",
+              "values": [
+                "inclusive",
+                "exclusive",
+                "none"
+              ]
+            },
+            "title": {
+              "type": "string",
+              "default": "Change Orders",
+              "label": "Section title",
+              "description": "Heading shown above the change-order log",
+              "tier": "presentation"
+            },
+            "currency": {
+              "type": "string",
+              "default": "USD",
+              "label": "Default currency",
+              "description": "ISO 4217 currency code (USD, EUR, GBP, …) for cost impact.",
+              "tier": "domain"
+            },
+            "roundingMode": {
+              "type": "string",
+              "default": "half-up",
+              "label": "Rounding mode",
+              "description": "Sub-cent rounding behavior for cost impact calculations.",
+              "tier": "domain",
+              "values": [
+                "bankers",
+                "half-up",
+                "down"
+              ]
+            },
+            "gracePeriodDays": {
+              "type": "number",
+              "default": 7.0,
+              "label": "Grace period (days)",
+              "description": "Days a pending approval can sit before escalation. Wire via sibling std-lifecycle rule.",
+              "tier": "domain"
+            },
+            "lateFeePolicy": {
+              "type": "string",
+              "default": "none",
+              "label": "Late fee policy",
+              "description": "Penalty when change order execution slips past approved date. Declarative; wiring deferred.",
+              "tier": "domain",
+              "values": [
+                "none",
+                "flat",
+                "percent"
+              ]
             }
           },
           "scope": "collection"

@@ -123,8 +123,8 @@
                     "AppLayoutData",
                     {
                       "emit": {
-                        "failure": "AppLayoutStateLoadFailed",
-                        "success": "AppLayoutStateLoaded"
+                        "success": "AppLayoutStateLoaded",
+                        "failure": "AppLayoutStateLoadFailed"
                       }
                     }
                   ],
@@ -133,24 +133,24 @@
                     "main",
                     {
                       "notifications": "@config.notifications",
-                      "searchEvent": "@config.searchEvent",
-                      "notificationClickEvent": "@config.notificationClickEvent",
+                      "navItems": "@config.navItems",
+                      "type": "@config.layoutPattern",
                       "appName": "@config.appName",
                       "layoutMode": "@config.layoutMode",
-                      "topBarActions": "@config.topBarActions",
-                      "navItems": "@config.navItems",
+                      "notificationClickEvent": "@config.notificationClickEvent",
                       "children": [
                         {
-                          "className": "max-w-5xl mx-auto w-full",
                           "type": "stack",
                           "direction": "vertical",
+                          "className": "max-w-5xl mx-auto w-full",
+                          "gap": "lg",
                           "children": [
                             "@config.contentTrait"
-                          ],
-                          "gap": "lg"
+                          ]
                         }
                       ],
-                      "type": "@config.layoutPattern"
+                      "searchEvent": "@config.searchEvent",
+                      "topBarActions": "@config.topBarActions"
                     }
                   ]
                 ]
@@ -178,12 +178,84 @@
             ]
           },
           "config": {
+            "searchEvent": {
+              "type": "string",
+              "default": "SEARCH",
+              "label": "Search event",
+              "description": "Event emitted when the user runs a global search",
+              "tier": "internal"
+            },
+            "detailSlot": {
+              "type": "slot",
+              "default": "modal",
+              "label": "Detail slot",
+              "description": "Slot where detail/edit views render",
+              "tier": "internal"
+            },
+            "layoutMode": {
+              "type": "string",
+              "default": "sidebar",
+              "label": "Layout mode",
+              "description": "Where the primary navigation lives in the chrome",
+              "tier": "presentation",
+              "values": [
+                "sidebar",
+                "topnav",
+                "bottomnav",
+                "minimal"
+              ]
+            },
+            "contentTrait": {
+              "type": "trait",
+              "label": "Content trait",
+              "description": "Trait rendered inside the app layout content area",
+              "tier": "internal"
+            },
+            "appName": {
+              "type": "string",
+              "default": "App",
+              "label": "App name",
+              "description": "Product name shown in the chrome header",
+              "tier": "presentation"
+            },
+            "navItems": {
+              "type": "[NavItem]",
+              "default": [],
+              "label": "Sidebar links",
+              "description": "Top-level nav entries on the left rail",
+              "tier": "presentation",
+              "items": {
+                "type": "object",
+                "properties": {
+                  "label": {
+                    "name": "label",
+                    "type": "string",
+                    "required": true
+                  },
+                  "href": {
+                    "name": "href",
+                    "type": "string",
+                    "required": true
+                  },
+                  "icon": {
+                    "name": "icon",
+                    "type": "string",
+                    "required": false
+                  },
+                  "badge": {
+                    "name": "badge",
+                    "type": "string",
+                    "required": false
+                  }
+                }
+              }
+            },
             "topBarActions": {
               "type": "[ItemAction]",
               "default": [],
               "label": "Top-bar actions",
               "description": "Icon buttons shown on the right side of the top bar",
-              "tier": "customization",
+              "tier": "presentation",
               "items": {
                 "type": "object",
                 "properties": {
@@ -192,15 +264,15 @@
                     "type": "string",
                     "required": true
                   },
-                  "variant": {
-                    "name": "variant",
-                    "type": "string",
-                    "required": false
-                  },
                   "label": {
                     "name": "label",
                     "type": "string",
                     "required": true
+                  },
+                  "variant": {
+                    "name": "variant",
+                    "type": "string",
+                    "required": false
                   },
                   "icon": {
                     "name": "icon",
@@ -210,34 +282,15 @@
                 }
               }
             },
-            "notificationClickEvent": {
-              "type": "string",
-              "default": "NOTIFY_CLICK",
-              "label": "Notification click event",
-              "description": "Event emitted when the user picks a notification",
-              "tier": "advanced"
-            },
-            "layoutPattern": {
-              "type": "pattern",
-              "default": "dashboard-layout",
-              "label": "Layout pattern",
-              "description": "UI pattern used to render the application chrome",
-              "tier": "advanced"
-            },
             "notifications": {
               "type": "[NotificationSpec]",
               "default": [],
               "label": "Notifications",
               "description": "Items shown in the notifications dropdown",
-              "tier": "customization",
+              "tier": "presentation",
               "items": {
                 "type": "object",
                 "properties": {
-                  "variant": {
-                    "name": "variant",
-                    "type": "string",
-                    "required": false
-                  },
                   "id": {
                     "name": "id",
                     "type": "string",
@@ -247,81 +300,28 @@
                     "name": "message",
                     "type": "string",
                     "required": false
+                  },
+                  "variant": {
+                    "name": "variant",
+                    "type": "string",
+                    "required": false
                   }
                 }
               }
             },
-            "contentTrait": {
-              "type": "trait",
-              "label": "Content trait",
-              "description": "Trait rendered inside the app layout content area",
-              "tier": "essential"
+            "layoutPattern": {
+              "type": "pattern",
+              "default": "dashboard-layout",
+              "label": "Layout pattern",
+              "description": "UI pattern used to render the application chrome",
+              "tier": "internal"
             },
-            "detailSlot": {
-              "type": "slot",
-              "default": "modal",
-              "label": "Detail slot",
-              "description": "Slot where detail/edit views render",
-              "tier": "advanced"
-            },
-            "searchEvent": {
+            "notificationClickEvent": {
               "type": "string",
-              "default": "SEARCH",
-              "label": "Search event",
-              "description": "Event emitted when the user runs a global search",
-              "tier": "advanced"
-            },
-            "layoutMode": {
-              "type": "string",
-              "default": "sidebar",
-              "label": "Layout mode",
-              "description": "Where the primary navigation lives in the chrome",
-              "tier": "customization",
-              "values": [
-                "sidebar",
-                "topnav",
-                "bottomnav",
-                "minimal"
-              ]
-            },
-            "navItems": {
-              "type": "[NavItem]",
-              "default": [],
-              "label": "Sidebar links",
-              "description": "Top-level nav entries on the left rail",
-              "tier": "essential",
-              "items": {
-                "type": "object",
-                "properties": {
-                  "icon": {
-                    "name": "icon",
-                    "type": "string",
-                    "required": false
-                  },
-                  "href": {
-                    "name": "href",
-                    "type": "string",
-                    "required": true
-                  },
-                  "badge": {
-                    "name": "badge",
-                    "type": "string",
-                    "required": false
-                  },
-                  "label": {
-                    "name": "label",
-                    "type": "string",
-                    "required": true
-                  }
-                }
-              }
-            },
-            "appName": {
-              "type": "string",
-              "default": "App",
-              "label": "App name",
-              "description": "Product name shown in the chrome header",
-              "tier": "essential"
+              "default": "NOTIFY_CLICK",
+              "label": "Notification click event",
+              "description": "Event emitted when the user picks a notification",
+              "tier": "internal"
             }
           },
           "scope": "instance"
