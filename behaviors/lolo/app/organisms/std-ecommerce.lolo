@@ -4,6 +4,8 @@ app std-ecommerce "2.0.0"
 orbital ProductOrbital {
   uses AppShell from "std/behaviors/std-app-layout"
   uses Browse from "std/behaviors/std-browse"
+  uses Audit from "std/behaviors/std-audit-capture"
+  uses Notify from "std/behaviors/std-notify-on-event"
 
   entity Product [persistent: products] {
     id : string!
@@ -271,7 +273,34 @@ ProductLoadFailed
       ProductBrowseList.DELETE -> DELETE
     }
   }
-  page "/products" as ProductsPage -> ProductAppLayout, ProductCatalog, ProductBrowseList, ProductCreate, ProductEdit, ProductView, ProductDelete
+  trait ProductAudit = Audit.traits.AuditCaptureListener {
+    config: {
+      captureEntity: "Product",
+      captureEventTypes: [],
+      excludeFields: [],
+      captureBeforeAfter: false,
+      retentionDays: 2555
+    }
+    events {
+      EntityMutated: PRODUCT_UPDATED
+    }
+  }
+
+  trait ProductLowStockNotifier = Notify.traits.NotifyOnEventListener {
+    config: {
+      listensFor: ["ProductOutOfStock"],
+      notifyChannel: "in-app",
+      template: "A product is out of stock",
+      severity: "warning",
+      recipients: [],
+      suppressionList: []
+    }
+    events {
+      EventOccurred: ProductOutOfStock
+    }
+  }
+
+  page "/products" as ProductsPage -> ProductAppLayout, ProductCatalog, ProductBrowseList, ProductCreate, ProductEdit, ProductView, ProductDelete, ProductAudit, ProductLowStockNotifier
 }
 orbital CartItemOrbital {
   entity CartItem [persistent: cartitems] {
@@ -608,6 +637,11 @@ orbital CheckoutOrbital {
   page "/checkout" -> CheckoutWizard, CheckoutPayment, CheckoutPaymentForm
 }
 orbital OrderRecordOrbital {
+  uses Approval from "std/behaviors/std-approval-gate"
+  uses Erasure  from "std/behaviors/std-data-erasure"
+  uses Notify   from "std/behaviors/std-notify-on-event"
+  uses Audit    from "std/behaviors/std-audit-capture"
+
   entity OrderRecord [persistent: orderrecords] {
     id : string!
     customerName : string!
@@ -804,5 +838,52 @@ OrderRecordLoaded
       OrderRecordBrowse.DELETE -> DELETE
     }
   }
-  page "/orders" -> OrderRecordBrowse, OrderRecordCreate, OrderRecordEdit, OrderRecordView, OrderRecordDelete
+  trait OrderRefundApproval = Approval.traits.ApprovalGateReview {
+    config: {
+      approverRoles: ["store-manager"],
+      threshold: 100,
+      autoApproveBelowThreshold: true,
+      valueField: "orderTotal",
+      escalationHours: 24,
+      escalationRoles: ["operations-director"]
+    }
+  }
+
+  trait OrderErasure = Erasure.traits.ErasureWorkflow {
+    config: {
+      targetEntity: "OrderRecord",
+      gracePeriodDays: 30,
+      anonymizeVsDelete: "anonymize",
+      piiFields: ["customerName", "email", "shippingAddress"]
+    }
+  }
+
+  trait OrderShippedNotifier = Notify.traits.NotifyOnEventListener {
+    config: {
+      listensFor: ["OrderShipped"],
+      notifyChannel: "in-app",
+      template: "Your order has shipped",
+      severity: "info",
+      recipients: [],
+      suppressionList: []
+    }
+    events {
+      EventOccurred: OrderShipped
+    }
+  }
+
+  trait OrderAudit = Audit.traits.AuditCaptureListener {
+    config: {
+      captureEntity: "OrderRecord",
+      captureEventTypes: [],
+      excludeFields: [],
+      captureBeforeAfter: false,
+      retentionDays: 2555
+    }
+    events {
+      EntityMutated: ORDER_RECORD_UPDATED
+    }
+  }
+
+  page "/orders" -> OrderRecordBrowse, OrderRecordCreate, OrderRecordEdit, OrderRecordView, OrderRecordDelete, OrderRefundApproval, OrderErasure, OrderShippedNotifier, OrderAudit
 }

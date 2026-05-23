@@ -10,6 +10,8 @@ orbital BuildOrbital {
   uses Stats        from "std/behaviors/std-stats"
   uses Graphs       from "std/behaviors/std-graphs"
   uses Browse       from "std/behaviors/std-browse"
+  uses Notify       from "std/behaviors/std-notify-on-event"
+  uses Audit        from "std/behaviors/std-audit-capture"
 
   entity Build [persistent: builds] {
     id : string!
@@ -254,7 +256,34 @@ orbital BuildOrbital {
     }
   }
 
-  page "/builds" as BuildsPage -> BuildAppLayout, BuildCatalog, BuildSearch, BuildFilter, BuildStats, BuildGraphs, BuildBrowseList, BuildCreate, BuildEdit, BuildView, BuildDelete, BuildPersistor
+  trait BuildFailedNotifier = Notify.traits.NotifyOnEventListener {
+    config: {
+      listensFor: ["BuildFailed"],
+      notifyChannel: "in-app",
+      template: "A build has failed",
+      severity: "error",
+      recipients: [],
+      suppressionList: []
+    }
+    events {
+      EventOccurred: BuildFailed
+    }
+  }
+
+  trait BuildAudit = Audit.traits.AuditCaptureListener {
+    config: {
+      captureEntity: "Build",
+      captureEventTypes: [],
+      excludeFields: [],
+      captureBeforeAfter: false,
+      retentionDays: 2555
+    }
+    events {
+      EntityMutated: BUILD_UPDATED
+    }
+  }
+
+  page "/builds" as BuildsPage -> BuildAppLayout, BuildCatalog, BuildSearch, BuildFilter, BuildStats, BuildGraphs, BuildBrowseList, BuildCreate, BuildEdit, BuildView, BuildDelete, BuildPersistor, BuildFailedNotifier, BuildAudit
 }
 
 orbital StageOrbital {
@@ -457,6 +486,7 @@ orbital DeploymentOrbital {
   uses AppShell from "std/behaviors/std-app-layout"
   uses Browse   from "std/behaviors/std-browse"
   uses GitHub   from "std/behaviors/std-service-github"
+  uses Approval from "std/behaviors/std-approval-gate"
 
   entity Deployment [persistent: deployments] {
     id : string!
@@ -647,5 +677,16 @@ orbital DeploymentOrbital {
     }
   }
 
-  page "/deploy" -> DeploymentAppLayout, DeploymentDisplay, DeploymentBrowseList, DeploymentCommitsPanel, DeploymentGitHub, DeploymentAsync
+  trait DeploymentApproval = Approval.traits.ApprovalGateReview {
+    config: {
+      approverRoles: ["release-manager"],
+      threshold: 0,
+      autoApproveBelowThreshold: false,
+      valueField: "environmentRiskScore",
+      escalationHours: 2,
+      escalationRoles: ["cto"]
+    }
+  }
+
+  page "/deploy" -> DeploymentAppLayout, DeploymentDisplay, DeploymentBrowseList, DeploymentCommitsPanel, DeploymentGitHub, DeploymentAsync, DeploymentApproval
 }

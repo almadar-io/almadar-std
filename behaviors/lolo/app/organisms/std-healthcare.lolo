@@ -11,6 +11,10 @@ orbital PatientOrbital {
   uses Stats         from "std/behaviors/std-stats"
   uses Graphs        from "std/behaviors/std-graphs"
   uses Storage       from "std/behaviors/std-service-storage"
+  uses Lifecycle     from "std/behaviors/std-lifecycle"
+  uses Notify        from "std/behaviors/std-notify-on-event"
+  uses Audit         from "std/behaviors/std-audit-capture"
+  uses Erasure       from "std/behaviors/std-data-erasure"
 
   entity Patient [persistent: patients] {
     id : string!
@@ -289,7 +293,54 @@ orbital PatientOrbital {
     }
   }
 
-  page "/patients" as PatientsPage -> PatientAppLayout, PatientCatalog, PatientSearch, PatientFilter, PatientStats, PatientGraphs, PatientBrowseList, PatientCreate, PatientEdit, PatientView, PatientDelete, PatientPersistor
+  trait PatientLifecycleScan = Lifecycle.traits.LifecycleScheduler {
+    config: {
+      targetEntity: "Patient",
+      rules: [
+        { fromStatus: "active",   toStatus: "inactive",   condition: { kind: "ageDays", value: 365, dateField: "dateOfBirth" } },
+        { fromStatus: "inactive", toStatus: "discharged", condition: { kind: "ageDays", value: 1095, dateField: "dateOfBirth" } }
+      ],
+      dryRun: false
+    }
+  }
+
+  trait PatientNotifier = Notify.traits.NotifyOnEventListener {
+    config: {
+      listensFor: ["PATIENT_UPDATED"],
+      notifyChannel: "in-app",
+      template: "Patient record updated",
+      severity: "info",
+      recipients: [],
+      suppressionList: []
+    }
+    events {
+      EventOccurred: PATIENT_UPDATED
+    }
+  }
+
+  trait PatientAuditCapture = Audit.traits.AuditCaptureListener {
+    config: {
+      captureEntity: "Patient",
+      captureEventTypes: [],
+      excludeFields: [],
+      captureBeforeAfter: true,
+      retentionDays: 2555
+    }
+    events {
+      EntityMutated: PATIENT_UPDATED
+    }
+  }
+
+  trait PatientErasureWorkflow = Erasure.traits.ErasureWorkflow {
+    config: {
+      targetEntity: "Patient",
+      gracePeriodDays: 30,
+      anonymizeVsDelete: "anonymize",
+      piiFields: ["firstName", "lastName", "phone", "email", "dateOfBirth"]
+    }
+  }
+
+  page "/patients" as PatientsPage -> PatientAppLayout, PatientCatalog, PatientSearch, PatientFilter, PatientStats, PatientGraphs, PatientBrowseList, PatientCreate, PatientEdit, PatientView, PatientDelete, PatientPersistor, PatientLifecycleScan, PatientNotifier, PatientAuditCapture, PatientErasureWorkflow
   page "/patients/upload" as PatientUploadPage -> PatientAppLayout, PatientDocumentUpload
 }
 
@@ -301,6 +352,7 @@ orbital AppointmentOrbital {
   uses Calendar      from "std/behaviors/std-calendar"
   uses Email         from "std/behaviors/std-service-email"
   uses Twilio        from "std/behaviors/std-service-twilio"
+  uses Reminder      from "std/behaviors/std-reminder-scheduler"
 
   entity Appointment [persistent: appointments] {
     id : string!
@@ -540,7 +592,18 @@ orbital AppointmentOrbital {
     }
   }
 
-  page "/appointments" as AppointmentsPage -> AppointmentAppLayout, AppointmentCatalog, AppointmentCalendar, AppointmentBrowseList, AppointmentCreate, AppointmentEdit, AppointmentView, AppointmentDelete, AppointmentPersistor
+  trait AppointmentReminderScheduler = Reminder.traits.ReminderScheduler {
+    config: {
+      targetEntity: "Appointment",
+      dateField: "scheduledAt",
+      offsetsHours: [168, 24, 1],
+      severity: "info",
+      template: "Upcoming appointment reminder",
+      windowToleranceMinutes: 60
+    }
+  }
+
+  page "/appointments" as AppointmentsPage -> AppointmentAppLayout, AppointmentCatalog, AppointmentCalendar, AppointmentBrowseList, AppointmentCreate, AppointmentEdit, AppointmentView, AppointmentDelete, AppointmentPersistor, AppointmentReminderScheduler
   page "/appointments/reminder" as AppointmentReminderPage -> AppointmentReminderSms
 }
 
@@ -735,6 +798,7 @@ orbital PrescriptionOrbital {
   uses Browse        from "std/behaviors/std-browse"
   uses Modal         from "std/behaviors/std-modal"
   uses Confirmation  from "std/behaviors/std-confirmation"
+  uses Approval      from "std/behaviors/std-approval-gate"
 
   entity Prescription [persistent: prescriptions] {
     id : string!
@@ -959,7 +1023,18 @@ orbital PrescriptionOrbital {
     }
   }
 
-  page "/prescriptions" as PrescriptionsPage -> PrescriptionAppLayout, PrescriptionCatalog, PrescriptionBrowseList, PrescriptionCreate, PrescriptionEdit, PrescriptionView, PrescriptionDelete, PrescriptionPersistor
+  trait PrescriptionApprovalGate = Approval.traits.ApprovalGateReview {
+    config: {
+      approverRoles: ["prescribing-physician", "pharmacy-supervisor"],
+      threshold: 0,
+      autoApproveBelowThreshold: false,
+      valueField: "",
+      escalationHours: 4,
+      escalationRoles: ["chief-medical-officer"]
+    }
+  }
+
+  page "/prescriptions" as PrescriptionsPage -> PrescriptionAppLayout, PrescriptionCatalog, PrescriptionBrowseList, PrescriptionCreate, PrescriptionEdit, PrescriptionView, PrescriptionDelete, PrescriptionPersistor, PrescriptionApprovalGate
 }
 
 orbital DashboardOrbital {
@@ -1006,4 +1081,172 @@ orbital DashboardOrbital {
   }
 
   page "/dashboard" as DashboardPage -> DashboardAppLayout, DashboardDisplay
+}
+
+orbital PhiPatientFromStdOrbital {
+  uses AppShell from "std/behaviors/std-app-layout"
+  uses Patients from "std/behaviors/std-patient"
+
+  entity PhiPatient [persistent: phipatients] {
+    id              : string!
+    firstName       : string!
+    lastName        : string!
+    dateOfBirth     : string = ""
+    consentType     : "standard" | "research" | "parental" | "minor" = "standard"
+    mrn             : string = ""
+    primaryProvider : string = ""
+    status          : "active" | "inactive" | "deceased" = "active"
+    createdAt       : string = ""
+    updatedAt       : string = ""
+  }
+
+  trait PhiPatientFromStdAppLayout = AppShell.traits.AppLayout -> PhiPatient {
+    config: {
+      contentTrait: "@trait.PhiPatientFromStdManageBlock",
+      appName: "HealthcareApp",
+      navItems: [{ label: "Patients", href: "/patients", icon: "user-plus" }, { label: "Appointments", href: "/appointments", icon: "calendar" }, { label: "Intake", href: "/intake", icon: "layout-list" }, { label: "Prescriptions", href: "/prescriptions", icon: "pill" }, { label: "Dashboard", href: "/dashboard", icon: "layout-dashboard" }, { label: "PHI Patients", href: "/patients-phi", icon: "shield" }],
+      searchEvent: "PHI_PATIENT_SEARCH",
+      notifications: [],
+      notificationClickEvent: "PHI_PATIENT_NOTIFICATIONS_OPEN"
+    }
+    events {
+      SEARCH: PHI_PATIENT_SEARCH
+      NOTIFY_CLICK: PHI_PATIENT_NOTIFICATIONS_OPEN
+    }
+  }
+
+  trait PhiPatientFromStdManageBlock = Patients.traits.PatientManage -> PhiPatient {
+    config: {
+      title: "Patients (PHI)"
+    }
+  }
+
+  page "/patients-phi" as PhiPatientFromStdPage -> PhiPatientFromStdAppLayout, PhiPatientFromStdManageBlock
+}
+
+orbital ControlledRxFromStdOrbital {
+  uses AppShell      from "std/behaviors/std-app-layout"
+  uses Prescriptions from "std/behaviors/std-prescription"
+
+  entity ControlledRx [persistent: controlledrxs] {
+    id               : string!
+    patientId        : string!
+    medication       : string!
+    dosage           : string = ""
+    quantity         : number = 0
+    refillsRemaining : number = 0
+    controlled       : boolean = false
+    status           : "draft" | "signed" | "sent" | "dispensed" | "expired" | "voided" = "draft"
+    prescribedBy     : string = ""
+    pharmacy         : string = ""
+    signedAt         : string = ""
+    createdAt        : string = ""
+  }
+
+  trait ControlledRxFromStdAppLayout = AppShell.traits.AppLayout -> ControlledRx {
+    config: {
+      contentTrait: "@trait.ControlledRxFromStdManageBlock",
+      appName: "HealthcareApp",
+      navItems: [{ label: "Patients", href: "/patients", icon: "user-plus" }, { label: "Appointments", href: "/appointments", icon: "calendar" }, { label: "Intake", href: "/intake", icon: "layout-list" }, { label: "Prescriptions", href: "/prescriptions", icon: "pill" }, { label: "Dashboard", href: "/dashboard", icon: "layout-dashboard" }, { label: "Controlled Rx", href: "/rx-controlled", icon: "shield" }],
+      searchEvent: "CONTROLLED_RX_SEARCH",
+      notifications: [],
+      notificationClickEvent: "CONTROLLED_RX_NOTIFICATIONS_OPEN"
+    }
+    events {
+      SEARCH: CONTROLLED_RX_SEARCH
+      NOTIFY_CLICK: CONTROLLED_RX_NOTIFICATIONS_OPEN
+    }
+  }
+
+  trait ControlledRxFromStdManageBlock = Prescriptions.traits.PrescriptionManage -> ControlledRx {
+    config: {
+      title: "Controlled Prescriptions"
+    }
+  }
+
+  page "/rx-controlled" as ControlledRxFromStdPage -> ControlledRxFromStdAppLayout, ControlledRxFromStdManageBlock
+}
+
+orbital InsuranceClaimFromStdOrbital {
+  uses AppShell from "std/behaviors/std-app-layout"
+  uses Claims   from "std/behaviors/std-insurance-claim"
+
+  entity InsuranceClaim [persistent: insurance_claims] {
+    id               : string!
+    patientId        : string!
+    payerId          : string!
+    serviceDate      : string
+    submittedAt      : string
+    status           : "draft" | "eligible" | "submitted" | "accepted" | "denied" | "paid" = "draft"
+    claimAmount      : number
+    paidAmount       : number = 0
+    denialReason     : string
+    priorAuthNumber  : string
+    createdAt        : string
+  }
+
+  trait InsuranceClaimFromStdAppLayout = AppShell.traits.AppLayout -> InsuranceClaim {
+    config: {
+      contentTrait: "@trait.InsuranceClaimFromStdManageBlock",
+      appName: "HealthcareApp",
+      navItems: [{ label: "Patients", href: "/patients", icon: "user-plus" }, { label: "Appointments", href: "/appointments", icon: "calendar" }, { label: "Intake", href: "/intake", icon: "layout-list" }, { label: "Prescriptions", href: "/prescriptions", icon: "pill" }, { label: "Dashboard", href: "/dashboard", icon: "layout-dashboard" }, { label: "Insurance Claims", href: "/insurance-claims-from-std", icon: "shield" }],
+      searchEvent: "INSURANCE_CLAIM_SEARCH",
+      notifications: [],
+      notificationClickEvent: "INSURANCE_CLAIM_NOTIFICATIONS_OPEN"
+    }
+    events {
+      SEARCH: INSURANCE_CLAIM_SEARCH
+      NOTIFY_CLICK: INSURANCE_CLAIM_NOTIFICATIONS_OPEN
+    }
+  }
+
+  trait InsuranceClaimFromStdManageBlock = Claims.traits.InsuranceClaimManage -> InsuranceClaim {
+    config: {
+      title: "Insurance Claims"
+    }
+  }
+
+  page "/insurance-claims-from-std" as InsuranceClaimFromStdPage -> InsuranceClaimFromStdAppLayout, InsuranceClaimFromStdManageBlock
+}
+
+orbital AppointmentPolicyFromStdOrbital {
+  uses AppShell from "std/behaviors/std-app-layout"
+  uses Policies from "std/behaviors/std-appointment-policy"
+
+  entity AppointmentPolicy [persistent: appointment_policies] {
+    id                         : string!
+    name                       : string!
+    description                : string = ""
+    rescheduleWindowHours      : number = 24
+    maxReschedules             : number = 2
+    cancellationPolicy         : "free" | "partial-refund" | "no-refund" = "free"
+    noShowGracePeriodMinutes   : number = 15
+    noShowFeeAmount            : number = 0
+    lateArrivalGraceMinutes    : number = 10
+    status                     : "active" | "archived" = "active"
+    createdAt                  : string
+  }
+
+  trait AppointmentPolicyFromStdAppLayout = AppShell.traits.AppLayout -> AppointmentPolicy {
+    config: {
+      contentTrait: "@trait.AppointmentPolicyFromStdManageBlock",
+      appName: "HealthcareApp",
+      navItems: [{ label: "Patients", href: "/patients", icon: "user-plus" }, { label: "Appointments", href: "/appointments", icon: "calendar" }, { label: "Intake", href: "/intake", icon: "layout-list" }, { label: "Prescriptions", href: "/prescriptions", icon: "pill" }, { label: "Dashboard", href: "/dashboard", icon: "layout-dashboard" }, { label: "Appointment Policies", href: "/appointment-policies-from-std", icon: "calendar-check" }],
+      searchEvent: "APPOINTMENT_POLICY_SEARCH",
+      notifications: [],
+      notificationClickEvent: "APPOINTMENT_POLICY_NOTIFICATIONS_OPEN"
+    }
+    events {
+      SEARCH: APPOINTMENT_POLICY_SEARCH
+      NOTIFY_CLICK: APPOINTMENT_POLICY_NOTIFICATIONS_OPEN
+    }
+  }
+
+  trait AppointmentPolicyFromStdManageBlock = Policies.traits.AppointmentPolicyManage -> AppointmentPolicy {
+    config: {
+      title: "Appointment Policies"
+    }
+  }
+
+  page "/appointment-policies-from-std" as AppointmentPolicyFromStdPage -> AppointmentPolicyFromStdAppLayout, AppointmentPolicyFromStdManageBlock
 }

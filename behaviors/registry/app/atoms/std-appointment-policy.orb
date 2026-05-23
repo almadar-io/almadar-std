@@ -1,0 +1,1051 @@
+{
+  "name": "std-appointment-policy",
+  "version": "1.0.0",
+  "description": "std-appointment-policy — shared reschedule/cancellation/no-show policy referenced by std-interview-slot, std-class-session, std-event, std-court-deadline via a policyId knob. Author one policy + reuse across appointment types. Exposes Scheduling-pattern knobs.",
+  "orbitals": [
+    {
+      "name": "AppointmentPolicyOrbital",
+      "entity": {
+        "name": "AppointmentPolicy",
+        "collection": "appointment_policies",
+        "persistence": "persistent",
+        "fields": [
+          {
+            "name": "id",
+            "type": "string",
+            "required": true
+          },
+          {
+            "name": "name",
+            "type": "string",
+            "required": true
+          },
+          {
+            "name": "description",
+            "type": "string",
+            "default": ""
+          },
+          {
+            "name": "rescheduleWindowHours",
+            "type": "number",
+            "default": 24.0
+          },
+          {
+            "name": "maxReschedules",
+            "type": "number",
+            "default": 2.0
+          },
+          {
+            "name": "cancellationPolicy",
+            "type": "string",
+            "default": "free",
+            "values": [
+              "free",
+              "partial-refund",
+              "no-refund"
+            ]
+          },
+          {
+            "name": "noShowGracePeriodMinutes",
+            "type": "number",
+            "default": 15.0
+          },
+          {
+            "name": "noShowFeeAmount",
+            "type": "number",
+            "default": 0.0
+          },
+          {
+            "name": "lateArrivalGraceMinutes",
+            "type": "number",
+            "default": 10.0
+          },
+          {
+            "name": "status",
+            "type": "string",
+            "default": "active",
+            "values": [
+              "active",
+              "archived"
+            ]
+          },
+          {
+            "name": "createdAt",
+            "type": "string"
+          }
+        ]
+      },
+      "traits": [
+        {
+          "name": "AppointmentPolicyManage",
+          "category": "interaction",
+          "linkedEntity": "AppointmentPolicy",
+          "emits": [
+            {
+              "event": "OPEN_POLICY",
+              "payloadSchema": [
+                {
+                  "name": "id",
+                  "type": "string",
+                  "required": true
+                },
+                {
+                  "name": "row.id",
+                  "type": "string",
+                  "required": true
+                },
+                {
+                  "name": "row.name",
+                  "type": "string",
+                  "required": true
+                },
+                {
+                  "name": "row.description",
+                  "type": "string"
+                },
+                {
+                  "name": "row.rescheduleWindowHours",
+                  "type": "number"
+                },
+                {
+                  "name": "row.maxReschedules",
+                  "type": "number"
+                },
+                {
+                  "name": "row.cancellationPolicy",
+                  "type": "string"
+                },
+                {
+                  "name": "row.noShowGracePeriodMinutes",
+                  "type": "number"
+                },
+                {
+                  "name": "row.noShowFeeAmount",
+                  "type": "number"
+                },
+                {
+                  "name": "row.lateArrivalGraceMinutes",
+                  "type": "number"
+                },
+                {
+                  "name": "row.status",
+                  "type": "string"
+                },
+                {
+                  "name": "row.createdAt",
+                  "type": "string"
+                }
+              ]
+            },
+            {
+              "event": "CLOSE_VIEW"
+            },
+            {
+              "event": "ARCHIVE_POLICY",
+              "payloadSchema": [
+                {
+                  "name": "id",
+                  "type": "string",
+                  "required": true
+                },
+                {
+                  "name": "row.id",
+                  "type": "string",
+                  "required": true
+                },
+                {
+                  "name": "row.name",
+                  "type": "string",
+                  "required": true
+                },
+                {
+                  "name": "row.description",
+                  "type": "string"
+                },
+                {
+                  "name": "row.rescheduleWindowHours",
+                  "type": "number"
+                },
+                {
+                  "name": "row.maxReschedules",
+                  "type": "number"
+                },
+                {
+                  "name": "row.cancellationPolicy",
+                  "type": "string"
+                },
+                {
+                  "name": "row.noShowGracePeriodMinutes",
+                  "type": "number"
+                },
+                {
+                  "name": "row.noShowFeeAmount",
+                  "type": "number"
+                },
+                {
+                  "name": "row.lateArrivalGraceMinutes",
+                  "type": "number"
+                },
+                {
+                  "name": "row.status",
+                  "type": "string"
+                },
+                {
+                  "name": "row.createdAt",
+                  "type": "string"
+                }
+              ]
+            },
+            {
+              "event": "AppointmentPolicyLoaded",
+              "payloadSchema": [
+                {
+                  "name": "data",
+                  "type": "[AppointmentPolicy]"
+                }
+              ]
+            },
+            {
+              "event": "AppointmentPolicyLoadFailed",
+              "payloadSchema": [
+                {
+                  "name": "error",
+                  "type": "string"
+                },
+                {
+                  "name": "code",
+                  "type": "string"
+                }
+              ]
+            }
+          ],
+          "stateMachine": {
+            "states": [
+              {
+                "name": "loading",
+                "isInitial": true
+              },
+              {
+                "name": "browsing"
+              },
+              {
+                "name": "viewing_single"
+              },
+              {
+                "name": "error"
+              }
+            ],
+            "events": [
+              {
+                "key": "INIT",
+                "name": "Initialize"
+              },
+              {
+                "key": "AppointmentPolicyLoaded",
+                "name": "AppointmentPolicy loaded",
+                "payloadSchema": [
+                  {
+                    "name": "data",
+                    "type": "[AppointmentPolicy]"
+                  }
+                ]
+              },
+              {
+                "key": "AppointmentPolicyLoadFailed",
+                "name": "AppointmentPolicy load failed",
+                "payloadSchema": [
+                  {
+                    "name": "error",
+                    "type": "string"
+                  },
+                  {
+                    "name": "code",
+                    "type": "string"
+                  }
+                ]
+              },
+              {
+                "key": "OPEN_POLICY",
+                "name": "Open Policy",
+                "payloadSchema": [
+                  {
+                    "name": "id",
+                    "type": "string",
+                    "required": true
+                  },
+                  {
+                    "name": "row",
+                    "type": "AppointmentPolicy"
+                  }
+                ]
+              },
+              {
+                "key": "ARCHIVE_POLICY",
+                "name": "Archive Policy",
+                "payloadSchema": [
+                  {
+                    "name": "id",
+                    "type": "string",
+                    "required": true
+                  },
+                  {
+                    "name": "row",
+                    "type": "AppointmentPolicy"
+                  }
+                ]
+              },
+              {
+                "key": "SET_STATUS",
+                "name": "Set Status",
+                "payloadSchema": [
+                  {
+                    "name": "entityId",
+                    "type": "string",
+                    "required": true
+                  },
+                  {
+                    "name": "newStatus",
+                    "type": "string",
+                    "required": true
+                  }
+                ]
+              },
+              {
+                "key": "CLOSE_VIEW",
+                "name": "Close View"
+              }
+            ],
+            "transitions": [
+              {
+                "from": "loading",
+                "to": "loading",
+                "event": "INIT",
+                "effects": [
+                  [
+                    "fetch",
+                    "AppointmentPolicy",
+                    {
+                      "emit": {
+                        "success": "AppointmentPolicyLoaded",
+                        "failure": "AppointmentPolicyLoadFailed"
+                      }
+                    }
+                  ],
+                  [
+                    "render-ui",
+                    "main",
+                    {
+                      "className": "py-12",
+                      "type": "stack",
+                      "children": [
+                        {
+                          "type": "spinner"
+                        },
+                        {
+                          "type": "typography",
+                          "color": "muted",
+                          "variant": "caption",
+                          "content": "Loading policies…"
+                        }
+                      ],
+                      "direction": "vertical",
+                      "gap": "md",
+                      "align": "center"
+                    }
+                  ]
+                ]
+              },
+              {
+                "from": "loading",
+                "to": "browsing",
+                "event": "AppointmentPolicyLoaded",
+                "effects": [
+                  [
+                    "render-ui",
+                    "main",
+                    {
+                      "type": "stack",
+                      "children": [
+                        {
+                          "type": "stack",
+                          "gap": "sm",
+                          "children": [
+                            {
+                              "type": "icon",
+                              "name": "calendar-check"
+                            },
+                            {
+                              "type": "typography",
+                              "content": "@config.title",
+                              "variant": "h3"
+                            }
+                          ],
+                          "direction": "horizontal",
+                          "align": "center"
+                        },
+                        {
+                          "type": "divider"
+                        },
+                        {
+                          "gap": "sm",
+                          "fields": "@config.fields",
+                          "type": "data-grid",
+                          "cols": 1.0,
+                          "entity": "@payload.data",
+                          "itemActions": "@config.itemActions"
+                        }
+                      ],
+                      "gap": "md",
+                      "direction": "vertical"
+                    }
+                  ]
+                ]
+              },
+              {
+                "from": "loading",
+                "to": "error",
+                "event": "AppointmentPolicyLoadFailed",
+                "effects": [
+                  [
+                    "render-ui",
+                    "main",
+                    {
+                      "variant": "error",
+                      "message": "@payload.error",
+                      "type": "alert"
+                    }
+                  ]
+                ]
+              },
+              {
+                "from": "browsing",
+                "to": "viewing_single",
+                "event": "OPEN_POLICY",
+                "effects": [
+                  [
+                    "set",
+                    "@entity.id",
+                    "@payload.row.id"
+                  ],
+                  [
+                    "set",
+                    "@entity.name",
+                    "@payload.row.name"
+                  ],
+                  [
+                    "set",
+                    "@entity.description",
+                    "@payload.row.description"
+                  ],
+                  [
+                    "set",
+                    "@entity.rescheduleWindowHours",
+                    "@payload.row.rescheduleWindowHours"
+                  ],
+                  [
+                    "set",
+                    "@entity.maxReschedules",
+                    "@payload.row.maxReschedules"
+                  ],
+                  [
+                    "set",
+                    "@entity.cancellationPolicy",
+                    "@payload.row.cancellationPolicy"
+                  ],
+                  [
+                    "set",
+                    "@entity.noShowGracePeriodMinutes",
+                    "@payload.row.noShowGracePeriodMinutes"
+                  ],
+                  [
+                    "set",
+                    "@entity.noShowFeeAmount",
+                    "@payload.row.noShowFeeAmount"
+                  ],
+                  [
+                    "set",
+                    "@entity.lateArrivalGraceMinutes",
+                    "@payload.row.lateArrivalGraceMinutes"
+                  ],
+                  [
+                    "set",
+                    "@entity.status",
+                    "@payload.row.status"
+                  ],
+                  [
+                    "set",
+                    "@entity.createdAt",
+                    "@payload.row.createdAt"
+                  ],
+                  [
+                    "render-ui",
+                    "main",
+                    {
+                      "direction": "vertical",
+                      "type": "stack",
+                      "gap": "md",
+                      "children": [
+                        {
+                          "type": "stack",
+                          "gap": "sm",
+                          "align": "center",
+                          "children": [
+                            {
+                              "type": "button",
+                              "label": "Back",
+                              "variant": "ghost",
+                              "action": "CLOSE_VIEW"
+                            },
+                            {
+                              "type": "icon",
+                              "name": "calendar-check"
+                            },
+                            {
+                              "variant": "h3",
+                              "type": "typography",
+                              "content": "@entity.name"
+                            }
+                          ],
+                          "direction": "horizontal"
+                        },
+                        {
+                          "type": "divider"
+                        },
+                        {
+                          "type": "stack",
+                          "direction": "vertical",
+                          "gap": "sm",
+                          "children": [
+                            {
+                              "type": "stack",
+                              "gap": "md",
+                              "children": [
+                                {
+                                  "content": "Reschedule window (h)",
+                                  "variant": "caption",
+                                  "color": "muted",
+                                  "type": "typography"
+                                },
+                                {
+                                  "variant": "body",
+                                  "type": "typography",
+                                  "content": "@entity.rescheduleWindowHours"
+                                }
+                              ],
+                              "direction": "horizontal"
+                            },
+                            {
+                              "type": "stack",
+                              "direction": "horizontal",
+                              "children": [
+                                {
+                                  "content": "Max reschedules",
+                                  "color": "muted",
+                                  "variant": "caption",
+                                  "type": "typography"
+                                },
+                                {
+                                  "content": "@entity.maxReschedules",
+                                  "variant": "body",
+                                  "type": "typography"
+                                }
+                              ],
+                              "gap": "md"
+                            },
+                            {
+                              "children": [
+                                {
+                                  "type": "typography",
+                                  "color": "muted",
+                                  "content": "Cancellation",
+                                  "variant": "caption"
+                                },
+                                {
+                                  "variant": "body",
+                                  "type": "typography",
+                                  "content": "@entity.cancellationPolicy"
+                                }
+                              ],
+                              "direction": "horizontal",
+                              "type": "stack",
+                              "gap": "md"
+                            },
+                            {
+                              "type": "stack",
+                              "gap": "md",
+                              "direction": "horizontal",
+                              "children": [
+                                {
+                                  "variant": "caption",
+                                  "content": "No-show grace (min)",
+                                  "color": "muted",
+                                  "type": "typography"
+                                },
+                                {
+                                  "variant": "body",
+                                  "content": "@entity.noShowGracePeriodMinutes",
+                                  "type": "typography"
+                                }
+                              ]
+                            },
+                            {
+                              "type": "stack",
+                              "direction": "horizontal",
+                              "gap": "md",
+                              "children": [
+                                {
+                                  "content": "No-show fee",
+                                  "type": "typography",
+                                  "variant": "caption",
+                                  "color": "muted"
+                                },
+                                {
+                                  "type": "typography",
+                                  "content": "@entity.noShowFeeAmount",
+                                  "variant": "body"
+                                }
+                              ]
+                            }
+                          ]
+                        },
+                        {
+                          "direction": "horizontal",
+                          "align": "center",
+                          "children": [
+                            {
+                              "type": "button",
+                              "action": "ARCHIVE_POLICY",
+                              "label": "Archive",
+                              "variant": "danger",
+                              "actionPayload": {
+                                "id": "@entity.id",
+                                "row": "@entity"
+                              }
+                            }
+                          ],
+                          "type": "stack",
+                          "gap": "sm"
+                        }
+                      ]
+                    }
+                  ]
+                ]
+              },
+              {
+                "from": "browsing",
+                "to": "loading",
+                "event": "ARCHIVE_POLICY",
+                "effects": [
+                  [
+                    "set",
+                    "@entity.id",
+                    "@payload.id"
+                  ],
+                  [
+                    "set",
+                    "@entity.status",
+                    "archived"
+                  ],
+                  [
+                    "persist",
+                    "update",
+                    "AppointmentPolicy",
+                    "@entity",
+                    {
+                      "emit": {
+                        "failure": "AppointmentPolicyLoadFailed",
+                        "success": "AppointmentPolicyLoaded"
+                      }
+                    }
+                  ],
+                  [
+                    "render-ui",
+                    "main",
+                    {
+                      "className": "py-12",
+                      "direction": "vertical",
+                      "gap": "md",
+                      "type": "stack",
+                      "children": [
+                        {
+                          "type": "spinner"
+                        },
+                        {
+                          "content": "Archiving policy…",
+                          "type": "typography",
+                          "variant": "caption",
+                          "color": "muted"
+                        }
+                      ],
+                      "align": "center"
+                    }
+                  ]
+                ]
+              },
+              {
+                "from": "browsing",
+                "to": "loading",
+                "event": "SET_STATUS",
+                "effects": [
+                  [
+                    "set",
+                    "@entity.id",
+                    "@payload.entityId"
+                  ],
+                  [
+                    "set",
+                    "@entity.status",
+                    "@payload.newStatus"
+                  ],
+                  [
+                    "persist",
+                    "update",
+                    "AppointmentPolicy",
+                    "@entity",
+                    {
+                      "emit": {
+                        "failure": "AppointmentPolicyLoadFailed",
+                        "success": "AppointmentPolicyLoaded"
+                      }
+                    }
+                  ],
+                  [
+                    "render-ui",
+                    "main",
+                    {
+                      "direction": "vertical",
+                      "className": "py-12",
+                      "type": "stack",
+                      "align": "center",
+                      "children": [
+                        {
+                          "type": "spinner"
+                        },
+                        {
+                          "color": "muted",
+                          "content": "Updating policy status…",
+                          "variant": "caption",
+                          "type": "typography"
+                        }
+                      ],
+                      "gap": "md"
+                    }
+                  ]
+                ]
+              },
+              {
+                "from": "viewing_single",
+                "to": "loading",
+                "event": "CLOSE_VIEW",
+                "effects": [
+                  [
+                    "fetch",
+                    "AppointmentPolicy",
+                    {
+                      "emit": {
+                        "success": "AppointmentPolicyLoaded",
+                        "failure": "AppointmentPolicyLoadFailed"
+                      }
+                    }
+                  ],
+                  [
+                    "render-ui",
+                    "main",
+                    {
+                      "className": "py-12",
+                      "type": "stack",
+                      "children": [
+                        {
+                          "type": "spinner"
+                        },
+                        {
+                          "type": "typography",
+                          "color": "muted",
+                          "variant": "caption",
+                          "content": "Loading policies…"
+                        }
+                      ],
+                      "gap": "md",
+                      "direction": "vertical",
+                      "align": "center"
+                    }
+                  ]
+                ]
+              },
+              {
+                "from": "viewing_single",
+                "to": "loading",
+                "event": "ARCHIVE_POLICY",
+                "effects": [
+                  [
+                    "set",
+                    "@entity.id",
+                    "@payload.id"
+                  ],
+                  [
+                    "fetch",
+                    "AppointmentPolicy",
+                    {
+                      "emit": {
+                        "failure": "AppointmentPolicyLoadFailed",
+                        "success": "AppointmentPolicyLoaded"
+                      }
+                    }
+                  ],
+                  [
+                    "render-ui",
+                    "main",
+                    {
+                      "children": [
+                        {
+                          "type": "spinner"
+                        },
+                        {
+                          "type": "typography",
+                          "content": "Archiving policy…",
+                          "color": "muted",
+                          "variant": "caption"
+                        }
+                      ],
+                      "className": "py-12",
+                      "type": "stack",
+                      "direction": "vertical",
+                      "gap": "md",
+                      "align": "center"
+                    }
+                  ]
+                ]
+              },
+              {
+                "from": "error",
+                "to": "loading",
+                "event": "INIT",
+                "effects": [
+                  [
+                    "fetch",
+                    "AppointmentPolicy",
+                    {
+                      "emit": {
+                        "failure": "AppointmentPolicyLoadFailed",
+                        "success": "AppointmentPolicyLoaded"
+                      }
+                    }
+                  ],
+                  [
+                    "render-ui",
+                    "main",
+                    {
+                      "type": "spinner",
+                      "size": "sm"
+                    }
+                  ]
+                ]
+              }
+            ]
+          },
+          "config": {
+            "noShowGracePeriodMinutes": {
+              "type": "number",
+              "default": 15.0,
+              "label": "No-show grace (minutes)",
+              "description": "Minutes after scheduled start before the appointment auto-marks no_show.",
+              "synonyms": "no-show window, late grace",
+              "tier": "domain"
+            },
+            "maxReschedules": {
+              "type": "number",
+              "default": 2.0,
+              "label": "Max reschedules",
+              "description": "Default hard cap on reschedules per appointment when this policy is referenced.",
+              "synonyms": "reschedule limit",
+              "tier": "domain"
+            },
+            "noShowFeeAmount": {
+              "type": "number",
+              "default": 0.0,
+              "label": "No-show fee amount",
+              "description": "Cash fee charged for a confirmed no-show. 0 = no fee.",
+              "synonyms": "missed-appointment fee, no-show charge",
+              "tier": "domain"
+            },
+            "lateArrivalGraceMinutes": {
+              "type": "number",
+              "default": 10.0,
+              "label": "Late arrival grace (minutes)",
+              "description": "Minutes a customer can arrive late before the slot is forfeit.",
+              "synonyms": "tardy window",
+              "tier": "domain"
+            },
+            "itemActions": {
+              "type": "[ItemAction]",
+              "default": [
+                {
+                  "variant": "primary",
+                  "icon": "arrow-right",
+                  "label": "Open",
+                  "event": "OPEN_POLICY"
+                },
+                {
+                  "event": "ARCHIVE_POLICY",
+                  "label": "Archive",
+                  "variant": "danger"
+                }
+              ],
+              "label": "Row actions",
+              "description": "Buttons users can click on each policy row",
+              "tier": "presentation",
+              "items": {
+                "type": "object",
+                "properties": {
+                  "icon": {
+                    "name": "icon",
+                    "type": "string",
+                    "required": false
+                  },
+                  "event": {
+                    "name": "event",
+                    "type": "string",
+                    "required": true
+                  },
+                  "variant": {
+                    "name": "variant",
+                    "type": "string",
+                    "required": false
+                  },
+                  "label": {
+                    "name": "label",
+                    "type": "string",
+                    "required": true
+                  }
+                }
+              }
+            },
+            "fields": {
+              "type": "[FieldSpec]",
+              "default": [
+                {
+                  "label": "Name",
+                  "variant": "caption",
+                  "name": "name"
+                },
+                {
+                  "name": "rescheduleWindowHours",
+                  "label": "Reschedule (h)",
+                  "variant": "caption"
+                },
+                {
+                  "label": "Max reschedules",
+                  "variant": "caption",
+                  "name": "maxReschedules"
+                },
+                {
+                  "variant": "badge",
+                  "name": "cancellationPolicy",
+                  "label": "Cancellation"
+                },
+                {
+                  "name": "noShowGracePeriodMinutes",
+                  "label": "No-show grace",
+                  "variant": "caption"
+                },
+                {
+                  "variant": "caption",
+                  "label": "No-show fee",
+                  "name": "noShowFeeAmount"
+                },
+                {
+                  "name": "status",
+                  "label": "Status",
+                  "variant": "badge"
+                }
+              ],
+              "label": "Columns to show",
+              "description": "Each column maps to one field on the AppointmentPolicy entity",
+              "tier": "presentation",
+              "items": {
+                "type": "object",
+                "properties": {
+                  "icon": {
+                    "name": "icon",
+                    "type": "string",
+                    "required": false
+                  },
+                  "name": {
+                    "name": "name",
+                    "type": "string",
+                    "required": true
+                  },
+                  "format": {
+                    "name": "format",
+                    "type": "string",
+                    "required": false
+                  },
+                  "label": {
+                    "name": "label",
+                    "type": "string",
+                    "required": false
+                  },
+                  "key": {
+                    "name": "key",
+                    "type": "string",
+                    "required": false
+                  },
+                  "header": {
+                    "name": "header",
+                    "type": "string",
+                    "required": false
+                  },
+                  "variant": {
+                    "name": "variant",
+                    "type": "string",
+                    "required": false
+                  }
+                }
+              }
+            },
+            "rescheduleWindowHours": {
+              "type": "number",
+              "default": 24.0,
+              "label": "Reschedule window (hours)",
+              "description": "Default hours before appointment during which the customer can self-reschedule. Atoms that reference a policy inherit this.",
+              "synonyms": "reschedule cutoff, change window",
+              "tier": "domain"
+            },
+            "title": {
+              "type": "string",
+              "default": "Appointment Policies",
+              "label": "Section title",
+              "description": "Heading shown above the policy list",
+              "tier": "presentation"
+            },
+            "cancellationPolicy": {
+              "type": "string",
+              "default": "free",
+              "label": "Cancellation policy",
+              "description": "Refund treatment when an appointment is cancelled inside the reschedule window.",
+              "synonyms": "refund policy, cancellation rule",
+              "tier": "domain",
+              "values": [
+                "free",
+                "partial-refund",
+                "no-refund"
+              ]
+            }
+          },
+          "scope": "collection"
+        }
+      ],
+      "pages": [
+        {
+          "name": "AppointmentPolicyPage",
+          "path": "/appointment-policies",
+          "traits": [
+            {
+              "ref": "AppointmentPolicyManage"
+            }
+          ]
+        }
+      ]
+    }
+  ]
+}

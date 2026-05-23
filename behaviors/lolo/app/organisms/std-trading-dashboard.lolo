@@ -259,6 +259,9 @@ orbital TradeOrderOrbital {
   uses Modal        from "std/behaviors/std-modal"
   uses Confirmation from "std/behaviors/std-confirmation"
   uses Browse       from "std/behaviors/std-browse"
+  uses Notify       from "std/behaviors/std-notify-on-event"
+  uses Audit        from "std/behaviors/std-audit-capture"
+  uses Approval     from "std/behaviors/std-approval-gate"
 
   entity TradeOrder [persistent: tradeorders] {
     id : string!
@@ -430,7 +433,45 @@ orbital TradeOrderOrbital {
     }
   }
 
-  page "/orders" -> TradeOrderAppLayout, TradeOrderCatalog, TradeOrderBrowseList, TradeOrderCreate, TradeOrderEdit, TradeOrderView, TradeOrderDelete, TradeOrderPersistor
+  trait TradingNotifier = Notify.traits.NotifyOnEventListener {
+    config: {
+      listensFor: ["TRADE_ORDER_UPDATED"],
+      notifyChannel: "in-app",
+      template: "Price or order alert",
+      severity: "warning",
+      recipients: [],
+      suppressionList: []
+    }
+    events {
+      EventOccurred: TRADE_ORDER_UPDATED
+    }
+  }
+
+  trait TradingAuditCapture = Audit.traits.AuditCaptureListener {
+    config: {
+      captureEntity: "TradeOrder",
+      captureEventTypes: [],
+      excludeFields: [],
+      captureBeforeAfter: true,
+      retentionDays: 2555
+    }
+    events {
+      EntityMutated: TRADE_ORDER_UPDATED
+    }
+  }
+
+  trait TradingApprovalGate = Approval.traits.ApprovalGateReview {
+    config: {
+      approverRoles: ["trading-desk-lead"],
+      threshold: 100000,
+      autoApproveBelowThreshold: true,
+      valueField: "price",
+      escalationHours: 1,
+      escalationRoles: ["compliance-officer"]
+    }
+  }
+
+  page "/orders" -> TradeOrderAppLayout, TradeOrderCatalog, TradeOrderBrowseList, TradeOrderCreate, TradeOrderEdit, TradeOrderView, TradeOrderDelete, TradeOrderPersistor, TradingNotifier, TradingAuditCapture, TradingApprovalGate
 }
 
 orbital MarketFeedOrbital {
@@ -584,4 +625,126 @@ orbital MarketFeedOrbital {
   }
 
   page "/market" -> MarketFeedAppLayout, MarketFeedDisplay, MarketFeedAsync, MarketSelection
+}
+
+orbital VenueTradeOrderFromStdOrbital {
+  uses AppShell from "std/behaviors/std-app-layout"
+  uses Orders   from "std/behaviors/std-trade-order"
+
+  entity VenueTradeOrder [persistent: venuetradeorders] {
+    id          : string!
+    instrument  : string!
+    side        : "buy" | "sell" = "buy"
+    orderType   : "market" | "limit" | "stop" | "stop-limit" | "trailing" = "market"
+    quantity    : number = 0
+    price       : number = 0
+    limitPrice  : number = 0
+    stopPrice   : number = 0
+    status      : "pending" | "working" | "filled" | "partially-filled" | "cancelled" | "rejected" = "pending"
+    venue       : string = ""
+    filledAt    : string = ""
+    createdAt   : string = ""
+  }
+
+  trait VenueTradeOrderFromStdAppLayout = AppShell.traits.AppLayout -> VenueTradeOrder {
+    config: {
+      contentTrait: "@trait.VenueTradeOrderFromStdManageBlock",
+      appName: "Trading Dashboard",
+      navItems: [{ label: "Portfolio", href: "/portfolio", icon: "layout-list" }, { label: "Orders", href: "/orders", icon: "clipboard-list" }, { label: "Market", href: "/market", icon: "activity" }, { label: "Venue Orders", href: "/orders-venue", icon: "trending-up" }],
+      searchEvent: "VENUE_ORDER_SEARCH",
+      notifications: [],
+      notificationClickEvent: "VENUE_ORDER_NOTIFICATIONS_OPEN"
+    }
+    events {
+      SEARCH: VENUE_ORDER_SEARCH
+      NOTIFY_CLICK: VENUE_ORDER_NOTIFICATIONS_OPEN
+    }
+  }
+
+  trait VenueTradeOrderFromStdManageBlock = Orders.traits.TradeOrderManage -> VenueTradeOrder {
+    config: {
+      title: "Venue Trade Orders"
+    }
+  }
+
+  page "/orders-venue" as VenueTradeOrderFromStdPage -> VenueTradeOrderFromStdAppLayout, VenueTradeOrderFromStdManageBlock
+}
+
+orbital PortfolioFromStdOrbital {
+  uses AppShell   from "std/behaviors/std-app-layout"
+  uses Portfolios from "std/behaviors/std-portfolio"
+
+  entity ManagedPortfolio [persistent: managed_portfolios] {
+    id                    : string!
+    name                  : string!
+    ownerAccountId        : string!
+    currentValueUSD       : number
+    targetAllocationJson  : string = "{}"
+    driftBps              : number = 0
+    status                : "active" | "rebalancing" | "frozen" | "archived" = "active"
+    lastRebalancedAt      : string
+    createdAt             : string
+  }
+
+  trait ManagedPortfolioFromStdAppLayout = AppShell.traits.AppLayout -> ManagedPortfolio {
+    config: {
+      contentTrait: "@trait.ManagedPortfolioFromStdManageBlock",
+      appName: "Trading Dashboard",
+      navItems: [{ label: "Portfolio", href: "/portfolio", icon: "layout-list" }, { label: "Orders", href: "/orders", icon: "clipboard-list" }, { label: "Market", href: "/market", icon: "activity" }, { label: "Managed Portfolios", href: "/portfolios-managed", icon: "briefcase" }],
+      searchEvent: "MANAGED_PORTFOLIO_SEARCH",
+      notifications: [],
+      notificationClickEvent: "MANAGED_PORTFOLIO_NOTIFICATIONS_OPEN"
+    }
+    events {
+      SEARCH: MANAGED_PORTFOLIO_SEARCH
+      NOTIFY_CLICK: MANAGED_PORTFOLIO_NOTIFICATIONS_OPEN
+    }
+  }
+
+  trait ManagedPortfolioFromStdManageBlock = Portfolios.traits.PortfolioManage -> ManagedPortfolio {
+    config: {
+      title: "Managed Portfolios"
+    }
+  }
+
+  page "/portfolios-managed" as ManagedPortfolioFromStdPage -> ManagedPortfolioFromStdAppLayout, ManagedPortfolioFromStdManageBlock
+}
+
+orbital MarginAccountFromStdOrbital {
+  uses AppShell from "std/behaviors/std-app-layout"
+  uses Margin   from "std/behaviors/std-margin-account"
+
+  entity MarginAccount [persistent: margin_accounts] {
+    id                  : string!
+    accountHolderId     : string!
+    equityUSD           : number
+    marginUsedUSD       : number
+    marginAvailableUSD  : number
+    status              : "good-standing" | "warning" | "margin-call" | "liquidated" = "good-standing"
+    lastCallAt          : string
+    createdAt           : string
+  }
+
+  trait MarginAccountFromStdAppLayout = AppShell.traits.AppLayout -> MarginAccount {
+    config: {
+      contentTrait: "@trait.MarginAccountFromStdManageBlock",
+      appName: "Trading Dashboard",
+      navItems: [{ label: "Portfolio", href: "/portfolio", icon: "layout-list" }, { label: "Orders", href: "/orders", icon: "clipboard-list" }, { label: "Market", href: "/market", icon: "activity" }, { label: "Margin Accounts", href: "/margin-accounts", icon: "dollar-sign" }],
+      searchEvent: "MARGIN_ACCOUNT_SEARCH",
+      notifications: [],
+      notificationClickEvent: "MARGIN_ACCOUNT_NOTIFICATIONS_OPEN"
+    }
+    events {
+      SEARCH: MARGIN_ACCOUNT_SEARCH
+      NOTIFY_CLICK: MARGIN_ACCOUNT_NOTIFICATIONS_OPEN
+    }
+  }
+
+  trait MarginAccountFromStdManageBlock = Margin.traits.MarginAccountManage -> MarginAccount {
+    config: {
+      title: "Margin Accounts"
+    }
+  }
+
+  page "/margin-accounts" as MarginAccountFromStdPage -> MarginAccountFromStdAppLayout, MarginAccountFromStdManageBlock
 }

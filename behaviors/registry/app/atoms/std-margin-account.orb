@@ -1,0 +1,1007 @@
+{
+  "name": "std-margin-account",
+  "version": "1.0.0",
+  "description": "std-margin-account — margin account leverage and call thresholds for trading apps.",
+  "orbitals": [
+    {
+      "name": "MarginAccountOrbital",
+      "entity": {
+        "name": "MarginAccount",
+        "collection": "margin_accounts",
+        "persistence": "persistent",
+        "fields": [
+          {
+            "name": "id",
+            "type": "string",
+            "required": true
+          },
+          {
+            "name": "accountHolderId",
+            "type": "string",
+            "required": true
+          },
+          {
+            "name": "equityUSD",
+            "type": "number"
+          },
+          {
+            "name": "marginUsedUSD",
+            "type": "number"
+          },
+          {
+            "name": "marginAvailableUSD",
+            "type": "number"
+          },
+          {
+            "name": "status",
+            "type": "string",
+            "default": "good-standing",
+            "values": [
+              "good-standing",
+              "warning",
+              "margin-call",
+              "liquidated"
+            ]
+          },
+          {
+            "name": "lastCallAt",
+            "type": "string"
+          },
+          {
+            "name": "createdAt",
+            "type": "string"
+          }
+        ]
+      },
+      "traits": [
+        {
+          "name": "MarginAccountManage",
+          "category": "interaction",
+          "linkedEntity": "MarginAccount",
+          "emits": [
+            {
+              "event": "OPEN_ACCOUNT",
+              "payloadSchema": [
+                {
+                  "name": "id",
+                  "type": "string",
+                  "required": true
+                },
+                {
+                  "name": "row.id",
+                  "type": "string",
+                  "required": true
+                },
+                {
+                  "name": "row.accountHolderId",
+                  "type": "string",
+                  "required": true
+                },
+                {
+                  "name": "row.equityUSD",
+                  "type": "number"
+                },
+                {
+                  "name": "row.marginUsedUSD",
+                  "type": "number"
+                },
+                {
+                  "name": "row.marginAvailableUSD",
+                  "type": "number"
+                },
+                {
+                  "name": "row.status",
+                  "type": "string"
+                },
+                {
+                  "name": "row.lastCallAt",
+                  "type": "string"
+                },
+                {
+                  "name": "row.createdAt",
+                  "type": "string"
+                }
+              ]
+            },
+            {
+              "event": "CLOSE_VIEW"
+            },
+            {
+              "event": "ISSUE_CALL",
+              "payloadSchema": [
+                {
+                  "name": "id",
+                  "type": "string",
+                  "required": true
+                },
+                {
+                  "name": "row.id",
+                  "type": "string",
+                  "required": true
+                },
+                {
+                  "name": "row.accountHolderId",
+                  "type": "string",
+                  "required": true
+                },
+                {
+                  "name": "row.equityUSD",
+                  "type": "number"
+                },
+                {
+                  "name": "row.marginUsedUSD",
+                  "type": "number"
+                },
+                {
+                  "name": "row.marginAvailableUSD",
+                  "type": "number"
+                },
+                {
+                  "name": "row.status",
+                  "type": "string"
+                },
+                {
+                  "name": "row.lastCallAt",
+                  "type": "string"
+                },
+                {
+                  "name": "row.createdAt",
+                  "type": "string"
+                }
+              ]
+            },
+            {
+              "event": "LIQUIDATE",
+              "payloadSchema": [
+                {
+                  "name": "id",
+                  "type": "string",
+                  "required": true
+                },
+                {
+                  "name": "row.id",
+                  "type": "string",
+                  "required": true
+                },
+                {
+                  "name": "row.accountHolderId",
+                  "type": "string",
+                  "required": true
+                },
+                {
+                  "name": "row.equityUSD",
+                  "type": "number"
+                },
+                {
+                  "name": "row.marginUsedUSD",
+                  "type": "number"
+                },
+                {
+                  "name": "row.marginAvailableUSD",
+                  "type": "number"
+                },
+                {
+                  "name": "row.status",
+                  "type": "string"
+                },
+                {
+                  "name": "row.lastCallAt",
+                  "type": "string"
+                },
+                {
+                  "name": "row.createdAt",
+                  "type": "string"
+                }
+              ]
+            },
+            {
+              "event": "MarginAccountLoaded",
+              "payloadSchema": [
+                {
+                  "name": "data",
+                  "type": "[MarginAccount]"
+                }
+              ]
+            },
+            {
+              "event": "MarginAccountLoadFailed",
+              "payloadSchema": [
+                {
+                  "name": "error",
+                  "type": "string"
+                },
+                {
+                  "name": "code",
+                  "type": "string"
+                }
+              ]
+            }
+          ],
+          "stateMachine": {
+            "states": [
+              {
+                "name": "loading",
+                "isInitial": true
+              },
+              {
+                "name": "browsing"
+              },
+              {
+                "name": "viewing_single"
+              },
+              {
+                "name": "error"
+              }
+            ],
+            "events": [
+              {
+                "key": "INIT",
+                "name": "Initialize"
+              },
+              {
+                "key": "MarginAccountLoaded",
+                "name": "MarginAccount loaded",
+                "payloadSchema": [
+                  {
+                    "name": "data",
+                    "type": "[MarginAccount]"
+                  }
+                ]
+              },
+              {
+                "key": "MarginAccountLoadFailed",
+                "name": "MarginAccount load failed",
+                "payloadSchema": [
+                  {
+                    "name": "error",
+                    "type": "string"
+                  },
+                  {
+                    "name": "code",
+                    "type": "string"
+                  }
+                ]
+              },
+              {
+                "key": "OPEN_ACCOUNT",
+                "name": "Open Account",
+                "payloadSchema": [
+                  {
+                    "name": "id",
+                    "type": "string",
+                    "required": true
+                  },
+                  {
+                    "name": "row",
+                    "type": "MarginAccount"
+                  }
+                ]
+              },
+              {
+                "key": "ISSUE_CALL",
+                "name": "Issue Call",
+                "payloadSchema": [
+                  {
+                    "name": "id",
+                    "type": "string",
+                    "required": true
+                  },
+                  {
+                    "name": "row",
+                    "type": "MarginAccount"
+                  }
+                ]
+              },
+              {
+                "key": "CLOSE_VIEW",
+                "name": "Close View"
+              },
+              {
+                "key": "LIQUIDATE",
+                "name": "Liquidate",
+                "payloadSchema": [
+                  {
+                    "name": "id",
+                    "type": "string",
+                    "required": true
+                  },
+                  {
+                    "name": "row",
+                    "type": "MarginAccount"
+                  }
+                ]
+              }
+            ],
+            "transitions": [
+              {
+                "from": "loading",
+                "to": "loading",
+                "event": "INIT",
+                "effects": [
+                  [
+                    "fetch",
+                    "MarginAccount",
+                    {
+                      "emit": {
+                        "success": "MarginAccountLoaded",
+                        "failure": "MarginAccountLoadFailed"
+                      }
+                    }
+                  ],
+                  [
+                    "render-ui",
+                    "main",
+                    {
+                      "type": "stack",
+                      "direction": "vertical",
+                      "gap": "md",
+                      "className": "py-12",
+                      "children": [
+                        {
+                          "type": "spinner"
+                        },
+                        {
+                          "type": "typography",
+                          "content": "Loading margin accounts…",
+                          "variant": "caption",
+                          "color": "muted"
+                        }
+                      ],
+                      "align": "center"
+                    }
+                  ]
+                ]
+              },
+              {
+                "from": "loading",
+                "to": "browsing",
+                "event": "MarginAccountLoaded",
+                "effects": [
+                  [
+                    "render-ui",
+                    "main",
+                    {
+                      "gap": "md",
+                      "direction": "vertical",
+                      "children": [
+                        {
+                          "children": [
+                            {
+                              "name": "trending-up",
+                              "type": "icon"
+                            },
+                            {
+                              "type": "typography",
+                              "variant": "h3",
+                              "content": "@config.title"
+                            }
+                          ],
+                          "gap": "sm",
+                          "type": "stack",
+                          "align": "center",
+                          "direction": "horizontal"
+                        },
+                        {
+                          "children": [
+                            {
+                              "value": "@payload.data.length",
+                              "label": "Total accounts",
+                              "type": "stat-display",
+                              "icon": "trending-up"
+                            },
+                            {
+                              "icon": "check-circle",
+                              "value": "184",
+                              "label": "Good standing",
+                              "type": "stat-display"
+                            },
+                            {
+                              "icon": "alert-triangle",
+                              "label": "Warning",
+                              "type": "stat-display",
+                              "value": "12"
+                            },
+                            {
+                              "label": "Margin calls",
+                              "value": "3",
+                              "type": "stat-display",
+                              "icon": "phone"
+                            }
+                          ],
+                          "cols": 4.0,
+                          "type": "simple-grid"
+                        },
+                        {
+                          "type": "divider"
+                        },
+                        {
+                          "fields": "@config.fields",
+                          "type": "data-grid",
+                          "gap": "sm",
+                          "itemActions": "@config.itemActions",
+                          "cols": 1.0,
+                          "entity": "@payload.data"
+                        }
+                      ],
+                      "type": "stack"
+                    }
+                  ]
+                ]
+              },
+              {
+                "from": "loading",
+                "to": "error",
+                "event": "MarginAccountLoadFailed",
+                "effects": [
+                  [
+                    "render-ui",
+                    "main",
+                    {
+                      "message": "@payload.error",
+                      "variant": "error",
+                      "type": "alert"
+                    }
+                  ]
+                ]
+              },
+              {
+                "from": "browsing",
+                "to": "viewing_single",
+                "event": "OPEN_ACCOUNT",
+                "effects": [
+                  [
+                    "set",
+                    "@entity.id",
+                    "@payload.row.id"
+                  ],
+                  [
+                    "set",
+                    "@entity.accountHolderId",
+                    "@payload.row.accountHolderId"
+                  ],
+                  [
+                    "set",
+                    "@entity.equityUSD",
+                    "@payload.row.equityUSD"
+                  ],
+                  [
+                    "set",
+                    "@entity.marginUsedUSD",
+                    "@payload.row.marginUsedUSD"
+                  ],
+                  [
+                    "set",
+                    "@entity.marginAvailableUSD",
+                    "@payload.row.marginAvailableUSD"
+                  ],
+                  [
+                    "set",
+                    "@entity.status",
+                    "@payload.row.status"
+                  ],
+                  [
+                    "set",
+                    "@entity.lastCallAt",
+                    "@payload.row.lastCallAt"
+                  ],
+                  [
+                    "set",
+                    "@entity.createdAt",
+                    "@payload.row.createdAt"
+                  ],
+                  [
+                    "render-ui",
+                    "main",
+                    {
+                      "type": "stack",
+                      "gap": "md",
+                      "direction": "vertical",
+                      "children": [
+                        {
+                          "type": "stack",
+                          "direction": "horizontal",
+                          "children": [
+                            {
+                              "action": "CLOSE_VIEW",
+                              "type": "button",
+                              "variant": "ghost",
+                              "label": "Back"
+                            },
+                            {
+                              "type": "icon",
+                              "name": "trending-up"
+                            },
+                            {
+                              "content": "@entity.accountHolderId",
+                              "variant": "h3",
+                              "type": "typography"
+                            },
+                            {
+                              "type": "badge",
+                              "variant": "default",
+                              "label": "@entity.status"
+                            }
+                          ],
+                          "gap": "sm",
+                          "align": "center"
+                        },
+                        {
+                          "type": "divider"
+                        },
+                        {
+                          "type": "simple-grid",
+                          "cols": 3.0,
+                          "children": [
+                            {
+                              "label": "Equity",
+                              "type": "stat-display",
+                              "value": "@entity.equityUSD",
+                              "icon": "dollar-sign"
+                            },
+                            {
+                              "type": "stat-display",
+                              "label": "Margin Used",
+                              "value": "@entity.marginUsedUSD",
+                              "icon": "dollar-sign"
+                            },
+                            {
+                              "label": "Margin Available",
+                              "icon": "dollar-sign",
+                              "value": "@entity.marginAvailableUSD",
+                              "type": "stat-display"
+                            }
+                          ]
+                        },
+                        {
+                          "direction": "vertical",
+                          "type": "stack",
+                          "children": [
+                            {
+                              "gap": "md",
+                              "direction": "horizontal",
+                              "children": [
+                                {
+                                  "variant": "caption",
+                                  "type": "typography",
+                                  "content": "Last Call",
+                                  "color": "muted"
+                                },
+                                {
+                                  "variant": "body",
+                                  "type": "typography",
+                                  "content": "@entity.lastCallAt"
+                                }
+                              ],
+                              "type": "stack"
+                            },
+                            {
+                              "type": "stack",
+                              "direction": "horizontal",
+                              "gap": "md",
+                              "children": [
+                                {
+                                  "content": "Created",
+                                  "variant": "caption",
+                                  "color": "muted",
+                                  "type": "typography"
+                                },
+                                {
+                                  "type": "typography",
+                                  "content": "@entity.createdAt",
+                                  "variant": "body"
+                                }
+                              ]
+                            }
+                          ],
+                          "gap": "sm"
+                        },
+                        {
+                          "direction": "horizontal",
+                          "align": "center",
+                          "children": [
+                            {
+                              "label": "Issue Call",
+                              "action": "ISSUE_CALL",
+                              "actionPayload": {
+                                "row": "@entity",
+                                "id": "@entity.id"
+                              },
+                              "type": "button",
+                              "variant": "danger"
+                            },
+                            {
+                              "type": "button",
+                              "variant": "danger",
+                              "action": "LIQUIDATE",
+                              "label": "Liquidate",
+                              "actionPayload": {
+                                "row": "@entity",
+                                "id": "@entity.id"
+                              }
+                            }
+                          ],
+                          "type": "stack",
+                          "gap": "sm"
+                        }
+                      ]
+                    }
+                  ]
+                ]
+              },
+              {
+                "from": "browsing",
+                "to": "loading",
+                "event": "ISSUE_CALL",
+                "effects": [
+                  [
+                    "set",
+                    "@entity.id",
+                    "@payload.id"
+                  ],
+                  [
+                    "fetch",
+                    "MarginAccount",
+                    {
+                      "emit": {
+                        "failure": "MarginAccountLoadFailed",
+                        "success": "MarginAccountLoaded"
+                      }
+                    }
+                  ],
+                  [
+                    "render-ui",
+                    "main",
+                    {
+                      "direction": "vertical",
+                      "children": [
+                        {
+                          "type": "spinner"
+                        },
+                        {
+                          "content": "Issuing margin call…",
+                          "color": "muted",
+                          "type": "typography",
+                          "variant": "caption"
+                        }
+                      ],
+                      "type": "stack",
+                      "align": "center",
+                      "gap": "md",
+                      "className": "py-12"
+                    }
+                  ]
+                ]
+              },
+              {
+                "from": "viewing_single",
+                "to": "loading",
+                "event": "CLOSE_VIEW",
+                "effects": [
+                  [
+                    "fetch",
+                    "MarginAccount",
+                    {
+                      "emit": {
+                        "success": "MarginAccountLoaded",
+                        "failure": "MarginAccountLoadFailed"
+                      }
+                    }
+                  ],
+                  [
+                    "render-ui",
+                    "main",
+                    {
+                      "className": "py-12",
+                      "gap": "md",
+                      "direction": "vertical",
+                      "type": "stack",
+                      "align": "center",
+                      "children": [
+                        {
+                          "type": "spinner"
+                        },
+                        {
+                          "variant": "caption",
+                          "content": "Loading margin accounts…",
+                          "color": "muted",
+                          "type": "typography"
+                        }
+                      ]
+                    }
+                  ]
+                ]
+              },
+              {
+                "from": "viewing_single",
+                "to": "loading",
+                "event": "ISSUE_CALL",
+                "effects": [
+                  [
+                    "set",
+                    "@entity.id",
+                    "@payload.id"
+                  ],
+                  [
+                    "fetch",
+                    "MarginAccount",
+                    {
+                      "emit": {
+                        "failure": "MarginAccountLoadFailed",
+                        "success": "MarginAccountLoaded"
+                      }
+                    }
+                  ],
+                  [
+                    "render-ui",
+                    "main",
+                    {
+                      "className": "py-12",
+                      "type": "stack",
+                      "children": [
+                        {
+                          "type": "spinner"
+                        },
+                        {
+                          "variant": "caption",
+                          "content": "Issuing margin call…",
+                          "type": "typography",
+                          "color": "muted"
+                        }
+                      ],
+                      "gap": "md",
+                      "align": "center",
+                      "direction": "vertical"
+                    }
+                  ]
+                ]
+              },
+              {
+                "from": "viewing_single",
+                "to": "loading",
+                "event": "LIQUIDATE",
+                "effects": [
+                  [
+                    "set",
+                    "@entity.id",
+                    "@payload.id"
+                  ],
+                  [
+                    "fetch",
+                    "MarginAccount",
+                    {
+                      "emit": {
+                        "success": "MarginAccountLoaded",
+                        "failure": "MarginAccountLoadFailed"
+                      }
+                    }
+                  ],
+                  [
+                    "render-ui",
+                    "main",
+                    {
+                      "align": "center",
+                      "type": "stack",
+                      "direction": "vertical",
+                      "gap": "md",
+                      "children": [
+                        {
+                          "type": "spinner"
+                        },
+                        {
+                          "content": "Liquidating positions…",
+                          "variant": "caption",
+                          "type": "typography",
+                          "color": "muted"
+                        }
+                      ],
+                      "className": "py-12"
+                    }
+                  ]
+                ]
+              },
+              {
+                "from": "error",
+                "to": "loading",
+                "event": "INIT",
+                "effects": [
+                  [
+                    "fetch",
+                    "MarginAccount",
+                    {
+                      "emit": {
+                        "failure": "MarginAccountLoadFailed",
+                        "success": "MarginAccountLoaded"
+                      }
+                    }
+                  ],
+                  [
+                    "render-ui",
+                    "main",
+                    {
+                      "size": "sm",
+                      "type": "spinner"
+                    }
+                  ]
+                ]
+              }
+            ]
+          },
+          "config": {
+            "marginLeverage": {
+              "type": "string",
+              "default": "2x",
+              "label": "Margin leverage",
+              "description": "Maximum leverage ratio permitted (regulatory + risk-appetite driven).",
+              "synonyms": "leverage ratio, max leverage",
+              "tier": "domain",
+              "values": [
+                "2x",
+                "4x",
+                "10x",
+                "20x"
+              ]
+            },
+            "itemActions": {
+              "type": "[ItemAction]",
+              "default": [
+                {
+                  "icon": "arrow-right",
+                  "event": "OPEN_ACCOUNT",
+                  "label": "Open",
+                  "variant": "primary"
+                },
+                {
+                  "label": "Issue Call",
+                  "event": "ISSUE_CALL",
+                  "icon": "alert-triangle",
+                  "variant": "danger"
+                }
+              ],
+              "label": "Row actions",
+              "description": "Buttons users can click on each margin account row",
+              "tier": "presentation",
+              "items": {
+                "type": "object",
+                "properties": {
+                  "event": {
+                    "name": "event",
+                    "type": "string",
+                    "required": true
+                  },
+                  "icon": {
+                    "name": "icon",
+                    "type": "string",
+                    "required": false
+                  },
+                  "variant": {
+                    "name": "variant",
+                    "type": "string",
+                    "required": false
+                  },
+                  "label": {
+                    "name": "label",
+                    "type": "string",
+                    "required": true
+                  }
+                }
+              }
+            },
+            "title": {
+              "type": "string",
+              "default": "Margin Accounts",
+              "label": "Section title",
+              "description": "Heading shown above the margin account list",
+              "tier": "presentation"
+            },
+            "marginCallThresholdPct": {
+              "type": "number",
+              "default": 30.0,
+              "label": "Margin call threshold (%)",
+              "description": "Equity percentage at which margin call is issued.",
+              "synonyms": "maintenance margin",
+              "tier": "domain"
+            },
+            "fields": {
+              "type": "[FieldSpec]",
+              "default": [
+                {
+                  "name": "accountHolderId",
+                  "variant": "caption",
+                  "label": "Holder"
+                },
+                {
+                  "variant": "caption",
+                  "name": "equityUSD",
+                  "label": "Equity"
+                },
+                {
+                  "variant": "caption",
+                  "name": "marginUsedUSD",
+                  "label": "Used"
+                },
+                {
+                  "label": "Available",
+                  "variant": "caption",
+                  "name": "marginAvailableUSD"
+                },
+                {
+                  "label": "Status",
+                  "name": "status",
+                  "variant": "badge"
+                },
+                {
+                  "variant": "caption",
+                  "label": "Last Call",
+                  "name": "lastCallAt"
+                }
+              ],
+              "label": "Columns to show",
+              "description": "Each column maps to one field on the MarginAccount entity",
+              "tier": "presentation",
+              "items": {
+                "type": "object",
+                "properties": {
+                  "key": {
+                    "name": "key",
+                    "type": "string",
+                    "required": false
+                  },
+                  "label": {
+                    "name": "label",
+                    "type": "string",
+                    "required": false
+                  },
+                  "variant": {
+                    "name": "variant",
+                    "type": "string",
+                    "required": false
+                  },
+                  "icon": {
+                    "name": "icon",
+                    "type": "string",
+                    "required": false
+                  },
+                  "format": {
+                    "name": "format",
+                    "type": "string",
+                    "required": false
+                  },
+                  "header": {
+                    "name": "header",
+                    "type": "string",
+                    "required": false
+                  },
+                  "name": {
+                    "name": "name",
+                    "type": "string",
+                    "required": true
+                  }
+                }
+              }
+            },
+            "forcedLiquidationThresholdPct": {
+              "type": "number",
+              "default": 20.0,
+              "label": "Forced liquidation threshold (%)",
+              "description": "Equity percentage at which positions are auto-liquidated to cover the loan.",
+              "synonyms": "liquidation trigger",
+              "tier": "domain"
+            }
+          },
+          "scope": "collection"
+        }
+      ],
+      "pages": [
+        {
+          "name": "MarginAccountManagePage",
+          "path": "/margin-accounts/manage",
+          "traits": [
+            {
+              "ref": "MarginAccountManage"
+            }
+          ]
+        }
+      ]
+    }
+  ]
+}

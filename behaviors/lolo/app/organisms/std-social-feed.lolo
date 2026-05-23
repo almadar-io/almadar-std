@@ -9,6 +9,9 @@ orbital PostOrbital {
   uses Stats        from "std/behaviors/std-stats"
   uses Browse       from "std/behaviors/std-browse"
   uses Storage      from "std/behaviors/std-service-storage"
+  uses ModQueue     from "std/behaviors/std-mod-queue"
+  uses Notify       from "std/behaviors/std-notify-on-event"
+  uses Erasure      from "std/behaviors/std-data-erasure"
 
   entity Post [persistent: posts] {
     id : string!
@@ -288,7 +291,37 @@ orbital PostOrbital {
     }
   }
 
-  page "/feed" as FeedPage -> PostAppLayout, FeedCatalog, PostSearch, PostStats, PostBrowseList, PostCreate, PostEdit, PostView, PostDeleteConfirm, PostImageUpload, PostImageUploadForm, PostPersistor, PostLikeTracker
+  trait PostModQueue = ModQueue.traits.ModQueueItemReview {
+    config: {
+      title: "Flagged Posts",
+      autoEscalateThreshold: 3
+    }
+  }
+
+  trait PostFlaggedNotifier = Notify.traits.NotifyOnEventListener {
+    config: {
+      listensFor: ["PostFlagged"],
+      notifyChannel: "in-app",
+      template: "A post has been flagged for review",
+      severity: "warning",
+      recipients: [],
+      suppressionList: []
+    }
+    events {
+      EventOccurred: PostFlagged
+    }
+  }
+
+  trait PostErasure = Erasure.traits.ErasureWorkflow {
+    config: {
+      targetEntity: "Post",
+      gracePeriodDays: 30,
+      anonymizeVsDelete: "anonymize",
+      piiFields: ["author", "content"]
+    }
+  }
+
+  page "/feed" as FeedPage -> PostAppLayout, FeedCatalog, PostSearch, PostStats, PostBrowseList, PostCreate, PostEdit, PostView, PostDeleteConfirm, PostImageUpload, PostImageUploadForm, PostPersistor, PostLikeTracker, PostModQueue, PostFlaggedNotifier, PostErasure
 }
 
 orbital CommentOrbital {
@@ -481,4 +514,42 @@ orbital CommentOrbital {
   }
 
   page "/comments" -> CommentAppLayout, CommentDisplay, CommentBrowseList, CommentCreate, CommentEdit, CommentView, CommentDeleteConfirm, CommentPersistor
+}
+
+orbital ModerationRuleFromStdOrbital {
+  uses AppShell from "std/behaviors/std-app-layout"
+  uses Rules    from "std/behaviors/std-moderation-rule"
+
+  entity ModerationRule [persistent: moderation_rules] {
+    id          : string!
+    name        : string!
+    description : string = ""
+    appliesTo   : string = ""
+    priority    : number = 0
+    status      : "active" | "testing" | "archived" = "active"
+    createdAt   : string = ""
+  }
+
+  trait ModerationRuleFromStdAppLayout = AppShell.traits.AppLayout -> ModerationRule {
+    config: {
+      contentTrait: "@trait.ModerationRuleFromStdManageBlock",
+      appName: "SocialFeed",
+      navItems: [{ label: "Feed", href: "/feed", icon: "rss" }, { label: "Comments", href: "/comments", icon: "message-circle" }, { label: "Moderation Rules", href: "/moderation-rules", icon: "shield-alert" }],
+      searchEvent: "MODERATION_RULE_SEARCH",
+      notifications: [],
+      notificationClickEvent: "MODERATION_RULE_NOTIFICATIONS_OPEN"
+    }
+    events {
+      SEARCH: MODERATION_RULE_SEARCH
+      NOTIFY_CLICK: MODERATION_RULE_NOTIFICATIONS_OPEN
+    }
+  }
+
+  trait ModerationRuleFromStdManageBlock = Rules.traits.ModerationRuleManage -> ModerationRule {
+    config: {
+      title: "Moderation Rules"
+    }
+  }
+
+  page "/moderation-rules" as ModerationRuleFromStdPage -> ModerationRuleFromStdAppLayout, ModerationRuleFromStdManageBlock
 }

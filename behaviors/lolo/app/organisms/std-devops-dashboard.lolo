@@ -10,6 +10,9 @@ orbital ServiceNodeOrbital {
   uses Stats        from "std/behaviors/std-stats"
   uses Graphs       from "std/behaviors/std-graphs"
   uses Browse       from "std/behaviors/std-browse"
+  uses Notify       from "std/behaviors/std-notify-on-event"
+  uses Audit        from "std/behaviors/std-audit-capture"
+  uses Approval     from "std/behaviors/std-approval-gate"
 
   entity ServiceNode [persistent: servicenodes] {
     id : string!
@@ -302,7 +305,45 @@ orbital ServiceNodeOrbital {
     }
   }
 
-  page "/services" as ServicesPage -> ServiceNodeAppLayout, ServiceNodeCatalog, ServiceNodeSearch, ServiceNodeFilter, ServiceNodeStats, ServiceNodeGraphs, ServiceNodeBrowseList, ServiceNodeCreate, ServiceNodeEdit, ServiceNodeView, ServiceNodeDelete, ServiceNodePersistor, ServiceNodeCircuitBreaker
+  trait DevopsNotifier = Notify.traits.NotifyOnEventListener {
+    config: {
+      listensFor: ["SERVICE_UPDATED"],
+      notifyChannel: "in-app",
+      template: "Incident or service status change",
+      severity: "warning",
+      recipients: [],
+      suppressionList: []
+    }
+    events {
+      EventOccurred: SERVICE_UPDATED
+    }
+  }
+
+  trait DevopsAuditCapture = Audit.traits.AuditCaptureListener {
+    config: {
+      captureEntity: "ServiceNode",
+      captureEventTypes: [],
+      excludeFields: [],
+      captureBeforeAfter: false,
+      retentionDays: 2555
+    }
+    events {
+      EntityMutated: SERVICE_UPDATED
+    }
+  }
+
+  trait DevopsApprovalGate = Approval.traits.ApprovalGateReview {
+    config: {
+      approverRoles: ["release-manager"],
+      threshold: 0,
+      autoApproveBelowThreshold: false,
+      valueField: "",
+      escalationHours: 4,
+      escalationRoles: ["sre-lead"]
+    }
+  }
+
+  page "/services" as ServicesPage -> ServiceNodeAppLayout, ServiceNodeCatalog, ServiceNodeSearch, ServiceNodeFilter, ServiceNodeStats, ServiceNodeGraphs, ServiceNodeBrowseList, ServiceNodeCreate, ServiceNodeEdit, ServiceNodeView, ServiceNodeDelete, ServiceNodePersistor, ServiceNodeCircuitBreaker, DevopsNotifier, DevopsAuditCapture, DevopsApprovalGate
 }
 
 orbital AlertMetricOrbital {
@@ -621,4 +662,86 @@ orbital SystemMetricOrbital {
   }
 
   page "/metrics" -> SystemMetricAppLayout, SystemMetricDisplay, SystemMetricsBrowse
+}
+
+orbital IncidentFromStdOrbital {
+  uses AppShell  from "std/behaviors/std-app-layout"
+  uses Incidents from "std/behaviors/std-incident"
+
+  entity OncallIncident [persistent: oncallincidents] {
+    id              : string!
+    title           : string!
+    description     : string!
+    severity        : "sev1" | "sev2" | "sev3" | "sev4" | "sev5" = "sev3"
+    status          : "open" | "acknowledged" | "investigating" | "mitigated" | "resolved" = "open"
+    pagedTo         : string
+    runbookId       : string
+    acknowledgedAt  : string
+    mitigatedAt     : string
+    resolvedAt      : string
+    createdAt       : string
+  }
+
+  trait IncidentFromStdAppLayout = AppShell.traits.AppLayout -> OncallIncident {
+    config: {
+      contentTrait: "@trait.IncidentFromStdManageBlock",
+      appName: "DevOps Dashboard",
+      navItems: [{ label: "Services", href: "/services", icon: "server" }, { label: "Alerts", href: "/alerts", icon: "bell" }, { label: "Logs", href: "/logs", icon: "terminal" }, { label: "Metrics", href: "/metrics", icon: "layout-list" }, { label: "Incidents", href: "/incidents", icon: "alert-octagon" }],
+      searchEvent: "INCIDENT_SEARCH",
+      notifications: [],
+      notificationClickEvent: "INCIDENT_NOTIFICATIONS_OPEN"
+    }
+    events {
+      SEARCH: INCIDENT_SEARCH
+      NOTIFY_CLICK: INCIDENT_NOTIFICATIONS_OPEN
+    }
+  }
+
+  trait IncidentFromStdManageBlock = Incidents.traits.IncidentManage -> OncallIncident {
+    config: {
+      title: "Incidents"
+    }
+  }
+
+  page "/incidents" as IncidentFromStdPage -> IncidentFromStdAppLayout, IncidentFromStdManageBlock
+}
+
+orbital RunbookFromStdOrbital {
+  uses AppShell from "std/behaviors/std-app-layout"
+  uses Books    from "std/behaviors/std-runbook"
+
+  entity Runbook [persistent: runbooks] {
+    id              : string!
+    title           : string!
+    description     : string = ""
+    triggerEvent    : string = ""
+    status          : "draft" | "active" | "deprecated" = "draft"
+    stepsJson       : string = "[]"
+    lastExecutedAt  : string = ""
+    executionCount  : number = 0
+    createdAt       : string = ""
+  }
+
+  trait RunbookFromStdAppLayout = AppShell.traits.AppLayout -> Runbook {
+    config: {
+      contentTrait: "@trait.RunbookFromStdManageBlock",
+      appName: "DevOps Dashboard",
+      navItems: [{ label: "Services", href: "/services", icon: "server" }, { label: "Alerts", href: "/alerts", icon: "bell" }, { label: "Logs", href: "/logs", icon: "terminal" }, { label: "Metrics", href: "/metrics", icon: "layout-list" }, { label: "Incidents", href: "/incidents", icon: "alert-octagon" }, { label: "Runbooks", href: "/runbooks", icon: "book-open" }],
+      searchEvent: "RUNBOOK_SEARCH",
+      notifications: [],
+      notificationClickEvent: "RUNBOOK_NOTIFICATIONS_OPEN"
+    }
+    events {
+      SEARCH: RUNBOOK_SEARCH
+      NOTIFY_CLICK: RUNBOOK_NOTIFICATIONS_OPEN
+    }
+  }
+
+  trait RunbookFromStdManageBlock = Books.traits.RunbookManage -> Runbook {
+    config: {
+      title: "Runbooks"
+    }
+  }
+
+  page "/runbooks" as RunbookFromStdPage -> RunbookFromStdAppLayout, RunbookFromStdManageBlock
 }

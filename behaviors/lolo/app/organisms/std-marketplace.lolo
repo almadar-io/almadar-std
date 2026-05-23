@@ -519,6 +519,9 @@ orbital OrderOrbital {
   uses Confirmation from "std/behaviors/std-confirmation"
   uses Browse       from "std/behaviors/std-browse"
   uses Cart         from "std/behaviors/std-cart"
+  uses Approval     from "std/behaviors/std-approval-gate"
+  uses Erasure      from "std/behaviors/std-data-erasure"
+  uses Audit        from "std/behaviors/std-audit-capture"
 
   entity Order [persistent: orders] {
     id          : string!
@@ -726,5 +729,38 @@ orbital OrderOrbital {
     }
   }
 
-  page "/orders" as OrdersPage -> OrderAppLayout, OrderCatalog, OrderBrowseList, OrderCart, OrderCartAdd, OrderCartRemove, OrderCartPersistor, OrderCreate, OrderEdit, OrderView, OrderDelete, OrderPersistor
+  trait OrderRefundApproval = Approval.traits.ApprovalGateReview {
+    config: {
+      approverRoles: ["marketplace-ops"],
+      threshold: 200,
+      autoApproveBelowThreshold: true,
+      valueField: "totalAmount",
+      escalationHours: 24,
+      escalationRoles: ["trust-and-safety"]
+    }
+  }
+
+  trait OrderErasure = Erasure.traits.ErasureWorkflow {
+    config: {
+      targetEntity: "Order",
+      gracePeriodDays: 30,
+      anonymizeVsDelete: "anonymize",
+      piiFields: ["buyerId"]
+    }
+  }
+
+  trait OrderAudit = Audit.traits.AuditCaptureListener {
+    config: {
+      captureEntity: "Order",
+      captureEventTypes: [],
+      excludeFields: [],
+      captureBeforeAfter: false,
+      retentionDays: 2555
+    }
+    events {
+      EntityMutated: ORDER_UPDATED
+    }
+  }
+
+  page "/orders" as OrdersPage -> OrderAppLayout, OrderCatalog, OrderBrowseList, OrderCart, OrderCartAdd, OrderCartRemove, OrderCartPersistor, OrderCreate, OrderEdit, OrderView, OrderDelete, OrderPersistor, OrderRefundApproval, OrderErasure, OrderAudit
 }

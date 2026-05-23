@@ -18,6 +18,28 @@ orbital CacheEntryOrbital {
   type CacheEntryUpdateFailed  = Event { error : string, code : string } "Fired when persist update fails"
 
   trait CacheEntryCacheManager -> CacheEntry [interaction, collection] {
+    config {
+      ttlSeconds : number = 300
+        @label "TTL (seconds)"
+        @description "Cache entry time-to-live before it goes stale. Default 5 minutes."
+        @tier "domain"
+        @synonyms "expiration, time to live, cache duration"
+      staleWhileRevalidate : boolean = true
+        @label "Serve stale while revalidating"
+        @description "When true, serve stale entries to consumers while a background refresh fetches fresh data. Reduces latency at the cost of brief staleness."
+        @tier "domain"
+        @synonyms "SWR, stale serving"
+      evictionPolicy : "lru" | "lfu" | "fifo" | "ttl-only" = "lru"
+        @label "Eviction policy"
+        @description "How entries are evicted when the cache fills: least-recently-used, least-frequently-used, first-in-first-out, or TTL-only (never evict early)."
+        @tier "domain"
+        @synonyms "cache replacement, eviction strategy"
+      maxCacheSize : number = 1000
+        @label "Max cache entries"
+        @description "Hard cap on cached entries before eviction. 0 = unlimited."
+        @tier "domain"
+        @synonyms "cache capacity, max entries"
+    }
     initial: empty
     state empty {
       INIT -> empty

@@ -80,14 +80,22 @@ export interface StdSegmentConfig {
   title?: string;
   /** Default: `365` */
   archiveInactiveAfterDays?: number;
-  /** Default: `true` */
-  consentTrackingEnabled?: boolean;
-  /** Default: `[{"label":"Open","icon":"arrow-right","variant":"primary","event":"OPEN_SEGMENT"},{"event":"RECALCULATE","variant":"danger","label":"Recalculate"}]` */
-  itemActions?: EntityRow[];
-  /** Default: `[{"label":"Name","variant":"caption","name":"name"},{"name":"description","variant":"caption","label":"Description"},{"name":"memberCount","label":"Members","variant":"badge"},{"label":"Updated","name":"lastUpdated","variant":"caption"}]` */
-  fields?: EntityRow[];
   /** Default: `50` */
   healthScoreThresholdAlert?: number;
+  /** Default: `"stale-and-empty"` */
+  autoArchivePolicy?: 'never' | 'empty-segment' | 'stale-and-empty';
+  /** Default: `true` */
+  consentTrackingEnabled?: boolean;
+  /** Default: `"score-based"` */
+  dealAdvancementCriteria?: 'score-based' | 'rule-based' | 'manual';
+  /** Default: `100` */
+  crossSellThreshold?: number;
+  /** Default: `90` */
+  staleAfterDays?: number;
+  /** Default: `[{"label":"Name","name":"name","variant":"caption"},{"label":"Description","name":"description","variant":"caption"},{"name":"memberCount","label":"Members","variant":"badge"},{"name":"lastUpdated","variant":"caption","label":"Updated"}]` */
+  fields?: EntityRow[];
+  /** Default: `[{"event":"OPEN_SEGMENT","label":"Open","variant":"primary","icon":"arrow-right"},{"variant":"danger","label":"Recalculate","event":"RECALCULATE"}]` */
+  itemActions?: EntityRow[];
   /** Default: `[30,7]` */
   renewalReminderDaysBefore?: number[];
 }

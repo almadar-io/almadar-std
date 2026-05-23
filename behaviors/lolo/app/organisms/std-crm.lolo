@@ -11,6 +11,12 @@ orbital ContactOrbital {
   uses Graphs       from "std/behaviors/std-graphs"
   uses Browse       from "std/behaviors/std-browse"
   uses Email        from "std/behaviors/std-service-email"
+  uses Lifecycle    from "std/behaviors/std-lifecycle"
+  uses Notify       from "std/behaviors/std-notify-on-event"
+  uses Erasure      from "std/behaviors/std-data-erasure"
+  uses CustomerAcct from "std/behaviors/std-customer-account"
+  uses Segment      from "std/behaviors/std-segment"
+  uses HealthScore  from "std/behaviors/std-health-score"
 
   entity Contact [persistent: contacts] {
     id : string!
@@ -280,7 +286,58 @@ orbital ContactOrbital {
     }
   }
 
-  page "/contacts" as ContactsPage -> ContactAppLayout, ContactCatalog, ContactSearch, ContactFilter, ContactStats, ContactGraphs, ContactBrowseList, ContactCreate, ContactEdit, ContactView, ContactDelete, ContactPersistor, ContactEmailSend
+  trait ContactLifecycleScan = Lifecycle.traits.LifecycleScheduler {
+    config: {
+      targetEntity: "Contact",
+      rules: [
+        { fromStatus: "lead", toStatus: "mql",      condition: { kind: "ageDays", value: 30,  dateField: "pendingId" } },
+        { fromStatus: "mql",  toStatus: "sql",      condition: { kind: "ageDays", value: 60,  dateField: "pendingId" } },
+        { fromStatus: "sql",  toStatus: "customer", condition: { kind: "ageDays", value: 180, dateField: "pendingId" } }
+      ],
+      dryRun: false
+    }
+  }
+
+  trait ContactNotifier = Notify.traits.NotifyOnEventListener {
+    config: {
+      listensFor: ["CONTACT_UPDATED"],
+      notifyChannel: "in-app",
+      template: "Lead activity update",
+      severity: "info",
+      recipients: [],
+      suppressionList: []
+    }
+    events {
+      EventOccurred: CONTACT_UPDATED
+    }
+  }
+
+  trait ContactErasureWorkflow = Erasure.traits.ErasureWorkflow {
+    config: {
+      targetEntity: "Contact",
+      gracePeriodDays: 30,
+      anonymizeVsDelete: "anonymize",
+      piiFields: ["email", "phone", "name"]
+    }
+  }
+
+  trait ContactCustomerDirectory = CustomerAcct.traits.CustomerAccountDirectory {
+    config: {
+      title: "Customer accounts",
+      healthScoreThresholdAlert: 50,
+      renewalReminderDaysBefore: [30, 7, 1],
+      archiveInactiveAfterDays: 365,
+      consentTrackingEnabled: true
+    }
+  }
+
+  trait ContactSegmentation = Segment.traits.SegmentSegment {
+  }
+
+  trait ContactHealthScore = HealthScore.traits.HealthScoreDashboard {
+  }
+
+  page "/contacts" as ContactsPage -> ContactAppLayout, ContactCatalog, ContactSearch, ContactFilter, ContactStats, ContactGraphs, ContactBrowseList, ContactCreate, ContactEdit, ContactView, ContactDelete, ContactPersistor, ContactEmailSend, ContactLifecycleScan, ContactNotifier, ContactErasureWorkflow, ContactCustomerDirectory, ContactSegmentation, ContactHealthScore
 }
 
 orbital DealOrbital {

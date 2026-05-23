@@ -1,0 +1,1268 @@
+{
+  "name": "std-device-fleet",
+  "version": "1.0.0",
+  "description": "std-device-fleet — IoT device fleet provisioning + OTA firmware + certificate rotation. Listens for SET_STATUS so std-lifecycle can drive transitions.",
+  "orbitals": [
+    {
+      "name": "DeviceFleetOrbital",
+      "entity": {
+        "name": "Device",
+        "collection": "devices",
+        "persistence": "persistent",
+        "fields": [
+          {
+            "name": "id",
+            "type": "string",
+            "required": true
+          },
+          {
+            "name": "name",
+            "type": "string",
+            "required": true
+          },
+          {
+            "name": "deviceType",
+            "type": "string",
+            "required": true
+          },
+          {
+            "name": "firmwareVersion",
+            "type": "string",
+            "default": ""
+          },
+          {
+            "name": "lastSeenAt",
+            "type": "string",
+            "default": ""
+          },
+          {
+            "name": "certExpiresAt",
+            "type": "string",
+            "default": ""
+          },
+          {
+            "name": "status",
+            "type": "string",
+            "default": "provisioning",
+            "values": [
+              "provisioning",
+              "active",
+              "degraded",
+              "offline",
+              "retired"
+            ]
+          },
+          {
+            "name": "provisionedBy",
+            "type": "string",
+            "default": ""
+          },
+          {
+            "name": "createdAt",
+            "type": "string",
+            "default": ""
+          }
+        ]
+      },
+      "traits": [
+        {
+          "name": "DeviceFleetManage",
+          "category": "interaction",
+          "linkedEntity": "Device",
+          "emits": [
+            {
+              "event": "OPEN_DEVICE",
+              "payloadSchema": [
+                {
+                  "name": "id",
+                  "type": "string",
+                  "required": true
+                },
+                {
+                  "name": "row.id",
+                  "type": "string",
+                  "required": true
+                },
+                {
+                  "name": "row.name",
+                  "type": "string",
+                  "required": true
+                },
+                {
+                  "name": "row.deviceType",
+                  "type": "string",
+                  "required": true
+                },
+                {
+                  "name": "row.firmwareVersion",
+                  "type": "string"
+                },
+                {
+                  "name": "row.lastSeenAt",
+                  "type": "string"
+                },
+                {
+                  "name": "row.certExpiresAt",
+                  "type": "string"
+                },
+                {
+                  "name": "row.status",
+                  "type": "string"
+                },
+                {
+                  "name": "row.provisionedBy",
+                  "type": "string"
+                },
+                {
+                  "name": "row.createdAt",
+                  "type": "string"
+                }
+              ]
+            },
+            {
+              "event": "CLOSE_VIEW"
+            },
+            {
+              "event": "REPROVISION",
+              "payloadSchema": [
+                {
+                  "name": "id",
+                  "type": "string",
+                  "required": true
+                }
+              ]
+            },
+            {
+              "event": "PUSH_FIRMWARE",
+              "payloadSchema": [
+                {
+                  "name": "id",
+                  "type": "string",
+                  "required": true
+                }
+              ]
+            },
+            {
+              "event": "RETIRE",
+              "payloadSchema": [
+                {
+                  "name": "id",
+                  "type": "string",
+                  "required": true
+                }
+              ]
+            },
+            {
+              "event": "DeviceLoaded",
+              "payloadSchema": [
+                {
+                  "name": "data",
+                  "type": "[Device]"
+                }
+              ]
+            },
+            {
+              "event": "DeviceLoadFailed",
+              "payloadSchema": [
+                {
+                  "name": "error",
+                  "type": "string"
+                },
+                {
+                  "name": "code",
+                  "type": "string"
+                }
+              ]
+            },
+            {
+              "event": "DeviceUpdated",
+              "payloadSchema": [
+                {
+                  "name": "row.id",
+                  "type": "string",
+                  "required": true
+                },
+                {
+                  "name": "row.name",
+                  "type": "string",
+                  "required": true
+                },
+                {
+                  "name": "row.deviceType",
+                  "type": "string",
+                  "required": true
+                },
+                {
+                  "name": "row.firmwareVersion",
+                  "type": "string"
+                },
+                {
+                  "name": "row.lastSeenAt",
+                  "type": "string"
+                },
+                {
+                  "name": "row.certExpiresAt",
+                  "type": "string"
+                },
+                {
+                  "name": "row.status",
+                  "type": "string"
+                },
+                {
+                  "name": "row.provisionedBy",
+                  "type": "string"
+                },
+                {
+                  "name": "row.createdAt",
+                  "type": "string"
+                }
+              ]
+            },
+            {
+              "event": "DeviceUpdateFailed",
+              "payloadSchema": [
+                {
+                  "name": "error",
+                  "type": "string"
+                },
+                {
+                  "name": "code",
+                  "type": "string"
+                }
+              ]
+            }
+          ],
+          "stateMachine": {
+            "states": [
+              {
+                "name": "loading",
+                "isInitial": true
+              },
+              {
+                "name": "browsing"
+              },
+              {
+                "name": "viewing_single"
+              },
+              {
+                "name": "error"
+              }
+            ],
+            "events": [
+              {
+                "key": "INIT",
+                "name": "Initialize"
+              },
+              {
+                "key": "DeviceLoaded",
+                "name": "Device loaded",
+                "payloadSchema": [
+                  {
+                    "name": "data",
+                    "type": "[Device]"
+                  }
+                ]
+              },
+              {
+                "key": "DeviceLoadFailed",
+                "name": "Device load failed",
+                "payloadSchema": [
+                  {
+                    "name": "error",
+                    "type": "string"
+                  },
+                  {
+                    "name": "code",
+                    "type": "string"
+                  }
+                ]
+              },
+              {
+                "key": "OPEN_DEVICE",
+                "name": "Open Device",
+                "payloadSchema": [
+                  {
+                    "name": "id",
+                    "type": "string",
+                    "required": true
+                  },
+                  {
+                    "name": "row",
+                    "type": "Device"
+                  }
+                ]
+              },
+              {
+                "key": "RETIRE",
+                "name": "Retire",
+                "payloadSchema": [
+                  {
+                    "name": "id",
+                    "type": "string",
+                    "required": true
+                  }
+                ]
+              },
+              {
+                "key": "DeviceUpdated",
+                "name": "Device updated",
+                "payloadSchema": [
+                  {
+                    "name": "row",
+                    "type": "Device"
+                  }
+                ]
+              },
+              {
+                "key": "DeviceUpdateFailed",
+                "name": "Device update failed",
+                "payloadSchema": [
+                  {
+                    "name": "error",
+                    "type": "string"
+                  },
+                  {
+                    "name": "code",
+                    "type": "string"
+                  }
+                ]
+              },
+              {
+                "key": "SET_STATUS",
+                "name": "Set Status",
+                "payloadSchema": [
+                  {
+                    "name": "entityId",
+                    "type": "string",
+                    "required": true
+                  },
+                  {
+                    "name": "newStatus",
+                    "type": "string",
+                    "required": true
+                  }
+                ]
+              },
+              {
+                "key": "CLOSE_VIEW",
+                "name": "Close View"
+              },
+              {
+                "key": "REPROVISION",
+                "name": "Reprovision",
+                "payloadSchema": [
+                  {
+                    "name": "id",
+                    "type": "string",
+                    "required": true
+                  }
+                ]
+              },
+              {
+                "key": "PUSH_FIRMWARE",
+                "name": "Push Firmware",
+                "payloadSchema": [
+                  {
+                    "name": "id",
+                    "type": "string",
+                    "required": true
+                  }
+                ]
+              }
+            ],
+            "transitions": [
+              {
+                "from": "loading",
+                "to": "loading",
+                "event": "INIT",
+                "effects": [
+                  [
+                    "fetch",
+                    "Device",
+                    {
+                      "emit": {
+                        "failure": "DeviceLoadFailed",
+                        "success": "DeviceLoaded"
+                      }
+                    }
+                  ],
+                  [
+                    "render-ui",
+                    "main",
+                    {
+                      "type": "stack",
+                      "direction": "vertical",
+                      "className": "py-12",
+                      "gap": "md",
+                      "align": "center",
+                      "children": [
+                        {
+                          "type": "spinner"
+                        },
+                        {
+                          "content": "Loading devices…",
+                          "color": "muted",
+                          "variant": "caption",
+                          "type": "typography"
+                        }
+                      ]
+                    }
+                  ]
+                ]
+              },
+              {
+                "from": "loading",
+                "to": "browsing",
+                "event": "DeviceLoaded",
+                "effects": [
+                  [
+                    "render-ui",
+                    "main",
+                    {
+                      "type": "stack",
+                      "gap": "md",
+                      "direction": "vertical",
+                      "children": [
+                        {
+                          "direction": "horizontal",
+                          "gap": "sm",
+                          "type": "stack",
+                          "align": "center",
+                          "children": [
+                            {
+                              "type": "icon",
+                              "name": "cpu"
+                            },
+                            {
+                              "content": "@config.title",
+                              "variant": "h3",
+                              "type": "typography"
+                            }
+                          ]
+                        },
+                        {
+                          "type": "simple-grid",
+                          "children": [
+                            {
+                              "value": "@payload.data.length",
+                              "label": "Total devices",
+                              "icon": "cpu",
+                              "type": "stat-display"
+                            },
+                            {
+                              "type": "stat-display",
+                              "value": "0",
+                              "label": "Active",
+                              "icon": "check-circle"
+                            },
+                            {
+                              "label": "Offline",
+                              "type": "stat-display",
+                              "icon": "wifi-off",
+                              "value": "0"
+                            },
+                            {
+                              "type": "stat-display",
+                              "icon": "alert-triangle",
+                              "label": "Cert expiring",
+                              "value": "0"
+                            }
+                          ],
+                          "cols": 4.0
+                        },
+                        {
+                          "type": "divider"
+                        },
+                        {
+                          "itemActions": "@config.itemActions",
+                          "type": "data-grid",
+                          "cols": 1.0,
+                          "entity": "@payload.data",
+                          "fields": "@config.fields",
+                          "gap": "sm"
+                        }
+                      ]
+                    }
+                  ]
+                ]
+              },
+              {
+                "from": "loading",
+                "to": "error",
+                "event": "DeviceLoadFailed",
+                "effects": [
+                  [
+                    "render-ui",
+                    "main",
+                    {
+                      "message": "@payload.error",
+                      "type": "alert",
+                      "variant": "error"
+                    }
+                  ]
+                ]
+              },
+              {
+                "from": "browsing",
+                "to": "viewing_single",
+                "event": "OPEN_DEVICE",
+                "effects": [
+                  [
+                    "set",
+                    "@entity.id",
+                    "@payload.row.id"
+                  ],
+                  [
+                    "set",
+                    "@entity.name",
+                    "@payload.row.name"
+                  ],
+                  [
+                    "set",
+                    "@entity.deviceType",
+                    "@payload.row.deviceType"
+                  ],
+                  [
+                    "set",
+                    "@entity.firmwareVersion",
+                    "@payload.row.firmwareVersion"
+                  ],
+                  [
+                    "set",
+                    "@entity.lastSeenAt",
+                    "@payload.row.lastSeenAt"
+                  ],
+                  [
+                    "set",
+                    "@entity.certExpiresAt",
+                    "@payload.row.certExpiresAt"
+                  ],
+                  [
+                    "set",
+                    "@entity.status",
+                    "@payload.row.status"
+                  ],
+                  [
+                    "set",
+                    "@entity.provisionedBy",
+                    "@payload.row.provisionedBy"
+                  ],
+                  [
+                    "set",
+                    "@entity.createdAt",
+                    "@payload.row.createdAt"
+                  ],
+                  [
+                    "render-ui",
+                    "main",
+                    {
+                      "direction": "vertical",
+                      "children": [
+                        {
+                          "children": [
+                            {
+                              "variant": "ghost",
+                              "type": "button",
+                              "label": "Back",
+                              "action": "CLOSE_VIEW"
+                            },
+                            {
+                              "type": "icon",
+                              "name": "cpu"
+                            },
+                            {
+                              "variant": "h3",
+                              "type": "typography",
+                              "content": "@entity.name"
+                            },
+                            {
+                              "variant": "primary",
+                              "type": "badge",
+                              "label": "@entity.status"
+                            }
+                          ],
+                          "direction": "horizontal",
+                          "gap": "sm",
+                          "type": "stack",
+                          "align": "center"
+                        },
+                        {
+                          "type": "divider"
+                        },
+                        {
+                          "children": [
+                            {
+                              "gap": "md",
+                              "children": [
+                                {
+                                  "type": "typography",
+                                  "variant": "caption",
+                                  "content": "Type",
+                                  "color": "muted"
+                                },
+                                {
+                                  "content": "@entity.deviceType",
+                                  "type": "typography",
+                                  "variant": "body"
+                                }
+                              ],
+                              "type": "stack",
+                              "direction": "horizontal"
+                            },
+                            {
+                              "direction": "horizontal",
+                              "gap": "md",
+                              "type": "stack",
+                              "children": [
+                                {
+                                  "type": "typography",
+                                  "variant": "caption",
+                                  "color": "muted",
+                                  "content": "Firmware"
+                                },
+                                {
+                                  "content": "@entity.firmwareVersion",
+                                  "type": "typography",
+                                  "variant": "body"
+                                }
+                              ]
+                            },
+                            {
+                              "type": "stack",
+                              "direction": "horizontal",
+                              "gap": "md",
+                              "children": [
+                                {
+                                  "type": "typography",
+                                  "content": "Provisioned by",
+                                  "variant": "caption",
+                                  "color": "muted"
+                                },
+                                {
+                                  "content": "@entity.provisionedBy",
+                                  "type": "typography",
+                                  "variant": "body"
+                                }
+                              ]
+                            }
+                          ],
+                          "direction": "vertical",
+                          "type": "stack",
+                          "gap": "sm"
+                        },
+                        {
+                          "type": "divider"
+                        },
+                        {
+                          "cols": 3.0,
+                          "children": [
+                            {
+                              "value": "@entity.lastSeenAt",
+                              "type": "stat-display",
+                              "label": "Last seen",
+                              "icon": "clock"
+                            },
+                            {
+                              "icon": "shield",
+                              "label": "Cert expires",
+                              "value": "@entity.certExpiresAt",
+                              "type": "stat-display"
+                            },
+                            {
+                              "label": "Created",
+                              "type": "stat-display",
+                              "icon": "calendar-plus",
+                              "value": "@entity.createdAt"
+                            }
+                          ],
+                          "type": "simple-grid"
+                        },
+                        {
+                          "direction": "horizontal",
+                          "type": "stack",
+                          "gap": "sm",
+                          "children": [
+                            {
+                              "type": "button",
+                              "action": "REPROVISION",
+                              "variant": "secondary",
+                              "actionPayload": {
+                                "id": "@entity.id"
+                              },
+                              "label": "Reprovision"
+                            },
+                            {
+                              "type": "button",
+                              "label": "Push Firmware",
+                              "variant": "primary",
+                              "action": "PUSH_FIRMWARE",
+                              "actionPayload": {
+                                "id": "@entity.id"
+                              }
+                            },
+                            {
+                              "type": "button",
+                              "variant": "danger",
+                              "action": "RETIRE",
+                              "actionPayload": {
+                                "id": "@entity.id"
+                              },
+                              "label": "Retire"
+                            }
+                          ],
+                          "align": "center"
+                        }
+                      ],
+                      "type": "stack",
+                      "gap": "md"
+                    }
+                  ]
+                ]
+              },
+              {
+                "from": "browsing",
+                "to": "loading",
+                "event": "RETIRE",
+                "effects": [
+                  [
+                    "set",
+                    "@entity.id",
+                    "@payload.id"
+                  ],
+                  [
+                    "set",
+                    "@entity.status",
+                    "retired"
+                  ],
+                  [
+                    "persist",
+                    "update",
+                    "Device",
+                    "@entity",
+                    {
+                      "emit": {
+                        "failure": "DeviceUpdateFailed",
+                        "success": "DeviceUpdated"
+                      }
+                    }
+                  ],
+                  [
+                    "render-ui",
+                    "main",
+                    {
+                      "type": "stack",
+                      "direction": "vertical",
+                      "gap": "md",
+                      "align": "center",
+                      "children": [
+                        {
+                          "type": "spinner"
+                        },
+                        {
+                          "content": "Retiring device…",
+                          "variant": "caption",
+                          "color": "muted",
+                          "type": "typography"
+                        }
+                      ],
+                      "className": "py-12"
+                    }
+                  ]
+                ]
+              },
+              {
+                "from": "browsing",
+                "to": "loading",
+                "event": "DeviceUpdated",
+                "effects": [
+                  [
+                    "fetch",
+                    "Device",
+                    {
+                      "emit": {
+                        "failure": "DeviceLoadFailed",
+                        "success": "DeviceLoaded"
+                      }
+                    }
+                  ]
+                ]
+              },
+              {
+                "from": "browsing",
+                "to": "browsing",
+                "event": "DeviceUpdateFailed",
+                "effects": [
+                  [
+                    "render-ui",
+                    "main",
+                    {
+                      "message": "@payload.error",
+                      "type": "alert",
+                      "variant": "error"
+                    }
+                  ]
+                ]
+              },
+              {
+                "from": "browsing",
+                "to": "loading",
+                "event": "SET_STATUS",
+                "effects": [
+                  [
+                    "set",
+                    "@entity.id",
+                    "@payload.entityId"
+                  ],
+                  [
+                    "set",
+                    "@entity.status",
+                    "@payload.newStatus"
+                  ],
+                  [
+                    "persist",
+                    "update",
+                    "Device",
+                    "@entity",
+                    {
+                      "emit": {
+                        "success": "DeviceUpdated",
+                        "failure": "DeviceUpdateFailed"
+                      }
+                    }
+                  ],
+                  [
+                    "render-ui",
+                    "main",
+                    {
+                      "direction": "vertical",
+                      "type": "stack",
+                      "align": "center",
+                      "className": "py-12",
+                      "children": [
+                        {
+                          "type": "spinner"
+                        },
+                        {
+                          "variant": "caption",
+                          "type": "typography",
+                          "content": "Updating device status…",
+                          "color": "muted"
+                        }
+                      ],
+                      "gap": "md"
+                    }
+                  ]
+                ]
+              },
+              {
+                "from": "viewing_single",
+                "to": "loading",
+                "event": "CLOSE_VIEW",
+                "effects": [
+                  [
+                    "fetch",
+                    "Device",
+                    {
+                      "emit": {
+                        "success": "DeviceLoaded",
+                        "failure": "DeviceLoadFailed"
+                      }
+                    }
+                  ],
+                  [
+                    "render-ui",
+                    "main",
+                    {
+                      "children": [
+                        {
+                          "type": "spinner"
+                        },
+                        {
+                          "color": "muted",
+                          "type": "typography",
+                          "variant": "caption",
+                          "content": "Loading devices…"
+                        }
+                      ],
+                      "type": "stack",
+                      "align": "center",
+                      "gap": "md",
+                      "direction": "vertical",
+                      "className": "py-12"
+                    }
+                  ]
+                ]
+              },
+              {
+                "from": "viewing_single",
+                "to": "loading",
+                "event": "REPROVISION",
+                "effects": [
+                  [
+                    "set",
+                    "@entity.id",
+                    "@payload.id"
+                  ],
+                  [
+                    "set",
+                    "@entity.status",
+                    "provisioning"
+                  ],
+                  [
+                    "persist",
+                    "update",
+                    "Device",
+                    "@entity",
+                    {
+                      "emit": {
+                        "success": "DeviceUpdated",
+                        "failure": "DeviceUpdateFailed"
+                      }
+                    }
+                  ],
+                  [
+                    "render-ui",
+                    "main",
+                    {
+                      "direction": "vertical",
+                      "type": "stack",
+                      "align": "center",
+                      "className": "py-12",
+                      "gap": "md",
+                      "children": [
+                        {
+                          "type": "spinner"
+                        },
+                        {
+                          "content": "Reprovisioning device…",
+                          "variant": "caption",
+                          "color": "muted",
+                          "type": "typography"
+                        }
+                      ]
+                    }
+                  ]
+                ]
+              },
+              {
+                "from": "viewing_single",
+                "to": "loading",
+                "event": "PUSH_FIRMWARE",
+                "effects": [
+                  [
+                    "set",
+                    "@entity.id",
+                    "@payload.id"
+                  ],
+                  [
+                    "persist",
+                    "update",
+                    "Device",
+                    "@entity",
+                    {
+                      "emit": {
+                        "success": "DeviceUpdated",
+                        "failure": "DeviceUpdateFailed"
+                      }
+                    }
+                  ],
+                  [
+                    "render-ui",
+                    "main",
+                    {
+                      "children": [
+                        {
+                          "type": "spinner"
+                        },
+                        {
+                          "color": "muted",
+                          "type": "typography",
+                          "variant": "caption",
+                          "content": "Pushing firmware…"
+                        }
+                      ],
+                      "direction": "vertical",
+                      "align": "center",
+                      "gap": "md",
+                      "className": "py-12",
+                      "type": "stack"
+                    }
+                  ]
+                ]
+              },
+              {
+                "from": "viewing_single",
+                "to": "loading",
+                "event": "RETIRE",
+                "effects": [
+                  [
+                    "set",
+                    "@entity.id",
+                    "@payload.id"
+                  ],
+                  [
+                    "set",
+                    "@entity.status",
+                    "retired"
+                  ],
+                  [
+                    "persist",
+                    "update",
+                    "Device",
+                    "@entity",
+                    {
+                      "emit": {
+                        "failure": "DeviceUpdateFailed",
+                        "success": "DeviceUpdated"
+                      }
+                    }
+                  ],
+                  [
+                    "render-ui",
+                    "main",
+                    {
+                      "children": [
+                        {
+                          "type": "spinner"
+                        },
+                        {
+                          "variant": "caption",
+                          "color": "muted",
+                          "content": "Retiring device…",
+                          "type": "typography"
+                        }
+                      ],
+                      "direction": "vertical",
+                      "gap": "md",
+                      "className": "py-12",
+                      "type": "stack",
+                      "align": "center"
+                    }
+                  ]
+                ]
+              },
+              {
+                "from": "error",
+                "to": "loading",
+                "event": "INIT",
+                "effects": [
+                  [
+                    "fetch",
+                    "Device",
+                    {
+                      "emit": {
+                        "failure": "DeviceLoadFailed",
+                        "success": "DeviceLoaded"
+                      }
+                    }
+                  ],
+                  [
+                    "render-ui",
+                    "main",
+                    {
+                      "type": "spinner",
+                      "size": "sm"
+                    }
+                  ]
+                ]
+              }
+            ]
+          },
+          "config": {
+            "fields": {
+              "type": "[FieldSpec]",
+              "default": [
+                {
+                  "label": "Name",
+                  "variant": "caption",
+                  "name": "name"
+                },
+                {
+                  "label": "Type",
+                  "variant": "caption",
+                  "name": "deviceType"
+                },
+                {
+                  "variant": "caption",
+                  "name": "firmwareVersion",
+                  "label": "Firmware"
+                },
+                {
+                  "variant": "badge",
+                  "name": "status",
+                  "label": "Status"
+                },
+                {
+                  "name": "lastSeenAt",
+                  "variant": "caption",
+                  "label": "Last seen"
+                },
+                {
+                  "label": "Cert expires",
+                  "name": "certExpiresAt",
+                  "variant": "caption"
+                }
+              ],
+              "label": "Columns to show",
+              "description": "Each column maps to one field on the Device entity",
+              "tier": "presentation",
+              "items": {
+                "type": "object",
+                "properties": {
+                  "name": {
+                    "name": "name",
+                    "type": "string",
+                    "required": true
+                  },
+                  "label": {
+                    "name": "label",
+                    "type": "string",
+                    "required": false
+                  },
+                  "format": {
+                    "name": "format",
+                    "type": "string",
+                    "required": false
+                  },
+                  "header": {
+                    "name": "header",
+                    "type": "string",
+                    "required": false
+                  },
+                  "key": {
+                    "name": "key",
+                    "type": "string",
+                    "required": false
+                  },
+                  "variant": {
+                    "name": "variant",
+                    "type": "string",
+                    "required": false
+                  },
+                  "icon": {
+                    "name": "icon",
+                    "type": "string",
+                    "required": false
+                  }
+                }
+              }
+            },
+            "title": {
+              "type": "string",
+              "default": "Devices",
+              "label": "Section title",
+              "description": "Heading shown above the device fleet",
+              "tier": "presentation"
+            },
+            "provisioningModel": {
+              "type": "string",
+              "default": "zero-touch",
+              "label": "Provisioning model",
+              "description": "How a new device joins the fleet.",
+              "synonyms": "onboarding mode, bootstrap",
+              "tier": "domain",
+              "values": [
+                "zero-touch",
+                "claim-then-bind",
+                "manual"
+              ]
+            },
+            "itemActions": {
+              "type": "[ItemAction]",
+              "default": [
+                {
+                  "event": "OPEN_DEVICE",
+                  "variant": "primary",
+                  "icon": "arrow-right",
+                  "label": "Open"
+                },
+                {
+                  "event": "RETIRE",
+                  "icon": "x",
+                  "label": "Retire",
+                  "variant": "danger"
+                }
+              ],
+              "label": "Row actions",
+              "description": "Buttons users can click on each device row",
+              "tier": "presentation",
+              "items": {
+                "type": "object",
+                "properties": {
+                  "event": {
+                    "name": "event",
+                    "type": "string",
+                    "required": true
+                  },
+                  "icon": {
+                    "name": "icon",
+                    "type": "string",
+                    "required": false
+                  },
+                  "label": {
+                    "name": "label",
+                    "type": "string",
+                    "required": true
+                  },
+                  "variant": {
+                    "name": "variant",
+                    "type": "string",
+                    "required": false
+                  }
+                }
+              }
+            },
+            "offlineActionPolicy": {
+              "type": "string",
+              "default": "queue",
+              "label": "Offline action policy",
+              "description": "How commands behave when the device is offline.",
+              "synonyms": "disconnect handling",
+              "tier": "domain",
+              "values": [
+                "queue",
+                "drop",
+                "fail-fast"
+              ]
+            },
+            "otaUpdateCadenceDays": {
+              "type": "number",
+              "default": 30.0,
+              "label": "OTA update cadence (days)",
+              "description": "Default cadence for over-the-air firmware push.",
+              "synonyms": "firmware refresh, update interval",
+              "tier": "domain"
+            },
+            "dataRetentionDays": {
+              "type": "number",
+              "default": 90.0,
+              "label": "Device data retention (days)",
+              "description": "Days to keep device telemetry. Compose std-lifecycle for cleanup.",
+              "tier": "domain"
+            },
+            "certificateRotationDays": {
+              "type": "number",
+              "default": 90.0,
+              "label": "Certificate rotation (days)",
+              "description": "Days before cert expiry to trigger renewal.",
+              "synonyms": "cert renewal window",
+              "tier": "domain"
+            }
+          },
+          "scope": "collection"
+        }
+      ],
+      "pages": [
+        {
+          "name": "DeviceFleetManagePage",
+          "path": "/devices",
+          "traits": [
+            {
+              "ref": "DeviceFleetManage"
+            }
+          ]
+        }
+      ]
+    }
+  ]
+}

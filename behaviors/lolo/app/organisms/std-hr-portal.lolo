@@ -12,6 +12,9 @@ orbital EmployeeOrbital {
   uses Graphs        from "std/behaviors/std-graphs"
   uses Storage       from "std/behaviors/std-service-storage"
   uses Email         from "std/behaviors/std-service-email"
+  uses Approval      from "std/behaviors/std-approval-gate"
+  uses Erasure       from "std/behaviors/std-data-erasure"
+  uses Audit         from "std/behaviors/std-audit-capture"
 
   entity Employee [persistent: employees] {
     id : string!
@@ -286,7 +289,40 @@ orbital EmployeeOrbital {
     }
   }
 
-  page "/employees" as EmployeesPage -> EmployeeAppLayout, EmployeeCatalog, EmployeeSearch, EmployeeFilter, EmployeeStats, EmployeeGraphs, EmployeeBrowseList, EmployeeCreate, EmployeeEdit, EmployeeView, EmployeeDelete, EmployeePersistor
+  trait EmployeeOfferApproval = Approval.traits.ApprovalGateReview {
+    config: {
+      approverRoles: ["hr-director", "vp-people"],
+      threshold: 150000,
+      autoApproveBelowThreshold: false,
+      valueField: "offerAmount",
+      escalationHours: 72,
+      escalationRoles: ["cfo"]
+    }
+  }
+
+  trait EmployeeErasure = Erasure.traits.ErasureWorkflow {
+    config: {
+      targetEntity: "Employee",
+      gracePeriodDays: 30,
+      anonymizeVsDelete: "anonymize",
+      piiFields: ["ssn", "address", "phone", "email"]
+    }
+  }
+
+  trait EmployeeAuditCapture = Audit.traits.AuditCaptureListener {
+    config: {
+      captureEntity: "Employee",
+      captureEventTypes: [],
+      excludeFields: ["ssn"],
+      captureBeforeAfter: true,
+      retentionDays: 2555
+    }
+    events {
+      EntityMutated: EMPLOYEE_UPDATED
+    }
+  }
+
+  page "/employees" as EmployeesPage -> EmployeeAppLayout, EmployeeCatalog, EmployeeSearch, EmployeeFilter, EmployeeStats, EmployeeGraphs, EmployeeBrowseList, EmployeeCreate, EmployeeEdit, EmployeeView, EmployeeDelete, EmployeePersistor, EmployeeOfferApproval, EmployeeErasure, EmployeeAuditCapture
   page "/employees/upload" as EmployeeAvatarPage -> EmployeeAppLayout, EmployeeAvatarUpload, EmployeeAvatarUploadForm
 }
 

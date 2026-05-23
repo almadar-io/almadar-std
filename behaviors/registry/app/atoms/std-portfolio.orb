@@ -1,0 +1,1176 @@
+{
+  "name": "std-portfolio",
+  "version": "1.0.0",
+  "description": "std-portfolio — portfolio rebalancing, tax-lot accounting, and drift policies for trading apps.",
+  "orbitals": [
+    {
+      "name": "PortfolioOrbital",
+      "entity": {
+        "name": "Portfolio",
+        "collection": "portfolios",
+        "persistence": "persistent",
+        "fields": [
+          {
+            "name": "id",
+            "type": "string",
+            "required": true
+          },
+          {
+            "name": "name",
+            "type": "string",
+            "required": true
+          },
+          {
+            "name": "ownerAccountId",
+            "type": "string",
+            "required": true
+          },
+          {
+            "name": "currentValueUSD",
+            "type": "number"
+          },
+          {
+            "name": "targetAllocationJson",
+            "type": "string",
+            "default": "{}"
+          },
+          {
+            "name": "driftBps",
+            "type": "number",
+            "default": 0.0
+          },
+          {
+            "name": "status",
+            "type": "string",
+            "default": "active",
+            "values": [
+              "active",
+              "rebalancing",
+              "frozen",
+              "archived"
+            ]
+          },
+          {
+            "name": "lastRebalancedAt",
+            "type": "string"
+          },
+          {
+            "name": "createdAt",
+            "type": "string"
+          }
+        ]
+      },
+      "traits": [
+        {
+          "name": "PortfolioManage",
+          "category": "interaction",
+          "linkedEntity": "Portfolio",
+          "emits": [
+            {
+              "event": "OPEN_PORTFOLIO",
+              "payloadSchema": [
+                {
+                  "name": "id",
+                  "type": "string",
+                  "required": true
+                },
+                {
+                  "name": "row.id",
+                  "type": "string",
+                  "required": true
+                },
+                {
+                  "name": "row.name",
+                  "type": "string",
+                  "required": true
+                },
+                {
+                  "name": "row.ownerAccountId",
+                  "type": "string",
+                  "required": true
+                },
+                {
+                  "name": "row.currentValueUSD",
+                  "type": "number"
+                },
+                {
+                  "name": "row.targetAllocationJson",
+                  "type": "string"
+                },
+                {
+                  "name": "row.driftBps",
+                  "type": "number"
+                },
+                {
+                  "name": "row.status",
+                  "type": "string"
+                },
+                {
+                  "name": "row.lastRebalancedAt",
+                  "type": "string"
+                },
+                {
+                  "name": "row.createdAt",
+                  "type": "string"
+                }
+              ]
+            },
+            {
+              "event": "CLOSE_VIEW"
+            },
+            {
+              "event": "REBALANCE",
+              "payloadSchema": [
+                {
+                  "name": "id",
+                  "type": "string",
+                  "required": true
+                },
+                {
+                  "name": "row.id",
+                  "type": "string",
+                  "required": true
+                },
+                {
+                  "name": "row.name",
+                  "type": "string",
+                  "required": true
+                },
+                {
+                  "name": "row.ownerAccountId",
+                  "type": "string",
+                  "required": true
+                },
+                {
+                  "name": "row.currentValueUSD",
+                  "type": "number"
+                },
+                {
+                  "name": "row.targetAllocationJson",
+                  "type": "string"
+                },
+                {
+                  "name": "row.driftBps",
+                  "type": "number"
+                },
+                {
+                  "name": "row.status",
+                  "type": "string"
+                },
+                {
+                  "name": "row.lastRebalancedAt",
+                  "type": "string"
+                },
+                {
+                  "name": "row.createdAt",
+                  "type": "string"
+                }
+              ]
+            },
+            {
+              "event": "FREEZE",
+              "payloadSchema": [
+                {
+                  "name": "id",
+                  "type": "string",
+                  "required": true
+                },
+                {
+                  "name": "row.id",
+                  "type": "string",
+                  "required": true
+                },
+                {
+                  "name": "row.name",
+                  "type": "string",
+                  "required": true
+                },
+                {
+                  "name": "row.ownerAccountId",
+                  "type": "string",
+                  "required": true
+                },
+                {
+                  "name": "row.currentValueUSD",
+                  "type": "number"
+                },
+                {
+                  "name": "row.targetAllocationJson",
+                  "type": "string"
+                },
+                {
+                  "name": "row.driftBps",
+                  "type": "number"
+                },
+                {
+                  "name": "row.status",
+                  "type": "string"
+                },
+                {
+                  "name": "row.lastRebalancedAt",
+                  "type": "string"
+                },
+                {
+                  "name": "row.createdAt",
+                  "type": "string"
+                }
+              ]
+            },
+            {
+              "event": "ARCHIVE",
+              "payloadSchema": [
+                {
+                  "name": "id",
+                  "type": "string",
+                  "required": true
+                },
+                {
+                  "name": "row.id",
+                  "type": "string",
+                  "required": true
+                },
+                {
+                  "name": "row.name",
+                  "type": "string",
+                  "required": true
+                },
+                {
+                  "name": "row.ownerAccountId",
+                  "type": "string",
+                  "required": true
+                },
+                {
+                  "name": "row.currentValueUSD",
+                  "type": "number"
+                },
+                {
+                  "name": "row.targetAllocationJson",
+                  "type": "string"
+                },
+                {
+                  "name": "row.driftBps",
+                  "type": "number"
+                },
+                {
+                  "name": "row.status",
+                  "type": "string"
+                },
+                {
+                  "name": "row.lastRebalancedAt",
+                  "type": "string"
+                },
+                {
+                  "name": "row.createdAt",
+                  "type": "string"
+                }
+              ]
+            },
+            {
+              "event": "PortfolioLoaded",
+              "payloadSchema": [
+                {
+                  "name": "data",
+                  "type": "[Portfolio]"
+                }
+              ]
+            },
+            {
+              "event": "PortfolioLoadFailed",
+              "payloadSchema": [
+                {
+                  "name": "error",
+                  "type": "string"
+                },
+                {
+                  "name": "code",
+                  "type": "string"
+                }
+              ]
+            }
+          ],
+          "stateMachine": {
+            "states": [
+              {
+                "name": "loading",
+                "isInitial": true
+              },
+              {
+                "name": "browsing"
+              },
+              {
+                "name": "viewing_single"
+              },
+              {
+                "name": "error"
+              }
+            ],
+            "events": [
+              {
+                "key": "INIT",
+                "name": "Initialize"
+              },
+              {
+                "key": "PortfolioLoaded",
+                "name": "Portfolio loaded",
+                "payloadSchema": [
+                  {
+                    "name": "data",
+                    "type": "[Portfolio]"
+                  }
+                ]
+              },
+              {
+                "key": "PortfolioLoadFailed",
+                "name": "Portfolio load failed",
+                "payloadSchema": [
+                  {
+                    "name": "error",
+                    "type": "string"
+                  },
+                  {
+                    "name": "code",
+                    "type": "string"
+                  }
+                ]
+              },
+              {
+                "key": "OPEN_PORTFOLIO",
+                "name": "Open Portfolio",
+                "payloadSchema": [
+                  {
+                    "name": "id",
+                    "type": "string",
+                    "required": true
+                  },
+                  {
+                    "name": "row",
+                    "type": "Portfolio"
+                  }
+                ]
+              },
+              {
+                "key": "REBALANCE",
+                "name": "Rebalance",
+                "payloadSchema": [
+                  {
+                    "name": "id",
+                    "type": "string",
+                    "required": true
+                  },
+                  {
+                    "name": "row",
+                    "type": "Portfolio"
+                  }
+                ]
+              },
+              {
+                "key": "CLOSE_VIEW",
+                "name": "Close View"
+              },
+              {
+                "key": "FREEZE",
+                "name": "Freeze",
+                "payloadSchema": [
+                  {
+                    "name": "id",
+                    "type": "string",
+                    "required": true
+                  },
+                  {
+                    "name": "row",
+                    "type": "Portfolio"
+                  }
+                ]
+              },
+              {
+                "key": "ARCHIVE",
+                "name": "Archive",
+                "payloadSchema": [
+                  {
+                    "name": "id",
+                    "type": "string",
+                    "required": true
+                  },
+                  {
+                    "name": "row",
+                    "type": "Portfolio"
+                  }
+                ]
+              }
+            ],
+            "transitions": [
+              {
+                "from": "loading",
+                "to": "loading",
+                "event": "INIT",
+                "effects": [
+                  [
+                    "fetch",
+                    "Portfolio",
+                    {
+                      "emit": {
+                        "failure": "PortfolioLoadFailed",
+                        "success": "PortfolioLoaded"
+                      }
+                    }
+                  ],
+                  [
+                    "render-ui",
+                    "main",
+                    {
+                      "type": "stack",
+                      "gap": "md",
+                      "direction": "vertical",
+                      "align": "center",
+                      "className": "py-12",
+                      "children": [
+                        {
+                          "type": "spinner"
+                        },
+                        {
+                          "color": "muted",
+                          "variant": "caption",
+                          "content": "Loading portfolios…",
+                          "type": "typography"
+                        }
+                      ]
+                    }
+                  ]
+                ]
+              },
+              {
+                "from": "loading",
+                "to": "browsing",
+                "event": "PortfolioLoaded",
+                "effects": [
+                  [
+                    "render-ui",
+                    "main",
+                    {
+                      "direction": "vertical",
+                      "gap": "md",
+                      "type": "stack",
+                      "children": [
+                        {
+                          "type": "stack",
+                          "direction": "horizontal",
+                          "gap": "sm",
+                          "align": "center",
+                          "children": [
+                            {
+                              "name": "pie-chart",
+                              "type": "icon"
+                            },
+                            {
+                              "content": "@config.title",
+                              "variant": "h3",
+                              "type": "typography"
+                            }
+                          ]
+                        },
+                        {
+                          "type": "simple-grid",
+                          "cols": 4.0,
+                          "children": [
+                            {
+                              "icon": "pie-chart",
+                              "value": "@payload.data.length",
+                              "type": "stat-display",
+                              "label": "Total portfolios"
+                            },
+                            {
+                              "icon": "dollar-sign",
+                              "label": "AUM",
+                              "value": "$8.4M",
+                              "type": "stat-display"
+                            },
+                            {
+                              "icon": "alert-triangle",
+                              "type": "stat-display",
+                              "label": "Needs rebalance",
+                              "value": "6"
+                            },
+                            {
+                              "value": "3",
+                              "label": "Rebalanced today",
+                              "icon": "refresh-cw",
+                              "type": "stat-display"
+                            }
+                          ]
+                        },
+                        {
+                          "type": "divider"
+                        },
+                        {
+                          "cols": 1.0,
+                          "itemActions": "@config.itemActions",
+                          "fields": "@config.fields",
+                          "entity": "@payload.data",
+                          "type": "data-grid",
+                          "gap": "sm"
+                        }
+                      ]
+                    }
+                  ]
+                ]
+              },
+              {
+                "from": "loading",
+                "to": "error",
+                "event": "PortfolioLoadFailed",
+                "effects": [
+                  [
+                    "render-ui",
+                    "main",
+                    {
+                      "variant": "error",
+                      "type": "alert",
+                      "message": "@payload.error"
+                    }
+                  ]
+                ]
+              },
+              {
+                "from": "browsing",
+                "to": "viewing_single",
+                "event": "OPEN_PORTFOLIO",
+                "effects": [
+                  [
+                    "set",
+                    "@entity.id",
+                    "@payload.row.id"
+                  ],
+                  [
+                    "set",
+                    "@entity.name",
+                    "@payload.row.name"
+                  ],
+                  [
+                    "set",
+                    "@entity.ownerAccountId",
+                    "@payload.row.ownerAccountId"
+                  ],
+                  [
+                    "set",
+                    "@entity.currentValueUSD",
+                    "@payload.row.currentValueUSD"
+                  ],
+                  [
+                    "set",
+                    "@entity.targetAllocationJson",
+                    "@payload.row.targetAllocationJson"
+                  ],
+                  [
+                    "set",
+                    "@entity.driftBps",
+                    "@payload.row.driftBps"
+                  ],
+                  [
+                    "set",
+                    "@entity.status",
+                    "@payload.row.status"
+                  ],
+                  [
+                    "set",
+                    "@entity.lastRebalancedAt",
+                    "@payload.row.lastRebalancedAt"
+                  ],
+                  [
+                    "set",
+                    "@entity.createdAt",
+                    "@payload.row.createdAt"
+                  ],
+                  [
+                    "render-ui",
+                    "main",
+                    {
+                      "children": [
+                        {
+                          "direction": "horizontal",
+                          "align": "center",
+                          "type": "stack",
+                          "gap": "sm",
+                          "children": [
+                            {
+                              "type": "button",
+                              "variant": "ghost",
+                              "label": "Back",
+                              "action": "CLOSE_VIEW"
+                            },
+                            {
+                              "name": "pie-chart",
+                              "type": "icon"
+                            },
+                            {
+                              "variant": "h3",
+                              "content": "@entity.name",
+                              "type": "typography"
+                            },
+                            {
+                              "type": "badge",
+                              "label": "@entity.status",
+                              "variant": "default"
+                            }
+                          ]
+                        },
+                        {
+                          "type": "divider"
+                        },
+                        {
+                          "children": [
+                            {
+                              "type": "stack",
+                              "gap": "md",
+                              "direction": "horizontal",
+                              "children": [
+                                {
+                                  "type": "typography",
+                                  "variant": "caption",
+                                  "color": "muted",
+                                  "content": "Owner"
+                                },
+                                {
+                                  "variant": "body",
+                                  "type": "typography",
+                                  "content": "@entity.ownerAccountId"
+                                }
+                              ]
+                            },
+                            {
+                              "gap": "md",
+                              "children": [
+                                {
+                                  "color": "muted",
+                                  "variant": "caption",
+                                  "type": "typography",
+                                  "content": "Target Allocation"
+                                },
+                                {
+                                  "type": "typography",
+                                  "variant": "body",
+                                  "content": "@entity.targetAllocationJson"
+                                }
+                              ],
+                              "type": "stack",
+                              "direction": "horizontal"
+                            }
+                          ],
+                          "direction": "vertical",
+                          "gap": "sm",
+                          "type": "stack"
+                        },
+                        {
+                          "type": "divider"
+                        },
+                        {
+                          "type": "simple-grid",
+                          "cols": 3.0,
+                          "children": [
+                            {
+                              "value": "@entity.currentValueUSD",
+                              "type": "stat-display",
+                              "label": "Current Value",
+                              "icon": "dollar-sign"
+                            },
+                            {
+                              "type": "stat-display",
+                              "label": "Drift (bps)",
+                              "value": "@entity.driftBps",
+                              "icon": "trending-up"
+                            },
+                            {
+                              "icon": "calendar",
+                              "label": "Last Rebalanced",
+                              "type": "stat-display",
+                              "value": "@entity.lastRebalancedAt"
+                            }
+                          ]
+                        },
+                        {
+                          "direction": "horizontal",
+                          "gap": "sm",
+                          "children": [
+                            {
+                              "type": "button",
+                              "variant": "primary",
+                              "action": "REBALANCE",
+                              "actionPayload": {
+                                "id": "@entity.id",
+                                "row": "@entity"
+                              },
+                              "label": "Rebalance"
+                            },
+                            {
+                              "type": "button",
+                              "actionPayload": {
+                                "id": "@entity.id",
+                                "row": "@entity"
+                              },
+                              "variant": "secondary",
+                              "label": "Freeze",
+                              "action": "FREEZE"
+                            },
+                            {
+                              "label": "Archive",
+                              "variant": "danger",
+                              "action": "ARCHIVE",
+                              "actionPayload": {
+                                "id": "@entity.id",
+                                "row": "@entity"
+                              },
+                              "type": "button"
+                            }
+                          ],
+                          "type": "stack",
+                          "align": "center"
+                        }
+                      ],
+                      "gap": "md",
+                      "direction": "vertical",
+                      "type": "stack"
+                    }
+                  ]
+                ]
+              },
+              {
+                "from": "browsing",
+                "to": "loading",
+                "event": "REBALANCE",
+                "effects": [
+                  [
+                    "set",
+                    "@entity.id",
+                    "@payload.id"
+                  ],
+                  [
+                    "fetch",
+                    "Portfolio",
+                    {
+                      "emit": {
+                        "failure": "PortfolioLoadFailed",
+                        "success": "PortfolioLoaded"
+                      }
+                    }
+                  ],
+                  [
+                    "render-ui",
+                    "main",
+                    {
+                      "direction": "vertical",
+                      "gap": "md",
+                      "align": "center",
+                      "type": "stack",
+                      "className": "py-12",
+                      "children": [
+                        {
+                          "type": "spinner"
+                        },
+                        {
+                          "color": "muted",
+                          "content": "Rebalancing portfolio…",
+                          "type": "typography",
+                          "variant": "caption"
+                        }
+                      ]
+                    }
+                  ]
+                ]
+              },
+              {
+                "from": "viewing_single",
+                "to": "loading",
+                "event": "CLOSE_VIEW",
+                "effects": [
+                  [
+                    "fetch",
+                    "Portfolio",
+                    {
+                      "emit": {
+                        "failure": "PortfolioLoadFailed",
+                        "success": "PortfolioLoaded"
+                      }
+                    }
+                  ],
+                  [
+                    "render-ui",
+                    "main",
+                    {
+                      "gap": "md",
+                      "align": "center",
+                      "type": "stack",
+                      "direction": "vertical",
+                      "className": "py-12",
+                      "children": [
+                        {
+                          "type": "spinner"
+                        },
+                        {
+                          "color": "muted",
+                          "variant": "caption",
+                          "type": "typography",
+                          "content": "Loading portfolios…"
+                        }
+                      ]
+                    }
+                  ]
+                ]
+              },
+              {
+                "from": "viewing_single",
+                "to": "loading",
+                "event": "REBALANCE",
+                "effects": [
+                  [
+                    "set",
+                    "@entity.id",
+                    "@payload.id"
+                  ],
+                  [
+                    "fetch",
+                    "Portfolio",
+                    {
+                      "emit": {
+                        "success": "PortfolioLoaded",
+                        "failure": "PortfolioLoadFailed"
+                      }
+                    }
+                  ],
+                  [
+                    "render-ui",
+                    "main",
+                    {
+                      "children": [
+                        {
+                          "type": "spinner"
+                        },
+                        {
+                          "content": "Rebalancing portfolio…",
+                          "variant": "caption",
+                          "color": "muted",
+                          "type": "typography"
+                        }
+                      ],
+                      "direction": "vertical",
+                      "type": "stack",
+                      "className": "py-12",
+                      "gap": "md",
+                      "align": "center"
+                    }
+                  ]
+                ]
+              },
+              {
+                "from": "viewing_single",
+                "to": "loading",
+                "event": "FREEZE",
+                "effects": [
+                  [
+                    "set",
+                    "@entity.id",
+                    "@payload.id"
+                  ],
+                  [
+                    "fetch",
+                    "Portfolio",
+                    {
+                      "emit": {
+                        "failure": "PortfolioLoadFailed",
+                        "success": "PortfolioLoaded"
+                      }
+                    }
+                  ],
+                  [
+                    "render-ui",
+                    "main",
+                    {
+                      "align": "center",
+                      "type": "stack",
+                      "children": [
+                        {
+                          "type": "spinner"
+                        },
+                        {
+                          "content": "Freezing portfolio…",
+                          "color": "muted",
+                          "type": "typography",
+                          "variant": "caption"
+                        }
+                      ],
+                      "gap": "md",
+                      "direction": "vertical",
+                      "className": "py-12"
+                    }
+                  ]
+                ]
+              },
+              {
+                "from": "viewing_single",
+                "to": "loading",
+                "event": "ARCHIVE",
+                "effects": [
+                  [
+                    "set",
+                    "@entity.id",
+                    "@payload.id"
+                  ],
+                  [
+                    "fetch",
+                    "Portfolio",
+                    {
+                      "emit": {
+                        "success": "PortfolioLoaded",
+                        "failure": "PortfolioLoadFailed"
+                      }
+                    }
+                  ],
+                  [
+                    "render-ui",
+                    "main",
+                    {
+                      "className": "py-12",
+                      "gap": "md",
+                      "direction": "vertical",
+                      "type": "stack",
+                      "children": [
+                        {
+                          "type": "spinner"
+                        },
+                        {
+                          "variant": "caption",
+                          "color": "muted",
+                          "content": "Archiving portfolio…",
+                          "type": "typography"
+                        }
+                      ],
+                      "align": "center"
+                    }
+                  ]
+                ]
+              },
+              {
+                "from": "error",
+                "to": "loading",
+                "event": "INIT",
+                "effects": [
+                  [
+                    "fetch",
+                    "Portfolio",
+                    {
+                      "emit": {
+                        "success": "PortfolioLoaded",
+                        "failure": "PortfolioLoadFailed"
+                      }
+                    }
+                  ],
+                  [
+                    "render-ui",
+                    "main",
+                    {
+                      "type": "spinner",
+                      "size": "sm"
+                    }
+                  ]
+                ]
+              }
+            ]
+          },
+          "config": {
+            "fields": {
+              "type": "[FieldSpec]",
+              "default": [
+                {
+                  "variant": "caption",
+                  "name": "name",
+                  "label": "Name"
+                },
+                {
+                  "label": "Owner",
+                  "variant": "caption",
+                  "name": "ownerAccountId"
+                },
+                {
+                  "name": "currentValueUSD",
+                  "label": "Value (USD)",
+                  "variant": "caption"
+                },
+                {
+                  "name": "driftBps",
+                  "label": "Drift (bps)",
+                  "variant": "caption"
+                },
+                {
+                  "variant": "badge",
+                  "label": "Status",
+                  "name": "status"
+                },
+                {
+                  "name": "lastRebalancedAt",
+                  "variant": "caption",
+                  "label": "Last Rebalanced"
+                }
+              ],
+              "label": "Columns to show",
+              "description": "Each column maps to one field on the Portfolio entity",
+              "tier": "presentation",
+              "items": {
+                "type": "object",
+                "properties": {
+                  "header": {
+                    "name": "header",
+                    "type": "string",
+                    "required": false
+                  },
+                  "label": {
+                    "name": "label",
+                    "type": "string",
+                    "required": false
+                  },
+                  "icon": {
+                    "name": "icon",
+                    "type": "string",
+                    "required": false
+                  },
+                  "variant": {
+                    "name": "variant",
+                    "type": "string",
+                    "required": false
+                  },
+                  "key": {
+                    "name": "key",
+                    "type": "string",
+                    "required": false
+                  },
+                  "name": {
+                    "name": "name",
+                    "type": "string",
+                    "required": true
+                  },
+                  "format": {
+                    "name": "format",
+                    "type": "string",
+                    "required": false
+                  }
+                }
+              }
+            },
+            "cashBufferPct": {
+              "type": "number",
+              "default": 5.0,
+              "label": "Cash buffer (%)",
+              "description": "Minimum percentage held in cash for liquidity needs and rebalancing.",
+              "synonyms": "cash reserve",
+              "tier": "domain"
+            },
+            "title": {
+              "type": "string",
+              "default": "Portfolios",
+              "label": "Section title",
+              "description": "Heading shown above the portfolio list",
+              "tier": "presentation"
+            },
+            "itemActions": {
+              "type": "[ItemAction]",
+              "default": [
+                {
+                  "icon": "arrow-right",
+                  "event": "OPEN_PORTFOLIO",
+                  "label": "Open",
+                  "variant": "primary"
+                },
+                {
+                  "event": "REBALANCE",
+                  "label": "Rebalance",
+                  "icon": "refresh-cw",
+                  "variant": "primary"
+                }
+              ],
+              "label": "Row actions",
+              "description": "Buttons users can click on each portfolio row",
+              "tier": "presentation",
+              "items": {
+                "type": "object",
+                "properties": {
+                  "variant": {
+                    "name": "variant",
+                    "type": "string",
+                    "required": false
+                  },
+                  "event": {
+                    "name": "event",
+                    "type": "string",
+                    "required": true
+                  },
+                  "icon": {
+                    "name": "icon",
+                    "type": "string",
+                    "required": false
+                  },
+                  "label": {
+                    "name": "label",
+                    "type": "string",
+                    "required": true
+                  }
+                }
+              }
+            },
+            "dividendReinvestPolicy": {
+              "type": "string",
+              "default": "auto",
+              "label": "Dividend reinvestment",
+              "description": "What to do with dividends: reinvest into source security, take as cash, or sweep to a designated fund.",
+              "synonyms": "DRIP, dividend handling",
+              "tier": "domain",
+              "values": [
+                "auto",
+                "cash",
+                "specified-fund"
+              ]
+            },
+            "taxLotMethod": {
+              "type": "string",
+              "default": "FIFO",
+              "label": "Tax lot method",
+              "description": "Cost-basis accounting method when selling shares.",
+              "synonyms": "lot accounting, cost basis",
+              "tier": "domain",
+              "values": [
+                "FIFO",
+                "LIFO",
+                "HIFO",
+                "specific-lot"
+              ]
+            },
+            "rebalancingFrequencyDays": {
+              "type": "number",
+              "default": 90.0,
+              "label": "Rebalance cadence (days)",
+              "description": "How often the portfolio gets auto-rebalanced toward target allocation.",
+              "synonyms": "rebalance interval",
+              "tier": "domain"
+            },
+            "driftThresholdBps": {
+              "type": "number",
+              "default": 500.0,
+              "label": "Drift threshold (bps)",
+              "description": "Maximum drift from target allocation before triggering rebalance.",
+              "synonyms": "drift band, rebalance trigger",
+              "tier": "domain"
+            }
+          },
+          "scope": "collection"
+        }
+      ],
+      "pages": [
+        {
+          "name": "PortfolioManagePage",
+          "path": "/portfolios/manage",
+          "traits": [
+            {
+              "ref": "PortfolioManage"
+            }
+          ]
+        }
+      ]
+    }
+  ]
+}

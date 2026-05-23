@@ -1,0 +1,187 @@
+app std-prescription "1.0.0"
+"std-prescription — prescription lifecycle (draft → signed → sent → dispensed) with controlled-substance, refill, and pharmacist-consult knobs."
+
+type FieldSpec = { name : string!, label : string, variant : string, icon : string, format : string, key : string, header : string }
+type ItemAction = { label : string!, event : string!, variant : string, icon : string }
+
+orbital PrescriptionOrbital {
+  entity Prescription [persistent: prescriptions] {
+    id               : string!
+    patientId        : string!
+    medication       : string!
+    dosage           : string = ""
+    quantity         : number = 0
+    refillsRemaining : number = 0
+    controlled       : boolean = false
+    status           : "draft" | "signed" | "sent" | "dispensed" | "expired" | "voided" = "draft"
+    prescribedBy     : string = ""
+    pharmacy         : string = ""
+    signedAt         : string = ""
+    createdAt        : string = ""
+  }
+
+  type PrescriptionLoaded        = Event { data : [Prescription] }            "Fired when the prescription collection finishes loading"
+  type PrescriptionLoadFailed    = Event { error : string, code : string }    "Fired when the prescription collection fails to load"
+  type PrescriptionUpdated       = Event { row : Prescription }               "Fired after a prescription row's status persists"
+  type PrescriptionUpdateFailed  = Event { error : string, code : string }    "Fired when a prescription row's status update fails to persist"
+
+  trait PrescriptionManage -> Prescription [interaction, collection] {
+    config {
+      title : string = "Prescriptions"
+        @label "Section title"
+        @description "Heading shown above the prescription list"
+        @tier "presentation"
+      fields : [FieldSpec] = [
+        { name: "medication",   label: "Medication", variant: "caption" },
+        { name: "patientId",    label: "Patient",    variant: "caption" },
+        { name: "dosage",       label: "Dosage",     variant: "caption" },
+        { name: "status",       label: "Status",     variant: "badge"   },
+        { name: "pharmacy",     label: "Pharmacy",   variant: "caption" },
+        { name: "prescribedBy", label: "Prescriber", variant: "caption" }
+      ]
+        @label "Columns to show"
+        @description "Each column maps to one field on the Prescription entity"
+        @tier "presentation"
+      itemActions : [ItemAction] = [
+        { label: "Open", event: "OPEN_RX", variant: "primary", icon: "arrow-right" },
+        { label: "Void", event: "VOID_RX", variant: "danger",  icon: "x" }
+      ]
+        @label "Row actions"
+        @description "Buttons users can click on each prescription row"
+        @tier "presentation"
+      controlledSubstanceSchedule : "none" | "II" | "III" | "IV" | "V" = "none"
+        @label "Controlled-substance schedule"
+        @description "DEA schedule. Drives e-prescribing + paper-trail requirements."
+        @tier "domain"
+        @synonyms "DEA schedule, narcotic class"
+      refillsAllowedPerYear : number = 5
+        @label "Max refills per year"
+        @description "Annual cap on refills for the same prescription."
+        @tier "domain"
+      priorAuthRequiredFor : [string] = []
+        @label "Prior-auth required for"
+        @description "Medications requiring insurance prior-authorization before dispensing."
+        @tier "domain"
+        @synonyms "PA required, insurance pre-approval"
+      genericSubstitutionAllowed : "always" | "patient-consent" | "prescriber-only" | "never" = "patient-consent"
+        @label "Generic substitution"
+        @description "Policy for substituting brand→generic at the pharmacy."
+        @tier "domain"
+      epaRequired : boolean = false
+        @label "EPA required"
+        @description "When true, controlled-substance prescriptions require electronic-prescribing-of-controlled-substances signing."
+        @tier "domain"
+        @synonyms "EPCS"
+      dispenseQuantityLimit : number = 90
+        @label "Dispense quantity limit"
+        @description "Maximum days-supply dispensed per fill."
+        @tier "domain"
+        @synonyms "days supply, fill limit"
+      dawCodeRequired : boolean = false
+        @label "DAW code required"
+        @description "When true, prescriber must include a Dispense-As-Written code on every Rx."
+        @tier "domain"
+      pharmacistConsultationRequired : "always" | "controlled-only" | "high-risk" | "never" = "controlled-only"
+        @label "Pharmacist consultation"
+        @description "When the pharmacist must counsel the patient at pickup."
+        @tier "domain"
+    }
+    initial: loading
+    state loading {
+      INIT -> loading
+        (fetch Prescription { emit: { success: "PrescriptionLoaded", failure: "PrescriptionLoadFailed" } })
+        (render-ui main { type: "stack", direction: "vertical", gap: "md", align: "center", className: "py-12", children: [{ type: "spinner" }, { type: "typography", variant: "caption", color: "muted", content: "Loading prescriptions…" }] })
+      PrescriptionLoaded -> browsing
+        (render-ui main { type: "stack", direction: "vertical", gap: "md", children: [{ type: "stack", direction: "horizontal", gap: "sm", align: "center", children: [{ type: "icon", name: "file-text" }, { type: "typography", content: "@config.title", variant: "h3" }] }, { type: "simple-grid", cols: 4, children: [{ type: "stat-display", label: "Total Rx", value: "@payload.data.length", icon: "file-text" }, { type: "stat-display", label: "Pending sign", value: "0", icon: "edit" }, { type: "stat-display", label: "Dispensed today", value: "0", icon: "check-circle" }, { type: "stat-display", label: "Controlled", value: "0", icon: "shield" }] }, { type: "divider" }, { type: "data-grid", entity: "@payload.data", fields: "@config.fields", cols: 1, gap: "sm", itemActions: "@config.itemActions" }] })
+      PrescriptionLoadFailed -> error
+        (render-ui main { type: "alert", variant: "error", message: "@payload.error" })
+    }
+    state browsing {
+      OPEN_RX -> viewing_single
+        (set @entity.id @payload.row.id)
+        (set @entity.patientId @payload.row.patientId)
+        (set @entity.medication @payload.row.medication)
+        (set @entity.dosage @payload.row.dosage)
+        (set @entity.quantity @payload.row.quantity)
+        (set @entity.refillsRemaining @payload.row.refillsRemaining)
+        (set @entity.controlled @payload.row.controlled)
+        (set @entity.status @payload.row.status)
+        (set @entity.prescribedBy @payload.row.prescribedBy)
+        (set @entity.pharmacy @payload.row.pharmacy)
+        (set @entity.signedAt @payload.row.signedAt)
+        (set @entity.createdAt @payload.row.createdAt)
+        (render-ui main { type: "stack", direction: "vertical", gap: "md", children: [{ type: "stack", direction: "horizontal", gap: "sm", align: "center", children: [{ type: "button", label: "Back", variant: "ghost", action: "CLOSE_VIEW" }, { type: "icon", name: "file-text" }, { type: "typography", content: "@entity.medication", variant: "h3" }, { type: "badge", label: "@entity.status", variant: "primary" }] }, { type: "divider" }, { type: "stack", direction: "vertical", gap: "sm", children: [{ type: "stack", direction: "horizontal", gap: "md", children: [{ type: "typography", variant: "caption", color: "muted", content: "Patient" }, { type: "typography", variant: "body", content: "@entity.patientId" }] }, { type: "stack", direction: "horizontal", gap: "md", children: [{ type: "typography", variant: "caption", color: "muted", content: "Dosage" }, { type: "typography", variant: "body", content: "@entity.dosage" }] }, { type: "stack", direction: "horizontal", gap: "md", children: [{ type: "typography", variant: "caption", color: "muted", content: "Pharmacy" }, { type: "typography", variant: "body", content: "@entity.pharmacy" }] }, { type: "stack", direction: "horizontal", gap: "md", children: [{ type: "typography", variant: "caption", color: "muted", content: "Prescriber" }, { type: "typography", variant: "body", content: "@entity.prescribedBy" }] }] }, { type: "divider" }, { type: "simple-grid", cols: 3, children: [{ type: "stat-display", label: "Quantity", value: "@entity.quantity", icon: "hash" }, { type: "stat-display", label: "Refills left", value: "@entity.refillsRemaining", icon: "repeat" }, { type: "stat-display", label: "Signed", value: "@entity.signedAt", icon: "calendar" }] }, { type: "stack", direction: "horizontal", gap: "sm", align: "center", children: [{ type: "button", label: "Sign", variant: "primary", action: "SIGN_RX", actionPayload: { id: "@entity.id" } }, { type: "button", label: "Send", variant: "primary", action: "SEND_RX", actionPayload: { id: "@entity.id" } }, { type: "button", label: "Dispense", variant: "primary", action: "DISPENSE", actionPayload: { id: "@entity.id" } }, { type: "button", label: "Void", variant: "danger", action: "VOID_RX", actionPayload: { id: "@entity.id" } }] }] })
+      VOID_RX -> loading
+        (set @entity.id @payload.id)
+        (set @entity.status "voided")
+        (persist update Prescription @entity { emit: { success: "PrescriptionUpdated", failure: "PrescriptionUpdateFailed" } })
+        (render-ui main { type: "stack", direction: "vertical", gap: "md", align: "center", className: "py-12", children: [{ type: "spinner" }, { type: "typography", variant: "caption", color: "muted", content: "Voiding prescription…" }] })
+      PrescriptionUpdated -> loading
+        (fetch Prescription { emit: { success: "PrescriptionLoaded", failure: "PrescriptionLoadFailed" } })
+      PrescriptionUpdateFailed -> browsing
+        (render-ui main { type: "alert", variant: "error", message: "@payload.error" })
+      SET_STATUS -> loading
+        (set @entity.id @payload.entityId)
+        (set @entity.status @payload.newStatus)
+        (persist update Prescription @entity { emit: { success: "PrescriptionUpdated", failure: "PrescriptionUpdateFailed" } })
+        (render-ui main { type: "stack", direction: "vertical", gap: "md", align: "center", className: "py-12", children: [{ type: "spinner" }, { type: "typography", variant: "caption", color: "muted", content: "Updating prescription status…" }] })
+    }
+    state viewing_single {
+      CLOSE_VIEW -> loading
+        (fetch Prescription { emit: { success: "PrescriptionLoaded", failure: "PrescriptionLoadFailed" } })
+        (render-ui main { type: "stack", direction: "vertical", gap: "md", align: "center", className: "py-12", children: [{ type: "spinner" }, { type: "typography", variant: "caption", color: "muted", content: "Loading prescriptions…" }] })
+      SIGN_RX -> loading
+        (set @entity.id @payload.id)
+        (set @entity.status "signed")
+        (set @entity.signedAt "now")
+        (persist update Prescription @entity { emit: { success: "PrescriptionUpdated", failure: "PrescriptionUpdateFailed" } })
+        (render-ui main { type: "stack", direction: "vertical", gap: "md", align: "center", className: "py-12", children: [{ type: "spinner" }, { type: "typography", variant: "caption", color: "muted", content: "Signing prescription…" }] })
+      SEND_RX -> loading
+        (set @entity.id @payload.id)
+        (set @entity.status "sent")
+        (persist update Prescription @entity { emit: { success: "PrescriptionUpdated", failure: "PrescriptionUpdateFailed" } })
+        (render-ui main { type: "stack", direction: "vertical", gap: "md", align: "center", className: "py-12", children: [{ type: "spinner" }, { type: "typography", variant: "caption", color: "muted", content: "Sending prescription…" }] })
+      DISPENSE -> loading
+        (set @entity.id @payload.id)
+        (set @entity.status "dispensed")
+        (persist update Prescription @entity { emit: { success: "PrescriptionUpdated", failure: "PrescriptionUpdateFailed" } })
+        (render-ui main { type: "stack", direction: "vertical", gap: "md", align: "center", className: "py-12", children: [{ type: "spinner" }, { type: "typography", variant: "caption", color: "muted", content: "Dispensing prescription…" }] })
+      VOID_RX -> loading
+        (set @entity.id @payload.id)
+        (set @entity.status "voided")
+        (persist update Prescription @entity { emit: { success: "PrescriptionUpdated", failure: "PrescriptionUpdateFailed" } })
+        (render-ui main { type: "stack", direction: "vertical", gap: "md", align: "center", className: "py-12", children: [{ type: "spinner" }, { type: "typography", variant: "caption", color: "muted", content: "Voiding prescription…" }] })
+    }
+    state error {
+      INIT -> loading
+        (fetch Prescription { emit: { success: "PrescriptionLoaded", failure: "PrescriptionLoadFailed" } })
+        (render-ui main { type: "spinner", size: "sm" })
+    }
+    emits {
+      OPEN_RX    { id : string!, row : Prescription }
+      CLOSE_VIEW { }
+      SIGN_RX    { id : string! }
+      SEND_RX    { id : string! }
+      DISPENSE   { id : string! }
+      VOID_RX    { id : string! }
+      PrescriptionLoaded       { data : [Prescription] }
+      PrescriptionLoadFailed   { error : string, code : string }
+      PrescriptionUpdated      { row : Prescription }
+      PrescriptionUpdateFailed { error : string, code : string }
+    }
+    listens {
+      OPEN_RX    { id : string!, row : Prescription }
+      CLOSE_VIEW { }
+      SIGN_RX    { id : string! }
+      SEND_RX    { id : string! }
+      DISPENSE   { id : string! }
+      VOID_RX    { id : string! }
+      SET_STATUS { entityId : string!, newStatus : string! }
+      PrescriptionLoaded       { data : [Prescription] }
+      PrescriptionLoadFailed   { error : string, code : string }
+      PrescriptionUpdated      { row : Prescription }
+      PrescriptionUpdateFailed { error : string, code : string }
+    }
+  }
+  page "/prescriptions" as PrescriptionManagePage -> PrescriptionManage
+}

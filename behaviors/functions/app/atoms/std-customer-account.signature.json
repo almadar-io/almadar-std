@@ -90,33 +90,51 @@
             "tier": "domain"
           },
           {
+            "key": "contactFrequencyCapPerWeek",
+            "type": "number",
+            "default": 5,
+            "label": "Contact frequency cap (per week)",
+            "description": "Maximum outbound contacts (email/SMS/call) per customer per week. 0 = uncapped.",
+            "synonyms": "outreach cap, contact limit",
+            "tier": "domain"
+          },
+          {
+            "key": "defaultRetentionYears",
+            "type": "number",
+            "default": 7,
+            "label": "Customer record retention (years)",
+            "description": "Years to keep a closed customer profile before deletion. Compose std-lifecycle + std-data-erasure to enforce.",
+            "synonyms": "keep customer for, GDPR retention",
+            "tier": "domain"
+          },
+          {
             "key": "fields",
             "type": "[FieldSpec]",
             "default": [
               {
-                "label": "Name",
                 "variant": "caption",
-                "name": "name"
+                "name": "name",
+                "label": "Name"
               },
               {
                 "name": "email",
-                "label": "Email",
-                "variant": "caption"
+                "variant": "caption",
+                "label": "Email"
               },
               {
-                "label": "Phone",
                 "name": "phone",
+                "label": "Phone",
                 "variant": "caption"
               },
               {
-                "label": "Points",
+                "name": "loyaltyPoints",
                 "variant": "caption",
-                "name": "loyaltyPoints"
+                "label": "Points"
               },
               {
+                "label": "Total Spent",
                 "name": "totalSpent",
-                "variant": "caption",
-                "label": "Total Spent"
+                "variant": "caption"
               },
               {
                 "variant": "badge",
@@ -129,18 +147,18 @@
             "tier": "presentation",
             "items": {
               "properties": {
-                "format": {
-                  "name": "format",
-                  "required": false,
-                  "type": "string"
-                },
                 "name": {
                   "name": "name",
                   "required": true,
                   "type": "string"
                 },
-                "key": {
-                  "name": "key",
+                "format": {
+                  "name": "format",
+                  "required": false,
+                  "type": "string"
+                },
+                "variant": {
+                  "name": "variant",
                   "required": false,
                   "type": "string"
                 },
@@ -149,8 +167,8 @@
                   "required": false,
                   "type": "string"
                 },
-                "label": {
-                  "name": "label",
+                "key": {
+                  "name": "key",
                   "required": false,
                   "type": "string"
                 },
@@ -159,14 +177,23 @@
                   "required": false,
                   "type": "string"
                 },
-                "variant": {
-                  "name": "variant",
+                "label": {
+                  "name": "label",
                   "required": false,
                   "type": "string"
                 }
               },
               "type": "object"
             }
+          },
+          {
+            "key": "gdprConsentRequired",
+            "type": "boolean",
+            "default": true,
+            "label": "GDPR consent required",
+            "description": "When true, customer profiles require explicit GDPR-compliant consent before storing PII. Drives consent-capture UI.",
+            "synonyms": "GDPR opt-in, data processing consent",
+            "tier": "domain"
           },
           {
             "key": "healthScoreThresholdAlert",
@@ -181,14 +208,14 @@
             "type": "[ItemAction]",
             "default": [
               {
-                "label": "Open",
                 "event": "OPEN_CUSTOMER",
+                "label": "Open",
                 "variant": "primary",
                 "icon": "arrow-right"
               },
               {
-                "variant": "danger",
                 "label": "Ban",
+                "variant": "danger",
                 "event": "BAN_CUSTOMER"
               }
             ],
@@ -202,6 +229,11 @@
                   "required": false,
                   "type": "string"
                 },
+                "label": {
+                  "name": "label",
+                  "required": true,
+                  "type": "string"
+                },
                 "event": {
                   "name": "event",
                   "required": true,
@@ -211,15 +243,24 @@
                   "name": "variant",
                   "required": false,
                   "type": "string"
-                },
-                "label": {
-                  "name": "label",
-                  "required": true,
-                  "type": "string"
                 }
               },
               "type": "object"
             }
+          },
+          {
+            "key": "lifecycleStagePolicy",
+            "type": "string",
+            "default": "linear",
+            "label": "Lifecycle stage policy",
+            "description": "linear = standard lead→customer→inactive progression; branching = supports parallel sub-stages; none = free-form status.",
+            "synonyms": "customer journey, stage progression",
+            "tier": "domain",
+            "enumValues": [
+              "linear",
+              "branching",
+              "none"
+            ]
           },
           {
             "key": "renewalReminderDaysBefore",

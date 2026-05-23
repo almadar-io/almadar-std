@@ -13,6 +13,11 @@ orbital ListingOrbital {
   uses Images       from "std/behaviors/std-image-upload-multi"
   uses Tags         from "std/behaviors/std-tag-taxonomy"
   uses Thread       from "std/behaviors/std-thread"
+  uses Notify       from "std/behaviors/std-notify-on-event"
+  uses Reminder     from "std/behaviors/std-reminder-scheduler"
+  uses Approval     from "std/behaviors/std-approval-gate"
+  uses Erasure      from "std/behaviors/std-data-erasure"
+  uses Audit        from "std/behaviors/std-audit-capture"
 
   entity Listing [persistent: listings] {
     id          : string!
@@ -279,7 +284,65 @@ orbital ListingOrbital {
     }
   }
 
-  page "/listings" as ListingsPage -> ListingAppLayout, ListingCatalog, ListingGeoSearch, ListingFilter, ListingTags, ListingSavedSearch, ListingImages, ListingStats, ListingBrowse, ListingCreate, ListingEdit, ListingView, ListingDelete, ListingInquiryThread, ListingPersistor
+  trait ListingExpireNotifier = Notify.traits.NotifyOnEventListener {
+    config: {
+      listensFor: ["ListingExpiring"],
+      notifyChannel: "in-app",
+      template: "Your listing is expiring soon",
+      severity: "warning",
+      recipients: [],
+      suppressionList: []
+    }
+    events {
+      EventOccurred: ListingExpiring
+    }
+  }
+
+  trait ListingReminder = Reminder.traits.ReminderScheduler {
+    config: {
+      targetEntity: "Listing",
+      dateField: "createdAt",
+      offsetsHours: [168, 24],
+      severity: "info",
+      template: "Your listing is approaching expiration",
+      windowToleranceMinutes: 60
+    }
+  }
+
+  trait ListingRefundApproval = Approval.traits.ApprovalGateReview {
+    config: {
+      approverRoles: ["listings-ops"],
+      threshold: 100,
+      autoApproveBelowThreshold: true,
+      valueField: "price",
+      escalationHours: 24,
+      escalationRoles: ["operations-manager"]
+    }
+  }
+
+  trait ListingErasure = Erasure.traits.ErasureWorkflow {
+    config: {
+      targetEntity: "Listing",
+      gracePeriodDays: 30,
+      anonymizeVsDelete: "anonymize",
+      piiFields: ["description", "location"]
+    }
+  }
+
+  trait ListingAudit = Audit.traits.AuditCaptureListener {
+    config: {
+      captureEntity: "Listing",
+      captureEventTypes: [],
+      excludeFields: [],
+      captureBeforeAfter: false,
+      retentionDays: 2555
+    }
+    events {
+      EntityMutated: LISTING_UPDATED
+    }
+  }
+
+  page "/listings" as ListingsPage -> ListingAppLayout, ListingCatalog, ListingGeoSearch, ListingFilter, ListingTags, ListingSavedSearch, ListingImages, ListingStats, ListingBrowse, ListingCreate, ListingEdit, ListingView, ListingDelete, ListingInquiryThread, ListingPersistor, ListingExpireNotifier, ListingReminder, ListingRefundApproval, ListingErasure, ListingAudit
 }
 
 orbital InquiryOrbital {

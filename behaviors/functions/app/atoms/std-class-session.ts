@@ -87,26 +87,28 @@ export interface StdClassSessionClassSessionLoadFailedPayload {
  * without modifying its state-machine topology.
  */
 export interface StdClassSessionConfig {
-  /** Default: `60` */
-  leadTimeMinutes?: number;
-  /** Default: `[{"label":"Class","variant":"caption","name":"className"},{"label":"Instructor","name":"instructorName","variant":"caption"},{"variant":"caption","name":"startTime","label":"Start"},{"variant":"badge","name":"capacity","label":"Capacity"},{"variant":"badge","label":"Booked","name":"bookedCount"},{"label":"Status","variant":"badge","name":"status"}]` */
+  /** Default: `[{"label":"Class","variant":"caption","name":"className"},{"label":"Instructor","name":"instructorName","variant":"caption"},{"label":"Start","name":"startTime","variant":"caption"},{"label":"Capacity","name":"capacity","variant":"badge"},{"variant":"badge","name":"bookedCount","label":"Booked"},{"variant":"badge","label":"Status","name":"status"}]` */
   fields?: EntityRow[];
-  /** Default: `"Class Sessions"` */
-  title?: string;
+  /** Default: `4` */
+  rescheduleWindowHours?: number;
+  /** Default: `10` */
+  noShowGracePeriodMinutes?: number;
   /** Default: `3` */
   maxReschedules?: number;
-  /** Default: `30` */
-  bookingWindowDays?: number;
+  /** Default: `""` */
+  policyId?: string;
   /** Default: `[]` */
   blackoutDates?: string[];
-  /** Default: `[{"icon":"arrow-right","variant":"primary","event":"OPEN_SESSION","label":"Open"},{"variant":"danger","label":"Cancel","event":"CANCEL_CLASS"}]` */
+  /** Default: `[{"variant":"primary","event":"OPEN_SESSION","label":"Open","icon":"arrow-right"},{"label":"Cancel","event":"CANCEL_CLASS","variant":"danger"}]` */
   itemActions?: EntityRow[];
   /** Default: `"06:00-22:00"` */
   bookingHours?: string;
-  /** Default: `10` */
-  noShowGracePeriodMinutes?: number;
-  /** Default: `4` */
-  rescheduleWindowHours?: number;
+  /** Default: `"Class Sessions"` */
+  title?: string;
+  /** Default: `30` */
+  bookingWindowDays?: number;
+  /** Default: `60` */
+  leadTimeMinutes?: number;
   /** Default: `"free"` */
   cancellationPolicy?: 'free' | 'partial-refund' | 'no-refund';
 }

@@ -1,0 +1,1352 @@
+{
+  "name": "std-incident",
+  "version": "1.0.0",
+  "description": "std-incident — devops/oncall incident lifecycle (open → acknowledged → investigating → mitigated → resolved). Listens for SET_STATUS so siblings can drive automated transitions. Exposes Incident-pattern knobs (severity, runbookId, pagedRoles, escalation, postmortem threshold, …).",
+  "orbitals": [
+    {
+      "name": "IncidentOrbital",
+      "entity": {
+        "name": "Incident",
+        "collection": "incidents",
+        "persistence": "persistent",
+        "fields": [
+          {
+            "name": "id",
+            "type": "string",
+            "required": true
+          },
+          {
+            "name": "title",
+            "type": "string",
+            "required": true
+          },
+          {
+            "name": "description",
+            "type": "string",
+            "required": true
+          },
+          {
+            "name": "severity",
+            "type": "string",
+            "default": "sev3",
+            "values": [
+              "sev1",
+              "sev2",
+              "sev3",
+              "sev4",
+              "sev5"
+            ]
+          },
+          {
+            "name": "status",
+            "type": "string",
+            "default": "open",
+            "values": [
+              "open",
+              "acknowledged",
+              "investigating",
+              "mitigated",
+              "resolved"
+            ]
+          },
+          {
+            "name": "pagedTo",
+            "type": "string"
+          },
+          {
+            "name": "runbookId",
+            "type": "string"
+          },
+          {
+            "name": "acknowledgedAt",
+            "type": "string"
+          },
+          {
+            "name": "mitigatedAt",
+            "type": "string"
+          },
+          {
+            "name": "resolvedAt",
+            "type": "string"
+          },
+          {
+            "name": "createdAt",
+            "type": "string"
+          }
+        ]
+      },
+      "traits": [
+        {
+          "name": "IncidentManage",
+          "category": "interaction",
+          "linkedEntity": "Incident",
+          "emits": [
+            {
+              "event": "INCIDENT_OPEN",
+              "payloadSchema": [
+                {
+                  "name": "id",
+                  "type": "string",
+                  "required": true
+                },
+                {
+                  "name": "row.id",
+                  "type": "string",
+                  "required": true
+                },
+                {
+                  "name": "row.title",
+                  "type": "string",
+                  "required": true
+                },
+                {
+                  "name": "row.description",
+                  "type": "string",
+                  "required": true
+                },
+                {
+                  "name": "row.severity",
+                  "type": "string"
+                },
+                {
+                  "name": "row.status",
+                  "type": "string"
+                },
+                {
+                  "name": "row.pagedTo",
+                  "type": "string"
+                },
+                {
+                  "name": "row.runbookId",
+                  "type": "string"
+                },
+                {
+                  "name": "row.acknowledgedAt",
+                  "type": "string"
+                },
+                {
+                  "name": "row.mitigatedAt",
+                  "type": "string"
+                },
+                {
+                  "name": "row.resolvedAt",
+                  "type": "string"
+                },
+                {
+                  "name": "row.createdAt",
+                  "type": "string"
+                }
+              ]
+            },
+            {
+              "event": "CLOSE_VIEW"
+            },
+            {
+              "event": "ACK",
+              "payloadSchema": [
+                {
+                  "name": "id",
+                  "type": "string",
+                  "required": true
+                },
+                {
+                  "name": "row.id",
+                  "type": "string",
+                  "required": true
+                },
+                {
+                  "name": "row.title",
+                  "type": "string",
+                  "required": true
+                },
+                {
+                  "name": "row.description",
+                  "type": "string",
+                  "required": true
+                },
+                {
+                  "name": "row.severity",
+                  "type": "string"
+                },
+                {
+                  "name": "row.status",
+                  "type": "string"
+                },
+                {
+                  "name": "row.pagedTo",
+                  "type": "string"
+                },
+                {
+                  "name": "row.runbookId",
+                  "type": "string"
+                },
+                {
+                  "name": "row.acknowledgedAt",
+                  "type": "string"
+                },
+                {
+                  "name": "row.mitigatedAt",
+                  "type": "string"
+                },
+                {
+                  "name": "row.resolvedAt",
+                  "type": "string"
+                },
+                {
+                  "name": "row.createdAt",
+                  "type": "string"
+                }
+              ]
+            },
+            {
+              "event": "MITIGATE",
+              "payloadSchema": [
+                {
+                  "name": "id",
+                  "type": "string",
+                  "required": true
+                },
+                {
+                  "name": "row.id",
+                  "type": "string",
+                  "required": true
+                },
+                {
+                  "name": "row.title",
+                  "type": "string",
+                  "required": true
+                },
+                {
+                  "name": "row.description",
+                  "type": "string",
+                  "required": true
+                },
+                {
+                  "name": "row.severity",
+                  "type": "string"
+                },
+                {
+                  "name": "row.status",
+                  "type": "string"
+                },
+                {
+                  "name": "row.pagedTo",
+                  "type": "string"
+                },
+                {
+                  "name": "row.runbookId",
+                  "type": "string"
+                },
+                {
+                  "name": "row.acknowledgedAt",
+                  "type": "string"
+                },
+                {
+                  "name": "row.mitigatedAt",
+                  "type": "string"
+                },
+                {
+                  "name": "row.resolvedAt",
+                  "type": "string"
+                },
+                {
+                  "name": "row.createdAt",
+                  "type": "string"
+                }
+              ]
+            },
+            {
+              "event": "RESOLVE",
+              "payloadSchema": [
+                {
+                  "name": "id",
+                  "type": "string",
+                  "required": true
+                },
+                {
+                  "name": "row.id",
+                  "type": "string",
+                  "required": true
+                },
+                {
+                  "name": "row.title",
+                  "type": "string",
+                  "required": true
+                },
+                {
+                  "name": "row.description",
+                  "type": "string",
+                  "required": true
+                },
+                {
+                  "name": "row.severity",
+                  "type": "string"
+                },
+                {
+                  "name": "row.status",
+                  "type": "string"
+                },
+                {
+                  "name": "row.pagedTo",
+                  "type": "string"
+                },
+                {
+                  "name": "row.runbookId",
+                  "type": "string"
+                },
+                {
+                  "name": "row.acknowledgedAt",
+                  "type": "string"
+                },
+                {
+                  "name": "row.mitigatedAt",
+                  "type": "string"
+                },
+                {
+                  "name": "row.resolvedAt",
+                  "type": "string"
+                },
+                {
+                  "name": "row.createdAt",
+                  "type": "string"
+                }
+              ]
+            },
+            {
+              "event": "IncidentLoaded",
+              "payloadSchema": [
+                {
+                  "name": "data",
+                  "type": "[Incident]"
+                }
+              ]
+            },
+            {
+              "event": "IncidentLoadFailed",
+              "payloadSchema": [
+                {
+                  "name": "error",
+                  "type": "string"
+                },
+                {
+                  "name": "code",
+                  "type": "string"
+                }
+              ]
+            }
+          ],
+          "stateMachine": {
+            "states": [
+              {
+                "name": "loading",
+                "isInitial": true
+              },
+              {
+                "name": "browsing"
+              },
+              {
+                "name": "viewing_single"
+              },
+              {
+                "name": "error"
+              }
+            ],
+            "events": [
+              {
+                "key": "INIT",
+                "name": "Initialize"
+              },
+              {
+                "key": "IncidentLoaded",
+                "name": "Incident loaded",
+                "payloadSchema": [
+                  {
+                    "name": "data",
+                    "type": "[Incident]"
+                  }
+                ]
+              },
+              {
+                "key": "IncidentLoadFailed",
+                "name": "Incident load failed",
+                "payloadSchema": [
+                  {
+                    "name": "error",
+                    "type": "string"
+                  },
+                  {
+                    "name": "code",
+                    "type": "string"
+                  }
+                ]
+              },
+              {
+                "key": "INCIDENT_OPEN",
+                "name": "Incident Open",
+                "payloadSchema": [
+                  {
+                    "name": "id",
+                    "type": "string",
+                    "required": true
+                  },
+                  {
+                    "name": "row",
+                    "type": "Incident"
+                  }
+                ]
+              },
+              {
+                "key": "RESOLVE",
+                "name": "Resolve",
+                "payloadSchema": [
+                  {
+                    "name": "id",
+                    "type": "string",
+                    "required": true
+                  },
+                  {
+                    "name": "row",
+                    "type": "Incident"
+                  }
+                ]
+              },
+              {
+                "key": "SET_STATUS",
+                "name": "Set Status",
+                "payloadSchema": [
+                  {
+                    "name": "entityId",
+                    "type": "string",
+                    "required": true
+                  },
+                  {
+                    "name": "newStatus",
+                    "type": "string",
+                    "required": true
+                  }
+                ]
+              },
+              {
+                "key": "CLOSE_VIEW",
+                "name": "Close View"
+              },
+              {
+                "key": "ACK",
+                "name": "Ack",
+                "payloadSchema": [
+                  {
+                    "name": "id",
+                    "type": "string",
+                    "required": true
+                  },
+                  {
+                    "name": "row",
+                    "type": "Incident"
+                  }
+                ]
+              },
+              {
+                "key": "MITIGATE",
+                "name": "Mitigate",
+                "payloadSchema": [
+                  {
+                    "name": "id",
+                    "type": "string",
+                    "required": true
+                  },
+                  {
+                    "name": "row",
+                    "type": "Incident"
+                  }
+                ]
+              }
+            ],
+            "transitions": [
+              {
+                "from": "loading",
+                "to": "loading",
+                "event": "INIT",
+                "effects": [
+                  [
+                    "fetch",
+                    "Incident",
+                    {
+                      "emit": {
+                        "success": "IncidentLoaded",
+                        "failure": "IncidentLoadFailed"
+                      }
+                    }
+                  ],
+                  [
+                    "render-ui",
+                    "main",
+                    {
+                      "gap": "md",
+                      "children": [
+                        {
+                          "type": "spinner"
+                        },
+                        {
+                          "color": "muted",
+                          "variant": "caption",
+                          "content": "Loading incidents…",
+                          "type": "typography"
+                        }
+                      ],
+                      "align": "center",
+                      "direction": "vertical",
+                      "className": "py-12",
+                      "type": "stack"
+                    }
+                  ]
+                ]
+              },
+              {
+                "from": "loading",
+                "to": "browsing",
+                "event": "IncidentLoaded",
+                "effects": [
+                  [
+                    "render-ui",
+                    "main",
+                    {
+                      "direction": "vertical",
+                      "gap": "md",
+                      "type": "stack",
+                      "children": [
+                        {
+                          "gap": "sm",
+                          "type": "stack",
+                          "direction": "horizontal",
+                          "children": [
+                            {
+                              "name": "alert-octagon",
+                              "type": "icon"
+                            },
+                            {
+                              "variant": "h3",
+                              "content": "@config.title",
+                              "type": "typography"
+                            }
+                          ],
+                          "align": "center"
+                        },
+                        {
+                          "type": "simple-grid",
+                          "cols": 4.0,
+                          "children": [
+                            {
+                              "value": "@payload.data.length",
+                              "icon": "alert-octagon",
+                              "type": "stat-display",
+                              "label": "Total incidents"
+                            },
+                            {
+                              "label": "Sev1 open",
+                              "value": "2",
+                              "type": "stat-display",
+                              "icon": "alert-triangle"
+                            },
+                            {
+                              "type": "stat-display",
+                              "icon": "bell",
+                              "value": "8",
+                              "label": "Acknowledged"
+                            },
+                            {
+                              "value": "12",
+                              "label": "Resolved today",
+                              "icon": "check-circle",
+                              "type": "stat-display"
+                            }
+                          ]
+                        },
+                        {
+                          "type": "divider"
+                        },
+                        {
+                          "cols": 1.0,
+                          "entity": "@payload.data",
+                          "fields": "@config.fields",
+                          "type": "data-grid",
+                          "gap": "sm",
+                          "itemActions": "@config.itemActions"
+                        }
+                      ]
+                    }
+                  ]
+                ]
+              },
+              {
+                "from": "loading",
+                "to": "error",
+                "event": "IncidentLoadFailed",
+                "effects": [
+                  [
+                    "render-ui",
+                    "main",
+                    {
+                      "message": "@payload.error",
+                      "type": "alert",
+                      "variant": "error"
+                    }
+                  ]
+                ]
+              },
+              {
+                "from": "browsing",
+                "to": "viewing_single",
+                "event": "INCIDENT_OPEN",
+                "effects": [
+                  [
+                    "set",
+                    "@entity.id",
+                    "@payload.row.id"
+                  ],
+                  [
+                    "set",
+                    "@entity.title",
+                    "@payload.row.title"
+                  ],
+                  [
+                    "set",
+                    "@entity.description",
+                    "@payload.row.description"
+                  ],
+                  [
+                    "set",
+                    "@entity.severity",
+                    "@payload.row.severity"
+                  ],
+                  [
+                    "set",
+                    "@entity.status",
+                    "@payload.row.status"
+                  ],
+                  [
+                    "set",
+                    "@entity.pagedTo",
+                    "@payload.row.pagedTo"
+                  ],
+                  [
+                    "set",
+                    "@entity.runbookId",
+                    "@payload.row.runbookId"
+                  ],
+                  [
+                    "set",
+                    "@entity.acknowledgedAt",
+                    "@payload.row.acknowledgedAt"
+                  ],
+                  [
+                    "set",
+                    "@entity.mitigatedAt",
+                    "@payload.row.mitigatedAt"
+                  ],
+                  [
+                    "set",
+                    "@entity.resolvedAt",
+                    "@payload.row.resolvedAt"
+                  ],
+                  [
+                    "set",
+                    "@entity.createdAt",
+                    "@payload.row.createdAt"
+                  ],
+                  [
+                    "render-ui",
+                    "main",
+                    {
+                      "children": [
+                        {
+                          "align": "center",
+                          "gap": "sm",
+                          "children": [
+                            {
+                              "type": "button",
+                              "label": "Back",
+                              "action": "CLOSE_VIEW",
+                              "variant": "ghost"
+                            },
+                            {
+                              "name": "alert-octagon",
+                              "type": "icon"
+                            },
+                            {
+                              "content": "@entity.title",
+                              "type": "typography",
+                              "variant": "h3"
+                            },
+                            {
+                              "label": "@entity.severity",
+                              "type": "badge",
+                              "variant": "primary"
+                            },
+                            {
+                              "variant": "default",
+                              "type": "badge",
+                              "label": "@entity.status"
+                            }
+                          ],
+                          "direction": "horizontal",
+                          "type": "stack"
+                        },
+                        {
+                          "type": "divider"
+                        },
+                        {
+                          "direction": "vertical",
+                          "children": [
+                            {
+                              "children": [
+                                {
+                                  "color": "muted",
+                                  "type": "typography",
+                                  "content": "Description",
+                                  "variant": "caption"
+                                },
+                                {
+                                  "type": "typography",
+                                  "content": "@entity.description",
+                                  "variant": "body"
+                                }
+                              ],
+                              "direction": "horizontal",
+                              "type": "stack",
+                              "gap": "md"
+                            },
+                            {
+                              "children": [
+                                {
+                                  "variant": "caption",
+                                  "color": "muted",
+                                  "type": "typography",
+                                  "content": "Paged to"
+                                },
+                                {
+                                  "content": "@entity.pagedTo",
+                                  "type": "typography",
+                                  "variant": "body"
+                                }
+                              ],
+                              "type": "stack",
+                              "direction": "horizontal",
+                              "gap": "md"
+                            },
+                            {
+                              "type": "stack",
+                              "gap": "md",
+                              "direction": "horizontal",
+                              "children": [
+                                {
+                                  "content": "Runbook",
+                                  "color": "muted",
+                                  "type": "typography",
+                                  "variant": "caption"
+                                },
+                                {
+                                  "type": "typography",
+                                  "content": "@entity.runbookId",
+                                  "variant": "body"
+                                }
+                              ]
+                            }
+                          ],
+                          "gap": "sm",
+                          "type": "stack"
+                        },
+                        {
+                          "type": "divider"
+                        },
+                        {
+                          "children": [
+                            {
+                              "type": "stat-display",
+                              "value": "@entity.acknowledgedAt",
+                              "label": "Acknowledged",
+                              "icon": "bell"
+                            },
+                            {
+                              "value": "@entity.mitigatedAt",
+                              "label": "Mitigated",
+                              "type": "stat-display",
+                              "icon": "shield"
+                            },
+                            {
+                              "icon": "check",
+                              "value": "@entity.resolvedAt",
+                              "label": "Resolved",
+                              "type": "stat-display"
+                            }
+                          ],
+                          "cols": 3.0,
+                          "type": "simple-grid"
+                        },
+                        {
+                          "align": "center",
+                          "direction": "horizontal",
+                          "children": [
+                            {
+                              "actionPayload": {
+                                "id": "@entity.id",
+                                "row": "@entity"
+                              },
+                              "label": "Acknowledge",
+                              "action": "ACK",
+                              "type": "button",
+                              "variant": "primary"
+                            },
+                            {
+                              "actionPayload": {
+                                "id": "@entity.id",
+                                "row": "@entity"
+                              },
+                              "variant": "secondary",
+                              "label": "Mitigate",
+                              "type": "button",
+                              "action": "MITIGATE"
+                            },
+                            {
+                              "label": "Resolve",
+                              "action": "RESOLVE",
+                              "actionPayload": {
+                                "id": "@entity.id",
+                                "row": "@entity"
+                              },
+                              "type": "button",
+                              "variant": "primary"
+                            }
+                          ],
+                          "type": "stack",
+                          "gap": "sm"
+                        }
+                      ],
+                      "type": "stack",
+                      "gap": "md",
+                      "direction": "vertical"
+                    }
+                  ]
+                ]
+              },
+              {
+                "from": "browsing",
+                "to": "loading",
+                "event": "RESOLVE",
+                "effects": [
+                  [
+                    "set",
+                    "@entity.id",
+                    "@payload.id"
+                  ],
+                  [
+                    "fetch",
+                    "Incident",
+                    {
+                      "emit": {
+                        "failure": "IncidentLoadFailed",
+                        "success": "IncidentLoaded"
+                      }
+                    }
+                  ],
+                  [
+                    "render-ui",
+                    "main",
+                    {
+                      "direction": "vertical",
+                      "gap": "md",
+                      "align": "center",
+                      "type": "stack",
+                      "className": "py-12",
+                      "children": [
+                        {
+                          "type": "spinner"
+                        },
+                        {
+                          "variant": "caption",
+                          "color": "muted",
+                          "content": "Resolving incident…",
+                          "type": "typography"
+                        }
+                      ]
+                    }
+                  ]
+                ]
+              },
+              {
+                "from": "browsing",
+                "to": "loading",
+                "event": "SET_STATUS",
+                "effects": [
+                  [
+                    "set",
+                    "@entity.id",
+                    "@payload.entityId"
+                  ],
+                  [
+                    "set",
+                    "@entity.status",
+                    "@payload.newStatus"
+                  ],
+                  [
+                    "persist",
+                    "update",
+                    "Incident",
+                    "@entity",
+                    {
+                      "emit": {
+                        "failure": "IncidentLoadFailed",
+                        "success": "IncidentLoaded"
+                      }
+                    }
+                  ],
+                  [
+                    "render-ui",
+                    "main",
+                    {
+                      "gap": "md",
+                      "children": [
+                        {
+                          "type": "spinner"
+                        },
+                        {
+                          "type": "typography",
+                          "content": "Updating incident status…",
+                          "color": "muted",
+                          "variant": "caption"
+                        }
+                      ],
+                      "type": "stack",
+                      "align": "center",
+                      "className": "py-12",
+                      "direction": "vertical"
+                    }
+                  ]
+                ]
+              },
+              {
+                "from": "viewing_single",
+                "to": "loading",
+                "event": "CLOSE_VIEW",
+                "effects": [
+                  [
+                    "fetch",
+                    "Incident",
+                    {
+                      "emit": {
+                        "success": "IncidentLoaded",
+                        "failure": "IncidentLoadFailed"
+                      }
+                    }
+                  ],
+                  [
+                    "render-ui",
+                    "main",
+                    {
+                      "gap": "md",
+                      "className": "py-12",
+                      "children": [
+                        {
+                          "type": "spinner"
+                        },
+                        {
+                          "color": "muted",
+                          "type": "typography",
+                          "content": "Loading incidents…",
+                          "variant": "caption"
+                        }
+                      ],
+                      "direction": "vertical",
+                      "type": "stack",
+                      "align": "center"
+                    }
+                  ]
+                ]
+              },
+              {
+                "from": "viewing_single",
+                "to": "loading",
+                "event": "ACK",
+                "effects": [
+                  [
+                    "set",
+                    "@entity.id",
+                    "@payload.id"
+                  ],
+                  [
+                    "fetch",
+                    "Incident",
+                    {
+                      "emit": {
+                        "failure": "IncidentLoadFailed",
+                        "success": "IncidentLoaded"
+                      }
+                    }
+                  ],
+                  [
+                    "render-ui",
+                    "main",
+                    {
+                      "type": "stack",
+                      "gap": "md",
+                      "direction": "vertical",
+                      "children": [
+                        {
+                          "type": "spinner"
+                        },
+                        {
+                          "color": "muted",
+                          "type": "typography",
+                          "variant": "caption",
+                          "content": "Acknowledging incident…"
+                        }
+                      ],
+                      "className": "py-12",
+                      "align": "center"
+                    }
+                  ]
+                ]
+              },
+              {
+                "from": "viewing_single",
+                "to": "loading",
+                "event": "MITIGATE",
+                "effects": [
+                  [
+                    "set",
+                    "@entity.id",
+                    "@payload.id"
+                  ],
+                  [
+                    "fetch",
+                    "Incident",
+                    {
+                      "emit": {
+                        "failure": "IncidentLoadFailed",
+                        "success": "IncidentLoaded"
+                      }
+                    }
+                  ],
+                  [
+                    "render-ui",
+                    "main",
+                    {
+                      "type": "stack",
+                      "align": "center",
+                      "className": "py-12",
+                      "direction": "vertical",
+                      "children": [
+                        {
+                          "type": "spinner"
+                        },
+                        {
+                          "variant": "caption",
+                          "type": "typography",
+                          "color": "muted",
+                          "content": "Mitigating incident…"
+                        }
+                      ],
+                      "gap": "md"
+                    }
+                  ]
+                ]
+              },
+              {
+                "from": "viewing_single",
+                "to": "loading",
+                "event": "RESOLVE",
+                "effects": [
+                  [
+                    "set",
+                    "@entity.id",
+                    "@payload.id"
+                  ],
+                  [
+                    "fetch",
+                    "Incident",
+                    {
+                      "emit": {
+                        "failure": "IncidentLoadFailed",
+                        "success": "IncidentLoaded"
+                      }
+                    }
+                  ],
+                  [
+                    "render-ui",
+                    "main",
+                    {
+                      "direction": "vertical",
+                      "type": "stack",
+                      "align": "center",
+                      "className": "py-12",
+                      "children": [
+                        {
+                          "type": "spinner"
+                        },
+                        {
+                          "type": "typography",
+                          "variant": "caption",
+                          "color": "muted",
+                          "content": "Resolving incident…"
+                        }
+                      ],
+                      "gap": "md"
+                    }
+                  ]
+                ]
+              },
+              {
+                "from": "error",
+                "to": "loading",
+                "event": "INIT",
+                "effects": [
+                  [
+                    "fetch",
+                    "Incident",
+                    {
+                      "emit": {
+                        "success": "IncidentLoaded",
+                        "failure": "IncidentLoadFailed"
+                      }
+                    }
+                  ],
+                  [
+                    "render-ui",
+                    "main",
+                    {
+                      "size": "sm",
+                      "type": "spinner"
+                    }
+                  ]
+                ]
+              }
+            ]
+          },
+          "config": {
+            "pagedRoles": {
+              "type": "[string]",
+              "default": [
+                "oncall-primary"
+              ],
+              "label": "Paged roles",
+              "description": "Roles auto-paged when an incident opens. Compose std-notify-on-event for delivery.",
+              "synonyms": "on-call roles, paging list",
+              "tier": "domain",
+              "items": {
+                "type": "string"
+              }
+            },
+            "postmortemRequiredAbove": {
+              "type": "string",
+              "default": "sev2",
+              "label": "Postmortem required above",
+              "description": "Severity threshold at-or-above which a postmortem doc is mandatory.",
+              "synonyms": "RCA required",
+              "tier": "domain",
+              "values": [
+                "sev1",
+                "sev2",
+                "sev3",
+                "sev4",
+                "sev5"
+              ]
+            },
+            "customerCommsRequired": {
+              "type": "string",
+              "default": "sev1-2",
+              "label": "Customer comms required",
+              "description": "When to require a customer-facing status page update.",
+              "synonyms": "status page, customer notification",
+              "tier": "domain",
+              "values": [
+                "always",
+                "sev1-only",
+                "sev1-2",
+                "never"
+              ]
+            },
+            "fields": {
+              "type": "[FieldSpec]",
+              "default": [
+                {
+                  "name": "title",
+                  "label": "Title",
+                  "variant": "caption"
+                },
+                {
+                  "name": "severity",
+                  "label": "Severity",
+                  "variant": "badge"
+                },
+                {
+                  "variant": "badge",
+                  "name": "status",
+                  "label": "Status"
+                },
+                {
+                  "label": "Paged",
+                  "name": "pagedTo",
+                  "variant": "caption"
+                },
+                {
+                  "name": "runbookId",
+                  "label": "Runbook",
+                  "variant": "caption"
+                }
+              ],
+              "label": "Columns to show",
+              "description": "Each column maps to one field on the Incident entity",
+              "tier": "presentation",
+              "items": {
+                "type": "object",
+                "properties": {
+                  "format": {
+                    "name": "format",
+                    "type": "string",
+                    "required": false
+                  },
+                  "key": {
+                    "name": "key",
+                    "type": "string",
+                    "required": false
+                  },
+                  "header": {
+                    "name": "header",
+                    "type": "string",
+                    "required": false
+                  },
+                  "variant": {
+                    "name": "variant",
+                    "type": "string",
+                    "required": false
+                  },
+                  "label": {
+                    "name": "label",
+                    "type": "string",
+                    "required": false
+                  },
+                  "name": {
+                    "name": "name",
+                    "type": "string",
+                    "required": true
+                  },
+                  "icon": {
+                    "name": "icon",
+                    "type": "string",
+                    "required": false
+                  }
+                }
+              }
+            },
+            "runbookId": {
+              "type": "string",
+              "default": "",
+              "label": "Default runbook ID",
+              "description": "ID of a sibling std-runbook (when composed) to consult on alert. Empty = no auto-suggested runbook.",
+              "tier": "domain"
+            },
+            "acknowledgementDeadlineMinutes": {
+              "type": "number",
+              "default": 5.0,
+              "label": "Acknowledgement deadline (min)",
+              "description": "Minutes from page to acknowledgement before re-paging.",
+              "tier": "domain"
+            },
+            "title": {
+              "type": "string",
+              "default": "Incidents",
+              "label": "Section title",
+              "description": "Heading shown above the incidents list",
+              "tier": "presentation"
+            },
+            "itemActions": {
+              "type": "[ItemAction]",
+              "default": [
+                {
+                  "label": "Open",
+                  "variant": "primary",
+                  "event": "INCIDENT_OPEN",
+                  "icon": "arrow-right"
+                },
+                {
+                  "event": "RESOLVE",
+                  "icon": "check",
+                  "variant": "primary",
+                  "label": "Resolve"
+                }
+              ],
+              "label": "Row actions",
+              "description": "Buttons users can click on each incident row",
+              "tier": "presentation",
+              "items": {
+                "type": "object",
+                "properties": {
+                  "label": {
+                    "name": "label",
+                    "type": "string",
+                    "required": true
+                  },
+                  "icon": {
+                    "name": "icon",
+                    "type": "string",
+                    "required": false
+                  },
+                  "variant": {
+                    "name": "variant",
+                    "type": "string",
+                    "required": false
+                  },
+                  "event": {
+                    "name": "event",
+                    "type": "string",
+                    "required": true
+                  }
+                }
+              }
+            },
+            "pageEscalationMinutes": {
+              "type": "number",
+              "default": 15.0,
+              "label": "Page escalation (min)",
+              "description": "Minutes after open before paging the next role in the escalation chain.",
+              "tier": "domain"
+            },
+            "autoCloseAfterResolution": {
+              "type": "boolean",
+              "default": true,
+              "label": "Auto-close after resolution",
+              "description": "When true, an incident moves to 'closed' automatically after the resolved-mitigated window.",
+              "tier": "domain"
+            },
+            "severity": {
+              "type": "string",
+              "default": "sev3",
+              "label": "Default severity",
+              "description": "Default severity classification for new incidents.",
+              "synonyms": "impact level, sev",
+              "tier": "domain",
+              "values": [
+                "sev1",
+                "sev2",
+                "sev3",
+                "sev4",
+                "sev5"
+              ]
+            }
+          },
+          "scope": "collection"
+        }
+      ],
+      "pages": [
+        {
+          "name": "IncidentManagePage",
+          "path": "/incidents",
+          "traits": [
+            {
+              "ref": "IncidentManage"
+            }
+          ]
+        }
+      ]
+    }
+  ]
+}

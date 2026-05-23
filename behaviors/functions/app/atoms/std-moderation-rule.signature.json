@@ -1,0 +1,252 @@
+[
+  {
+    "organism": "std-moderation-rule",
+    "orbital": "ModerationRuleOrbital",
+    "tier": "atoms",
+    "factoryPath": "behaviors/functions/app/atoms/std-moderation-rule.ts",
+    "entities": [
+      {
+        "name": "ModerationRule",
+        "fields": [
+          {
+            "name": "name",
+            "type": "string",
+            "required": true
+          },
+          {
+            "name": "description",
+            "type": "string",
+            "required": false
+          },
+          {
+            "name": "appliesTo",
+            "type": "string",
+            "required": false
+          },
+          {
+            "name": "priority",
+            "type": "number",
+            "required": false
+          },
+          {
+            "name": "status",
+            "type": "string",
+            "required": false
+          }
+        ],
+        "persistence": "persistent"
+      }
+    ],
+    "traits": [
+      {
+        "name": "ModerationRuleManage",
+        "emittedEvents": [
+          "OPEN_RULE",
+          "CLOSE_VIEW",
+          "TEST_RULE",
+          "ARCHIVE_RULE",
+          "ModerationRuleLoaded",
+          "ModerationRuleLoadFailed"
+        ],
+        "listenedEvents": [],
+        "overridableConfigKeys": [
+          {
+            "key": "appealWindowHours",
+            "type": "number",
+            "default": 48,
+            "label": "Appeal window (hours)",
+            "description": "Hours a user has to appeal an enforcement action before it becomes permanent.",
+            "tier": "domain"
+          },
+          {
+            "key": "autoAction",
+            "type": "string",
+            "default": "flag",
+            "label": "Auto action",
+            "description": "What to do when the rule fires.",
+            "synonyms": "moderation action, enforcement",
+            "tier": "domain",
+            "enumValues": [
+              "flag",
+              "hide",
+              "shadow-ban",
+              "delete",
+              "ban-user"
+            ]
+          },
+          {
+            "key": "fields",
+            "type": "[FieldSpec]",
+            "default": [
+              {
+                "label": "Rule",
+                "name": "name",
+                "variant": "caption"
+              },
+              {
+                "label": "Applies to",
+                "variant": "caption",
+                "name": "appliesTo"
+              },
+              {
+                "variant": "caption",
+                "name": "priority",
+                "label": "Priority"
+              },
+              {
+                "name": "status",
+                "label": "Status",
+                "variant": "badge"
+              }
+            ],
+            "label": "Columns to show",
+            "description": "Each column maps to one field on the Moderation Rule entity",
+            "tier": "presentation",
+            "items": {
+              "properties": {
+                "label": {
+                  "name": "label",
+                  "required": false,
+                  "type": "string"
+                },
+                "key": {
+                  "name": "key",
+                  "required": false,
+                  "type": "string"
+                },
+                "variant": {
+                  "name": "variant",
+                  "required": false,
+                  "type": "string"
+                },
+                "format": {
+                  "name": "format",
+                  "required": false,
+                  "type": "string"
+                },
+                "header": {
+                  "name": "header",
+                  "required": false,
+                  "type": "string"
+                },
+                "icon": {
+                  "name": "icon",
+                  "required": false,
+                  "type": "string"
+                },
+                "name": {
+                  "name": "name",
+                  "required": true,
+                  "type": "string"
+                }
+              },
+              "type": "object"
+            }
+          },
+          {
+            "key": "humanReviewThreshold",
+            "type": "number",
+            "default": 0.6,
+            "label": "Human review threshold",
+            "description": "Toxicity score above which content goes to human review queue instead of auto-action. 0 = always human review; 1 = never.",
+            "synonyms": "review queue threshold",
+            "tier": "domain"
+          },
+          {
+            "key": "itemActions",
+            "type": "[ItemAction]",
+            "default": [
+              {
+                "variant": "primary",
+                "event": "OPEN_RULE",
+                "icon": "arrow-right",
+                "label": "Open"
+              },
+              {
+                "label": "Archive",
+                "variant": "danger",
+                "event": "ARCHIVE_RULE"
+              }
+            ],
+            "label": "Row actions",
+            "description": "Buttons users can click on each rule row",
+            "tier": "presentation",
+            "items": {
+              "properties": {
+                "icon": {
+                  "name": "icon",
+                  "required": false,
+                  "type": "string"
+                },
+                "variant": {
+                  "name": "variant",
+                  "required": false,
+                  "type": "string"
+                },
+                "label": {
+                  "name": "label",
+                  "required": true,
+                  "type": "string"
+                },
+                "event": {
+                  "name": "event",
+                  "required": true,
+                  "type": "string"
+                }
+              },
+              "type": "object"
+            }
+          },
+          {
+            "key": "repeatOffenderEscalation",
+            "type": "string",
+            "default": "tempban",
+            "label": "Repeat-offender escalation",
+            "description": "Action for users who triggered this rule N times in a rolling window.",
+            "synonyms": "recidivism policy",
+            "tier": "domain",
+            "enumValues": [
+              "warn",
+              "tempban",
+              "ban"
+            ]
+          },
+          {
+            "key": "title",
+            "type": "string",
+            "default": "Moderation Rules",
+            "label": "Section title",
+            "description": "Heading shown above the moderation rules list",
+            "tier": "presentation"
+          },
+          {
+            "key": "toxicityThreshold",
+            "type": "number",
+            "default": 0.85,
+            "label": "Toxicity threshold (0-1)",
+            "description": "Confidence score above which content is flagged. Lower = more aggressive moderation.",
+            "synonyms": "abuse threshold, content sensitivity",
+            "tier": "domain"
+          }
+        ],
+        "capabilities": []
+      }
+    ],
+    "pages": [
+      {
+        "name": "ModerationRulePage",
+        "defaultPath": "/moderation-rules",
+        "primaryEntity": "ModerationRule"
+      }
+    ],
+    "emittedEvents": [
+      "ARCHIVE_RULE",
+      "CLOSE_VIEW",
+      "ModerationRuleLoadFailed",
+      "ModerationRuleLoaded",
+      "OPEN_RULE",
+      "TEST_RULE"
+    ],
+    "listenedEvents": []
+  }
+]

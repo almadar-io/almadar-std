@@ -1,0 +1,275 @@
+[
+  {
+    "organism": "std-portfolio",
+    "orbital": "PortfolioOrbital",
+    "tier": "atoms",
+    "factoryPath": "behaviors/functions/app/atoms/std-portfolio.ts",
+    "entities": [
+      {
+        "name": "Portfolio",
+        "fields": [
+          {
+            "name": "name",
+            "type": "string",
+            "required": true
+          },
+          {
+            "name": "ownerAccountId",
+            "type": "string",
+            "required": true
+          },
+          {
+            "name": "currentValueUSD",
+            "type": "number",
+            "required": false
+          },
+          {
+            "name": "targetAllocationJson",
+            "type": "string",
+            "required": false
+          },
+          {
+            "name": "driftBps",
+            "type": "number",
+            "required": false
+          },
+          {
+            "name": "status",
+            "type": "string",
+            "required": false
+          },
+          {
+            "name": "lastRebalancedAt",
+            "type": "string",
+            "required": false
+          }
+        ],
+        "persistence": "persistent"
+      }
+    ],
+    "traits": [
+      {
+        "name": "PortfolioManage",
+        "emittedEvents": [
+          "OPEN_PORTFOLIO",
+          "CLOSE_VIEW",
+          "REBALANCE",
+          "FREEZE",
+          "ARCHIVE",
+          "PortfolioLoaded",
+          "PortfolioLoadFailed"
+        ],
+        "listenedEvents": [],
+        "overridableConfigKeys": [
+          {
+            "key": "cashBufferPct",
+            "type": "number",
+            "default": 5,
+            "label": "Cash buffer (%)",
+            "description": "Minimum percentage held in cash for liquidity needs and rebalancing.",
+            "synonyms": "cash reserve",
+            "tier": "domain"
+          },
+          {
+            "key": "dividendReinvestPolicy",
+            "type": "string",
+            "default": "auto",
+            "label": "Dividend reinvestment",
+            "description": "What to do with dividends: reinvest into source security, take as cash, or sweep to a designated fund.",
+            "synonyms": "DRIP, dividend handling",
+            "tier": "domain",
+            "enumValues": [
+              "auto",
+              "cash",
+              "specified-fund"
+            ]
+          },
+          {
+            "key": "driftThresholdBps",
+            "type": "number",
+            "default": 500,
+            "label": "Drift threshold (bps)",
+            "description": "Maximum drift from target allocation before triggering rebalance.",
+            "synonyms": "drift band, rebalance trigger",
+            "tier": "domain"
+          },
+          {
+            "key": "fields",
+            "type": "[FieldSpec]",
+            "default": [
+              {
+                "variant": "caption",
+                "name": "name",
+                "label": "Name"
+              },
+              {
+                "label": "Owner",
+                "variant": "caption",
+                "name": "ownerAccountId"
+              },
+              {
+                "name": "currentValueUSD",
+                "label": "Value (USD)",
+                "variant": "caption"
+              },
+              {
+                "name": "driftBps",
+                "label": "Drift (bps)",
+                "variant": "caption"
+              },
+              {
+                "variant": "badge",
+                "label": "Status",
+                "name": "status"
+              },
+              {
+                "name": "lastRebalancedAt",
+                "variant": "caption",
+                "label": "Last Rebalanced"
+              }
+            ],
+            "label": "Columns to show",
+            "description": "Each column maps to one field on the Portfolio entity",
+            "tier": "presentation",
+            "items": {
+              "properties": {
+                "header": {
+                  "name": "header",
+                  "required": false,
+                  "type": "string"
+                },
+                "label": {
+                  "name": "label",
+                  "required": false,
+                  "type": "string"
+                },
+                "icon": {
+                  "name": "icon",
+                  "required": false,
+                  "type": "string"
+                },
+                "variant": {
+                  "name": "variant",
+                  "required": false,
+                  "type": "string"
+                },
+                "key": {
+                  "name": "key",
+                  "required": false,
+                  "type": "string"
+                },
+                "name": {
+                  "name": "name",
+                  "required": true,
+                  "type": "string"
+                },
+                "format": {
+                  "name": "format",
+                  "required": false,
+                  "type": "string"
+                }
+              },
+              "type": "object"
+            }
+          },
+          {
+            "key": "itemActions",
+            "type": "[ItemAction]",
+            "default": [
+              {
+                "icon": "arrow-right",
+                "event": "OPEN_PORTFOLIO",
+                "label": "Open",
+                "variant": "primary"
+              },
+              {
+                "event": "REBALANCE",
+                "label": "Rebalance",
+                "icon": "refresh-cw",
+                "variant": "primary"
+              }
+            ],
+            "label": "Row actions",
+            "description": "Buttons users can click on each portfolio row",
+            "tier": "presentation",
+            "items": {
+              "properties": {
+                "variant": {
+                  "name": "variant",
+                  "required": false,
+                  "type": "string"
+                },
+                "event": {
+                  "name": "event",
+                  "required": true,
+                  "type": "string"
+                },
+                "icon": {
+                  "name": "icon",
+                  "required": false,
+                  "type": "string"
+                },
+                "label": {
+                  "name": "label",
+                  "required": true,
+                  "type": "string"
+                }
+              },
+              "type": "object"
+            }
+          },
+          {
+            "key": "rebalancingFrequencyDays",
+            "type": "number",
+            "default": 90,
+            "label": "Rebalance cadence (days)",
+            "description": "How often the portfolio gets auto-rebalanced toward target allocation.",
+            "synonyms": "rebalance interval",
+            "tier": "domain"
+          },
+          {
+            "key": "taxLotMethod",
+            "type": "string",
+            "default": "FIFO",
+            "label": "Tax lot method",
+            "description": "Cost-basis accounting method when selling shares.",
+            "synonyms": "lot accounting, cost basis",
+            "tier": "domain",
+            "enumValues": [
+              "FIFO",
+              "LIFO",
+              "HIFO",
+              "specific-lot"
+            ]
+          },
+          {
+            "key": "title",
+            "type": "string",
+            "default": "Portfolios",
+            "label": "Section title",
+            "description": "Heading shown above the portfolio list",
+            "tier": "presentation"
+          }
+        ],
+        "capabilities": []
+      }
+    ],
+    "pages": [
+      {
+        "name": "PortfolioManagePage",
+        "defaultPath": "/portfolios/manage",
+        "primaryEntity": "Portfolio"
+      }
+    ],
+    "emittedEvents": [
+      "ARCHIVE",
+      "CLOSE_VIEW",
+      "FREEZE",
+      "OPEN_PORTFOLIO",
+      "PortfolioLoadFailed",
+      "PortfolioLoaded",
+      "REBALANCE"
+    ],
+    "listenedEvents": []
+  }
+]

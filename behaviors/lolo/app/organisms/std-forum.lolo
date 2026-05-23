@@ -12,6 +12,9 @@ orbital QuestionOrbital {
   uses Filter       from "std/behaviors/std-filter"
   uses Browse       from "std/behaviors/std-browse"
   uses Stats        from "std/behaviors/std-stats"
+  uses Notify       from "std/behaviors/std-notify-on-event"
+  uses Erasure      from "std/behaviors/std-data-erasure"
+  uses Audit        from "std/behaviors/std-audit-capture"
 
   entity Question [persistent: questions] {
     id : string!
@@ -281,7 +284,43 @@ orbital QuestionOrbital {
     }
   }
 
-  page "/questions" as QuestionsPage -> QuestionAppLayout, QuestionCatalog, QuestionSearch, QuestionFilter, QuestionStats, QuestionTagTree, QuestionBrowseList, QuestionThread, QuestionVote, QuestionCreate, QuestionEdit, QuestionView, QuestionDeleteConfirm, QuestionPersistor
+  trait QuestionReplyNotifier = Notify.traits.NotifyOnEventListener {
+    config: {
+      listensFor: ["ReplyAdded"],
+      notifyChannel: "in-app",
+      template: "A new reply was posted on your question",
+      severity: "info",
+      recipients: [],
+      suppressionList: []
+    }
+    events {
+      EventOccurred: ReplyAdded
+    }
+  }
+
+  trait QuestionErasure = Erasure.traits.ErasureWorkflow {
+    config: {
+      targetEntity: "Question",
+      gracePeriodDays: 30,
+      anonymizeVsDelete: "anonymize",
+      piiFields: ["authorName", "body"]
+    }
+  }
+
+  trait QuestionAudit = Audit.traits.AuditCaptureListener {
+    config: {
+      captureEntity: "Question",
+      captureEventTypes: [],
+      excludeFields: [],
+      captureBeforeAfter: false,
+      retentionDays: 2555
+    }
+    events {
+      EntityMutated: QUESTION_UPDATED
+    }
+  }
+
+  page "/questions" as QuestionsPage -> QuestionAppLayout, QuestionCatalog, QuestionSearch, QuestionFilter, QuestionStats, QuestionTagTree, QuestionBrowseList, QuestionThread, QuestionVote, QuestionCreate, QuestionEdit, QuestionView, QuestionDeleteConfirm, QuestionPersistor, QuestionReplyNotifier, QuestionErasure, QuestionAudit
 }
 
 orbital ModQueueOrbital {
@@ -439,4 +478,42 @@ orbital ModQueueOrbital {
   }
 
   page "/moderation" as ModerationPage -> ModerationAppLayout, ModerationDisplay, ModerationQueue, ModerationFlagBrowse, ModerationDecisionBrowse, ModerationRevertConfirm, ModerationPersistor
+}
+
+orbital ModerationRuleFromStdOrbital {
+  uses AppShell from "std/behaviors/std-app-layout"
+  uses Rules    from "std/behaviors/std-moderation-rule"
+
+  entity ModerationRule [persistent: moderation_rules] {
+    id          : string!
+    name        : string!
+    description : string = ""
+    appliesTo   : string = ""
+    priority    : number = 0
+    status      : "active" | "testing" | "archived" = "active"
+    createdAt   : string = ""
+  }
+
+  trait ModerationRuleFromStdAppLayout = AppShell.traits.AppLayout -> ModerationRule {
+    config: {
+      contentTrait: "@trait.ModerationRuleFromStdManageBlock",
+      appName: "Forum",
+      navItems: [{ label: "Questions", href: "/questions", icon: "help-circle" }, { label: "Categories", href: "/questions", icon: "tag" }, { label: "Moderation", href: "/moderation", icon: "shield-alert" }, { label: "Moderation Rules", href: "/moderation-rules", icon: "filter" }],
+      searchEvent: "MODERATION_RULE_SEARCH",
+      notifications: [],
+      notificationClickEvent: "MODERATION_RULE_NOTIFICATIONS_OPEN"
+    }
+    events {
+      SEARCH: MODERATION_RULE_SEARCH
+      NOTIFY_CLICK: MODERATION_RULE_NOTIFICATIONS_OPEN
+    }
+  }
+
+  trait ModerationRuleFromStdManageBlock = Rules.traits.ModerationRuleManage -> ModerationRule {
+    config: {
+      title: "Moderation Rules"
+    }
+  }
+
+  page "/moderation-rules" as ModerationRuleFromStdPage -> ModerationRuleFromStdAppLayout, ModerationRuleFromStdManageBlock
 }

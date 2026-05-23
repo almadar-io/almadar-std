@@ -10,6 +10,9 @@ orbital ChatMessageOrbital {
   uses Browse       from "std/behaviors/std-browse"
   uses Storage      from "std/behaviors/std-service-storage"
   uses Twilio       from "std/behaviors/std-service-twilio"
+  uses Erasure      from "std/behaviors/std-data-erasure"
+  uses Audit        from "std/behaviors/std-audit-capture"
+  uses Notify       from "std/behaviors/std-notify-on-event"
 
   entity ChatMessage [persistent: chatmessages] {
     id : string!
@@ -280,7 +283,43 @@ orbital ChatMessageOrbital {
     }
   }
 
-  page "/chat" as ChatPage -> ChatAppLayout, ChatRoom, ChatSearch, ChatStats, ChatMessageBrowse, ChatMessageCompose, ChatMessageView, ChatMessagePersistor, ChatMessageAttachment, ChatSmsNotify
+  trait ChatErasure = Erasure.traits.ErasureWorkflow {
+    config: {
+      targetEntity: "ChatMessage",
+      gracePeriodDays: 30,
+      anonymizeVsDelete: "anonymize",
+      piiFields: ["sender", "content"]
+    }
+  }
+
+  trait ChatAudit = Audit.traits.AuditCaptureListener {
+    config: {
+      captureEntity: "ChatMessage",
+      captureEventTypes: [],
+      excludeFields: [],
+      captureBeforeAfter: false,
+      retentionDays: 2555
+    }
+    events {
+      EntityMutated: MESSAGE_SAVED
+    }
+  }
+
+  trait ChatMentionNotifier = Notify.traits.NotifyOnEventListener {
+    config: {
+      listensFor: ["MessageMention"],
+      notifyChannel: "in-app",
+      template: "You were mentioned in a message",
+      severity: "info",
+      recipients: [],
+      suppressionList: []
+    }
+    events {
+      EventOccurred: MessageMention
+    }
+  }
+
+  page "/chat" as ChatPage -> ChatAppLayout, ChatRoom, ChatSearch, ChatStats, ChatMessageBrowse, ChatMessageCompose, ChatMessageView, ChatMessagePersistor, ChatMessageAttachment, ChatSmsNotify, ChatErasure, ChatAudit, ChatMentionNotifier
 }
 
 orbital ChannelOrbital {
@@ -562,4 +601,41 @@ orbital OnlineUserOrbital {
   }
 
   page "/online" -> OnlineUserAppLayout, OnlineUserDisplay
+}
+
+orbital ConversationPolicyFromStdOrbital {
+  uses AppShell from "std/behaviors/std-app-layout"
+  uses Policies from "std/behaviors/std-conversation-policy"
+
+  entity ConversationPolicy [persistent: conversation_policies] {
+    id          : string!
+    name        : string!
+    description : string = ""
+    appliesTo   : string = ""
+    status      : "active" | "archived" = "active"
+    createdAt   : string = ""
+  }
+
+  trait ConversationPolicyFromStdAppLayout = AppShell.traits.AppLayout -> ConversationPolicy {
+    config: {
+      contentTrait: "@trait.ConversationPolicyFromStdManageBlock",
+      appName: "Realtime Chat",
+      navItems: [{ label: "Chat", href: "/chat", icon: "message-circle" }, { label: "Channels", href: "/channels", icon: "hash" }, { label: "Online", href: "/online", icon: "users" }, { label: "Conversation Policies", href: "/conversation-policies", icon: "shield" }],
+      searchEvent: "CONVERSATION_POLICY_SEARCH",
+      notifications: [],
+      notificationClickEvent: "CONVERSATION_POLICY_NOTIFICATIONS_OPEN"
+    }
+    events {
+      SEARCH: CONVERSATION_POLICY_SEARCH
+      NOTIFY_CLICK: CONVERSATION_POLICY_NOTIFICATIONS_OPEN
+    }
+  }
+
+  trait ConversationPolicyFromStdManageBlock = Policies.traits.ConversationPolicyManage -> ConversationPolicy {
+    config: {
+      title: "Conversation Policies"
+    }
+  }
+
+  page "/conversation-policies" as ConversationPolicyFromStdPage -> ConversationPolicyFromStdAppLayout, ConversationPolicyFromStdManageBlock
 }

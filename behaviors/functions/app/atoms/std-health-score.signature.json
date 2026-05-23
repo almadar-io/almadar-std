@@ -81,11 +81,35 @@
         "listenedEvents": [],
         "overridableConfigKeys": [
           {
+            "key": "alertEscalationRoles",
+            "type": "[string]",
+            "default": [
+              "csm-lead",
+              "customer-success-director"
+            ],
+            "label": "Alert escalation roles",
+            "description": "Roles paged when a previously-healthy account drops below churnRiskThreshold. Compose std-notify-on-event.",
+            "synonyms": "escalation list, escalation chain",
+            "tier": "domain",
+            "items": {
+              "type": "string"
+            }
+          },
+          {
             "key": "archiveInactiveAfterDays",
             "type": "number",
             "default": 365,
             "label": "Archive inactive after (days)",
             "description": "Days a health score may go without recalculation before being archived. Declarative; wire via sibling std-lifecycle.",
+            "tier": "domain"
+          },
+          {
+            "key": "churnRiskThreshold",
+            "type": "number",
+            "default": 30,
+            "label": "Churn risk threshold",
+            "description": "Score below which a customer is classified as at-risk for churn. Drives the retention playbook trigger.",
+            "synonyms": "at-risk threshold, churn signal",
             "tier": "domain"
           },
           {
@@ -101,34 +125,34 @@
             "type": "[FieldSpec]",
             "default": [
               {
-                "label": "Customer",
                 "name": "customerName",
+                "label": "Customer",
                 "variant": "caption"
               },
               {
+                "variant": "badge",
                 "name": "score",
-                "label": "Score",
+                "label": "Score"
+              },
+              {
+                "name": "tier",
+                "label": "Tier",
                 "variant": "badge"
               },
               {
-                "variant": "badge",
-                "label": "Tier",
-                "name": "tier"
-              },
-              {
-                "name": "usageScore",
                 "label": "Usage",
+                "name": "usageScore",
                 "variant": "caption"
               },
               {
-                "label": "Support",
                 "name": "supportScore",
+                "label": "Support",
                 "variant": "caption"
               },
               {
-                "name": "trend",
+                "label": "Trend",
                 "variant": "badge",
-                "label": "Trend"
+                "name": "trend"
               },
               {
                 "variant": "caption",
@@ -141,14 +165,14 @@
             "tier": "presentation",
             "items": {
               "properties": {
-                "header": {
-                  "name": "header",
+                "key": {
+                  "name": "key",
                   "required": false,
                   "type": "string"
                 },
-                "name": {
-                  "name": "name",
-                  "required": true,
+                "header": {
+                  "name": "header",
+                  "required": false,
                   "type": "string"
                 },
                 "label": {
@@ -161,18 +185,18 @@
                   "required": false,
                   "type": "string"
                 },
-                "format": {
-                  "name": "format",
-                  "required": false,
-                  "type": "string"
-                },
-                "key": {
-                  "name": "key",
-                  "required": false,
+                "name": {
+                  "name": "name",
+                  "required": true,
                   "type": "string"
                 },
                 "variant": {
                   "name": "variant",
+                  "required": false,
+                  "type": "string"
+                },
+                "format": {
+                  "name": "format",
                   "required": false,
                   "type": "string"
                 }
@@ -193,14 +217,14 @@
             "type": "[ItemAction]",
             "default": [
               {
-                "variant": "primary",
                 "label": "Open",
+                "event": "OPEN_SCORE",
                 "icon": "arrow-right",
-                "event": "OPEN_SCORE"
+                "variant": "primary"
               },
               {
-                "label": "Recalculate",
                 "event": "RECALCULATE",
+                "label": "Recalculate",
                 "variant": "secondary"
               }
             ],
@@ -209,18 +233,13 @@
             "tier": "presentation",
             "items": {
               "properties": {
-                "variant": {
-                  "name": "variant",
-                  "required": false,
-                  "type": "string"
-                },
                 "label": {
                   "name": "label",
                   "required": true,
                   "type": "string"
                 },
-                "icon": {
-                  "name": "icon",
+                "variant": {
+                  "name": "variant",
                   "required": false,
                   "type": "string"
                 },
@@ -228,10 +247,24 @@
                   "name": "event",
                   "required": true,
                   "type": "string"
+                },
+                "icon": {
+                  "name": "icon",
+                  "required": false,
+                  "type": "string"
                 }
               },
               "type": "object"
             }
+          },
+          {
+            "key": "recomputeIntervalHours",
+            "type": "number",
+            "default": 24,
+            "label": "Recompute interval (hours)",
+            "description": "How often the composite score is recalculated from underlying signals.",
+            "synonyms": "refresh cadence, calc interval",
+            "tier": "domain"
           },
           {
             "key": "renewalReminderDaysBefore",

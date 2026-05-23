@@ -3,6 +3,7 @@ app std-renewal-risk "1.2.0"
 
 type FieldSpec = { name : string!, label : string, variant : string, icon : string, format : string, key : string, header : string }
 type ItemAction = { label : string!, event : string!, variant : string, icon : string }
+type RiskTierBand = { tier : string!, scoreLow : number!, scoreHigh : number! }
 
 orbital RenewalRiskOrbital {
   entity RenewalRisk [persistent: renewalrisks] {
@@ -65,6 +66,21 @@ orbital RenewalRiskOrbital {
         @label "Track consent"
         @description "Whether mitigation-plan outreach requires recorded consent. Declarative."
         @tier "domain"
+      riskTierThresholds : [RiskTierBand] = [{ tier: "low", scoreLow: 70, scoreHigh: 100 }, { tier: "medium", scoreLow: 40, scoreHigh: 70 }, { tier: "high", scoreLow: 0, scoreHigh: 40 }]
+        @label "Risk tier thresholds"
+        @description "Health-score bands that map to risk tiers. low = healthy; medium = monitor; high = active intervention."
+        @tier "domain"
+        @synonyms "risk bands, tier mapping"
+      interventionPlaybookId : string = ""
+        @label "Default intervention playbook ID"
+        @description "Reference to the playbook auto-suggested when an account enters high-risk. Empty = no auto-suggest."
+        @tier "domain"
+        @synonyms "retention playbook, save-the-account workflow"
+      renewalReminderDaysBefore_csm : [number] = [60, 30, 14]
+        @label "CSM intervention reminder days-before"
+        @description "Days before renewalDate to nudge the assigned CSM. Separate from customer-facing reminders. Compose std-reminder-scheduler."
+        @tier "domain"
+        @synonyms "CSM nudge cadence"
     }
     initial: loading
     state loading {
