@@ -111,28 +111,28 @@ export interface StdApBillApBillUpdateFailedPayload {
  * without modifying its state-machine topology.
  */
 export interface StdApBillConfig {
-  /** Default: `[{"icon":"arrow-right","label":"Open","event":"OPEN_BILL","variant":"primary"},{"label":"Void","event":"VOID_BILL","variant":"danger"}]` */
-  itemActions?: EntityRow[];
-  /** Default: `"Bills Payable"` */
-  title?: string;
-  /** Default: `"USD"` */
-  currency?: string;
-  /** Default: `"exclusive"` */
-  taxStrategy?: 'inclusive' | 'exclusive' | 'none';
-  /** Default: `0` */
-  lateFeeAmount?: number;
   /** Default: `""` */
   complianceJurisdiction?: string;
-  /** Default: `30` */
-  gracePeriodDays?: number;
-  /** Default: `7` */
-  retentionYears?: number;
+  /** Default: `"exclusive"` */
+  taxStrategy?: 'inclusive' | 'exclusive' | 'none';
+  /** Default: `[{"icon":"arrow-right","label":"Open","variant":"primary","event":"OPEN_BILL"},{"variant":"danger","label":"Void","event":"VOID_BILL"}]` */
+  itemActions?: EntityRow[];
   /** Default: `"none"` */
   lateFeePolicy?: 'none' | 'flat' | 'percent';
+  /** Default: `7` */
+  retentionYears?: number;
   /** Default: `"half-up"` */
   roundingMode?: 'bankers' | 'half-up' | 'down';
-  /** Default: `[{"label":"Vendor","name":"vendor","variant":"caption"},{"name":"billNumber","label":"Bill #","variant":"caption"},{"name":"billDate","variant":"caption","label":"Bill Date"},{"name":"dueDate","label":"Due","variant":"caption"},{"variant":"caption","name":"amountTotal","label":"Total"},{"variant":"badge","label":"Status","name":"status"}]` */
+  /** Default: `[{"variant":"caption","name":"vendor","label":"Vendor"},{"variant":"caption","label":"Bill #","name":"billNumber"},{"variant":"caption","name":"billDate","label":"Bill Date"},{"label":"Due","variant":"caption","name":"dueDate"},{"variant":"caption","name":"amountTotal","label":"Total"},{"variant":"badge","name":"status","label":"Status"}]` */
   fields?: EntityRow[];
+  /** Default: `30` */
+  gracePeriodDays?: number;
+  /** Default: `"USD"` */
+  currency?: string;
+  /** Default: `"Bills Payable"` */
+  title?: string;
+  /** Default: `0` */
+  lateFeeAmount?: number;
 }
 
 /**

@@ -39,40 +39,40 @@ export type StdPricingPageEventKey = 'INIT';
  * without modifying its state-machine topology.
  */
 export interface StdPricingPageConfig {
-  /** Default: `""` */
-  heroTitleAccent?: string;
-  /** Default: `"Start free, scale as you grow."` */
-  heroSubtitle?: string;
-  /** Default: `"Still have questions?"` */
-  ctaTitle?: string;
-  /** Default: `"Simple, transparent pricing"` */
-  heroTitle?: string;
-  /** Default: `"center"` */
-  heroAlign?: string;
-  /** Default: `"Get Started"` */
-  heroPrimaryActionLabel?: string;
-  /** Default: `"Contact Sales"` */
-  heroSecondaryActionLabel?: string;
-  /** Default: `[{"title":"Product","items":[{"label":"Features","href":"#"},{"label":"Pricing","href":"#"},{"href":"#","label":"Changelog"}]},{"items":[{"label":"About","href":"#"},{"label":"Careers","href":"#"},{"href":"#","label":"Blog"}],"title":"Company"},{"title":"Resources","items":[{"href":"#","label":"Docs"},{"label":"Community","href":"#"},{"href":"#","label":"Support"}]}]` */
-  footerColumns?: EntityRow[];
   /** Default: `"/signup"` */
   heroPrimaryActionHref?: string;
-  /** Default: `"/contact"` */
-  heroSecondaryActionHref?: string;
   /** Default: `"subtle"` */
   heroBackground?: string;
+  /** Default: `[{"title":"Can I change plans later?","id":"plan-changes","content":"Yes, you can upgrade or downgrade at any time."},{"title":"Is there a free trial?","content":"Yes, every paid plan includes a 14-day free trial.","id":"free-trial"},{"id":"payment-methods","title":"What payment methods do you accept?","content":"We accept all major credit cards and wire transfers for Enterprise."}]` */
+  faq?: EntityRow[];
   /** Default: `""` */
   heroTag?: string;
-  /** Default: `[{"id":"plan-changes","title":"Can I change plans later?","content":"Yes, you can upgrade or downgrade at any time."},{"id":"free-trial","content":"Yes, every paid plan includes a 14-day free trial.","title":"Is there a free trial?"},{"title":"What payment methods do you accept?","content":"We accept all major credit cards and wire transfers for Enterprise.","id":"payment-methods"}]` */
-  faq?: EntityRow[];
-  /** Default: `"© 2026 Almadar. All rights reserved."` */
-  footerCopyright?: string;
-  /** Default: `[{"features":["1 project","Community support","Basic analytics"],"action":{"href":"#","label":"Get Started"},"highlighted":false,"price":"$0","description":"For individuals and small projects.","badge":"","name":"Starter"},{"action":{"label":"Start Trial","href":"#"},"name":"Pro","description":"For growing teams that need more power.","badge":"Most Popular","highlighted":true,"price":"$49","features":["Unlimited projects","Priority support","Advanced analytics","Custom domains"]},{"price":"Custom","action":{"label":"Contact Sales","href":"#"},"highlighted":false,"name":"Enterprise","description":"For organizations with advanced needs.","features":["Dedicated infra","SLA guarantee","SSO & SAML","Audit logs","Custom contracts"],"badge":""}]` */
-  plans?: EntityRow[];
-  /** Default: `{"label":"Contact Sales","href":"/contact"}` */
-  ctaAction?: EntityRow;
   /** Default: `"Our team is here to help you find the right plan."` */
   ctaSubtitle?: string;
+  /** Default: `"Simple, transparent pricing"` */
+  heroTitle?: string;
+  /** Default: `"Start free, scale as you grow."` */
+  heroSubtitle?: string;
+  /** Default: `"Get Started"` */
+  heroPrimaryActionLabel?: string;
+  /** Default: `"/contact"` */
+  heroSecondaryActionHref?: string;
+  /** Default: `[{"highlighted":false,"description":"For individuals and small projects.","action":{"label":"Get Started","href":"#"},"name":"Starter","price":"$0","badge":"","features":["1 project","Community support","Basic analytics"]},{"name":"Pro","description":"For growing teams that need more power.","features":["Unlimited projects","Priority support","Advanced analytics","Custom domains"],"price":"$49","action":{"label":"Start Trial","href":"#"},"highlighted":true,"badge":"Most Popular"},{"description":"For organizations with advanced needs.","features":["Dedicated infra","SLA guarantee","SSO & SAML","Audit logs","Custom contracts"],"price":"Custom","badge":"","name":"Enterprise","action":{"href":"#","label":"Contact Sales"},"highlighted":false}]` */
+  plans?: EntityRow[];
+  /** Default: `"center"` */
+  heroAlign?: string;
+  /** Default: `"Still have questions?"` */
+  ctaTitle?: string;
+  /** Default: `"© 2026 Almadar. All rights reserved."` */
+  footerCopyright?: string;
+  /** Default: `{"label":"Contact Sales","href":"/contact"}` */
+  ctaAction?: EntityRow;
+  /** Default: `"Contact Sales"` */
+  heroSecondaryActionLabel?: string;
+  /** Default: `[{"items":[{"href":"#","label":"Features"},{"label":"Pricing","href":"#"},{"href":"#","label":"Changelog"}],"title":"Product"},{"items":[{"href":"#","label":"About"},{"label":"Careers","href":"#"},{"label":"Blog","href":"#"}],"title":"Company"},{"title":"Resources","items":[{"href":"#","label":"Docs"},{"label":"Community","href":"#"},{"href":"#","label":"Support"}]}]` */
+  footerColumns?: EntityRow[];
+  /** Default: `""` */
+  heroTitleAccent?: string;
 }
 
 /**

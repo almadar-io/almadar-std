@@ -113,24 +113,24 @@ export interface StdLeaseLeaseUpdateFailedPayload {
  * without modifying its state-machine topology.
  */
 export interface StdLeaseConfig {
-  /** Default: `[{"label":"Tenant","variant":"caption","name":"tenantName"},{"variant":"caption","label":"Unit","name":"unitLabel"},{"variant":"caption","label":"Start","name":"startDate"},{"variant":"caption","label":"End","name":"endDate"},{"name":"monthlyRent","variant":"caption","label":"Monthly Rent"},{"label":"Status","variant":"badge","name":"status"}]` */
-  fields?: EntityRow[];
-  /** Default: `[{"variant":"primary","icon":"arrow-right","event":"OPEN_LEASE","label":"Open"},{"label":"Terminate","event":"TERMINATE_LEASE","variant":"danger"}]` */
-  itemActions?: EntityRow[];
-  /** Default: `false` */
-  autoRenewEnabled?: boolean;
-  /** Default: `12` */
-  inspectionFrequencyMonths?: number;
-  /** Default: `"Leases"` */
-  title?: string;
+  /** Default: `5` */
+  lateRentGraceDays?: number;
   /** Default: `60` */
   leaseRenewalNoticeDays?: number;
+  /** Default: `"Leases"` */
+  title?: string;
+  /** Default: `false` */
+  autoRenewEnabled?: boolean;
+  /** Default: `[{"name":"tenantName","label":"Tenant","variant":"caption"},{"label":"Unit","name":"unitLabel","variant":"caption"},{"name":"startDate","label":"Start","variant":"caption"},{"variant":"caption","label":"End","name":"endDate"},{"label":"Monthly Rent","name":"monthlyRent","variant":"caption"},{"variant":"badge","name":"status","label":"Status"}]` */
+  fields?: EntityRow[];
+  /** Default: `[{"event":"OPEN_LEASE","label":"Open","icon":"arrow-right","variant":"primary"},{"label":"Terminate","event":"TERMINATE_LEASE","variant":"danger"}]` */
+  itemActions?: EntityRow[];
   /** Default: `1` */
   securityDepositMonths?: number;
   /** Default: `"no-pets"` */
   petPolicy?: 'no-pets' | 'cats-only' | 'dogs-only' | 'all';
-  /** Default: `5` */
-  lateRentGraceDays?: number;
+  /** Default: `12` */
+  inspectionFrequencyMonths?: number;
 }
 
 /**

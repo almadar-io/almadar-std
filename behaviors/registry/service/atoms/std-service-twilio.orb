@@ -121,25 +121,25 @@
                     "render-ui",
                     "main",
                     {
+                      "gap": "lg",
                       "type": "stack",
                       "direction": "vertical",
                       "align": "stretch",
-                      "gap": "lg",
                       "children": [
                         {
-                          "direction": "horizontal",
                           "gap": "md",
-                          "type": "stack",
+                          "direction": "horizontal",
                           "align": "center",
+                          "type": "stack",
                           "children": [
                             {
-                              "name": "message-circle",
-                              "type": "icon"
+                              "type": "icon",
+                              "name": "message-circle"
                             },
                             {
+                              "variant": "h2",
                               "type": "typography",
-                              "content": "Twilio Messaging",
-                              "variant": "h2"
+                              "content": "Twilio Messaging"
                             }
                           ]
                         },
@@ -147,23 +147,23 @@
                           "type": "divider"
                         },
                         {
+                          "type": "input",
                           "placeholder": "+1234567890",
-                          "inputType": "tel",
-                          "type": "input"
+                          "inputType": "tel"
                         },
                         {
-                          "placeholder": "Write your message...",
-                          "type": "textarea"
+                          "type": "textarea",
+                          "placeholder": "Write your message..."
                         },
                         {
                           "options": [
                             {
-                              "value": "sms",
-                              "label": "SMS"
+                              "label": "SMS",
+                              "value": "sms"
                             },
                             {
-                              "value": "voice",
-                              "label": "Voice"
+                              "label": "Voice",
+                              "value": "voice"
                             },
                             {
                               "label": "WhatsApp",
@@ -173,10 +173,10 @@
                           "type": "select"
                         },
                         {
-                          "icon": "send",
-                          "type": "button",
                           "action": "SEND",
+                          "icon": "send",
                           "label": "Send",
+                          "type": "button",
                           "variant": "primary"
                         }
                       ]
@@ -393,8 +393,8 @@
                     "ServiceTwilio",
                     {
                       "emit": {
-                        "success": "ServiceTwilioLoaded",
-                        "failure": "ServiceTwilioLoadFailed"
+                        "failure": "ServiceTwilioLoadFailed",
+                        "success": "ServiceTwilioLoaded"
                       }
                     }
                   ],
@@ -403,10 +403,10 @@
                     "main",
                     {
                       "type": "stack",
-                      "direction": "vertical",
                       "children": [
                         "@config.uiTrait"
                       ],
+                      "direction": "vertical",
                       "gap": "md"
                     }
                   ]
@@ -431,8 +431,8 @@
                     "twilio",
                     "sendSMS",
                     {
-                      "body": "@config.body",
-                      "to": "@config.recipient"
+                      "to": "@config.recipient",
+                      "body": "@config.body"
                     },
                     {
                       "emit": {
@@ -479,34 +479,34 @@
                     "render-ui",
                     "main",
                     {
+                      "direction": "vertical",
+                      "gap": "lg",
+                      "align": "center",
                       "children": [
                         {
-                          "type": "icon",
-                          "name": "check-circle"
+                          "name": "check-circle",
+                          "type": "icon"
                         },
                         {
+                          "type": "alert",
                           "variant": "success",
-                          "message": "Message sent successfully",
-                          "type": "alert"
+                          "message": "Message sent successfully"
                         },
                         {
                           "variant": "body",
-                          "type": "typography",
                           "color": "muted",
+                          "type": "typography",
                           "content": "@entity.messageSid"
                         },
                         {
-                          "action": "RESET",
-                          "label": "Send Another",
                           "variant": "ghost",
+                          "label": "Send Another",
                           "type": "button",
-                          "icon": "rotate-ccw"
+                          "icon": "rotate-ccw",
+                          "action": "RESET"
                         }
                       ],
-                      "gap": "lg",
-                      "direction": "vertical",
-                      "type": "stack",
-                      "align": "center"
+                      "type": "stack"
                     }
                   ]
                 ]
@@ -539,8 +539,8 @@
                     "main",
                     {
                       "message": "@entity.error",
-                      "title": "Send Failed",
                       "onRetry": "RETRY",
+                      "title": "Send Failed",
                       "type": "error-state"
                     }
                   ]
@@ -560,12 +560,12 @@
                     "render-ui",
                     "main",
                     {
+                      "direction": "vertical",
+                      "type": "stack",
+                      "gap": "md",
                       "children": [
                         "@config.uiTrait"
-                      ],
-                      "gap": "md",
-                      "type": "stack",
-                      "direction": "vertical"
+                      ]
                     }
                   ]
                 ]
@@ -589,12 +589,12 @@
                     "render-ui",
                     "main",
                     {
-                      "direction": "vertical",
                       "type": "stack",
+                      "gap": "md",
+                      "direction": "vertical",
                       "children": [
                         "@config.uiTrait"
-                      ],
-                      "gap": "md"
+                      ]
                     }
                   ]
                 ]
@@ -613,12 +613,12 @@
                     "render-ui",
                     "main",
                     {
-                      "gap": "md",
-                      "type": "stack",
-                      "direction": "vertical",
                       "children": [
                         "@config.uiTrait"
-                      ]
+                      ],
+                      "direction": "vertical",
+                      "gap": "md",
+                      "type": "stack"
                     }
                   ]
                 ]
@@ -626,6 +626,18 @@
             ]
           },
           "config": {
+            "mode": {
+              "type": "string",
+              "default": "sms",
+              "label": "Channel",
+              "description": "Twilio delivery channel: SMS, voice call, or WhatsApp",
+              "tier": "domain",
+              "values": [
+                "sms",
+                "voice",
+                "whatsapp"
+              ]
+            },
             "uiTrait": {
               "type": "trait",
               "default": "@trait.ServiceTwilioDefaultForm",
@@ -633,38 +645,26 @@
               "description": "Trait that renders the Twilio message composer UI",
               "tier": "internal"
             },
-            "recipient": {
-              "type": "string",
-              "default": "",
-              "label": "Recipient phone",
-              "description": "Destination phone number in E.164 format (e.g. +14155551234)",
-              "tier": "customization"
-            },
             "sender": {
               "type": "string",
               "default": "",
               "label": "From number",
               "description": "Twilio number or sender ID the message is sent from",
-              "tier": "customization"
-            },
-            "mode": {
-              "type": "string",
-              "default": "sms",
-              "label": "Channel",
-              "description": "Twilio delivery channel: SMS, voice call, or WhatsApp",
-              "tier": "customization",
-              "values": [
-                "sms",
-                "voice",
-                "whatsapp"
-              ]
+              "tier": "domain"
             },
             "body": {
               "type": "string",
               "default": "",
               "label": "Message body",
               "description": "Text content Twilio should deliver to the recipient",
-              "tier": "customization"
+              "tier": "presentation"
+            },
+            "recipient": {
+              "type": "string",
+              "default": "",
+              "label": "Recipient phone",
+              "description": "Destination phone number in E.164 format (e.g. +14155551234)",
+              "tier": "presentation"
             }
           },
           "scope": "instance"

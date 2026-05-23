@@ -110,36 +110,36 @@
                     "render-ui",
                     "main",
                     {
+                      "children": {
+                        "label": "@config.buttonLabel",
+                        "icon": "download",
+                        "variant": "ghost",
+                        "type": "button",
+                        "size": "sm",
+                        "action": "OPEN_EXPORT"
+                      },
                       "type": "popover",
                       "position": "bottom",
                       "content": {
-                        "entity": "@entity.options",
-                        "type": "data-list",
-                        "fields": [],
                         "renderItem": [
                           "fn",
                           "fmt",
                           {
-                            "action": "@config.event",
-                            "size": "sm",
+                            "actionPayload": {
+                              "tileId": "@config.tileId",
+                              "format": "@fmt.format"
+                            },
+                            "icon": "file-down",
+                            "label": "@fmt.label",
                             "variant": "ghost",
                             "type": "button",
-                            "actionPayload": {
-                              "format": "@fmt.format",
-                              "tileId": "@config.tileId"
-                            },
-                            "label": "@fmt.label",
-                            "icon": "file-down"
+                            "size": "sm",
+                            "action": "@config.event"
                           }
-                        ]
-                      },
-                      "children": {
-                        "icon": "download",
-                        "action": "OPEN_EXPORT",
-                        "label": "@config.buttonLabel",
-                        "type": "button",
-                        "variant": "ghost",
-                        "size": "sm"
+                        ],
+                        "fields": [],
+                        "type": "data-list",
+                        "entity": "@entity.options"
                       }
                     }
                   ]
@@ -172,6 +172,58 @@
             ]
           },
           "config": {
+            "formats": {
+              "type": "[FormatOption]",
+              "default": [
+                {
+                  "id": "csv",
+                  "format": "csv",
+                  "label": "CSV"
+                },
+                {
+                  "format": "xlsx",
+                  "label": "XLSX",
+                  "id": "xlsx"
+                },
+                {
+                  "format": "pdf",
+                  "id": "pdf",
+                  "label": "PDF"
+                }
+              ],
+              "label": "Available formats",
+              "description": "Export formats shown to the user in the popover",
+              "synonyms": "list of export format entries (csv / xlsx / pdf / png / json). user phrases: 'only CSV' -> keep only csv entry; 'add JSON' -> append json entry; 'no PNG' -> remove png; 'allow X and Y' -> set the array to those two",
+              "tier": "presentation",
+              "items": {
+                "type": "object",
+                "properties": {
+                  "format": {
+                    "name": "format",
+                    "type": "string",
+                    "required": true
+                  },
+                  "id": {
+                    "name": "id",
+                    "type": "string",
+                    "required": true
+                  },
+                  "label": {
+                    "name": "label",
+                    "type": "string",
+                    "required": true
+                  }
+                }
+              }
+            },
+            "buttonLabel": {
+              "type": "string",
+              "default": "Export",
+              "label": "Button label",
+              "description": "Text shown on the toolbar button that opens the export popover",
+              "synonyms": "the text on the export trigger button. user phrases: 'rename export button to X' / 'set the button label to X' / 'call the button X' / 'change export button text to X' -> X (e.g. 'Download CSV', 'Download', 'Export Data')",
+              "tier": "presentation"
+            },
             "tileId": {
               "type": "string",
               "default": "",
@@ -187,58 +239,6 @@
               "description": "Event emitted when the user picks a format",
               "synonyms": "bus event name. internal wiring; users rarely target directly",
               "tier": "internal"
-            },
-            "buttonLabel": {
-              "type": "string",
-              "default": "Export",
-              "label": "Button label",
-              "description": "Text shown on the toolbar button that opens the export popover",
-              "synonyms": "the text on the export trigger button. user phrases: 'rename export button to X' / 'set the button label to X' / 'call the button X' / 'change export button text to X' -> X (e.g. 'Download CSV', 'Download', 'Export Data')",
-              "tier": "customization"
-            },
-            "formats": {
-              "type": "[FormatOption]",
-              "default": [
-                {
-                  "label": "CSV",
-                  "id": "csv",
-                  "format": "csv"
-                },
-                {
-                  "label": "XLSX",
-                  "id": "xlsx",
-                  "format": "xlsx"
-                },
-                {
-                  "id": "pdf",
-                  "format": "pdf",
-                  "label": "PDF"
-                }
-              ],
-              "label": "Available formats",
-              "description": "Export formats shown to the user in the popover",
-              "synonyms": "list of export format entries (csv / xlsx / pdf / png / json). user phrases: 'only CSV' -> keep only csv entry; 'add JSON' -> append json entry; 'no PNG' -> remove png; 'allow X and Y' -> set the array to those two",
-              "tier": "customization",
-              "items": {
-                "type": "object",
-                "properties": {
-                  "label": {
-                    "name": "label",
-                    "type": "string",
-                    "required": true
-                  },
-                  "id": {
-                    "name": "id",
-                    "type": "string",
-                    "required": true
-                  },
-                  "format": {
-                    "name": "format",
-                    "type": "string",
-                    "required": true
-                  }
-                }
-              }
             }
           },
           "scope": "instance"

@@ -101,10 +101,10 @@ export interface StdDataErasureConfig {
   piiFields?: string[];
   /** Default: `30` */
   gracePeriodDays?: number;
-  /** Default: `"anonymize"` */
-  anonymizeVsDelete?: 'anonymize' | 'delete';
   /** Default: `""` */
   targetEntity?: string;
+  /** Default: `"anonymize"` */
+  anonymizeVsDelete?: 'anonymize' | 'delete';
 }
 
 /**

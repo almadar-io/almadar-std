@@ -134,17 +134,20 @@
           "ref": "AppShell.traits.AppLayout",
           "name": "ListingAppLayout",
           "config": {
+            "searchEvent": "LISTING_SEARCH",
             "notifications": [],
+            "contentTrait": "@trait.ListingCatalog",
+            "appName": "Listings",
             "navItems": [
               {
-                "href": "/listings",
                 "label": "Browse",
-                "icon": "list"
+                "icon": "list",
+                "href": "/listings"
               },
               {
                 "label": "Saved",
-                "icon": "bookmark",
-                "href": "/saved"
+                "href": "/saved",
+                "icon": "bookmark"
               },
               {
                 "label": "Inquiries",
@@ -152,10 +155,7 @@
                 "icon": "message-circle"
               }
             ],
-            "notificationClickEvent": "LISTING_NOTIFICATIONS_OPEN",
-            "searchEvent": "LISTING_SEARCH",
-            "contentTrait": "@trait.ListingCatalog",
-            "appName": "Listings"
+            "notificationClickEvent": "LISTING_NOTIFICATIONS_OPEN"
           },
           "events": {
             "SEARCH": "LISTING_SEARCH",
@@ -258,53 +258,54 @@
                     {
                       "gap": "lg",
                       "type": "stack",
+                      "direction": "vertical",
                       "children": [
                         {
+                          "type": "stack",
+                          "direction": "horizontal",
+                          "gap": "md",
+                          "justify": "between",
+                          "align": "center",
                           "children": [
                             {
+                              "direction": "horizontal",
+                              "gap": "sm",
+                              "type": "stack",
+                              "align": "center",
                               "children": [
                                 {
                                   "name": "list",
                                   "type": "icon"
                                 },
                                 {
-                                  "variant": "h2",
+                                  "type": "typography",
                                   "content": "Listings",
-                                  "type": "typography"
+                                  "variant": "h2"
                                 }
-                              ],
-                              "direction": "horizontal",
-                              "align": "center",
-                              "type": "stack",
-                              "gap": "sm"
+                              ]
                             },
                             {
                               "children": [
                                 {
-                                  "variant": "secondary",
                                   "type": "button",
+                                  "icon": "bookmark",
                                   "label": "Save Search",
-                                  "action": "SAVE_SEARCH",
-                                  "icon": "bookmark"
+                                  "variant": "secondary",
+                                  "action": "SAVE_SEARCH"
                                 },
                                 {
-                                  "type": "button",
-                                  "icon": "plus",
                                   "variant": "primary",
+                                  "icon": "plus",
                                   "label": "New Listing",
+                                  "type": "button",
                                   "action": "CREATE"
                                 }
                               ],
+                              "direction": "horizontal",
                               "gap": "sm",
-                              "type": "stack",
-                              "direction": "horizontal"
+                              "type": "stack"
                             }
-                          ],
-                          "type": "stack",
-                          "gap": "md",
-                          "justify": "between",
-                          "align": "center",
-                          "direction": "horizontal"
+                          ]
                         },
                         {
                           "type": "divider"
@@ -312,21 +313,20 @@
                         "@trait.ListingGeoSearch",
                         {
                           "gap": "md",
-                          "direction": "horizontal",
+                          "type": "stack",
                           "children": [
                             "@trait.ListingFilter",
                             "@trait.ListingTags"
                           ],
                           "align": "start",
-                          "type": "stack"
+                          "direction": "horizontal"
                         },
                         "@trait.ListingStats",
                         {
                           "type": "divider"
                         },
                         "@trait.ListingBrowse"
-                      ],
-                      "direction": "vertical"
+                      ]
                     }
                   ]
                 ]
@@ -345,15 +345,13 @@
                     "render-ui",
                     "main",
                     {
-                      "direction": "vertical",
-                      "gap": "md",
                       "align": "center",
-                      "className": "py-8",
                       "type": "stack",
+                      "className": "py-8",
                       "children": [
                         {
-                          "name": "bell",
-                          "type": "icon"
+                          "type": "icon",
+                          "name": "bell"
                         },
                         {
                           "variant": "h3",
@@ -367,12 +365,14 @@
                           "type": "typography"
                         },
                         {
-                          "action": "INIT",
                           "type": "button",
-                          "label": "Back to listings",
-                          "variant": "ghost"
+                          "variant": "ghost",
+                          "action": "INIT",
+                          "label": "Back to listings"
                         }
-                      ]
+                      ],
+                      "direction": "vertical",
+                      "gap": "md"
                     }
                   ]
                 ]
@@ -385,28 +385,28 @@
           "ref": "GeoSearch.traits.GeoSearchResultSearch",
           "name": "ListingGeoSearch",
           "config": {
+            "event": "LISTING_GEO_SEARCH",
             "defaultRadiusKm": 25.0,
-            "placeholder": "Search nearby listings…",
-            "event": "LISTING_GEO_SEARCH"
+            "placeholder": "Search nearby listings…"
           }
         },
         {
           "ref": "Filter.traits.FilterTargetFilter",
           "name": "ListingFilter",
           "config": {
-            "event": "LISTING_FILTER",
             "filters": [
               {
+                "label": "Status",
+                "field": "status",
+                "filterType": "select",
                 "options": [
                   "active",
                   "sold",
                   "expired"
-                ],
-                "field": "status",
-                "label": "Status",
-                "filterType": "select"
+                ]
               }
-            ]
+            ],
+            "event": "LISTING_FILTER"
           }
         },
         {
@@ -428,10 +428,10 @@
           "ref": "Images.traits.UploadedImageUpload",
           "name": "ListingImages",
           "config": {
-            "title": "Listing Photos",
-            "maxImages": 10.0,
+            "accept": "image/*",
             "maxBytesPerImage": 10485760.0,
-            "accept": "image/*"
+            "maxImages": 10.0,
+            "title": "Listing Photos"
           }
         },
         {
@@ -440,15 +440,15 @@
           "config": {
             "metrics": [
               {
-                "aggregation": "count",
                 "label": "Total",
-                "format": "number",
                 "icon": "list",
-                "variant": "primary"
+                "aggregation": "count",
+                "variant": "primary",
+                "format": "number"
               },
               {
                 "icon": "check-circle",
-                "format": "number",
+                "aggregation": "count",
                 "filter": [
                   "fn",
                   "row",
@@ -458,12 +458,12 @@
                     "active"
                   ]
                 ],
-                "aggregation": "count",
-                "variant": "success",
-                "label": "Active"
+                "label": "Active",
+                "format": "number",
+                "variant": "success"
               },
               {
-                "aggregation": "count",
+                "icon": "tag",
                 "filter": [
                   "fn",
                   "row",
@@ -475,16 +475,16 @@
                 ],
                 "format": "number",
                 "variant": "info",
-                "icon": "tag",
+                "aggregation": "count",
                 "label": "Sold"
               },
               {
-                "icon": "trending-up",
-                "variant": "warning",
                 "field": "price",
+                "icon": "trending-up",
                 "aggregation": "avg",
-                "format": "number",
-                "label": "Avg Price"
+                "label": "Avg Price",
+                "variant": "warning",
+                "format": "number"
               }
             ],
             "title": "Listings"
@@ -505,53 +505,53 @@
           "name": "ListingBrowse",
           "linkedEntity": "Listing",
           "config": {
-            "cols": 1.0,
-            "gap": "sm",
             "fields": [
               {
-                "name": "title",
                 "variant": "h3",
+                "name": "title",
                 "icon": "list"
               },
               {
-                "variant": "badge",
-                "name": "price"
+                "name": "price",
+                "variant": "badge"
               },
               {
-                "variant": "badge",
-                "name": "status"
+                "name": "status",
+                "variant": "badge"
               },
               {
                 "name": "location",
                 "variant": "caption"
               },
               {
-                "variant": "caption",
-                "name": "description"
+                "name": "description",
+                "variant": "caption"
               }
             ],
             "itemActions": [
               {
-                "label": "View",
                 "variant": "ghost",
+                "label": "View",
                 "event": "VIEW"
               },
               {
-                "event": "EDIT",
+                "label": "Edit",
                 "variant": "ghost",
-                "label": "Edit"
+                "event": "EDIT"
               },
               {
                 "variant": "secondary",
-                "event": "INQUIRE",
-                "label": "Inquire"
+                "label": "Inquire",
+                "event": "INQUIRE"
               },
               {
-                "variant": "danger",
+                "label": "Delete",
                 "event": "DELETE",
-                "label": "Delete"
+                "variant": "danger"
               }
-            ]
+            ],
+            "gap": "sm",
+            "cols": 1.0
           },
           "listens": [
             {
@@ -601,6 +601,7 @@
           "name": "ListingCreate",
           "linkedEntity": "Listing",
           "config": {
+            "icon": "plus-circle",
             "mode": "create",
             "fields": [
               "title",
@@ -609,7 +610,6 @@
               "location",
               "status"
             ],
-            "icon": "plus-circle",
             "title": "New Listing"
           },
           "events": {
@@ -631,16 +631,16 @@
           "name": "ListingEdit",
           "linkedEntity": "Listing",
           "config": {
+            "mode": "edit",
             "icon": "edit",
+            "title": "Edit Listing",
             "fields": [
               "title",
               "description",
               "price",
               "location",
               "status"
-            ],
-            "mode": "edit",
-            "title": "Edit Listing"
+            ]
           },
           "events": {
             "OPEN": "EDIT"
@@ -661,6 +661,7 @@
           "name": "ListingView",
           "linkedEntity": "Listing",
           "config": {
+            "icon": "eye",
             "fields": [
               "title",
               "description",
@@ -669,8 +670,7 @@
               "status"
             ],
             "title": "View Listing",
-            "mode": "edit",
-            "icon": "eye"
+            "mode": "edit"
           },
           "events": {
             "OPEN": "VIEW"
@@ -691,10 +691,10 @@
           "name": "ListingDelete",
           "linkedEntity": "Listing",
           "config": {
-            "title": "Delete Listing",
             "icon": "alert-triangle",
-            "alertMessage": "This action cannot be undone.",
-            "confirmLabel": "Delete"
+            "confirmLabel": "Delete",
+            "title": "Delete Listing",
+            "alertMessage": "This action cannot be undone."
           },
           "events": {
             "CONFIRM": "CONFIRM_DELETE",
@@ -715,8 +715,8 @@
           "ref": "Thread.traits.ThreadPostBrowse",
           "name": "ListingInquiryThread",
           "config": {
-            "flat": true,
-            "threadRootId": ""
+            "threadRootId": "",
+            "flat": true
           }
         },
         {
@@ -1198,21 +1198,21 @@
                     "main",
                     {
                       "type": "stack",
+                      "direction": "vertical",
+                      "align": "center",
                       "className": "py-12",
-                      "gap": "md",
                       "children": [
                         {
                           "type": "spinner"
                         },
                         {
                           "type": "typography",
+                          "variant": "caption",
                           "color": "muted",
-                          "content": "Loading inquiries…",
-                          "variant": "caption"
+                          "content": "Loading inquiries…"
                         }
                       ],
-                      "direction": "vertical",
-                      "align": "center"
+                      "gap": "md"
                     }
                   ]
                 ]
@@ -1226,81 +1226,81 @@
                     "render-ui",
                     "main",
                     {
-                      "direction": "vertical",
-                      "type": "stack",
-                      "className": "max-w-5xl mx-auto w-full",
-                      "gap": "lg",
                       "children": [
                         {
-                          "type": "stack",
-                          "align": "center",
-                          "direction": "horizontal",
-                          "justify": "between",
                           "children": [
                             {
-                              "type": "stack",
-                              "align": "center",
-                              "gap": "sm",
                               "direction": "horizontal",
+                              "align": "center",
+                              "type": "stack",
+                              "gap": "sm",
                               "children": [
                                 {
-                                  "type": "icon",
-                                  "name": "message-circle"
+                                  "name": "message-circle",
+                                  "type": "icon"
                                 },
                                 {
+                                  "content": "Inquiries",
                                   "variant": "h2",
-                                  "type": "typography",
-                                  "content": "Inquiries"
+                                  "type": "typography"
                                 }
                               ]
                             },
                             {
-                              "type": "button",
+                              "action": "CREATE",
+                              "variant": "primary",
                               "label": "New Inquiry",
                               "icon": "edit",
-                              "action": "CREATE",
-                              "variant": "primary"
+                              "type": "button"
                             }
                           ],
+                          "justify": "between",
+                          "direction": "horizontal",
+                          "align": "center",
+                          "type": "stack",
                           "gap": "md"
                         },
                         {
                           "type": "divider"
                         },
                         {
-                          "itemActions": [
-                            {
-                              "label": "Open",
-                              "variant": "ghost",
-                              "event": "VIEW"
-                            }
-                          ],
-                          "gap": "sm",
                           "type": "data-list",
                           "fields": [
                             {
                               "variant": "h4",
-                              "icon": "message-circle",
-                              "name": "subject"
+                              "name": "subject",
+                              "icon": "message-circle"
                             },
                             {
-                              "name": "message",
-                              "variant": "body"
+                              "variant": "body",
+                              "name": "message"
                             },
                             {
-                              "name": "status",
-                              "variant": "badge"
+                              "variant": "badge",
+                              "name": "status"
                             },
                             {
                               "variant": "caption",
-                              "name": "createdAt",
-                              "format": "date"
+                              "format": "date",
+                              "name": "createdAt"
+                            }
+                          ],
+                          "gap": "sm",
+                          "itemActions": [
+                            {
+                              "event": "VIEW",
+                              "label": "Open",
+                              "variant": "ghost"
                             }
                           ],
                           "entity": "@payload.data",
                           "variant": "card"
                         }
-                      ]
+                      ],
+                      "type": "stack",
+                      "direction": "vertical",
+                      "gap": "lg",
+                      "className": "max-w-5xl mx-auto w-full"
                     }
                   ]
                 ]
@@ -1314,36 +1314,36 @@
                     "render-ui",
                     "main",
                     {
-                      "type": "stack",
-                      "direction": "vertical",
-                      "align": "center",
-                      "gap": "md",
-                      "className": "py-12",
                       "children": [
                         {
-                          "name": "alert-triangle",
                           "color": "destructive",
+                          "name": "alert-triangle",
                           "type": "icon"
                         },
                         {
-                          "variant": "h3",
+                          "type": "typography",
                           "content": "Failed to load inquiries",
-                          "type": "typography"
+                          "variant": "h3"
                         },
                         {
                           "color": "muted",
-                          "type": "typography",
                           "content": "@payload.error",
-                          "variant": "body"
+                          "variant": "body",
+                          "type": "typography"
                         },
                         {
-                          "label": "Retry",
-                          "type": "button",
-                          "action": "INIT",
                           "variant": "primary",
-                          "icon": "rotate-ccw"
+                          "icon": "rotate-ccw",
+                          "action": "INIT",
+                          "label": "Retry",
+                          "type": "button"
                         }
-                      ]
+                      ],
+                      "type": "stack",
+                      "className": "py-12",
+                      "gap": "md",
+                      "align": "center",
+                      "direction": "vertical"
                     }
                   ]
                 ]
@@ -1358,8 +1358,8 @@
                     "Inquiry",
                     {
                       "emit": {
-                        "success": "InquiryLoaded",
-                        "failure": "InquiryLoadFailed"
+                        "failure": "InquiryLoadFailed",
+                        "success": "InquiryLoaded"
                       }
                     }
                   ],
@@ -1382,8 +1382,8 @@
                     "Inquiry",
                     {
                       "emit": {
-                        "success": "InquiryLoaded",
-                        "failure": "InquiryLoadFailed"
+                        "failure": "InquiryLoadFailed",
+                        "success": "InquiryLoaded"
                       }
                     }
                   ],
@@ -1405,7 +1405,6 @@
           "name": "InquiryCreate",
           "linkedEntity": "Inquiry",
           "config": {
-            "title": "New Inquiry",
             "fields": [
               "listingId",
               "subject",
@@ -1414,7 +1413,8 @@
               "toUserId"
             ],
             "mode": "create",
-            "icon": "plus-circle"
+            "icon": "plus-circle",
+            "title": "New Inquiry"
           },
           "events": {
             "OPEN": "CREATE"

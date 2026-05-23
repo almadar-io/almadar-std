@@ -30,7 +30,7 @@ orbital MaintenanceRequestOrbital {
       title       : string   = "Maintenance Requests"
         @label "Section title"
         @description "Heading shown above the maintenance request queue"
-        @tier "customization"
+        @tier "presentation"
       fields      : [FieldSpec] = [
         { name: "unitId",        label: "Unit",        variant: "caption" },
         { name: "requesterName", label: "Requester",   variant: "caption" },
@@ -41,86 +41,86 @@ orbital MaintenanceRequestOrbital {
       ]
         @label "Columns to show"
         @description "Each column maps to one field on the Maintenance Request entity"
-        @tier "customization"
+        @tier "presentation"
       itemActions : [ItemAction] = [
         { label: "Open",   event: "OPEN_REQUEST",   variant: "primary", icon: "arrow-right" },
         { label: "Cancel", event: "CANCEL_REQUEST", variant: "danger",  icon: "x" }
       ]
         @label "Row actions"
         @description "Buttons users can click on each request row"
-        @tier "customization"
+        @tier "presentation"
       bookingWindowDays : number = 30
         @label "Booking window (days)"
         @description "How far in advance tenants can schedule maintenance visits."
-        @tier "customization"
+        @tier "domain"
       leadTimeMinutes : number = 120
         @label "Lead time (minutes)"
         @description "Minimum minutes before scheduledAt that a new visit can be booked."
-        @tier "customization"
+        @tier "domain"
       bookingHours : string = "08:00-18:00"
         @label "Booking hours"
         @description "Daily window during which maintenance visits can be scheduled (HH:MM-HH:MM)."
-        @tier "customization"
+        @tier "domain"
       blackoutDates : [string] = []
         @label "Blackout dates"
         @description "ISO dates blocked from scheduling. Compose std-lifecycle to enforce."
-        @tier "customization"
+        @tier "domain"
       noShowGracePeriodMinutes : number = 30
         @label "No-show grace (minutes)"
         @description "Minutes after scheduledAt before the request flags no_show. Wire via std-lifecycle."
-        @tier "customization"
+        @tier "domain"
       rescheduleWindowHours : number = 12
         @label "Reschedule window (hours)"
         @description "Hours before scheduledAt during which the tenant can self-reschedule."
-        @tier "customization"
+        @tier "domain"
       maxReschedules : number = 2
         @label "Max reschedules"
         @description "Hard cap on reschedule count per request."
-        @tier "advanced"
+        @tier "domain"
       cancellationPolicy : "free" | "partial-refund" | "no-refund" = "free"
         @label "Cancellation policy"
         @description "Fee treatment when a visit is cancelled inside the reschedule window."
-        @tier "customization"
+        @tier "domain"
       serviceAreaRadius : number = 25
         @label "Service area radius (mi)"
         @description "Maximum distance from the property hub for tech dispatch eligibility."
-        @tier "customization"
+        @tier "domain"
       serviceZones : [string] = []
         @label "Service zones"
         @description "Named geographic zones for dispatch grouping."
-        @tier "customization"
+        @tier "domain"
       dispatchStrategy : "nearest" | "round-robin" | "manual" = "nearest"
         @label "Dispatch strategy"
         @description "How techs are assigned to a maintenance request."
-        @tier "customization"
+        @tier "domain"
       skillsRequired : [string] = []
         @label "Required skills"
         @description "Capability tags a tech must have (e.g. 'plumbing', 'electrical', 'hvac')."
-        @tier "customization"
+        @tier "domain"
       responseTimeMinutes : number = 240
         @label "Response time SLA (min)"
         @description "Target time from request open to first acknowledgement."
-        @tier "essential"
+        @tier "domain"
       resolutionSLAHours : number = 48
         @label "Resolution SLA (hours)"
         @description "Target time from request open to completed. Compose std-lifecycle to auto-escalate."
-        @tier "essential"
+        @tier "domain"
       escalationThresholdHours : number = 72
         @label "Escalation threshold (hours)"
         @description "Hours after which an unresolved request auto-escalates. Compose std-lifecycle for wiring."
-        @tier "customization"
+        @tier "domain"
       customerVisibleStatuses : [string] = ["scheduled", "in_progress", "completed"]
         @label "Customer-visible statuses"
         @description "Subset of statuses tenants see in their portal. Internal statuses are filtered."
-        @tier "customization"
+        @tier "domain"
       requirePhotoOnComplete : boolean = false
         @label "Require photo on complete"
         @description "Block COMPLETE_REQUEST unless a completion photo is attached."
-        @tier "customization"
+        @tier "domain"
       requireSignatureOnComplete : boolean = false
         @label "Require tenant signature on complete"
         @description "Block COMPLETE_REQUEST unless tenant signature is captured (compose std-signature-capture)."
-        @tier "customization"
+        @tier "domain"
     }
     initial: loading
     state loading {

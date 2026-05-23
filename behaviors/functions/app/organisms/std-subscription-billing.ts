@@ -31,8 +31,8 @@ const ALIAS = 'SubscriptionBilling';
  * without modifying its state-machine topology.
  */
 export interface StdSubscriptionBillingConfig {
-  notifications?: TraitConfig;
   navItems?: TraitConfig;
+  notifications?: TraitConfig;
 }
 
 /**
@@ -200,28 +200,28 @@ export function stdSubscriptionBillingSubscriptionOrbital(params: StdSubscriptio
         'ref': 'AppShell.traits.AppLayout',
         'name': 'PlanAppLayout',
         'config': {
-          'notifications': [],
-          'contentTrait': '@trait.PlanCatalog',
-          'notificationClickEvent': 'PLAN_NOTIFICATIONS_OPEN',
           'appName': 'Subscription Billing',
+          'notificationClickEvent': 'PLAN_NOTIFICATIONS_OPEN',
           'navItems': [
             {
-              'href': '/plans',
               'label': 'Plans',
+              'href': '/plans',
               'icon': 'credit-card',
             },
             {
               'href': '/invoices',
-              'label': 'Invoices',
               'icon': 'receipt',
+              'label': 'Invoices',
             },
             {
-              'label': 'Dunning',
               'href': '/dunning',
               'icon': 'alert-triangle',
+              'label': 'Dunning',
             },
           ],
           'searchEvent': 'PLAN_SEARCH',
+          'notifications': [],
+          'contentTrait': '@trait.PlanCatalog',
         },
         'events': {
           'NOTIFY_CLICK': 'PLAN_NOTIFICATIONS_OPEN',
@@ -308,47 +308,46 @@ export function stdSubscriptionBillingSubscriptionOrbital(params: StdSubscriptio
                   'render-ui',
                   'main',
                   {
-                    'gap': 'lg',
                     'direction': 'vertical',
                     'type': 'stack',
                     'children': [
                       {
                         'direction': 'horizontal',
+                        'align': 'center',
                         'type': 'stack',
                         'justify': 'between',
-                        'align': 'center',
                         'gap': 'md',
                         'children': [
                           {
-                            'direction': 'horizontal',
-                            'gap': 'sm',
-                            'align': 'center',
                             'type': 'stack',
+                            'direction': 'horizontal',
                             'children': [
                               {
                                 'type': 'icon',
                                 'name': 'credit-card',
                               },
                               {
-                                'type': 'typography',
                                 'content': 'Plans',
+                                'type': 'typography',
                                 'variant': 'h2',
                               },
                             ],
+                            'gap': 'sm',
+                            'align': 'center',
                           },
                           {
                             'children': [
                               {
                                 'label': 'New Plan',
-                                'icon': 'plus',
+                                'action': 'CREATE',
                                 'type': 'button',
                                 'variant': 'primary',
-                                'action': 'CREATE',
+                                'icon': 'plus',
                               },
                             ],
-                            'gap': 'sm',
                             'type': 'stack',
                             'direction': 'horizontal',
+                            'gap': 'sm',
                           },
                         ],
                       },
@@ -356,14 +355,14 @@ export function stdSubscriptionBillingSubscriptionOrbital(params: StdSubscriptio
                         'type': 'divider',
                       },
                       {
+                        'type': 'stack',
                         'align': 'center',
+                        'gap': 'md',
                         'children': [
                           '@trait.PlanSearch',
                           '@trait.PlanFilter',
                         ],
-                        'type': 'stack',
                         'direction': 'horizontal',
-                        'gap': 'md',
                       },
                       '@trait.PlanStats',
                       '@trait.PlanGraphs',
@@ -376,20 +375,21 @@ export function stdSubscriptionBillingSubscriptionOrbital(params: StdSubscriptio
                       },
                       {
                         'variant': 'h3',
-                        'content': 'Active Subscriptions',
                         'type': 'typography',
+                        'content': 'Active Subscriptions',
                       },
                       '@trait.PlanSubscriptionManage',
                       {
                         'type': 'divider',
                       },
                       {
-                        'variant': 'h3',
                         'type': 'typography',
+                        'variant': 'h3',
                         'content': 'Trials',
                       },
                       '@trait.PlanTrialManage',
                     ],
+                    'gap': 'lg',
                   },
                 ],
               ],
@@ -408,6 +408,9 @@ export function stdSubscriptionBillingSubscriptionOrbital(params: StdSubscriptio
                   'render-ui',
                   'main',
                   {
+                    'align': 'center',
+                    'className': 'py-8',
+                    'type': 'stack',
                     'children': [
                       {
                         'type': 'icon',
@@ -415,27 +418,24 @@ export function stdSubscriptionBillingSubscriptionOrbital(params: StdSubscriptio
                       },
                       {
                         'type': 'typography',
-                        'content': 'No notifications',
                         'variant': 'h3',
+                        'content': 'No notifications',
                       },
                       {
-                        'type': 'typography',
                         'content': 'You\'re all caught up.',
+                        'type': 'typography',
                         'variant': 'caption',
                         'color': 'muted',
                       },
                       {
-                        'action': 'INIT',
-                        'variant': 'ghost',
-                        'label': 'Back to plans',
                         'type': 'button',
+                        'label': 'Back to plans',
+                        'variant': 'ghost',
+                        'action': 'INIT',
                       },
                     ],
-                    'align': 'center',
-                    'type': 'stack',
-                    'direction': 'vertical',
-                    'className': 'py-8',
                     'gap': 'md',
+                    'direction': 'vertical',
                   },
                 ],
               ],
@@ -456,27 +456,27 @@ export function stdSubscriptionBillingSubscriptionOrbital(params: StdSubscriptio
         'ref': 'Filter.traits.FilterTargetFilter',
         'name': 'PlanFilter',
         'config': {
+          'event': 'PLAN_FILTER',
           'filters': [
             {
+              'label': 'Interval',
+              'field': 'interval',
               'filterType': 'select',
               'options': [
                 'monthly',
                 'yearly',
               ],
-              'label': 'Interval',
-              'field': 'interval',
             },
             {
+              'filterType': 'select',
+              'field': 'status',
               'options': [
                 'active',
                 'archived',
               ],
-              'filterType': 'select',
-              'field': 'status',
               'label': 'Status',
             },
           ],
-          'event': 'PLAN_FILTER',
         },
       }),
       makeTraitRef({
@@ -487,14 +487,13 @@ export function stdSubscriptionBillingSubscriptionOrbital(params: StdSubscriptio
           'metrics': [
             {
               'aggregation': 'count',
-              'label': 'Total',
               'icon': 'credit-card',
+              'label': 'Total',
               'format': 'number',
               'variant': 'primary',
             },
             {
-              'format': 'number',
-              'variant': 'success',
+              'label': 'Active',
               'filter': [
                 'fn',
                 'row',
@@ -504,11 +503,15 @@ export function stdSubscriptionBillingSubscriptionOrbital(params: StdSubscriptio
                   'active',
                 ],
               ],
-              'icon': 'check-circle',
-              'label': 'Active',
               'aggregation': 'count',
+              'variant': 'success',
+              'icon': 'check-circle',
+              'format': 'number',
             },
             {
+              'format': 'number',
+              'aggregation': 'count',
+              'label': 'Archived',
               'filter': [
                 'fn',
                 'row',
@@ -518,11 +521,8 @@ export function stdSubscriptionBillingSubscriptionOrbital(params: StdSubscriptio
                   'archived',
                 ],
               ],
-              'icon': 'archive',
-              'aggregation': 'count',
-              'label': 'Archived',
               'variant': 'warning',
-              'format': 'number',
+              'icon': 'archive',
             },
           ],
         },
@@ -541,13 +541,13 @@ export function stdSubscriptionBillingSubscriptionOrbital(params: StdSubscriptio
         'ref': 'Graphs.traits.GraphItemGraph',
         'name': 'PlanGraphs',
         'config': {
-          'title': 'Plans by Interval',
-          'aggregation': 'count',
-          'height': 240,
-          'categoryField': 'interval',
           'showLegend': false,
+          'categoryField': 'interval',
+          'height': 240,
+          'title': 'Plans by Interval',
           'subtitle': 'Monthly vs yearly distribution',
           'chartType': 'bar',
+          'aggregation': 'count',
         },
         'listens': [
           {
@@ -565,52 +565,52 @@ export function stdSubscriptionBillingSubscriptionOrbital(params: StdSubscriptio
         'name': 'PlanBrowseList',
         'linkedEntity': canonicalName,
         'config': {
-          'gap': 'sm',
+          'cols': 1,
           'itemActions': [
             {
               'label': 'View',
-              'variant': 'ghost',
               'event': 'VIEW',
+              'variant': 'ghost',
             },
             {
-              'label': 'Edit',
               'event': 'EDIT',
               'variant': 'ghost',
+              'label': 'Edit',
             },
             {
-              'variant': 'danger',
               'event': 'DELETE',
               'label': 'Delete',
+              'variant': 'danger',
             },
           ],
-          'cols': 1,
           'fields': [
             {
               'name': 'name',
-              'variant': 'h3',
               'icon': 'credit-card',
+              'variant': 'h3',
             },
             {
-              'variant': 'caption',
               'name': 'description',
+              'variant': 'caption',
             },
             {
               'name': 'interval',
               'variant': 'badge',
             },
             {
-              'variant': 'body',
               'name': 'amount',
+              'variant': 'body',
             },
             {
+              'variant': 'badge',
               'name': 'currency',
-              'variant': 'badge',
             },
             {
-              'variant': 'badge',
               'name': 'status',
+              'variant': 'badge',
             },
           ],
+          'gap': 'sm',
         },
         'listens': [
           {
@@ -660,8 +660,8 @@ export function stdSubscriptionBillingSubscriptionOrbital(params: StdSubscriptio
         'name': 'PlanCreate',
         'linkedEntity': canonicalName,
         'config': {
-          'title': 'New Plan',
           'icon': 'plus-circle',
+          'mode': 'create',
           'fields': [
             'name',
             'description',
@@ -671,7 +671,7 @@ export function stdSubscriptionBillingSubscriptionOrbital(params: StdSubscriptio
             'trialDays',
             'status',
           ],
-          'mode': 'create',
+          'title': 'New Plan',
         },
         'events': {
           'OPEN': 'CREATE',
@@ -692,9 +692,9 @@ export function stdSubscriptionBillingSubscriptionOrbital(params: StdSubscriptio
         'name': 'PlanEdit',
         'linkedEntity': canonicalName,
         'config': {
-          'mode': 'edit',
           'icon': 'edit',
           'title': 'Edit Plan',
+          'mode': 'edit',
           'fields': [
             'name',
             'description',
@@ -725,6 +725,8 @@ export function stdSubscriptionBillingSubscriptionOrbital(params: StdSubscriptio
         'linkedEntity': canonicalName,
         'config': {
           'icon': 'eye',
+          'title': 'View Plan',
+          'mode': 'edit',
           'fields': [
             'name',
             'description',
@@ -734,8 +736,6 @@ export function stdSubscriptionBillingSubscriptionOrbital(params: StdSubscriptio
             'trialDays',
             'status',
           ],
-          'title': 'View Plan',
-          'mode': 'edit',
         },
         'events': {
           'OPEN': 'VIEW',
@@ -756,14 +756,14 @@ export function stdSubscriptionBillingSubscriptionOrbital(params: StdSubscriptio
         'name': 'PlanDelete',
         'linkedEntity': canonicalName,
         'config': {
-          'alertMessage': 'This action cannot be undone.',
+          'icon': 'alert-triangle',
           'title': 'Delete Plan',
           'confirmLabel': 'Delete',
-          'icon': 'alert-triangle',
+          'alertMessage': 'This action cannot be undone.',
         },
         'events': {
-          'CONFIRM': 'CONFIRM_DELETE',
           'REQUEST': 'DELETE',
+          'CONFIRM': 'CONFIRM_DELETE',
         },
         'listens': [
           {
@@ -780,8 +780,8 @@ export function stdSubscriptionBillingSubscriptionOrbital(params: StdSubscriptio
         'ref': 'Recurring.traits.SubscriptionManage',
         'name': 'PlanSubscriptionManage',
         'config': {
-          'maxRetries': 4,
           'title': 'Active Subscriptions',
+          'maxRetries': 4,
         },
       }),
       makeTraitRef({
@@ -1241,28 +1241,28 @@ export function stdSubscriptionBillingInvoiceOrbital(params: StdSubscriptionBill
         'ref': 'AppShell.traits.AppLayout',
         'name': 'InvoiceAppLayout',
         'config': {
+          'searchEvent': 'INVOICE_SEARCH',
           'notificationClickEvent': 'INVOICE_NOTIFICATIONS_OPEN',
           'appName': 'Subscription Billing',
           'contentTrait': '@trait.InvoiceCatalog',
-          'searchEvent': 'INVOICE_SEARCH',
+          'notifications': [],
           'navItems': [
             {
-              'icon': 'credit-card',
               'href': '/plans',
+              'icon': 'credit-card',
               'label': 'Plans',
             },
             {
-              'label': 'Invoices',
               'icon': 'receipt',
+              'label': 'Invoices',
               'href': '/invoices',
             },
             {
-              'href': '/dunning',
               'label': 'Dunning',
               'icon': 'alert-triangle',
+              'href': '/dunning',
             },
           ],
-          'notifications': [],
         },
         'events': {
           'SEARCH': 'INVOICE_SEARCH',
@@ -1349,48 +1349,48 @@ export function stdSubscriptionBillingInvoiceOrbital(params: StdSubscriptionBill
                   'render-ui',
                   'main',
                   {
-                    'type': 'stack',
                     'gap': 'lg',
+                    'direction': 'vertical',
                     'children': [
                       {
+                        'direction': 'horizontal',
                         'type': 'stack',
-                        'gap': 'md',
+                        'justify': 'between',
                         'children': [
                           {
-                            'align': 'center',
-                            'direction': 'horizontal',
                             'gap': 'sm',
-                            'type': 'stack',
                             'children': [
                               {
                                 'type': 'icon',
                                 'name': 'receipt',
                               },
                               {
-                                'type': 'typography',
                                 'content': 'Invoices',
                                 'variant': 'h2',
+                                'type': 'typography',
                               },
                             ],
+                            'direction': 'horizontal',
+                            'type': 'stack',
+                            'align': 'center',
                           },
                           {
-                            'direction': 'horizontal',
+                            'type': 'stack',
                             'children': [
                               {
+                                'label': 'Add Note',
                                 'type': 'button',
                                 'action': 'CREATE',
                                 'icon': 'plus',
                                 'variant': 'primary',
-                                'label': 'Add Note',
                               },
                             ],
-                            'type': 'stack',
+                            'direction': 'horizontal',
                             'gap': 'sm',
                           },
                         ],
-                        'justify': 'between',
+                        'gap': 'md',
                         'align': 'center',
-                        'direction': 'horizontal',
                       },
                       {
                         'type': 'divider',
@@ -1400,13 +1400,13 @@ export function stdSubscriptionBillingInvoiceOrbital(params: StdSubscriptionBill
                         'type': 'divider',
                       },
                       {
+                        'variant': 'h3',
                         'content': 'Recent Notes',
                         'type': 'typography',
-                        'variant': 'h3',
                       },
                       '@trait.InvoiceNoteBrowseList',
                     ],
-                    'direction': 'vertical',
+                    'type': 'stack',
                   },
                 ],
               ],
@@ -1425,7 +1425,9 @@ export function stdSubscriptionBillingInvoiceOrbital(params: StdSubscriptionBill
                   'render-ui',
                   'main',
                   {
+                    'direction': 'vertical',
                     'type': 'stack',
+                    'align': 'center',
                     'className': 'py-8',
                     'children': [
                       {
@@ -1433,15 +1435,15 @@ export function stdSubscriptionBillingInvoiceOrbital(params: StdSubscriptionBill
                         'name': 'bell',
                       },
                       {
+                        'variant': 'h3',
                         'content': 'No notifications',
                         'type': 'typography',
-                        'variant': 'h3',
                       },
                       {
                         'content': 'You\'re all caught up.',
-                        'color': 'muted',
-                        'variant': 'caption',
                         'type': 'typography',
+                        'variant': 'caption',
+                        'color': 'muted',
                       },
                       {
                         'variant': 'ghost',
@@ -1450,8 +1452,6 @@ export function stdSubscriptionBillingInvoiceOrbital(params: StdSubscriptionBill
                         'type': 'button',
                       },
                     ],
-                    'align': 'center',
-                    'direction': 'vertical',
                     'gap': 'md',
                   },
                 ],
@@ -1466,41 +1466,41 @@ export function stdSubscriptionBillingInvoiceOrbital(params: StdSubscriptionBill
         'name': 'InvoiceManageBlock',
         'config': {
           'taxStrategy': 'exclusive',
-          'title': 'Invoices',
-          'currency': 'USD',
-          'lateFeePolicy': 'none',
           'lateFeeAmount': 0,
-          'retentionYears': 7,
-          'gracePeriodDays': 30,
+          'currency': 'USD',
           'complianceJurisdiction': 'US',
+          'title': 'Invoices',
+          'lateFeePolicy': 'none',
+          'gracePeriodDays': 30,
           'refundTiersJson': '[]',
+          'retentionYears': 7,
         },
       }),
       makeTraitRef({
         'ref': 'Lifecycle.traits.LifecycleScheduler',
         'name': 'InvoiceLifecycleScan',
         'config': {
-          'targetEntity': 'InvoiceRecord',
           'rules': [
             {
-              'fromStatus': 'sent',
               'condition': {
                 'value': 30,
-                'dateField': 'dueAt',
                 'kind': 'ageDays',
+                'dateField': 'dueAt',
               },
               'toStatus': 'overdue',
+              'fromStatus': 'sent',
             },
             {
-              'toStatus': 'void',
-              'fromStatus': 'overdue',
               'condition': {
                 'kind': 'ageDays',
                 'value': 90,
                 'dateField': 'dueAt',
               },
+              'fromStatus': 'overdue',
+              'toStatus': 'void',
             },
           ],
+          'targetEntity': 'InvoiceRecord',
           'dryRun': false,
         },
       }),
@@ -1508,14 +1508,14 @@ export function stdSubscriptionBillingInvoiceOrbital(params: StdSubscriptionBill
         'ref': 'Notify.traits.NotifyOnEventListener',
         'name': 'InvoiceNotifier',
         'config': {
-          'suppressionList': [],
           'listensFor': [
             'InvoiceUpdated',
           ],
-          'template': 'Invoice updated',
-          'severity': 'info',
           'notifyChannel': 'in-app',
+          'template': 'Invoice updated',
           'recipients': [],
+          'suppressionList': [],
+          'severity': 'info',
         },
         'events': {
           'EventOccurred': 'InvoiceUpdated',
@@ -1525,11 +1525,11 @@ export function stdSubscriptionBillingInvoiceOrbital(params: StdSubscriptionBill
         'ref': 'Audit.traits.AuditCaptureListener',
         'name': 'InvoiceAuditCapture',
         'config': {
+          'captureEntity': 'InvoiceRecord',
+          'captureEventTypes': [],
           'retentionDays': 2555,
           'captureBeforeAfter': false,
-          'captureEntity': 'InvoiceRecord',
           'excludeFields': [],
-          'captureEventTypes': [],
         },
         'events': {
           'EntityMutated': 'InvoiceUpdated',
@@ -1541,19 +1541,11 @@ export function stdSubscriptionBillingInvoiceOrbital(params: StdSubscriptionBill
         'linkedEntity': canonicalName,
         'config': {
           'cols': 1,
-          'itemActions': [
-            {
-              'variant': 'danger',
-              'event': 'DELETE',
-              'label': 'Delete',
-            },
-          ],
-          'gap': 'sm',
           'fields': [
             {
+              'variant': 'h4',
               'name': 'invoiceId',
               'icon': 'receipt',
-              'variant': 'h4',
             },
             {
               'name': 'body',
@@ -1568,6 +1560,14 @@ export function stdSubscriptionBillingInvoiceOrbital(params: StdSubscriptionBill
               'variant': 'caption',
             },
           ],
+          'itemActions': [
+            {
+              'variant': 'danger',
+              'label': 'Delete',
+              'event': 'DELETE',
+            },
+          ],
+          'gap': 'sm',
         },
         'listens': [
           {
@@ -1593,14 +1593,14 @@ export function stdSubscriptionBillingInvoiceOrbital(params: StdSubscriptionBill
         'name': 'InvoiceNoteCreate',
         'linkedEntity': canonicalName,
         'config': {
-          'mode': 'create',
+          'title': 'New Note',
           'fields': [
             'invoiceId',
             'body',
             'author',
           ],
+          'mode': 'create',
           'icon': 'plus-circle',
-          'title': 'New Note',
         },
         'events': {
           'OPEN': 'CREATE',
@@ -1984,6 +1984,7 @@ export function stdSubscriptionBillingDunningOrbital(params: StdSubscriptionBill
         'name': 'DunningAppLayout',
         'config': {
           'contentTrait': '@trait.DunningCatalog',
+          'notifications': [],
           'navItems': [
             {
               'label': 'Plans',
@@ -1991,20 +1992,19 @@ export function stdSubscriptionBillingDunningOrbital(params: StdSubscriptionBill
               'icon': 'credit-card',
             },
             {
+              'icon': 'receipt',
               'label': 'Invoices',
               'href': '/invoices',
-              'icon': 'receipt',
             },
             {
-              'label': 'Dunning',
-              'href': '/dunning',
               'icon': 'alert-triangle',
+              'href': '/dunning',
+              'label': 'Dunning',
             },
           ],
-          'appName': 'Subscription Billing',
           'searchEvent': 'DUNNING_SEARCH',
-          'notifications': [],
           'notificationClickEvent': 'DUNNING_NOTIFICATIONS_OPEN',
+          'appName': 'Subscription Billing',
         },
         'events': {
           'SEARCH': 'DUNNING_SEARCH',
@@ -2091,48 +2091,46 @@ export function stdSubscriptionBillingDunningOrbital(params: StdSubscriptionBill
                   'render-ui',
                   'main',
                   {
-                    'gap': 'lg',
                     'type': 'stack',
-                    'direction': 'vertical',
                     'children': [
                       {
-                        'type': 'stack',
                         'gap': 'md',
-                        'align': 'center',
-                        'direction': 'horizontal',
                         'children': [
                           {
+                            'gap': 'sm',
                             'direction': 'horizontal',
+                            'align': 'center',
+                            'type': 'stack',
                             'children': [
                               {
-                                'type': 'icon',
                                 'name': 'alert-triangle',
+                                'type': 'icon',
                               },
                               {
-                                'variant': 'h2',
                                 'type': 'typography',
                                 'content': 'Dunning',
+                                'variant': 'h2',
                               },
                             ],
-                            'type': 'stack',
-                            'gap': 'sm',
-                            'align': 'center',
                           },
                           {
-                            'gap': 'sm',
                             'type': 'stack',
                             'children': [
                               {
-                                'variant': 'primary',
                                 'label': 'Log Note',
-                                'icon': 'plus',
                                 'action': 'CREATE',
                                 'type': 'button',
+                                'icon': 'plus',
+                                'variant': 'primary',
                               },
                             ],
                             'direction': 'horizontal',
+                            'gap': 'sm',
                           },
                         ],
+                        'direction': 'horizontal',
+                        'align': 'center',
+                        'type': 'stack',
                         'justify': 'between',
                       },
                       {
@@ -2144,11 +2142,13 @@ export function stdSubscriptionBillingDunningOrbital(params: StdSubscriptionBill
                       },
                       {
                         'variant': 'h3',
-                        'content': 'Case Notes',
                         'type': 'typography',
+                        'content': 'Case Notes',
                       },
                       '@trait.DunningNoteBrowseList',
                     ],
+                    'gap': 'lg',
+                    'direction': 'vertical',
                   },
                 ],
               ],
@@ -2167,7 +2167,7 @@ export function stdSubscriptionBillingDunningOrbital(params: StdSubscriptionBill
                   'render-ui',
                   'main',
                   {
-                    'type': 'stack',
+                    'direction': 'vertical',
                     'children': [
                       {
                         'type': 'icon',
@@ -2179,22 +2179,22 @@ export function stdSubscriptionBillingDunningOrbital(params: StdSubscriptionBill
                         'type': 'typography',
                       },
                       {
-                        'content': 'You\'re all caught up.',
+                        'color': 'muted',
                         'type': 'typography',
                         'variant': 'caption',
-                        'color': 'muted',
+                        'content': 'You\'re all caught up.',
                       },
                       {
-                        'type': 'button',
                         'label': 'Back to dunning',
-                        'action': 'INIT',
                         'variant': 'ghost',
+                        'action': 'INIT',
+                        'type': 'button',
                       },
                     ],
-                    'align': 'center',
-                    'gap': 'md',
                     'className': 'py-8',
-                    'direction': 'vertical',
+                    'gap': 'md',
+                    'align': 'center',
+                    'type': 'stack',
                   },
                 ],
               ],
@@ -2217,24 +2217,23 @@ export function stdSubscriptionBillingDunningOrbital(params: StdSubscriptionBill
         'config': {
           'fields': [
             {
-              'variant': 'h4',
-              'icon': 'alert-triangle',
               'name': 'caseId',
+              'icon': 'alert-triangle',
+              'variant': 'h4',
             },
             {
-              'variant': 'body',
               'name': 'body',
+              'variant': 'body',
             },
             {
+              'variant': 'caption',
               'name': 'author',
-              'variant': 'caption',
             },
             {
-              'name': 'createdAt',
               'variant': 'caption',
+              'name': 'createdAt',
             },
           ],
-          'cols': 1,
           'gap': 'sm',
           'itemActions': [
             {
@@ -2243,6 +2242,7 @@ export function stdSubscriptionBillingDunningOrbital(params: StdSubscriptionBill
               'variant': 'danger',
             },
           ],
+          'cols': 1,
         },
         'listens': [
           {

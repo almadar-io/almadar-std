@@ -83,7 +83,7 @@ export interface StdWizardWizardSaveFailedPayload {
  * without modifying its state-machine topology.
  */
 export interface StdWizardConfig {
-  /** Default: `[{"fields":["title","description"],"description":"Basic information","icon":"file-text","label":"Details","key":"details"},{"fields":["category","priority"],"icon":"settings","key":"options","label":"Options","description":"Configure preferences"},{"icon":"check-circle","key":"review","fields":["notes"],"label":"Review","description":"Confirm and submit"}]` */
+  /** Default: `[{"icon":"file-text","key":"details","description":"Basic information","label":"Details","fields":["title","description"]},{"label":"Options","fields":["category","priority"],"icon":"settings","key":"options","description":"Configure preferences"},{"key":"review","fields":["notes"],"label":"Review","icon":"check-circle","description":"Confirm and submit"}]` */
   steps?: EntityRow[];
   /** Default: `"Wizard"` */
   title?: string;

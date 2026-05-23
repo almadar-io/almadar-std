@@ -576,20 +576,20 @@ export function stdAgentAssistantAssistantOrbital(params: StdAgentAssistantAssis
                   'render-ui',
                   'main',
                   {
-                    'type': 'stack',
-                    'gap': 'md',
                     'className': 'py-12',
+                    'type': 'stack',
                     'children': [
                       {
                         'type': 'spinner',
                       },
                       {
-                        'type': 'typography',
                         'content': 'Loading assistant…',
+                        'type': 'typography',
                         'color': 'muted',
                         'variant': 'caption',
                       },
                     ],
+                    'gap': 'md',
                     'direction': 'vertical',
                     'align': 'center',
                   },
@@ -605,87 +605,84 @@ export function stdAgentAssistantAssistantOrbital(params: StdAgentAssistantAssis
                   'render-ui',
                   'main',
                   {
-                    'appName': 'Agent Assistant',
                     'navItems': [
                       {
-                        'label': 'Chat',
                         'href': '/chat',
+                        'label': 'Chat',
                         'icon': 'message-circle',
                       },
                       {
+                        'label': 'Memory',
                         'href': '/memory',
                         'icon': 'brain',
-                        'label': 'Memory',
                       },
                       {
-                        'href': '/settings',
                         'icon': 'settings',
+                        'href': '/settings',
                         'label': 'Settings',
                       },
                     ],
                     'type': 'dashboard-layout',
+                    'appName': 'Agent Assistant',
                     'children': [
                       {
                         'gap': 'lg',
-                        'type': 'stack',
-                        'direction': 'vertical',
                         'children': [
                           {
-                            'justify': 'between',
-                            'gap': 'sm',
-                            'align': 'center',
-                            'direction': 'horizontal',
                             'children': [
                               {
-                                'align': 'center',
-                                'direction': 'horizontal',
-                                'type': 'stack',
-                                'gap': 'sm',
                                 'children': [
                                   {
                                     'name': 'message-circle',
                                     'type': 'icon',
                                   },
                                   {
-                                    'variant': 'h2',
-                                    'content': 'Assistant Thread',
                                     'type': 'typography',
+                                    'content': 'Assistant Thread',
+                                    'variant': 'h2',
                                   },
                                 ],
+                                'align': 'center',
+                                'type': 'stack',
+                                'gap': 'sm',
+                                'direction': 'horizontal',
                               },
                               {
                                 'type': 'button',
-                                'label': 'New Message',
-                                'icon': 'plus',
-                                'action': 'COMPOSE',
                                 'variant': 'primary',
+                                'action': 'COMPOSE',
+                                'icon': 'plus',
+                                'label': 'New Message',
                               },
                             ],
+                            'align': 'center',
+                            'gap': 'sm',
+                            'direction': 'horizontal',
+                            'justify': 'between',
                             'type': 'stack',
                           },
                           {
                             'type': 'divider',
                           },
                           {
-                            'entity': '@payload.data',
-                            'type': 'data-list',
                             'fields': [],
+                            'type': 'data-list',
                             'renderItem': [
                               'fn',
                               'item',
                               {
                                 'direction': 'vertical',
-                                'type': 'stack',
                                 'gap': 'xs',
                                 'children': [
                                   {
                                     'type': 'stack',
                                     'direction': 'horizontal',
+                                    'gap': 'sm',
                                     'align': 'center',
                                     'children': [
                                       {
-                                        'label': '@item.role',
                                         'type': 'badge',
+                                        'label': '@item.role',
                                       },
                                       {
                                         'type': 'badge',
@@ -695,11 +692,10 @@ export function stdAgentAssistantAssistantOrbital(params: StdAgentAssistantAssis
                                       {
                                         'content': '@item.timestamp',
                                         'type': 'typography',
-                                        'color': 'muted',
                                         'variant': 'caption',
+                                        'color': 'muted',
                                       },
                                     ],
-                                    'gap': 'sm',
                                   },
                                   {
                                     'type': 'typography',
@@ -707,10 +703,14 @@ export function stdAgentAssistantAssistantOrbital(params: StdAgentAssistantAssis
                                     'content': '@item.content',
                                   },
                                 ],
+                                'type': 'stack',
                               },
                             ],
+                            'entity': '@payload.data',
                           },
                         ],
+                        'type': 'stack',
+                        'direction': 'vertical',
                       },
                     ],
                   },
@@ -726,36 +726,36 @@ export function stdAgentAssistantAssistantOrbital(params: StdAgentAssistantAssis
                   'render-ui',
                   'main',
                   {
-                    'className': 'py-12',
-                    'gap': 'md',
-                    'direction': 'vertical',
-                    'type': 'stack',
-                    'align': 'center',
                     'children': [
                       {
-                        'type': 'icon',
-                        'color': 'destructive',
                         'name': 'alert-triangle',
+                        'color': 'destructive',
+                        'type': 'icon',
                       },
                       {
-                        'variant': 'h3',
                         'type': 'typography',
                         'content': 'Failed to load assistant',
+                        'variant': 'h3',
                       },
                       {
+                        'variant': 'body',
+                        'type': 'typography',
                         'color': 'muted',
                         'content': '@payload.error',
-                        'type': 'typography',
-                        'variant': 'body',
                       },
                       {
+                        'variant': 'primary',
+                        'label': 'Retry',
                         'action': 'INIT',
                         'type': 'button',
-                        'label': 'Retry',
                         'icon': 'rotate-ccw',
-                        'variant': 'primary',
                       },
                     ],
+                    'direction': 'vertical',
+                    'gap': 'md',
+                    'type': 'stack',
+                    'className': 'py-12',
+                    'align': 'center',
                   },
                 ],
               ],
@@ -769,39 +769,39 @@ export function stdAgentAssistantAssistantOrbital(params: StdAgentAssistantAssis
                   'render-ui',
                   'main',
                   {
+                    'direction': 'vertical',
+                    'gap': 'lg',
                     'children': [
                       {
+                        'type': 'stack',
+                        'gap': 'sm',
+                        'direction': 'horizontal',
                         'children': [
                           {
-                            'type': 'icon',
                             'name': 'message-circle',
+                            'type': 'icon',
                           },
                           {
-                            'type': 'typography',
                             'content': 'Assistant Thread',
+                            'type': 'typography',
                             'variant': 'h2',
                           },
                         ],
-                        'gap': 'sm',
                         'align': 'center',
-                        'type': 'stack',
-                        'direction': 'horizontal',
                       },
                       {
                         'type': 'divider',
                       },
                       {
-                        'submitEvent': 'SEND',
-                        'cancelEvent': 'CANCEL_COMPOSE',
                         'fields': [
                           'content',
                         ],
                         'type': 'form-section',
                         'mode': 'create',
+                        'submitEvent': 'SEND',
+                        'cancelEvent': 'CANCEL_COMPOSE',
                       },
                     ],
-                    'direction': 'vertical',
-                    'gap': 'lg',
                     'type': 'stack',
                   },
                 ],
@@ -818,8 +818,8 @@ export function stdAgentAssistantAssistantOrbital(params: StdAgentAssistantAssis
                   'Assistant',
                   {
                     'emit': {
-                      'failure': 'AssistantDeleteFailed',
                       'success': 'AssistantDeleted',
+                      'failure': 'AssistantDeleteFailed',
                     },
                   },
                 ],
@@ -828,8 +828,8 @@ export function stdAgentAssistantAssistantOrbital(params: StdAgentAssistantAssis
                   'Assistant',
                   {
                     'emit': {
-                      'success': 'AssistantLoaded',
                       'failure': 'AssistantLoadFailed',
+                      'success': 'AssistantLoaded',
                     },
                   },
                 ],
@@ -852,10 +852,10 @@ export function stdAgentAssistantAssistantOrbital(params: StdAgentAssistantAssis
                   'create',
                   'Assistant',
                   {
-                    'role': 'user',
-                    'content': '@payload.content',
-                    'timestamp': '@now',
                     'status': 'sent',
+                    'content': '@payload.content',
+                    'role': 'user',
+                    'timestamp': '@now',
                   },
                   {
                     'emit': {
@@ -892,8 +892,8 @@ export function stdAgentAssistantAssistantOrbital(params: StdAgentAssistantAssis
                   'Assistant',
                   {
                     'emit': {
-                      'failure': 'AssistantLoadFailed',
                       'success': 'AssistantLoaded',
+                      'failure': 'AssistantLoadFailed',
                     },
                   },
                 ],
@@ -917,8 +917,8 @@ export function stdAgentAssistantAssistantOrbital(params: StdAgentAssistantAssis
                   'Assistant',
                   {
                     'emit': {
-                      'failure': 'AssistantDeleteFailed',
                       'success': 'AssistantDeleted',
+                      'failure': 'AssistantDeleteFailed',
                     },
                   },
                 ],
@@ -927,8 +927,8 @@ export function stdAgentAssistantAssistantOrbital(params: StdAgentAssistantAssis
                   'Assistant',
                   {
                     'emit': {
-                      'success': 'AssistantLoaded',
                       'failure': 'AssistantLoadFailed',
+                      'success': 'AssistantLoaded',
                     },
                   },
                 ],
@@ -1068,8 +1068,8 @@ export function stdAgentAssistantAssistantOrbital(params: StdAgentAssistantAssis
                   'Assistant',
                   {
                     'emit': {
-                      'success': 'AssistantLoaded',
                       'failure': 'AssistantLoadFailed',
+                      'success': 'AssistantLoaded',
                     },
                   },
                 ],
@@ -1077,30 +1077,30 @@ export function stdAgentAssistantAssistantOrbital(params: StdAgentAssistantAssis
                   'render-ui',
                   'main',
                   {
-                    'type': 'dashboard-layout',
-                    'appName': 'Agent Assistant',
                     'navItems': [
                       {
-                        'label': 'Chat',
                         'href': '/chat',
                         'icon': 'message-circle',
+                        'label': 'Chat',
                       },
                       {
-                        'href': '/memory',
                         'label': 'Memory',
+                        'href': '/memory',
                         'icon': 'brain',
                       },
                       {
-                        'href': '/settings',
-                        'label': 'Settings',
                         'icon': 'settings',
+                        'label': 'Settings',
+                        'href': '/settings',
                       },
                     ],
+                    'type': 'dashboard-layout',
+                    'appName': 'Agent Assistant',
                     'children': [
                       {
-                        'description': 'Conversation is ready',
-                        'title': 'Conversation',
                         'type': 'empty-state',
+                        'title': 'Conversation',
+                        'description': 'Conversation is ready',
                         'icon': 'message-circle',
                       },
                     ],
@@ -1714,22 +1714,22 @@ export function stdAgentAssistantMemoryOrbital(params: StdAgentAssistantMemoryOr
                   'render-ui',
                   'main',
                   {
-                    'gap': 'md',
-                    'direction': 'vertical',
+                    'type': 'stack',
                     'align': 'center',
+                    'className': 'py-12',
                     'children': [
                       {
                         'type': 'spinner',
                       },
                       {
-                        'content': 'Loading…',
                         'color': 'muted',
-                        'type': 'typography',
+                        'content': 'Loading…',
                         'variant': 'caption',
+                        'type': 'typography',
                       },
                     ],
-                    'type': 'stack',
-                    'className': 'py-12',
+                    'gap': 'md',
+                    'direction': 'vertical',
                   },
                 ],
               ],
@@ -1743,12 +1743,10 @@ export function stdAgentAssistantMemoryOrbital(params: StdAgentAssistantMemoryOr
                   'render-ui',
                   'main',
                   {
-                    'type': 'dashboard-layout',
-                    'appName': 'Agent Assistant',
                     'navItems': [
                       {
-                        'label': 'Chat',
                         'href': '/chat',
+                        'label': 'Chat',
                         'icon': 'message-circle',
                       },
                       {
@@ -1764,17 +1762,21 @@ export function stdAgentAssistantMemoryOrbital(params: StdAgentAssistantMemoryOr
                     ],
                     'children': [
                       {
-                        'type': 'stack',
                         'gap': 'lg',
                         'className': 'max-w-5xl mx-auto w-full',
+                        'direction': 'vertical',
+                        'type': 'stack',
                         'children': [
                           {
                             'children': [
                               {
+                                'type': 'stack',
+                                'align': 'center',
+                                'direction': 'horizontal',
                                 'children': [
                                   {
-                                    'name': 'brain',
                                     'type': 'icon',
+                                    'name': 'brain',
                                   },
                                   {
                                     'type': 'typography',
@@ -1783,53 +1785,51 @@ export function stdAgentAssistantMemoryOrbital(params: StdAgentAssistantMemoryOr
                                   },
                                 ],
                                 'gap': 'sm',
-                                'direction': 'horizontal',
-                                'type': 'stack',
-                                'align': 'center',
                               },
                               {
+                                'gap': 'sm',
+                                'type': 'stack',
                                 'direction': 'horizontal',
                                 'children': [
                                   {
                                     'type': 'button',
-                                    'label': 'Memorize',
                                     'action': 'MEMORIZE',
                                     'variant': 'primary',
                                     'icon': 'plus',
+                                    'label': 'Memorize',
                                   },
                                   {
                                     'action': 'RECALL',
-                                    'variant': 'secondary',
-                                    'type': 'button',
                                     'icon': 'search',
+                                    'type': 'button',
                                     'label': 'Recall',
+                                    'variant': 'secondary',
                                   },
                                   {
                                     'type': 'button',
                                     'action': 'DECAY',
                                     'label': 'Decay All',
-                                    'icon': 'clock',
                                     'variant': 'ghost',
+                                    'icon': 'clock',
                                   },
                                 ],
-                                'type': 'stack',
-                                'gap': 'sm',
                               },
                             ],
                             'gap': 'md',
-                            'align': 'center',
-                            'direction': 'horizontal',
                             'justify': 'between',
                             'type': 'stack',
+                            'direction': 'horizontal',
+                            'align': 'center',
                           },
                           {
                             'type': 'divider',
                           },
                           {
+                            'entity': '@payload.data',
                             'itemActions': [
                               {
-                                'variant': 'ghost',
                                 'label': 'Pin',
+                                'variant': 'ghost',
                                 'event': 'PIN',
                               },
                               {
@@ -1843,45 +1843,45 @@ export function stdAgentAssistantMemoryOrbital(params: StdAgentAssistantMemoryOr
                                 'label': 'Forget',
                               },
                             ],
-                            'type': 'data-grid',
-                            'entity': '@payload.data',
                             'fields': [
                               {
-                                'icon': 'brain',
                                 'variant': 'h4',
+                                'icon': 'brain',
                                 'name': 'content',
                                 'label': 'Content',
                               },
                               {
+                                'label': 'Category',
                                 'name': 'category',
+                                'variant': 'badge',
                                 'colorMap': {
+                                  'completed': 'success',
+                                  'pending': 'warning',
+                                  'active': 'success',
+                                  'done': 'success',
+                                  'cancelled': 'destructive',
+                                  'disabled': 'neutral',
+                                  'failed': 'destructive',
                                   'archived': 'neutral',
+                                  'error': 'destructive',
                                   'inactive': 'neutral',
                                   'draft': 'warning',
-                                  'done': 'success',
-                                  'active': 'success',
-                                  'cancelled': 'destructive',
-                                  'pending': 'warning',
-                                  'disabled': 'neutral',
                                   'scheduled': 'warning',
-                                  'failed': 'destructive',
-                                  'completed': 'success',
-                                  'error': 'destructive',
                                 },
-                                'label': 'Category',
-                                'variant': 'badge',
                               },
                               {
-                                'variant': 'caption',
                                 'label': 'Strength',
                                 'name': 'strength',
+                                'variant': 'caption',
                               },
                             ],
+                            'type': 'data-grid',
                           },
                         ],
-                        'direction': 'vertical',
                       },
                     ],
+                    'type': 'dashboard-layout',
+                    'appName': 'Agent Assistant',
                   },
                 ],
               ],
@@ -1895,10 +1895,10 @@ export function stdAgentAssistantMemoryOrbital(params: StdAgentAssistantMemoryOr
                   'render-ui',
                   'main',
                   {
-                    'align': 'center',
-                    'gap': 'md',
-                    'className': 'py-12',
                     'type': 'stack',
+                    'direction': 'vertical',
+                    'className': 'py-12',
+                    'align': 'center',
                     'children': [
                       {
                         'name': 'alert-triangle',
@@ -1906,25 +1906,25 @@ export function stdAgentAssistantMemoryOrbital(params: StdAgentAssistantMemoryOr
                         'type': 'icon',
                       },
                       {
+                        'variant': 'h3',
                         'content': 'Failed to load memory',
                         'type': 'typography',
-                        'variant': 'h3',
                       },
                       {
                         'content': '@payload.error',
-                        'color': 'muted',
-                        'type': 'typography',
                         'variant': 'body',
+                        'type': 'typography',
+                        'color': 'muted',
                       },
                       {
                         'type': 'button',
                         'action': 'INIT',
-                        'label': 'Retry',
                         'variant': 'primary',
                         'icon': 'rotate-ccw',
+                        'label': 'Retry',
                       },
                     ],
-                    'direction': 'vertical',
+                    'gap': 'md',
                   },
                 ],
               ],
@@ -2099,8 +2099,8 @@ export function stdAgentAssistantMemoryOrbital(params: StdAgentAssistantMemoryOr
                   'Memory',
                   {
                     'emit': {
-                      'failure': 'MemoryLoadFailed',
                       'success': 'MemoryLoaded',
+                      'failure': 'MemoryLoadFailed',
                     },
                   },
                 ],
@@ -2115,15 +2115,14 @@ export function stdAgentAssistantMemoryOrbital(params: StdAgentAssistantMemoryOr
                   'render-ui',
                   'modal',
                   {
-                    'gap': 'md',
+                    'direction': 'vertical',
                     'children': [
                       {
-                        'gap': 'sm',
                         'direction': 'horizontal',
                         'children': [
                           {
-                            'name': 'plus-circle',
                             'type': 'icon',
+                            'name': 'plus-circle',
                           },
                           {
                             'variant': 'h3',
@@ -2131,25 +2130,26 @@ export function stdAgentAssistantMemoryOrbital(params: StdAgentAssistantMemoryOr
                             'content': 'Memorize',
                           },
                         ],
+                        'gap': 'sm',
                         'type': 'stack',
                       },
                       {
                         'type': 'divider',
                       },
                       {
-                        'cancelEvent': 'CLOSE',
-                        'type': 'form-section',
                         'fields': [
                           'content',
                           'category',
                           'scope',
                         ],
-                        'submitEvent': 'SAVE',
+                        'type': 'form-section',
                         'mode': 'create',
+                        'cancelEvent': 'CLOSE',
+                        'submitEvent': 'SAVE',
                       },
                     ],
                     'type': 'stack',
-                    'direction': 'vertical',
+                    'gap': 'md',
                   },
                 ],
               ],
@@ -2190,8 +2190,8 @@ export function stdAgentAssistantMemoryOrbital(params: StdAgentAssistantMemoryOr
                   '@payload.data',
                   {
                     'emit': {
-                      'failure': 'MemorySaveFailed',
                       'success': 'MemorySaved',
+                      'failure': 'MemorySaveFailed',
                     },
                   },
                 ],
@@ -2513,8 +2513,8 @@ export function stdAgentAssistantMemoryOrbital(params: StdAgentAssistantMemoryOr
                   'Memory',
                   {
                     'emit': {
-                      'success': 'MemoryLoaded',
                       'failure': 'MemoryLoadFailed',
+                      'success': 'MemoryLoaded',
                     },
                   },
                 ],
@@ -2524,30 +2524,30 @@ export function stdAgentAssistantMemoryOrbital(params: StdAgentAssistantMemoryOr
                   {
                     'navItems': [
                       {
-                        'icon': 'message-circle',
                         'label': 'Chat',
                         'href': '/chat',
+                        'icon': 'message-circle',
                       },
                       {
+                        'label': 'Memory',
                         'icon': 'brain',
                         'href': '/memory',
-                        'label': 'Memory',
                       },
                       {
                         'icon': 'settings',
-                        'label': 'Settings',
                         'href': '/settings',
-                      },
-                    ],
-                    'children': [
-                      {
-                        'title': 'Memory',
-                        'icon': 'brain',
-                        'description': 'Memory is ready',
-                        'type': 'empty-state',
+                        'label': 'Settings',
                       },
                     ],
                     'type': 'dashboard-layout',
+                    'children': [
+                      {
+                        'icon': 'brain',
+                        'description': 'Memory is ready',
+                        'type': 'empty-state',
+                        'title': 'Memory',
+                      },
+                    ],
                     'appName': 'Agent Assistant',
                   },
                 ],
@@ -2570,8 +2570,8 @@ export function stdAgentAssistantMemoryOrbital(params: StdAgentAssistantMemoryOr
                   '@payload.data',
                   {
                     'emit': {
-                      'failure': 'MemorySaveFailed',
                       'success': 'MemorySaved',
+                      'failure': 'MemorySaveFailed',
                     },
                   },
                 ],
@@ -3021,16 +3021,15 @@ export function stdAgentAssistantAssistantContextOrbital(params: StdAgentAssista
                   'render-ui',
                   'main',
                   {
+                    'appName': 'Agent Assistant',
                     'children': [
                       {
-                        'type': 'stack',
                         'direction': 'vertical',
                         'gap': 'lg',
+                        'type': 'stack',
                         'children': [
                           {
-                            'direction': 'horizontal',
                             'gap': 'sm',
-                            'type': 'stack',
                             'align': 'center',
                             'children': [
                               {
@@ -3038,48 +3037,50 @@ export function stdAgentAssistantAssistantContextOrbital(params: StdAgentAssista
                                 'name': 'gauge',
                               },
                               {
+                                'type': 'typography',
                                 'variant': 'h2',
                                 'content': 'Token Usage',
-                                'type': 'typography',
                               },
                               {
-                                'type': 'badge',
                                 'label': 'Normal',
                                 'variant': 'default',
+                                'type': 'badge',
                               },
                             ],
+                            'type': 'stack',
+                            'direction': 'horizontal',
                           },
                           {
                             'type': 'divider',
                           },
                           {
                             'type': 'progress-bar',
-                            'value': '@entity.current',
                             'max': '@entity.max',
+                            'value': '@entity.current',
                           },
                           {
+                            'gap': 'md',
+                            'direction': 'horizontal',
+                            'type': 'stack',
                             'children': [
                               {
-                                'label': 'Tokens Used',
                                 'type': 'stat-display',
                                 'value': '@entity.current',
+                                'label': 'Tokens Used',
                               },
                               {
+                                'type': 'stat-display',
                                 'value': '@entity.max',
                                 'label': 'Max Tokens',
-                                'type': 'stat-display',
                               },
                             ],
-                            'gap': 'md',
-                            'type': 'stack',
-                            'direction': 'horizontal',
                           },
                           {
+                            'variant': 'ghost',
+                            'type': 'button',
                             'icon': 'rotate-ccw',
                             'action': 'RESET',
-                            'type': 'button',
                             'label': 'Reset',
-                            'variant': 'ghost',
                           },
                         ],
                       },
@@ -3087,14 +3088,14 @@ export function stdAgentAssistantAssistantContextOrbital(params: StdAgentAssista
                     'type': 'dashboard-layout',
                     'navItems': [
                       {
-                        'href': '/chat',
-                        'icon': 'message-circle',
                         'label': 'Chat',
+                        'icon': 'message-circle',
+                        'href': '/chat',
                       },
                       {
                         'href': '/memory',
-                        'label': 'Memory',
                         'icon': 'brain',
+                        'label': 'Memory',
                       },
                       {
                         'icon': 'settings',
@@ -3102,7 +3103,6 @@ export function stdAgentAssistantAssistantContextOrbital(params: StdAgentAssista
                         'href': '/settings',
                       },
                     ],
-                    'appName': 'Agent Assistant',
                   },
                 ],
               ],
@@ -3138,10 +3138,6 @@ export function stdAgentAssistantAssistantContextOrbital(params: StdAgentAssista
                         'type': 'stack',
                         'children': [
                           {
-                            'align': 'center',
-                            'gap': 'sm',
-                            'direction': 'horizontal',
-                            'type': 'stack',
                             'children': [
                               {
                                 'type': 'icon',
@@ -3158,23 +3154,27 @@ export function stdAgentAssistantAssistantContextOrbital(params: StdAgentAssista
                                 'label': 'Normal',
                               },
                             ],
+                            'type': 'stack',
+                            'gap': 'sm',
+                            'direction': 'horizontal',
+                            'align': 'center',
                           },
                           {
                             'type': 'divider',
                           },
                           {
+                            'max': '@entity.max',
                             'type': 'progress-bar',
                             'value': '@entity.current',
-                            'max': '@entity.max',
                           },
                           {
-                            'gap': 'md',
                             'direction': 'horizontal',
+                            'type': 'stack',
                             'children': [
                               {
+                                'type': 'stat-display',
                                 'label': 'Tokens Used',
                                 'value': '@entity.current',
-                                'type': 'stat-display',
                               },
                               {
                                 'type': 'stat-display',
@@ -3182,13 +3182,13 @@ export function stdAgentAssistantAssistantContextOrbital(params: StdAgentAssista
                                 'value': '@entity.max',
                               },
                             ],
-                            'type': 'stack',
+                            'gap': 'md',
                           },
                           {
                             'type': 'button',
-                            'label': 'Reset',
-                            'variant': 'ghost',
                             'icon': 'rotate-ccw',
+                            'variant': 'ghost',
+                            'label': 'Reset',
                             'action': 'RESET',
                           },
                         ],
@@ -3202,14 +3202,14 @@ export function stdAgentAssistantAssistantContextOrbital(params: StdAgentAssista
                         'icon': 'message-circle',
                       },
                       {
-                        'label': 'Memory',
-                        'icon': 'brain',
                         'href': '/memory',
+                        'icon': 'brain',
+                        'label': 'Memory',
                       },
                       {
                         'label': 'Settings',
-                        'href': '/settings',
                         'icon': 'settings',
+                        'href': '/settings',
                       },
                     ],
                   },
@@ -3251,94 +3251,13 @@ export function stdAgentAssistantAssistantContextOrbital(params: StdAgentAssista
                   'render-ui',
                   'main',
                   {
+                    'type': 'dashboard-layout',
                     'appName': 'Agent Assistant',
-                    'children': [
-                      {
-                        'direction': 'vertical',
-                        'type': 'stack',
-                        'gap': 'lg',
-                        'children': [
-                          {
-                            'gap': 'sm',
-                            'type': 'stack',
-                            'children': [
-                              {
-                                'type': 'icon',
-                                'name': 'alert-triangle',
-                              },
-                              {
-                                'variant': 'h2',
-                                'type': 'typography',
-                                'content': 'Token Usage',
-                              },
-                              {
-                                'type': 'badge',
-                                'label': 'Warning',
-                                'variant': 'warning',
-                              },
-                            ],
-                            'direction': 'horizontal',
-                            'align': 'center',
-                          },
-                          {
-                            'type': 'divider',
-                          },
-                          {
-                            'variant': 'warning',
-                            'message': 'Token usage approaching limit. Consider compacting.',
-                            'type': 'alert',
-                          },
-                          {
-                            'max': '@entity.max',
-                            'type': 'progress-bar',
-                            'value': '@entity.current',
-                          },
-                          {
-                            'type': 'stack',
-                            'direction': 'horizontal',
-                            'children': [
-                              {
-                                'type': 'stat-display',
-                                'label': 'Tokens Used',
-                                'value': '@entity.current',
-                              },
-                              {
-                                'label': 'Max Tokens',
-                                'value': '@entity.max',
-                                'type': 'stat-display',
-                              },
-                            ],
-                            'gap': 'md',
-                          },
-                          {
-                            'type': 'stack',
-                            'gap': 'sm',
-                            'children': [
-                              {
-                                'icon': 'minimize-2',
-                                'type': 'button',
-                                'label': 'Compact',
-                                'variant': 'primary',
-                                'action': 'COMPACT',
-                              },
-                              {
-                                'label': 'Reset',
-                                'variant': 'ghost',
-                                'action': 'RESET',
-                                'icon': 'rotate-ccw',
-                                'type': 'button',
-                              },
-                            ],
-                            'direction': 'horizontal',
-                          },
-                        ],
-                      },
-                    ],
                     'navItems': [
                       {
+                        'href': '/chat',
                         'icon': 'message-circle',
                         'label': 'Chat',
-                        'href': '/chat',
                       },
                       {
                         'icon': 'brain',
@@ -3346,12 +3265,93 @@ export function stdAgentAssistantAssistantContextOrbital(params: StdAgentAssista
                         'href': '/memory',
                       },
                       {
-                        'icon': 'settings',
                         'label': 'Settings',
                         'href': '/settings',
+                        'icon': 'settings',
                       },
                     ],
-                    'type': 'dashboard-layout',
+                    'children': [
+                      {
+                        'children': [
+                          {
+                            'type': 'stack',
+                            'align': 'center',
+                            'gap': 'sm',
+                            'direction': 'horizontal',
+                            'children': [
+                              {
+                                'name': 'alert-triangle',
+                                'type': 'icon',
+                              },
+                              {
+                                'type': 'typography',
+                                'variant': 'h2',
+                                'content': 'Token Usage',
+                              },
+                              {
+                                'variant': 'warning',
+                                'type': 'badge',
+                                'label': 'Warning',
+                              },
+                            ],
+                          },
+                          {
+                            'type': 'divider',
+                          },
+                          {
+                            'message': 'Token usage approaching limit. Consider compacting.',
+                            'type': 'alert',
+                            'variant': 'warning',
+                          },
+                          {
+                            'type': 'progress-bar',
+                            'value': '@entity.current',
+                            'max': '@entity.max',
+                          },
+                          {
+                            'children': [
+                              {
+                                'type': 'stat-display',
+                                'label': 'Tokens Used',
+                                'value': '@entity.current',
+                              },
+                              {
+                                'type': 'stat-display',
+                                'label': 'Max Tokens',
+                                'value': '@entity.max',
+                              },
+                            ],
+                            'type': 'stack',
+                            'direction': 'horizontal',
+                            'gap': 'md',
+                          },
+                          {
+                            'direction': 'horizontal',
+                            'gap': 'sm',
+                            'children': [
+                              {
+                                'action': 'COMPACT',
+                                'variant': 'primary',
+                                'type': 'button',
+                                'label': 'Compact',
+                                'icon': 'minimize-2',
+                              },
+                              {
+                                'action': 'RESET',
+                                'label': 'Reset',
+                                'variant': 'ghost',
+                                'icon': 'rotate-ccw',
+                                'type': 'button',
+                              },
+                            ],
+                            'type': 'stack',
+                          },
+                        ],
+                        'gap': 'lg',
+                        'type': 'stack',
+                        'direction': 'vertical',
+                      },
+                    ],
                   },
                 ],
               ],
@@ -3379,31 +3379,48 @@ export function stdAgentAssistantAssistantContextOrbital(params: StdAgentAssista
                   'render-ui',
                   'main',
                   {
-                    'appName': 'Agent Assistant',
+                    'navItems': [
+                      {
+                        'href': '/chat',
+                        'icon': 'message-circle',
+                        'label': 'Chat',
+                      },
+                      {
+                        'href': '/memory',
+                        'icon': 'brain',
+                        'label': 'Memory',
+                      },
+                      {
+                        'label': 'Settings',
+                        'icon': 'settings',
+                        'href': '/settings',
+                      },
+                    ],
                     'children': [
                       {
+                        'direction': 'vertical',
                         'gap': 'lg',
                         'children': [
                           {
-                            'direction': 'horizontal',
+                            'align': 'center',
                             'children': [
                               {
-                                'type': 'icon',
                                 'name': 'alert-octagon',
+                                'type': 'icon',
                               },
                               {
-                                'content': 'Token Usage',
-                                'type': 'typography',
                                 'variant': 'h2',
+                                'type': 'typography',
+                                'content': 'Token Usage',
                               },
                               {
+                                'label': 'Critical',
                                 'type': 'badge',
                                 'variant': 'danger',
-                                'label': 'Critical',
                               },
                             ],
-                            'align': 'center',
                             'type': 'stack',
+                            'direction': 'horizontal',
                             'gap': 'sm',
                           },
                           {
@@ -3411,12 +3428,12 @@ export function stdAgentAssistantAssistantContextOrbital(params: StdAgentAssista
                           },
                           {
                             'message': 'Token usage critical. Compact immediately to avoid truncation.',
-                            'type': 'alert',
                             'variant': 'error',
+                            'type': 'alert',
                           },
                           {
-                            'value': '@entity.current',
                             'type': 'progress-bar',
+                            'value': '@entity.current',
                             'max': '@entity.max',
                           },
                           {
@@ -3425,60 +3442,43 @@ export function stdAgentAssistantAssistantContextOrbital(params: StdAgentAssista
                             'gap': 'md',
                             'children': [
                               {
+                                'type': 'stat-display',
                                 'label': 'Tokens Used',
                                 'value': '@entity.current',
-                                'type': 'stat-display',
                               },
                               {
-                                'value': '@entity.max',
                                 'type': 'stat-display',
                                 'label': 'Max Tokens',
+                                'value': '@entity.max',
                               },
                             ],
                           },
                           {
                             'direction': 'horizontal',
                             'type': 'stack',
-                            'gap': 'sm',
                             'children': [
                               {
+                                'label': 'Compact Now',
                                 'variant': 'primary',
                                 'type': 'button',
-                                'label': 'Compact Now',
-                                'icon': 'minimize-2',
                                 'action': 'COMPACT',
+                                'icon': 'minimize-2',
                               },
                               {
-                                'type': 'button',
                                 'label': 'Reset',
                                 'action': 'RESET',
                                 'variant': 'ghost',
+                                'type': 'button',
                                 'icon': 'rotate-ccw',
                               },
                             ],
+                            'gap': 'sm',
                           },
                         ],
                         'type': 'stack',
-                        'direction': 'vertical',
                       },
                     ],
-                    'navItems': [
-                      {
-                        'label': 'Chat',
-                        'href': '/chat',
-                        'icon': 'message-circle',
-                      },
-                      {
-                        'icon': 'brain',
-                        'label': 'Memory',
-                        'href': '/memory',
-                      },
-                      {
-                        'label': 'Settings',
-                        'href': '/settings',
-                        'icon': 'settings',
-                      },
-                    ],
+                    'appName': 'Agent Assistant',
                     'type': 'dashboard-layout',
                   },
                 ],
@@ -3504,14 +3504,30 @@ export function stdAgentAssistantAssistantContextOrbital(params: StdAgentAssista
                   'render-ui',
                   'main',
                   {
+                    'navItems': [
+                      {
+                        'href': '/chat',
+                        'icon': 'message-circle',
+                        'label': 'Chat',
+                      },
+                      {
+                        'href': '/memory',
+                        'label': 'Memory',
+                        'icon': 'brain',
+                      },
+                      {
+                        'label': 'Settings',
+                        'href': '/settings',
+                        'icon': 'settings',
+                      },
+                    ],
+                    'type': 'dashboard-layout',
+                    'appName': 'Agent Assistant',
                     'children': [
                       {
                         'children': [
                           {
-                            'gap': 'sm',
                             'type': 'stack',
-                            'direction': 'horizontal',
-                            'align': 'center',
                             'children': [
                               {
                                 'name': 'gauge',
@@ -3528,6 +3544,9 @@ export function stdAgentAssistantAssistantContextOrbital(params: StdAgentAssista
                                 'type': 'badge',
                               },
                             ],
+                            'gap': 'sm',
+                            'direction': 'horizontal',
+                            'align': 'center',
                           },
                           {
                             'type': 'divider',
@@ -3538,52 +3557,33 @@ export function stdAgentAssistantAssistantContextOrbital(params: StdAgentAssista
                             'type': 'progress-bar',
                           },
                           {
+                            'gap': 'md',
                             'type': 'stack',
                             'direction': 'horizontal',
-                            'gap': 'md',
                             'children': [
                               {
+                                'value': '@entity.current',
                                 'label': 'Tokens Used',
                                 'type': 'stat-display',
-                                'value': '@entity.current',
                               },
                               {
-                                'type': 'stat-display',
                                 'label': 'Max Tokens',
                                 'value': '@entity.max',
+                                'type': 'stat-display',
                               },
                             ],
                           },
                           {
-                            'variant': 'ghost',
-                            'type': 'button',
                             'icon': 'rotate-ccw',
+                            'type': 'button',
                             'label': 'Reset',
                             'action': 'RESET',
+                            'variant': 'ghost',
                           },
                         ],
-                        'type': 'stack',
-                        'direction': 'vertical',
                         'gap': 'lg',
-                      },
-                    ],
-                    'type': 'dashboard-layout',
-                    'appName': 'Agent Assistant',
-                    'navItems': [
-                      {
-                        'label': 'Chat',
-                        'href': '/chat',
-                        'icon': 'message-circle',
-                      },
-                      {
-                        'label': 'Memory',
-                        'icon': 'brain',
-                        'href': '/memory',
-                      },
-                      {
-                        'label': 'Settings',
-                        'icon': 'settings',
-                        'href': '/settings',
+                        'direction': 'vertical',
+                        'type': 'stack',
                       },
                     ],
                   },
@@ -3604,80 +3604,16 @@ export function stdAgentAssistantAssistantContextOrbital(params: StdAgentAssista
                   'render-ui',
                   'main',
                   {
-                    'type': 'dashboard-layout',
-                    'children': [
-                      {
-                        'children': [
-                          {
-                            'type': 'stack',
-                            'gap': 'sm',
-                            'align': 'center',
-                            'direction': 'horizontal',
-                            'children': [
-                              {
-                                'type': 'icon',
-                                'name': 'gauge',
-                              },
-                              {
-                                'variant': 'h2',
-                                'type': 'typography',
-                                'content': 'Token Usage',
-                              },
-                              {
-                                'type': 'badge',
-                                'label': 'Normal',
-                                'variant': 'default',
-                              },
-                            ],
-                          },
-                          {
-                            'type': 'divider',
-                          },
-                          {
-                            'value': '@entity.current',
-                            'max': '@entity.max',
-                            'type': 'progress-bar',
-                          },
-                          {
-                            'type': 'stack',
-                            'direction': 'horizontal',
-                            'gap': 'md',
-                            'children': [
-                              {
-                                'value': '@entity.current',
-                                'type': 'stat-display',
-                                'label': 'Tokens Used',
-                              },
-                              {
-                                'value': '@entity.max',
-                                'type': 'stat-display',
-                                'label': 'Max Tokens',
-                              },
-                            ],
-                          },
-                          {
-                            'icon': 'rotate-ccw',
-                            'type': 'button',
-                            'variant': 'ghost',
-                            'label': 'Reset',
-                            'action': 'RESET',
-                          },
-                        ],
-                        'direction': 'vertical',
-                        'type': 'stack',
-                        'gap': 'lg',
-                      },
-                    ],
                     'navItems': [
                       {
+                        'href': '/chat',
                         'icon': 'message-circle',
                         'label': 'Chat',
-                        'href': '/chat',
                       },
                       {
-                        'icon': 'brain',
-                        'label': 'Memory',
                         'href': '/memory',
+                        'label': 'Memory',
+                        'icon': 'brain',
                       },
                       {
                         'label': 'Settings',
@@ -3685,7 +3621,71 @@ export function stdAgentAssistantAssistantContextOrbital(params: StdAgentAssista
                         'icon': 'settings',
                       },
                     ],
+                    'children': [
+                      {
+                        'type': 'stack',
+                        'gap': 'lg',
+                        'children': [
+                          {
+                            'align': 'center',
+                            'children': [
+                              {
+                                'name': 'gauge',
+                                'type': 'icon',
+                              },
+                              {
+                                'variant': 'h2',
+                                'content': 'Token Usage',
+                                'type': 'typography',
+                              },
+                              {
+                                'variant': 'default',
+                                'type': 'badge',
+                                'label': 'Normal',
+                              },
+                            ],
+                            'direction': 'horizontal',
+                            'gap': 'sm',
+                            'type': 'stack',
+                          },
+                          {
+                            'type': 'divider',
+                          },
+                          {
+                            'max': '@entity.max',
+                            'type': 'progress-bar',
+                            'value': '@entity.current',
+                          },
+                          {
+                            'direction': 'horizontal',
+                            'type': 'stack',
+                            'gap': 'md',
+                            'children': [
+                              {
+                                'label': 'Tokens Used',
+                                'type': 'stat-display',
+                                'value': '@entity.current',
+                              },
+                              {
+                                'label': 'Max Tokens',
+                                'type': 'stat-display',
+                                'value': '@entity.max',
+                              },
+                            ],
+                          },
+                          {
+                            'variant': 'ghost',
+                            'label': 'Reset',
+                            'action': 'RESET',
+                            'type': 'button',
+                            'icon': 'rotate-ccw',
+                          },
+                        ],
+                        'direction': 'vertical',
+                      },
+                    ],
                     'appName': 'Agent Assistant',
+                    'type': 'dashboard-layout',
                   },
                 ],
               ],
@@ -3725,16 +3725,16 @@ export function stdAgentAssistantAssistantContextOrbital(params: StdAgentAssista
                   'render-ui',
                   'main',
                   {
+                    'type': 'dashboard-layout',
                     'children': [
                       {
-                        'direction': 'vertical',
-                        'gap': 'lg',
+                        'type': 'stack',
                         'children': [
                           {
                             'direction': 'horizontal',
-                            'type': 'stack',
                             'gap': 'sm',
                             'align': 'center',
+                            'type': 'stack',
                             'children': [
                               {
                                 'name': 'alert-triangle',
@@ -3746,9 +3746,9 @@ export function stdAgentAssistantAssistantContextOrbital(params: StdAgentAssista
                                 'type': 'typography',
                               },
                               {
-                                'type': 'badge',
-                                'label': 'Warning',
                                 'variant': 'warning',
+                                'label': 'Warning',
+                                'type': 'badge',
                               },
                             ],
                           },
@@ -3756,19 +3756,17 @@ export function stdAgentAssistantAssistantContextOrbital(params: StdAgentAssista
                             'type': 'divider',
                           },
                           {
-                            'message': 'Token usage approaching limit. Consider compacting.',
                             'type': 'alert',
                             'variant': 'warning',
+                            'message': 'Token usage approaching limit. Consider compacting.',
                           },
                           {
+                            'value': '@entity.current',
                             'type': 'progress-bar',
                             'max': '@entity.max',
-                            'value': '@entity.current',
                           },
                           {
                             'type': 'stack',
-                            'gap': 'md',
-                            'direction': 'horizontal',
                             'children': [
                               {
                                 'label': 'Tokens Used',
@@ -3776,11 +3774,13 @@ export function stdAgentAssistantAssistantContextOrbital(params: StdAgentAssista
                                 'value': '@entity.current',
                               },
                               {
+                                'label': 'Max Tokens',
                                 'value': '@entity.max',
                                 'type': 'stat-display',
-                                'label': 'Max Tokens',
                               },
                             ],
+                            'direction': 'horizontal',
+                            'gap': 'md',
                           },
                           {
                             'direction': 'horizontal',
@@ -3788,44 +3788,44 @@ export function stdAgentAssistantAssistantContextOrbital(params: StdAgentAssista
                             'type': 'stack',
                             'children': [
                               {
-                                'icon': 'minimize-2',
-                                'label': 'Compact',
                                 'action': 'COMPACT',
                                 'type': 'button',
                                 'variant': 'primary',
+                                'icon': 'minimize-2',
+                                'label': 'Compact',
                               },
                               {
-                                'icon': 'rotate-ccw',
-                                'variant': 'ghost',
-                                'action': 'RESET',
                                 'type': 'button',
                                 'label': 'Reset',
+                                'variant': 'ghost',
+                                'icon': 'rotate-ccw',
+                                'action': 'RESET',
                               },
                             ],
                           },
                         ],
-                        'type': 'stack',
+                        'gap': 'lg',
+                        'direction': 'vertical',
                       },
                     ],
-                    'type': 'dashboard-layout',
-                    'appName': 'Agent Assistant',
                     'navItems': [
                       {
-                        'href': '/chat',
                         'icon': 'message-circle',
                         'label': 'Chat',
+                        'href': '/chat',
                       },
                       {
-                        'label': 'Memory',
-                        'icon': 'brain',
                         'href': '/memory',
+                        'icon': 'brain',
+                        'label': 'Memory',
                       },
                       {
+                        'icon': 'settings',
                         'label': 'Settings',
                         'href': '/settings',
-                        'icon': 'settings',
                       },
                     ],
+                    'appName': 'Agent Assistant',
                   },
                 ],
               ],
@@ -3853,48 +3853,49 @@ export function stdAgentAssistantAssistantContextOrbital(params: StdAgentAssista
                   'render-ui',
                   'main',
                   {
+                    'type': 'dashboard-layout',
+                    'appName': 'Agent Assistant',
                     'navItems': [
                       {
-                        'label': 'Chat',
                         'href': '/chat',
                         'icon': 'message-circle',
+                        'label': 'Chat',
                       },
                       {
-                        'label': 'Memory',
                         'href': '/memory',
+                        'label': 'Memory',
                         'icon': 'brain',
                       },
                       {
-                        'icon': 'settings',
                         'label': 'Settings',
+                        'icon': 'settings',
                         'href': '/settings',
                       },
                     ],
-                    'appName': 'Agent Assistant',
                     'children': [
                       {
-                        'gap': 'lg',
                         'type': 'stack',
+                        'gap': 'lg',
                         'direction': 'vertical',
                         'children': [
                           {
+                            'gap': 'sm',
                             'align': 'center',
                             'type': 'stack',
                             'direction': 'horizontal',
-                            'gap': 'sm',
                             'children': [
                               {
                                 'type': 'icon',
                                 'name': 'alert-octagon',
                               },
                               {
-                                'type': 'typography',
                                 'content': 'Token Usage',
+                                'type': 'typography',
                                 'variant': 'h2',
                               },
                               {
-                                'variant': 'danger',
                                 'type': 'badge',
+                                'variant': 'danger',
                                 'label': 'Critical',
                               },
                             ],
@@ -3903,18 +3904,16 @@ export function stdAgentAssistantAssistantContextOrbital(params: StdAgentAssista
                             'type': 'divider',
                           },
                           {
-                            'type': 'alert',
                             'variant': 'error',
+                            'type': 'alert',
                             'message': 'Token usage critical. Compact immediately to avoid truncation.',
                           },
                           {
-                            'type': 'progress-bar',
                             'value': '@entity.current',
                             'max': '@entity.max',
+                            'type': 'progress-bar',
                           },
                           {
-                            'direction': 'horizontal',
-                            'gap': 'md',
                             'children': [
                               {
                                 'value': '@entity.current',
@@ -3922,38 +3921,39 @@ export function stdAgentAssistantAssistantContextOrbital(params: StdAgentAssista
                                 'label': 'Tokens Used',
                               },
                               {
-                                'label': 'Max Tokens',
                                 'type': 'stat-display',
+                                'label': 'Max Tokens',
                                 'value': '@entity.max',
                               },
                             ],
                             'type': 'stack',
+                            'gap': 'md',
+                            'direction': 'horizontal',
                           },
                           {
-                            'gap': 'sm',
                             'type': 'stack',
+                            'direction': 'horizontal',
                             'children': [
                               {
+                                'label': 'Compact Now',
                                 'action': 'COMPACT',
                                 'type': 'button',
-                                'label': 'Compact Now',
                                 'variant': 'primary',
                                 'icon': 'minimize-2',
                               },
                               {
-                                'icon': 'rotate-ccw',
-                                'type': 'button',
-                                'label': 'Reset',
                                 'action': 'RESET',
+                                'label': 'Reset',
+                                'type': 'button',
+                                'icon': 'rotate-ccw',
                                 'variant': 'ghost',
                               },
                             ],
-                            'direction': 'horizontal',
+                            'gap': 'sm',
                           },
                         ],
                       },
                     ],
-                    'type': 'dashboard-layout',
                   },
                 ],
               ],
@@ -3981,86 +3981,86 @@ export function stdAgentAssistantAssistantContextOrbital(params: StdAgentAssista
                   'render-ui',
                   'main',
                   {
-                    'navItems': [
-                      {
-                        'label': 'Chat',
-                        'href': '/chat',
-                        'icon': 'message-circle',
-                      },
-                      {
-                        'label': 'Memory',
-                        'href': '/memory',
-                        'icon': 'brain',
-                      },
-                      {
-                        'label': 'Settings',
-                        'href': '/settings',
-                        'icon': 'settings',
-                      },
-                    ],
-                    'appName': 'Agent Assistant',
-                    'type': 'dashboard-layout',
                     'children': [
                       {
+                        'direction': 'vertical',
                         'children': [
                           {
-                            'type': 'stack',
-                            'align': 'center',
+                            'gap': 'sm',
                             'children': [
                               {
-                                'name': 'gauge',
                                 'type': 'icon',
+                                'name': 'gauge',
                               },
                               {
+                                'variant': 'h2',
                                 'type': 'typography',
                                 'content': 'Token Usage',
-                                'variant': 'h2',
                               },
                               {
-                                'label': 'Normal',
-                                'type': 'badge',
                                 'variant': 'default',
+                                'type': 'badge',
+                                'label': 'Normal',
                               },
                             ],
-                            'gap': 'sm',
+                            'type': 'stack',
                             'direction': 'horizontal',
+                            'align': 'center',
                           },
                           {
                             'type': 'divider',
                           },
                           {
+                            'type': 'progress-bar',
                             'value': '@entity.current',
                             'max': '@entity.max',
-                            'type': 'progress-bar',
                           },
                           {
-                            'type': 'stack',
-                            'direction': 'horizontal',
                             'children': [
                               {
                                 'type': 'stat-display',
-                                'value': '@entity.current',
                                 'label': 'Tokens Used',
+                                'value': '@entity.current',
                               },
                               {
                                 'value': '@entity.max',
-                                'label': 'Max Tokens',
                                 'type': 'stat-display',
+                                'label': 'Max Tokens',
                               },
                             ],
+                            'type': 'stack',
+                            'direction': 'horizontal',
                             'gap': 'md',
                           },
                           {
-                            'icon': 'rotate-ccw',
                             'type': 'button',
-                            'label': 'Reset',
+                            'icon': 'rotate-ccw',
                             'variant': 'ghost',
                             'action': 'RESET',
+                            'label': 'Reset',
                           },
                         ],
-                        'direction': 'vertical',
                         'type': 'stack',
                         'gap': 'lg',
+                      },
+                    ],
+                    'type': 'dashboard-layout',
+                    'appName': 'Agent Assistant',
+                    'navItems': [
+                      {
+                        'href': '/chat',
+                        'label': 'Chat',
+                        'icon': 'message-circle',
+                      },
+                      {
+                        'label': 'Memory',
+                        'icon': 'brain',
+                        'href': '/memory',
+                      },
+                      {
+                        'icon': 'settings',
+                        'label': 'Settings',
+                        'href': '/settings',
                       },
                     ],
                   },
@@ -4087,18 +4087,17 @@ export function stdAgentAssistantAssistantContextOrbital(params: StdAgentAssista
                   'render-ui',
                   'main',
                   {
-                    'type': 'dashboard-layout',
-                    'appName': 'Agent Assistant',
                     'children': [
                       {
+                        'gap': 'lg',
+                        'type': 'stack',
                         'direction': 'vertical',
                         'children': [
                           {
-                            'direction': 'horizontal',
                             'children': [
                               {
-                                'type': 'icon',
                                 'name': 'gauge',
+                                'type': 'icon',
                               },
                               {
                                 'variant': 'h2',
@@ -4106,69 +4105,70 @@ export function stdAgentAssistantAssistantContextOrbital(params: StdAgentAssista
                                 'content': 'Token Usage',
                               },
                               {
+                                'label': 'Normal',
                                 'variant': 'default',
                                 'type': 'badge',
-                                'label': 'Normal',
                               },
                             ],
+                            'direction': 'horizontal',
                             'type': 'stack',
-                            'gap': 'sm',
                             'align': 'center',
+                            'gap': 'sm',
                           },
                           {
                             'type': 'divider',
                           },
                           {
-                            'type': 'progress-bar',
                             'value': '@entity.current',
                             'max': '@entity.max',
+                            'type': 'progress-bar',
                           },
                           {
-                            'direction': 'horizontal',
                             'gap': 'md',
-                            'type': 'stack',
                             'children': [
                               {
-                                'value': '@entity.current',
                                 'label': 'Tokens Used',
+                                'value': '@entity.current',
                                 'type': 'stat-display',
                               },
                               {
-                                'label': 'Max Tokens',
                                 'value': '@entity.max',
+                                'label': 'Max Tokens',
                                 'type': 'stat-display',
                               },
                             ],
+                            'type': 'stack',
+                            'direction': 'horizontal',
                           },
                           {
-                            'action': 'RESET',
+                            'label': 'Reset',
+                            'variant': 'ghost',
                             'icon': 'rotate-ccw',
                             'type': 'button',
-                            'variant': 'ghost',
-                            'label': 'Reset',
+                            'action': 'RESET',
                           },
                         ],
-                        'type': 'stack',
-                        'gap': 'lg',
                       },
                     ],
                     'navItems': [
                       {
-                        'href': '/chat',
                         'label': 'Chat',
+                        'href': '/chat',
                         'icon': 'message-circle',
                       },
                       {
-                        'href': '/memory',
-                        'label': 'Memory',
                         'icon': 'brain',
+                        'label': 'Memory',
+                        'href': '/memory',
                       },
                       {
                         'href': '/settings',
-                        'label': 'Settings',
                         'icon': 'settings',
+                        'label': 'Settings',
                       },
                     ],
+                    'type': 'dashboard-layout',
+                    'appName': 'Agent Assistant',
                   },
                 ],
               ],
@@ -4187,20 +4187,36 @@ export function stdAgentAssistantAssistantContextOrbital(params: StdAgentAssista
                   'render-ui',
                   'main',
                   {
-                    'type': 'dashboard-layout',
                     'appName': 'Agent Assistant',
+                    'navItems': [
+                      {
+                        'label': 'Chat',
+                        'href': '/chat',
+                        'icon': 'message-circle',
+                      },
+                      {
+                        'href': '/memory',
+                        'label': 'Memory',
+                        'icon': 'brain',
+                      },
+                      {
+                        'label': 'Settings',
+                        'href': '/settings',
+                        'icon': 'settings',
+                      },
+                    ],
+                    'type': 'dashboard-layout',
                     'children': [
                       {
+                        'gap': 'lg',
+                        'type': 'stack',
                         'children': [
                           {
-                            'align': 'center',
-                            'type': 'stack',
                             'gap': 'sm',
-                            'direction': 'horizontal',
                             'children': [
                               {
-                                'type': 'icon',
                                 'name': 'gauge',
+                                'type': 'icon',
                               },
                               {
                                 'content': 'Token Usage',
@@ -4209,64 +4225,48 @@ export function stdAgentAssistantAssistantContextOrbital(params: StdAgentAssista
                               },
                               {
                                 'label': 'Normal',
-                                'variant': 'default',
                                 'type': 'badge',
+                                'variant': 'default',
                               },
                             ],
+                            'align': 'center',
+                            'type': 'stack',
+                            'direction': 'horizontal',
                           },
                           {
                             'type': 'divider',
                           },
                           {
-                            'value': '@entity.current',
                             'max': '@entity.max',
                             'type': 'progress-bar',
+                            'value': '@entity.current',
                           },
                           {
-                            'children': [
-                              {
-                                'label': 'Tokens Used',
-                                'value': '@entity.current',
-                                'type': 'stat-display',
-                              },
-                              {
-                                'label': 'Max Tokens',
-                                'value': '@entity.max',
-                                'type': 'stat-display',
-                              },
-                            ],
                             'gap': 'md',
                             'type': 'stack',
                             'direction': 'horizontal',
+                            'children': [
+                              {
+                                'value': '@entity.current',
+                                'label': 'Tokens Used',
+                                'type': 'stat-display',
+                              },
+                              {
+                                'type': 'stat-display',
+                                'value': '@entity.max',
+                                'label': 'Max Tokens',
+                              },
+                            ],
                           },
                           {
                             'label': 'Reset',
-                            'type': 'button',
-                            'variant': 'ghost',
-                            'action': 'RESET',
                             'icon': 'rotate-ccw',
+                            'type': 'button',
+                            'action': 'RESET',
+                            'variant': 'ghost',
                           },
                         ],
                         'direction': 'vertical',
-                        'gap': 'lg',
-                        'type': 'stack',
-                      },
-                    ],
-                    'navItems': [
-                      {
-                        'icon': 'message-circle',
-                        'label': 'Chat',
-                        'href': '/chat',
-                      },
-                      {
-                        'icon': 'brain',
-                        'href': '/memory',
-                        'label': 'Memory',
-                      },
-                      {
-                        'icon': 'settings',
-                        'label': 'Settings',
-                        'href': '/settings',
                       },
                     ],
                   },
@@ -4296,29 +4296,50 @@ export function stdAgentAssistantAssistantContextOrbital(params: StdAgentAssista
                   'render-ui',
                   'main',
                   {
+                    'navItems': [
+                      {
+                        'href': '/chat',
+                        'label': 'Chat',
+                        'icon': 'message-circle',
+                      },
+                      {
+                        'label': 'Memory',
+                        'icon': 'brain',
+                        'href': '/memory',
+                      },
+                      {
+                        'label': 'Settings',
+                        'icon': 'settings',
+                        'href': '/settings',
+                      },
+                    ],
+                    'appName': 'Agent Assistant',
                     'children': [
                       {
+                        'gap': 'lg',
+                        'direction': 'vertical',
+                        'type': 'stack',
                         'children': [
                           {
                             'type': 'stack',
+                            'direction': 'horizontal',
                             'align': 'center',
                             'children': [
                               {
-                                'name': 'alert-octagon',
                                 'type': 'icon',
+                                'name': 'alert-octagon',
                               },
                               {
-                                'type': 'typography',
                                 'variant': 'h2',
+                                'type': 'typography',
                                 'content': 'Token Usage',
                               },
                               {
-                                'type': 'badge',
                                 'label': 'Critical',
                                 'variant': 'danger',
+                                'type': 'badge',
                               },
                             ],
-                            'direction': 'horizontal',
                             'gap': 'sm',
                           },
                           {
@@ -4326,18 +4347,15 @@ export function stdAgentAssistantAssistantContextOrbital(params: StdAgentAssista
                           },
                           {
                             'variant': 'error',
-                            'type': 'alert',
                             'message': 'Token usage critical. Compact immediately to avoid truncation.',
+                            'type': 'alert',
                           },
                           {
-                            'value': '@entity.current',
                             'type': 'progress-bar',
                             'max': '@entity.max',
+                            'value': '@entity.current',
                           },
                           {
-                            'direction': 'horizontal',
-                            'type': 'stack',
-                            'gap': 'md',
                             'children': [
                               {
                                 'type': 'stat-display',
@@ -4345,58 +4363,40 @@ export function stdAgentAssistantAssistantContextOrbital(params: StdAgentAssista
                                 'value': '@entity.current',
                               },
                               {
-                                'type': 'stat-display',
                                 'label': 'Max Tokens',
+                                'type': 'stat-display',
                                 'value': '@entity.max',
                               },
                             ],
+                            'type': 'stack',
+                            'gap': 'md',
+                            'direction': 'horizontal',
                           },
                           {
-                            'type': 'stack',
-                            'direction': 'horizontal',
-                            'gap': 'sm',
                             'children': [
                               {
                                 'action': 'COMPACT',
                                 'variant': 'primary',
-                                'icon': 'minimize-2',
                                 'type': 'button',
+                                'icon': 'minimize-2',
                                 'label': 'Compact Now',
                               },
                               {
-                                'type': 'button',
-                                'icon': 'rotate-ccw',
+                                'label': 'Reset',
                                 'variant': 'ghost',
                                 'action': 'RESET',
-                                'label': 'Reset',
+                                'type': 'button',
+                                'icon': 'rotate-ccw',
                               },
                             ],
+                            'gap': 'sm',
+                            'type': 'stack',
+                            'direction': 'horizontal',
                           },
                         ],
-                        'type': 'stack',
-                        'gap': 'lg',
-                        'direction': 'vertical',
                       },
                     ],
                     'type': 'dashboard-layout',
-                    'appName': 'Agent Assistant',
-                    'navItems': [
-                      {
-                        'icon': 'message-circle',
-                        'label': 'Chat',
-                        'href': '/chat',
-                      },
-                      {
-                        'icon': 'brain',
-                        'href': '/memory',
-                        'label': 'Memory',
-                      },
-                      {
-                        'href': '/settings',
-                        'icon': 'settings',
-                        'label': 'Settings',
-                      },
-                    ],
                   },
                 ],
               ],
@@ -4436,107 +4436,107 @@ export function stdAgentAssistantAssistantContextOrbital(params: StdAgentAssista
                   'render-ui',
                   'main',
                   {
-                    'appName': 'Agent Assistant',
+                    'type': 'dashboard-layout',
                     'navItems': [
                       {
+                        'icon': 'message-circle',
                         'label': 'Chat',
                         'href': '/chat',
-                        'icon': 'message-circle',
                       },
                       {
+                        'icon': 'brain',
                         'label': 'Memory',
                         'href': '/memory',
-                        'icon': 'brain',
                       },
                       {
                         'href': '/settings',
-                        'icon': 'settings',
                         'label': 'Settings',
+                        'icon': 'settings',
                       },
                     ],
-                    'type': 'dashboard-layout',
                     'children': [
                       {
-                        'type': 'stack',
+                        'gap': 'lg',
                         'children': [
                           {
-                            'gap': 'sm',
+                            'align': 'center',
                             'direction': 'horizontal',
+                            'gap': 'sm',
                             'children': [
                               {
                                 'type': 'icon',
                                 'name': 'alert-triangle',
                               },
                               {
-                                'variant': 'h2',
                                 'type': 'typography',
                                 'content': 'Token Usage',
+                                'variant': 'h2',
                               },
                               {
-                                'type': 'badge',
                                 'variant': 'warning',
+                                'type': 'badge',
                                 'label': 'Warning',
                               },
                             ],
                             'type': 'stack',
-                            'align': 'center',
                           },
                           {
                             'type': 'divider',
                           },
                           {
                             'variant': 'warning',
-                            'message': 'Token usage approaching limit. Consider compacting.',
                             'type': 'alert',
+                            'message': 'Token usage approaching limit. Consider compacting.',
                           },
                           {
+                            'type': 'progress-bar',
                             'value': '@entity.current',
                             'max': '@entity.max',
-                            'type': 'progress-bar',
                           },
                           {
                             'type': 'stack',
-                            'direction': 'horizontal',
-                            'gap': 'md',
                             'children': [
                               {
                                 'type': 'stat-display',
-                                'value': '@entity.current',
                                 'label': 'Tokens Used',
+                                'value': '@entity.current',
                               },
                               {
-                                'value': '@entity.max',
                                 'type': 'stat-display',
                                 'label': 'Max Tokens',
+                                'value': '@entity.max',
                               },
                             ],
+                            'gap': 'md',
+                            'direction': 'horizontal',
                           },
                           {
                             'gap': 'sm',
                             'children': [
                               {
                                 'label': 'Compact',
-                                'icon': 'minimize-2',
-                                'action': 'COMPACT',
                                 'type': 'button',
                                 'variant': 'primary',
+                                'icon': 'minimize-2',
+                                'action': 'COMPACT',
                               },
                               {
-                                'icon': 'rotate-ccw',
                                 'type': 'button',
-                                'action': 'RESET',
-                                'label': 'Reset',
                                 'variant': 'ghost',
+                                'icon': 'rotate-ccw',
+                                'label': 'Reset',
+                                'action': 'RESET',
                               },
                             ],
                             'type': 'stack',
                             'direction': 'horizontal',
                           },
                         ],
+                        'type': 'stack',
                         'direction': 'vertical',
-                        'gap': 'lg',
                       },
                     ],
+                    'appName': 'Agent Assistant',
                   },
                 ],
               ],
@@ -4564,65 +4564,49 @@ export function stdAgentAssistantAssistantContextOrbital(params: StdAgentAssista
                   'render-ui',
                   'main',
                   {
-                    'navItems': [
-                      {
-                        'icon': 'message-circle',
-                        'label': 'Chat',
-                        'href': '/chat',
-                      },
-                      {
-                        'icon': 'brain',
-                        'label': 'Memory',
-                        'href': '/memory',
-                      },
-                      {
-                        'icon': 'settings',
-                        'href': '/settings',
-                        'label': 'Settings',
-                      },
-                    ],
-                    'type': 'dashboard-layout',
                     'children': [
                       {
-                        'direction': 'vertical',
+                        'gap': 'lg',
                         'children': [
                           {
                             'gap': 'sm',
                             'type': 'stack',
+                            'align': 'center',
                             'direction': 'horizontal',
                             'children': [
                               {
-                                'name': 'gauge',
                                 'type': 'icon',
+                                'name': 'gauge',
                               },
                               {
-                                'variant': 'h2',
-                                'type': 'typography',
                                 'content': 'Token Usage',
+                                'type': 'typography',
+                                'variant': 'h2',
                               },
                               {
-                                'type': 'badge',
-                                'label': 'Normal',
                                 'variant': 'default',
+                                'label': 'Normal',
+                                'type': 'badge',
                               },
                             ],
-                            'align': 'center',
                           },
                           {
                             'type': 'divider',
                           },
                           {
-                            'type': 'progress-bar',
                             'value': '@entity.current',
+                            'type': 'progress-bar',
                             'max': '@entity.max',
                           },
                           {
+                            'type': 'stack',
                             'direction': 'horizontal',
+                            'gap': 'md',
                             'children': [
                               {
                                 'type': 'stat-display',
-                                'value': '@entity.current',
                                 'label': 'Tokens Used',
+                                'value': '@entity.current',
                               },
                               {
                                 'type': 'stat-display',
@@ -4630,19 +4614,35 @@ export function stdAgentAssistantAssistantContextOrbital(params: StdAgentAssista
                                 'value': '@entity.max',
                               },
                             ],
-                            'gap': 'md',
-                            'type': 'stack',
                           },
                           {
                             'type': 'button',
-                            'action': 'RESET',
-                            'icon': 'rotate-ccw',
                             'variant': 'ghost',
                             'label': 'Reset',
+                            'action': 'RESET',
+                            'icon': 'rotate-ccw',
                           },
                         ],
-                        'gap': 'lg',
                         'type': 'stack',
+                        'direction': 'vertical',
+                      },
+                    ],
+                    'type': 'dashboard-layout',
+                    'navItems': [
+                      {
+                        'label': 'Chat',
+                        'href': '/chat',
+                        'icon': 'message-circle',
+                      },
+                      {
+                        'href': '/memory',
+                        'label': 'Memory',
+                        'icon': 'brain',
+                      },
+                      {
+                        'href': '/settings',
+                        'label': 'Settings',
+                        'icon': 'settings',
                       },
                     ],
                     'appName': 'Agent Assistant',
@@ -4677,28 +4677,21 @@ export function stdAgentAssistantAssistantContextOrbital(params: StdAgentAssista
                         'icon': 'message-circle',
                       },
                       {
-                        'href': '/memory',
                         'icon': 'brain',
+                        'href': '/memory',
                         'label': 'Memory',
                       },
                       {
-                        'label': 'Settings',
-                        'href': '/settings',
                         'icon': 'settings',
+                        'href': '/settings',
+                        'label': 'Settings',
                       },
                     ],
                     'appName': 'Agent Assistant',
-                    'type': 'dashboard-layout',
                     'children': [
                       {
-                        'direction': 'vertical',
-                        'gap': 'lg',
-                        'type': 'stack',
                         'children': [
                           {
-                            'type': 'stack',
-                            'gap': 'sm',
-                            'align': 'center',
                             'children': [
                               {
                                 'name': 'gauge',
@@ -4706,52 +4699,59 @@ export function stdAgentAssistantAssistantContextOrbital(params: StdAgentAssista
                               },
                               {
                                 'content': 'Token Usage',
-                                'type': 'typography',
                                 'variant': 'h2',
+                                'type': 'typography',
                               },
                               {
-                                'label': 'Normal',
                                 'type': 'badge',
+                                'label': 'Normal',
                                 'variant': 'default',
                               },
                             ],
+                            'type': 'stack',
                             'direction': 'horizontal',
+                            'gap': 'sm',
+                            'align': 'center',
                           },
                           {
                             'type': 'divider',
                           },
                           {
                             'value': '@entity.current',
-                            'type': 'progress-bar',
                             'max': '@entity.max',
+                            'type': 'progress-bar',
                           },
                           {
-                            'type': 'stack',
                             'direction': 'horizontal',
                             'children': [
                               {
-                                'type': 'stat-display',
                                 'label': 'Tokens Used',
                                 'value': '@entity.current',
+                                'type': 'stat-display',
                               },
                               {
-                                'type': 'stat-display',
-                                'label': 'Max Tokens',
                                 'value': '@entity.max',
+                                'label': 'Max Tokens',
+                                'type': 'stat-display',
                               },
                             ],
                             'gap': 'md',
+                            'type': 'stack',
                           },
                           {
-                            'icon': 'rotate-ccw',
-                            'type': 'button',
-                            'label': 'Reset',
                             'action': 'RESET',
+                            'label': 'Reset',
                             'variant': 'ghost',
+                            'type': 'button',
+                            'icon': 'rotate-ccw',
                           },
                         ],
+                        'type': 'stack',
+                        'gap': 'lg',
+                        'direction': 'vertical',
                       },
                     ],
+                    'type': 'dashboard-layout',
                   },
                 ],
               ],
@@ -4770,70 +4770,8 @@ export function stdAgentAssistantAssistantContextOrbital(params: StdAgentAssista
                   'render-ui',
                   'main',
                   {
+                    'type': 'dashboard-layout',
                     'appName': 'Agent Assistant',
-                    'children': [
-                      {
-                        'children': [
-                          {
-                            'gap': 'sm',
-                            'align': 'center',
-                            'direction': 'horizontal',
-                            'type': 'stack',
-                            'children': [
-                              {
-                                'type': 'icon',
-                                'name': 'gauge',
-                              },
-                              {
-                                'type': 'typography',
-                                'content': 'Token Usage',
-                                'variant': 'h2',
-                              },
-                              {
-                                'variant': 'default',
-                                'type': 'badge',
-                                'label': 'Normal',
-                              },
-                            ],
-                          },
-                          {
-                            'type': 'divider',
-                          },
-                          {
-                            'type': 'progress-bar',
-                            'value': '@entity.current',
-                            'max': '@entity.max',
-                          },
-                          {
-                            'type': 'stack',
-                            'children': [
-                              {
-                                'label': 'Tokens Used',
-                                'type': 'stat-display',
-                                'value': '@entity.current',
-                              },
-                              {
-                                'value': '@entity.max',
-                                'type': 'stat-display',
-                                'label': 'Max Tokens',
-                              },
-                            ],
-                            'direction': 'horizontal',
-                            'gap': 'md',
-                          },
-                          {
-                            'type': 'button',
-                            'icon': 'rotate-ccw',
-                            'variant': 'ghost',
-                            'label': 'Reset',
-                            'action': 'RESET',
-                          },
-                        ],
-                        'type': 'stack',
-                        'gap': 'lg',
-                        'direction': 'vertical',
-                      },
-                    ],
                     'navItems': [
                       {
                         'label': 'Chat',
@@ -4841,17 +4779,79 @@ export function stdAgentAssistantAssistantContextOrbital(params: StdAgentAssista
                         'icon': 'message-circle',
                       },
                       {
-                        'icon': 'brain',
                         'href': '/memory',
                         'label': 'Memory',
+                        'icon': 'brain',
                       },
                       {
-                        'label': 'Settings',
                         'href': '/settings',
+                        'label': 'Settings',
                         'icon': 'settings',
                       },
                     ],
-                    'type': 'dashboard-layout',
+                    'children': [
+                      {
+                        'children': [
+                          {
+                            'children': [
+                              {
+                                'type': 'icon',
+                                'name': 'gauge',
+                              },
+                              {
+                                'variant': 'h2',
+                                'type': 'typography',
+                                'content': 'Token Usage',
+                              },
+                              {
+                                'variant': 'default',
+                                'type': 'badge',
+                                'label': 'Normal',
+                              },
+                            ],
+                            'gap': 'sm',
+                            'direction': 'horizontal',
+                            'type': 'stack',
+                            'align': 'center',
+                          },
+                          {
+                            'type': 'divider',
+                          },
+                          {
+                            'max': '@entity.max',
+                            'value': '@entity.current',
+                            'type': 'progress-bar',
+                          },
+                          {
+                            'direction': 'horizontal',
+                            'children': [
+                              {
+                                'type': 'stat-display',
+                                'label': 'Tokens Used',
+                                'value': '@entity.current',
+                              },
+                              {
+                                'type': 'stat-display',
+                                'label': 'Max Tokens',
+                                'value': '@entity.max',
+                              },
+                            ],
+                            'type': 'stack',
+                            'gap': 'md',
+                          },
+                          {
+                            'type': 'button',
+                            'label': 'Reset',
+                            'action': 'RESET',
+                            'icon': 'rotate-ccw',
+                            'variant': 'ghost',
+                          },
+                        ],
+                        'gap': 'lg',
+                        'direction': 'vertical',
+                        'type': 'stack',
+                      },
+                    ],
                   },
                 ],
               ],
@@ -4987,50 +4987,68 @@ export function stdAgentAssistantAssistantContextOrbital(params: StdAgentAssista
                   'render-ui',
                   'main',
                   {
+                    'navItems': [
+                      {
+                        'href': '/chat',
+                        'label': 'Chat',
+                        'icon': 'message-circle',
+                      },
+                      {
+                        'label': 'Memory',
+                        'href': '/memory',
+                        'icon': 'brain',
+                      },
+                      {
+                        'label': 'Settings',
+                        'icon': 'settings',
+                        'href': '/settings',
+                      },
+                    ],
+                    'type': 'dashboard-layout',
                     'appName': 'Agent Assistant',
                     'children': [
                       {
                         'children': [
                           {
-                            'direction': 'horizontal',
+                            'gap': 'md',
                             'justify': 'between',
                             'children': [
                               {
-                                'align': 'center',
                                 'type': 'stack',
                                 'direction': 'horizontal',
                                 'gap': 'md',
                                 'children': [
                                   {
-                                    'type': 'icon',
                                     'name': 'layers',
+                                    'type': 'icon',
                                   },
                                   {
-                                    'variant': 'h2',
                                     'type': 'typography',
                                     'content': 'Context Window Alert',
+                                    'variant': 'h2',
                                   },
                                 ],
+                                'align': 'center',
                               },
                               {
-                                'icon': 'x',
                                 'action': 'HIDE',
                                 'variant': 'ghost',
-                                'label': 'Dismiss',
                                 'type': 'button',
+                                'icon': 'x',
+                                'label': 'Dismiss',
                               },
                             ],
+                            'direction': 'horizontal',
                             'align': 'center',
-                            'gap': 'md',
                             'type': 'stack',
                           },
                           {
                             'type': 'divider',
                           },
                           {
+                            'type': 'alert',
                             'message': '@entity.message',
                             'variant': '@entity.notificationType',
-                            'type': 'alert',
                           },
                           {
                             'type': 'toast-slot',
@@ -5041,27 +5059,9 @@ export function stdAgentAssistantAssistantContextOrbital(params: StdAgentAssista
                             'message': '@entity.message',
                           },
                         ],
-                        'gap': 'lg',
                         'type': 'stack',
                         'direction': 'vertical',
-                      },
-                    ],
-                    'type': 'dashboard-layout',
-                    'navItems': [
-                      {
-                        'href': '/chat',
-                        'icon': 'message-circle',
-                        'label': 'Chat',
-                      },
-                      {
-                        'href': '/memory',
-                        'icon': 'brain',
-                        'label': 'Memory',
-                      },
-                      {
-                        'label': 'Settings',
-                        'href': '/settings',
-                        'icon': 'settings',
+                        'gap': 'lg',
                       },
                     ],
                   },
@@ -5088,10 +5088,69 @@ export function stdAgentAssistantAssistantContextOrbital(params: StdAgentAssista
                   'main',
                   {
                     'type': 'dashboard-layout',
+                    'appName': 'Agent Assistant',
+                    'children': [
+                      {
+                        'gap': 'lg',
+                        'direction': 'vertical',
+                        'children': [
+                          {
+                            'children': [
+                              {
+                                'direction': 'horizontal',
+                                'children': [
+                                  {
+                                    'type': 'icon',
+                                    'name': 'layers',
+                                  },
+                                  {
+                                    'type': 'typography',
+                                    'content': 'Context Window Alert',
+                                    'variant': 'h2',
+                                  },
+                                ],
+                                'gap': 'md',
+                                'type': 'stack',
+                                'align': 'center',
+                              },
+                              {
+                                'type': 'button',
+                                'icon': 'x',
+                                'label': 'Dismiss',
+                                'variant': 'ghost',
+                                'action': 'HIDE',
+                              },
+                            ],
+                            'gap': 'md',
+                            'direction': 'horizontal',
+                            'type': 'stack',
+                            'justify': 'between',
+                            'align': 'center',
+                          },
+                          {
+                            'type': 'divider',
+                          },
+                          {
+                            'variant': '@entity.notificationType',
+                            'type': 'alert',
+                            'message': '@entity.message',
+                          },
+                          {
+                            'type': 'toast-slot',
+                          },
+                          {
+                            'type': 'alert',
+                            'variant': 'warning',
+                            'message': '@entity.message',
+                          },
+                        ],
+                        'type': 'stack',
+                      },
+                    ],
                     'navItems': [
                       {
-                        'href': '/chat',
                         'label': 'Chat',
+                        'href': '/chat',
                         'icon': 'message-circle',
                       },
                       {
@@ -5105,65 +5164,6 @@ export function stdAgentAssistantAssistantContextOrbital(params: StdAgentAssista
                         'href': '/settings',
                       },
                     ],
-                    'children': [
-                      {
-                        'type': 'stack',
-                        'children': [
-                          {
-                            'gap': 'md',
-                            'align': 'center',
-                            'direction': 'horizontal',
-                            'justify': 'between',
-                            'type': 'stack',
-                            'children': [
-                              {
-                                'gap': 'md',
-                                'direction': 'horizontal',
-                                'type': 'stack',
-                                'align': 'center',
-                                'children': [
-                                  {
-                                    'name': 'layers',
-                                    'type': 'icon',
-                                  },
-                                  {
-                                    'type': 'typography',
-                                    'content': 'Context Window Alert',
-                                    'variant': 'h2',
-                                  },
-                                ],
-                              },
-                              {
-                                'icon': 'x',
-                                'variant': 'ghost',
-                                'action': 'HIDE',
-                                'label': 'Dismiss',
-                                'type': 'button',
-                              },
-                            ],
-                          },
-                          {
-                            'type': 'divider',
-                          },
-                          {
-                            'type': 'alert',
-                            'message': '@entity.message',
-                            'variant': '@entity.notificationType',
-                          },
-                          {
-                            'type': 'toast-slot',
-                          },
-                          {
-                            'variant': 'warning',
-                            'message': '@entity.message',
-                            'type': 'alert',
-                          },
-                        ],
-                        'gap': 'lg',
-                        'direction': 'vertical',
-                      },
-                    ],
-                    'appName': 'Agent Assistant',
                   },
                 ],
               ],
@@ -5335,8 +5335,8 @@ export function stdAgentAssistantAssistantContextOrbital(params: StdAgentAssista
                   'AssistantContext',
                   {
                     'emit': {
-                      'failure': 'AssistantContextLoadFailed',
                       'success': 'AssistantContextLoaded',
+                      'failure': 'AssistantContextLoadFailed',
                     },
                   },
                 ],
@@ -5350,19 +5350,21 @@ export function stdAgentAssistantAssistantContextOrbital(params: StdAgentAssista
                   'render-ui',
                   'main',
                   {
+                    'type': 'dashboard-layout',
+                    'appName': 'Agent Assistant',
                     'children': [
                       {
-                        'title': 'Context Window',
                         'description': 'Context Window is ready',
                         'type': 'empty-state',
+                        'title': 'Context Window',
                         'icon': 'layers',
                       },
                     ],
                     'navItems': [
                       {
-                        'icon': 'message-circle',
                         'href': '/chat',
                         'label': 'Chat',
+                        'icon': 'message-circle',
                       },
                       {
                         'icon': 'brain',
@@ -5375,8 +5377,6 @@ export function stdAgentAssistantAssistantContextOrbital(params: StdAgentAssista
                         'label': 'Settings',
                       },
                     ],
-                    'type': 'dashboard-layout',
-                    'appName': 'Agent Assistant',
                   },
                 ],
               ],
@@ -5527,8 +5527,8 @@ export function stdAgentAssistantAssistantContextOrbital(params: StdAgentAssista
                   'emit',
                   'SHOW',
                   {
-                    'notificationType': 'error',
                     'message': 'Token usage at limit',
+                    'notificationType': 'error',
                   },
                 ],
               ],
@@ -6065,38 +6065,40 @@ export function stdAgentAssistantProviderConfigOrbital(params: StdAgentAssistant
                   'render-ui',
                   'main',
                   {
+                    'appName': 'Agent Assistant',
                     'type': 'dashboard-layout',
                     'children': [
                       {
+                        'gap': 'lg',
                         'children': [
                           {
                             'direction': 'horizontal',
-                            'justify': 'between',
-                            'type': 'stack',
                             'gap': 'md',
+                            'type': 'stack',
+                            'justify': 'between',
                             'children': [
                               {
+                                'direction': 'horizontal',
                                 'children': [
                                   {
-                                    'type': 'icon',
                                     'name': 'repeat',
+                                    'type': 'icon',
                                   },
                                   {
+                                    'type': 'typography',
                                     'content': 'Switch Provider',
                                     'variant': 'h2',
-                                    'type': 'typography',
                                   },
                                 ],
-                                'gap': 'md',
-                                'direction': 'horizontal',
                                 'type': 'stack',
+                                'gap': 'md',
                               },
                               {
-                                'action': 'SWITCH',
                                 'type': 'button',
+                                'label': 'Open',
                                 'icon': 'repeat',
                                 'variant': 'primary',
-                                'label': 'Open',
+                                'action': 'SWITCH',
                               },
                             ],
                           },
@@ -6104,35 +6106,33 @@ export function stdAgentAssistantProviderConfigOrbital(params: StdAgentAssistant
                             'type': 'divider',
                           },
                           {
+                            'type': 'empty-state',
                             'description': 'Click Open to view details in a modal overlay.',
                             'icon': 'repeat',
-                            'type': 'empty-state',
                             'title': 'Nothing open',
                           },
                         ],
                         'type': 'stack',
                         'direction': 'vertical',
-                        'gap': 'lg',
                       },
                     ],
                     'navItems': [
                       {
-                        'icon': 'message-circle',
-                        'href': '/chat',
                         'label': 'Chat',
+                        'href': '/chat',
+                        'icon': 'message-circle',
                       },
                       {
-                        'icon': 'brain',
                         'href': '/memory',
                         'label': 'Memory',
+                        'icon': 'brain',
                       },
                       {
-                        'href': '/settings',
                         'icon': 'settings',
                         'label': 'Settings',
+                        'href': '/settings',
                       },
                     ],
-                    'appName': 'Agent Assistant',
                   },
                 ],
               ],
@@ -6156,61 +6156,61 @@ export function stdAgentAssistantProviderConfigOrbital(params: StdAgentAssistant
                   'render-ui',
                   'modal',
                   {
-                    'type': 'stack',
-                    'direction': 'vertical',
                     'gap': 'md',
+                    'type': 'stack',
                     'children': [
                       {
                         'gap': 'sm',
                         'children': [
                           {
-                            'name': 'repeat',
                             'type': 'icon',
+                            'name': 'repeat',
                           },
                           {
-                            'type': 'typography',
                             'content': 'Switch Provider',
                             'variant': 'h3',
+                            'type': 'typography',
                           },
                         ],
-                        'type': 'stack',
                         'direction': 'horizontal',
+                        'type': 'stack',
                       },
                       {
                         'type': 'divider',
                       },
                       {
+                        'gap': 'md',
                         'type': 'stack',
                         'children': [
                           {
                             'variant': 'caption',
-                            'type': 'typography',
                             'content': 'Current:',
+                            'type': 'typography',
                           },
                           {
                             'label': '@entity.currentProvider',
                             'type': 'badge',
                           },
                           {
-                            'type': 'badge',
                             'label': '@entity.currentModel',
+                            'type': 'badge',
                           },
                         ],
                         'direction': 'horizontal',
-                        'gap': 'md',
                       },
                       {
-                        'submitEvent': 'SAVE',
-                        'type': 'form-section',
                         'mode': 'edit',
-                        'entity': '@entity',
-                        'cancelEvent': 'CLOSE',
                         'fields': [
                           'currentProvider',
                           'currentModel',
                         ],
+                        'type': 'form-section',
+                        'submitEvent': 'SAVE',
+                        'entity': '@entity',
+                        'cancelEvent': 'CLOSE',
                       },
                     ],
+                    'direction': 'vertical',
                   },
                 ],
               ],
@@ -6235,8 +6235,8 @@ export function stdAgentAssistantProviderConfigOrbital(params: StdAgentAssistant
                   'ProviderConfig',
                   {
                     'emit': {
-                      'failure': 'ProviderConfigLoadFailed',
                       'success': 'ProviderConfigLoaded',
+                      'failure': 'ProviderConfigLoadFailed',
                     },
                   },
                 ],
@@ -6244,67 +6244,16 @@ export function stdAgentAssistantProviderConfigOrbital(params: StdAgentAssistant
                   'render-ui',
                   'main',
                   {
-                    'appName': 'Agent Assistant',
-                    'type': 'dashboard-layout',
-                    'children': [
-                      {
-                        'children': [
-                          {
-                            'justify': 'between',
-                            'gap': 'md',
-                            'children': [
-                              {
-                                'type': 'stack',
-                                'direction': 'horizontal',
-                                'gap': 'md',
-                                'children': [
-                                  {
-                                    'type': 'icon',
-                                    'name': 'repeat',
-                                  },
-                                  {
-                                    'variant': 'h2',
-                                    'content': 'Switch Provider',
-                                    'type': 'typography',
-                                  },
-                                ],
-                              },
-                              {
-                                'icon': 'repeat',
-                                'type': 'button',
-                                'action': 'SWITCH',
-                                'label': 'Open',
-                                'variant': 'primary',
-                              },
-                            ],
-                            'type': 'stack',
-                            'direction': 'horizontal',
-                          },
-                          {
-                            'type': 'divider',
-                          },
-                          {
-                            'icon': 'repeat',
-                            'title': 'Nothing open',
-                            'type': 'empty-state',
-                            'description': 'Click Open to view details in a modal overlay.',
-                          },
-                        ],
-                        'gap': 'lg',
-                        'direction': 'vertical',
-                        'type': 'stack',
-                      },
-                    ],
                     'navItems': [
                       {
-                        'href': '/chat',
-                        'icon': 'message-circle',
                         'label': 'Chat',
+                        'icon': 'message-circle',
+                        'href': '/chat',
                       },
                       {
+                        'icon': 'brain',
                         'label': 'Memory',
                         'href': '/memory',
-                        'icon': 'brain',
                       },
                       {
                         'icon': 'settings',
@@ -6312,6 +6261,57 @@ export function stdAgentAssistantProviderConfigOrbital(params: StdAgentAssistant
                         'href': '/settings',
                       },
                     ],
+                    'type': 'dashboard-layout',
+                    'children': [
+                      {
+                        'gap': 'lg',
+                        'children': [
+                          {
+                            'gap': 'md',
+                            'justify': 'between',
+                            'type': 'stack',
+                            'direction': 'horizontal',
+                            'children': [
+                              {
+                                'direction': 'horizontal',
+                                'type': 'stack',
+                                'gap': 'md',
+                                'children': [
+                                  {
+                                    'type': 'icon',
+                                    'name': 'repeat',
+                                  },
+                                  {
+                                    'content': 'Switch Provider',
+                                    'type': 'typography',
+                                    'variant': 'h2',
+                                  },
+                                ],
+                              },
+                              {
+                                'icon': 'repeat',
+                                'variant': 'primary',
+                                'action': 'SWITCH',
+                                'type': 'button',
+                                'label': 'Open',
+                              },
+                            ],
+                          },
+                          {
+                            'type': 'divider',
+                          },
+                          {
+                            'description': 'Click Open to view details in a modal overlay.',
+                            'type': 'empty-state',
+                            'icon': 'repeat',
+                            'title': 'Nothing open',
+                          },
+                        ],
+                        'type': 'stack',
+                        'direction': 'vertical',
+                      },
+                    ],
+                    'appName': 'Agent Assistant',
                   },
                 ],
               ],
@@ -6356,31 +6356,15 @@ export function stdAgentAssistantProviderConfigOrbital(params: StdAgentAssistant
                   'render-ui',
                   'main',
                   {
-                    'navItems': [
-                      {
-                        'icon': 'message-circle',
-                        'label': 'Chat',
-                        'href': '/chat',
-                      },
-                      {
-                        'label': 'Memory',
-                        'icon': 'brain',
-                        'href': '/memory',
-                      },
-                      {
-                        'label': 'Settings',
-                        'icon': 'settings',
-                        'href': '/settings',
-                      },
-                    ],
                     'type': 'dashboard-layout',
                     'children': [
                       {
+                        'direction': 'vertical',
+                        'type': 'stack',
+                        'gap': 'lg',
                         'children': [
                           {
                             'gap': 'md',
-                            'direction': 'horizontal',
-                            'justify': 'between',
                             'children': [
                               {
                                 'children': [
@@ -6389,9 +6373,9 @@ export function stdAgentAssistantProviderConfigOrbital(params: StdAgentAssistant
                                     'name': 'repeat',
                                   },
                                   {
+                                    'content': 'Switch Provider',
                                     'variant': 'h2',
                                     'type': 'typography',
-                                    'content': 'Switch Provider',
                                   },
                                 ],
                                 'direction': 'horizontal',
@@ -6399,31 +6383,47 @@ export function stdAgentAssistantProviderConfigOrbital(params: StdAgentAssistant
                                 'type': 'stack',
                               },
                               {
-                                'variant': 'primary',
                                 'type': 'button',
                                 'label': 'Open',
+                                'variant': 'primary',
                                 'icon': 'repeat',
                                 'action': 'SWITCH',
                               },
                             ],
+                            'direction': 'horizontal',
                             'type': 'stack',
+                            'justify': 'between',
                           },
                           {
                             'type': 'divider',
                           },
                           {
                             'title': 'Nothing open',
-                            'type': 'empty-state',
                             'description': 'Click Open to view details in a modal overlay.',
+                            'type': 'empty-state',
                             'icon': 'repeat',
                           },
                         ],
-                        'type': 'stack',
-                        'direction': 'vertical',
-                        'gap': 'lg',
                       },
                     ],
                     'appName': 'Agent Assistant',
+                    'navItems': [
+                      {
+                        'href': '/chat',
+                        'label': 'Chat',
+                        'icon': 'message-circle',
+                      },
+                      {
+                        'icon': 'brain',
+                        'href': '/memory',
+                        'label': 'Memory',
+                      },
+                      {
+                        'icon': 'settings',
+                        'label': 'Settings',
+                        'href': '/settings',
+                      },
+                    ],
                   },
                 ],
               ],
@@ -6559,18 +6559,18 @@ export function stdAgentAssistantProviderConfigOrbital(params: StdAgentAssistant
                   'render-ui',
                   'main',
                   {
-                    'appName': 'Agent Assistant',
                     'type': 'dashboard-layout',
+                    'appName': 'Agent Assistant',
                     'navItems': [
                       {
-                        'icon': 'message-circle',
                         'label': 'Chat',
                         'href': '/chat',
+                        'icon': 'message-circle',
                       },
                       {
+                        'href': '/memory',
                         'label': 'Memory',
                         'icon': 'brain',
-                        'href': '/memory',
                       },
                       {
                         'label': 'Settings',
@@ -6581,18 +6581,17 @@ export function stdAgentAssistantProviderConfigOrbital(params: StdAgentAssistant
                     'children': [
                       {
                         'direction': 'vertical',
+                        'type': 'stack',
                         'children': [
                           {
-                            'direction': 'horizontal',
-                            'type': 'stack',
-                            'gap': 'md',
-                            'justify': 'between',
                             'align': 'center',
+                            'gap': 'md',
+                            'type': 'stack',
                             'children': [
                               {
-                                'gap': 'md',
-                                'align': 'center',
                                 'direction': 'horizontal',
+                                'type': 'stack',
+                                'align': 'center',
                                 'children': [
                                   {
                                     'type': 'icon',
@@ -6600,28 +6599,30 @@ export function stdAgentAssistantProviderConfigOrbital(params: StdAgentAssistant
                                   },
                                   {
                                     'type': 'typography',
-                                    'variant': 'h2',
                                     'content': 'Provider Status',
+                                    'variant': 'h2',
                                   },
                                 ],
-                                'type': 'stack',
+                                'gap': 'md',
                               },
                               {
-                                'action': 'HIDE',
                                 'type': 'button',
                                 'label': 'Dismiss',
+                                'action': 'HIDE',
                                 'variant': 'ghost',
                                 'icon': 'x',
                               },
                             ],
+                            'direction': 'horizontal',
+                            'justify': 'between',
                           },
                           {
                             'type': 'divider',
                           },
                           {
-                            'variant': '@entity.notificationType',
-                            'type': 'alert',
                             'message': '@entity.message',
+                            'type': 'alert',
+                            'variant': '@entity.notificationType',
                           },
                           {
                             'type': 'toast-slot',
@@ -6633,7 +6634,6 @@ export function stdAgentAssistantProviderConfigOrbital(params: StdAgentAssistant
                           },
                         ],
                         'gap': 'lg',
-                        'type': 'stack',
                       },
                     ],
                   },
@@ -6659,21 +6659,23 @@ export function stdAgentAssistantProviderConfigOrbital(params: StdAgentAssistant
                   'render-ui',
                   'main',
                   {
+                    'type': 'dashboard-layout',
                     'children': [
                       {
-                        'direction': 'vertical',
                         'type': 'stack',
+                        'direction': 'vertical',
+                        'gap': 'lg',
                         'children': [
                           {
-                            'type': 'stack',
-                            'justify': 'between',
-                            'direction': 'horizontal',
-                            'align': 'center',
                             'gap': 'md',
+                            'type': 'stack',
+                            'direction': 'horizontal',
+                            'justify': 'between',
+                            'align': 'center',
                             'children': [
                               {
-                                'type': 'stack',
                                 'align': 'center',
+                                'gap': 'md',
                                 'children': [
                                   {
                                     'name': 'server',
@@ -6681,19 +6683,19 @@ export function stdAgentAssistantProviderConfigOrbital(params: StdAgentAssistant
                                   },
                                   {
                                     'type': 'typography',
-                                    'content': 'Provider Status',
                                     'variant': 'h2',
+                                    'content': 'Provider Status',
                                   },
                                 ],
+                                'type': 'stack',
                                 'direction': 'horizontal',
-                                'gap': 'md',
                               },
                               {
-                                'label': 'Dismiss',
-                                'type': 'button',
-                                'icon': 'x',
                                 'action': 'HIDE',
+                                'type': 'button',
+                                'label': 'Dismiss',
                                 'variant': 'ghost',
+                                'icon': 'x',
                               },
                             ],
                           },
@@ -6701,41 +6703,39 @@ export function stdAgentAssistantProviderConfigOrbital(params: StdAgentAssistant
                             'type': 'divider',
                           },
                           {
-                            'variant': '@entity.notificationType',
-                            'type': 'alert',
                             'message': '@entity.message',
+                            'type': 'alert',
+                            'variant': '@entity.notificationType',
                           },
                           {
                             'type': 'toast-slot',
                           },
                           {
-                            'variant': 'warning',
                             'type': 'alert',
+                            'variant': 'warning',
                             'message': '@entity.message',
                           },
                         ],
-                        'gap': 'lg',
                       },
                     ],
-                    'appName': 'Agent Assistant',
-                    'type': 'dashboard-layout',
                     'navItems': [
                       {
-                        'icon': 'message-circle',
                         'label': 'Chat',
                         'href': '/chat',
+                        'icon': 'message-circle',
                       },
                       {
-                        'label': 'Memory',
                         'href': '/memory',
                         'icon': 'brain',
+                        'label': 'Memory',
                       },
                       {
-                        'href': '/settings',
                         'label': 'Settings',
+                        'href': '/settings',
                         'icon': 'settings',
                       },
                     ],
+                    'appName': 'Agent Assistant',
                   },
                 ],
               ],
@@ -6894,8 +6894,8 @@ export function stdAgentAssistantProviderConfigOrbital(params: StdAgentAssistant
                   'ProviderConfig',
                   {
                     'emit': {
-                      'failure': 'ProviderConfigLoadFailed',
                       'success': 'ProviderConfigLoaded',
+                      'failure': 'ProviderConfigLoadFailed',
                     },
                   },
                 ],
@@ -6913,29 +6913,29 @@ export function stdAgentAssistantProviderConfigOrbital(params: StdAgentAssistant
                       {
                         'description': 'Provider is ready',
                         'type': 'empty-state',
-                        'title': 'Provider',
                         'icon': 'repeat',
+                        'title': 'Provider',
                       },
                     ],
+                    'appName': 'Agent Assistant',
+                    'type': 'dashboard-layout',
                     'navItems': [
                       {
-                        'icon': 'message-circle',
                         'label': 'Chat',
+                        'icon': 'message-circle',
                         'href': '/chat',
                       },
                       {
-                        'icon': 'brain',
                         'href': '/memory',
                         'label': 'Memory',
+                        'icon': 'brain',
                       },
                       {
+                        'icon': 'settings',
                         'label': 'Settings',
                         'href': '/settings',
-                        'icon': 'settings',
                       },
                     ],
-                    'type': 'dashboard-layout',
-                    'appName': 'Agent Assistant',
                   },
                 ],
               ],
@@ -7036,8 +7036,8 @@ export function stdAgentAssistantProviderConfigOrbital(params: StdAgentAssistant
                   'emit',
                   'SHOW',
                   {
-                    'message': 'Provider switched',
                     'notificationType': 'info',
+                    'message': 'Provider switched',
                   },
                 ],
               ],
@@ -7359,18 +7359,18 @@ export function stdAgentAssistantAssistantNavOrbital(params: StdAgentAssistantAs
                     'align': 'center',
                     'type': 'stack',
                     'gap': 'md',
+                    'className': 'py-12',
                     'children': [
                       {
                         'type': 'spinner',
                       },
                       {
-                        'content': 'Loading…',
                         'variant': 'caption',
-                        'color': 'muted',
                         'type': 'typography',
+                        'content': 'Loading…',
+                        'color': 'muted',
                       },
                     ],
-                    'className': 'py-12',
                   },
                 ],
               ],
@@ -7384,34 +7384,15 @@ export function stdAgentAssistantAssistantNavOrbital(params: StdAgentAssistantAs
                   'render-ui',
                   'main',
                   {
-                    'type': 'dashboard-layout',
-                    'navItems': [
-                      {
-                        'href': '/chat',
-                        'icon': 'message-circle',
-                        'label': 'Chat',
-                      },
-                      {
-                        'icon': 'brain',
-                        'label': 'Memory',
-                        'href': '/memory',
-                      },
-                      {
-                        'icon': 'settings',
-                        'label': 'Settings',
-                        'href': '/settings',
-                      },
-                    ],
+                    'appName': 'Agent Assistant',
                     'children': [
                       {
                         'type': 'stack',
-                        'gap': 'lg',
-                        'direction': 'vertical',
                         'children': [
                           {
-                            'type': 'stack',
-                            'direction': 'horizontal',
                             'align': 'center',
+                            'gap': 'sm',
+                            'direction': 'horizontal',
                             'children': [
                               {
                                 'name': 'message-circle',
@@ -7419,32 +7400,32 @@ export function stdAgentAssistantAssistantNavOrbital(params: StdAgentAssistantAs
                               },
                               {
                                 'variant': 'h2',
-                                'content': 'Assistant',
                                 'type': 'typography',
+                                'content': 'Assistant',
                               },
                             ],
-                            'gap': 'sm',
+                            'type': 'stack',
                           },
                           {
                             'type': 'divider',
                           },
                           {
-                            'defaultActiveTab': 'chat',
-                            'tabChangeEvent': 'SELECT_TAB',
                             'tabs': [
                               {
-                                'label': 'Chat',
                                 'value': 'chat',
+                                'label': 'Chat',
                               },
                               {
                                 'label': 'Memory',
                                 'value': 'memory',
                               },
                               {
-                                'label': 'Settings',
                                 'value': 'settings',
+                                'label': 'Settings',
                               },
                             ],
+                            'defaultActiveTab': 'chat',
+                            'tabChangeEvent': 'SELECT_TAB',
                             'type': 'tabs',
                           },
                           {
@@ -7452,36 +7433,55 @@ export function stdAgentAssistantAssistantNavOrbital(params: StdAgentAssistantAs
                           },
                           {
                             'entity': '@payload.data',
+                            'type': 'data-grid',
+                            'fields': [],
+                            'className': 'transition-shadow hover:shadow-md cursor-pointer',
                             'renderItem': [
                               'fn',
                               'item',
                               {
                                 'direction': 'vertical',
-                                'type': 'stack',
                                 'gap': 'sm',
+                                'type': 'stack',
                                 'children': [
                                   {
+                                    'content': '@item.messages',
                                     'type': 'typography',
                                     'variant': 'h4',
-                                    'content': '@item.messages',
                                   },
                                   {
                                     'color': 'muted',
+                                    'variant': 'caption',
                                     'type': 'typography',
                                     'content': '@item.currentMessage',
-                                    'variant': 'caption',
                                   },
                                 ],
                               },
                             ],
-                            'type': 'data-grid',
-                            'className': 'transition-shadow hover:shadow-md cursor-pointer',
-                            'fields': [],
                           },
                         ],
+                        'gap': 'lg',
+                        'direction': 'vertical',
                       },
                     ],
-                    'appName': 'Agent Assistant',
+                    'navItems': [
+                      {
+                        'href': '/chat',
+                        'label': 'Chat',
+                        'icon': 'message-circle',
+                      },
+                      {
+                        'href': '/memory',
+                        'icon': 'brain',
+                        'label': 'Memory',
+                      },
+                      {
+                        'label': 'Settings',
+                        'href': '/settings',
+                        'icon': 'settings',
+                      },
+                    ],
+                    'type': 'dashboard-layout',
                   },
                 ],
               ],
@@ -7495,36 +7495,36 @@ export function stdAgentAssistantAssistantNavOrbital(params: StdAgentAssistantAs
                   'render-ui',
                   'main',
                   {
-                    'align': 'center',
-                    'className': 'py-12',
+                    'gap': 'md',
+                    'direction': 'vertical',
                     'children': [
                       {
+                        'color': 'destructive',
                         'type': 'icon',
                         'name': 'alert-triangle',
-                        'color': 'destructive',
                       },
                       {
                         'variant': 'h3',
-                        'type': 'typography',
                         'content': 'Failed to load',
+                        'type': 'typography',
                       },
                       {
-                        'variant': 'body',
-                        'content': '@payload.error',
                         'type': 'typography',
                         'color': 'muted',
+                        'content': '@payload.error',
+                        'variant': 'body',
                       },
                       {
-                        'type': 'button',
-                        'label': 'Retry',
-                        'icon': 'rotate-ccw',
-                        'variant': 'primary',
                         'action': 'INIT',
+                        'type': 'button',
+                        'variant': 'primary',
+                        'icon': 'rotate-ccw',
+                        'label': 'Retry',
                       },
                     ],
-                    'direction': 'vertical',
-                    'gap': 'md',
                     'type': 'stack',
+                    'align': 'center',
+                    'className': 'py-12',
                   },
                 ],
               ],
@@ -7847,8 +7847,8 @@ export function stdAgentAssistantMemorySidebarOrbital(params: StdAgentAssistantM
                   'MemorySidebar',
                   {
                     'emit': {
-                      'success': 'MemorySidebarLoaded',
                       'failure': 'MemorySidebarLoadFailed',
+                      'success': 'MemorySidebarLoaded',
                     },
                   },
                 ],
@@ -7856,74 +7856,76 @@ export function stdAgentAssistantMemorySidebarOrbital(params: StdAgentAssistantM
                   'render-ui',
                   'drawer',
                   {
+                    'gap': 'none',
+                    'direction': 'vertical',
                     'children': [
                       {
-                        'title': 'Memory Recall',
-                        'type': 'drawer',
-                        'isOpen': true,
                         'children': [
                           {
-                            'type': 'stack',
                             'direction': 'vertical',
+                            'type': 'stack',
+                            'gap': 'md',
                             'children': [
                               {
-                                'justify': 'between',
                                 'children': [
                                   {
+                                    'type': 'typography',
                                     'content': 'Content',
-                                    'type': 'typography',
                                     'variant': 'caption',
                                   },
                                   {
                                     'type': 'typography',
+                                    'variant': 'body',
                                     'content': '@entity.content',
-                                    'variant': 'body',
                                   },
                                 ],
-                                'type': 'stack',
                                 'direction': 'horizontal',
+                                'justify': 'between',
+                                'type': 'stack',
                                 'gap': 'md',
                               },
                               {
                                 'children': [
                                   {
+                                    'variant': 'caption',
+                                    'type': 'typography',
                                     'content': 'Query',
-                                    'type': 'typography',
-                                    'variant': 'caption',
                                   },
                                   {
-                                    'variant': 'body',
-                                    'type': 'typography',
                                     'content': '@entity.query',
+                                    'type': 'typography',
+                                    'variant': 'body',
                                   },
                                 ],
+                                'direction': 'horizontal',
                                 'type': 'stack',
                                 'gap': 'md',
                                 'justify': 'between',
-                                'direction': 'horizontal',
                               },
                               {
+                                'type': 'stack',
+                                'gap': 'md',
                                 'children': [
                                   {
+                                    'content': 'Strength',
                                     'variant': 'caption',
                                     'type': 'typography',
-                                    'content': 'Strength',
                                   },
                                   {
-                                    'content': '@entity.strength',
                                     'type': 'typography',
                                     'variant': 'body',
+                                    'content': '@entity.strength',
                                   },
                                 ],
-                                'justify': 'between',
-                                'gap': 'md',
-                                'type': 'stack',
                                 'direction': 'horizontal',
+                                'justify': 'between',
                               },
                               {
                                 'type': 'divider',
                               },
                               {
+                                'type': 'stack',
+                                'direction': 'horizontal',
                                 'justify': 'end',
                                 'children': [
                                   {
@@ -7933,68 +7935,64 @@ export function stdAgentAssistantMemorySidebarOrbital(params: StdAgentAssistantM
                                     'action': 'CLOSE',
                                   },
                                 ],
-                                'type': 'stack',
                                 'gap': 'sm',
-                                'direction': 'horizontal',
                               },
                             ],
-                            'gap': 'md',
                           },
                         ],
+                        'isOpen': true,
+                        'title': 'Memory Recall',
+                        'type': 'drawer',
                       },
                       {
+                        'onClose': 'CLOSE',
                         'isOpen': true,
                         'position': 'right',
-                        'title': 'Memory Recall',
                         'children': [
                           {
                             'children': [
                               {
-                                'type': 'stack',
                                 'gap': 'md',
-                                'direction': 'horizontal',
                                 'justify': 'between',
+                                'direction': 'horizontal',
+                                'type': 'stack',
                                 'children': [
                                   {
-                                    'type': 'typography',
                                     'variant': 'caption',
+                                    'type': 'typography',
                                     'content': 'Content',
                                   },
                                   {
+                                    'variant': 'body',
                                     'content': '@entity.content',
-                                    'variant': 'body',
                                     'type': 'typography',
                                   },
                                 ],
                               },
                               {
-                                'justify': 'between',
                                 'direction': 'horizontal',
                                 'gap': 'md',
-                                'type': 'stack',
                                 'children': [
                                   {
-                                    'content': 'Query',
-                                    'type': 'typography',
                                     'variant': 'caption',
+                                    'type': 'typography',
+                                    'content': 'Query',
                                   },
                                   {
-                                    'content': '@entity.query',
                                     'type': 'typography',
+                                    'content': '@entity.query',
                                     'variant': 'body',
                                   },
                                 ],
+                                'type': 'stack',
+                                'justify': 'between',
                               },
                               {
-                                'type': 'stack',
-                                'direction': 'horizontal',
-                                'gap': 'md',
-                                'justify': 'between',
                                 'children': [
                                   {
+                                    'type': 'typography',
                                     'variant': 'caption',
                                     'content': 'Strength',
-                                    'type': 'typography',
                                   },
                                   {
                                     'content': '@entity.strength',
@@ -8002,20 +8000,22 @@ export function stdAgentAssistantMemorySidebarOrbital(params: StdAgentAssistantM
                                     'type': 'typography',
                                   },
                                 ],
+                                'type': 'stack',
+                                'justify': 'between',
+                                'gap': 'md',
+                                'direction': 'horizontal',
                               },
                             ],
+                            'direction': 'vertical',
                             'gap': 'md',
                             'type': 'stack',
-                            'direction': 'vertical',
                           },
                         ],
                         'type': 'side-panel',
-                        'onClose': 'CLOSE',
+                        'title': 'Memory Recall',
                       },
                     ],
                     'type': 'stack',
-                    'direction': 'vertical',
-                    'gap': 'none',
                   },
                 ],
               ],
@@ -8035,8 +8035,8 @@ export function stdAgentAssistantMemorySidebarOrbital(params: StdAgentAssistantM
                   'MemorySidebar',
                   {
                     'emit': {
-                      'failure': 'MemorySidebarLoadFailed',
                       'success': 'MemorySidebarLoaded',
+                      'failure': 'MemorySidebarLoadFailed',
                     },
                   },
                 ],

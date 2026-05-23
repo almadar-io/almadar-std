@@ -97,32 +97,32 @@ export interface StdRfiRfiLoadFailedPayload {
  * without modifying its state-machine topology.
  */
 export interface StdRfiConfig {
-  /** Default: `120` */
-  resolutionSLAHours?: number;
-  /** Default: `480` */
-  responseTimeMinutes?: number;
-  /** Default: `[]` */
-  skillsRequired?: string[];
-  /** Default: `"RFIs"` */
-  title?: string;
-  /** Default: `"manual"` */
-  dispatchStrategy?: 'nearest' | 'round-robin' | 'manual';
-  /** Default: `0` */
-  serviceAreaRadius?: number;
   /** Default: `["submitted","answered","closed"]` */
   customerVisibleStatuses?: string[];
-  /** Default: `[{"name":"rfiNumber","variant":"caption","label":"RFI #"},{"label":"Subject","name":"subject","variant":"caption"},{"variant":"badge","name":"status","label":"Status"},{"name":"raisedBy","label":"Raised By","variant":"caption"},{"name":"assignedTo","variant":"caption","label":"Assigned"},{"variant":"caption","name":"dueAt","label":"Due"}]` */
-  fields?: EntityRow[];
-  /** Default: `[]` */
-  serviceZones?: string[];
+  /** Default: `"manual"` */
+  dispatchStrategy?: 'nearest' | 'round-robin' | 'manual';
+  /** Default: `[{"event":"OPEN_RFI","label":"Open","icon":"arrow-right","variant":"primary"},{"label":"Close","variant":"danger","event":"CLOSE"}]` */
+  itemActions?: EntityRow[];
   /** Default: `168` */
   escalationThresholdHours?: number;
+  /** Default: `"RFIs"` */
+  title?: string;
+  /** Default: `[]` */
+  serviceZones?: string[];
+  /** Default: `[{"name":"rfiNumber","label":"RFI #","variant":"caption"},{"variant":"caption","label":"Subject","name":"subject"},{"variant":"badge","name":"status","label":"Status"},{"name":"raisedBy","variant":"caption","label":"Raised By"},{"name":"assignedTo","label":"Assigned","variant":"caption"},{"label":"Due","name":"dueAt","variant":"caption"}]` */
+  fields?: EntityRow[];
+  /** Default: `0` */
+  serviceAreaRadius?: number;
+  /** Default: `480` */
+  responseTimeMinutes?: number;
+  /** Default: `120` */
+  resolutionSLAHours?: number;
+  /** Default: `[]` */
+  skillsRequired?: string[];
   /** Default: `false` */
   requirePhotoOnComplete?: boolean;
   /** Default: `false` */
   requireSignatureOnComplete?: boolean;
-  /** Default: `[{"label":"Open","icon":"arrow-right","variant":"primary","event":"OPEN_RFI"},{"event":"CLOSE","label":"Close","variant":"danger"}]` */
-  itemActions?: EntityRow[];
 }
 
 /**

@@ -34,11 +34,11 @@ orbital InvoiceOrbital {
       title           : string   = "Invoices"
         @label "Section title"
         @description "Heading shown above the invoice list"
-        @tier "customization"
+        @tier "presentation"
       refundTiersJson : string   = "[]"
         @label "Refund tiers"
         @description "JSON list of refund options (e.g. 50% / 100%) shown on the detail view"
-        @tier "customization"
+        @tier "domain"
       fields          : [FieldSpec] = [
         { name: "invoiceNumber", label: "Invoice #", variant: "caption" },
         { name: "customerId",    label: "Customer",  variant: "caption" },
@@ -49,46 +49,46 @@ orbital InvoiceOrbital {
       ]
         @label "Columns to show"
         @description "Each column maps to one field on the Invoice entity"
-        @tier "customization"
+        @tier "presentation"
       itemActions     : [ItemAction] = [
         { label: "Open", event: "OPEN_INVOICE", variant: "primary", icon: "arrow-right" },
         { label: "Void", event: "VOID",         variant: "danger",  icon: "x" }
       ]
         @label "Row actions"
         @description "Buttons users can click on each invoice row"
-        @tier "customization"
+        @tier "presentation"
       currency        : string   = "USD"
         @label "Default currency"
         @description "ISO 4217 currency code (USD, EUR, GBP, …) for new invoices."
-        @tier "essential"
+        @tier "domain"
       taxStrategy     : "inclusive" | "exclusive" | "none" = "exclusive"
         @label "Tax strategy"
         @description "inclusive = tax baked into the line item totals; exclusive = tax added on top; none = no tax."
-        @tier "customization"
+        @tier "domain"
       roundingMode    : "bankers" | "half-up" | "down" = "half-up"
         @label "Rounding mode"
         @description "Sub-cent rounding behavior for line items and totals."
-        @tier "advanced"
+        @tier "domain"
       gracePeriodDays : number   = 30
         @label "Grace period (days)"
         @description "Days after dueAt before an invoice is treated as overdue. Wire via sibling std-lifecycle rule { fromStatus: 'sent', toStatus: 'overdue', condition: { kind: 'ageDays', value: gracePeriodDays, dateField: 'dueAt' } }."
-        @tier "customization"
+        @tier "domain"
       lateFeePolicy   : "none" | "flat" | "percent" = "none"
         @label "Late fee policy"
         @description "How late fees compute when overdue: none = no fee; flat = lateFeeAmount as flat cash; percent = lateFeeAmount as % of total. v1.2 declarative; wiring requires a late-fee compute step (gap)."
-        @tier "customization"
+        @tier "domain"
       lateFeeAmount   : number   = 0
         @label "Late fee amount"
         @description "Flat cash amount or percentage (per lateFeePolicy)."
-        @tier "customization"
+        @tier "domain"
       complianceJurisdiction : string = ""
         @label "Compliance jurisdiction"
         @description "Drives tax + retention rules per locale: 'US-CA', 'EU-DE', 'UK', etc. v1.2 declarative."
-        @tier "advanced"
+        @tier "domain"
       retentionYears  : number   = 7
         @label "Retention (years)"
         @description "Years to keep invoice records for compliance. Default 7 matches common regimes. Wire via sibling std-lifecycle delete rule when available."
-        @tier "advanced"
+        @tier "domain"
     }
     initial: loading
     state loading {

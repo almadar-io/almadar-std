@@ -39,44 +39,44 @@ export type StdGraphsEventKey = 'INIT' | 'ITEMS_LOADED';
  * without modifying its state-machine topology.
  */
 export interface StdGraphsConfig {
+  /** Default: `false` */
+  timeAxis?: boolean;
+  /** Default: `"Counts per category"` */
+  subtitle?: string;
+  /** Default: `"chart"` */
+  viewPattern?: unknown;
   /** Default: `"desc"` */
   sortDir?: 'asc' | 'desc';
-  /** Default: `"Distribution"` */
-  title?: string;
-  /** Default: `"bar"` */
-  chartType?: 'bar' | 'line' | 'pie' | 'area' | 'donut' | 'histogram' | 'scatter';
-  /** Default: `[]` */
-  series?: EntityRow[];
   /** Default: `""` */
   valueField?: string;
+  /** Default: `280` */
+  height?: number;
+  /** Default: `true` */
+  showLegend?: boolean;
   /** Default: `"count"` */
   aggregation?: 'count' | 'sum' | 'avg' | 'min' | 'max';
   /** Default: `false` */
   showValues?: boolean;
-  /** Default: `"status"` */
-  categoryField?: string;
-  /** Default: `"none"` */
-  stack?: 'none' | 'stack' | 'normalize';
-  /** Default: `"Counts per category"` */
-  subtitle?: string;
-  /** Default: `"month"` */
-  period?: 'day' | 'week' | 'month' | 'quarter' | 'year';
+  /** Default: `[]` */
+  series?: EntityRow[];
   /** Default: `"date"` */
   timeField?: string;
-  /** Default: `"none"` */
-  sortField?: 'value' | 'label' | 'none';
-  /** Default: `280` */
-  height?: number;
-  /** Default: `false` */
-  timeAxis?: boolean;
+  /** Default: `"month"` */
+  period?: 'day' | 'week' | 'month' | 'quarter' | 'year';
   /** Default: `0` */
   limit?: number;
-  /** Default: `true` */
-  showLegend?: boolean;
   /** Default: `""` */
   drillEvent?: string;
-  /** Default: `"chart"` */
-  viewPattern?: unknown;
+  /** Default: `"none"` */
+  sortField?: 'value' | 'label' | 'none';
+  /** Default: `"none"` */
+  stack?: 'none' | 'stack' | 'normalize';
+  /** Default: `"bar"` */
+  chartType?: 'bar' | 'line' | 'pie' | 'area' | 'donut' | 'histogram' | 'scatter';
+  /** Default: `"Distribution"` */
+  title?: string;
+  /** Default: `"status"` */
+  categoryField?: string;
 }
 
 /**

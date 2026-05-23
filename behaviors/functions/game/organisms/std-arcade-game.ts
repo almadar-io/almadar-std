@@ -292,8 +292,8 @@ export function stdArcadeGameArcadeStateOrbital(params: StdArcadeGameArcadeState
                   'ArcadeState',
                   {
                     'emit': {
-                      'success': 'ArcadeStateLoaded',
                       'failure': 'ArcadeStateLoadFailed',
+                      'success': 'ArcadeStateLoaded',
                     },
                   },
                 ],
@@ -301,22 +301,22 @@ export function stdArcadeGameArcadeStateOrbital(params: StdArcadeGameArcadeState
                   'render-ui',
                   'main',
                   {
-                    'appName': 'Arcade Game',
+                    'type': 'game-shell',
                     'children': [
                       {
-                        'menuItems': [
-                          {
-                            'variant': 'primary',
-                            'label': 'Start Game',
-                            'event': 'START',
-                          },
-                        ],
-                        'subtitle': 'Main Menu',
                         'type': 'game-menu',
                         'title': 'Arcade',
+                        'subtitle': 'Main Menu',
+                        'menuItems': [
+                          {
+                            'label': 'Start Game',
+                            'event': 'START',
+                            'variant': 'primary',
+                          },
+                        ],
                       },
                     ],
-                    'type': 'game-shell',
+                    'appName': 'Arcade Game',
                     'showTopBar': true,
                   },
                 ],
@@ -331,24 +331,24 @@ export function stdArcadeGameArcadeStateOrbital(params: StdArcadeGameArcadeState
                   'render-ui',
                   'main',
                   {
-                    'type': 'game-shell',
-                    'showTopBar': true,
                     'appName': 'Arcade Game',
+                    'type': 'game-shell',
                     'children': [
                       {
                         'stats': [
                           {
-                            'label': 'Score',
                             'value': '@entity.score',
+                            'label': 'Score',
                           },
                           {
-                            'value': '@entity.level',
                             'label': 'Level',
+                            'value': '@entity.level',
                           },
                         ],
                         'type': 'game-hud',
                       },
                     ],
+                    'showTopBar': true,
                   },
                 ],
               ],
@@ -367,20 +367,20 @@ export function stdArcadeGameArcadeStateOrbital(params: StdArcadeGameArcadeState
                   'render-ui',
                   'modal',
                   {
+                    'title': 'Paused',
+                    'type': 'game-menu',
                     'menuItems': [
                       {
-                        'label': 'Resume',
                         'event': 'RESUME',
+                        'label': 'Resume',
                         'variant': 'primary',
                       },
                       {
+                        'variant': 'ghost',
                         'label': 'Quit',
                         'event': 'RESTART',
-                        'variant': 'ghost',
                       },
                     ],
-                    'type': 'game-menu',
-                    'title': 'Paused',
                   },
                 ],
               ],
@@ -394,37 +394,37 @@ export function stdArcadeGameArcadeStateOrbital(params: StdArcadeGameArcadeState
                   'render-ui',
                   'main',
                   {
+                    'appName': 'Arcade Game',
+                    'showTopBar': true,
                     'children': [
                       {
                         'title': 'Game Over',
-                        'menuItems': [
+                        'stats': [
                           {
-                            'event': 'RESTART',
-                            'variant': 'primary',
-                            'label': 'Play Again',
+                            'value': '@entity.score',
+                            'label': 'Score',
                           },
                           {
-                            'variant': 'secondary',
-                            'label': 'Main Menu',
-                            'event': 'RESTART',
+                            'label': 'Level',
+                            'value': '@entity.level',
                           },
                         ],
                         'type': 'game-over-screen',
-                        'stats': [
+                        'menuItems': [
                           {
-                            'label': 'Score',
-                            'value': '@entity.score',
+                            'label': 'Play Again',
+                            'event': 'RESTART',
+                            'variant': 'primary',
                           },
                           {
-                            'value': '@entity.level',
-                            'label': 'Level',
+                            'label': 'Main Menu',
+                            'event': 'RESTART',
+                            'variant': 'secondary',
                           },
                         ],
                       },
                     ],
                     'type': 'game-shell',
-                    'showTopBar': true,
-                    'appName': 'Arcade Game',
                   },
                 ],
               ],
@@ -449,23 +449,23 @@ export function stdArcadeGameArcadeStateOrbital(params: StdArcadeGameArcadeState
                   'main',
                   {
                     'appName': 'Arcade Game',
-                    'type': 'game-shell',
-                    'showTopBar': true,
                     'children': [
                       {
                         'type': 'game-hud',
                         'stats': [
                           {
-                            'label': 'Score',
                             'value': '@entity.score',
+                            'label': 'Score',
                           },
                           {
-                            'label': 'Level',
                             'value': '@entity.level',
+                            'label': 'Level',
                           },
                         ],
                       },
                     ],
+                    'showTopBar': true,
+                    'type': 'game-shell',
                   },
                 ],
               ],
@@ -484,23 +484,23 @@ export function stdArcadeGameArcadeStateOrbital(params: StdArcadeGameArcadeState
                   'render-ui',
                   'main',
                   {
+                    'type': 'game-shell',
                     'showTopBar': true,
                     'children': [
                       {
+                        'type': 'game-hud',
                         'stats': [
                           {
-                            'value': '@entity.score',
                             'label': 'Score',
+                            'value': '@entity.score',
                           },
                           {
                             'label': 'Level',
                             'value': '@entity.level',
                           },
                         ],
-                        'type': 'game-hud',
                       },
                     ],
-                    'type': 'game-shell',
                     'appName': 'Arcade Game',
                   },
                 ],
@@ -520,11 +520,12 @@ export function stdArcadeGameArcadeStateOrbital(params: StdArcadeGameArcadeState
                   'render-ui',
                   'main',
                   {
-                    'showTopBar': true,
-                    'appName': 'Arcade Game',
                     'type': 'game-shell',
+                    'appName': 'Arcade Game',
                     'children': [
                       {
+                        'type': 'game-menu',
+                        'subtitle': 'Main Menu',
                         'menuItems': [
                           {
                             'label': 'Start Game',
@@ -533,10 +534,9 @@ export function stdArcadeGameArcadeStateOrbital(params: StdArcadeGameArcadeState
                           },
                         ],
                         'title': 'Arcade',
-                        'type': 'game-menu',
-                        'subtitle': 'Main Menu',
                       },
                     ],
+                    'showTopBar': true,
                   },
                 ],
               ],
@@ -550,9 +550,13 @@ export function stdArcadeGameArcadeStateOrbital(params: StdArcadeGameArcadeState
                   'render-ui',
                   'main',
                   {
+                    'appName': 'Arcade Game',
                     'type': 'game-shell',
                     'children': [
                       {
+                        'title': 'Arcade',
+                        'type': 'game-menu',
+                        'subtitle': 'Main Menu',
                         'menuItems': [
                           {
                             'event': 'START',
@@ -560,12 +564,8 @@ export function stdArcadeGameArcadeStateOrbital(params: StdArcadeGameArcadeState
                             'label': 'Start Game',
                           },
                         ],
-                        'title': 'Arcade',
-                        'type': 'game-menu',
-                        'subtitle': 'Main Menu',
                       },
                     ],
-                    'appName': 'Arcade Game',
                     'showTopBar': true,
                   },
                 ],
@@ -875,54 +875,54 @@ export function stdArcadeGameArcadeCanvasOrbital(params: StdArcadeGameArcadeCanv
                   'render-ui',
                   'main',
                   {
-                    'appName': 'Arcade Game',
-                    'showTopBar': true,
                     'children': [
                       {
                         'type': 'stack',
-                        'direction': 'vertical',
                         'gap': 'md',
                         'children': [
                           {
-                            'type': 'stack',
-                            'direction': 'horizontal',
                             'gap': 'sm',
+                            'align': 'center',
+                            'direction': 'horizontal',
                             'children': [
                               {
-                                'type': 'icon',
                                 'name': 'monitor',
+                                'type': 'icon',
                               },
                               {
-                                'content': 'ArcadeCanvas Canvas',
                                 'variant': 'h3',
                                 'type': 'typography',
+                                'content': 'ArcadeCanvas Canvas',
                               },
                             ],
-                            'align': 'center',
+                            'type': 'stack',
                           },
                           {
-                            'type': 'typography',
-                            'variant': 'caption',
-                            'color': 'muted',
                             'content': '800x600 @ 60fps',
+                            'color': 'muted',
+                            'variant': 'caption',
+                            'type': 'typography',
                           },
                           {
-                            'type': 'game-canvas-2d',
-                            'height': 600,
                             'width': 800,
                             'fps': 60,
+                            'type': 'game-canvas-2d',
+                            'height': 600,
                           },
                           {
-                            'action': 'START',
-                            'label': 'Start',
-                            'icon': 'play',
                             'type': 'button',
                             'variant': 'primary',
+                            'icon': 'play',
+                            'action': 'START',
+                            'label': 'Start',
                           },
                         ],
+                        'direction': 'vertical',
                       },
                     ],
                     'type': 'game-shell',
+                    'appName': 'Arcade Game',
+                    'showTopBar': true,
                   },
                 ],
               ],
@@ -936,48 +936,48 @@ export function stdArcadeGameArcadeCanvasOrbital(params: StdArcadeGameArcadeCanv
                   'render-ui',
                   'main',
                   {
-                    'appName': 'Arcade Game',
-                    'type': 'game-shell',
                     'showTopBar': true,
                     'children': [
                       {
-                        'direction': 'vertical',
+                        'type': 'stack',
                         'children': [
                           {
-                            'gap': 'sm',
-                            'type': 'stack',
-                            'direction': 'horizontal',
-                            'align': 'center',
                             'children': [
                               {
-                                'type': 'icon',
                                 'name': 'monitor',
+                                'type': 'icon',
                               },
                               {
+                                'type': 'typography',
                                 'content': 'ArcadeCanvas Canvas',
                                 'variant': 'h3',
-                                'type': 'typography',
                               },
                             ],
+                            'gap': 'sm',
+                            'align': 'center',
+                            'type': 'stack',
+                            'direction': 'horizontal',
                           },
                           {
-                            'type': 'game-canvas-2d',
-                            'height': 600,
                             'width': 800,
                             'fps': 60,
+                            'type': 'game-canvas-2d',
+                            'height': 600,
                           },
                           {
                             'type': 'button',
                             'variant': 'ghost',
-                            'icon': 'square',
                             'label': 'Stop',
                             'action': 'STOP',
+                            'icon': 'square',
                           },
                         ],
+                        'direction': 'vertical',
                         'gap': 'md',
-                        'type': 'stack',
                       },
                     ],
+                    'type': 'game-shell',
+                    'appName': 'Arcade Game',
                   },
                 ],
               ],
@@ -996,54 +996,54 @@ export function stdArcadeGameArcadeCanvasOrbital(params: StdArcadeGameArcadeCanv
                   'render-ui',
                   'main',
                   {
-                    'type': 'game-shell',
-                    'showTopBar': true,
                     'children': [
                       {
+                        'gap': 'md',
                         'type': 'stack',
-                        'direction': 'vertical',
                         'children': [
                           {
-                            'align': 'center',
-                            'gap': 'sm',
-                            'type': 'stack',
                             'direction': 'horizontal',
+                            'type': 'stack',
+                            'gap': 'sm',
                             'children': [
                               {
-                                'name': 'monitor',
                                 'type': 'icon',
+                                'name': 'monitor',
                               },
                               {
-                                'content': 'ArcadeCanvas Canvas',
                                 'type': 'typography',
+                                'content': 'ArcadeCanvas Canvas',
                                 'variant': 'h3',
                               },
                             ],
+                            'align': 'center',
                           },
                           {
-                            'color': 'muted',
-                            'content': '800x600 @ 60fps',
                             'type': 'typography',
                             'variant': 'caption',
+                            'color': 'muted',
+                            'content': '800x600 @ 60fps',
                           },
                           {
-                            'type': 'game-canvas-2d',
                             'height': 600,
+                            'type': 'game-canvas-2d',
                             'width': 800,
                             'fps': 60,
                           },
                           {
-                            'action': 'START',
-                            'variant': 'primary',
-                            'label': 'Start',
-                            'type': 'button',
                             'icon': 'play',
+                            'variant': 'primary',
+                            'action': 'START',
+                            'type': 'button',
+                            'label': 'Start',
                           },
                         ],
-                        'gap': 'md',
+                        'direction': 'vertical',
                       },
                     ],
+                    'showTopBar': true,
                     'appName': 'Arcade Game',
+                    'type': 'game-shell',
                   },
                 ],
               ],
@@ -1416,16 +1416,16 @@ export function stdArcadeGameArcadeScoreOrbital(params: StdArcadeGameArcadeScore
                   'render-ui',
                   'main',
                   {
+                    'type': 'game-shell',
                     'showTopBar': true,
                     'appName': 'Arcade Game',
-                    'type': 'game-shell',
                     'children': [
                       {
-                        'highScore': '@entity.highScore',
                         'type': 'score-board',
-                        'multiplier': '@entity.multiplier',
-                        'level': '@entity.level',
                         'score': '@entity.score',
+                        'highScore': '@entity.highScore',
+                        'level': '@entity.level',
+                        'multiplier': '@entity.multiplier',
                         'combo': '@entity.combo',
                       },
                     ],
@@ -1461,17 +1461,17 @@ export function stdArcadeGameArcadeScoreOrbital(params: StdArcadeGameArcadeScore
                   'main',
                   {
                     'type': 'game-shell',
+                    'showTopBar': true,
                     'children': [
                       {
+                        'multiplier': '@entity.multiplier',
+                        'level': '@entity.level',
+                        'highScore': '@entity.highScore',
                         'combo': '@entity.combo',
                         'type': 'score-board',
                         'score': '@entity.score',
-                        'multiplier': '@entity.multiplier',
-                        'highScore': '@entity.highScore',
-                        'level': '@entity.level',
                       },
                     ],
-                    'showTopBar': true,
                     'appName': 'Arcade Game',
                   },
                 ],
@@ -1492,18 +1492,18 @@ export function stdArcadeGameArcadeScoreOrbital(params: StdArcadeGameArcadeScore
                   'main',
                   {
                     'showTopBar': true,
+                    'type': 'game-shell',
                     'appName': 'Arcade Game',
                     'children': [
                       {
-                        'multiplier': '@entity.multiplier',
-                        'level': '@entity.level',
                         'highScore': '@entity.highScore',
-                        'type': 'score-board',
-                        'score': '@entity.score',
+                        'level': '@entity.level',
+                        'multiplier': '@entity.multiplier',
                         'combo': '@entity.combo',
+                        'score': '@entity.score',
+                        'type': 'score-board',
                       },
                     ],
-                    'type': 'game-shell',
                   },
                 ],
               ],
@@ -1533,18 +1533,18 @@ export function stdArcadeGameArcadeScoreOrbital(params: StdArcadeGameArcadeScore
                   'main',
                   {
                     'type': 'game-shell',
-                    'appName': 'Arcade Game',
-                    'showTopBar': true,
                     'children': [
                       {
-                        'highScore': '@entity.highScore',
                         'level': '@entity.level',
                         'score': '@entity.score',
                         'combo': '@entity.combo',
-                        'multiplier': '@entity.multiplier',
                         'type': 'score-board',
+                        'multiplier': '@entity.multiplier',
+                        'highScore': '@entity.highScore',
                       },
                     ],
+                    'showTopBar': true,
+                    'appName': 'Arcade Game',
                   },
                 ],
               ],
@@ -1865,11 +1865,11 @@ export function stdArcadeGameArcadeHudOrbital(params: StdArcadeGameArcadeHudOrbi
                   'render-ui',
                   'main',
                   {
+                    'type': 'game-shell',
                     'appName': 'Arcade Game',
+                    'showTopBar': true,
                     'children': [
                       {
-                        'transparent': false,
-                        'position': 'top-left',
                         'type': 'game-hud',
                         'stats': [
                           {
@@ -1881,18 +1881,18 @@ export function stdArcadeGameArcadeHudOrbital(params: StdArcadeGameArcadeHudOrbi
                             'value': '@entity.lives',
                           },
                           {
-                            'label': 'Level',
                             'value': '@entity.level',
+                            'label': 'Level',
                           },
                           {
                             'value': '@entity.timer',
                             'label': 'Timer',
                           },
                         ],
+                        'transparent': false,
+                        'position': 'top-left',
                       },
                     ],
-                    'type': 'game-shell',
-                    'showTopBar': true,
                   },
                 ],
               ],
@@ -1916,22 +1916,19 @@ export function stdArcadeGameArcadeHudOrbital(params: StdArcadeGameArcadeHudOrbi
                   'render-ui',
                   'main',
                   {
-                    'appName': 'Arcade Game',
                     'showTopBar': true,
-                    'type': 'game-shell',
                     'children': [
                       {
-                        'transparent': false,
-                        'type': 'game-hud',
                         'position': 'top-left',
+                        'type': 'game-hud',
                         'stats': [
                           {
                             'label': 'Score',
                             'value': '@entity.score',
                           },
                           {
-                            'value': '@entity.lives',
                             'label': 'Lives',
+                            'value': '@entity.lives',
                           },
                           {
                             'label': 'Level',
@@ -1942,8 +1939,11 @@ export function stdArcadeGameArcadeHudOrbital(params: StdArcadeGameArcadeHudOrbi
                             'value': '@entity.timer',
                           },
                         ],
+                        'transparent': false,
                       },
                     ],
+                    'type': 'game-shell',
+                    'appName': 'Arcade Game',
                   },
                 ],
               ],

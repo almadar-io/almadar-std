@@ -89,20 +89,20 @@ export interface StdHealthScoreHealthScoreLoadFailedPayload {
  * without modifying its state-machine topology.
  */
 export interface StdHealthScoreConfig {
-  /** Default: `40` */
-  healthScoreThresholdAlert?: number;
-  /** Default: `[{"icon":"arrow-right","event":"OPEN_SCORE","variant":"primary","label":"Open"},{"label":"Recalculate","variant":"secondary","event":"RECALCULATE"}]` */
-  itemActions?: EntityRow[];
   /** Default: `365` */
   archiveInactiveAfterDays?: number;
-  /** Default: `[{"label":"Customer","variant":"caption","name":"customerName"},{"variant":"badge","name":"score","label":"Score"},{"label":"Tier","name":"tier","variant":"badge"},{"label":"Usage","name":"usageScore","variant":"caption"},{"label":"Support","variant":"caption","name":"supportScore"},{"label":"Trend","variant":"badge","name":"trend"},{"label":"CSM","variant":"caption","name":"assignedCsm"}]` */
-  fields?: EntityRow[];
   /** Default: `false` */
   consentTrackingEnabled?: boolean;
-  /** Default: `[30,7,1]` */
-  renewalReminderDaysBefore?: number[];
   /** Default: `"Customer Health Scores"` */
   title?: string;
+  /** Default: `[{"label":"Customer","name":"customerName","variant":"caption"},{"name":"score","label":"Score","variant":"badge"},{"variant":"badge","label":"Tier","name":"tier"},{"name":"usageScore","label":"Usage","variant":"caption"},{"label":"Support","name":"supportScore","variant":"caption"},{"name":"trend","variant":"badge","label":"Trend"},{"variant":"caption","label":"CSM","name":"assignedCsm"}]` */
+  fields?: EntityRow[];
+  /** Default: `[{"variant":"primary","label":"Open","icon":"arrow-right","event":"OPEN_SCORE"},{"label":"Recalculate","event":"RECALCULATE","variant":"secondary"}]` */
+  itemActions?: EntityRow[];
+  /** Default: `40` */
+  healthScoreThresholdAlert?: number;
+  /** Default: `[30,7,1]` */
+  renewalReminderDaysBefore?: number[];
 }
 
 /**

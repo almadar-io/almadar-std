@@ -102,13 +102,11 @@
           "ref": "AppShell.traits.AppLayout",
           "name": "JournalAppLayout",
           "config": {
-            "contentTrait": "@trait.JournalCatalog",
-            "appName": "Accounting",
             "navItems": [
               {
-                "href": "/journal-summaries",
                 "icon": "book-open",
-                "label": "Journal"
+                "label": "Journal",
+                "href": "/journal-summaries"
               },
               {
                 "href": "/entries",
@@ -116,24 +114,26 @@
                 "label": "Entries"
               },
               {
-                "label": "Chart of Accounts",
                 "href": "/accounts",
-                "icon": "layout-list"
+                "icon": "layout-list",
+                "label": "Chart of Accounts"
               },
               {
                 "icon": "file-text",
-                "label": "AP Bills",
-                "href": "/bills"
+                "href": "/bills",
+                "label": "AP Bills"
               },
               {
+                "label": "AR Invoices",
                 "icon": "receipt",
-                "href": "/invoices",
-                "label": "AR Invoices"
+                "href": "/invoices"
               }
             ],
-            "notifications": [],
+            "appName": "Accounting",
+            "searchEvent": "JOURNAL_SEARCH",
             "notificationClickEvent": "JOURNAL_NOTIFICATIONS_OPEN",
-            "searchEvent": "JOURNAL_SEARCH"
+            "contentTrait": "@trait.JournalCatalog",
+            "notifications": []
           },
           "events": {
             "NOTIFY_CLICK": "JOURNAL_NOTIFICATIONS_OPEN",
@@ -223,57 +223,57 @@
                       "direction": "vertical",
                       "children": [
                         {
-                          "justify": "between",
+                          "align": "center",
                           "children": [
                             {
-                              "align": "center",
                               "children": [
                                 {
                                   "type": "icon",
                                   "name": "book-open"
                                 },
                                 {
-                                  "type": "typography",
+                                  "content": "Journal Summaries",
                                   "variant": "h2",
-                                  "content": "Journal Summaries"
+                                  "type": "typography"
                                 }
                               ],
+                              "gap": "sm",
                               "direction": "horizontal",
                               "type": "stack",
-                              "gap": "sm"
+                              "align": "center"
                             },
                             {
                               "gap": "sm",
-                              "type": "stack",
                               "children": [
                                 {
+                                  "icon": "plus",
                                   "action": "CREATE",
-                                  "variant": "primary",
-                                  "label": "New Period",
                                   "type": "button",
-                                  "icon": "plus"
+                                  "variant": "primary",
+                                  "label": "New Period"
                                 }
                               ],
+                              "type": "stack",
                               "direction": "horizontal"
                             }
                           ],
-                          "gap": "md",
                           "type": "stack",
-                          "align": "center",
-                          "direction": "horizontal"
+                          "direction": "horizontal",
+                          "gap": "md",
+                          "justify": "between"
                         },
                         {
                           "type": "divider"
                         },
                         {
+                          "type": "stack",
+                          "gap": "md",
                           "align": "center",
                           "children": [
                             "@trait.JournalSearch",
                             "@trait.JournalFilter"
                           ],
-                          "type": "stack",
-                          "direction": "horizontal",
-                          "gap": "md"
+                          "direction": "horizontal"
                         },
                         "@trait.JournalStats",
                         "@trait.JournalGraphs",
@@ -282,8 +282,8 @@
                         },
                         "@trait.JournalBrowseList"
                       ],
-                      "type": "stack",
-                      "gap": "lg"
+                      "gap": "lg",
+                      "type": "stack"
                     }
                   ]
                 ]
@@ -302,34 +302,34 @@
                     "render-ui",
                     "main",
                     {
-                      "direction": "vertical",
+                      "align": "center",
+                      "className": "py-8",
+                      "gap": "md",
+                      "type": "stack",
                       "children": [
                         {
-                          "name": "bell",
-                          "type": "icon"
+                          "type": "icon",
+                          "name": "bell"
                         },
                         {
-                          "content": "No notifications",
+                          "variant": "h3",
                           "type": "typography",
-                          "variant": "h3"
+                          "content": "No notifications"
                         },
                         {
+                          "type": "typography",
                           "variant": "caption",
                           "content": "You're all caught up.",
-                          "color": "muted",
-                          "type": "typography"
+                          "color": "muted"
                         },
                         {
-                          "label": "Back to journal",
                           "type": "button",
                           "variant": "ghost",
-                          "action": "INIT"
+                          "action": "INIT",
+                          "label": "Back to journal"
                         }
                       ],
-                      "type": "stack",
-                      "className": "py-8",
-                      "align": "center",
-                      "gap": "md"
+                      "direction": "vertical"
                     }
                   ]
                 ]
@@ -352,14 +352,14 @@
           "config": {
             "filters": [
               {
+                "field": "status",
+                "label": "Status",
+                "filterType": "select",
                 "options": [
                   "draft",
                   "posted",
                   "closed"
-                ],
-                "label": "Status",
-                "filterType": "select",
-                "field": "status"
+                ]
               }
             ],
             "event": "JOURNAL_FILTER"
@@ -369,32 +369,32 @@
           "ref": "Stats.traits.StatsItemStats",
           "name": "JournalStats",
           "config": {
+            "title": "Journal Periods",
             "metrics": [
               {
+                "variant": "primary",
                 "format": "number",
                 "aggregation": "count",
-                "variant": "primary",
                 "icon": "book-open",
                 "label": "Periods"
               },
               {
-                "variant": "success",
-                "field": "totalDebits",
                 "icon": "trending-up",
-                "aggregation": "sum",
+                "field": "totalDebits",
+                "variant": "success",
                 "format": "number",
-                "label": "Debits"
+                "label": "Debits",
+                "aggregation": "sum"
               },
               {
-                "label": "Credits",
-                "field": "totalCredits",
-                "aggregation": "sum",
-                "format": "number",
                 "icon": "trending-down",
-                "variant": "warning"
+                "label": "Credits",
+                "variant": "warning",
+                "format": "number",
+                "field": "totalCredits",
+                "aggregation": "sum"
               }
-            ],
-            "title": "Journal Periods"
+            ]
           },
           "listens": [
             {
@@ -411,13 +411,13 @@
           "ref": "Graphs.traits.GraphItemGraph",
           "name": "JournalGraphs",
           "config": {
-            "chartType": "bar",
-            "subtitle": "Periods by status",
-            "aggregation": "count",
-            "height": 240.0,
             "title": "Journal Status",
+            "height": 240.0,
+            "subtitle": "Periods by status",
             "categoryField": "status",
-            "showLegend": false
+            "showLegend": false,
+            "chartType": "bar",
+            "aggregation": "count"
           },
           "listens": [
             {
@@ -715,22 +715,22 @@
                     "render-ui",
                     "main",
                     {
-                      "direction": "vertical",
                       "className": "py-12",
-                      "align": "center",
+                      "type": "stack",
                       "children": [
                         {
                           "type": "spinner"
                         },
                         {
-                          "variant": "caption",
-                          "content": "Loading journal periods…",
                           "type": "typography",
-                          "color": "muted"
+                          "color": "muted",
+                          "content": "Loading journal periods…",
+                          "variant": "caption"
                         }
                       ],
+                      "direction": "vertical",
                       "gap": "md",
-                      "type": "stack"
+                      "align": "center"
                     }
                   ]
                 ]
@@ -745,18 +745,18 @@
                     "main",
                     {
                       "type": "data-grid",
-                      "entity": "@payload.data",
+                      "gap": "sm",
                       "fields": [
                         {
-                          "name": "period",
-                          "icon": "calendar",
                           "variant": "h4",
+                          "icon": "calendar",
+                          "name": "period",
                           "label": "Period"
                         },
                         {
+                          "label": "Status",
                           "variant": "badge",
-                          "name": "status",
-                          "label": "Status"
+                          "name": "status"
                         },
                         {
                           "variant": "caption",
@@ -764,28 +764,28 @@
                           "name": "totalDebits"
                         },
                         {
-                          "label": "Total Credits",
                           "variant": "caption",
-                          "name": "totalCredits"
+                          "name": "totalCredits",
+                          "label": "Total Credits"
                         }
                       ],
                       "cols": 1.0,
-                      "gap": "sm",
+                      "entity": "@payload.data",
                       "itemActions": [
                         {
+                          "event": "VIEW",
                           "variant": "ghost",
-                          "label": "View",
-                          "event": "VIEW"
+                          "label": "View"
                         },
                         {
-                          "event": "EDIT",
+                          "label": "Edit",
                           "variant": "ghost",
-                          "label": "Edit"
+                          "event": "EDIT"
                         },
                         {
-                          "event": "DELETE",
+                          "variant": "danger",
                           "label": "Delete",
-                          "variant": "danger"
+                          "event": "DELETE"
                         }
                       ]
                     }
@@ -802,8 +802,8 @@
                     "main",
                     {
                       "type": "alert",
-                      "variant": "error",
-                      "message": "@payload.error"
+                      "message": "@payload.error",
+                      "variant": "error"
                     }
                   ]
                 ]
@@ -818,8 +818,8 @@
                     "JournalSummary",
                     {
                       "emit": {
-                        "failure": "JournalSummaryLoadFailed",
-                        "success": "JournalSummaryLoaded"
+                        "success": "JournalSummaryLoaded",
+                        "failure": "JournalSummaryLoadFailed"
                       }
                     }
                   ],
@@ -907,9 +907,9 @@
               "totalCredits",
               "status"
             ],
+            "icon": "plus-circle",
             "mode": "create",
-            "title": "New Journal Period",
-            "icon": "plus-circle"
+            "title": "New Journal Period"
           },
           "events": {
             "OPEN": "CREATE"
@@ -930,14 +930,14 @@
           "name": "JournalEdit",
           "linkedEntity": "JournalSummary",
           "config": {
+            "mode": "edit",
+            "title": "Edit Journal Period",
             "fields": [
               "period",
               "totalDebits",
               "totalCredits",
               "status"
             ],
-            "title": "Edit Journal Period",
-            "mode": "edit",
             "icon": "edit"
           },
           "events": {
@@ -959,15 +959,15 @@
           "name": "JournalView",
           "linkedEntity": "JournalSummary",
           "config": {
-            "icon": "eye",
+            "title": "View Journal Period",
+            "mode": "edit",
             "fields": [
               "period",
               "totalDebits",
               "totalCredits",
               "status"
             ],
-            "title": "View Journal Period",
-            "mode": "edit"
+            "icon": "eye"
           },
           "events": {
             "OPEN": "VIEW"
@@ -988,10 +988,10 @@
           "name": "JournalDelete",
           "linkedEntity": "JournalSummary",
           "config": {
-            "confirmLabel": "Delete",
             "icon": "alert-triangle",
+            "alertMessage": "This action cannot be undone.",
             "title": "Delete Journal Period",
-            "alertMessage": "This action cannot be undone."
+            "confirmLabel": "Delete"
           },
           "events": {
             "REQUEST": "DELETE",

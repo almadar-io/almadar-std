@@ -85,40 +85,40 @@ export interface StdClassRosterRosterEntryLoadFailedPayload {
  * without modifying its state-machine topology.
  */
 export interface StdClassRosterConfig {
+  /** Default: `30` */
+  bookingWindowDays?: number;
+  /** Default: `[]` */
+  blackoutDates?: string[];
+  /** Default: `"free"` */
+  cancellationPolicy?: 'free' | 'partial-refund' | 'no-refund';
+  /** Default: `730` */
+  retentionAfterRejectionDays?: number;
   /** Default: `"Class Roster"` */
   title?: string;
   /** Default: `false` */
-  eVerifyRequired?: boolean;
-  /** Default: `4` */
-  rescheduleWindowHours?: number;
-  /** Default: `false` */
-  i9DocumentsRequired?: boolean;
-  /** Default: `"06:00-22:00"` */
-  bookingHours?: string;
+  backgroundCheckRequired?: boolean;
+  /** Default: `[{"label":"Member","name":"memberName","variant":"caption"},{"label":"Session","name":"sessionId","variant":"caption"},{"name":"status","label":"Status","variant":"badge"},{"name":"checkedInAt","label":"Checked In","variant":"caption"}]` */
+  fields?: EntityRow[];
   /** Default: `3` */
   maxReschedules?: number;
   /** Default: `false` */
   anonymizeOnRejection?: boolean;
-  /** Default: `[{"name":"memberName","variant":"caption","label":"Member"},{"label":"Session","variant":"caption","name":"sessionId"},{"name":"status","label":"Status","variant":"badge"},{"label":"Checked In","variant":"caption","name":"checkedInAt"}]` */
-  fields?: EntityRow[];
+  /** Default: `[{"event":"OPEN_ENTRY","variant":"primary","icon":"arrow-right","label":"Open"},{"label":"Check In","event":"CHECK_IN","variant":"secondary"},{"label":"No Show","variant":"danger","event":"MARK_NO_SHOW"}]` */
+  itemActions?: EntityRow[];
+  /** Default: `false` */
+  i9DocumentsRequired?: boolean;
+  /** Default: `4` */
+  rescheduleWindowHours?: number;
   /** Default: `10` */
   noShowGracePeriodMinutes?: number;
-  /** Default: `"free"` */
-  cancellationPolicy?: 'free' | 'partial-refund' | 'no-refund';
+  /** Default: `false` */
+  eVerifyRequired?: boolean;
   /** Default: `false` */
   equalOpportunityTrackingEnabled?: boolean;
-  /** Default: `[]` */
-  blackoutDates?: string[];
-  /** Default: `[{"variant":"primary","icon":"arrow-right","label":"Open","event":"OPEN_ENTRY"},{"event":"CHECK_IN","label":"Check In","variant":"secondary"},{"variant":"danger","event":"MARK_NO_SHOW","label":"No Show"}]` */
-  itemActions?: EntityRow[];
-  /** Default: `30` */
-  bookingWindowDays?: number;
   /** Default: `15` */
   leadTimeMinutes?: number;
-  /** Default: `false` */
-  backgroundCheckRequired?: boolean;
-  /** Default: `730` */
-  retentionAfterRejectionDays?: number;
+  /** Default: `"06:00-22:00"` */
+  bookingHours?: string;
 }
 
 /**

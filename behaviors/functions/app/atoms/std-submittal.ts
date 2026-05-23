@@ -104,32 +104,32 @@ export interface StdSubmittalSubmittalLoadFailedPayload {
  * without modifying its state-machine topology.
  */
 export interface StdSubmittalConfig {
-  /** Default: `1440` */
-  responseTimeMinutes?: number;
-  /** Default: `["submitted","in-review","approved","rejected","revise-resubmit"]` */
-  customerVisibleStatuses?: string[];
-  /** Default: `0` */
-  serviceAreaRadius?: number;
-  /** Default: `"manual"` */
-  dispatchStrategy?: 'nearest' | 'round-robin' | 'manual';
-  /** Default: `[]` */
-  skillsRequired?: string[];
-  /** Default: `[{"label":"Open","icon":"arrow-right","variant":"primary","event":"OPEN_SUBMITTAL"},{"variant":"danger","label":"Delete","event":"REQUEST_DELETE"}]` */
-  itemActions?: EntityRow[];
-  /** Default: `[]` */
-  serviceZones?: string[];
-  /** Default: `240` */
-  resolutionSLAHours?: number;
-  /** Default: `336` */
-  escalationThresholdHours?: number;
   /** Default: `false` */
   requirePhotoOnComplete?: boolean;
-  /** Default: `false` */
-  requireSignatureOnComplete?: boolean;
   /** Default: `"Submittals"` */
   title?: string;
-  /** Default: `[{"name":"submittalNumber","variant":"caption","label":"Number"},{"name":"specSection","variant":"caption","label":"Spec Section"},{"name":"title","label":"Title","variant":"caption"},{"variant":"caption","label":"Contractor","name":"contractor"},{"variant":"badge","name":"status","label":"Status"},{"name":"revisionNumber","variant":"caption","label":"Rev"}]` */
+  /** Default: `[{"event":"OPEN_SUBMITTAL","label":"Open","icon":"arrow-right","variant":"primary"},{"event":"REQUEST_DELETE","variant":"danger","label":"Delete"}]` */
+  itemActions?: EntityRow[];
+  /** Default: `1440` */
+  responseTimeMinutes?: number;
+  /** Default: `240` */
+  resolutionSLAHours?: number;
+  /** Default: `[]` */
+  serviceZones?: string[];
+  /** Default: `[{"name":"submittalNumber","variant":"caption","label":"Number"},{"variant":"caption","name":"specSection","label":"Spec Section"},{"label":"Title","variant":"caption","name":"title"},{"label":"Contractor","variant":"caption","name":"contractor"},{"variant":"badge","label":"Status","name":"status"},{"variant":"caption","label":"Rev","name":"revisionNumber"}]` */
   fields?: EntityRow[];
+  /** Default: `0` */
+  serviceAreaRadius?: number;
+  /** Default: `[]` */
+  skillsRequired?: string[];
+  /** Default: `["submitted","in-review","approved","rejected","revise-resubmit"]` */
+  customerVisibleStatuses?: string[];
+  /** Default: `false` */
+  requireSignatureOnComplete?: boolean;
+  /** Default: `336` */
+  escalationThresholdHours?: number;
+  /** Default: `"manual"` */
+  dispatchStrategy?: 'nearest' | 'round-robin' | 'manual';
 }
 
 /**

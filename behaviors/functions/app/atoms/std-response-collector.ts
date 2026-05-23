@@ -83,30 +83,30 @@ export interface StdResponseCollectorResponseLoadFailedPayload {
  * without modifying its state-machine topology.
  */
 export interface StdResponseCollectorConfig {
-  /** Default: `[{"variant":"primary","label":"Open","event":"OPEN_RESPONSE","icon":"arrow-right"},{"label":"Delete","event":"DELETE_RESPONSE","variant":"danger"}]` */
-  itemActions?: EntityRow[];
-  /** Default: `"Responses"` */
-  title?: string;
   /** Default: `false` */
   trackClicks?: boolean;
   /** Default: `true` */
-  includeUnsubscribeLink?: boolean;
-  /** Default: `true` */
-  suppressionListEnabled?: boolean;
-  /** Default: `""` */
-  physicalAddressFooter?: string;
+  respectQuietHours?: boolean;
   /** Default: `false` */
   trackOpens?: boolean;
-  /** Default: `500` */
-  sendsPerHour?: number;
   /** Default: `true` */
-  respectQuietHours?: boolean;
-  /** Default: `[{"label":"Question","name":"questionId","variant":"caption"},{"label":"Respondent","name":"respondentId","variant":"caption"},{"name":"surveyId","variant":"caption","label":"Survey"},{"variant":"caption","label":"Answer","name":"answerJson"},{"variant":"caption","name":"submittedAt","label":"Submitted"}]` */
+  includeUnsubscribeLink?: boolean;
+  /** Default: `[{"variant":"caption","name":"questionId","label":"Question"},{"name":"respondentId","label":"Respondent","variant":"caption"},{"variant":"caption","name":"surveyId","label":"Survey"},{"name":"answerJson","variant":"caption","label":"Answer"},{"label":"Submitted","variant":"caption","name":"submittedAt"}]` */
   fields?: EntityRow[];
-  /** Default: `true` */
-  gdprConsentRequired?: boolean;
   /** Default: `2` */
   frequencyCapPerWeek?: number;
+  /** Default: `[{"event":"OPEN_RESPONSE","variant":"primary","icon":"arrow-right","label":"Open"},{"variant":"danger","event":"DELETE_RESPONSE","label":"Delete"}]` */
+  itemActions?: EntityRow[];
+  /** Default: `true` */
+  suppressionListEnabled?: boolean;
+  /** Default: `500` */
+  sendsPerHour?: number;
+  /** Default: `""` */
+  physicalAddressFooter?: string;
+  /** Default: `true` */
+  gdprConsentRequired?: boolean;
+  /** Default: `"Responses"` */
+  title?: string;
 }
 
 /**

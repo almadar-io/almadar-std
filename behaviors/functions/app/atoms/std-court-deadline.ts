@@ -87,38 +87,38 @@ export interface StdCourtDeadlineCourtDeadlineLoadFailedPayload {
  * without modifying its state-machine topology.
  */
 export interface StdCourtDeadlineConfig {
-  /** Default: `72` */
-  rescheduleWindowHours?: number;
-  /** Default: `2` */
-  maxReschedules?: number;
-  /** Default: `false` */
-  retainerRequired?: boolean;
   /** Default: `[]` */
   blackoutDates?: string[];
-  /** Default: `0` */
-  billingRateDefault?: number;
-  /** Default: `0` */
-  noShowGracePeriodMinutes?: number;
-  /** Default: `[{"variant":"caption","label":"Title","name":"title"},{"variant":"badge","name":"deadlineType","label":"Type"},{"name":"dueAt","label":"Due","variant":"caption"},{"variant":"caption","name":"jurisdiction","label":"Jurisdiction"},{"label":"Assigned","variant":"caption","name":"assignedTo"},{"name":"status","label":"Status","variant":"badge"}]` */
-  fields?: EntityRow[];
-  /** Default: `true` */
-  conflictCheckRequired?: boolean;
-  /** Default: `365` */
-  bookingWindowDays?: number;
-  /** Default: `[{"icon":"arrow-right","event":"OPEN_DEADLINE","variant":"primary","label":"Open"},{"variant":"danger","label":"Complete","event":"MARK_COMPLETED"}]` */
-  itemActions?: EntityRow[];
-  /** Default: `"Deadlines"` */
-  title?: string;
-  /** Default: `1440` */
-  leadTimeMinutes?: number;
-  /** Default: `""` */
-  practiceArea?: string;
-  /** Default: `"no-refund"` */
-  cancellationPolicy?: 'free' | 'partial-refund' | 'no-refund';
-  /** Default: `"standard"` */
-  clientConfidentialityLevel?: 'standard' | 'elevated' | 'restricted';
+  /** Default: `2` */
+  maxReschedules?: number;
   /** Default: `"00:00-23:59"` */
   bookingHours?: string;
+  /** Default: `false` */
+  retainerRequired?: boolean;
+  /** Default: `1440` */
+  leadTimeMinutes?: number;
+  /** Default: `[{"label":"Title","variant":"caption","name":"title"},{"variant":"badge","name":"deadlineType","label":"Type"},{"variant":"caption","name":"dueAt","label":"Due"},{"name":"jurisdiction","label":"Jurisdiction","variant":"caption"},{"name":"assignedTo","label":"Assigned","variant":"caption"},{"label":"Status","variant":"badge","name":"status"}]` */
+  fields?: EntityRow[];
+  /** Default: `72` */
+  rescheduleWindowHours?: number;
+  /** Default: `"Deadlines"` */
+  title?: string;
+  /** Default: `0` */
+  billingRateDefault?: number;
+  /** Default: `365` */
+  bookingWindowDays?: number;
+  /** Default: `"no-refund"` */
+  cancellationPolicy?: 'free' | 'partial-refund' | 'no-refund';
+  /** Default: `""` */
+  practiceArea?: string;
+  /** Default: `[{"variant":"primary","icon":"arrow-right","event":"OPEN_DEADLINE","label":"Open"},{"event":"MARK_COMPLETED","variant":"danger","label":"Complete"}]` */
+  itemActions?: EntityRow[];
+  /** Default: `0` */
+  noShowGracePeriodMinutes?: number;
+  /** Default: `true` */
+  conflictCheckRequired?: boolean;
+  /** Default: `"standard"` */
+  clientConfidentialityLevel?: 'standard' | 'elevated' | 'restricted';
 }
 
 /**

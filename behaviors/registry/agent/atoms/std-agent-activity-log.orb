@@ -288,22 +288,22 @@
                     "render-ui",
                     "main",
                     {
-                      "gap": "md",
-                      "direction": "vertical",
                       "children": [
                         {
                           "type": "spinner"
                         },
                         {
-                          "type": "typography",
-                          "color": "muted",
                           "variant": "caption",
+                          "color": "muted",
+                          "type": "typography",
                           "content": "Loading activity log…"
                         }
                       ],
+                      "className": "py-12",
+                      "direction": "vertical",
                       "type": "stack",
-                      "align": "center",
-                      "className": "py-12"
+                      "gap": "md",
+                      "align": "center"
                     }
                   ]
                 ]
@@ -317,52 +317,52 @@
                     "render-ui",
                     "main",
                     {
+                      "direction": "vertical",
                       "gap": "lg",
                       "children": [
                         {
-                          "direction": "horizontal",
+                          "type": "stack",
                           "align": "center",
                           "children": [
                             {
-                              "type": "stack",
                               "children": [
                                 {
                                   "name": "activity",
                                   "type": "icon"
                                 },
                                 {
+                                  "variant": "h2",
                                   "content": "Activity Log",
-                                  "type": "typography",
-                                  "variant": "h2"
+                                  "type": "typography"
                                 }
                               ],
                               "gap": "sm",
-                              "align": "center",
-                              "direction": "horizontal"
+                              "direction": "horizontal",
+                              "type": "stack",
+                              "align": "center"
                             },
                             {
-                              "action": "CLEAR",
                               "type": "button",
-                              "variant": "ghost",
+                              "action": "CLEAR",
                               "label": "Clear",
+                              "variant": "ghost",
                               "icon": "trash"
                             }
                           ],
                           "gap": "sm",
-                          "type": "stack",
+                          "direction": "horizontal",
                           "justify": "between"
                         },
                         {
                           "type": "divider"
                         },
                         {
-                          "fields": [],
+                          "entity": "@payload.data",
                           "type": "timeline",
-                          "entity": "@payload.data"
+                          "fields": []
                         }
                       ],
-                      "type": "stack",
-                      "direction": "vertical"
+                      "type": "stack"
                     }
                   ]
                 ]
@@ -376,11 +376,13 @@
                     "render-ui",
                     "main",
                     {
-                      "direction": "vertical",
+                      "type": "stack",
+                      "gap": "md",
+                      "className": "py-12",
                       "children": [
                         {
-                          "color": "destructive",
                           "name": "alert-triangle",
+                          "color": "destructive",
                           "type": "icon"
                         },
                         {
@@ -389,23 +391,21 @@
                           "variant": "h3"
                         },
                         {
-                          "color": "muted",
-                          "variant": "body",
                           "type": "typography",
-                          "content": "@payload.error"
+                          "variant": "body",
+                          "content": "@payload.error",
+                          "color": "muted"
                         },
                         {
+                          "variant": "primary",
                           "action": "INIT",
                           "icon": "rotate-ccw",
-                          "variant": "primary",
                           "type": "button",
                           "label": "Retry"
                         }
                       ],
-                      "gap": "md",
-                      "type": "stack",
-                      "className": "py-12",
-                      "align": "center"
+                      "align": "center",
+                      "direction": "vertical"
                     }
                   ]
                 ]
@@ -420,10 +420,10 @@
                     "create",
                     "AgentActivityLog",
                     {
-                      "status": "@payload.status",
-                      "timestamp": "@now",
                       "action": "@payload.action",
-                      "detail": "@payload.detail"
+                      "status": "@payload.status",
+                      "detail": "@payload.detail",
+                      "timestamp": "@now"
                     },
                     {
                       "emit": {
@@ -436,22 +436,22 @@
                     "render-ui",
                     "main",
                     {
-                      "align": "center",
-                      "type": "stack",
-                      "direction": "vertical",
                       "className": "py-12",
+                      "type": "stack",
                       "children": [
                         {
                           "type": "spinner"
                         },
                         {
                           "variant": "caption",
-                          "type": "typography",
                           "color": "muted",
-                          "content": "Recording entry…"
+                          "content": "Recording entry…",
+                          "type": "typography"
                         }
                       ],
-                      "gap": "md"
+                      "gap": "md",
+                      "direction": "vertical",
+                      "align": "center"
                     }
                   ]
                 ]
@@ -476,22 +476,22 @@
                     "render-ui",
                     "main",
                     {
-                      "className": "py-12",
+                      "direction": "vertical",
                       "type": "stack",
+                      "gap": "md",
+                      "align": "center",
                       "children": [
                         {
                           "type": "spinner"
                         },
                         {
-                          "type": "typography",
+                          "variant": "caption",
                           "color": "muted",
                           "content": "Clearing activity log…",
-                          "variant": "caption"
+                          "type": "typography"
                         }
                       ],
-                      "gap": "md",
-                      "direction": "vertical",
-                      "align": "center"
+                      "className": "py-12"
                     }
                   ]
                 ]
@@ -500,73 +500,6 @@
                 "from": "persisting",
                 "to": "loading",
                 "event": "AgentActivityLogSaved",
-                "effects": [
-                  [
-                    "fetch",
-                    "AgentActivityLog",
-                    {
-                      "emit": {
-                        "failure": "AgentActivityLogLoadFailed",
-                        "success": "AgentActivityLogLoaded"
-                      }
-                    }
-                  ],
-                  [
-                    "render-ui",
-                    "main",
-                    {
-                      "type": "spinner"
-                    }
-                  ]
-                ]
-              },
-              {
-                "from": "persisting",
-                "to": "error",
-                "event": "AgentActivityLogSaveFailed",
-                "effects": [
-                  [
-                    "render-ui",
-                    "main",
-                    {
-                      "gap": "md",
-                      "align": "center",
-                      "type": "stack",
-                      "className": "py-12",
-                      "direction": "vertical",
-                      "children": [
-                        {
-                          "color": "destructive",
-                          "name": "alert-triangle",
-                          "type": "icon"
-                        },
-                        {
-                          "type": "typography",
-                          "variant": "h3",
-                          "content": "Failed to record entry"
-                        },
-                        {
-                          "type": "typography",
-                          "color": "muted",
-                          "content": "@payload.error",
-                          "variant": "body"
-                        },
-                        {
-                          "action": "INIT",
-                          "icon": "rotate-ccw",
-                          "label": "Retry",
-                          "type": "button",
-                          "variant": "primary"
-                        }
-                      ]
-                    }
-                  ]
-                ]
-              },
-              {
-                "from": "deleting",
-                "to": "loading",
-                "event": "AgentActivityLogDeleted",
                 "effects": [
                   [
                     "fetch",
@@ -588,26 +521,29 @@
                 ]
               },
               {
-                "from": "deleting",
+                "from": "persisting",
                 "to": "error",
-                "event": "AgentActivityLogDeleteFailed",
+                "event": "AgentActivityLogSaveFailed",
                 "effects": [
                   [
                     "render-ui",
                     "main",
                     {
-                      "className": "py-12",
+                      "type": "stack",
                       "direction": "vertical",
+                      "gap": "md",
+                      "className": "py-12",
+                      "align": "center",
                       "children": [
                         {
                           "type": "icon",
-                          "color": "destructive",
-                          "name": "alert-triangle"
+                          "name": "alert-triangle",
+                          "color": "destructive"
                         },
                         {
                           "variant": "h3",
-                          "type": "typography",
-                          "content": "Failed to clear activity log"
+                          "content": "Failed to record entry",
+                          "type": "typography"
                         },
                         {
                           "color": "muted",
@@ -616,16 +552,80 @@
                           "content": "@payload.error"
                         },
                         {
-                          "variant": "primary",
                           "type": "button",
+                          "variant": "primary",
                           "icon": "rotate-ccw",
-                          "action": "INIT",
-                          "label": "Retry"
+                          "label": "Retry",
+                          "action": "INIT"
                         }
-                      ],
+                      ]
+                    }
+                  ]
+                ]
+              },
+              {
+                "from": "deleting",
+                "to": "loading",
+                "event": "AgentActivityLogDeleted",
+                "effects": [
+                  [
+                    "fetch",
+                    "AgentActivityLog",
+                    {
+                      "emit": {
+                        "failure": "AgentActivityLogLoadFailed",
+                        "success": "AgentActivityLogLoaded"
+                      }
+                    }
+                  ],
+                  [
+                    "render-ui",
+                    "main",
+                    {
+                      "type": "spinner"
+                    }
+                  ]
+                ]
+              },
+              {
+                "from": "deleting",
+                "to": "error",
+                "event": "AgentActivityLogDeleteFailed",
+                "effects": [
+                  [
+                    "render-ui",
+                    "main",
+                    {
+                      "align": "center",
                       "type": "stack",
                       "gap": "md",
-                      "align": "center"
+                      "direction": "vertical",
+                      "className": "py-12",
+                      "children": [
+                        {
+                          "name": "alert-triangle",
+                          "color": "destructive",
+                          "type": "icon"
+                        },
+                        {
+                          "type": "typography",
+                          "variant": "h3",
+                          "content": "Failed to clear activity log"
+                        },
+                        {
+                          "color": "muted",
+                          "type": "typography",
+                          "content": "@payload.error",
+                          "variant": "body"
+                        },
+                        {
+                          "action": "INIT",
+                          "icon": "rotate-ccw",
+                          "variant": "primary",
+                          "type": "button",
+                          "label": "Retry"
+                        }
+                      ]
                     }
                   ]
                 ]
@@ -640,8 +640,8 @@
                     "AgentActivityLog",
                     {
                       "emit": {
-                        "failure": "AgentActivityLogLoadFailed",
-                        "success": "AgentActivityLogLoaded"
+                        "success": "AgentActivityLogLoaded",
+                        "failure": "AgentActivityLogLoadFailed"
                       }
                     }
                   ],

@@ -39,46 +39,46 @@ export type StdAboutPageEventKey = 'INIT';
  * without modifying its state-machine topology.
  */
 export interface StdAboutPageConfig {
-  /** Default: `""` */
-  heroTitleAccent?: string;
-  /** Default: `"Our Story"` */
-  article1Title?: string;
-  /** Default: `"We're building the future of software creation."` */
-  heroSubtitle?: string;
-  /** Default: `"Our Values"` */
-  article3Title?: string;
-  /** Default: `"Join Us"` */
-  heroPrimaryActionLabel?: string;
-  /** Default: `""` */
-  heroTag?: string;
-  /** Default: `"We exist to democratize software creation through natural language and AI."` */
-  article2Content?: string;
-  /** Default: `[{"bio":"Former VP Engineering at BigTech. Obsessed with developer experience.","name":"Jane Doe","nameAr":"","role":"CEO","id":"1","avatar":""},{"name":"John Smith","nameAr":"","id":"2","role":"CTO","bio":"Built distributed systems at scale for a decade.","avatar":""},{"avatar":"","id":"3","role":"Head of Design","nameAr":"","bio":"Believes great design is invisible.","name":"Alice Chen"}]` */
-  team?: EntityRow[];
-  /** Default: `"subtle"` */
-  heroBackground?: string;
-  /** Default: `"Our Mission"` */
-  article2Title?: string;
-  /** Default: `[{"categoryColor":"","href":"#","id":"1","description":"How Acme scaled from 1K to 1M users in 6 months.","title":"Acme Corp","category":"SaaS","linkLabel":"Read story"},{"description":"Globex reduced infrastructure costs by 70%.","categoryColor":"","linkLabel":"Read story","id":"2","category":"Fintech","href":"#","title":"Globex"}]` */
-  caseStudies?: EntityRow[];
-  /** Default: `"Speed, simplicity, and developer joy guide every decision we make."` */
-  article3Content?: string;
-  /** Default: `"Almadar started with a simple belief: everyone should be able to build software."` */
-  article1Content?: string;
-  /** Default: `"Want to work with us?"` */
-  ctaTitle?: string;
-  /** Default: `{"label":"View Open Roles","href":"/careers"}` */
-  ctaAction?: EntityRow;
-  /** Default: `"center"` */
-  heroAlign?: string;
   /** Default: `"/careers"` */
   heroPrimaryActionHref?: string;
-  /** Default: `[{"items":[{"href":"#","label":"Features"},{"label":"Pricing","href":"#"},{"href":"#","label":"Changelog"}],"title":"Product"},{"items":[{"href":"#","label":"About"},{"href":"#","label":"Careers"},{"label":"Blog","href":"#"}],"title":"Company"},{"items":[{"label":"Docs","href":"#"},{"href":"#","label":"Community"},{"label":"Support","href":"#"}],"title":"Resources"}]` */
-  footerColumns?: EntityRow[];
-  /** Default: `"© 2026 Almadar. All rights reserved."` */
-  footerCopyright?: string;
+  /** Default: `[{"linkLabel":"Read story","title":"Acme Corp","categoryColor":"","category":"SaaS","href":"#","description":"How Acme scaled from 1K to 1M users in 6 months.","id":"1"},{"category":"Fintech","href":"#","categoryColor":"","linkLabel":"Read story","id":"2","title":"Globex","description":"Globex reduced infrastructure costs by 70%."}]` */
+  caseStudies?: EntityRow[];
+  /** Default: `"center"` */
+  heroAlign?: string;
+  /** Default: `[{"bio":"Former VP Engineering at BigTech. Obsessed with developer experience.","avatar":"","name":"Jane Doe","id":"1","nameAr":"","role":"CEO"},{"name":"John Smith","nameAr":"","id":"2","role":"CTO","bio":"Built distributed systems at scale for a decade.","avatar":""},{"nameAr":"","name":"Alice Chen","avatar":"","id":"3","bio":"Believes great design is invisible.","role":"Head of Design"}]` */
+  team?: EntityRow[];
+  /** Default: `"Our Story"` */
+  article1Title?: string;
+  /** Default: `"Our Values"` */
+  article3Title?: string;
+  /** Default: `"Almadar started with a simple belief: everyone should be able to build software."` */
+  article1Content?: string;
+  /** Default: `{"label":"View Open Roles","href":"/careers"}` */
+  ctaAction?: EntityRow;
+  /** Default: `""` */
+  heroTag?: string;
+  /** Default: `"Join Us"` */
+  heroPrimaryActionLabel?: string;
+  /** Default: `"We exist to democratize software creation through natural language and AI."` */
+  article2Content?: string;
   /** Default: `"About Almadar"` */
   heroTitle?: string;
+  /** Default: `"Want to work with us?"` */
+  ctaTitle?: string;
+  /** Default: `[{"title":"Product","items":[{"label":"Features","href":"#"},{"label":"Pricing","href":"#"},{"href":"#","label":"Changelog"}]},{"title":"Company","items":[{"href":"#","label":"About"},{"label":"Careers","href":"#"},{"label":"Blog","href":"#"}]},{"title":"Resources","items":[{"label":"Docs","href":"#"},{"href":"#","label":"Community"},{"href":"#","label":"Support"}]}]` */
+  footerColumns?: EntityRow[];
+  /** Default: `""` */
+  heroTitleAccent?: string;
+  /** Default: `"We're building the future of software creation."` */
+  heroSubtitle?: string;
+  /** Default: `"© 2026 Almadar. All rights reserved."` */
+  footerCopyright?: string;
+  /** Default: `"Our Mission"` */
+  article2Title?: string;
+  /** Default: `"Speed, simplicity, and developer joy guide every decision we make."` */
+  article3Content?: string;
+  /** Default: `"subtle"` */
+  heroBackground?: string;
 }
 
 /**

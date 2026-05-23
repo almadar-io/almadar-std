@@ -120,22 +120,22 @@ export interface StdMatterMatterUpdateFailedPayload {
  * without modifying its state-machine topology.
  */
 export interface StdMatterConfig {
-  /** Default: `"Matters"` */
-  title?: string;
-  /** Default: `true` */
-  conflictCheckRequired?: boolean;
+  /** Default: `[{"variant":"caption","name":"matterNumber","label":"Matter #"},{"variant":"caption","label":"Title","name":"title"},{"name":"clientName","variant":"caption","label":"Client"},{"variant":"badge","label":"Practice","name":"practiceArea"},{"label":"Lead","name":"leadAttorney","variant":"caption"},{"name":"status","label":"Status","variant":"badge"}]` */
+  fields?: EntityRow[];
   /** Default: `""` */
   practiceArea?: string;
-  /** Default: `[{"event":"OPEN_MATTER","label":"Open","variant":"primary","icon":"arrow-right"},{"event":"CLOSE_MATTER","label":"Close","variant":"danger"}]` */
+  /** Default: `[{"event":"OPEN_MATTER","icon":"arrow-right","label":"Open","variant":"primary"},{"variant":"danger","label":"Close","event":"CLOSE_MATTER"}]` */
   itemActions?: EntityRow[];
-  /** Default: `0` */
-  billingRateDefault?: number;
-  /** Default: `[{"variant":"caption","name":"matterNumber","label":"Matter #"},{"name":"title","label":"Title","variant":"caption"},{"name":"clientName","label":"Client","variant":"caption"},{"variant":"badge","label":"Practice","name":"practiceArea"},{"label":"Lead","variant":"caption","name":"leadAttorney"},{"variant":"badge","name":"status","label":"Status"}]` */
-  fields?: EntityRow[];
-  /** Default: `false` */
-  retainerRequired?: boolean;
+  /** Default: `true` */
+  conflictCheckRequired?: boolean;
+  /** Default: `"Matters"` */
+  title?: string;
   /** Default: `"standard"` */
   clientConfidentialityLevel?: 'standard' | 'elevated' | 'restricted';
+  /** Default: `false` */
+  retainerRequired?: boolean;
+  /** Default: `0` */
+  billingRateDefault?: number;
 }
 
 /**

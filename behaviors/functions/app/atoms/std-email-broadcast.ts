@@ -111,28 +111,28 @@ export interface StdEmailBroadcastEmailBroadcastUpdateFailedPayload {
  * without modifying its state-machine topology.
  */
 export interface StdEmailBroadcastConfig {
+  /** Default: `true` */
+  suppressionListEnabled?: boolean;
+  /** Default: `[{"name":"name","variant":"caption","label":"Name"},{"name":"subject","variant":"caption","label":"Subject"},{"label":"Status","variant":"badge","name":"status"},{"label":"Recipients","variant":"caption","name":"recipientCount"},{"label":"Sent","variant":"caption","name":"sentCount"},{"label":"Scheduled","variant":"caption","name":"scheduledAt"}]` */
+  fields?: EntityRow[];
+  /** Default: `5` */
+  frequencyCapPerWeek?: number;
+  /** Default: `true` */
+  gdprConsentRequired?: boolean;
   /** Default: `"Email Broadcasts"` */
   title?: string;
-  /** Default: `[{"variant":"caption","label":"Name","name":"name"},{"name":"subject","label":"Subject","variant":"caption"},{"name":"status","variant":"badge","label":"Status"},{"variant":"caption","label":"Recipients","name":"recipientCount"},{"variant":"caption","name":"sentCount","label":"Sent"},{"name":"scheduledAt","label":"Scheduled","variant":"caption"}]` */
-  fields?: EntityRow[];
-  /** Default: `[{"variant":"primary","event":"OPEN_BROADCAST","icon":"arrow-right","label":"Open"},{"event":"CANCEL_BROADCAST","label":"Cancel","variant":"danger"}]` */
-  itemActions?: EntityRow[];
   /** Default: `1000` */
   sendsPerHour?: number;
   /** Default: `true` */
-  suppressionListEnabled?: boolean;
-  /** Default: `true` */
   trackClicks?: boolean;
   /** Default: `true` */
-  gdprConsentRequired?: boolean;
-  /** Default: `true` */
-  includeUnsubscribeLink?: boolean;
+  respectQuietHours?: boolean;
   /** Default: `""` */
   physicalAddressFooter?: string;
   /** Default: `true` */
-  respectQuietHours?: boolean;
-  /** Default: `5` */
-  frequencyCapPerWeek?: number;
+  includeUnsubscribeLink?: boolean;
+  /** Default: `[{"variant":"primary","icon":"arrow-right","label":"Open","event":"OPEN_BROADCAST"},{"event":"CANCEL_BROADCAST","variant":"danger","label":"Cancel"}]` */
+  itemActions?: EntityRow[];
   /** Default: `true` */
   trackOpens?: boolean;
 }

@@ -85,32 +85,32 @@ export interface StdStockLevelStockLevelLoadFailedPayload {
  * without modifying its state-machine topology.
  */
 export interface StdStockLevelConfig {
+  /** Default: `10` */
+  lowStockThreshold?: number;
+  /** Default: `[{"label":"SKU","variant":"caption","name":"sku"},{"label":"Product","name":"productName","variant":"caption"},{"variant":"caption","name":"locationId","label":"Location"},{"name":"onHand","variant":"caption","label":"On Hand"},{"name":"reorderPoint","label":"Reorder At","variant":"caption"}]` */
+  fields?: EntityRow[];
   /** Default: `false` */
-  expiryTrackingEnabled?: boolean;
-  /** Default: `"Stock Levels"` */
-  title?: string;
-  /** Default: `""` */
-  defaultWarehouse?: string;
+  lotTrackingEnabled?: boolean;
+  /** Default: `[{"variant":"primary","event":"OPEN_STOCK","icon":"arrow-right","label":"Open"},{"event":"ADJUST_STOCK","label":"Adjust","variant":"danger"}]` */
+  itemActions?: EntityRow[];
   /** Default: `false` */
-  multiLocationEnabled?: boolean;
+  serialTrackingEnabled?: boolean;
   /** Default: `5` */
   reorderPoint?: number;
   /** Default: `false` */
-  serialTrackingEnabled?: boolean;
+  multiLocationEnabled?: boolean;
   /** Default: `false` */
-  hazmatEnabled?: boolean;
-  /** Default: `7` */
-  safetyStockDays?: number;
-  /** Default: `[{"label":"Open","variant":"primary","event":"OPEN_STOCK","icon":"arrow-right"},{"label":"Adjust","event":"ADJUST_STOCK","variant":"danger"}]` */
-  itemActions?: EntityRow[];
+  expiryTrackingEnabled?: boolean;
   /** Default: `30` */
   cycleCountFrequencyDays?: number;
-  /** Default: `10` */
-  lowStockThreshold?: number;
+  /** Default: `"Stock Levels"` */
+  title?: string;
+  /** Default: `7` */
+  safetyStockDays?: number;
+  /** Default: `""` */
+  defaultWarehouse?: string;
   /** Default: `false` */
-  lotTrackingEnabled?: boolean;
-  /** Default: `[{"name":"sku","label":"SKU","variant":"caption"},{"variant":"caption","name":"productName","label":"Product"},{"name":"locationId","variant":"caption","label":"Location"},{"label":"On Hand","variant":"caption","name":"onHand"},{"variant":"caption","name":"reorderPoint","label":"Reorder At"}]` */
-  fields?: EntityRow[];
+  hazmatEnabled?: boolean;
 }
 
 /**

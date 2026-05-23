@@ -158,42 +158,42 @@ export interface StdTicketTierTicketTierUpdateFailedPayload {
  * without modifying its state-machine topology.
  */
 export interface StdTicketTierConfig {
-  /** Default: `false` */
-  coursingEnabled?: boolean;
-  /** Default: `0` */
-  lateFeeAmount?: number;
-  /** Default: `"Ticket Tiers"` */
-  title?: string;
-  /** Default: `""` */
-  complianceJurisdiction?: string;
-  /** Default: `"none"` */
-  lateFeePolicy?: 'none' | 'flat' | 'percent';
-  /** Default: `[{"label":"Tier","variant":"badge","name":"name"},{"variant":"caption","name":"price","label":"Price"},{"variant":"badge","label":"Currency","name":"currency"},{"variant":"caption","name":"quantityTotal","label":"Total"},{"variant":"caption","label":"Sold","name":"quantitySold"},{"name":"status","label":"Status","variant":"badge"}]` */
-  fields?: EntityRow[];
-  /** Default: `[{"variant":"primary","event":"OPEN_TIER","icon":"arrow-right","label":"Open"},{"variant":"danger","label":"Close","event":"CLOSE","icon":"x"}]` */
-  itemActions?: EntityRow[];
-  /** Default: `"exclusive"` */
-  taxStrategy?: 'inclusive' | 'exclusive' | 'none';
-  /** Default: `[0]` */
-  tipPresets?: number[];
-  /** Default: `0` */
-  gracePeriodDays?: number;
-  /** Default: `false` */
-  allowSplitChecks?: boolean;
-  /** Default: `"half-up"` */
-  roundingMode?: 'bankers' | 'half-up' | 'down';
-  /** Default: `0` */
-  serviceCharge?: number;
-  /** Default: `"USD"` */
-  currency?: string;
   /** Default: `7` */
   retentionYears?: number;
-  /** Default: `false` */
-  kitchenAutoFire?: boolean;
   /** Default: `60` */
   tableTurnoverTargetMinutes?: number;
+  /** Default: `"USD"` */
+  currency?: string;
+  /** Default: `0` */
+  lateFeeAmount?: number;
+  /** Default: `"none"` */
+  lateFeePolicy?: 'none' | 'flat' | 'percent';
+  /** Default: `false` */
+  kitchenAutoFire?: boolean;
+  /** Default: `[0]` */
+  tipPresets?: number[];
+  /** Default: `"half-up"` */
+  roundingMode?: 'bankers' | 'half-up' | 'down';
+  /** Default: `false` */
+  allowSplitChecks?: boolean;
+  /** Default: `"Ticket Tiers"` */
+  title?: string;
+  /** Default: `0` */
+  serviceCharge?: number;
+  /** Default: `0` */
+  gracePeriodDays?: number;
+  /** Default: `[{"icon":"arrow-right","event":"OPEN_TIER","label":"Open","variant":"primary"},{"label":"Close","variant":"danger","event":"CLOSE","icon":"x"}]` */
+  itemActions?: EntityRow[];
+  /** Default: `""` */
+  complianceJurisdiction?: string;
+  /** Default: `false` */
+  coursingEnabled?: boolean;
   /** Default: `true` */
   allergenWarningsEnabled?: boolean;
+  /** Default: `[{"variant":"badge","label":"Tier","name":"name"},{"label":"Price","name":"price","variant":"caption"},{"name":"currency","variant":"badge","label":"Currency"},{"name":"quantityTotal","label":"Total","variant":"caption"},{"label":"Sold","variant":"caption","name":"quantitySold"},{"name":"status","variant":"badge","label":"Status"}]` */
+  fields?: EntityRow[];
+  /** Default: `"exclusive"` */
+  taxStrategy?: 'inclusive' | 'exclusive' | 'none';
 }
 
 /**

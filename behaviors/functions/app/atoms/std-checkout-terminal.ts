@@ -89,42 +89,42 @@ export interface StdCheckoutTerminalCheckoutSessionLoadFailedPayload {
  * without modifying its state-machine topology.
  */
 export interface StdCheckoutTerminalConfig {
-  /** Default: `false` */
-  allergenWarningsEnabled?: boolean;
-  /** Default: `60` */
-  tableTurnoverTargetMinutes?: number;
-  /** Default: `[]` */
-  blackoutDates?: string[];
-  /** Default: `false` */
-  allowSplitChecks?: boolean;
   /** Default: `1` */
   rescheduleWindowHours?: number;
-  /** Default: `[{"variant":"caption","name":"terminalId","label":"Terminal"},{"variant":"caption","label":"Cashier","name":"cashierName"},{"name":"status","variant":"badge","label":"Status"},{"variant":"caption","name":"total","label":"Total"},{"name":"openedAt","variant":"caption","label":"Opened"}]` */
-  fields?: EntityRow[];
+  /** Default: `[]` */
+  blackoutDates?: string[];
+  /** Default: `0` */
+  serviceCharge?: number;
+  /** Default: `false` */
+  allowSplitChecks?: boolean;
+  /** Default: `[15,18,20,25]` */
+  tipPresets?: number[];
+  /** Default: `false` */
+  coursingEnabled?: boolean;
+  /** Default: `1` */
+  maxReschedules?: number;
+  /** Default: `"free"` */
+  cancellationPolicy?: 'free' | 'partial-refund' | 'no-refund';
+  /** Default: `[{"label":"Open","variant":"primary","event":"OPEN_TERMINAL"},{"event":"VOID_SESSION","label":"Void","variant":"danger"}]` */
+  itemActions?: EntityRow[];
+  /** Default: `60` */
+  noShowGracePeriodMinutes?: number;
+  /** Default: `"06:00-23:00"` */
+  bookingHours?: string;
+  /** Default: `"Terminals"` */
+  title?: string;
   /** Default: `0` */
   leadTimeMinutes?: number;
   /** Default: `60` */
-  noShowGracePeriodMinutes?: number;
-  /** Default: `0` */
-  serviceCharge?: number;
-  /** Default: `"06:00-23:00"` */
-  bookingHours?: string;
+  tableTurnoverTargetMinutes?: number;
   /** Default: `1` */
   bookingWindowDays?: number;
+  /** Default: `[{"name":"terminalId","variant":"caption","label":"Terminal"},{"name":"cashierName","label":"Cashier","variant":"caption"},{"name":"status","variant":"badge","label":"Status"},{"label":"Total","variant":"caption","name":"total"},{"label":"Opened","variant":"caption","name":"openedAt"}]` */
+  fields?: EntityRow[];
   /** Default: `false` */
   kitchenAutoFire?: boolean;
-  /** Default: `[15,18,20,25]` */
-  tipPresets?: number[];
-  /** Default: `[{"label":"Open","variant":"primary","event":"OPEN_TERMINAL"},{"variant":"danger","label":"Void","event":"VOID_SESSION"}]` */
-  itemActions?: EntityRow[];
-  /** Default: `1` */
-  maxReschedules?: number;
   /** Default: `false` */
-  coursingEnabled?: boolean;
-  /** Default: `"free"` */
-  cancellationPolicy?: 'free' | 'partial-refund' | 'no-refund';
-  /** Default: `"Terminals"` */
-  title?: string;
+  allergenWarningsEnabled?: boolean;
 }
 
 /**

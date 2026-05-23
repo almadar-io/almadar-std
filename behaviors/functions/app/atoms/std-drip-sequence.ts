@@ -110,29 +110,29 @@ export interface StdDripSequenceDripSequenceUpdateFailedPayload {
  */
 export interface StdDripSequenceConfig {
   /** Default: `true` */
-  includeUnsubscribeLink?: boolean;
-  /** Default: `true` */
-  suppressionListEnabled?: boolean;
-  /** Default: `true` */
-  trackClicks?: boolean;
-  /** Default: `""` */
-  physicalAddressFooter?: string;
-  /** Default: `[{"variant":"caption","label":"Name","name":"name"},{"label":"Description","name":"description","variant":"caption"},{"label":"Trigger","name":"triggerEvent","variant":"caption"},{"label":"Status","variant":"badge","name":"status"},{"variant":"caption","name":"totalEnrolled","label":"Enrolled"},{"name":"totalCompleted","label":"Completed","variant":"caption"}]` */
+  respectQuietHours?: boolean;
+  /** Default: `[{"label":"Name","variant":"caption","name":"name"},{"label":"Description","name":"description","variant":"caption"},{"label":"Trigger","variant":"caption","name":"triggerEvent"},{"variant":"badge","label":"Status","name":"status"},{"name":"totalEnrolled","variant":"caption","label":"Enrolled"},{"label":"Completed","name":"totalCompleted","variant":"caption"}]` */
   fields?: EntityRow[];
   /** Default: `true` */
+  gdprConsentRequired?: boolean;
+  /** Default: `true` */
   trackOpens?: boolean;
-  /** Default: `5` */
-  frequencyCapPerWeek?: number;
+  /** Default: `true` */
+  trackClicks?: boolean;
+  /** Default: `true` */
+  includeUnsubscribeLink?: boolean;
   /** Default: `"Drip Sequences"` */
   title?: string;
+  /** Default: `""` */
+  physicalAddressFooter?: string;
   /** Default: `500` */
   sendsPerHour?: number;
-  /** Default: `true` */
-  gdprConsentRequired?: boolean;
-  /** Default: `[{"icon":"arrow-right","event":"OPEN_SEQUENCE","label":"Open","variant":"primary"},{"event":"PAUSE","variant":"danger","label":"Pause"}]` */
+  /** Default: `[{"label":"Open","event":"OPEN_SEQUENCE","icon":"arrow-right","variant":"primary"},{"label":"Pause","event":"PAUSE","variant":"danger"}]` */
   itemActions?: EntityRow[];
   /** Default: `true` */
-  respectQuietHours?: boolean;
+  suppressionListEnabled?: boolean;
+  /** Default: `5` */
+  frequencyCapPerWeek?: number;
 }
 
 /**

@@ -111,30 +111,30 @@ export interface StdPayoutLedgerPayoutUpdateFailedPayload {
  * without modifying its state-machine topology.
  */
 export interface StdPayoutLedgerConfig {
-  /** Default: `0` */
-  lateFeeAmount?: number;
-  /** Default: `"USD"` */
-  currency?: string;
-  /** Default: `"none"` */
-  lateFeePolicy?: 'none' | 'flat' | 'percent';
-  /** Default: `"none"` */
-  taxStrategy?: 'inclusive' | 'exclusive' | 'none';
-  /** Default: `7` */
-  retentionYears?: number;
-  /** Default: `3` */
-  gracePeriodDays?: number;
-  /** Default: `[{"variant":"caption","name":"vendorId","label":"Vendor"},{"name":"amount","variant":"caption","label":"Amount"},{"label":"Currency","name":"currency","variant":"badge"},{"label":"Status","name":"status","variant":"badge"},{"variant":"caption","label":"Bank","name":"bankAccountMasked"},{"name":"requestedAt","variant":"caption","label":"Requested"}]` */
-  fields?: EntityRow[];
-  /** Default: `""` */
-  complianceJurisdiction?: string;
-  /** Default: `"half-up"` */
-  roundingMode?: 'bankers' | 'half-up' | 'down';
   /** Default: `50` */
   minimumWithdrawal?: number;
+  /** Default: `0` */
+  lateFeeAmount?: number;
   /** Default: `"Payouts"` */
   title?: string;
-  /** Default: `[{"label":"Open","event":"OPEN_PAYOUT","variant":"primary","icon":"arrow-right"},{"label":"Withdraw","variant":"danger","event":"REQUEST_WITHDRAW"}]` */
+  /** Default: `7` */
+  retentionYears?: number;
+  /** Default: `[{"label":"Open","event":"OPEN_PAYOUT","icon":"arrow-right","variant":"primary"},{"event":"REQUEST_WITHDRAW","variant":"danger","label":"Withdraw"}]` */
   itemActions?: EntityRow[];
+  /** Default: `"none"` */
+  taxStrategy?: 'inclusive' | 'exclusive' | 'none';
+  /** Default: `""` */
+  complianceJurisdiction?: string;
+  /** Default: `"USD"` */
+  currency?: string;
+  /** Default: `[{"label":"Vendor","variant":"caption","name":"vendorId"},{"name":"amount","label":"Amount","variant":"caption"},{"label":"Currency","variant":"badge","name":"currency"},{"name":"status","variant":"badge","label":"Status"},{"name":"bankAccountMasked","label":"Bank","variant":"caption"},{"variant":"caption","name":"requestedAt","label":"Requested"}]` */
+  fields?: EntityRow[];
+  /** Default: `3` */
+  gracePeriodDays?: number;
+  /** Default: `"half-up"` */
+  roundingMode?: 'bankers' | 'half-up' | 'down';
+  /** Default: `"none"` */
+  lateFeePolicy?: 'none' | 'flat' | 'percent';
 }
 
 /**

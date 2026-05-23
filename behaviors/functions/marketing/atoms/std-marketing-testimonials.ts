@@ -41,7 +41,7 @@ export type StdMarketingTestimonialsEventKey = 'INIT';
 export interface StdMarketingTestimonialsConfig {
   /** Default: `"quotes"` */
   variant?: string;
-  /** Default: `[{"logo":"","name":"Acme Corp","quote":"Almadar cut our time-to-market by 80%."},{"name":"Globex","logo":"","quote":"The most intuitive platform we've ever used."},{"name":"Initech","logo":"","quote":"We replaced three tools with one."}]` */
+  /** Default: `[{"name":"Acme Corp","logo":"","quote":"Almadar cut our time-to-market by 80%."},{"name":"Globex","logo":"","quote":"The most intuitive platform we've ever used."},{"logo":"","name":"Initech","quote":"We replaced three tools with one."}]` */
   items?: EntityRow[];
 }
 

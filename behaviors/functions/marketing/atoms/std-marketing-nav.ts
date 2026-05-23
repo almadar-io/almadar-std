@@ -47,16 +47,16 @@ export interface StdMarketingNavNavClickPayload {
  * without modifying its state-machine topology.
  */
 export interface StdMarketingNavConfig {
-  /** Default: `""` */
-  logoSrc?: string;
-  /** Default: `"Almadar"` */
-  brandName?: string;
-  /** Default: `"Get Started"` */
-  primaryActionLabel?: string;
   /** Default: `"#"` */
   primaryActionHref?: string;
-  /** Default: `[{"href":"#product","label":"Product"},{"href":"#pricing","label":"Pricing"},{"label":"About","href":"#about"},{"href":"#docs","label":"Docs"}]` */
+  /** Default: `[{"label":"Product","href":"#product"},{"label":"Pricing","href":"#pricing"},{"label":"About","href":"#about"},{"label":"Docs","href":"#docs"}]` */
   items?: EntityRow[];
+  /** Default: `"Almadar"` */
+  brandName?: string;
+  /** Default: `""` */
+  logoSrc?: string;
+  /** Default: `"Get Started"` */
+  primaryActionLabel?: string;
 }
 
 /**

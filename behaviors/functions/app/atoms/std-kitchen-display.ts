@@ -158,18 +158,20 @@ export interface StdKitchenDisplayKitchenTicketUpdateFailedPayload {
  * without modifying its state-machine topology.
  */
 export interface StdKitchenDisplayConfig {
+  /** Default: `[{"label":"Order","name":"orderId","variant":"caption"},{"label":"Table","name":"tableLabel","variant":"caption"},{"variant":"caption","name":"serverName","label":"Server"},{"label":"Status","name":"status","variant":"badge"},{"name":"aging","label":"Aging","variant":"badge"},{"name":"receivedAt","label":"Received","variant":"caption"}]` */
+  fields?: EntityRow[];
+  /** Default: `false` */
+  kitchenAutoFire?: boolean;
+  /** Default: `[{"label":"Open","variant":"primary","event":"OPEN_TICKET","icon":"arrow-right"},{"variant":"danger","event":"MARK_SERVED","label":"Mark Served","icon":"utensils"}]` */
+  itemActions?: EntityRow[];
+  /** Default: `false` */
+  coursingEnabled?: boolean;
+  /** Default: `true` */
+  allowSplitChecks?: boolean;
   /** Default: `20` */
   overdueMinutes?: number;
   /** Default: `true` */
-  allowSplitChecks?: boolean;
-  /** Default: `false` */
-  kitchenAutoFire?: boolean;
-  /** Default: `false` */
-  coursingEnabled?: boolean;
-  /** Default: `[{"name":"orderId","label":"Order","variant":"caption"},{"variant":"caption","label":"Table","name":"tableLabel"},{"name":"serverName","label":"Server","variant":"caption"},{"name":"status","label":"Status","variant":"badge"},{"label":"Aging","variant":"badge","name":"aging"},{"variant":"caption","name":"receivedAt","label":"Received"}]` */
-  fields?: EntityRow[];
-  /** Default: `[{"variant":"primary","event":"OPEN_TICKET","icon":"arrow-right","label":"Open"},{"event":"MARK_SERVED","variant":"danger","label":"Mark Served","icon":"utensils"}]` */
-  itemActions?: EntityRow[];
+  allergenWarningsEnabled?: boolean;
   /** Default: `0` */
   serviceCharge?: number;
   /** Default: `[15,18,20,25]` */
@@ -178,8 +180,6 @@ export interface StdKitchenDisplayConfig {
   tableTurnoverTargetMinutes?: number;
   /** Default: `"Kitchen Display"` */
   title?: string;
-  /** Default: `true` */
-  allergenWarningsEnabled?: boolean;
 }
 
 /**

@@ -124,28 +124,28 @@ export interface StdDunningDunningCaseUpdateFailedPayload {
  * without modifying its state-machine topology.
  */
 export interface StdDunningConfig {
-  /** Default: `"half-up"` */
-  roundingMode?: 'bankers' | 'half-up' | 'down';
-  /** Default: `0` */
-  lateFeeAmount?: number;
-  /** Default: `7` */
-  retentionYears?: number;
   /** Default: `7` */
   gracePeriodDays?: number;
+  /** Default: `""` */
+  complianceJurisdiction?: string;
   /** Default: `"USD"` */
   currency?: string;
   /** Default: `"none"` */
   taxStrategy?: 'inclusive' | 'exclusive' | 'none';
-  /** Default: `[{"variant":"caption","name":"subscriptionId","label":"Subscription"},{"name":"customerId","variant":"caption","label":"Customer"},{"label":"Severity","name":"severity","variant":"badge"},{"label":"Attempt","name":"attemptNumber","variant":"caption"},{"variant":"caption","name":"amountDue","label":"Amount Due"},{"label":"Status","variant":"badge","name":"status"}]` */
+  /** Default: `"half-up"` */
+  roundingMode?: 'bankers' | 'half-up' | 'down';
+  /** Default: `0` */
+  lateFeeAmount?: number;
+  /** Default: `"Dunning Cases"` */
+  title?: string;
+  /** Default: `7` */
+  retentionYears?: number;
+  /** Default: `[{"event":"OPEN_CASE","variant":"primary","label":"Open","icon":"arrow-right"},{"icon":"ban","event":"SUSPEND","label":"Suspend","variant":"danger"}]` */
+  itemActions?: EntityRow[];
+  /** Default: `[{"name":"subscriptionId","label":"Subscription","variant":"caption"},{"name":"customerId","label":"Customer","variant":"caption"},{"name":"severity","label":"Severity","variant":"badge"},{"label":"Attempt","variant":"caption","name":"attemptNumber"},{"variant":"caption","label":"Amount Due","name":"amountDue"},{"name":"status","label":"Status","variant":"badge"}]` */
   fields?: EntityRow[];
   /** Default: `"none"` */
   lateFeePolicy?: 'none' | 'flat' | 'percent';
-  /** Default: `[{"label":"Open","variant":"primary","event":"OPEN_CASE","icon":"arrow-right"},{"icon":"ban","label":"Suspend","event":"SUSPEND","variant":"danger"}]` */
-  itemActions?: EntityRow[];
-  /** Default: `"Dunning Cases"` */
-  title?: string;
-  /** Default: `""` */
-  complianceJurisdiction?: string;
 }
 
 /**

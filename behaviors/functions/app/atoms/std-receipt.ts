@@ -89,28 +89,28 @@ export interface StdReceiptReceiptLoadFailedPayload {
  * without modifying its state-machine topology.
  */
 export interface StdReceiptConfig {
-  /** Default: `"none"` */
-  lateFeePolicy?: 'none' | 'flat' | 'percent';
-  /** Default: `7` */
-  retentionYears?: number;
-  /** Default: `0` */
-  lateFeeAmount?: number;
-  /** Default: `"exclusive"` */
-  taxStrategy?: 'inclusive' | 'exclusive' | 'none';
-  /** Default: `"USD"` */
-  currency?: string;
-  /** Default: `[{"label":"Receipt #","variant":"caption","name":"receiptNumber"},{"name":"recipientName","variant":"caption","label":"Recipient"},{"variant":"badge","label":"Type","name":"transactionType"},{"name":"total","label":"Total","variant":"caption"},{"name":"issuedAt","label":"Issued","variant":"caption"}]` */
-  fields?: EntityRow[];
-  /** Default: `0` */
-  gracePeriodDays?: number;
-  /** Default: `"half-up"` */
-  roundingMode?: 'bankers' | 'half-up' | 'down';
   /** Default: `"Receipts"` */
   title?: string;
+  /** Default: `"none"` */
+  lateFeePolicy?: 'none' | 'flat' | 'percent';
+  /** Default: `"USD"` */
+  currency?: string;
+  /** Default: `7` */
+  retentionYears?: number;
   /** Default: `""` */
   complianceJurisdiction?: string;
-  /** Default: `[{"icon":"arrow-right","event":"OPEN_RECEIPT","label":"Open","variant":"primary"},{"variant":"danger","label":"Reprint","event":"REPRINT_RECEIPT"}]` */
+  /** Default: `0` */
+  gracePeriodDays?: number;
+  /** Default: `"exclusive"` */
+  taxStrategy?: 'inclusive' | 'exclusive' | 'none';
+  /** Default: `0` */
+  lateFeeAmount?: number;
+  /** Default: `[{"label":"Receipt #","variant":"caption","name":"receiptNumber"},{"name":"recipientName","label":"Recipient","variant":"caption"},{"variant":"badge","label":"Type","name":"transactionType"},{"name":"total","variant":"caption","label":"Total"},{"name":"issuedAt","label":"Issued","variant":"caption"}]` */
+  fields?: EntityRow[];
+  /** Default: `[{"icon":"arrow-right","event":"OPEN_RECEIPT","variant":"primary","label":"Open"},{"variant":"danger","event":"REPRINT_RECEIPT","label":"Reprint"}]` */
   itemActions?: EntityRow[];
+  /** Default: `"half-up"` */
+  roundingMode?: 'bankers' | 'half-up' | 'down';
 }
 
 /**

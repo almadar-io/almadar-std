@@ -85,26 +85,26 @@ export interface StdRouteOptimizeRouteLoadFailedPayload {
  * without modifying its state-machine topology.
  */
 export interface StdRouteOptimizeConfig {
-  /** Default: `""` */
-  defaultWarehouse?: string;
-  /** Default: `false` */
-  lotTrackingEnabled?: boolean;
-  /** Default: `[{"name":"technicianId","label":"Technician","variant":"caption"},{"label":"Distance (km)","variant":"caption","name":"totalDistanceKm"},{"variant":"caption","name":"totalDurationMinutes","label":"Duration (min)"},{"variant":"caption","name":"optimizedAt","label":"Optimized"}]` */
-  fields?: EntityRow[];
-  /** Default: `false` */
-  hazmatEnabled?: boolean;
+  /** Default: `30` */
+  cycleCountFrequencyDays?: number;
   /** Default: `false` */
   multiLocationEnabled?: boolean;
   /** Default: `false` */
-  serialTrackingEnabled?: boolean;
-  /** Default: `30` */
-  cycleCountFrequencyDays?: number;
-  /** Default: `[{"event":"OPEN_ROUTE","icon":"arrow-right","variant":"primary","label":"Open"},{"variant":"danger","label":"Optimize","event":"OPTIMIZE"}]` */
-  itemActions?: EntityRow[];
+  lotTrackingEnabled?: boolean;
+  /** Default: `false` */
+  hazmatEnabled?: boolean;
   /** Default: `false` */
   expiryTrackingEnabled?: boolean;
   /** Default: `"Routes"` */
   title?: string;
+  /** Default: `[{"variant":"primary","label":"Open","event":"OPEN_ROUTE","icon":"arrow-right"},{"label":"Optimize","event":"OPTIMIZE","variant":"danger"}]` */
+  itemActions?: EntityRow[];
+  /** Default: `[{"variant":"caption","label":"Technician","name":"technicianId"},{"label":"Distance (km)","name":"totalDistanceKm","variant":"caption"},{"name":"totalDurationMinutes","label":"Duration (min)","variant":"caption"},{"variant":"caption","name":"optimizedAt","label":"Optimized"}]` */
+  fields?: EntityRow[];
+  /** Default: `""` */
+  defaultWarehouse?: string;
+  /** Default: `false` */
+  serialTrackingEnabled?: boolean;
 }
 
 /**

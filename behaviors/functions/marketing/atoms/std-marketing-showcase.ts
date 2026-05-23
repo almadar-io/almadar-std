@@ -47,7 +47,7 @@ export interface StdMarketingShowcaseShowcaseClickPayload {
  * without modifying its state-machine topology.
  */
 export interface StdMarketingShowcaseConfig {
-  /** Default: `[{"image":{"src":"","alt":"Dashboard preview"},"id":"1","title":"Dashboard","accentColor":"","description":"Real-time analytics at a glance.","href":"","badge":"New"},{"description":"GraphQL and REST in one click.","id":"2","image":{"alt":"API docs preview","src":""},"title":"API","href":"","badge":"","accentColor":""},{"href":"","description":"Native apps without native code.","title":"Mobile","badge":"Beta","image":{"alt":"Mobile app preview","src":""},"accentColor":"","id":"3"}]` */
+  /** Default: `[{"description":"Real-time analytics at a glance.","id":"1","image":{"alt":"Dashboard preview","src":""},"badge":"New","accentColor":"","href":"","title":"Dashboard"},{"id":"2","href":"","badge":"","description":"GraphQL and REST in one click.","image":{"src":"","alt":"API docs preview"},"accentColor":"","title":"API"},{"accentColor":"","id":"3","description":"Native apps without native code.","title":"Mobile","image":{"src":"","alt":"Mobile app preview"},"badge":"Beta","href":""}]` */
   items?: EntityRow[];
 }
 

@@ -117,51 +117,50 @@
                     "main",
                     {
                       "type": "stack",
-                      "gap": "lg",
-                      "align": "center",
                       "direction": "vertical",
                       "children": [
                         {
                           "type": "stack",
-                          "direction": "horizontal",
                           "gap": "md",
                           "align": "center",
                           "children": [
                             {
-                              "type": "icon",
-                              "name": "shield"
+                              "name": "shield",
+                              "type": "icon"
                             },
                             {
-                              "variant": "h2",
                               "type": "typography",
+                              "variant": "h2",
                               "content": "Bearer API Tester"
                             }
-                          ]
+                          ],
+                          "direction": "horizontal"
                         },
                         {
                           "type": "divider"
                         },
                         {
-                          "gap": "md",
+                          "direction": "vertical",
                           "type": "stack",
+                          "gap": "md",
                           "children": [
                             {
                               "options": [
                                 {
-                                  "label": "GET",
-                                  "value": "GET"
+                                  "value": "GET",
+                                  "label": "GET"
                                 },
                                 {
-                                  "value": "POST",
-                                  "label": "POST"
+                                  "label": "POST",
+                                  "value": "POST"
                                 },
                                 {
-                                  "value": "PUT",
-                                  "label": "PUT"
+                                  "label": "PUT",
+                                  "value": "PUT"
                                 },
                                 {
-                                  "value": "DELETE",
-                                  "label": "DELETE"
+                                  "label": "DELETE",
+                                  "value": "DELETE"
                                 }
                               ],
                               "type": "select"
@@ -171,25 +170,26 @@
                               "placeholder": "/users"
                             },
                             {
-                              "type": "textarea",
-                              "placeholder": "JSON request body"
+                              "placeholder": "JSON request body",
+                              "type": "textarea"
                             },
                             {
-                              "type": "input",
                               "inputType": "password",
+                              "type": "input",
                               "placeholder": "Bearer token"
                             }
-                          ],
-                          "direction": "vertical"
+                          ]
                         },
                         {
-                          "icon": "send",
-                          "action": "SEND",
-                          "type": "button",
                           "label": "Send",
-                          "variant": "primary"
+                          "variant": "primary",
+                          "icon": "send",
+                          "type": "button",
+                          "action": "SEND"
                         }
-                      ]
+                      ],
+                      "align": "center",
+                      "gap": "lg"
                     }
                   ]
                 ]
@@ -425,8 +425,8 @@
                     "ServiceCustomBearer",
                     {
                       "emit": {
-                        "failure": "ServiceCustomBearerLoadFailed",
-                        "success": "ServiceCustomBearerLoaded"
+                        "success": "ServiceCustomBearerLoaded",
+                        "failure": "ServiceCustomBearerLoadFailed"
                       }
                     }
                   ],
@@ -435,8 +435,8 @@
                     "main",
                     {
                       "gap": "md",
-                      "direction": "vertical",
                       "type": "stack",
+                      "direction": "vertical",
                       "children": [
                         "@config.uiTrait"
                       ]
@@ -453,9 +453,9 @@
                     "render-ui",
                     "main",
                     {
-                      "message": "Sending bearer-authenticated request...",
+                      "type": "loading-state",
                       "title": "Calling API...",
-                      "type": "loading-state"
+                      "message": "Sending bearer-authenticated request..."
                     }
                   ],
                   [
@@ -463,14 +463,14 @@
                     "customBearer",
                     "@config.method",
                     {
-                      "endpoint": "@config.endpoint",
                       "body": "@config.body",
-                      "token": "@config.token"
+                      "token": "@config.token",
+                      "endpoint": "@config.endpoint"
                     },
                     {
                       "emit": {
-                        "failure": "FAILED",
-                        "success": "BearerDone"
+                        "success": "BearerDone",
+                        "failure": "FAILED"
                       }
                     }
                   ]
@@ -500,42 +500,42 @@
                     "emit",
                     "ServiceCustomBearerCustomBearerCompleted",
                     {
-                      "id": "@payload.id",
-                      "result": "@payload.result"
+                      "result": "@payload.result",
+                      "id": "@payload.id"
                     }
                   ],
                   [
                     "render-ui",
                     "main",
                     {
+                      "type": "stack",
+                      "gap": "lg",
+                      "direction": "vertical",
+                      "align": "center",
                       "children": [
                         {
                           "type": "icon",
                           "name": "check-circle"
                         },
                         {
-                          "message": "Request successful!",
                           "variant": "success",
+                          "message": "Request successful!",
                           "type": "alert"
                         },
                         {
-                          "type": "typography",
-                          "content": "@entity.callId",
                           "color": "muted",
-                          "variant": "body"
+                          "variant": "body",
+                          "content": "@entity.callId",
+                          "type": "typography"
                         },
                         {
-                          "variant": "ghost",
-                          "type": "button",
-                          "action": "RESET",
                           "icon": "rotate-ccw",
-                          "label": "New Request"
+                          "action": "RESET",
+                          "label": "New Request",
+                          "variant": "ghost",
+                          "type": "button"
                         }
-                      ],
-                      "direction": "vertical",
-                      "type": "stack",
-                      "gap": "lg",
-                      "align": "center"
+                      ]
                     }
                   ]
                 ]
@@ -554,8 +554,8 @@
                     "emit",
                     "ServiceCustomBearerCustomBearerFailed",
                     {
-                      "error": "@entity.error",
-                      "code": "bearer_call_failed"
+                      "code": "bearer_call_failed",
+                      "error": "@entity.error"
                     }
                   ],
                   [
@@ -564,8 +564,8 @@
                     {
                       "title": "Request Failed",
                       "onRetry": "RETRY",
-                      "type": "error-state",
-                      "message": "@entity.error"
+                      "message": "@entity.error",
+                      "type": "error-state"
                     }
                   ]
                 ]
@@ -580,11 +580,11 @@
                     "main",
                     {
                       "direction": "vertical",
+                      "type": "stack",
+                      "gap": "md",
                       "children": [
                         "@config.uiTrait"
-                      ],
-                      "type": "stack",
-                      "gap": "md"
+                      ]
                     }
                   ]
                 ]
@@ -608,12 +608,12 @@
                     "render-ui",
                     "main",
                     {
+                      "type": "stack",
+                      "gap": "md",
+                      "direction": "vertical",
                       "children": [
                         "@config.uiTrait"
-                      ],
-                      "direction": "vertical",
-                      "gap": "md",
-                      "type": "stack"
+                      ]
                     }
                   ]
                 ]
@@ -627,12 +627,12 @@
                     "render-ui",
                     "main",
                     {
-                      "direction": "vertical",
                       "type": "stack",
-                      "gap": "md",
                       "children": [
                         "@config.uiTrait"
-                      ]
+                      ],
+                      "direction": "vertical",
+                      "gap": "md"
                     }
                   ]
                 ]
@@ -640,19 +640,19 @@
             ]
           },
           "config": {
-            "token": {
+            "body": {
               "type": "string",
               "default": "",
-              "label": "Bearer token",
-              "description": "Bearer token sent in the Authorization header",
-              "tier": "internal"
+              "label": "Request body",
+              "description": "JSON body sent with non-GET requests",
+              "tier": "presentation"
             },
             "method": {
               "type": "string",
               "default": "GET",
               "label": "HTTP method",
               "description": "HTTP verb used for the request (GET, POST, PUT, DELETE)",
-              "tier": "customization",
+              "tier": "domain",
               "values": [
                 "GET",
                 "POST",
@@ -660,26 +660,26 @@
                 "DELETE"
               ]
             },
+            "endpoint": {
+              "type": "string",
+              "default": "",
+              "label": "API endpoint",
+              "description": "URL path the bearer-authenticated HTTP request targets",
+              "tier": "domain"
+            },
+            "token": {
+              "type": "string",
+              "default": "",
+              "label": "Bearer token",
+              "description": "Bearer token sent in the Authorization header",
+              "tier": "internal"
+            },
             "uiTrait": {
               "type": "trait",
               "default": "@trait.ServiceCustomBearerDefaultForm",
               "label": "Request form",
               "description": "Trait that renders the bearer-token request UI",
               "tier": "internal"
-            },
-            "endpoint": {
-              "type": "string",
-              "default": "",
-              "label": "API endpoint",
-              "description": "URL path the bearer-authenticated HTTP request targets",
-              "tier": "customization"
-            },
-            "body": {
-              "type": "string",
-              "default": "",
-              "label": "Request body",
-              "description": "JSON body sent with non-GET requests",
-              "tier": "customization"
             }
           },
           "scope": "instance"

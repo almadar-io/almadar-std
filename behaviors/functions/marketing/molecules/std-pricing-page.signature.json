@@ -52,25 +52,25 @@
             "type": "[FaqItem]",
             "default": [
               {
-                "id": "plan-changes",
                 "title": "Can I change plans later?",
+                "id": "plan-changes",
                 "content": "Yes, you can upgrade or downgrade at any time."
               },
               {
-                "id": "free-trial",
+                "title": "Is there a free trial?",
                 "content": "Yes, every paid plan includes a 14-day free trial.",
-                "title": "Is there a free trial?"
+                "id": "free-trial"
               },
               {
+                "id": "payment-methods",
                 "title": "What payment methods do you accept?",
-                "content": "We accept all major credit cards and wire transfers for Enterprise.",
-                "id": "payment-methods"
+                "content": "We accept all major credit cards and wire transfers for Enterprise."
               }
             ],
             "items": {
               "properties": {
-                "title": {
-                  "name": "title",
+                "content": {
+                  "name": "content",
                   "required": true,
                   "type": "string"
                 },
@@ -79,8 +79,8 @@
                   "required": true,
                   "type": "string"
                 },
-                "content": {
-                  "name": "content",
+                "title": {
+                  "name": "title",
                   "required": true,
                   "type": "string"
                 }
@@ -93,11 +93,10 @@
             "type": "[FooterColumn]",
             "default": [
               {
-                "title": "Product",
                 "items": [
                   {
-                    "label": "Features",
-                    "href": "#"
+                    "href": "#",
+                    "label": "Features"
                   },
                   {
                     "label": "Pricing",
@@ -107,21 +106,22 @@
                     "href": "#",
                     "label": "Changelog"
                   }
-                ]
+                ],
+                "title": "Product"
               },
               {
                 "items": [
                   {
-                    "label": "About",
-                    "href": "#"
+                    "href": "#",
+                    "label": "About"
                   },
                   {
                     "label": "Careers",
                     "href": "#"
                   },
                   {
-                    "href": "#",
-                    "label": "Blog"
+                    "label": "Blog",
+                    "href": "#"
                   }
                 ],
                 "title": "Company"
@@ -146,30 +146,30 @@
             ],
             "items": {
               "properties": {
+                "title": {
+                  "name": "title",
+                  "required": true,
+                  "type": "string"
+                },
                 "items": {
                   "name": "items",
                   "required": false,
                   "type": "array",
                   "items": {
                     "properties": {
-                      "href": {
-                        "name": "href",
+                      "label": {
+                        "name": "label",
                         "required": true,
                         "type": "string"
                       },
-                      "label": {
-                        "name": "label",
+                      "href": {
+                        "name": "href",
                         "required": true,
                         "type": "string"
                       }
                     },
                     "type": "object"
                   }
-                },
-                "title": {
-                  "name": "title",
-                  "required": true,
-                  "type": "string"
                 }
               },
               "type": "object"
@@ -235,46 +235,39 @@
             "type": "[PricingPlan]",
             "default": [
               {
+                "highlighted": false,
+                "description": "For individuals and small projects.",
+                "action": {
+                  "label": "Get Started",
+                  "href": "#"
+                },
+                "name": "Starter",
+                "price": "$0",
+                "badge": "",
                 "features": [
                   "1 project",
                   "Community support",
                   "Basic analytics"
-                ],
-                "action": {
-                  "href": "#",
-                  "label": "Get Started"
-                },
-                "highlighted": false,
-                "price": "$0",
-                "description": "For individuals and small projects.",
-                "badge": "",
-                "name": "Starter"
+                ]
               },
               {
-                "action": {
-                  "label": "Start Trial",
-                  "href": "#"
-                },
                 "name": "Pro",
                 "description": "For growing teams that need more power.",
-                "badge": "Most Popular",
-                "highlighted": true,
-                "price": "$49",
                 "features": [
                   "Unlimited projects",
                   "Priority support",
                   "Advanced analytics",
                   "Custom domains"
-                ]
-              },
-              {
-                "price": "Custom",
+                ],
+                "price": "$49",
                 "action": {
-                  "label": "Contact Sales",
+                  "label": "Start Trial",
                   "href": "#"
                 },
-                "highlighted": false,
-                "name": "Enterprise",
+                "highlighted": true,
+                "badge": "Most Popular"
+              },
+              {
                 "description": "For organizations with advanced needs.",
                 "features": [
                   "Dedicated infra",
@@ -283,7 +276,14 @@
                   "Audit logs",
                   "Custom contracts"
                 ],
-                "badge": ""
+                "price": "Custom",
+                "badge": "",
+                "name": "Enterprise",
+                "action": {
+                  "href": "#",
+                  "label": "Contact Sales"
+                },
+                "highlighted": false
               }
             ],
             "items": {
@@ -292,28 +292,18 @@
                   "name": "action",
                   "required": true,
                   "properties": {
-                    "label": {
-                      "name": "label",
+                    "href": {
+                      "name": "href",
                       "required": true,
                       "type": "string"
                     },
-                    "href": {
-                      "name": "href",
+                    "label": {
+                      "name": "label",
                       "required": true,
                       "type": "string"
                     }
                   },
                   "type": "object"
-                },
-                "highlighted": {
-                  "name": "highlighted",
-                  "required": false,
-                  "type": "boolean"
-                },
-                "badge": {
-                  "name": "badge",
-                  "required": false,
-                  "type": "string"
                 },
                 "name": {
                   "name": "name",
@@ -325,11 +315,6 @@
                   "required": true,
                   "type": "string"
                 },
-                "description": {
-                  "name": "description",
-                  "required": false,
-                  "type": "string"
-                },
                 "features": {
                   "name": "features",
                   "required": false,
@@ -337,6 +322,21 @@
                   "items": {
                     "type": "string"
                   }
+                },
+                "badge": {
+                  "name": "badge",
+                  "required": false,
+                  "type": "string"
+                },
+                "description": {
+                  "name": "description",
+                  "required": false,
+                  "type": "string"
+                },
+                "highlighted": {
+                  "name": "highlighted",
+                  "required": false,
+                  "type": "boolean"
                 }
               },
               "type": "object"

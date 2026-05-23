@@ -122,28 +122,28 @@ export interface StdHelpArticleHelpArticleUpdateFailedPayload {
  * without modifying its state-machine topology.
  */
 export interface StdHelpArticleConfig {
-  /** Default: `false` */
-  scheduledPublishEnabled?: boolean;
-  /** Default: `"Help Articles"` */
-  title?: string;
   /** Default: `10` */
   keepVersions?: number;
+  /** Default: `[{"label":"Open","icon":"arrow-right","variant":"primary","event":"OPEN_ARTICLE"},{"variant":"danger","label":"Archive","event":"ARCHIVE"}]` */
+  itemActions?: EntityRow[];
+  /** Default: `false` */
+  scheduledPublishEnabled?: boolean;
   /** Default: `"public"` */
   visibilityScope?: 'public' | 'internal' | 'customer';
-  /** Default: `"en"` */
-  defaultLocale?: string;
+  /** Default: `"Help Articles"` */
+  title?: string;
   /** Default: `true` */
   seoEnabled?: boolean;
+  /** Default: `"en"` */
+  defaultLocale?: string;
   /** Default: `30` */
   draftAutosaveSeconds?: number;
-  /** Default: `["en"]` */
-  enabledLocales?: string[];
   /** Default: `true` */
   allowRollback?: boolean;
-  /** Default: `[{"variant":"caption","name":"title","label":"Title"},{"label":"Slug","name":"slug","variant":"caption"},{"name":"categoryName","label":"Category","variant":"caption"},{"variant":"caption","label":"Author","name":"author"},{"label":"Status","name":"status","variant":"badge"},{"label":"Views","variant":"caption","name":"viewCount"},{"name":"publishedAt","label":"Published","variant":"caption"}]` */
+  /** Default: `[{"label":"Title","name":"title","variant":"caption"},{"label":"Slug","name":"slug","variant":"caption"},{"label":"Category","variant":"caption","name":"categoryName"},{"name":"author","variant":"caption","label":"Author"},{"variant":"badge","name":"status","label":"Status"},{"name":"viewCount","variant":"caption","label":"Views"},{"name":"publishedAt","variant":"caption","label":"Published"}]` */
   fields?: EntityRow[];
-  /** Default: `[{"icon":"arrow-right","variant":"primary","label":"Open","event":"OPEN_ARTICLE"},{"variant":"danger","event":"ARCHIVE","label":"Archive"}]` */
-  itemActions?: EntityRow[];
+  /** Default: `["en"]` */
+  enabledLocales?: string[];
 }
 
 /**

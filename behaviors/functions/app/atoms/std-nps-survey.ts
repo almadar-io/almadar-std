@@ -109,28 +109,28 @@ export interface StdNpsSurveyNpsSurveyUpdateFailedPayload {
  * without modifying its state-machine topology.
  */
 export interface StdNpsSurveyConfig {
-  /** Default: `2` */
-  frequencyCapPerWeek?: number;
   /** Default: `500` */
   sendsPerHour?: number;
-  /** Default: `true` */
-  suppressionListEnabled?: boolean;
-  /** Default: `[{"label":"Open","icon":"arrow-right","event":"OPEN_SURVEY","variant":"primary"},{"label":"Mark Followed Up","variant":"danger","event":"MARK_FOLLOWED_UP"}]` */
-  itemActions?: EntityRow[];
-  /** Default: `[{"variant":"caption","name":"customerName","label":"Customer"},{"name":"score","variant":"caption","label":"Score"},{"variant":"badge","name":"category","label":"Category"},{"name":"surveyedAt","label":"Surveyed","variant":"caption"},{"variant":"caption","label":"Channel","name":"channel"},{"name":"status","label":"Status","variant":"badge"}]` */
+  /** Default: `2` */
+  frequencyCapPerWeek?: number;
+  /** Default: `[{"name":"customerName","label":"Customer","variant":"caption"},{"variant":"caption","name":"score","label":"Score"},{"name":"category","variant":"badge","label":"Category"},{"variant":"caption","name":"surveyedAt","label":"Surveyed"},{"label":"Channel","name":"channel","variant":"caption"},{"label":"Status","variant":"badge","name":"status"}]` */
   fields?: EntityRow[];
-  /** Default: `true` */
-  gdprConsentRequired?: boolean;
-  /** Default: `true` */
-  trackOpens?: boolean;
-  /** Default: `true` */
-  trackClicks?: boolean;
-  /** Default: `true` */
-  includeUnsubscribeLink?: boolean;
-  /** Default: `""` */
-  physicalAddressFooter?: string;
   /** Default: `"NPS Surveys"` */
   title?: string;
+  /** Default: `true` */
+  suppressionListEnabled?: boolean;
+  /** Default: `true` */
+  gdprConsentRequired?: boolean;
+  /** Default: `""` */
+  physicalAddressFooter?: string;
+  /** Default: `true` */
+  trackOpens?: boolean;
+  /** Default: `[{"label":"Open","icon":"arrow-right","variant":"primary","event":"OPEN_SURVEY"},{"event":"MARK_FOLLOWED_UP","variant":"danger","label":"Mark Followed Up"}]` */
+  itemActions?: EntityRow[];
+  /** Default: `true` */
+  includeUnsubscribeLink?: boolean;
+  /** Default: `true` */
+  trackClicks?: boolean;
   /** Default: `true` */
   respectQuietHours?: boolean;
 }

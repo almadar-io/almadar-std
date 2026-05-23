@@ -93,18 +93,18 @@ export interface StdVendorOnboardingVendorLoadFailedPayload {
  * without modifying its state-machine topology.
  */
 export interface StdVendorOnboardingConfig {
+  /** Default: `1825` */
+  retentionAfterRejectionDays?: number;
   /** Default: `false` */
-  eVerifyRequired?: boolean;
+  equalOpportunityTrackingEnabled?: boolean;
+  /** Default: `true` */
+  backgroundCheckRequired?: boolean;
+  /** Default: `false` */
+  anonymizeOnRejection?: boolean;
   /** Default: `false` */
   i9DocumentsRequired?: boolean;
   /** Default: `false` */
-  equalOpportunityTrackingEnabled?: boolean;
-  /** Default: `false` */
-  anonymizeOnRejection?: boolean;
-  /** Default: `true` */
-  backgroundCheckRequired?: boolean;
-  /** Default: `1825` */
-  retentionAfterRejectionDays?: number;
+  eVerifyRequired?: boolean;
 }
 
 /**

@@ -47,12 +47,12 @@ export interface StdMarketingFeaturesFeatureClickPayload {
  * without modifying its state-machine topology.
  */
 export interface StdMarketingFeaturesConfig {
-  /** Default: `[{"icon":"zap","href":"","title":"Lightning Fast","description":"Build and deploy in minutes, not months.","linkLabel":"Learn more"},{"href":"","description":"SOC-2 compliant with end-to-end encryption.","linkLabel":"Learn more","title":"Enterprise Secure","icon":"shield"},{"icon":"puzzle","title":"Infinitely Extensible","description":"Plug in any service, any data source, any UI pattern.","href":"","linkLabel":"Learn more"}]` */
-  items?: EntityRow[];
-  /** Default: `"lg"` */
-  gap?: string;
   /** Default: `3` */
   columns?: number;
+  /** Default: `"lg"` */
+  gap?: string;
+  /** Default: `[{"icon":"zap","href":"","description":"Build and deploy in minutes, not months.","title":"Lightning Fast","linkLabel":"Learn more"},{"icon":"shield","href":"","title":"Enterprise Secure","description":"SOC-2 compliant with end-to-end encryption.","linkLabel":"Learn more"},{"title":"Infinitely Extensible","icon":"puzzle","href":"","linkLabel":"Learn more","description":"Plug in any service, any data source, any UI pattern."}]` */
+  items?: EntityRow[];
 }
 
 /**

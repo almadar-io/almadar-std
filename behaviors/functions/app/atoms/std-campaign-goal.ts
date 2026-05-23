@@ -111,20 +111,20 @@ export interface StdCampaignGoalCampaignGoalUpdateFailedPayload {
  * without modifying its state-machine topology.
  */
 export interface StdCampaignGoalConfig {
-  /** Default: `25` */
-  healthScoreThresholdAlert?: number;
+  /** Default: `[{"variant":"caption","name":"name","label":"Name"},{"label":"Target","variant":"caption","name":"targetAmount"},{"label":"Raised","variant":"caption","name":"raisedAmount"},{"label":"Donors","variant":"caption","name":"donorCount"},{"label":"Status","name":"status","variant":"badge"}]` */
+  fields?: EntityRow[];
+  /** Default: `[{"icon":"arrow-right","event":"OPEN_CAMPAIGN","label":"Open","variant":"primary"},{"event":"END_CAMPAIGN","label":"End","variant":"danger"}]` */
+  itemActions?: EntityRow[];
+  /** Default: `180` */
+  archiveInactiveAfterDays?: number;
   /** Default: `[30,7,1]` */
   renewalReminderDaysBefore?: number[];
   /** Default: `true` */
   consentTrackingEnabled?: boolean;
-  /** Default: `[{"event":"OPEN_CAMPAIGN","label":"Open","variant":"primary","icon":"arrow-right"},{"label":"End","variant":"danger","event":"END_CAMPAIGN"}]` */
-  itemActions?: EntityRow[];
   /** Default: `"Campaigns"` */
   title?: string;
-  /** Default: `180` */
-  archiveInactiveAfterDays?: number;
-  /** Default: `[{"name":"name","variant":"caption","label":"Name"},{"name":"targetAmount","label":"Target","variant":"caption"},{"name":"raisedAmount","label":"Raised","variant":"caption"},{"name":"donorCount","variant":"caption","label":"Donors"},{"variant":"badge","label":"Status","name":"status"}]` */
-  fields?: EntityRow[];
+  /** Default: `25` */
+  healthScoreThresholdAlert?: number;
 }
 
 /**

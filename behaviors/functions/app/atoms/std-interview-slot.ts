@@ -86,40 +86,40 @@ export interface StdInterviewSlotInterviewSlotLoadFailedPayload {
  * without modifying its state-machine topology.
  */
 export interface StdInterviewSlotConfig {
+  /** Default: `"09:00-17:00"` */
+  bookingHours?: string;
+  /** Default: `"free"` */
+  cancellationPolicy?: 'free' | 'partial-refund' | 'no-refund';
+  /** Default: `24` */
+  rescheduleWindowHours?: number;
+  /** Default: `false` */
+  i9DocumentsRequired?: boolean;
+  /** Default: `false` */
+  backgroundCheckRequired?: boolean;
+  /** Default: `false` */
+  equalOpportunityTrackingEnabled?: boolean;
+  /** Default: `30` */
+  bookingWindowDays?: number;
+  /** Default: `15` */
+  noShowGracePeriodMinutes?: number;
+  /** Default: `false` */
+  anonymizeOnRejection?: boolean;
+  /** Default: `730` */
+  retentionAfterRejectionDays?: number;
+  /** Default: `[{"label":"Applicant","variant":"caption","name":"applicantName"},{"label":"Interviewer","variant":"caption","name":"interviewerName"},{"name":"scheduledAt","variant":"caption","label":"Scheduled"},{"variant":"badge","name":"format","label":"Format"},{"name":"status","variant":"badge","label":"Status"}]` */
+  fields?: EntityRow[];
+  /** Default: `[{"label":"Open","icon":"arrow-right","event":"OPEN_INTERVIEW","variant":"primary"},{"label":"Cancel","event":"CANCEL_INTERVIEW","variant":"danger"}]` */
+  itemActions?: EntityRow[];
+  /** Default: `[]` */
+  blackoutDates?: string[];
+  /** Default: `"Interviews"` */
+  title?: string;
+  /** Default: `60` */
+  leadTimeMinutes?: number;
   /** Default: `false` */
   eVerifyRequired?: boolean;
   /** Default: `2` */
   maxReschedules?: number;
-  /** Default: `"free"` */
-  cancellationPolicy?: 'free' | 'partial-refund' | 'no-refund';
-  /** Default: `false` */
-  backgroundCheckRequired?: boolean;
-  /** Default: `"Interviews"` */
-  title?: string;
-  /** Default: `730` */
-  retentionAfterRejectionDays?: number;
-  /** Default: `[{"variant":"caption","name":"applicantName","label":"Applicant"},{"label":"Interviewer","name":"interviewerName","variant":"caption"},{"name":"scheduledAt","label":"Scheduled","variant":"caption"},{"variant":"badge","name":"format","label":"Format"},{"name":"status","label":"Status","variant":"badge"}]` */
-  fields?: EntityRow[];
-  /** Default: `[]` */
-  blackoutDates?: string[];
-  /** Default: `false` */
-  equalOpportunityTrackingEnabled?: boolean;
-  /** Default: `15` */
-  noShowGracePeriodMinutes?: number;
-  /** Default: `[{"event":"OPEN_INTERVIEW","label":"Open","icon":"arrow-right","variant":"primary"},{"variant":"danger","label":"Cancel","event":"CANCEL_INTERVIEW"}]` */
-  itemActions?: EntityRow[];
-  /** Default: `60` */
-  leadTimeMinutes?: number;
-  /** Default: `"09:00-17:00"` */
-  bookingHours?: string;
-  /** Default: `30` */
-  bookingWindowDays?: number;
-  /** Default: `false` */
-  anonymizeOnRejection?: boolean;
-  /** Default: `false` */
-  i9DocumentsRequired?: boolean;
-  /** Default: `24` */
-  rescheduleWindowHours?: number;
 }
 
 /**

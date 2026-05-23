@@ -39,16 +39,16 @@ export type StdMarketingFooterEventKey = 'INIT';
  * without modifying its state-machine topology.
  */
 export interface StdMarketingFooterConfig {
-  /** Default: `""` */
-  logoAlt?: string;
   /** Default: `"© 2026 Almadar. All rights reserved."` */
   copyright?: string;
-  /** Default: `[{"items":[{"label":"Features","href":"#"},{"href":"#","label":"Pricing"},{"href":"#","label":"Changelog"}],"title":"Product"},{"title":"Company","items":[{"href":"#","label":"About"},{"label":"Careers","href":"#"},{"href":"#","label":"Blog"}]},{"title":"Resources","items":[{"label":"Docs","href":"#"},{"label":"Community","href":"#"},{"href":"#","label":"Support"}]}]` */
-  columns?: EntityRow[];
   /** Default: `""` */
-  logoSrc?: string;
+  logoAlt?: string;
+  /** Default: `[{"title":"Product","items":[{"label":"Features","href":"#"},{"href":"#","label":"Pricing"},{"href":"#","label":"Changelog"}]},{"title":"Company","items":[{"href":"#","label":"About"},{"href":"#","label":"Careers"},{"href":"#","label":"Blog"}]},{"items":[{"href":"#","label":"Docs"},{"label":"Community","href":"#"},{"href":"#","label":"Support"}],"title":"Resources"}]` */
+  columns?: EntityRow[];
   /** Default: `"/"` */
   logoHref?: string;
+  /** Default: `""` */
+  logoSrc?: string;
 }
 
 /**

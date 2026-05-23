@@ -118,20 +118,20 @@ export interface StdHelpCategoryConfig {
   defaultLocale?: string;
   /** Default: `"public"` */
   visibilityScope?: 'public' | 'internal' | 'customer';
-  /** Default: `["en"]` */
-  enabledLocales?: string[];
-  /** Default: `[{"variant":"caption","label":"Name","name":"name"},{"label":"Slug","variant":"caption","name":"slug"},{"variant":"caption","name":"articleCount","label":"Articles"},{"label":"Order","name":"sortOrder","variant":"caption"},{"name":"status","variant":"badge","label":"Status"},{"name":"updatedAt","label":"Updated","variant":"caption"}]` */
-  fields?: EntityRow[];
-  /** Default: `[{"variant":"primary","label":"Open","event":"OPEN_CATEGORY","icon":"arrow-right"},{"event":"ARCHIVE","variant":"danger","label":"Archive"}]` */
-  itemActions?: EntityRow[];
-  /** Default: `true` */
-  seoEnabled?: boolean;
-  /** Default: `false` */
-  scheduledPublishEnabled?: boolean;
   /** Default: `"Help Categories"` */
   title?: string;
+  /** Default: `["en"]` */
+  enabledLocales?: string[];
+  /** Default: `[{"name":"name","label":"Name","variant":"caption"},{"variant":"caption","name":"slug","label":"Slug"},{"label":"Articles","name":"articleCount","variant":"caption"},{"variant":"caption","name":"sortOrder","label":"Order"},{"name":"status","variant":"badge","label":"Status"},{"label":"Updated","variant":"caption","name":"updatedAt"}]` */
+  fields?: EntityRow[];
   /** Default: `5` */
   keepVersions?: number;
+  /** Default: `[{"event":"OPEN_CATEGORY","icon":"arrow-right","label":"Open","variant":"primary"},{"label":"Archive","variant":"danger","event":"ARCHIVE"}]` */
+  itemActions?: EntityRow[];
+  /** Default: `false` */
+  scheduledPublishEnabled?: boolean;
+  /** Default: `true` */
+  seoEnabled?: boolean;
   /** Default: `30` */
   draftAutosaveSeconds?: number;
 }

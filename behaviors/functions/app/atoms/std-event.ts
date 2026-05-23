@@ -97,28 +97,28 @@ export interface StdEventEventLoadFailedPayload {
  * without modifying its state-machine topology.
  */
 export interface StdEventConfig {
-  /** Default: `[{"event":"OPEN_EVENT","variant":"primary","icon":"arrow-right","label":"Open"},{"event":"CANCEL","variant":"danger","icon":"x","label":"Cancel"}]` */
+  /** Default: `[{"icon":"arrow-right","label":"Open","event":"OPEN_EVENT","variant":"primary"},{"event":"CANCEL","icon":"x","label":"Cancel","variant":"danger"}]` */
   itemActions?: EntityRow[];
+  /** Default: `60` */
+  leadTimeMinutes?: number;
+  /** Default: `"00:00-23:59"` */
+  bookingHours?: string;
+  /** Default: `[{"name":"name","label":"Name","variant":"caption"},{"name":"venue","label":"Venue","variant":"caption"},{"name":"startsAt","label":"Starts","variant":"caption"},{"label":"Ends","variant":"caption","name":"endsAt"},{"name":"capacity","variant":"caption","label":"Capacity"},{"name":"status","label":"Status","variant":"badge"}]` */
+  fields?: EntityRow[];
+  /** Default: `1` */
+  maxReschedules?: number;
   /** Default: `180` */
   bookingWindowDays?: number;
   /** Default: `48` */
   rescheduleWindowHours?: number;
-  /** Default: `[{"name":"name","label":"Name","variant":"caption"},{"label":"Venue","variant":"caption","name":"venue"},{"name":"startsAt","label":"Starts","variant":"caption"},{"name":"endsAt","label":"Ends","variant":"caption"},{"name":"capacity","label":"Capacity","variant":"caption"},{"name":"status","label":"Status","variant":"badge"}]` */
-  fields?: EntityRow[];
-  /** Default: `60` */
-  leadTimeMinutes?: number;
-  /** Default: `1` */
-  maxReschedules?: number;
   /** Default: `"Events"` */
   title?: string;
-  /** Default: `[]` */
-  blackoutDates?: string[];
   /** Default: `30` */
   noShowGracePeriodMinutes?: number;
   /** Default: `"partial-refund"` */
   cancellationPolicy?: 'free' | 'partial-refund' | 'no-refund';
-  /** Default: `"00:00-23:59"` */
-  bookingHours?: string;
+  /** Default: `[]` */
+  blackoutDates?: string[];
 }
 
 /**

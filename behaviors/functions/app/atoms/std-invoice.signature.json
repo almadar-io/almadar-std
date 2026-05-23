@@ -101,24 +101,22 @@
             "type": "string",
             "default": "",
             "label": "Compliance jurisdiction",
-            "description": "Drives tax + retention rules per locale: 'US-CA', 'EU-DE', 'UK', etc. v1.2 declarative.",
-            "tier": "advanced"
+            "description": "Drives tax + retention rules per locale: 'US-CA', 'EU-DE', 'UK', etc. v1.2 declarative."
           },
           {
             "key": "currency",
             "type": "string",
             "default": "USD",
             "label": "Default currency",
-            "description": "ISO 4217 currency code (USD, EUR, GBP, …) for new invoices.",
-            "tier": "essential"
+            "description": "ISO 4217 currency code (USD, EUR, GBP, …) for new invoices."
           },
           {
             "key": "fields",
             "type": "[FieldSpec]",
             "default": [
               {
-                "variant": "caption",
                 "name": "invoiceNumber",
+                "variant": "caption",
                 "label": "Invoice #"
               },
               {
@@ -127,53 +125,37 @@
                 "label": "Customer"
               },
               {
-                "label": "Status",
                 "name": "status",
+                "label": "Status",
                 "variant": "badge"
               },
               {
-                "label": "Total",
                 "variant": "caption",
-                "name": "total"
+                "name": "total",
+                "label": "Total"
               },
               {
-                "variant": "badge",
+                "name": "currency",
                 "label": "Currency",
-                "name": "currency"
+                "variant": "badge"
               },
               {
                 "label": "Due",
-                "variant": "caption",
-                "name": "dueAt"
+                "name": "dueAt",
+                "variant": "caption"
               }
             ],
             "label": "Columns to show",
             "description": "Each column maps to one field on the Invoice entity",
-            "tier": "customization",
             "items": {
               "properties": {
-                "variant": {
-                  "name": "variant",
-                  "required": false,
-                  "type": "string"
-                },
-                "name": {
-                  "name": "name",
-                  "required": true,
-                  "type": "string"
-                },
-                "label": {
-                  "name": "label",
-                  "required": false,
-                  "type": "string"
-                },
                 "key": {
                   "name": "key",
                   "required": false,
                   "type": "string"
                 },
-                "format": {
-                  "name": "format",
+                "label": {
+                  "name": "label",
                   "required": false,
                   "type": "string"
                 },
@@ -186,6 +168,21 @@
                   "name": "icon",
                   "required": false,
                   "type": "string"
+                },
+                "format": {
+                  "name": "format",
+                  "required": false,
+                  "type": "string"
+                },
+                "name": {
+                  "name": "name",
+                  "required": true,
+                  "type": "string"
+                },
+                "variant": {
+                  "name": "variant",
+                  "required": false,
+                  "type": "string"
                 }
               },
               "type": "object"
@@ -196,36 +193,29 @@
             "type": "number",
             "default": 30,
             "label": "Grace period (days)",
-            "description": "Days after dueAt before an invoice is treated as overdue. Wire via sibling std-lifecycle rule { fromStatus: 'sent', toStatus: 'overdue', condition: { kind: 'ageDays', value: gracePeriodDays, dateField: 'dueAt' } }.",
-            "tier": "customization"
+            "description": "Days after dueAt before an invoice is treated as overdue. Wire via sibling std-lifecycle rule { fromStatus: 'sent', toStatus: 'overdue', condition: { kind: 'ageDays', value: gracePeriodDays, dateField: 'dueAt' } }."
           },
           {
             "key": "itemActions",
             "type": "[ItemAction]",
             "default": [
               {
-                "variant": "primary",
+                "event": "OPEN_INVOICE",
                 "icon": "arrow-right",
                 "label": "Open",
-                "event": "OPEN_INVOICE"
+                "variant": "primary"
               },
               {
                 "icon": "x",
-                "label": "Void",
                 "event": "VOID",
+                "label": "Void",
                 "variant": "danger"
               }
             ],
             "label": "Row actions",
             "description": "Buttons users can click on each invoice row",
-            "tier": "customization",
             "items": {
               "properties": {
-                "event": {
-                  "name": "event",
-                  "required": true,
-                  "type": "string"
-                },
                 "variant": {
                   "name": "variant",
                   "required": false,
@@ -234,6 +224,11 @@
                 "icon": {
                   "name": "icon",
                   "required": false,
+                  "type": "string"
+                },
+                "event": {
+                  "name": "event",
+                  "required": true,
                   "type": "string"
                 },
                 "label": {
@@ -250,8 +245,7 @@
             "type": "number",
             "default": 0,
             "label": "Late fee amount",
-            "description": "Flat cash amount or percentage (per lateFeePolicy).",
-            "tier": "customization"
+            "description": "Flat cash amount or percentage (per lateFeePolicy)."
           },
           {
             "key": "lateFeePolicy",
@@ -259,7 +253,6 @@
             "default": "none",
             "label": "Late fee policy",
             "description": "How late fees compute when overdue: none = no fee; flat = lateFeeAmount as flat cash; percent = lateFeeAmount as % of total. v1.2 declarative; wiring requires a late-fee compute step (gap).",
-            "tier": "customization",
             "enumValues": [
               "none",
               "flat",
@@ -271,16 +264,14 @@
             "type": "string",
             "default": "[]",
             "label": "Refund tiers",
-            "description": "JSON list of refund options (e.g. 50% / 100%) shown on the detail view",
-            "tier": "customization"
+            "description": "JSON list of refund options (e.g. 50% / 100%) shown on the detail view"
           },
           {
             "key": "retentionYears",
             "type": "number",
             "default": 7,
             "label": "Retention (years)",
-            "description": "Years to keep invoice records for compliance. Default 7 matches common regimes. Wire via sibling std-lifecycle delete rule when available.",
-            "tier": "advanced"
+            "description": "Years to keep invoice records for compliance. Default 7 matches common regimes. Wire via sibling std-lifecycle delete rule when available."
           },
           {
             "key": "roundingMode",
@@ -288,7 +279,6 @@
             "default": "half-up",
             "label": "Rounding mode",
             "description": "Sub-cent rounding behavior for line items and totals.",
-            "tier": "advanced",
             "enumValues": [
               "bankers",
               "half-up",
@@ -301,7 +291,6 @@
             "default": "exclusive",
             "label": "Tax strategy",
             "description": "inclusive = tax baked into the line item totals; exclusive = tax added on top; none = no tax.",
-            "tier": "customization",
             "enumValues": [
               "inclusive",
               "exclusive",
@@ -313,8 +302,7 @@
             "type": "string",
             "default": "Invoices",
             "label": "Section title",
-            "description": "Heading shown above the invoice list",
-            "tier": "customization"
+            "description": "Heading shown above the invoice list"
           }
         ],
         "capabilities": []

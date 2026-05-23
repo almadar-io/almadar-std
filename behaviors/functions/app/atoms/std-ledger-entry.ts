@@ -87,28 +87,28 @@ export interface StdLedgerEntryLedgerEntryLoadFailedPayload {
  * without modifying its state-machine topology.
  */
 export interface StdLedgerEntryConfig {
-  /** Default: `[{"label":"Date","name":"entryDate","variant":"caption"},{"name":"accountName","label":"Account","variant":"caption"},{"variant":"caption","name":"description","label":"Description"},{"name":"debit","variant":"caption","label":"Debit"},{"variant":"caption","name":"credit","label":"Credit"},{"label":"Reconciled","variant":"badge","name":"isReconciled"}]` */
+  /** Default: `[{"label":"Date","variant":"caption","name":"entryDate"},{"name":"accountName","label":"Account","variant":"caption"},{"label":"Description","variant":"caption","name":"description"},{"label":"Debit","variant":"caption","name":"debit"},{"name":"credit","label":"Credit","variant":"caption"},{"name":"isReconciled","variant":"badge","label":"Reconciled"}]` */
   fields?: EntityRow[];
-  /** Default: `"Journal Entries"` */
-  title?: string;
+  /** Default: `"USD"` */
+  currency?: string;
   /** Default: `"none"` */
   taxStrategy?: 'inclusive' | 'exclusive' | 'none';
   /** Default: `"none"` */
   lateFeePolicy?: 'none' | 'flat' | 'percent';
-  /** Default: `7` */
-  retentionYears?: number;
-  /** Default: `0` */
-  lateFeeAmount?: number;
-  /** Default: `"bankers"` */
-  roundingMode?: 'bankers' | 'half-up' | 'down';
-  /** Default: `[{"label":"Open","icon":"arrow-right","variant":"primary","event":"OPEN_ENTRY"},{"event":"REVERSE_ENTRY","variant":"danger","label":"Reverse"}]` */
-  itemActions?: EntityRow[];
-  /** Default: `"USD"` */
-  currency?: string;
-  /** Default: `0` */
-  gracePeriodDays?: number;
   /** Default: `""` */
   complianceJurisdiction?: string;
+  /** Default: `0` */
+  lateFeeAmount?: number;
+  /** Default: `"Journal Entries"` */
+  title?: string;
+  /** Default: `0` */
+  gracePeriodDays?: number;
+  /** Default: `7` */
+  retentionYears?: number;
+  /** Default: `"bankers"` */
+  roundingMode?: 'bankers' | 'half-up' | 'down';
+  /** Default: `[{"icon":"arrow-right","label":"Open","variant":"primary","event":"OPEN_ENTRY"},{"variant":"danger","event":"REVERSE_ENTRY","label":"Reverse"}]` */
+  itemActions?: EntityRow[];
 }
 
 /**

@@ -39,22 +39,22 @@ export type StdMarketingCommunityEventKey = 'INIT';
  * without modifying its state-machine topology.
  */
 export interface StdMarketingCommunityConfig {
+  /** Default: `"Connect with thousands of builders."` */
+  subtitle?: string;
+  /** Default: `""` */
+  twitterFollowers?: string;
   /** Default: `""` */
   githubUrl?: string;
+  /** Default: `""` */
+  githubStars?: string;
+  /** Default: `"Join the community"` */
+  heading?: string;
+  /** Default: `""` */
+  twitterUrl?: string;
   /** Default: `""` */
   discordUrl?: string;
   /** Default: `""` */
   discordMembers?: string;
-  /** Default: `""` */
-  twitterFollowers?: string;
-  /** Default: `""` */
-  twitterUrl?: string;
-  /** Default: `"Join the community"` */
-  heading?: string;
-  /** Default: `"Connect with thousands of builders."` */
-  subtitle?: string;
-  /** Default: `""` */
-  githubStars?: string;
 }
 
 /**

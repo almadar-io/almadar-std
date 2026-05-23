@@ -172,24 +172,24 @@ export interface StdTimesheetTimesheetLoadFailedPayload {
  * without modifying its state-machine topology.
  */
 export interface StdTimesheetConfig {
+  /** Default: `[{"event":"OPEN_TIMESHEET","variant":"primary","label":"Open","icon":"arrow-right"},{"variant":"danger","label":"Delete","event":"REQUEST_DELETE"}]` */
+  itemActions?: EntityRow[];
+  /** Default: `[{"name":"employeeName","label":"Employee","variant":"caption"},{"variant":"caption","name":"periodStart","label":"Period Start"},{"name":"periodEnd","variant":"caption","label":"Period End"},{"name":"totalHours","label":"Total Hours","variant":"caption"},{"label":"Billable","name":"billableHours","variant":"caption"},{"name":"status","variant":"badge","label":"Status"},{"variant":"caption","label":"Approved By","name":"approvedBy"}]` */
+  fields?: EntityRow[];
   /** Default: `false` */
-  eVerifyRequired?: boolean;
+  backgroundCheckRequired?: boolean;
   /** Default: `false` */
   i9DocumentsRequired?: boolean;
-  /** Default: `"Timesheets"` */
-  title?: string;
-  /** Default: `[{"label":"Employee","variant":"caption","name":"employeeName"},{"name":"periodStart","label":"Period Start","variant":"caption"},{"label":"Period End","variant":"caption","name":"periodEnd"},{"label":"Total Hours","variant":"caption","name":"totalHours"},{"name":"billableHours","variant":"caption","label":"Billable"},{"label":"Status","variant":"badge","name":"status"},{"variant":"caption","name":"approvedBy","label":"Approved By"}]` */
-  fields?: EntityRow[];
+  /** Default: `false` */
+  anonymizeOnRejection?: boolean;
   /** Default: `1095` */
   retentionAfterRejectionDays?: number;
   /** Default: `false` */
-  backgroundCheckRequired?: boolean;
-  /** Default: `[{"icon":"arrow-right","event":"OPEN_TIMESHEET","variant":"primary","label":"Open"},{"label":"Delete","variant":"danger","event":"REQUEST_DELETE"}]` */
-  itemActions?: EntityRow[];
-  /** Default: `false` */
-  anonymizeOnRejection?: boolean;
+  eVerifyRequired?: boolean;
   /** Default: `false` */
   equalOpportunityTrackingEnabled?: boolean;
+  /** Default: `"Timesheets"` */
+  title?: string;
 }
 
 /**

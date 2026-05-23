@@ -122,33 +122,32 @@
                     "render-ui",
                     "main",
                     {
-                      "align": "center",
-                      "gap": "lg",
-                      "direction": "vertical",
                       "type": "stack",
+                      "align": "center",
                       "children": [
                         {
-                          "type": "stack",
-                          "direction": "horizontal",
-                          "gap": "md",
                           "children": [
                             {
                               "type": "icon",
                               "name": "calendar"
                             },
                             {
+                              "type": "typography",
                               "content": "Add to Calendar",
-                              "variant": "h2",
-                              "type": "typography"
+                              "variant": "h2"
                             }
                           ],
-                          "align": "center"
+                          "direction": "horizontal",
+                          "type": "stack",
+                          "align": "center",
+                          "gap": "md"
                         },
                         {
                           "type": "divider"
                         },
                         {
                           "gap": "md",
+                          "direction": "vertical",
                           "children": [
                             {
                               "inputType": "text",
@@ -161,22 +160,23 @@
                               "inputType": "text"
                             },
                             {
-                              "type": "input",
                               "placeholder": "Ends at (ISO 8601)",
+                              "type": "input",
                               "inputType": "text"
                             }
                           ],
-                          "direction": "vertical",
                           "type": "stack"
                         },
                         {
-                          "type": "button",
                           "variant": "primary",
                           "icon": "calendar",
                           "action": "GENERATE",
-                          "label": "Generate .ics"
+                          "label": "Generate .ics",
+                          "type": "button"
                         }
-                      ]
+                      ],
+                      "direction": "vertical",
+                      "gap": "lg"
                     }
                   ]
                 ]
@@ -416,10 +416,10 @@
                     "main",
                     {
                       "type": "stack",
+                      "direction": "vertical",
                       "children": [
                         "@config.uiTrait"
                       ],
-                      "direction": "vertical",
                       "gap": "md"
                     }
                   ]
@@ -440,8 +440,8 @@
                     "main",
                     {
                       "type": "loading-state",
-                      "message": "Creating your calendar file.",
-                      "title": "Generating .ics..."
+                      "title": "Generating .ics...",
+                      "message": "Creating your calendar file."
                     }
                   ],
                   [
@@ -451,9 +451,9 @@
                     {
                       "description": "@entity.description",
                       "location": "@entity.location",
+                      "eventName": "@entity.eventName",
                       "startsAt": "@entity.startsAt",
-                      "endsAt": "@entity.endsAt",
-                      "eventName": "@entity.eventName"
+                      "endsAt": "@entity.endsAt"
                     },
                     {
                       "emit": {
@@ -499,40 +499,40 @@
                     "main",
                     {
                       "gap": "lg",
+                      "type": "stack",
+                      "direction": "vertical",
+                      "align": "center",
                       "children": [
                         {
-                          "type": "icon",
-                          "name": "check-circle"
+                          "name": "check-circle",
+                          "type": "icon"
                         },
                         {
-                          "variant": "success",
                           "type": "alert",
+                          "variant": "success",
                           "message": "Calendar file ready!"
                         },
                         {
-                          "content": "@entity.downloadUrl",
-                          "color": "muted",
+                          "variant": "body",
                           "type": "typography",
-                          "variant": "body"
+                          "content": "@entity.downloadUrl",
+                          "color": "muted"
                         },
                         {
-                          "type": "button",
                           "label": "Download .ics",
+                          "type": "button",
+                          "variant": "primary",
                           "action": "RESET",
-                          "icon": "download",
-                          "variant": "primary"
+                          "icon": "download"
                         },
                         {
-                          "type": "button",
-                          "label": "New Event",
                           "action": "RESET",
-                          "variant": "ghost",
-                          "icon": "rotate-ccw"
+                          "label": "New Event",
+                          "icon": "rotate-ccw",
+                          "type": "button",
+                          "variant": "ghost"
                         }
-                      ],
-                      "type": "stack",
-                      "align": "center",
-                      "direction": "vertical"
+                      ]
                     }
                   ]
                 ]
@@ -556,16 +556,16 @@
                     "emit",
                     "ServiceCalendarIcalIcalFailed",
                     {
-                      "code": "generate_failed",
-                      "error": "@entity.error"
+                      "error": "@entity.error",
+                      "code": "generate_failed"
                     }
                   ],
                   [
                     "render-ui",
                     "main",
                     {
-                      "message": "@entity.error",
                       "type": "error-state",
+                      "message": "@entity.error",
                       "onRetry": "RETRY",
                       "title": "Generation Failed"
                     }
@@ -586,12 +586,12 @@
                     "render-ui",
                     "main",
                     {
-                      "gap": "md",
-                      "direction": "vertical",
                       "type": "stack",
                       "children": [
                         "@config.uiTrait"
-                      ]
+                      ],
+                      "direction": "vertical",
+                      "gap": "md"
                     }
                   ]
                 ]
@@ -621,8 +621,8 @@
                     "main",
                     {
                       "type": "stack",
-                      "direction": "vertical",
                       "gap": "md",
+                      "direction": "vertical",
                       "children": [
                         "@config.uiTrait"
                       ]
@@ -644,12 +644,12 @@
                     "render-ui",
                     "main",
                     {
-                      "direction": "vertical",
                       "children": [
                         "@config.uiTrait"
                       ],
+                      "type": "stack",
                       "gap": "md",
-                      "type": "stack"
+                      "direction": "vertical"
                     }
                   ]
                 ]
@@ -662,21 +662,28 @@
               "default": "",
               "label": "Start time",
               "description": "Event start in ISO 8601 format (e.g. 2026-06-01T09:00:00Z)",
-              "tier": "customization"
+              "tier": "presentation"
             },
             "endsAt": {
               "type": "string",
               "default": "",
               "label": "End time",
               "description": "Event end in ISO 8601 format (e.g. 2026-06-01T10:00:00Z)",
-              "tier": "customization"
+              "tier": "presentation"
             },
-            "eventName": {
+            "description": {
               "type": "string",
               "default": "",
-              "label": "Event title",
-              "description": "Title shown for the event in the recipient's calendar",
-              "tier": "customization"
+              "label": "Event details",
+              "description": "Long-form notes attached to the calendar invite",
+              "tier": "presentation"
+            },
+            "location": {
+              "type": "string",
+              "default": "",
+              "label": "Location",
+              "description": "Physical address or meeting URL for the event",
+              "tier": "presentation"
             },
             "uiTrait": {
               "type": "trait",
@@ -685,19 +692,12 @@
               "description": "Trait that renders the calendar event editor UI",
               "tier": "internal"
             },
-            "description": {
+            "eventName": {
               "type": "string",
               "default": "",
-              "label": "Event details",
-              "description": "Long-form notes attached to the calendar invite",
-              "tier": "customization"
-            },
-            "location": {
-              "type": "string",
-              "default": "",
-              "label": "Location",
-              "description": "Physical address or meeting URL for the event",
-              "tier": "customization"
+              "label": "Event title",
+              "description": "Title shown for the event in the recipient's calendar",
+              "tier": "presentation"
             }
           },
           "scope": "instance"

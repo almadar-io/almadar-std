@@ -153,28 +153,28 @@ export interface StdChangeOrderChangeOrderUpdateFailedPayload {
  * without modifying its state-machine topology.
  */
 export interface StdChangeOrderConfig {
-  /** Default: `"none"` */
-  lateFeePolicy?: 'none' | 'flat' | 'percent';
-  /** Default: `7` */
-  retentionYears?: number;
-  /** Default: `"USD"` */
-  currency?: string;
-  /** Default: `7` */
-  gracePeriodDays?: number;
-  /** Default: `0` */
-  lateFeeAmount?: number;
   /** Default: `""` */
   complianceJurisdiction?: string;
+  /** Default: `0` */
+  lateFeeAmount?: number;
+  /** Default: `[{"name":"coNumber","label":"CO #","variant":"caption"},{"name":"description","label":"Description","variant":"caption"},{"label":"Cost Impact","name":"costImpact","variant":"caption"},{"name":"scheduleImpactDays","label":"Days","variant":"caption"},{"label":"Status","variant":"badge","name":"status"},{"label":"Requested By","variant":"caption","name":"requestedBy"}]` */
+  fields?: EntityRow[];
+  /** Default: `7` */
+  retentionYears?: number;
+  /** Default: `[{"event":"OPEN_CHANGE_ORDER","label":"Open","variant":"primary","icon":"arrow-right"},{"event":"REQUEST_DELETE","variant":"danger","label":"Delete"}]` */
+  itemActions?: EntityRow[];
   /** Default: `"exclusive"` */
   taxStrategy?: 'inclusive' | 'exclusive' | 'none';
   /** Default: `"Change Orders"` */
   title?: string;
-  /** Default: `[{"icon":"arrow-right","variant":"primary","label":"Open","event":"OPEN_CHANGE_ORDER"},{"variant":"danger","label":"Delete","event":"REQUEST_DELETE"}]` */
-  itemActions?: EntityRow[];
+  /** Default: `"USD"` */
+  currency?: string;
   /** Default: `"half-up"` */
   roundingMode?: 'bankers' | 'half-up' | 'down';
-  /** Default: `[{"variant":"caption","name":"coNumber","label":"CO #"},{"label":"Description","variant":"caption","name":"description"},{"label":"Cost Impact","name":"costImpact","variant":"caption"},{"name":"scheduleImpactDays","variant":"caption","label":"Days"},{"label":"Status","variant":"badge","name":"status"},{"label":"Requested By","variant":"caption","name":"requestedBy"}]` */
-  fields?: EntityRow[];
+  /** Default: `7` */
+  gracePeriodDays?: number;
+  /** Default: `"none"` */
+  lateFeePolicy?: 'none' | 'flat' | 'percent';
 }
 
 /**

@@ -27,7 +27,7 @@ orbital RentChargeOrbital {
       title       : string   = "Rent Charges"
         @label "Section title"
         @description "Heading shown above the rent charge ledger"
-        @tier "customization"
+        @tier "presentation"
       fields      : [FieldSpec] = [
         { name: "tenantId", label: "Tenant",   variant: "caption" },
         { name: "amount",   label: "Amount",   variant: "caption" },
@@ -38,70 +38,70 @@ orbital RentChargeOrbital {
       ]
         @label "Columns to show"
         @description "Each column maps to one field on the Rent Charge entity"
-        @tier "advanced"
+        @tier "presentation"
       itemActions : [ItemAction] = [
         { label: "Open",  event: "OPEN_CHARGE",  variant: "primary", icon: "arrow-right" },
         { label: "Waive", event: "WAIVE_CHARGE", variant: "danger" }
       ]
         @label "Row actions"
         @description "Buttons users can click on each charge row"
-        @tier "customization"
+        @tier "presentation"
       currency        : string   = "USD"
         @label "Default currency"
         @description "ISO 4217 currency code (USD, EUR, GBP, …) for rent amounts."
-        @tier "essential"
+        @tier "domain"
       taxStrategy     : "inclusive" | "exclusive" | "none" = "none"
         @label "Tax strategy"
         @description "inclusive = tax baked into rent; exclusive = tax added on top; none = no tax."
-        @tier "customization"
+        @tier "domain"
       roundingMode    : "bankers" | "half-up" | "down" = "half-up"
         @label "Rounding mode"
         @description "Sub-cent rounding behavior for rent + late fee calculations."
-        @tier "advanced"
+        @tier "domain"
       gracePeriodDays : number   = 5
         @label "Grace period (days)"
         @description "Days after dueDate before the charge is treated as overdue. Wire via sibling std-lifecycle rule."
-        @tier "customization"
+        @tier "domain"
       lateFeePolicy   : "none" | "flat" | "percent" = "flat"
         @label "Late fee policy"
         @description "How late fees compute on overdue rent: none, flat (lateFeeAmount cash), or percent (% of rent). Declarative; wiring deferred."
-        @tier "customization"
+        @tier "domain"
       lateFeeAmount   : number   = 25
         @label "Late fee amount"
         @description "Flat cash amount or percentage (per lateFeePolicy)."
-        @tier "customization"
+        @tier "domain"
       complianceJurisdiction : string = ""
         @label "Compliance jurisdiction"
         @description "Drives rent regulations per locale: 'US-CA', 'EU-DE', 'UK', etc. Declarative."
-        @tier "advanced"
+        @tier "domain"
       retentionYears  : number   = 7
         @label "Retention (years)"
         @description "Years to keep rent records for compliance."
-        @tier "advanced"
+        @tier "domain"
       lateRentGraceDays : number = 5
         @label "Late rent grace (days)"
         @description "Days after dueDate before late fee is auto-assessed. Real-estate-specific alias for gracePeriodDays. Declarative."
-        @tier "customization"
+        @tier "domain"
       leaseRenewalNoticeDays : number = 60
         @label "Lease renewal notice (days)"
         @description "Days before lease end when a renewal notice should fire. Declarative on rent-charge; wired upstream by std-lease."
-        @tier "customization"
+        @tier "domain"
       securityDepositMonths : number = 1
         @label "Security deposit (months of rent)"
         @description "How many months of rent are held as a security deposit. Declarative on rent-charge."
-        @tier "customization"
+        @tier "domain"
       autoRenewEnabled : boolean = false
         @label "Auto-renew lease"
         @description "When true, leases auto-renew on expiry rather than going month-to-month. Declarative on rent-charge."
-        @tier "customization"
+        @tier "domain"
       petPolicy : "no-pets" | "cats-only" | "dogs-only" | "all" = "no-pets"
         @label "Pet policy"
         @description "Property-level pet policy. Declarative."
-        @tier "customization"
+        @tier "domain"
       inspectionFrequencyMonths : number = 12
         @label "Inspection frequency (months)"
         @description "How often property inspections are scheduled. Declarative."
-        @tier "advanced"
+        @tier "domain"
     }
     initial: loading
     state loading {

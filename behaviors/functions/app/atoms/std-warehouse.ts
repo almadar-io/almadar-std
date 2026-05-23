@@ -69,32 +69,32 @@ export interface StdWarehouseWarehouseLoadFailedPayload {
  * without modifying its state-machine topology.
  */
 export interface StdWarehouseConfig {
-  /** Default: `10` */
-  lowStockThreshold?: number;
-  /** Default: `[{"variant":"caption","label":"Code","name":"code"},{"name":"name","label":"Name","variant":"caption"},{"label":"Type","variant":"badge","name":"type"},{"name":"totalSkus","variant":"caption","label":"SKUs"},{"label":"Active","variant":"badge","name":"isActive"}]` */
-  fields?: EntityRow[];
   /** Default: `""` */
   defaultWarehouse?: string;
-  /** Default: `[{"variant":"primary","icon":"arrow-right","label":"Open","event":"OPEN_WAREHOUSE"}]` */
-  itemActions?: EntityRow[];
-  /** Default: `7` */
-  safetyStockDays?: number;
-  /** Default: `"Locations"` */
-  title?: string;
-  /** Default: `5` */
-  reorderPoint?: number;
+  /** Default: `false` */
+  multiLocationEnabled?: boolean;
   /** Default: `false` */
   serialTrackingEnabled?: boolean;
+  /** Default: `false` */
+  lotTrackingEnabled?: boolean;
+  /** Default: `5` */
+  reorderPoint?: number;
+  /** Default: `[{"variant":"primary","event":"OPEN_WAREHOUSE","icon":"arrow-right","label":"Open"}]` */
+  itemActions?: EntityRow[];
+  /** Default: `10` */
+  lowStockThreshold?: number;
+  /** Default: `[{"label":"Code","variant":"caption","name":"code"},{"label":"Name","variant":"caption","name":"name"},{"label":"Type","variant":"badge","name":"type"},{"label":"SKUs","variant":"caption","name":"totalSkus"},{"label":"Active","name":"isActive","variant":"badge"}]` */
+  fields?: EntityRow[];
+  /** Default: `"Locations"` */
+  title?: string;
+  /** Default: `7` */
+  safetyStockDays?: number;
   /** Default: `false` */
   expiryTrackingEnabled?: boolean;
   /** Default: `false` */
   hazmatEnabled?: boolean;
-  /** Default: `false` */
-  lotTrackingEnabled?: boolean;
   /** Default: `30` */
   cycleCountFrequencyDays?: number;
-  /** Default: `false` */
-  multiLocationEnabled?: boolean;
 }
 
 /**

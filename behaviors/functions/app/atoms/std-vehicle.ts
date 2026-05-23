@@ -125,26 +125,26 @@ export interface StdVehicleVehicleUpdateFailedPayload {
  * without modifying its state-machine topology.
  */
 export interface StdVehicleConfig {
+  /** Default: `30` */
+  cycleCountFrequencyDays?: number;
+  /** Default: `""` */
+  defaultWarehouse?: string;
   /** Default: `false` */
-  expiryTrackingEnabled?: boolean;
+  lotTrackingEnabled?: boolean;
+  /** Default: `[{"event":"OPEN_VEHICLE","icon":"arrow-right","label":"Open","variant":"primary"},{"variant":"danger","label":"Retire","event":"RETIRE"}]` */
+  itemActions?: EntityRow[];
+  /** Default: `false` */
+  multiLocationEnabled?: boolean;
   /** Default: `"Fleet"` */
   title?: string;
   /** Default: `false` */
+  serialTrackingEnabled?: boolean;
+  /** Default: `false` */
   hazmatEnabled?: boolean;
-  /** Default: `false` */
-  lotTrackingEnabled?: boolean;
-  /** Default: `false` */
-  multiLocationEnabled?: boolean;
-  /** Default: `""` */
-  defaultWarehouse?: string;
-  /** Default: `30` */
-  cycleCountFrequencyDays?: number;
-  /** Default: `[{"label":"Plate","name":"licensePlate","variant":"caption"},{"variant":"caption","name":"make","label":"Make"},{"name":"model","label":"Model","variant":"caption"},{"name":"year","label":"Year","variant":"caption"},{"name":"vehicleType","label":"Type","variant":"badge"},{"variant":"caption","name":"odometer","label":"Odometer"},{"label":"Status","name":"status","variant":"badge"}]` */
+  /** Default: `[{"variant":"caption","name":"licensePlate","label":"Plate"},{"name":"make","label":"Make","variant":"caption"},{"name":"model","label":"Model","variant":"caption"},{"variant":"caption","name":"year","label":"Year"},{"name":"vehicleType","label":"Type","variant":"badge"},{"variant":"caption","label":"Odometer","name":"odometer"},{"label":"Status","name":"status","variant":"badge"}]` */
   fields?: EntityRow[];
   /** Default: `false` */
-  serialTrackingEnabled?: boolean;
-  /** Default: `[{"icon":"arrow-right","event":"OPEN_VEHICLE","label":"Open","variant":"primary"},{"label":"Retire","event":"RETIRE","variant":"danger"}]` */
-  itemActions?: EntityRow[];
+  expiryTrackingEnabled?: boolean;
 }
 
 /**

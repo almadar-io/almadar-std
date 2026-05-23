@@ -178,32 +178,32 @@ export interface StdWorkOrderWorkOrderLoadFailedPayload {
  * without modifying its state-machine topology.
  */
 export interface StdWorkOrderConfig {
-  /** Default: `[{"variant":"caption","label":"Customer","name":"customerName"},{"name":"serviceType","label":"Service","variant":"caption"},{"variant":"caption","name":"address","label":"Address"},{"label":"Priority","name":"priority","variant":"badge"},{"label":"Status","variant":"badge","name":"status"},{"name":"assignedTo","label":"Assigned","variant":"caption"},{"label":"ETA (min)","variant":"caption","name":"etaMinutes"}]` */
-  fields?: EntityRow[];
+  /** Default: `["assigned","en-route","completed"]` */
+  customerVisibleStatuses?: string[];
   /** Default: `"Work Orders"` */
   title?: string;
+  /** Default: `24` */
+  resolutionSLAHours?: number;
+  /** Default: `false` */
+  requirePhotoOnComplete?: boolean;
+  /** Default: `[{"name":"customerName","label":"Customer","variant":"caption"},{"variant":"caption","name":"serviceType","label":"Service"},{"variant":"caption","name":"address","label":"Address"},{"name":"priority","label":"Priority","variant":"badge"},{"variant":"badge","label":"Status","name":"status"},{"name":"assignedTo","label":"Assigned","variant":"caption"},{"label":"ETA (min)","variant":"caption","name":"etaMinutes"}]` */
+  fields?: EntityRow[];
+  /** Default: `[]` */
+  serviceZones?: string[];
+  /** Default: `[]` */
+  skillsRequired?: string[];
+  /** Default: `60` */
+  responseTimeMinutes?: number;
+  /** Default: `false` */
+  requireSignatureOnComplete?: boolean;
+  /** Default: `[{"label":"Open","variant":"primary","icon":"arrow-right","event":"OPEN_ORDER"},{"event":"CANCEL","icon":"x","label":"Cancel","variant":"danger"}]` */
+  itemActions?: EntityRow[];
   /** Default: `50` */
   serviceAreaRadius?: number;
   /** Default: `"nearest"` */
   dispatchStrategy?: 'nearest' | 'round-robin' | 'manual';
   /** Default: `48` */
   escalationThresholdHours?: number;
-  /** Default: `[{"variant":"primary","event":"OPEN_ORDER","icon":"arrow-right","label":"Open"},{"variant":"danger","event":"CANCEL","label":"Cancel","icon":"x"}]` */
-  itemActions?: EntityRow[];
-  /** Default: `[]` */
-  skillsRequired?: string[];
-  /** Default: `60` */
-  responseTimeMinutes?: number;
-  /** Default: `["assigned","en-route","completed"]` */
-  customerVisibleStatuses?: string[];
-  /** Default: `false` */
-  requirePhotoOnComplete?: boolean;
-  /** Default: `[]` */
-  serviceZones?: string[];
-  /** Default: `24` */
-  resolutionSLAHours?: number;
-  /** Default: `false` */
-  requireSignatureOnComplete?: boolean;
 }
 
 /**

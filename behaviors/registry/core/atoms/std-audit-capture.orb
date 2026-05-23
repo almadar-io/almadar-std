@@ -235,24 +235,24 @@
                         "create",
                         "AuditEntry",
                         {
-                          "before": "@entity.before",
-                          "entityId": "@entity.entityId",
-                          "actor": "@user.id",
-                          "entityType": "@config.captureEntity",
-                          "after": "@entity.after",
                           "action": "@entity.action",
-                          "recordedAt": 0.0
+                          "actor": "@user.id",
+                          "recordedAt": 0.0,
+                          "after": "@entity.after",
+                          "before": "@entity.before",
+                          "entityType": "@config.captureEntity",
+                          "entityId": "@entity.entityId"
                         }
                       ],
                       [
                         "emit",
                         "AuditRecorded",
                         {
-                          "actor": "@user.id",
                           "entityType": "@config.captureEntity",
-                          "entityId": "@entity.entityId",
+                          "recordedAt": 0.0,
                           "action": "@entity.action",
-                          "recordedAt": 0.0
+                          "actor": "@user.id",
+                          "entityId": "@entity.entityId"
                         }
                       ]
                     ]
@@ -262,36 +262,29 @@
             ]
           },
           "config": {
-            "captureBeforeAfter": {
-              "type": "boolean",
-              "default": false,
-              "label": "Capture before/after snapshots",
-              "description": "When true, persist `before` and `after` object snapshots from @payload.data on each audit row. Default off to keep audit rows small.",
-              "tier": "advanced"
-            },
-            "captureEntity": {
-              "type": "string",
-              "default": "",
-              "label": "Entity to audit",
-              "description": "Type name of the entity whose mutations get logged",
-              "tier": "essential"
-            },
             "captureEventTypes": {
               "type": "[string]",
               "default": [],
               "label": "Event-kind filter",
               "description": "When set, only @payload.data.kind values in this list are audited. Empty list = capture every event. Requires the upstream event to include a `kind` field on its payload.",
-              "tier": "advanced",
+              "tier": "domain",
               "items": {
                 "type": "string"
               }
+            },
+            "captureBeforeAfter": {
+              "type": "boolean",
+              "default": false,
+              "label": "Capture before/after snapshots",
+              "description": "When true, persist `before` and `after` object snapshots from @payload.data on each audit row. Default off to keep audit rows small.",
+              "tier": "domain"
             },
             "excludeFields": {
               "type": "[string]",
               "default": [],
               "label": "Skip fields",
               "description": "Entity fields to omit from the audit payload (declarative; before/after still capture all fields in v1.1 — field exclusion lands when captureBeforeAfter wiring filters per-field).",
-              "tier": "advanced",
+              "tier": "domain",
               "items": {
                 "type": "string"
               }
@@ -301,7 +294,14 @@
               "default": 2555.0,
               "label": "Retention (days)",
               "description": "Days to keep audit rows. Default 2555 (7 years) for typical compliance regimes. WIRING DEFERRED: retention enforcement requires composing `std-lifecycle` against AuditEntry with a delete rule (gap — docs/Almadar_Std_Factories.md).",
-              "tier": "advanced"
+              "tier": "domain"
+            },
+            "captureEntity": {
+              "type": "string",
+              "default": "",
+              "label": "Entity to audit",
+              "description": "Type name of the entity whose mutations get logged",
+              "tier": "domain"
             }
           },
           "scope": "instance"

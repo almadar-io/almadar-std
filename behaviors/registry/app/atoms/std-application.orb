@@ -750,8 +750,8 @@
                     "Application",
                     {
                       "emit": {
-                        "failure": "ApplicationLoadFailed",
-                        "success": "ApplicationLoaded"
+                        "success": "ApplicationLoaded",
+                        "failure": "ApplicationLoadFailed"
                       }
                     }
                   ],
@@ -759,22 +759,22 @@
                     "render-ui",
                     "main",
                     {
+                      "type": "stack",
+                      "direction": "vertical",
+                      "align": "center",
                       "className": "py-12",
                       "children": [
                         {
                           "type": "spinner"
                         },
                         {
-                          "content": "Loading applications…",
-                          "type": "typography",
                           "color": "muted",
+                          "type": "typography",
+                          "content": "Loading applications…",
                           "variant": "caption"
                         }
                       ],
-                      "direction": "vertical",
-                      "gap": "md",
-                      "type": "stack",
-                      "align": "center"
+                      "gap": "md"
                     }
                   ]
                 ]
@@ -788,84 +788,84 @@
                     "render-ui",
                     "main",
                     {
-                      "direction": "vertical",
-                      "type": "stack",
                       "children": [
                         {
-                          "justify": "between",
                           "type": "stack",
-                          "direction": "horizontal",
                           "gap": "md",
                           "children": [
                             {
-                              "type": "stack",
-                              "align": "center",
+                              "gap": "sm",
                               "children": [
                                 {
                                   "name": "file-text",
                                   "type": "icon"
                                 },
                                 {
-                                  "content": "Applications",
                                   "variant": "h3",
+                                  "content": "Applications",
                                   "type": "typography"
                                 }
                               ],
-                              "gap": "sm",
-                              "direction": "horizontal"
+                              "direction": "horizontal",
+                              "type": "stack",
+                              "align": "center"
                             },
                             {
                               "label": "New Application",
-                              "icon": "plus",
-                              "type": "button",
                               "variant": "primary",
-                              "action": "CREATE"
+                              "type": "button",
+                              "action": "CREATE",
+                              "icon": "plus"
                             }
-                          ]
+                          ],
+                          "direction": "horizontal",
+                          "justify": "between"
                         },
                         {
+                          "cols": 4.0,
+                          "type": "simple-grid",
                           "children": [
                             {
                               "label": "Total applications",
+                              "value": "@payload.data.length",
                               "type": "stat-display",
-                              "icon": "file-text",
-                              "value": "@payload.data.length"
+                              "icon": "file-text"
                             },
                             {
-                              "value": "21",
-                              "label": "Submitted",
                               "type": "stat-display",
+                              "label": "Submitted",
+                              "value": "21",
                               "icon": "send"
                             },
                             {
-                              "icon": "search",
                               "value": "8",
-                              "type": "stat-display",
-                              "label": "Under review"
+                              "label": "Under review",
+                              "icon": "search",
+                              "type": "stat-display"
                             },
                             {
-                              "label": "Accepted",
-                              "type": "stat-display",
                               "value": "12",
-                              "icon": "check-circle"
+                              "label": "Accepted",
+                              "icon": "check-circle",
+                              "type": "stat-display"
                             }
-                          ],
-                          "type": "simple-grid",
-                          "cols": 4.0
+                          ]
                         },
                         {
                           "type": "divider"
                         },
                         {
+                          "type": "data-grid",
+                          "fields": "@config.fields",
                           "cols": 1.0,
-                          "itemActions": "@config.itemActions",
                           "gap": "sm",
                           "entity": "@payload.data",
-                          "type": "data-grid",
-                          "fields": "@config.fields"
+                          "itemActions": "@config.itemActions"
                         }
                       ],
-                      "gap": "md"
+                      "gap": "md",
+                      "direction": "vertical",
+                      "type": "stack"
                     }
                   ]
                 ]
@@ -879,9 +879,9 @@
                     "render-ui",
                     "main",
                     {
+                      "type": "alert",
                       "message": "@payload.error",
-                      "variant": "error",
-                      "type": "alert"
+                      "variant": "error"
                     }
                   ]
                 ]
@@ -935,45 +935,45 @@
                     "render-ui",
                     "main",
                     {
-                      "direction": "vertical",
+                      "type": "stack",
                       "gap": "md",
+                      "direction": "vertical",
                       "children": [
                         {
-                          "gap": "sm",
-                          "align": "center",
-                          "type": "stack",
                           "children": [
                             {
-                              "name": "file-text",
-                              "type": "icon"
+                              "type": "icon",
+                              "name": "file-text"
                             },
                             {
                               "type": "typography",
-                              "variant": "h3",
-                              "content": "New Application"
+                              "content": "New Application",
+                              "variant": "h3"
                             }
                           ],
-                          "direction": "horizontal"
+                          "direction": "horizontal",
+                          "align": "center",
+                          "type": "stack",
+                          "gap": "sm"
                         },
                         {
                           "type": "divider"
                         },
                         {
-                          "type": "form-section",
                           "entity": "@entity",
-                          "mode": "create",
-                          "cancelEvent": "CANCEL_EDIT",
-                          "submitEvent": "CREATE_SUBMIT",
                           "fields": [
                             "applicantName",
                             "applicantEmail",
                             "targetId",
                             "targetType",
                             "coverLetter"
-                          ]
+                          ],
+                          "type": "form-section",
+                          "submitEvent": "CREATE_SUBMIT",
+                          "mode": "create",
+                          "cancelEvent": "CANCEL_EDIT"
                         }
-                      ],
-                      "type": "stack"
+                      ]
                     }
                   ]
                 ]
@@ -1029,28 +1029,27 @@
                     {
                       "children": [
                         {
-                          "direction": "horizontal",
-                          "gap": "sm",
+                          "align": "center",
                           "children": [
                             {
-                              "type": "icon",
-                              "name": "pencil"
+                              "name": "pencil",
+                              "type": "icon"
                             },
                             {
-                              "type": "typography",
+                              "content": "Edit Application",
                               "variant": "h3",
-                              "content": "Edit Application"
+                              "type": "typography"
                             }
                           ],
                           "type": "stack",
-                          "align": "center"
+                          "gap": "sm",
+                          "direction": "horizontal"
                         },
                         {
                           "type": "divider"
                         },
                         {
-                          "cancelEvent": "CANCEL_EDIT",
-                          "submitEvent": "UPDATE_SUBMIT",
+                          "entity": "@entity",
                           "fields": [
                             "applicantName",
                             "applicantEmail",
@@ -1058,14 +1057,15 @@
                             "targetType",
                             "coverLetter"
                           ],
-                          "mode": "edit",
                           "type": "form-section",
-                          "entity": "@entity"
+                          "submitEvent": "UPDATE_SUBMIT",
+                          "cancelEvent": "CANCEL_EDIT",
+                          "mode": "edit"
                         }
                       ],
-                      "direction": "vertical",
+                      "gap": "md",
                       "type": "stack",
-                      "gap": "md"
+                      "direction": "vertical"
                     }
                   ]
                 ]
@@ -1095,14 +1095,14 @@
                     "update",
                     "Application",
                     {
-                      "id": "@entity.id",
                       "status": "submitted",
+                      "id": "@entity.id",
                       "submittedAt": "@entity.submittedAt"
                     },
                     {
                       "emit": {
-                        "failure": "ApplicationLoadFailed",
-                        "success": "ApplicationSubmitted"
+                        "success": "ApplicationSubmitted",
+                        "failure": "ApplicationLoadFailed"
                       }
                     }
                   ],
@@ -1110,22 +1110,22 @@
                     "render-ui",
                     "main",
                     {
-                      "type": "stack",
-                      "className": "py-12",
-                      "gap": "md",
-                      "direction": "vertical",
                       "children": [
                         {
                           "type": "spinner"
                         },
                         {
-                          "type": "typography",
-                          "color": "muted",
+                          "content": "Submitting…",
                           "variant": "caption",
-                          "content": "Submitting…"
+                          "type": "typography",
+                          "color": "muted"
                         }
                       ],
-                      "align": "center"
+                      "align": "center",
+                      "className": "py-12",
+                      "gap": "md",
+                      "type": "stack",
+                      "direction": "vertical"
                     }
                   ]
                 ]
@@ -1156,8 +1156,8 @@
                     "Application",
                     {
                       "status": "accepted",
-                      "reviewedAt": "@entity.reviewedAt",
-                      "id": "@entity.id"
+                      "id": "@entity.id",
+                      "reviewedAt": "@entity.reviewedAt"
                     },
                     {
                       "emit": {
@@ -1170,22 +1170,22 @@
                     "render-ui",
                     "main",
                     {
+                      "direction": "vertical",
+                      "gap": "md",
+                      "align": "center",
                       "type": "stack",
+                      "className": "py-12",
                       "children": [
                         {
                           "type": "spinner"
                         },
                         {
-                          "variant": "caption",
                           "type": "typography",
+                          "content": "Accepting…",
                           "color": "muted",
-                          "content": "Accepting…"
+                          "variant": "caption"
                         }
-                      ],
-                      "direction": "vertical",
-                      "className": "py-12",
-                      "gap": "md",
-                      "align": "center"
+                      ]
                     }
                   ]
                 ]
@@ -1221,9 +1221,9 @@
                     "Application",
                     {
                       "id": "@entity.id",
+                      "status": "rejected",
                       "reviewedAt": "@entity.reviewedAt",
-                      "notes": "@entity.notes",
-                      "status": "rejected"
+                      "notes": "@entity.notes"
                     },
                     {
                       "emit": {
@@ -1236,22 +1236,22 @@
                     "render-ui",
                     "main",
                     {
-                      "type": "stack",
-                      "align": "center",
                       "children": [
                         {
                           "type": "spinner"
                         },
                         {
-                          "variant": "caption",
-                          "content": "Rejecting…",
                           "type": "typography",
-                          "color": "muted"
+                          "color": "muted",
+                          "variant": "caption",
+                          "content": "Rejecting…"
                         }
                       ],
                       "direction": "vertical",
                       "gap": "md",
-                      "className": "py-12"
+                      "type": "stack",
+                      "className": "py-12",
+                      "align": "center"
                     }
                   ]
                 ]
@@ -1266,8 +1266,8 @@
                     "Application",
                     {
                       "emit": {
-                        "success": "ApplicationLoaded",
-                        "failure": "ApplicationLoadFailed"
+                        "failure": "ApplicationLoadFailed",
+                        "success": "ApplicationLoaded"
                       }
                     }
                   ],
@@ -1314,22 +1314,22 @@
                     "render-ui",
                     "main",
                     {
+                      "type": "stack",
+                      "align": "center",
                       "children": [
                         {
                           "type": "spinner"
                         },
                         {
-                          "type": "typography",
-                          "variant": "caption",
+                          "color": "muted",
                           "content": "Updating application status…",
-                          "color": "muted"
+                          "type": "typography",
+                          "variant": "caption"
                         }
                       ],
-                      "type": "stack",
-                      "align": "center",
                       "className": "py-12",
-                      "gap": "md",
-                      "direction": "vertical"
+                      "direction": "vertical",
+                      "gap": "md"
                     }
                   ]
                 ]
@@ -1346,8 +1346,8 @@
                     "@payload.data",
                     {
                       "emit": {
-                        "success": "ApplicationCreated",
-                        "failure": "ApplicationLoadFailed"
+                        "failure": "ApplicationLoadFailed",
+                        "success": "ApplicationCreated"
                       }
                     }
                   ],
@@ -1355,19 +1355,19 @@
                     "render-ui",
                     "main",
                     {
-                      "className": "py-12",
-                      "type": "stack",
                       "direction": "vertical",
+                      "className": "py-12",
                       "gap": "md",
+                      "type": "stack",
                       "children": [
                         {
                           "type": "spinner"
                         },
                         {
                           "color": "muted",
+                          "type": "typography",
                           "variant": "caption",
-                          "content": "Saving…",
-                          "type": "typography"
+                          "content": "Saving…"
                         }
                       ],
                       "align": "center"
@@ -1387,8 +1387,8 @@
                     "@payload.data",
                     {
                       "emit": {
-                        "failure": "ApplicationLoadFailed",
-                        "success": "ApplicationUpdated"
+                        "success": "ApplicationUpdated",
+                        "failure": "ApplicationLoadFailed"
                       }
                     }
                   ],
@@ -1397,21 +1397,21 @@
                     "main",
                     {
                       "direction": "vertical",
-                      "type": "stack",
                       "gap": "md",
+                      "className": "py-12",
+                      "align": "center",
                       "children": [
                         {
                           "type": "spinner"
                         },
                         {
+                          "type": "typography",
                           "color": "muted",
                           "variant": "caption",
-                          "type": "typography",
                           "content": "Updating…"
                         }
                       ],
-                      "align": "center",
-                      "className": "py-12"
+                      "type": "stack"
                     }
                   ]
                 ]
@@ -1426,8 +1426,8 @@
                     "Application",
                     {
                       "emit": {
-                        "success": "ApplicationLoaded",
-                        "failure": "ApplicationLoadFailed"
+                        "failure": "ApplicationLoadFailed",
+                        "success": "ApplicationLoaded"
                       }
                     }
                   ],
@@ -1450,8 +1450,8 @@
                     "Application",
                     {
                       "emit": {
-                        "success": "ApplicationLoaded",
-                        "failure": "ApplicationLoadFailed"
+                        "failure": "ApplicationLoadFailed",
+                        "success": "ApplicationLoaded"
                       }
                     }
                   ],
@@ -1474,8 +1474,8 @@
                     "Application",
                     {
                       "emit": {
-                        "success": "ApplicationLoaded",
-                        "failure": "ApplicationLoadFailed"
+                        "failure": "ApplicationLoadFailed",
+                        "success": "ApplicationLoaded"
                       }
                     }
                   ],
@@ -1569,9 +1569,9 @@
                     "render-ui",
                     "main",
                     {
+                      "message": "@payload.error",
                       "variant": "error",
-                      "type": "alert",
-                      "message": "@payload.error"
+                      "type": "alert"
                     }
                   ]
                 ]
@@ -1607,14 +1607,14 @@
               "type": "[FieldSpec]",
               "default": [
                 {
-                  "label": "Applicant",
                   "name": "applicantName",
                   "icon": "user",
+                  "label": "Applicant",
                   "variant": "caption"
                 },
                 {
-                  "variant": "caption",
                   "name": "applicantEmail",
+                  "variant": "caption",
                   "label": "Email"
                 },
                 {
@@ -1623,24 +1623,44 @@
                   "variant": "caption"
                 },
                 {
-                  "label": "Status",
+                  "variant": "badge",
                   "name": "status",
-                  "variant": "badge"
+                  "label": "Status"
                 },
                 {
                   "name": "submittedAt",
-                  "label": "Submitted",
-                  "variant": "caption"
+                  "variant": "caption",
+                  "label": "Submitted"
                 }
               ],
               "label": "Columns to show",
               "description": "Each column maps to one field on the Application entity",
-              "tier": "customization",
+              "tier": "presentation",
               "items": {
                 "type": "object",
                 "properties": {
+                  "name": {
+                    "name": "name",
+                    "type": "string",
+                    "required": true
+                  },
+                  "key": {
+                    "name": "key",
+                    "type": "string",
+                    "required": false
+                  },
+                  "variant": {
+                    "name": "variant",
+                    "type": "string",
+                    "required": false
+                  },
                   "header": {
                     "name": "header",
+                    "type": "string",
+                    "required": false
+                  },
+                  "label": {
+                    "name": "label",
                     "type": "string",
                     "required": false
                   },
@@ -1653,36 +1673,37 @@
                     "name": "icon",
                     "type": "string",
                     "required": false
-                  },
-                  "key": {
-                    "name": "key",
-                    "type": "string",
-                    "required": false
-                  },
-                  "label": {
-                    "name": "label",
-                    "type": "string",
-                    "required": false
-                  },
-                  "name": {
-                    "name": "name",
-                    "type": "string",
-                    "required": true
-                  },
-                  "variant": {
-                    "name": "variant",
-                    "type": "string",
-                    "required": false
                   }
                 }
               }
+            },
+            "retentionAfterRejectionDays": {
+              "type": "number",
+              "default": 730.0,
+              "label": "Retention after rejection (days)",
+              "description": "Days to keep rejected applications. Default 730 (2 years) is typical EEOC retention. Wire via sibling std-lifecycle delete rule.",
+              "tier": "domain"
+            },
+            "backgroundCheckRequired": {
+              "type": "boolean",
+              "default": false,
+              "label": "Background check required",
+              "description": "Block ACCEPT transition until a background check is complete.",
+              "tier": "domain"
+            },
+            "i9DocumentsRequired": {
+              "type": "boolean",
+              "default": false,
+              "label": "I-9 documents required",
+              "description": "Require I-9 supporting documents at the accepted transition.",
+              "tier": "domain"
             },
             "anonymizeOnRejection": {
               "type": "boolean",
               "default": false,
               "label": "Anonymize on rejection",
               "description": "When true, scrub PII (applicantName, applicantEmail, coverLetter) on REJECT to retain only the audit row. Pair with sibling std-data-erasure for full Art. 17 compliance.",
-              "tier": "customization"
+              "tier": "domain"
             },
             "itemActions": {
               "type": "[ItemAction]",
@@ -1694,8 +1715,8 @@
                 },
                 {
                   "label": "Submit",
-                  "variant": "primary",
-                  "event": "SUBMIT"
+                  "event": "SUBMIT",
+                  "variant": "primary"
                 },
                 {
                   "label": "Accept",
@@ -1703,29 +1724,19 @@
                   "variant": "primary"
                 },
                 {
-                  "event": "REJECT",
                   "variant": "danger",
-                  "label": "Reject"
+                  "label": "Reject",
+                  "event": "REJECT"
                 }
               ],
               "label": "Row actions",
               "description": "Buttons users can click on each application row",
-              "tier": "customization",
+              "tier": "presentation",
               "items": {
                 "type": "object",
                 "properties": {
-                  "event": {
-                    "name": "event",
-                    "type": "string",
-                    "required": true
-                  },
                   "icon": {
                     "name": "icon",
-                    "type": "string",
-                    "required": false
-                  },
-                  "variant": {
-                    "name": "variant",
                     "type": "string",
                     "required": false
                   },
@@ -1733,51 +1744,40 @@
                     "name": "label",
                     "type": "string",
                     "required": true
+                  },
+                  "variant": {
+                    "name": "variant",
+                    "type": "string",
+                    "required": false
+                  },
+                  "event": {
+                    "name": "event",
+                    "type": "string",
+                    "required": true
                   }
                 }
               }
-            },
-            "retentionAfterRejectionDays": {
-              "type": "number",
-              "default": 730.0,
-              "label": "Retention after rejection (days)",
-              "description": "Days to keep rejected applications. Default 730 (2 years) is typical EEOC retention. Wire via sibling std-lifecycle delete rule.",
-              "tier": "advanced"
-            },
-            "title": {
-              "type": "string",
-              "default": "Applications",
-              "label": "Section title",
-              "description": "Heading shown above the application list",
-              "tier": "customization"
             },
             "equalOpportunityTrackingEnabled": {
               "type": "boolean",
               "default": false,
               "label": "Equal opportunity tracking",
               "description": "Capture demographic data separately for EEO reporting (stored in a sibling collection, not on the Application entity).",
-              "tier": "advanced"
+              "tier": "domain"
             },
             "eVerifyRequired": {
               "type": "boolean",
               "default": false,
               "label": "E-Verify required",
               "description": "US I-9 / E-Verify gate. Block ACCEPT until verification passes.",
-              "tier": "customization"
+              "tier": "domain"
             },
-            "backgroundCheckRequired": {
-              "type": "boolean",
-              "default": false,
-              "label": "Background check required",
-              "description": "Block ACCEPT transition until a background check is complete.",
-              "tier": "customization"
-            },
-            "i9DocumentsRequired": {
-              "type": "boolean",
-              "default": false,
-              "label": "I-9 documents required",
-              "description": "Require I-9 supporting documents at the accepted transition.",
-              "tier": "customization"
+            "title": {
+              "type": "string",
+              "default": "Applications",
+              "label": "Section title",
+              "description": "Heading shown above the application list",
+              "tier": "presentation"
             }
           },
           "scope": "collection"

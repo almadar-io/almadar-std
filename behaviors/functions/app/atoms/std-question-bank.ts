@@ -86,26 +86,26 @@ export interface StdQuestionBankQuestionLoadFailedPayload {
 export interface StdQuestionBankConfig {
   /** Default: `["en"]` */
   enabledLocales?: string[];
-  /** Default: `"en"` */
-  defaultLocale?: string;
-  /** Default: `[{"label":"Question","name":"label","variant":"caption"},{"name":"kind","label":"Type","variant":"badge"},{"name":"category","label":"Category","variant":"caption"},{"label":"Survey","name":"surveyId","variant":"caption"},{"label":"Order","name":"order","variant":"caption"}]` */
-  fields?: EntityRow[];
-  /** Default: `30` */
-  draftAutosaveSeconds?: number;
-  /** Default: `"internal"` */
-  visibilityScope?: 'public' | 'internal' | 'customer';
-  /** Default: `true` */
-  allowRollback?: boolean;
-  /** Default: `false` */
-  scheduledPublishEnabled?: boolean;
-  /** Default: `5` */
-  keepVersions?: number;
-  /** Default: `"Question Bank"` */
-  title?: string;
-  /** Default: `[{"event":"OPEN_QUESTION","variant":"primary","label":"Open","icon":"arrow-right"},{"event":"DELETE_QUESTION","variant":"danger","label":"Delete"}]` */
+  /** Default: `[{"label":"Open","event":"OPEN_QUESTION","variant":"primary","icon":"arrow-right"},{"label":"Delete","variant":"danger","event":"DELETE_QUESTION"}]` */
   itemActions?: EntityRow[];
   /** Default: `false` */
   seoEnabled?: boolean;
+  /** Default: `"en"` */
+  defaultLocale?: string;
+  /** Default: `5` */
+  keepVersions?: number;
+  /** Default: `30` */
+  draftAutosaveSeconds?: number;
+  /** Default: `false` */
+  scheduledPublishEnabled?: boolean;
+  /** Default: `"Question Bank"` */
+  title?: string;
+  /** Default: `[{"variant":"caption","label":"Question","name":"label"},{"variant":"badge","name":"kind","label":"Type"},{"variant":"caption","name":"category","label":"Category"},{"variant":"caption","name":"surveyId","label":"Survey"},{"variant":"caption","name":"order","label":"Order"}]` */
+  fields?: EntityRow[];
+  /** Default: `true` */
+  allowRollback?: boolean;
+  /** Default: `"internal"` */
+  visibilityScope?: 'public' | 'internal' | 'customer';
 }
 
 /**

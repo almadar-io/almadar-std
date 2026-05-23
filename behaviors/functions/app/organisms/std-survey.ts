@@ -31,8 +31,8 @@ const ALIAS = 'Survey';
  * without modifying its state-machine topology.
  */
 export interface StdSurveyConfig {
-  navItems?: TraitConfig;
   notifications?: TraitConfig;
+  navItems?: TraitConfig;
 }
 
 /**
@@ -182,7 +182,10 @@ export function stdSurveySurveyOrbital(params: StdSurveySurveyOrbitalParams = {}
         'ref': 'AppShell.traits.AppLayout',
         'name': 'SurveyAppLayout',
         'config': {
+          'contentTrait': '@trait.SurveyCatalog',
+          'notifications': [],
           'appName': 'Surveys',
+          'notificationClickEvent': 'SURVEY_NOTIFICATIONS_OPEN',
           'navItems': [
             {
               'href': '/surveys',
@@ -190,19 +193,16 @@ export function stdSurveySurveyOrbital(params: StdSurveySurveyOrbitalParams = {}
               'icon': 'list-checks',
             },
             {
-              'icon': 'inbox',
               'label': 'Responses',
               'href': '/responses',
+              'icon': 'inbox',
             },
           ],
-          'notifications': [],
           'searchEvent': 'SURVEY_SEARCH',
-          'notificationClickEvent': 'SURVEY_NOTIFICATIONS_OPEN',
-          'contentTrait': '@trait.SurveyCatalog',
         },
         'events': {
-          'NOTIFY_CLICK': 'SURVEY_NOTIFICATIONS_OPEN',
           'SEARCH': 'SURVEY_SEARCH',
+          'NOTIFY_CLICK': 'SURVEY_NOTIFICATIONS_OPEN',
         },
       }),
       rebindInlineTraitEntity({
@@ -285,49 +285,49 @@ export function stdSurveySurveyOrbital(params: StdSurveySurveyOrbitalParams = {}
                   'render-ui',
                   'main',
                   {
-                    'gap': 'lg',
                     'type': 'stack',
                     'direction': 'vertical',
+                    'gap': 'lg',
                     'children': [
                       {
-                        'type': 'stack',
-                        'justify': 'between',
-                        'gap': 'md',
-                        'align': 'center',
                         'children': [
                           {
-                            'gap': 'sm',
                             'direction': 'horizontal',
+                            'align': 'center',
+                            'type': 'stack',
                             'children': [
                               {
-                                'type': 'icon',
                                 'name': 'list-checks',
+                                'type': 'icon',
                               },
                               {
-                                'variant': 'h2',
                                 'type': 'typography',
                                 'content': 'Surveys',
+                                'variant': 'h2',
                               },
                             ],
-                            'type': 'stack',
-                            'align': 'center',
+                            'gap': 'sm',
                           },
                           {
-                            'direction': 'horizontal',
                             'type': 'stack',
+                            'direction': 'horizontal',
                             'gap': 'sm',
                             'children': [
                               {
-                                'type': 'button',
-                                'variant': 'primary',
-                                'action': 'CREATE',
-                                'label': 'New Survey',
                                 'icon': 'plus',
+                                'label': 'New Survey',
+                                'type': 'button',
+                                'action': 'CREATE',
+                                'variant': 'primary',
                               },
                             ],
                           },
                         ],
+                        'gap': 'md',
                         'direction': 'horizontal',
+                        'justify': 'between',
+                        'align': 'center',
+                        'type': 'stack',
                       },
                       {
                         'type': 'divider',
@@ -343,26 +343,26 @@ export function stdSurveySurveyOrbital(params: StdSurveySurveyOrbitalParams = {}
                         'type': 'divider',
                       },
                       {
+                        'variant': 'h3',
                         'type': 'typography',
                         'content': 'Question Bank',
-                        'variant': 'h3',
                       },
                       '@trait.SurveyQuestionBank',
                       {
                         'type': 'divider',
                       },
                       {
-                        'type': 'typography',
                         'content': 'Skip Logic',
                         'variant': 'h3',
+                        'type': 'typography',
                       },
                       '@trait.SurveyBranching',
                       {
                         'type': 'divider',
                       },
                       {
-                        'type': 'typography',
                         'variant': 'h3',
+                        'type': 'typography',
                         'content': 'Survey Preview',
                       },
                       '@trait.SurveyPreviewForm',
@@ -385,11 +385,13 @@ export function stdSurveySurveyOrbital(params: StdSurveySurveyOrbitalParams = {}
                   'render-ui',
                   'main',
                   {
+                    'gap': 'md',
                     'align': 'center',
+                    'className': 'py-8',
                     'children': [
                       {
-                        'name': 'bell',
                         'type': 'icon',
+                        'name': 'bell',
                       },
                       {
                         'type': 'typography',
@@ -397,21 +399,19 @@ export function stdSurveySurveyOrbital(params: StdSurveySurveyOrbitalParams = {}
                         'content': 'No notifications',
                       },
                       {
-                        'color': 'muted',
-                        'content': 'You\'re all caught up.',
-                        'type': 'typography',
                         'variant': 'caption',
+                        'content': 'You\'re all caught up.',
+                        'color': 'muted',
+                        'type': 'typography',
                       },
                       {
-                        'variant': 'ghost',
-                        'label': 'Back to surveys',
-                        'action': 'INIT',
                         'type': 'button',
+                        'label': 'Back to surveys',
+                        'variant': 'ghost',
+                        'action': 'INIT',
                       },
                     ],
                     'direction': 'vertical',
-                    'gap': 'md',
-                    'className': 'py-8',
                     'type': 'stack',
                   },
                 ],
@@ -433,16 +433,17 @@ export function stdSurveySurveyOrbital(params: StdSurveySurveyOrbitalParams = {}
         'ref': 'Stats.traits.StatsItemStats',
         'name': 'SurveyStats',
         'config': {
+          'title': 'Surveys',
           'metrics': [
             {
-              'icon': 'list-checks',
-              'variant': 'primary',
-              'label': 'Total',
-              'format': 'number',
               'aggregation': 'count',
+              'label': 'Total',
+              'variant': 'primary',
+              'format': 'number',
+              'icon': 'list-checks',
             },
             {
-              'label': 'Draft',
+              'format': 'number',
               'filter': [
                 'fn',
                 'row',
@@ -452,10 +453,10 @@ export function stdSurveySurveyOrbital(params: StdSurveySurveyOrbitalParams = {}
                   'draft',
                 ],
               ],
+              'label': 'Draft',
+              'aggregation': 'count',
               'icon': 'edit',
               'variant': 'warning',
-              'aggregation': 'count',
-              'format': 'number',
             },
             {
               'filter': [
@@ -467,14 +468,13 @@ export function stdSurveySurveyOrbital(params: StdSurveySurveyOrbitalParams = {}
                   'published',
                 ],
               ],
+              'variant': 'success',
               'label': 'Published',
               'format': 'number',
-              'icon': 'check-circle',
-              'variant': 'success',
               'aggregation': 'count',
+              'icon': 'check-circle',
             },
           ],
-          'title': 'Surveys',
         },
         'listens': [
           {
@@ -491,12 +491,12 @@ export function stdSurveySurveyOrbital(params: StdSurveySurveyOrbitalParams = {}
         'ref': 'Graphs.traits.GraphItemGraph',
         'name': 'SurveyGraphs',
         'config': {
-          'height': 240,
-          'showLegend': false,
-          'chartType': 'bar',
-          'categoryField': 'status',
           'title': 'Surveys by Status',
           'subtitle': 'Distribution across lifecycle states',
+          'chartType': 'bar',
+          'categoryField': 'status',
+          'showLegend': false,
+          'height': 240,
           'aggregation': 'count',
         },
         'listens': [
@@ -515,44 +515,44 @@ export function stdSurveySurveyOrbital(params: StdSurveySurveyOrbitalParams = {}
         'name': 'SurveyBrowseList',
         'linkedEntity': canonicalName,
         'config': {
+          'gap': 'sm',
+          'itemActions': [
+            {
+              'variant': 'ghost',
+              'label': 'View',
+              'event': 'VIEW',
+            },
+            {
+              'variant': 'ghost',
+              'label': 'Edit',
+              'event': 'EDIT',
+            },
+            {
+              'variant': 'danger',
+              'event': 'DELETE',
+              'label': 'Delete',
+            },
+          ],
           'fields': [
             {
-              'variant': 'h3',
               'name': 'title',
+              'variant': 'h3',
               'icon': 'list-checks',
             },
             {
-              'variant': 'badge',
               'name': 'status',
+              'variant': 'badge',
             },
             {
               'name': 'description',
               'variant': 'caption',
             },
             {
-              'name': 'createdAt',
-              'variant': 'caption',
               'format': 'date',
+              'variant': 'caption',
+              'name': 'createdAt',
             },
           ],
-          'itemActions': [
-            {
-              'event': 'VIEW',
-              'variant': 'ghost',
-              'label': 'View',
-            },
-            {
-              'label': 'Edit',
-              'event': 'EDIT',
-              'variant': 'ghost',
-            },
-            {
-              'event': 'DELETE',
-              'variant': 'danger',
-              'label': 'Delete',
-            },
-          ],
-          'gap': 'sm',
           'cols': 1,
         },
         'listens': [
@@ -613,14 +613,14 @@ export function stdSurveySurveyOrbital(params: StdSurveySurveyOrbitalParams = {}
         'name': 'SurveyCreate',
         'linkedEntity': canonicalName,
         'config': {
+          'title': 'New Survey',
+          'mode': 'create',
+          'icon': 'plus-circle',
           'fields': [
             'title',
             'description',
             'status',
           ],
-          'title': 'New Survey',
-          'icon': 'plus-circle',
-          'mode': 'create',
         },
         'events': {
           'OPEN': 'CREATE',
@@ -641,14 +641,14 @@ export function stdSurveySurveyOrbital(params: StdSurveySurveyOrbitalParams = {}
         'name': 'SurveyEdit',
         'linkedEntity': canonicalName,
         'config': {
+          'title': 'Edit Survey',
           'fields': [
             'title',
             'description',
             'status',
           ],
-          'title': 'Edit Survey',
-          'icon': 'edit',
           'mode': 'edit',
+          'icon': 'edit',
         },
         'events': {
           'OPEN': 'EDIT',
@@ -670,8 +670,8 @@ export function stdSurveySurveyOrbital(params: StdSurveySurveyOrbitalParams = {}
         'linkedEntity': canonicalName,
         'config': {
           'mode': 'edit',
-          'icon': 'eye',
           'title': 'View Survey',
+          'icon': 'eye',
           'fields': [
             'title',
             'description',
@@ -697,10 +697,10 @@ export function stdSurveySurveyOrbital(params: StdSurveySurveyOrbitalParams = {}
         'name': 'SurveyDelete',
         'linkedEntity': canonicalName,
         'config': {
-          'confirmLabel': 'Delete',
-          'title': 'Delete Survey',
           'icon': 'alert-triangle',
           'alertMessage': 'This action cannot be undone.',
+          'confirmLabel': 'Delete',
+          'title': 'Delete Survey',
         },
         'events': {
           'REQUEST': 'DELETE',
@@ -1161,22 +1161,22 @@ export function stdSurveyResponseOrbital(params: StdSurveyResponseOrbitalParams 
         'name': 'ResponseAppLayout',
         'config': {
           'notifications': [],
-          'contentTrait': '@trait.ResponseDashboard',
-          'searchEvent': 'RESPONSE_SEARCH',
-          'notificationClickEvent': 'RESPONSE_NOTIFICATIONS_OPEN',
+          'appName': 'Surveys',
           'navItems': [
             {
-              'icon': 'list-checks',
-              'href': '/surveys',
               'label': 'Surveys',
+              'href': '/surveys',
+              'icon': 'list-checks',
             },
             {
+              'label': 'Responses',
               'icon': 'inbox',
               'href': '/responses',
-              'label': 'Responses',
             },
           ],
-          'appName': 'Surveys',
+          'notificationClickEvent': 'RESPONSE_NOTIFICATIONS_OPEN',
+          'searchEvent': 'RESPONSE_SEARCH',
+          'contentTrait': '@trait.ResponseDashboard',
         },
         'events': {
           'SEARCH': 'RESPONSE_SEARCH',
@@ -1247,25 +1247,22 @@ export function stdSurveyResponseOrbital(params: StdSurveyResponseOrbitalParams 
                   'render-ui',
                   'main',
                   {
-                    'direction': 'vertical',
-                    'type': 'stack',
                     'className': 'max-w-6xl mx-auto w-full p-4',
-                    'gap': 'lg',
                     'children': [
                       {
-                        'align': 'center',
                         'gap': 'sm',
-                        'direction': 'horizontal',
                         'type': 'stack',
+                        'direction': 'horizontal',
+                        'align': 'center',
                         'children': [
                           {
                             'name': 'inbox',
                             'type': 'icon',
                           },
                           {
-                            'variant': 'h2',
                             'content': 'Responses',
                             'type': 'typography',
+                            'variant': 'h2',
                           },
                         ],
                       },
@@ -1282,12 +1279,15 @@ export function stdSurveyResponseOrbital(params: StdSurveyResponseOrbitalParams 
                         'type': 'divider',
                       },
                       {
-                        'content': 'All responses',
                         'type': 'typography',
                         'variant': 'h3',
+                        'content': 'All responses',
                       },
                       '@trait.ResponseBrowseList',
                     ],
+                    'direction': 'vertical',
+                    'gap': 'lg',
+                    'type': 'stack',
                   },
                 ],
               ],
@@ -1306,11 +1306,8 @@ export function stdSurveyResponseOrbital(params: StdSurveyResponseOrbitalParams 
                   'render-ui',
                   'main',
                   {
-                    'gap': 'md',
-                    'type': 'stack',
                     'className': 'py-8',
                     'align': 'center',
-                    'direction': 'vertical',
                     'children': [
                       {
                         'type': 'icon',
@@ -1322,18 +1319,21 @@ export function stdSurveyResponseOrbital(params: StdSurveyResponseOrbitalParams 
                         'variant': 'h3',
                       },
                       {
-                        'color': 'muted',
                         'type': 'typography',
                         'variant': 'caption',
                         'content': 'You\'re all caught up.',
+                        'color': 'muted',
                       },
                       {
-                        'variant': 'ghost',
                         'label': 'Back to responses',
                         'action': 'INIT',
+                        'variant': 'ghost',
                         'type': 'button',
                       },
                     ],
+                    'gap': 'md',
+                    'direction': 'vertical',
+                    'type': 'stack',
                   },
                 ],
               ],
@@ -1354,17 +1354,20 @@ export function stdSurveyResponseOrbital(params: StdSurveyResponseOrbitalParams 
         'name': 'ResponseBrowseList',
         'linkedEntity': canonicalName,
         'config': {
+          'gap': 'sm',
+          'pageSize': 100,
+          'cols': 1,
           'displayPageSize': 10,
           'fields': [
             {
-              'name': 'surveyId',
-              'variant': 'caption',
               'label': 'Survey',
+              'variant': 'caption',
+              'name': 'surveyId',
             },
             {
+              'label': 'Respondent',
               'name': 'respondentId',
               'variant': 'body',
-              'label': 'Respondent',
             },
             {
               'name': 'questionId',
@@ -1372,27 +1375,24 @@ export function stdSurveyResponseOrbital(params: StdSurveyResponseOrbitalParams 
               'label': 'Question',
             },
             {
-              'variant': 'body',
               'name': 'answerJson',
               'label': 'Answer',
+              'variant': 'body',
             },
             {
               'name': 'submittedAt',
-              'format': 'date',
               'label': 'Submitted',
               'variant': 'caption',
+              'format': 'date',
             },
           ],
-          'gap': 'sm',
           'itemActions': [
             {
               'variant': 'ghost',
-              'event': 'VIEW',
               'label': 'View',
+              'event': 'VIEW',
             },
           ],
-          'pageSize': 100,
-          'cols': 1,
         },
       }),
       makeTraitRef({
@@ -1400,6 +1400,8 @@ export function stdSurveyResponseOrbital(params: StdSurveyResponseOrbitalParams 
         'name': 'ResponseView',
         'linkedEntity': canonicalName,
         'config': {
+          'mode': 'edit',
+          'title': 'View Response',
           'fields': [
             'surveyId',
             'respondentId',
@@ -1407,9 +1409,7 @@ export function stdSurveyResponseOrbital(params: StdSurveyResponseOrbitalParams 
             'answerJson',
             'submittedAt',
           ],
-          'mode': 'edit',
           'icon': 'eye',
-          'title': 'View Response',
         },
         'events': {
           'OPEN': 'VIEW',

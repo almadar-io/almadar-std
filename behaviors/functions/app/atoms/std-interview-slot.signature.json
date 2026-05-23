@@ -70,16 +70,14 @@
             "type": "boolean",
             "default": false,
             "label": "Anonymize on rejection",
-            "description": "When true, scrub applicant PII on rejection. Pair with std-data-erasure.",
-            "tier": "customization"
+            "description": "When true, scrub applicant PII on rejection. Pair with std-data-erasure."
           },
           {
             "key": "backgroundCheckRequired",
             "type": "boolean",
             "default": false,
             "label": "Background check required",
-            "description": "Block COMPLETE_INTERVIEW until a background check is on file.",
-            "tier": "customization"
+            "description": "Block COMPLETE_INTERVIEW until a background check is on file."
           },
           {
             "key": "blackoutDates",
@@ -87,7 +85,6 @@
             "default": [],
             "label": "Blackout dates",
             "description": "ISO dates blocked from booking (e.g. holidays). Compose std-lifecycle to enforce.",
-            "tier": "customization",
             "items": {
               "type": "string"
             }
@@ -97,16 +94,14 @@
             "type": "string",
             "default": "09:00-17:00",
             "label": "Booking hours",
-            "description": "Daily window during which interviews can be scheduled (HH:MM-HH:MM).",
-            "tier": "customization"
+            "description": "Daily window during which interviews can be scheduled (HH:MM-HH:MM)."
           },
           {
             "key": "bookingWindowDays",
             "type": "number",
             "default": 30,
             "label": "Booking window (days)",
-            "description": "How far in advance applicants can schedule interviews.",
-            "tier": "customization"
+            "description": "How far in advance applicants can schedule interviews."
           },
           {
             "key": "cancellationPolicy",
@@ -114,7 +109,6 @@
             "default": "free",
             "label": "Cancellation policy",
             "description": "Refund treatment when a slot is cancelled inside the reschedule window.",
-            "tier": "customization",
             "enumValues": [
               "free",
               "partial-refund",
@@ -126,35 +120,33 @@
             "type": "boolean",
             "default": false,
             "label": "E-Verify required",
-            "description": "US I-9 / E-Verify gate. Block downstream offer until verification passes.",
-            "tier": "customization"
+            "description": "US I-9 / E-Verify gate. Block downstream offer until verification passes."
           },
           {
             "key": "equalOpportunityTrackingEnabled",
             "type": "boolean",
             "default": false,
             "label": "Equal opportunity tracking",
-            "description": "Capture demographic data separately for EEO reporting (sibling collection).",
-            "tier": "advanced"
+            "description": "Capture demographic data separately for EEO reporting (sibling collection)."
           },
           {
             "key": "fields",
             "type": "[FieldSpec]",
             "default": [
               {
+                "label": "Applicant",
                 "variant": "caption",
-                "name": "applicantName",
-                "label": "Applicant"
+                "name": "applicantName"
               },
               {
                 "label": "Interviewer",
-                "name": "interviewerName",
-                "variant": "caption"
+                "variant": "caption",
+                "name": "interviewerName"
               },
               {
                 "name": "scheduledAt",
-                "label": "Scheduled",
-                "variant": "caption"
+                "variant": "caption",
+                "label": "Scheduled"
               },
               {
                 "variant": "badge",
@@ -163,17 +155,36 @@
               },
               {
                 "name": "status",
-                "label": "Status",
-                "variant": "badge"
+                "variant": "badge",
+                "label": "Status"
               }
             ],
             "label": "Columns to show",
             "description": "Each column maps to one field on the Interview Slot entity",
-            "tier": "customization",
             "items": {
               "properties": {
                 "format": {
                   "name": "format",
+                  "required": false,
+                  "type": "string"
+                },
+                "name": {
+                  "name": "name",
+                  "required": true,
+                  "type": "string"
+                },
+                "label": {
+                  "name": "label",
+                  "required": false,
+                  "type": "string"
+                },
+                "header": {
+                  "name": "header",
+                  "required": false,
+                  "type": "string"
+                },
+                "icon": {
+                  "name": "icon",
                   "required": false,
                   "type": "string"
                 },
@@ -186,26 +197,6 @@
                   "name": "key",
                   "required": false,
                   "type": "string"
-                },
-                "header": {
-                  "name": "header",
-                  "required": false,
-                  "type": "string"
-                },
-                "label": {
-                  "name": "label",
-                  "required": false,
-                  "type": "string"
-                },
-                "name": {
-                  "name": "name",
-                  "required": true,
-                  "type": "string"
-                },
-                "icon": {
-                  "name": "icon",
-                  "required": false,
-                  "type": "string"
                 }
               },
               "type": "object"
@@ -216,38 +207,36 @@
             "type": "boolean",
             "default": false,
             "label": "I-9 documents required",
-            "description": "Require I-9 supporting documents before accepting an offer downstream.",
-            "tier": "customization"
+            "description": "Require I-9 supporting documents before accepting an offer downstream."
           },
           {
             "key": "itemActions",
             "type": "[ItemAction]",
             "default": [
               {
-                "event": "OPEN_INTERVIEW",
                 "label": "Open",
                 "icon": "arrow-right",
+                "event": "OPEN_INTERVIEW",
                 "variant": "primary"
               },
               {
-                "variant": "danger",
                 "label": "Cancel",
-                "event": "CANCEL_INTERVIEW"
+                "event": "CANCEL_INTERVIEW",
+                "variant": "danger"
               }
             ],
             "label": "Row actions",
             "description": "Buttons users can click on each interview row",
-            "tier": "customization",
             "items": {
               "properties": {
-                "icon": {
-                  "name": "icon",
-                  "required": false,
-                  "type": "string"
-                },
                 "event": {
                   "name": "event",
                   "required": true,
+                  "type": "string"
+                },
+                "icon": {
+                  "name": "icon",
+                  "required": false,
                   "type": "string"
                 },
                 "label": {
@@ -269,48 +258,42 @@
             "type": "number",
             "default": 60,
             "label": "Lead time (minutes)",
-            "description": "Minimum minutes before start time that a new booking is accepted.",
-            "tier": "customization"
+            "description": "Minimum minutes before start time that a new booking is accepted."
           },
           {
             "key": "maxReschedules",
             "type": "number",
             "default": 2,
             "label": "Max reschedules",
-            "description": "Hard cap on reschedule count per interview slot.",
-            "tier": "advanced"
+            "description": "Hard cap on reschedule count per interview slot."
           },
           {
             "key": "noShowGracePeriodMinutes",
             "type": "number",
             "default": 15,
             "label": "No-show grace (minutes)",
-            "description": "Minutes after scheduledAt before the slot auto-marks no_show. Wire via std-lifecycle.",
-            "tier": "customization"
+            "description": "Minutes after scheduledAt before the slot auto-marks no_show. Wire via std-lifecycle."
           },
           {
             "key": "rescheduleWindowHours",
             "type": "number",
             "default": 24,
             "label": "Reschedule window (hours)",
-            "description": "Hours before scheduledAt during which the applicant can self-reschedule.",
-            "tier": "customization"
+            "description": "Hours before scheduledAt during which the applicant can self-reschedule."
           },
           {
             "key": "retentionAfterRejectionDays",
             "type": "number",
             "default": 730,
             "label": "Retention after rejection (days)",
-            "description": "Days to keep rejected interview records. Default 730 (2 years) EEOC typical.",
-            "tier": "advanced"
+            "description": "Days to keep rejected interview records. Default 730 (2 years) EEOC typical."
           },
           {
             "key": "title",
             "type": "string",
             "default": "Interviews",
             "label": "Section title",
-            "description": "Heading shown above the interview schedule",
-            "tier": "customization"
+            "description": "Heading shown above the interview schedule"
           }
         ],
         "capabilities": []

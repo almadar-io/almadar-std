@@ -120,20 +120,20 @@ export interface StdCustomerAccountCustomerAccountUpdateFailedPayload {
  * without modifying its state-machine topology.
  */
 export interface StdCustomerAccountConfig {
-  /** Default: `365` */
-  archiveInactiveAfterDays?: number;
-  /** Default: `"Customers"` */
-  title?: string;
-  /** Default: `[{"label":"Name","variant":"caption","name":"name"},{"name":"email","label":"Email","variant":"caption"},{"label":"Phone","name":"phone","variant":"caption"},{"label":"Points","variant":"caption","name":"loyaltyPoints"},{"name":"totalSpent","variant":"caption","label":"Total Spent"},{"label":"Status","variant":"badge","name":"status"}]` */
-  fields?: EntityRow[];
-  /** Default: `50` */
-  healthScoreThresholdAlert?: number;
   /** Default: `true` */
   consentTrackingEnabled?: boolean;
-  /** Default: `[{"label":"Open","event":"OPEN_CUSTOMER","icon":"arrow-right","variant":"primary"},{"variant":"danger","event":"BAN_CUSTOMER","label":"Ban"}]` */
+  /** Default: `[{"label":"Name","variant":"caption","name":"name"},{"name":"email","label":"Email","variant":"caption"},{"label":"Phone","name":"phone","variant":"caption"},{"label":"Points","variant":"caption","name":"loyaltyPoints"},{"name":"totalSpent","variant":"caption","label":"Total Spent"},{"variant":"badge","name":"status","label":"Status"}]` */
+  fields?: EntityRow[];
+  /** Default: `"Customers"` */
+  title?: string;
+  /** Default: `[{"label":"Open","event":"OPEN_CUSTOMER","variant":"primary","icon":"arrow-right"},{"variant":"danger","label":"Ban","event":"BAN_CUSTOMER"}]` */
   itemActions?: EntityRow[];
   /** Default: `[30,7,1]` */
   renewalReminderDaysBefore?: number[];
+  /** Default: `365` */
+  archiveInactiveAfterDays?: number;
+  /** Default: `50` */
+  healthScoreThresholdAlert?: number;
 }
 
 /**

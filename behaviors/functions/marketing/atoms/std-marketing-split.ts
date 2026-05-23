@@ -40,19 +40,19 @@ export type StdMarketingSplitEventKey = 'INIT';
  */
 export interface StdMarketingSplitConfig {
   /** Default: `""` */
-  imageAlt?: string;
+  imageSrc?: string;
   /** Default: `"right"` */
   imagePosition?: string;
   /** Default: `"default"` */
   background?: string;
-  /** Default: `"Everything you need to build, deploy, and scale."` */
-  description?: string;
   /** Default: `"Powerful under the hood"` */
   title?: string;
   /** Default: `["Instant deployments","Auto-scaling","Global CDN"]` */
   bullets?: string[];
   /** Default: `""` */
-  imageSrc?: string;
+  imageAlt?: string;
+  /** Default: `"Everything you need to build, deploy, and scale."` */
+  description?: string;
 }
 
 /**

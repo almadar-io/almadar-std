@@ -223,15 +223,15 @@ export function stdAgentTutorTutorSessionOrbital(params: StdAgentTutorTutorSessi
             'items': {
               'type': 'object',
               'properties': {
-                'icon': {
-                  'name': 'icon',
-                  'type': 'string',
-                  'required': false,
-                },
                 'label': {
                   'name': 'label',
                   'type': 'string',
                   'required': true,
+                },
+                'icon': {
+                  'name': 'icon',
+                  'type': 'string',
+                  'required': false,
                 },
                 'id': {
                   'name': 'id',
@@ -549,28 +549,30 @@ export function stdAgentTutorTutorSessionOrbital(params: StdAgentTutorTutorSessi
                   'render-ui',
                   'main',
                   {
+                    'type': 'dashboard-layout',
                     'appName': 'AI Tutor',
                     'children': [
                       {
+                        'direction': 'vertical',
                         'gap': 'lg',
                         'type': 'stack',
                         'children': [
                           {
                             'gap': 'sm',
-                            'type': 'stack',
-                            'align': 'center',
-                            'direction': 'horizontal',
                             'children': [
                               {
-                                'name': 'graduation-cap',
                                 'type': 'icon',
+                                'name': 'graduation-cap',
                               },
                               {
                                 'type': 'typography',
-                                'variant': 'h2',
                                 'content': 'Tutor',
+                                'variant': 'h2',
                               },
                             ],
+                            'align': 'center',
+                            'type': 'stack',
+                            'direction': 'horizontal',
                           },
                           {
                             'type': 'divider',
@@ -579,38 +581,36 @@ export function stdAgentTutorTutorSessionOrbital(params: StdAgentTutorTutorSessi
                             'type': 'card',
                             'children': [
                               {
-                                'direction': 'vertical',
                                 'gap': 'md',
-                                'type': 'stack',
                                 'children': [
                                   {
-                                    'type': 'typography',
                                     'variant': 'body',
                                     'content': 'What topic would you like to learn about? The tutor will assess your level and guide you through it.',
+                                    'type': 'typography',
                                   },
                                   {
                                     'mode': 'edit',
                                     'type': 'form-section',
                                     'submitEvent': 'START_SESSION',
-                                    'entity': '@entity',
                                     'fields': [
                                       'topic',
                                     ],
+                                    'entity': '@entity',
                                   },
                                 ],
+                                'direction': 'vertical',
+                                'type': 'stack',
                               },
                             ],
                           },
                         ],
-                        'direction': 'vertical',
                       },
                     ],
-                    'type': 'dashboard-layout',
                     'navItems': [
                       {
+                        'href': '/teach',
                         'label': 'Teach',
                         'icon': 'book-open',
-                        'href': '/teach',
                       },
                       {
                         'href': '/quiz',
@@ -619,8 +619,8 @@ export function stdAgentTutorTutorSessionOrbital(params: StdAgentTutorTutorSessi
                       },
                       {
                         'label': 'Concepts',
-                        'icon': 'brain',
                         'href': '/concepts',
+                        'icon': 'brain',
                       },
                     ],
                   },
@@ -654,14 +654,31 @@ export function stdAgentTutorTutorSessionOrbital(params: StdAgentTutorTutorSessi
                   'render-ui',
                   'main',
                   {
+                    'navItems': [
+                      {
+                        'icon': 'book-open',
+                        'href': '/teach',
+                        'label': 'Teach',
+                      },
+                      {
+                        'label': 'Quiz',
+                        'icon': 'help-circle',
+                        'href': '/quiz',
+                      },
+                      {
+                        'href': '/concepts',
+                        'label': 'Concepts',
+                        'icon': 'brain',
+                      },
+                    ],
+                    'type': 'dashboard-layout',
+                    'appName': 'AI Tutor',
                     'children': [
                       {
-                        'type': 'stack',
-                        'gap': 'lg',
                         'children': [
                           {
-                            'type': 'icon',
                             'name': 'search',
+                            'type': 'icon',
                           },
                           {
                             'type': 'typography',
@@ -672,34 +689,17 @@ export function stdAgentTutorTutorSessionOrbital(params: StdAgentTutorTutorSessi
                             'type': 'spinner',
                           },
                           {
+                            'content': 'Recalling prior learning and classifying skill level',
                             'type': 'typography',
                             'variant': 'caption',
-                            'content': 'Recalling prior learning and classifying skill level',
                           },
                         ],
-                        'direction': 'vertical',
+                        'type': 'stack',
                         'align': 'center',
+                        'gap': 'lg',
+                        'direction': 'vertical',
                       },
                     ],
-                    'navItems': [
-                      {
-                        'icon': 'book-open',
-                        'label': 'Teach',
-                        'href': '/teach',
-                      },
-                      {
-                        'icon': 'help-circle',
-                        'label': 'Quiz',
-                        'href': '/quiz',
-                      },
-                      {
-                        'href': '/concepts',
-                        'icon': 'brain',
-                        'label': 'Concepts',
-                      },
-                    ],
-                    'type': 'dashboard-layout',
-                    'appName': 'AI Tutor',
                   },
                 ],
               ],
@@ -727,21 +727,37 @@ export function stdAgentTutorTutorSessionOrbital(params: StdAgentTutorTutorSessi
                   'render-ui',
                   'main',
                   {
+                    'navItems': [
+                      {
+                        'href': '/teach',
+                        'label': 'Teach',
+                        'icon': 'book-open',
+                      },
+                      {
+                        'href': '/quiz',
+                        'icon': 'help-circle',
+                        'label': 'Quiz',
+                      },
+                      {
+                        'label': 'Concepts',
+                        'href': '/concepts',
+                        'icon': 'brain',
+                      },
+                    ],
                     'children': [
                       {
-                        'direction': 'vertical',
                         'children': [
                           {
-                            'justify': 'between',
-                            'align': 'center',
-                            'type': 'stack',
+                            'direction': 'horizontal',
                             'children': [
                               {
+                                'type': 'stack',
+                                'gap': 'sm',
                                 'direction': 'horizontal',
                                 'children': [
                                   {
-                                    'type': 'icon',
                                     'name': 'book-open',
+                                    'type': 'icon',
                                   },
                                   {
                                     'content': 'Lesson: @entity.topic',
@@ -749,8 +765,6 @@ export function stdAgentTutorTutorSessionOrbital(params: StdAgentTutorTutorSessi
                                     'type': 'typography',
                                   },
                                 ],
-                                'type': 'stack',
-                                'gap': 'sm',
                                 'align': 'center',
                               },
                               {
@@ -758,8 +772,10 @@ export function stdAgentTutorTutorSessionOrbital(params: StdAgentTutorTutorSessi
                                 'type': 'badge',
                               },
                             ],
-                            'direction': 'horizontal',
                             'gap': 'sm',
+                            'align': 'center',
+                            'type': 'stack',
+                            'justify': 'between',
                           },
                           {
                             'type': 'divider',
@@ -770,84 +786,68 @@ export function stdAgentTutorTutorSessionOrbital(params: StdAgentTutorTutorSessi
                               {
                                 'children': [
                                   {
-                                    'content': '@entity.explanation',
                                     'type': 'typography',
+                                    'content': '@entity.explanation',
                                     'variant': 'body',
                                   },
                                 ],
-                                'type': 'stack',
-                                'gap': 'md',
                                 'direction': 'vertical',
+                                'gap': 'md',
+                                'type': 'stack',
                               },
                             ],
                           },
                           {
+                            'gap': 'sm',
                             'children': [
                               {
-                                'action': 'START_QUIZ',
                                 'variant': 'primary',
                                 'type': 'button',
+                                'action': 'START_QUIZ',
                                 'icon': 'help-circle',
                                 'label': 'Quiz Me',
                               },
                               {
-                                'type': 'button',
                                 'label': 'Explain More',
-                                'icon': 'book-open',
                                 'action': 'EXPLAIN_MORE',
+                                'type': 'button',
                                 'variant': 'secondary',
+                                'icon': 'book-open',
                               },
                               {
-                                'type': 'button',
-                                'label': 'New Topic',
                                 'variant': 'ghost',
-                                'action': 'RESET',
+                                'label': 'New Topic',
+                                'type': 'button',
                                 'icon': 'rotate-ccw',
+                                'action': 'RESET',
                               },
                             ],
-                            'direction': 'horizontal',
                             'type': 'stack',
-                            'gap': 'sm',
+                            'direction': 'horizontal',
                           },
                           {
                             'type': 'stack',
                             'children': [
                               {
-                                'type': 'badge',
                                 'label': '@entity.questionsAsked',
+                                'type': 'badge',
                               },
                               {
-                                'type': 'badge',
                                 'label': '@entity.correctAnswers',
+                                'type': 'badge',
                               },
                             ],
                             'gap': 'xs',
                             'direction': 'horizontal',
                           },
                         ],
+                        'direction': 'vertical',
                         'gap': 'lg',
                         'type': 'stack',
                       },
                     ],
-                    'navItems': [
-                      {
-                        'href': '/teach',
-                        'icon': 'book-open',
-                        'label': 'Teach',
-                      },
-                      {
-                        'href': '/quiz',
-                        'icon': 'help-circle',
-                        'label': 'Quiz',
-                      },
-                      {
-                        'icon': 'brain',
-                        'href': '/concepts',
-                        'label': 'Concepts',
-                      },
-                    ],
-                    'type': 'dashboard-layout',
                     'appName': 'AI Tutor',
+                    'type': 'dashboard-layout',
                   },
                 ],
               ],
@@ -866,21 +866,36 @@ export function stdAgentTutorTutorSessionOrbital(params: StdAgentTutorTutorSessi
                   'main',
                   {
                     'type': 'dashboard-layout',
-                    'appName': 'AI Tutor',
+                    'navItems': [
+                      {
+                        'href': '/teach',
+                        'icon': 'book-open',
+                        'label': 'Teach',
+                      },
+                      {
+                        'icon': 'help-circle',
+                        'label': 'Quiz',
+                        'href': '/quiz',
+                      },
+                      {
+                        'icon': 'brain',
+                        'label': 'Concepts',
+                        'href': '/concepts',
+                      },
+                    ],
                     'children': [
                       {
+                        'gap': 'lg',
+                        'direction': 'vertical',
                         'children': [
                           {
-                            'direction': 'horizontal',
-                            'justify': 'between',
-                            'type': 'stack',
                             'gap': 'sm',
+                            'direction': 'horizontal',
+                            'type': 'stack',
+                            'justify': 'between',
+                            'align': 'center',
                             'children': [
                               {
-                                'direction': 'horizontal',
-                                'type': 'stack',
-                                'align': 'center',
-                                'gap': 'sm',
                                 'children': [
                                   {
                                     'type': 'icon',
@@ -892,13 +907,16 @@ export function stdAgentTutorTutorSessionOrbital(params: StdAgentTutorTutorSessi
                                     'variant': 'h2',
                                   },
                                 ],
+                                'gap': 'sm',
+                                'type': 'stack',
+                                'direction': 'horizontal',
+                                'align': 'center',
                               },
                               {
                                 'label': '@entity.studentLevel',
                                 'type': 'badge',
                               },
                             ],
-                            'align': 'center',
                           },
                           {
                             'type': 'divider',
@@ -907,50 +925,48 @@ export function stdAgentTutorTutorSessionOrbital(params: StdAgentTutorTutorSessi
                             'type': 'card',
                             'children': [
                               {
-                                'type': 'stack',
-                                'gap': 'md',
                                 'direction': 'vertical',
+                                'gap': 'md',
+                                'type': 'stack',
                                 'children': [
                                   {
+                                    'type': 'typography',
                                     'variant': 'body',
                                     'content': '@entity.explanation',
-                                    'type': 'typography',
                                   },
                                 ],
                               },
                             ],
                           },
                           {
-                            'type': 'stack',
+                            'gap': 'sm',
                             'children': [
                               {
-                                'icon': 'help-circle',
-                                'type': 'button',
                                 'label': 'Quiz Me',
-                                'action': 'START_QUIZ',
+                                'type': 'button',
+                                'icon': 'help-circle',
                                 'variant': 'primary',
+                                'action': 'START_QUIZ',
                               },
                               {
+                                'icon': 'book-open',
+                                'action': 'EXPLAIN_MORE',
                                 'variant': 'secondary',
                                 'label': 'Explain More',
                                 'type': 'button',
-                                'action': 'EXPLAIN_MORE',
-                                'icon': 'book-open',
                               },
                               {
-                                'type': 'button',
-                                'variant': 'ghost',
                                 'label': 'New Topic',
+                                'variant': 'ghost',
+                                'type': 'button',
                                 'action': 'RESET',
                                 'icon': 'rotate-ccw',
                               },
                             ],
                             'direction': 'horizontal',
-                            'gap': 'sm',
+                            'type': 'stack',
                           },
                           {
-                            'type': 'stack',
-                            'gap': 'xs',
                             'direction': 'horizontal',
                             'children': [
                               {
@@ -962,30 +978,14 @@ export function stdAgentTutorTutorSessionOrbital(params: StdAgentTutorTutorSessi
                                 'label': '@entity.correctAnswers',
                               },
                             ],
+                            'gap': 'xs',
+                            'type': 'stack',
                           },
                         ],
-                        'gap': 'lg',
-                        'direction': 'vertical',
                         'type': 'stack',
                       },
                     ],
-                    'navItems': [
-                      {
-                        'icon': 'book-open',
-                        'label': 'Teach',
-                        'href': '/teach',
-                      },
-                      {
-                        'href': '/quiz',
-                        'icon': 'help-circle',
-                        'label': 'Quiz',
-                      },
-                      {
-                        'label': 'Concepts',
-                        'icon': 'brain',
-                        'href': '/concepts',
-                      },
-                    ],
+                    'appName': 'AI Tutor',
                   },
                 ],
               ],
@@ -1003,58 +1003,55 @@ export function stdAgentTutorTutorSessionOrbital(params: StdAgentTutorTutorSessi
                   'render-ui',
                   'main',
                   {
-                    'appName': 'AI Tutor',
-                    'type': 'dashboard-layout',
                     'navItems': [
                       {
-                        'href': '/teach',
                         'label': 'Teach',
+                        'href': '/teach',
                         'icon': 'book-open',
                       },
                       {
                         'label': 'Quiz',
-                        'icon': 'help-circle',
                         'href': '/quiz',
+                        'icon': 'help-circle',
                       },
                       {
                         'href': '/concepts',
-                        'label': 'Concepts',
                         'icon': 'brain',
+                        'label': 'Concepts',
                       },
                     ],
                     'children': [
                       {
-                        'direction': 'vertical',
-                        'gap': 'lg',
                         'type': 'stack',
+                        'gap': 'lg',
                         'children': [
                           {
-                            'align': 'center',
+                            'type': 'stack',
+                            'justify': 'between',
                             'children': [
                               {
                                 'align': 'center',
-                                'gap': 'sm',
-                                'direction': 'horizontal',
-                                'type': 'stack',
                                 'children': [
                                   {
-                                    'type': 'icon',
                                     'name': 'book-open',
+                                    'type': 'icon',
                                   },
                                   {
                                     'variant': 'h2',
-                                    'content': 'Lesson: @entity.topic',
                                     'type': 'typography',
+                                    'content': 'Lesson: @entity.topic',
                                   },
                                 ],
+                                'gap': 'sm',
+                                'type': 'stack',
+                                'direction': 'horizontal',
                               },
                               {
-                                'type': 'badge',
                                 'label': '@entity.studentLevel',
+                                'type': 'badge',
                               },
                             ],
-                            'type': 'stack',
-                            'justify': 'between',
+                            'align': 'center',
                             'gap': 'sm',
                             'direction': 'horizontal',
                           },
@@ -1062,11 +1059,10 @@ export function stdAgentTutorTutorSessionOrbital(params: StdAgentTutorTutorSessi
                             'type': 'divider',
                           },
                           {
+                            'type': 'card',
                             'children': [
                               {
-                                'gap': 'md',
                                 'type': 'stack',
-                                'direction': 'vertical',
                                 'children': [
                                   {
                                     'content': '@entity.explanation',
@@ -1074,56 +1070,60 @@ export function stdAgentTutorTutorSessionOrbital(params: StdAgentTutorTutorSessi
                                     'type': 'typography',
                                   },
                                 ],
+                                'direction': 'vertical',
+                                'gap': 'md',
                               },
                             ],
-                            'type': 'card',
                           },
                           {
                             'direction': 'horizontal',
+                            'type': 'stack',
                             'children': [
                               {
-                                'action': 'START_QUIZ',
+                                'label': 'Quiz Me',
+                                'type': 'button',
                                 'variant': 'primary',
                                 'icon': 'help-circle',
-                                'type': 'button',
-                                'label': 'Quiz Me',
+                                'action': 'START_QUIZ',
                               },
                               {
-                                'label': 'Explain More',
-                                'action': 'EXPLAIN_MORE',
                                 'type': 'button',
                                 'variant': 'secondary',
+                                'label': 'Explain More',
+                                'action': 'EXPLAIN_MORE',
                                 'icon': 'book-open',
                               },
                               {
-                                'label': 'New Topic',
-                                'type': 'button',
-                                'icon': 'rotate-ccw',
                                 'action': 'RESET',
                                 'variant': 'ghost',
+                                'icon': 'rotate-ccw',
+                                'type': 'button',
+                                'label': 'New Topic',
                               },
                             ],
-                            'type': 'stack',
                             'gap': 'sm',
                           },
                           {
-                            'type': 'stack',
                             'direction': 'horizontal',
+                            'gap': 'xs',
+                            'type': 'stack',
                             'children': [
                               {
-                                'type': 'badge',
                                 'label': '@entity.questionsAsked',
+                                'type': 'badge',
                               },
                               {
                                 'label': '@entity.correctAnswers',
                                 'type': 'badge',
                               },
                             ],
-                            'gap': 'xs',
                           },
                         ],
+                        'direction': 'vertical',
                       },
                     ],
+                    'type': 'dashboard-layout',
+                    'appName': 'AI Tutor',
                   },
                 ],
               ],
@@ -1162,68 +1162,11 @@ export function stdAgentTutorTutorSessionOrbital(params: StdAgentTutorTutorSessi
                   'render-ui',
                   'main',
                   {
-                    'type': 'dashboard-layout',
-                    'appName': 'AI Tutor',
-                    'children': [
-                      {
-                        'direction': 'vertical',
-                        'gap': 'lg',
-                        'children': [
-                          {
-                            'align': 'center',
-                            'gap': 'sm',
-                            'children': [
-                              {
-                                'name': 'graduation-cap',
-                                'type': 'icon',
-                              },
-                              {
-                                'content': 'Tutor',
-                                'type': 'typography',
-                                'variant': 'h2',
-                              },
-                            ],
-                            'direction': 'horizontal',
-                            'type': 'stack',
-                          },
-                          {
-                            'type': 'divider',
-                          },
-                          {
-                            'type': 'card',
-                            'children': [
-                              {
-                                'type': 'stack',
-                                'direction': 'vertical',
-                                'gap': 'md',
-                                'children': [
-                                  {
-                                    'content': 'What topic would you like to learn about? The tutor will assess your level and guide you through it.',
-                                    'variant': 'body',
-                                    'type': 'typography',
-                                  },
-                                  {
-                                    'submitEvent': 'START_SESSION',
-                                    'type': 'form-section',
-                                    'mode': 'edit',
-                                    'entity': '@entity',
-                                    'fields': [
-                                      'topic',
-                                    ],
-                                  },
-                                ],
-                              },
-                            ],
-                          },
-                        ],
-                        'type': 'stack',
-                      },
-                    ],
                     'navItems': [
                       {
                         'label': 'Teach',
-                        'icon': 'book-open',
                         'href': '/teach',
+                        'icon': 'book-open',
                       },
                       {
                         'label': 'Quiz',
@@ -1231,11 +1174,68 @@ export function stdAgentTutorTutorSessionOrbital(params: StdAgentTutorTutorSessi
                         'href': '/quiz',
                       },
                       {
-                        'label': 'Concepts',
-                        'href': '/concepts',
                         'icon': 'brain',
+                        'href': '/concepts',
+                        'label': 'Concepts',
                       },
                     ],
+                    'appName': 'AI Tutor',
+                    'children': [
+                      {
+                        'type': 'stack',
+                        'gap': 'lg',
+                        'direction': 'vertical',
+                        'children': [
+                          {
+                            'gap': 'sm',
+                            'type': 'stack',
+                            'children': [
+                              {
+                                'type': 'icon',
+                                'name': 'graduation-cap',
+                              },
+                              {
+                                'type': 'typography',
+                                'content': 'Tutor',
+                                'variant': 'h2',
+                              },
+                            ],
+                            'align': 'center',
+                            'direction': 'horizontal',
+                          },
+                          {
+                            'type': 'divider',
+                          },
+                          {
+                            'children': [
+                              {
+                                'direction': 'vertical',
+                                'type': 'stack',
+                                'gap': 'md',
+                                'children': [
+                                  {
+                                    'type': 'typography',
+                                    'content': 'What topic would you like to learn about? The tutor will assess your level and guide you through it.',
+                                    'variant': 'body',
+                                  },
+                                  {
+                                    'mode': 'edit',
+                                    'submitEvent': 'START_SESSION',
+                                    'entity': '@entity',
+                                    'fields': [
+                                      'topic',
+                                    ],
+                                    'type': 'form-section',
+                                  },
+                                ],
+                              },
+                            ],
+                            'type': 'card',
+                          },
+                        ],
+                      },
+                    ],
+                    'type': 'dashboard-layout',
                   },
                 ],
               ],
@@ -1603,6 +1603,40 @@ export function stdAgentTutorQuizQuestionOrbital(params: StdAgentTutorQuizQuesti
                   'main',
                   {
                     'type': 'dashboard-layout',
+                    'children': [
+                      {
+                        'direction': 'vertical',
+                        'type': 'stack',
+                        'gap': 'lg',
+                        'children': [
+                          {
+                            'children': [
+                              {
+                                'type': 'icon',
+                                'name': 'help-circle',
+                              },
+                              {
+                                'content': 'Quiz',
+                                'variant': 'h2',
+                                'type': 'typography',
+                              },
+                            ],
+                            'direction': 'horizontal',
+                            'gap': 'sm',
+                            'align': 'center',
+                            'type': 'stack',
+                          },
+                          {
+                            'type': 'divider',
+                          },
+                          {
+                            'type': 'typography',
+                            'content': 'Waiting for a quiz to start...',
+                            'variant': 'body',
+                          },
+                        ],
+                      },
+                    ],
                     'navItems': [
                       {
                         'href': '/teach',
@@ -1610,48 +1644,14 @@ export function stdAgentTutorQuizQuestionOrbital(params: StdAgentTutorQuizQuesti
                         'icon': 'book-open',
                       },
                       {
-                        'label': 'Quiz',
                         'icon': 'help-circle',
+                        'label': 'Quiz',
                         'href': '/quiz',
                       },
                       {
-                        'icon': 'brain',
-                        'href': '/concepts',
                         'label': 'Concepts',
-                      },
-                    ],
-                    'children': [
-                      {
-                        'children': [
-                          {
-                            'direction': 'horizontal',
-                            'children': [
-                              {
-                                'type': 'icon',
-                                'name': 'help-circle',
-                              },
-                              {
-                                'variant': 'h2',
-                                'content': 'Quiz',
-                                'type': 'typography',
-                              },
-                            ],
-                            'type': 'stack',
-                            'align': 'center',
-                            'gap': 'sm',
-                          },
-                          {
-                            'type': 'divider',
-                          },
-                          {
-                            'variant': 'body',
-                            'type': 'typography',
-                            'content': 'Waiting for a quiz to start...',
-                          },
-                        ],
-                        'gap': 'lg',
-                        'type': 'stack',
-                        'direction': 'vertical',
+                        'href': '/concepts',
+                        'icon': 'brain',
                       },
                     ],
                     'appName': 'AI Tutor',
@@ -1678,44 +1678,27 @@ export function stdAgentTutorQuizQuestionOrbital(params: StdAgentTutorQuizQuesti
                   'main',
                   {
                     'appName': 'AI Tutor',
-                    'navItems': [
-                      {
-                        'href': '/teach',
-                        'icon': 'book-open',
-                        'label': 'Teach',
-                      },
-                      {
-                        'label': 'Quiz',
-                        'icon': 'help-circle',
-                        'href': '/quiz',
-                      },
-                      {
-                        'href': '/concepts',
-                        'icon': 'brain',
-                        'label': 'Concepts',
-                      },
-                    ],
-                    'type': 'dashboard-layout',
                     'children': [
                       {
-                        'type': 'stack',
+                        'direction': 'vertical',
+                        'gap': 'lg',
                         'children': [
                           {
-                            'align': 'center',
-                            'gap': 'sm',
+                            'type': 'stack',
                             'direction': 'horizontal',
+                            'gap': 'sm',
+                            'align': 'center',
                             'children': [
                               {
                                 'name': 'help-circle',
                                 'type': 'icon',
                               },
                               {
-                                'content': 'Quiz Question',
-                                'type': 'typography',
                                 'variant': 'h2',
+                                'type': 'typography',
+                                'content': 'Quiz Question',
                               },
                             ],
-                            'type': 'stack',
                           },
                           {
                             'type': 'divider',
@@ -1725,6 +1708,7 @@ export function stdAgentTutorQuizQuestionOrbital(params: StdAgentTutorQuizQuesti
                             'children': [
                               {
                                 'direction': 'vertical',
+                                'gap': 'md',
                                 'type': 'stack',
                                 'children': [
                                   {
@@ -1733,27 +1717,43 @@ export function stdAgentTutorQuizQuestionOrbital(params: StdAgentTutorQuizQuesti
                                     'content': '@entity.question',
                                   },
                                   {
+                                    'type': 'typography',
                                     'content': '@entity.options',
                                     'variant': 'body',
-                                    'type': 'typography',
                                   },
                                   {
+                                    'entity': '@entity',
                                     'mode': 'edit',
                                     'submitEvent': 'SUBMIT_ANSWER',
-                                    'entity': '@entity',
                                     'fields': [
                                       'studentAnswer',
                                     ],
                                     'type': 'form-section',
                                   },
                                 ],
-                                'gap': 'md',
                               },
                             ],
                           },
                         ],
-                        'direction': 'vertical',
-                        'gap': 'lg',
+                        'type': 'stack',
+                      },
+                    ],
+                    'type': 'dashboard-layout',
+                    'navItems': [
+                      {
+                        'icon': 'book-open',
+                        'label': 'Teach',
+                        'href': '/teach',
+                      },
+                      {
+                        'icon': 'help-circle',
+                        'href': '/quiz',
+                        'label': 'Quiz',
+                      },
+                      {
+                        'href': '/concepts',
+                        'icon': 'brain',
+                        'label': 'Concepts',
                       },
                     ],
                   },
@@ -1775,16 +1775,17 @@ export function stdAgentTutorQuizQuestionOrbital(params: StdAgentTutorQuizQuesti
                   'main',
                   {
                     'type': 'dashboard-layout',
+                    'appName': 'AI Tutor',
                     'navItems': [
                       {
+                        'label': 'Teach',
                         'href': '/teach',
                         'icon': 'book-open',
-                        'label': 'Teach',
                       },
                       {
                         'label': 'Quiz',
-                        'href': '/quiz',
                         'icon': 'help-circle',
+                        'href': '/quiz',
                       },
                       {
                         'label': 'Concepts',
@@ -1794,23 +1795,25 @@ export function stdAgentTutorQuizQuestionOrbital(params: StdAgentTutorQuizQuesti
                     ],
                     'children': [
                       {
+                        'direction': 'vertical',
+                        'gap': 'lg',
                         'children': [
                           {
-                            'gap': 'sm',
+                            'direction': 'horizontal',
                             'children': [
                               {
-                                'name': 'help-circle',
                                 'type': 'icon',
+                                'name': 'help-circle',
                               },
                               {
-                                'type': 'typography',
                                 'content': 'Quiz Question',
                                 'variant': 'h2',
+                                'type': 'typography',
                               },
                             ],
-                            'type': 'stack',
-                            'direction': 'horizontal',
+                            'gap': 'sm',
                             'align': 'center',
+                            'type': 'stack',
                           },
                           {
                             'type': 'divider',
@@ -1818,41 +1821,38 @@ export function stdAgentTutorQuizQuestionOrbital(params: StdAgentTutorQuizQuesti
                           {
                             'children': [
                               {
-                                'direction': 'vertical',
-                                'type': 'stack',
-                                'gap': 'md',
                                 'children': [
                                   {
-                                    'type': 'typography',
                                     'content': '@entity.question',
+                                    'type': 'typography',
                                     'variant': 'h3',
                                   },
                                   {
-                                    'type': 'typography',
                                     'content': '@entity.options',
+                                    'type': 'typography',
                                     'variant': 'body',
                                   },
                                   {
-                                    'entity': '@entity',
-                                    'mode': 'edit',
-                                    'type': 'form-section',
                                     'fields': [
                                       'studentAnswer',
                                     ],
+                                    'mode': 'edit',
+                                    'type': 'form-section',
                                     'submitEvent': 'SUBMIT_ANSWER',
+                                    'entity': '@entity',
                                   },
                                 ],
+                                'type': 'stack',
+                                'gap': 'md',
+                                'direction': 'vertical',
                               },
                             ],
                             'type': 'card',
                           },
                         ],
-                        'direction': 'vertical',
                         'type': 'stack',
-                        'gap': 'lg',
                       },
                     ],
-                    'appName': 'AI Tutor',
                   },
                 ],
               ],
@@ -1887,29 +1887,32 @@ export function stdAgentTutorQuizQuestionOrbital(params: StdAgentTutorQuizQuesti
                     'appName': 'AI Tutor',
                     'navItems': [
                       {
+                        'label': 'Teach',
                         'href': '/teach',
                         'icon': 'book-open',
-                        'label': 'Teach',
                       },
                       {
+                        'icon': 'help-circle',
                         'label': 'Quiz',
                         'href': '/quiz',
-                        'icon': 'help-circle',
                       },
                       {
                         'href': '/concepts',
-                        'icon': 'brain',
                         'label': 'Concepts',
+                        'icon': 'brain',
                       },
                     ],
                     'type': 'dashboard-layout',
                     'children': [
                       {
+                        'gap': 'lg',
                         'type': 'stack',
                         'direction': 'vertical',
                         'children': [
                           {
                             'direction': 'horizontal',
+                            'type': 'stack',
+                            'align': 'center',
                             'gap': 'sm',
                             'children': [
                               {
@@ -1917,78 +1920,75 @@ export function stdAgentTutorQuizQuestionOrbital(params: StdAgentTutorQuizQuesti
                                 'type': 'icon',
                               },
                               {
-                                'variant': 'h2',
                                 'type': 'typography',
                                 'content': 'Answer Review',
+                                'variant': 'h2',
                               },
                             ],
-                            'type': 'stack',
-                            'align': 'center',
                           },
                           {
                             'type': 'divider',
                           },
                           {
+                            'type': 'card',
                             'children': [
                               {
+                                'type': 'stack',
                                 'direction': 'vertical',
                                 'gap': 'md',
                                 'children': [
                                   {
+                                    'gap': 'sm',
+                                    'type': 'stack',
+                                    'direction': 'horizontal',
                                     'children': [
                                       {
-                                        'label': '@entity.feedback',
                                         'type': 'badge',
+                                        'label': '@entity.feedback',
                                       },
                                     ],
-                                    'type': 'stack',
-                                    'gap': 'sm',
-                                    'direction': 'horizontal',
                                   },
                                   {
+                                    'variant': 'body',
+                                    'type': 'typography',
                                     'content': '@entity.feedback',
-                                    'type': 'typography',
-                                    'variant': 'body',
                                   },
                                   {
                                     'type': 'typography',
-                                    'variant': 'caption',
                                     'content': 'Correct answer',
+                                    'variant': 'caption',
                                   },
                                   {
-                                    'variant': 'body',
                                     'type': 'typography',
                                     'content': '@entity.correctAnswer',
+                                    'variant': 'body',
                                   },
                                 ],
-                                'type': 'stack',
                               },
                             ],
-                            'type': 'card',
                           },
                           {
+                            'gap': 'sm',
+                            'type': 'stack',
+                            'direction': 'horizontal',
                             'children': [
                               {
-                                'action': 'NEXT_QUESTION',
                                 'type': 'button',
-                                'label': 'Next Question',
-                                'icon': 'arrow-right',
                                 'variant': 'primary',
+                                'icon': 'arrow-right',
+                                'label': 'Next Question',
+                                'action': 'NEXT_QUESTION',
                               },
                               {
+                                'type': 'button',
                                 'label': 'Back to Lesson',
+                                'action': 'BACK_TO_LESSON',
                                 'variant': 'ghost',
                                 'icon': 'book-open',
-                                'type': 'button',
-                                'action': 'BACK_TO_LESSON',
                               },
                             ],
-                            'direction': 'horizontal',
-                            'type': 'stack',
-                            'gap': 'sm',
                           },
                         ],
-                        'gap': 'lg',
                       },
                     ],
                   },
@@ -2023,29 +2023,31 @@ export function stdAgentTutorQuizQuestionOrbital(params: StdAgentTutorQuizQuesti
                   'render-ui',
                   'main',
                   {
-                    'type': 'dashboard-layout',
                     'navItems': [
                       {
-                        'href': '/teach',
                         'icon': 'book-open',
                         'label': 'Teach',
+                        'href': '/teach',
                       },
                       {
+                        'href': '/quiz',
                         'icon': 'help-circle',
                         'label': 'Quiz',
-                        'href': '/quiz',
                       },
                       {
-                        'href': '/concepts',
-                        'label': 'Concepts',
                         'icon': 'brain',
+                        'label': 'Concepts',
+                        'href': '/concepts',
                       },
                     ],
+                    'type': 'dashboard-layout',
+                    'appName': 'AI Tutor',
                     'children': [
                       {
+                        'type': 'stack',
                         'children': [
                           {
-                            'type': 'stack',
+                            'direction': 'horizontal',
                             'gap': 'sm',
                             'align': 'center',
                             'children': [
@@ -2055,53 +2057,51 @@ export function stdAgentTutorQuizQuestionOrbital(params: StdAgentTutorQuizQuesti
                               },
                               {
                                 'content': 'Quiz Question',
-                                'type': 'typography',
                                 'variant': 'h2',
+                                'type': 'typography',
                               },
                             ],
-                            'direction': 'horizontal',
+                            'type': 'stack',
                           },
                           {
                             'type': 'divider',
                           },
                           {
+                            'type': 'card',
                             'children': [
                               {
                                 'children': [
                                   {
-                                    'variant': 'h3',
                                     'content': '@entity.question',
+                                    'variant': 'h3',
                                     'type': 'typography',
                                   },
                                   {
-                                    'content': '@entity.options',
                                     'type': 'typography',
+                                    'content': '@entity.options',
                                     'variant': 'body',
                                   },
                                   {
-                                    'mode': 'edit',
                                     'entity': '@entity',
-                                    'type': 'form-section',
                                     'submitEvent': 'SUBMIT_ANSWER',
                                     'fields': [
                                       'studentAnswer',
                                     ],
+                                    'type': 'form-section',
+                                    'mode': 'edit',
                                   },
                                 ],
-                                'type': 'stack',
-                                'gap': 'md',
                                 'direction': 'vertical',
+                                'gap': 'md',
+                                'type': 'stack',
                               },
                             ],
-                            'type': 'card',
                           },
                         ],
-                        'type': 'stack',
-                        'gap': 'lg',
                         'direction': 'vertical',
+                        'gap': 'lg',
                       },
                     ],
-                    'appName': 'AI Tutor',
                   },
                 ],
               ],
@@ -2120,15 +2120,14 @@ export function stdAgentTutorQuizQuestionOrbital(params: StdAgentTutorQuizQuesti
                   'render-ui',
                   'main',
                   {
+                    'type': 'dashboard-layout',
                     'children': [
                       {
+                        'gap': 'lg',
                         'direction': 'vertical',
                         'type': 'stack',
                         'children': [
                           {
-                            'type': 'stack',
-                            'direction': 'horizontal',
-                            'align': 'center',
                             'children': [
                               {
                                 'type': 'icon',
@@ -2136,36 +2135,36 @@ export function stdAgentTutorQuizQuestionOrbital(params: StdAgentTutorQuizQuesti
                               },
                               {
                                 'variant': 'h2',
-                                'type': 'typography',
                                 'content': 'Quiz',
+                                'type': 'typography',
                               },
                             ],
+                            'direction': 'horizontal',
+                            'type': 'stack',
+                            'align': 'center',
                             'gap': 'sm',
                           },
                           {
                             'type': 'divider',
                           },
                           {
-                            'variant': 'body',
-                            'content': 'Waiting for a quiz to start...',
                             'type': 'typography',
+                            'content': 'Waiting for a quiz to start...',
+                            'variant': 'body',
                           },
                         ],
-                        'gap': 'lg',
                       },
                     ],
-                    'appName': 'AI Tutor',
-                    'type': 'dashboard-layout',
                     'navItems': [
                       {
-                        'icon': 'book-open',
                         'label': 'Teach',
+                        'icon': 'book-open',
                         'href': '/teach',
                       },
                       {
                         'label': 'Quiz',
-                        'icon': 'help-circle',
                         'href': '/quiz',
+                        'icon': 'help-circle',
                       },
                       {
                         'href': '/concepts',
@@ -2173,6 +2172,7 @@ export function stdAgentTutorQuizQuestionOrbital(params: StdAgentTutorQuizQuesti
                         'icon': 'brain',
                       },
                     ],
+                    'appName': 'AI Tutor',
                   },
                 ],
               ],
@@ -2551,21 +2551,21 @@ export function stdAgentTutorTutorChatOrbital(params: StdAgentTutorTutorChatOrbi
                   'main',
                   {
                     'type': 'stack',
-                    'align': 'center',
+                    'direction': 'vertical',
                     'className': 'py-12',
+                    'gap': 'md',
                     'children': [
                       {
                         'type': 'spinner',
                       },
                       {
+                        'content': 'Loading…',
+                        'type': 'typography',
                         'color': 'muted',
                         'variant': 'caption',
-                        'type': 'typography',
-                        'content': 'Loading…',
                       },
                     ],
-                    'direction': 'vertical',
-                    'gap': 'md',
+                    'align': 'center',
                   },
                 ],
               ],
@@ -2581,61 +2581,60 @@ export function stdAgentTutorTutorChatOrbital(params: StdAgentTutorTutorChatOrbi
                   {
                     'children': [
                       {
-                        'gap': 'lg',
-                        'type': 'stack',
                         'children': [
                           {
                             'children': [
                               {
+                                'type': 'stack',
+                                'gap': 'sm',
+                                'align': 'center',
                                 'children': [
                                   {
-                                    'name': 'message-circle',
                                     'type': 'icon',
+                                    'name': 'message-circle',
                                   },
                                   {
-                                    'content': 'TutorChat Thread',
                                     'variant': 'h2',
                                     'type': 'typography',
+                                    'content': 'TutorChat Thread',
                                   },
                                 ],
-                                'gap': 'sm',
-                                'type': 'stack',
                                 'direction': 'horizontal',
-                                'align': 'center',
                               },
                               {
-                                'variant': 'primary',
-                                'icon': 'plus',
-                                'type': 'button',
-                                'label': 'New Message',
                                 'action': 'COMPOSE',
+                                'label': 'New Message',
+                                'type': 'button',
+                                'icon': 'plus',
+                                'variant': 'primary',
                               },
                             ],
+                            'justify': 'between',
+                            'type': 'stack',
+                            'direction': 'horizontal',
                             'gap': 'sm',
                             'align': 'center',
-                            'type': 'stack',
-                            'justify': 'between',
-                            'direction': 'horizontal',
                           },
                           {
                             'type': 'divider',
                           },
                           {
-                            'entity': '@payload.data',
-                            'fields': [],
                             'type': 'data-list',
+                            'entity': '@payload.data',
                             'renderItem': [
                               'fn',
                               'item',
                               {
                                 'children': [
                                   {
-                                    'type': 'stack',
+                                    'gap': 'sm',
+                                    'direction': 'horizontal',
                                     'align': 'center',
+                                    'type': 'stack',
                                     'children': [
                                       {
-                                        'type': 'badge',
                                         'label': '@item.role',
+                                        'type': 'badge',
                                       },
                                       {
                                         'label': '@item.status',
@@ -2643,32 +2642,32 @@ export function stdAgentTutorTutorChatOrbital(params: StdAgentTutorTutorChatOrbi
                                         'variant': 'neutral',
                                       },
                                       {
-                                        'color': 'muted',
-                                        'variant': 'caption',
                                         'type': 'typography',
                                         'content': '@item.timestamp',
+                                        'variant': 'caption',
+                                        'color': 'muted',
                                       },
                                     ],
-                                    'direction': 'horizontal',
-                                    'gap': 'sm',
                                   },
                                   {
+                                    'type': 'typography',
                                     'content': '@item.content',
                                     'variant': 'body',
-                                    'type': 'typography',
                                   },
                                 ],
-                                'direction': 'vertical',
-                                'gap': 'xs',
                                 'type': 'stack',
+                                'gap': 'xs',
+                                'direction': 'vertical',
                               },
                             ],
+                            'fields': [],
                           },
                         ],
+                        'type': 'stack',
+                        'gap': 'lg',
                         'direction': 'vertical',
                       },
                     ],
-                    'type': 'dashboard-layout',
                     'navItems': [
                       {
                         'label': 'Teach',
@@ -2676,16 +2675,17 @@ export function stdAgentTutorTutorChatOrbital(params: StdAgentTutorTutorChatOrbi
                         'icon': 'book-open',
                       },
                       {
-                        'label': 'Quiz',
-                        'href': '/quiz',
                         'icon': 'help-circle',
+                        'href': '/quiz',
+                        'label': 'Quiz',
                       },
                       {
-                        'label': 'Concepts',
-                        'href': '/concepts',
                         'icon': 'brain',
+                        'href': '/concepts',
+                        'label': 'Concepts',
                       },
                     ],
+                    'type': 'dashboard-layout',
                     'appName': 'AI Tutor',
                   },
                 ],
@@ -2700,36 +2700,36 @@ export function stdAgentTutorTutorChatOrbital(params: StdAgentTutorTutorChatOrbi
                   'render-ui',
                   'main',
                   {
-                    'type': 'stack',
-                    'gap': 'md',
                     'direction': 'vertical',
+                    'className': 'py-12',
                     'align': 'center',
                     'children': [
                       {
                         'type': 'icon',
-                        'name': 'alert-triangle',
                         'color': 'destructive',
+                        'name': 'alert-triangle',
                       },
                       {
-                        'type': 'typography',
-                        'variant': 'h3',
                         'content': 'Failed to load tutorchat',
+                        'variant': 'h3',
+                        'type': 'typography',
                       },
                       {
+                        'content': '@payload.error',
                         'color': 'muted',
                         'type': 'typography',
-                        'content': '@payload.error',
                         'variant': 'body',
                       },
                       {
                         'type': 'button',
-                        'variant': 'primary',
-                        'icon': 'rotate-ccw',
                         'action': 'INIT',
+                        'icon': 'rotate-ccw',
                         'label': 'Retry',
+                        'variant': 'primary',
                       },
                     ],
-                    'className': 'py-12',
+                    'type': 'stack',
+                    'gap': 'md',
                   },
                 ],
               ],
@@ -2743,24 +2743,24 @@ export function stdAgentTutorTutorChatOrbital(params: StdAgentTutorTutorChatOrbi
                   'render-ui',
                   'main',
                   {
+                    'gap': 'lg',
                     'type': 'stack',
                     'direction': 'vertical',
-                    'gap': 'lg',
                     'children': [
                       {
-                        'gap': 'sm',
                         'type': 'stack',
-                        'direction': 'horizontal',
+                        'gap': 'sm',
                         'align': 'center',
+                        'direction': 'horizontal',
                         'children': [
                           {
-                            'name': 'message-circle',
                             'type': 'icon',
+                            'name': 'message-circle',
                           },
                           {
                             'content': 'TutorChat Thread',
-                            'type': 'typography',
                             'variant': 'h2',
+                            'type': 'typography',
                           },
                         ],
                       },
@@ -2768,13 +2768,13 @@ export function stdAgentTutorTutorChatOrbital(params: StdAgentTutorTutorChatOrbi
                         'type': 'divider',
                       },
                       {
-                        'type': 'form-section',
+                        'submitEvent': 'SEND',
+                        'cancelEvent': 'CANCEL_COMPOSE',
                         'fields': [
                           'content',
                         ],
-                        'submitEvent': 'SEND',
+                        'type': 'form-section',
                         'mode': 'create',
-                        'cancelEvent': 'CANCEL_COMPOSE',
                       },
                     ],
                   },
@@ -2792,8 +2792,8 @@ export function stdAgentTutorTutorChatOrbital(params: StdAgentTutorTutorChatOrbi
                   'TutorChat',
                   {
                     'emit': {
-                      'failure': 'TutorChatDeleteFailed',
                       'success': 'TutorChatDeleted',
+                      'failure': 'TutorChatDeleteFailed',
                     },
                   },
                 ],
@@ -2826,10 +2826,10 @@ export function stdAgentTutorTutorChatOrbital(params: StdAgentTutorTutorChatOrbi
                   'create',
                   'TutorChat',
                   {
-                    'status': 'sent',
                     'timestamp': '@now',
-                    'role': 'user',
                     'content': '@payload.content',
+                    'status': 'sent',
+                    'role': 'user',
                   },
                   {
                     'emit': {
@@ -2891,8 +2891,8 @@ export function stdAgentTutorTutorChatOrbital(params: StdAgentTutorTutorChatOrbi
                   'TutorChat',
                   {
                     'emit': {
-                      'failure': 'TutorChatDeleteFailed',
                       'success': 'TutorChatDeleted',
+                      'failure': 'TutorChatDeleteFailed',
                     },
                   },
                 ],
@@ -3041,8 +3041,8 @@ export function stdAgentTutorTutorChatOrbital(params: StdAgentTutorTutorChatOrbi
                   'TutorChat',
                   {
                     'emit': {
-                      'success': 'TutorChatLoaded',
                       'failure': 'TutorChatLoadFailed',
+                      'success': 'TutorChatLoaded',
                     },
                   },
                 ],
@@ -3050,7 +3050,24 @@ export function stdAgentTutorTutorChatOrbital(params: StdAgentTutorTutorChatOrbi
                   'render-ui',
                   'main',
                   {
-                    'type': 'dashboard-layout',
+                    'appName': 'AI Tutor',
+                    'navItems': [
+                      {
+                        'icon': 'book-open',
+                        'label': 'Teach',
+                        'href': '/teach',
+                      },
+                      {
+                        'icon': 'help-circle',
+                        'label': 'Quiz',
+                        'href': '/quiz',
+                      },
+                      {
+                        'label': 'Concepts',
+                        'href': '/concepts',
+                        'icon': 'brain',
+                      },
+                    ],
                     'children': [
                       {
                         'type': 'empty-state',
@@ -3059,24 +3076,7 @@ export function stdAgentTutorTutorChatOrbital(params: StdAgentTutorTutorChatOrbi
                         'icon': 'message-circle',
                       },
                     ],
-                    'appName': 'AI Tutor',
-                    'navItems': [
-                      {
-                        'label': 'Teach',
-                        'icon': 'book-open',
-                        'href': '/teach',
-                      },
-                      {
-                        'label': 'Quiz',
-                        'href': '/quiz',
-                        'icon': 'help-circle',
-                      },
-                      {
-                        'label': 'Concepts',
-                        'href': '/concepts',
-                        'icon': 'brain',
-                      },
-                    ],
+                    'type': 'dashboard-layout',
                   },
                 ],
               ],
@@ -3677,8 +3677,8 @@ export function stdAgentTutorConceptOrbital(params: StdAgentTutorConceptOrbitalP
                   'Concept',
                   {
                     'emit': {
-                      'success': 'ConceptLoaded',
                       'failure': 'ConceptLoadFailed',
+                      'success': 'ConceptLoaded',
                     },
                   },
                 ],
@@ -3686,22 +3686,22 @@ export function stdAgentTutorConceptOrbital(params: StdAgentTutorConceptOrbitalP
                   'render-ui',
                   'main',
                   {
-                    'children': [
-                      {
-                        'type': 'spinner',
-                      },
-                      {
-                        'type': 'typography',
-                        'content': 'Loading…',
-                        'variant': 'caption',
-                        'color': 'muted',
-                      },
-                    ],
                     'gap': 'md',
                     'type': 'stack',
                     'align': 'center',
                     'direction': 'vertical',
                     'className': 'py-12',
+                    'children': [
+                      {
+                        'type': 'spinner',
+                      },
+                      {
+                        'variant': 'caption',
+                        'color': 'muted',
+                        'type': 'typography',
+                        'content': 'Loading…',
+                      },
+                    ],
                   },
                 ],
               ],
@@ -3715,28 +3715,41 @@ export function stdAgentTutorConceptOrbital(params: StdAgentTutorConceptOrbitalP
                   'render-ui',
                   'main',
                   {
-                    'type': 'dashboard-layout',
+                    'navItems': [
+                      {
+                        'icon': 'book-open',
+                        'label': 'Teach',
+                        'href': '/teach',
+                      },
+                      {
+                        'href': '/quiz',
+                        'icon': 'help-circle',
+                        'label': 'Quiz',
+                      },
+                      {
+                        'href': '/concepts',
+                        'label': 'Concepts',
+                        'icon': 'brain',
+                      },
+                    ],
                     'appName': 'AI Tutor',
+                    'type': 'dashboard-layout',
                     'children': [
                       {
+                        'className': 'max-w-5xl mx-auto w-full',
                         'gap': 'lg',
                         'type': 'stack',
                         'direction': 'vertical',
-                        'className': 'max-w-5xl mx-auto w-full',
                         'children': [
                           {
                             'direction': 'horizontal',
-                            'gap': 'md',
                             'children': [
                               {
                                 'type': 'stack',
-                                'gap': 'sm',
-                                'direction': 'horizontal',
-                                'align': 'center',
                                 'children': [
                                   {
-                                    'type': 'icon',
                                     'name': 'brain',
+                                    'type': 'icon',
                                   },
                                   {
                                     'content': 'Concept Manager',
@@ -3744,36 +3757,40 @@ export function stdAgentTutorConceptOrbital(params: StdAgentTutorConceptOrbitalP
                                     'variant': 'h2',
                                   },
                                 ],
+                                'gap': 'sm',
+                                'direction': 'horizontal',
+                                'align': 'center',
                               },
                               {
-                                'gap': 'sm',
-                                'type': 'stack',
                                 'direction': 'horizontal',
+                                'gap': 'sm',
                                 'children': [
                                   {
-                                    'action': 'MEMORIZE',
-                                    'label': 'Memorize',
-                                    'variant': 'primary',
                                     'type': 'button',
+                                    'variant': 'primary',
                                     'icon': 'plus',
+                                    'label': 'Memorize',
+                                    'action': 'MEMORIZE',
                                   },
                                   {
+                                    'type': 'button',
                                     'action': 'RECALL',
                                     'variant': 'secondary',
-                                    'icon': 'search',
-                                    'type': 'button',
                                     'label': 'Recall',
+                                    'icon': 'search',
                                   },
                                   {
-                                    'variant': 'ghost',
-                                    'icon': 'clock',
                                     'action': 'DECAY',
                                     'type': 'button',
+                                    'variant': 'ghost',
+                                    'icon': 'clock',
                                     'label': 'Decay All',
                                   },
                                 ],
+                                'type': 'stack',
                               },
                             ],
+                            'gap': 'md',
                             'justify': 'between',
                             'type': 'stack',
                             'align': 'center',
@@ -3782,75 +3799,58 @@ export function stdAgentTutorConceptOrbital(params: StdAgentTutorConceptOrbitalP
                             'type': 'divider',
                           },
                           {
-                            'fields': [
-                              {
-                                'icon': 'brain',
-                                'label': 'Content',
-                                'name': 'content',
-                                'variant': 'h4',
-                              },
-                              {
-                                'colorMap': {
-                                  'active': 'success',
-                                  'scheduled': 'warning',
-                                  'inactive': 'neutral',
-                                  'failed': 'destructive',
-                                  'archived': 'neutral',
-                                  'error': 'destructive',
-                                  'completed': 'success',
-                                  'draft': 'warning',
-                                  'cancelled': 'destructive',
-                                  'pending': 'warning',
-                                  'done': 'success',
-                                },
-                                'variant': 'badge',
-                                'label': 'Category',
-                                'name': 'category',
-                              },
-                              {
-                                'variant': 'caption',
-                                'name': 'strength',
-                                'label': 'Strength',
-                              },
-                            ],
-                            'entity': '@payload.data',
                             'itemActions': [
                               {
                                 'variant': 'ghost',
-                                'label': 'Pin',
                                 'event': 'PIN',
+                                'label': 'Pin',
                               },
                               {
-                                'label': 'Reinforce',
                                 'event': 'REINFORCE',
                                 'variant': 'ghost',
+                                'label': 'Reinforce',
                               },
                               {
                                 'label': 'Forget',
-                                'event': 'FORGET',
                                 'variant': 'danger',
+                                'event': 'FORGET',
                               },
                             ],
+                            'entity': '@payload.data',
                             'type': 'data-grid',
+                            'fields': [
+                              {
+                                'variant': 'h4',
+                                'name': 'content',
+                                'icon': 'brain',
+                                'label': 'Content',
+                              },
+                              {
+                                'name': 'category',
+                                'label': 'Category',
+                                'colorMap': {
+                                  'done': 'success',
+                                  'active': 'success',
+                                  'archived': 'neutral',
+                                  'inactive': 'neutral',
+                                  'completed': 'success',
+                                  'draft': 'warning',
+                                  'pending': 'warning',
+                                  'scheduled': 'warning',
+                                  'error': 'destructive',
+                                  'cancelled': 'destructive',
+                                  'failed': 'destructive',
+                                },
+                                'variant': 'badge',
+                              },
+                              {
+                                'name': 'strength',
+                                'label': 'Strength',
+                                'variant': 'caption',
+                              },
+                            ],
                           },
                         ],
-                      },
-                    ],
-                    'navItems': [
-                      {
-                        'label': 'Teach',
-                        'href': '/teach',
-                        'icon': 'book-open',
-                      },
-                      {
-                        'label': 'Quiz',
-                        'href': '/quiz',
-                        'icon': 'help-circle',
-                      },
-                      {
-                        'href': '/concepts',
-                        'icon': 'brain',
-                        'label': 'Concepts',
                       },
                     ],
                   },
@@ -3867,32 +3867,32 @@ export function stdAgentTutorConceptOrbital(params: StdAgentTutorConceptOrbitalP
                   'main',
                   {
                     'type': 'stack',
-                    'direction': 'vertical',
-                    'gap': 'md',
-                    'className': 'py-12',
                     'align': 'center',
+                    'direction': 'vertical',
+                    'className': 'py-12',
+                    'gap': 'md',
                     'children': [
                       {
                         'name': 'alert-triangle',
-                        'color': 'destructive',
                         'type': 'icon',
+                        'color': 'destructive',
                       },
                       {
-                        'content': 'Failed to load concept',
                         'variant': 'h3',
+                        'content': 'Failed to load concept',
                         'type': 'typography',
                       },
                       {
-                        'content': '@payload.error',
                         'type': 'typography',
-                        'variant': 'body',
                         'color': 'muted',
+                        'content': '@payload.error',
+                        'variant': 'body',
                       },
                       {
-                        'label': 'Retry',
-                        'variant': 'primary',
                         'type': 'button',
                         'action': 'INIT',
+                        'variant': 'primary',
+                        'label': 'Retry',
                         'icon': 'rotate-ccw',
                       },
                     ],
@@ -4086,38 +4086,38 @@ export function stdAgentTutorConceptOrbital(params: StdAgentTutorConceptOrbitalP
                   'render-ui',
                   'modal',
                   {
+                    'gap': 'md',
                     'type': 'stack',
                     'direction': 'vertical',
-                    'gap': 'md',
                     'children': [
                       {
+                        'direction': 'horizontal',
+                        'gap': 'sm',
+                        'type': 'stack',
                         'children': [
                           {
-                            'type': 'icon',
                             'name': 'plus-circle',
+                            'type': 'icon',
                           },
                           {
-                            'type': 'typography',
                             'content': 'Memorize',
+                            'type': 'typography',
                             'variant': 'h3',
                           },
                         ],
-                        'direction': 'horizontal',
-                        'type': 'stack',
-                        'gap': 'sm',
                       },
                       {
                         'type': 'divider',
                       },
                       {
-                        'submitEvent': 'SAVE',
-                        'mode': 'create',
                         'fields': [
                           'content',
                           'category',
                           'scope',
                         ],
                         'type': 'form-section',
+                        'mode': 'create',
+                        'submitEvent': 'SAVE',
                         'cancelEvent': 'CLOSE',
                       },
                     ],
@@ -4161,8 +4161,8 @@ export function stdAgentTutorConceptOrbital(params: StdAgentTutorConceptOrbitalP
                   '@payload.data',
                   {
                     'emit': {
-                      'success': 'ConceptSaved',
                       'failure': 'ConceptSaveFailed',
+                      'success': 'ConceptSaved',
                     },
                   },
                 ],
@@ -4495,14 +4495,14 @@ export function stdAgentTutorConceptOrbital(params: StdAgentTutorConceptOrbitalP
                   {
                     'navItems': [
                       {
-                        'href': '/teach',
                         'icon': 'book-open',
                         'label': 'Teach',
+                        'href': '/teach',
                       },
                       {
+                        'href': '/quiz',
                         'icon': 'help-circle',
                         'label': 'Quiz',
-                        'href': '/quiz',
                       },
                       {
                         'href': '/concepts',
@@ -4510,16 +4510,16 @@ export function stdAgentTutorConceptOrbital(params: StdAgentTutorConceptOrbitalP
                         'icon': 'brain',
                       },
                     ],
+                    'appName': 'AI Tutor',
+                    'type': 'dashboard-layout',
                     'children': [
                       {
-                        'title': 'Memory',
                         'icon': 'brain',
-                        'description': 'Memory is ready',
+                        'title': 'Memory',
                         'type': 'empty-state',
+                        'description': 'Memory is ready',
                       },
                     ],
-                    'type': 'dashboard-layout',
-                    'appName': 'AI Tutor',
                   },
                 ],
               ],
@@ -4541,8 +4541,8 @@ export function stdAgentTutorConceptOrbital(params: StdAgentTutorConceptOrbitalP
                   '@payload.data',
                   {
                     'emit': {
-                      'failure': 'ConceptSaveFailed',
                       'success': 'ConceptSaved',
+                      'failure': 'ConceptSaveFailed',
                     },
                   },
                 ],
@@ -4572,8 +4572,8 @@ export function stdAgentTutorConceptOrbital(params: StdAgentTutorConceptOrbitalP
                   'Concept',
                   {
                     'emit': {
-                      'success': 'ConceptLoaded',
                       'failure': 'ConceptLoadFailed',
+                      'success': 'ConceptLoaded',
                     },
                   },
                 ],
@@ -5023,18 +5023,17 @@ export function stdAgentTutorStudentAssessmentOrbital(params: StdAgentTutorStude
                   'render-ui',
                   'main',
                   {
-                    'type': 'dashboard-layout',
                     'appName': 'AI Tutor',
                     'navItems': [
                       {
                         'icon': 'book-open',
-                        'label': 'Teach',
                         'href': '/teach',
+                        'label': 'Teach',
                       },
                       {
                         'href': '/quiz',
-                        'label': 'Quiz',
                         'icon': 'help-circle',
+                        'label': 'Quiz',
                       },
                       {
                         'label': 'Concepts',
@@ -5042,53 +5041,54 @@ export function stdAgentTutorStudentAssessmentOrbital(params: StdAgentTutorStude
                         'icon': 'brain',
                       },
                     ],
+                    'type': 'dashboard-layout',
                     'children': [
                       {
+                        'type': 'stack',
+                        'gap': 'lg',
                         'children': [
                           {
+                            'gap': 'md',
+                            'direction': 'horizontal',
                             'justify': 'between',
+                            'type': 'stack',
                             'children': [
                               {
                                 'direction': 'horizontal',
                                 'children': [
                                   {
-                                    'type': 'icon',
                                     'name': 'tag',
+                                    'type': 'icon',
                                   },
                                   {
-                                    'variant': 'h2',
                                     'type': 'typography',
                                     'content': 'StudentAssessment',
+                                    'variant': 'h2',
                                   },
                                 ],
-                                'type': 'stack',
                                 'gap': 'md',
+                                'type': 'stack',
                               },
                               {
                                 'type': 'button',
-                                'label': 'Open',
-                                'action': 'CLASSIFY',
                                 'icon': 'tag',
+                                'action': 'CLASSIFY',
+                                'label': 'Open',
                                 'variant': 'primary',
                               },
                             ],
-                            'type': 'stack',
-                            'gap': 'md',
-                            'direction': 'horizontal',
                           },
                           {
                             'type': 'divider',
                           },
                           {
-                            'description': 'Click Open to view details in a modal overlay.',
                             'type': 'empty-state',
                             'icon': 'tag',
                             'title': 'Nothing open',
+                            'description': 'Click Open to view details in a modal overlay.',
                           },
                         ],
                         'direction': 'vertical',
-                        'gap': 'lg',
-                        'type': 'stack',
                       },
                     ],
                   },
@@ -5104,15 +5104,13 @@ export function stdAgentTutorStudentAssessmentOrbital(params: StdAgentTutorStude
                   'render-ui',
                   'modal',
                   {
-                    'gap': 'md',
                     'children': [
                       {
-                        'type': 'stack',
-                        'direction': 'horizontal',
+                        'gap': 'sm',
                         'children': [
                           {
-                            'type': 'icon',
                             'name': 'tag',
+                            'type': 'icon',
                           },
                           {
                             'content': 'StudentAssessment',
@@ -5120,54 +5118,56 @@ export function stdAgentTutorStudentAssessmentOrbital(params: StdAgentTutorStude
                             'variant': 'h3',
                           },
                         ],
-                        'gap': 'sm',
+                        'type': 'stack',
+                        'direction': 'horizontal',
                       },
                       {
                         'type': 'divider',
                       },
                       {
                         'type': 'stack',
-                        'gap': 'sm',
                         'direction': 'horizontal',
+                        'gap': 'sm',
                         'children': [
                           {
+                            'variant': 'caption',
                             'content': 'Categories:',
                             'type': 'typography',
-                            'variant': 'caption',
                           },
                           {
-                            'type': 'badge',
+                            'variant': 'secondary',
                             'label': 'beginner',
-                            'variant': 'secondary',
-                          },
-                          {
-                            'variant': 'secondary',
                             'type': 'badge',
-                            'label': 'intermediate',
                           },
                           {
+                            'label': 'intermediate',
+                            'type': 'badge',
                             'variant': 'secondary',
+                          },
+                          {
                             'type': 'badge',
                             'label': 'advanced',
+                            'variant': 'secondary',
                           },
                           {
-                            'variant': 'secondary',
-                            'label': 'expert',
                             'type': 'badge',
+                            'label': 'expert',
+                            'variant': 'secondary',
                           },
                         ],
                       },
                       {
-                        'cancelEvent': 'CLOSE',
-                        'submitEvent': 'SAVE',
                         'mode': 'create',
                         'type': 'form-section',
+                        'cancelEvent': 'CLOSE',
                         'fields': [
                           'input',
                         ],
+                        'submitEvent': 'SAVE',
                       },
                     ],
                     'direction': 'vertical',
+                    'gap': 'md',
                     'type': 'stack',
                   },
                 ],
@@ -5203,71 +5203,71 @@ export function stdAgentTutorStudentAssessmentOrbital(params: StdAgentTutorStude
                   'main',
                   {
                     'type': 'dashboard-layout',
+                    'navItems': [
+                      {
+                        'href': '/teach',
+                        'icon': 'book-open',
+                        'label': 'Teach',
+                      },
+                      {
+                        'icon': 'help-circle',
+                        'href': '/quiz',
+                        'label': 'Quiz',
+                      },
+                      {
+                        'icon': 'brain',
+                        'href': '/concepts',
+                        'label': 'Concepts',
+                      },
+                    ],
                     'appName': 'AI Tutor',
                     'children': [
                       {
+                        'direction': 'vertical',
                         'children': [
                           {
-                            'direction': 'horizontal',
                             'gap': 'md',
-                            'type': 'stack',
-                            'justify': 'between',
                             'children': [
                               {
-                                'gap': 'md',
-                                'direction': 'horizontal',
-                                'type': 'stack',
                                 'children': [
                                   {
                                     'type': 'icon',
                                     'name': 'tag',
                                   },
                                   {
+                                    'content': 'StudentAssessment',
                                     'type': 'typography',
                                     'variant': 'h2',
-                                    'content': 'StudentAssessment',
                                   },
                                 ],
+                                'type': 'stack',
+                                'direction': 'horizontal',
+                                'gap': 'md',
                               },
                               {
-                                'icon': 'tag',
-                                'label': 'Open',
                                 'action': 'CLASSIFY',
+                                'label': 'Open',
                                 'variant': 'primary',
                                 'type': 'button',
+                                'icon': 'tag',
                               },
                             ],
+                            'direction': 'horizontal',
+                            'type': 'stack',
+                            'justify': 'between',
                           },
                           {
                             'type': 'divider',
                           },
                           {
                             'icon': 'tag',
+                            'title': 'Nothing open',
                             'description': 'Click Open to view details in a modal overlay.',
                             'type': 'empty-state',
-                            'title': 'Nothing open',
                           },
                         ],
-                        'direction': 'vertical',
                         'gap': 'lg',
                         'type': 'stack',
-                      },
-                    ],
-                    'navItems': [
-                      {
-                        'icon': 'book-open',
-                        'label': 'Teach',
-                        'href': '/teach',
-                      },
-                      {
-                        'href': '/quiz',
-                        'label': 'Quiz',
-                        'icon': 'help-circle',
-                      },
-                      {
-                        'href': '/concepts',
-                        'label': 'Concepts',
-                        'icon': 'brain',
                       },
                     ],
                   },
@@ -5286,8 +5286,8 @@ export function stdAgentTutorStudentAssessmentOrbital(params: StdAgentTutorStude
                   '@payload.data',
                   {
                     'emit': {
-                      'success': 'StudentAssessmentSaved',
                       'failure': 'StudentAssessmentSaveFailed',
+                      'success': 'StudentAssessmentSaved',
                     },
                   },
                 ],
@@ -5305,8 +5305,8 @@ export function stdAgentTutorStudentAssessmentOrbital(params: StdAgentTutorStude
                   'StudentAssessment',
                   {
                     'emit': {
-                      'failure': 'StudentAssessmentLoadFailed',
                       'success': 'StudentAssessmentLoaded',
+                      'failure': 'StudentAssessmentLoadFailed',
                     },
                   },
                 ],
@@ -5314,45 +5314,28 @@ export function stdAgentTutorStudentAssessmentOrbital(params: StdAgentTutorStude
                   'render-ui',
                   'main',
                   {
-                    'appName': 'AI Tutor',
-                    'type': 'dashboard-layout',
-                    'navItems': [
-                      {
-                        'icon': 'book-open',
-                        'label': 'Teach',
-                        'href': '/teach',
-                      },
-                      {
-                        'label': 'Quiz',
-                        'href': '/quiz',
-                        'icon': 'help-circle',
-                      },
-                      {
-                        'icon': 'brain',
-                        'label': 'Concepts',
-                        'href': '/concepts',
-                      },
-                    ],
                     'children': [
                       {
+                        'type': 'stack',
                         'direction': 'vertical',
                         'children': [
                           {
+                            'gap': 'md',
+                            'type': 'stack',
                             'direction': 'horizontal',
-                            'justify': 'between',
                             'children': [
                               {
                                 'type': 'stack',
                                 'direction': 'horizontal',
                                 'children': [
                                   {
-                                    'type': 'icon',
                                     'name': 'tag',
+                                    'type': 'icon',
                                   },
                                   {
                                     'type': 'typography',
-                                    'variant': 'h2',
                                     'content': 'StudentAssessment',
+                                    'variant': 'h2',
                                   },
                                 ],
                                 'gap': 'md',
@@ -5365,21 +5348,38 @@ export function stdAgentTutorStudentAssessmentOrbital(params: StdAgentTutorStude
                                 'label': 'Open',
                               },
                             ],
-                            'type': 'stack',
-                            'gap': 'md',
+                            'justify': 'between',
                           },
                           {
                             'type': 'divider',
                           },
                           {
-                            'description': 'Click Open to view details in a modal overlay.',
-                            'icon': 'tag',
                             'title': 'Nothing open',
+                            'icon': 'tag',
                             'type': 'empty-state',
+                            'description': 'Click Open to view details in a modal overlay.',
                           },
                         ],
                         'gap': 'lg',
-                        'type': 'stack',
+                      },
+                    ],
+                    'appName': 'AI Tutor',
+                    'type': 'dashboard-layout',
+                    'navItems': [
+                      {
+                        'icon': 'book-open',
+                        'href': '/teach',
+                        'label': 'Teach',
+                      },
+                      {
+                        'href': '/quiz',
+                        'label': 'Quiz',
+                        'icon': 'help-circle',
+                      },
+                      {
+                        'icon': 'brain',
+                        'label': 'Concepts',
+                        'href': '/concepts',
                       },
                     ],
                   },
@@ -5491,8 +5491,8 @@ export function stdAgentTutorStudentAssessmentOrbital(params: StdAgentTutorStude
                   'StudentAssessment',
                   {
                     'emit': {
-                      'success': 'StudentAssessmentLoaded',
                       'failure': 'StudentAssessmentLoadFailed',
+                      'success': 'StudentAssessmentLoaded',
                     },
                   },
                 ],
@@ -5517,16 +5517,17 @@ export function stdAgentTutorStudentAssessmentOrbital(params: StdAgentTutorStude
                   'render-ui',
                   'main',
                   {
+                    'type': 'dashboard-layout',
                     'navItems': [
                       {
-                        'href': '/teach',
                         'label': 'Teach',
                         'icon': 'book-open',
+                        'href': '/teach',
                       },
                       {
+                        'icon': 'help-circle',
                         'href': '/quiz',
                         'label': 'Quiz',
-                        'icon': 'help-circle',
                       },
                       {
                         'href': '/concepts',
@@ -5534,63 +5535,62 @@ export function stdAgentTutorStudentAssessmentOrbital(params: StdAgentTutorStude
                         'label': 'Concepts',
                       },
                     ],
-                    'type': 'dashboard-layout',
                     'children': [
                       {
+                        'direction': 'vertical',
                         'type': 'stack',
+                        'gap': 'lg',
                         'children': [
                           {
-                            'children': [
-                              {
-                                'align': 'center',
-                                'children': [
-                                  {
-                                    'type': 'icon',
-                                    'name': 'tag',
-                                  },
-                                  {
-                                    'content': 'StudentAssessment Result',
-                                    'variant': 'h2',
-                                    'type': 'typography',
-                                  },
-                                ],
-                                'gap': 'md',
-                                'direction': 'horizontal',
-                                'type': 'stack',
-                              },
-                              {
-                                'variant': 'ghost',
-                                'type': 'button',
-                                'action': 'HIDE',
-                                'icon': 'x',
-                                'label': 'Dismiss',
-                              },
-                            ],
+                            'justify': 'between',
                             'align': 'center',
                             'direction': 'horizontal',
                             'type': 'stack',
                             'gap': 'md',
-                            'justify': 'between',
+                            'children': [
+                              {
+                                'type': 'stack',
+                                'align': 'center',
+                                'children': [
+                                  {
+                                    'name': 'tag',
+                                    'type': 'icon',
+                                  },
+                                  {
+                                    'content': 'StudentAssessment Result',
+                                    'type': 'typography',
+                                    'variant': 'h2',
+                                  },
+                                ],
+                                'gap': 'md',
+                                'direction': 'horizontal',
+                              },
+                              {
+                                'label': 'Dismiss',
+                                'type': 'button',
+                                'icon': 'x',
+                                'variant': 'ghost',
+                                'action': 'HIDE',
+                              },
+                            ],
                           },
                           {
                             'type': 'divider',
                           },
                           {
-                            'type': 'alert',
                             'variant': '@entity.notificationType',
+                            'type': 'alert',
                             'message': '@entity.message',
                           },
                           {
                             'type': 'toast-slot',
                           },
                           {
-                            'message': '@entity.message',
                             'variant': 'warning',
                             'type': 'alert',
+                            'message': '@entity.message',
                           },
                         ],
-                        'gap': 'lg',
-                        'direction': 'vertical',
                       },
                     ],
                     'appName': 'AI Tutor',
@@ -5619,59 +5619,57 @@ export function stdAgentTutorStudentAssessmentOrbital(params: StdAgentTutorStude
                   {
                     'navItems': [
                       {
+                        'label': 'Teach',
                         'href': '/teach',
                         'icon': 'book-open',
-                        'label': 'Teach',
                       },
                       {
                         'icon': 'help-circle',
-                        'label': 'Quiz',
                         'href': '/quiz',
+                        'label': 'Quiz',
                       },
                       {
-                        'label': 'Concepts',
                         'icon': 'brain',
+                        'label': 'Concepts',
                         'href': '/concepts',
                       },
                     ],
-                    'appName': 'AI Tutor',
                     'children': [
                       {
-                        'direction': 'vertical',
                         'type': 'stack',
                         'children': [
                           {
                             'type': 'stack',
+                            'align': 'center',
                             'gap': 'md',
                             'justify': 'between',
-                            'align': 'center',
+                            'direction': 'horizontal',
                             'children': [
                               {
+                                'gap': 'md',
                                 'type': 'stack',
                                 'align': 'center',
-                                'gap': 'md',
                                 'children': [
                                   {
-                                    'type': 'icon',
                                     'name': 'tag',
+                                    'type': 'icon',
                                   },
                                   {
-                                    'variant': 'h2',
                                     'type': 'typography',
                                     'content': 'StudentAssessment Result',
+                                    'variant': 'h2',
                                   },
                                 ],
                                 'direction': 'horizontal',
                               },
                               {
+                                'action': 'HIDE',
                                 'variant': 'ghost',
+                                'icon': 'x',
                                 'type': 'button',
                                 'label': 'Dismiss',
-                                'icon': 'x',
-                                'action': 'HIDE',
                               },
                             ],
-                            'direction': 'horizontal',
                           },
                           {
                             'type': 'divider',
@@ -5685,14 +5683,16 @@ export function stdAgentTutorStudentAssessmentOrbital(params: StdAgentTutorStude
                             'type': 'toast-slot',
                           },
                           {
-                            'variant': 'warning',
-                            'message': '@entity.message',
                             'type': 'alert',
+                            'message': '@entity.message',
+                            'variant': 'warning',
                           },
                         ],
                         'gap': 'lg',
+                        'direction': 'vertical',
                       },
                     ],
+                    'appName': 'AI Tutor',
                     'type': 'dashboard-layout',
                   },
                 ],
@@ -5846,8 +5846,8 @@ export function stdAgentTutorStudentAssessmentOrbital(params: StdAgentTutorStude
                   'StudentAssessment',
                   {
                     'emit': {
-                      'failure': 'StudentAssessmentLoadFailed',
                       'success': 'StudentAssessmentLoaded',
+                      'failure': 'StudentAssessmentLoadFailed',
                     },
                   },
                 ],
@@ -5855,18 +5855,25 @@ export function stdAgentTutorStudentAssessmentOrbital(params: StdAgentTutorStude
                   'render-ui',
                   'main',
                   {
-                    'type': 'dashboard-layout',
+                    'children': [
+                      {
+                        'type': 'empty-state',
+                        'icon': 'tag',
+                        'title': 'Classifier',
+                        'description': 'Classifier is ready',
+                      },
+                    ],
                     'appName': 'AI Tutor',
                     'navItems': [
                       {
-                        'icon': 'book-open',
                         'href': '/teach',
+                        'icon': 'book-open',
                         'label': 'Teach',
                       },
                       {
-                        'href': '/quiz',
-                        'icon': 'help-circle',
                         'label': 'Quiz',
+                        'icon': 'help-circle',
+                        'href': '/quiz',
                       },
                       {
                         'icon': 'brain',
@@ -5874,14 +5881,7 @@ export function stdAgentTutorStudentAssessmentOrbital(params: StdAgentTutorStude
                         'href': '/concepts',
                       },
                     ],
-                    'children': [
-                      {
-                        'description': 'Classifier is ready',
-                        'icon': 'tag',
-                        'title': 'Classifier',
-                        'type': 'empty-state',
-                      },
-                    ],
+                    'type': 'dashboard-layout',
                   },
                 ],
               ],

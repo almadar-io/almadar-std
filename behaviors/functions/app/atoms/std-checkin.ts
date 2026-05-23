@@ -87,30 +87,30 @@ export interface StdCheckinCheckinLoadFailedPayload {
  * without modifying its state-machine topology.
  */
 export interface StdCheckinConfig {
-  /** Default: `[{"label":"Open","event":"OPEN_CHECKIN","icon":"arrow-right","variant":"primary"},{"label":"Revoke","event":"REVOKE_CHECKIN","variant":"danger"}]` */
-  itemActions?: EntityRow[];
-  /** Default: `"Check-ins"` */
-  title?: string;
+  /** Default: `[{"label":"Type","variant":"badge","name":"targetType"},{"name":"targetId","label":"Target","variant":"caption"},{"label":"User","variant":"caption","name":"userId"},{"name":"mode","variant":"badge","label":"Mode"},{"name":"checkedInAt","variant":"caption","label":"When"}]` */
+  fields?: EntityRow[];
   /** Default: `0` */
   leadTimeMinutes?: number;
-  /** Default: `"geo"` */
-  mode?: string;
+  /** Default: `[]` */
+  blackoutDates?: string[];
   /** Default: `1` */
   bookingWindowDays?: number;
   /** Default: `24` */
   rescheduleWindowHours?: number;
-  /** Default: `15` */
-  noShowGracePeriodMinutes?: number;
-  /** Default: `2` */
-  maxReschedules?: number;
-  /** Default: `[{"variant":"badge","label":"Type","name":"targetType"},{"name":"targetId","variant":"caption","label":"Target"},{"name":"userId","label":"User","variant":"caption"},{"label":"Mode","variant":"badge","name":"mode"},{"label":"When","name":"checkedInAt","variant":"caption"}]` */
-  fields?: EntityRow[];
-  /** Default: `[]` */
-  blackoutDates?: string[];
-  /** Default: `"06:00-23:00"` */
-  bookingHours?: string;
+  /** Default: `"Check-ins"` */
+  title?: string;
   /** Default: `"free"` */
   cancellationPolicy?: 'free' | 'partial-refund' | 'no-refund';
+  /** Default: `"geo"` */
+  mode?: string;
+  /** Default: `"06:00-23:00"` */
+  bookingHours?: string;
+  /** Default: `2` */
+  maxReschedules?: number;
+  /** Default: `15` */
+  noShowGracePeriodMinutes?: number;
+  /** Default: `[{"label":"Open","variant":"primary","event":"OPEN_CHECKIN","icon":"arrow-right"},{"label":"Revoke","event":"REVOKE_CHECKIN","variant":"danger"}]` */
+  itemActions?: EntityRow[];
 }
 
 /**

@@ -365,8 +365,8 @@
                     "Revision",
                     {
                       "emit": {
-                        "success": "RevisionLoaded",
-                        "failure": "RevisionLoadFailed"
+                        "failure": "RevisionLoadFailed",
+                        "success": "RevisionLoaded"
                       }
                     }
                   ],
@@ -374,22 +374,22 @@
                     "render-ui",
                     "main",
                     {
-                      "gap": "md",
                       "align": "center",
                       "children": [
                         {
                           "type": "spinner"
                         },
                         {
-                          "color": "muted",
                           "content": "Loading version history…",
                           "type": "typography",
+                          "color": "muted",
                           "variant": "caption"
                         }
                       ],
-                      "direction": "vertical",
+                      "type": "stack",
+                      "gap": "md",
                       "className": "py-12",
-                      "type": "stack"
+                      "direction": "vertical"
                     }
                   ]
                 ]
@@ -404,15 +404,13 @@
                     "main",
                     {
                       "type": "stack",
-                      "gap": "md",
                       "direction": "vertical",
                       "children": [
                         {
-                          "direction": "horizontal",
                           "children": [
                             {
-                              "type": "icon",
-                              "name": "history"
+                              "name": "history",
+                              "type": "icon"
                             },
                             {
                               "content": "@config.title",
@@ -420,18 +418,20 @@
                               "type": "typography"
                             }
                           ],
+                          "align": "center",
                           "type": "stack",
-                          "gap": "sm",
-                          "align": "center"
+                          "direction": "horizontal",
+                          "gap": "sm"
                         },
                         {
+                          "type": "simple-grid",
                           "cols": 4.0,
                           "children": [
                             {
-                              "value": "@payload.data.length",
-                              "label": "Total revisions",
+                              "icon": "history",
                               "type": "stat-display",
-                              "icon": "history"
+                              "label": "Total revisions",
+                              "value": "@payload.data.length"
                             },
                             {
                               "type": "stat-display",
@@ -440,19 +440,18 @@
                               "label": "Authors"
                             },
                             {
-                              "type": "stat-display",
                               "value": "14",
+                              "icon": "save",
                               "label": "Saves this week",
-                              "icon": "save"
+                              "type": "stat-display"
                             },
                             {
-                              "label": "Rollbacks",
+                              "value": "2",
                               "icon": "rotate-ccw",
-                              "type": "stat-display",
-                              "value": "2"
+                              "label": "Rollbacks",
+                              "type": "stat-display"
                             }
-                          ],
-                          "type": "simple-grid"
+                          ]
                         },
                         {
                           "type": "divider"
@@ -461,33 +460,32 @@
                           "cols": 1.0,
                           "itemActions": [
                             {
-                              "event": "OPEN_REVISION",
                               "icon": "arrow-right",
-                              "variant": "primary",
-                              "label": "Open"
+                              "label": "Open",
+                              "event": "OPEN_REVISION",
+                              "variant": "primary"
                             },
                             {
-                              "label": "Rollback",
                               "icon": "rotate-ccw",
                               "event": "ROLLBACK",
-                              "variant": "danger"
+                              "variant": "danger",
+                              "label": "Rollback"
                             }
                           ],
-                          "gap": "sm",
                           "fields": [
                             {
+                              "label": "Version",
                               "name": "versionNumber",
-                              "variant": "badge",
-                              "label": "Version"
+                              "variant": "badge"
                             },
                             {
                               "label": "Author",
-                              "name": "authorName",
-                              "variant": "caption"
+                              "variant": "caption",
+                              "name": "authorName"
                             },
                             {
-                              "name": "summary",
                               "label": "Summary",
+                              "name": "summary",
                               "variant": "caption"
                             },
                             {
@@ -497,9 +495,11 @@
                             }
                           ],
                           "entity": "@payload.data",
+                          "gap": "sm",
                           "type": "data-grid"
                         }
-                      ]
+                      ],
+                      "gap": "md"
                     }
                   ]
                 ]
@@ -530,9 +530,9 @@
                     "render-ui",
                     "main",
                     {
-                      "type": "alert",
+                      "message": "@payload.error",
                       "variant": "error",
-                      "message": "@payload.error"
+                      "type": "alert"
                     }
                   ]
                 ]
@@ -546,9 +546,9 @@
                     "render-ui",
                     "main",
                     {
-                      "message": "@payload.error",
                       "type": "alert",
-                      "variant": "error"
+                      "variant": "error",
+                      "message": "@payload.error"
                     }
                   ]
                 ]
@@ -609,16 +609,14 @@
                     {
                       "children": [
                         {
-                          "type": "stack",
                           "direction": "horizontal",
-                          "gap": "sm",
-                          "align": "center",
+                          "type": "stack",
                           "children": [
                             {
-                              "action": "CLOSE_VIEW",
                               "label": "Back",
-                              "variant": "ghost",
-                              "type": "button"
+                              "type": "button",
+                              "action": "CLOSE_VIEW",
+                              "variant": "ghost"
                             },
                             {
                               "name": "file-text",
@@ -634,124 +632,126 @@
                               "label": "@entity.versionNumber",
                               "variant": "default"
                             }
-                          ]
+                          ],
+                          "gap": "sm",
+                          "align": "center"
                         },
                         {
                           "type": "divider"
                         },
                         {
-                          "gap": "sm",
-                          "type": "stack",
                           "direction": "vertical",
+                          "type": "stack",
                           "children": [
                             {
-                              "direction": "horizontal",
-                              "type": "stack",
-                              "gap": "md",
                               "children": [
                                 {
-                                  "content": "Author",
-                                  "color": "muted",
                                   "type": "typography",
-                                  "variant": "caption"
-                                },
-                                {
-                                  "content": "@entity.authorName",
-                                  "type": "typography",
-                                  "variant": "body"
-                                }
-                              ]
-                            },
-                            {
-                              "gap": "md",
-                              "direction": "horizontal",
-                              "children": [
-                                {
                                   "variant": "caption",
-                                  "content": "Saved",
-                                  "type": "typography",
+                                  "content": "Author",
                                   "color": "muted"
                                 },
                                 {
                                   "variant": "body",
                                   "type": "typography",
-                                  "content": "@entity.createdAt"
+                                  "content": "@entity.authorName"
                                 }
                               ],
+                              "direction": "horizontal",
+                              "gap": "md",
                               "type": "stack"
                             },
                             {
                               "direction": "horizontal",
-                              "gap": "md",
-                              "type": "stack",
                               "children": [
                                 {
                                   "variant": "caption",
+                                  "type": "typography",
+                                  "color": "muted",
+                                  "content": "Saved"
+                                },
+                                {
+                                  "variant": "body",
+                                  "content": "@entity.createdAt",
+                                  "type": "typography"
+                                }
+                              ],
+                              "type": "stack",
+                              "gap": "md"
+                            },
+                            {
+                              "direction": "horizontal",
+                              "children": [
+                                {
                                   "color": "muted",
                                   "content": "Content",
-                                  "type": "typography"
+                                  "type": "typography",
+                                  "variant": "caption"
                                 },
                                 {
                                   "type": "typography",
                                   "variant": "body",
                                   "content": "@entity.content"
                                 }
-                              ]
+                              ],
+                              "type": "stack",
+                              "gap": "md"
                             }
-                          ]
+                          ],
+                          "gap": "sm"
                         },
                         {
                           "type": "divider"
                         },
                         {
                           "cols": 3.0,
-                          "type": "simple-grid",
                           "children": [
                             {
-                              "label": "Version",
-                              "value": "@entity.versionNumber",
                               "type": "stat-display",
+                              "value": "@entity.versionNumber",
+                              "label": "Version",
                               "icon": "tag"
                             },
                             {
-                              "value": "@entity.documentId",
                               "type": "stat-display",
                               "label": "Document",
+                              "value": "@entity.documentId",
                               "icon": "file"
                             },
                             {
                               "type": "stat-display",
                               "icon": "layers",
-                              "value": "@entity.documentType",
-                              "label": "Type"
+                              "label": "Type",
+                              "value": "@entity.documentType"
                             }
-                          ]
+                          ],
+                          "type": "simple-grid"
                         },
                         {
+                          "children": [
+                            {
+                              "variant": "secondary",
+                              "actionPayload": {
+                                "id": "@entity.id"
+                              },
+                              "type": "button",
+                              "label": "Compare",
+                              "action": "COMPARE"
+                            },
+                            {
+                              "label": "Rollback",
+                              "action": "ROLLBACK",
+                              "type": "button",
+                              "variant": "danger",
+                              "actionPayload": {
+                                "id": "@entity.id"
+                              }
+                            }
+                          ],
                           "type": "stack",
                           "align": "center",
                           "direction": "horizontal",
-                          "gap": "sm",
-                          "children": [
-                            {
-                              "label": "Compare",
-                              "variant": "secondary",
-                              "action": "COMPARE",
-                              "actionPayload": {
-                                "id": "@entity.id"
-                              },
-                              "type": "button"
-                            },
-                            {
-                              "type": "button",
-                              "actionPayload": {
-                                "id": "@entity.id"
-                              },
-                              "label": "Rollback",
-                              "variant": "danger",
-                              "action": "ROLLBACK"
-                            }
-                          ]
+                          "gap": "sm"
                         }
                       ],
                       "gap": "md",
@@ -785,22 +785,22 @@
                     "render-ui",
                     "main",
                     {
-                      "type": "stack",
                       "align": "center",
+                      "type": "stack",
+                      "direction": "vertical",
                       "children": [
                         {
                           "type": "spinner"
                         },
                         {
-                          "content": "Rolling back…",
                           "variant": "caption",
+                          "content": "Rolling back…",
                           "type": "typography",
                           "color": "muted"
                         }
                       ],
-                      "className": "py-12",
                       "gap": "md",
-                      "direction": "vertical"
+                      "className": "py-12"
                     }
                   ]
                 ]
@@ -815,8 +815,8 @@
                     "Revision",
                     {
                       "emit": {
-                        "success": "RevisionLoaded",
-                        "failure": "RevisionLoadFailed"
+                        "failure": "RevisionLoadFailed",
+                        "success": "RevisionLoaded"
                       }
                     }
                   ],
@@ -824,22 +824,22 @@
                     "render-ui",
                     "main",
                     {
-                      "gap": "md",
                       "children": [
                         {
                           "type": "spinner"
                         },
                         {
+                          "content": "Loading version history…",
                           "type": "typography",
                           "variant": "caption",
-                          "content": "Loading version history…",
                           "color": "muted"
                         }
                       ],
-                      "type": "stack",
-                      "className": "py-12",
+                      "gap": "md",
                       "direction": "vertical",
-                      "align": "center"
+                      "type": "stack",
+                      "align": "center",
+                      "className": "py-12"
                     }
                   ]
                 ]
@@ -858,68 +858,151 @@
                     "render-ui",
                     "main",
                     {
-                      "direction": "vertical",
-                      "type": "stack",
-                      "gap": "md",
                       "children": [
                         {
+                          "direction": "horizontal",
+                          "type": "stack",
+                          "align": "center",
                           "children": [
                             {
                               "variant": "ghost",
+                              "label": "Back",
                               "type": "button",
-                              "action": "CLOSE_VIEW",
-                              "label": "Back"
+                              "action": "CLOSE_VIEW"
                             },
                             {
                               "type": "icon",
                               "name": "git-compare"
                             },
                             {
-                              "type": "typography",
+                              "content": "Compare versions",
                               "variant": "h3",
-                              "content": "Compare versions"
+                              "type": "typography"
                             }
                           ],
-                          "direction": "horizontal",
-                          "type": "stack",
-                          "align": "center",
                           "gap": "sm"
                         },
                         {
                           "type": "divider"
                         },
                         {
-                          "beforeId": "@payload.beforeId",
-                          "revisions": "@payload.revisions",
                           "onRevert": "ROLLBACK",
-                          "afterId": "@payload.afterId",
+                          "revisions": "@payload.revisions",
+                          "beforeId": "@payload.beforeId",
                           "type": "version-diff",
+                          "afterId": "@payload.afterId",
                           "view": "side-by-side"
                         },
                         {
-                          "direction": "horizontal",
-                          "gap": "sm",
-                          "type": "stack",
-                          "align": "center",
                           "children": [
                             {
+                              "action": "ROLLBACK",
                               "actionPayload": {
                                 "id": "@entity.id"
                               },
-                              "type": "button",
+                              "label": "Rollback",
                               "variant": "danger",
-                              "action": "ROLLBACK",
-                              "label": "Rollback"
+                              "type": "button"
                             }
-                          ]
+                          ],
+                          "gap": "sm",
+                          "direction": "horizontal",
+                          "type": "stack",
+                          "align": "center"
                         }
-                      ]
+                      ],
+                      "type": "stack",
+                      "direction": "vertical",
+                      "gap": "md"
                     }
                   ]
                 ]
               },
               {
                 "from": "viewing_single",
+                "to": "loading",
+                "event": "ROLLBACK",
+                "effects": [
+                  [
+                    "set",
+                    "@entity.id",
+                    "@payload.id"
+                  ],
+                  [
+                    "fetch",
+                    "Revision",
+                    {
+                      "emit": {
+                        "success": "RevisionLoaded",
+                        "failure": "RevisionLoadFailed"
+                      }
+                    }
+                  ],
+                  [
+                    "render-ui",
+                    "main",
+                    {
+                      "align": "center",
+                      "className": "py-12",
+                      "children": [
+                        {
+                          "type": "spinner"
+                        },
+                        {
+                          "variant": "caption",
+                          "content": "Rolling back…",
+                          "type": "typography",
+                          "color": "muted"
+                        }
+                      ],
+                      "type": "stack",
+                      "direction": "vertical",
+                      "gap": "md"
+                    }
+                  ]
+                ]
+              },
+              {
+                "from": "comparing",
+                "to": "loading",
+                "event": "CLOSE_VIEW",
+                "effects": [
+                  [
+                    "fetch",
+                    "Revision",
+                    {
+                      "emit": {
+                        "success": "RevisionLoaded",
+                        "failure": "RevisionLoadFailed"
+                      }
+                    }
+                  ],
+                  [
+                    "render-ui",
+                    "main",
+                    {
+                      "className": "py-12",
+                      "children": [
+                        {
+                          "type": "spinner"
+                        },
+                        {
+                          "variant": "caption",
+                          "type": "typography",
+                          "content": "Loading version history…",
+                          "color": "muted"
+                        }
+                      ],
+                      "direction": "vertical",
+                      "gap": "md",
+                      "align": "center",
+                      "type": "stack"
+                    }
+                  ]
+                ]
+              },
+              {
+                "from": "comparing",
                 "to": "loading",
                 "event": "ROLLBACK",
                 "effects": [
@@ -943,104 +1026,21 @@
                     "main",
                     {
                       "direction": "vertical",
+                      "gap": "md",
                       "type": "stack",
+                      "align": "center",
                       "className": "py-12",
                       "children": [
                         {
                           "type": "spinner"
                         },
                         {
-                          "variant": "caption",
                           "color": "muted",
                           "type": "typography",
+                          "variant": "caption",
                           "content": "Rolling back…"
                         }
-                      ],
-                      "align": "center",
-                      "gap": "md"
-                    }
-                  ]
-                ]
-              },
-              {
-                "from": "comparing",
-                "to": "loading",
-                "event": "CLOSE_VIEW",
-                "effects": [
-                  [
-                    "fetch",
-                    "Revision",
-                    {
-                      "emit": {
-                        "success": "RevisionLoaded",
-                        "failure": "RevisionLoadFailed"
-                      }
-                    }
-                  ],
-                  [
-                    "render-ui",
-                    "main",
-                    {
-                      "className": "py-12",
-                      "type": "stack",
-                      "children": [
-                        {
-                          "type": "spinner"
-                        },
-                        {
-                          "content": "Loading version history…",
-                          "color": "muted",
-                          "type": "typography",
-                          "variant": "caption"
-                        }
-                      ],
-                      "direction": "vertical",
-                      "align": "center",
-                      "gap": "md"
-                    }
-                  ]
-                ]
-              },
-              {
-                "from": "comparing",
-                "to": "loading",
-                "event": "ROLLBACK",
-                "effects": [
-                  [
-                    "set",
-                    "@entity.id",
-                    "@payload.id"
-                  ],
-                  [
-                    "fetch",
-                    "Revision",
-                    {
-                      "emit": {
-                        "success": "RevisionLoaded",
-                        "failure": "RevisionLoadFailed"
-                      }
-                    }
-                  ],
-                  [
-                    "render-ui",
-                    "main",
-                    {
-                      "children": [
-                        {
-                          "type": "spinner"
-                        },
-                        {
-                          "color": "muted",
-                          "content": "Rolling back…",
-                          "type": "typography",
-                          "variant": "caption"
-                        }
-                      ],
-                      "direction": "vertical",
-                      "align": "center",
-                      "type": "stack",
-                      "gap": "md",
-                      "className": "py-12"
+                      ]
                     }
                   ]
                 ]
@@ -1055,8 +1055,8 @@
                     "Revision",
                     {
                       "emit": {
-                        "success": "RevisionLoaded",
-                        "failure": "RevisionLoadFailed"
+                        "failure": "RevisionLoadFailed",
+                        "success": "RevisionLoaded"
                       }
                     }
                   ],
@@ -1064,8 +1064,8 @@
                     "render-ui",
                     "main",
                     {
-                      "size": "sm",
-                      "type": "spinner"
+                      "type": "spinner",
+                      "size": "sm"
                     }
                   ]
                 ]
@@ -1078,7 +1078,7 @@
               "default": "Version History",
               "label": "Section title",
               "description": "Heading shown above the revision list",
-              "tier": "customization"
+              "tier": "presentation"
             }
           },
           "scope": "collection"

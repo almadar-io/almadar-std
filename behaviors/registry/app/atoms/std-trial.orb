@@ -526,8 +526,8 @@
                     "Trial",
                     {
                       "emit": {
-                        "success": "TrialLoaded",
-                        "failure": "TrialLoadFailed"
+                        "failure": "TrialLoadFailed",
+                        "success": "TrialLoaded"
                       }
                     }
                   ],
@@ -535,22 +535,22 @@
                     "render-ui",
                     "main",
                     {
-                      "className": "py-12",
                       "children": [
                         {
                           "type": "spinner"
                         },
                         {
+                          "type": "typography",
                           "variant": "caption",
                           "color": "muted",
-                          "content": "Loading trials…",
-                          "type": "typography"
+                          "content": "Loading trials…"
                         }
                       ],
+                      "align": "center",
                       "direction": "vertical",
-                      "type": "stack",
                       "gap": "md",
-                      "align": "center"
+                      "type": "stack",
+                      "className": "py-12"
                     }
                   ]
                 ]
@@ -564,11 +564,14 @@
                     "render-ui",
                     "main",
                     {
+                      "type": "stack",
+                      "direction": "vertical",
+                      "gap": "md",
                       "children": [
                         {
+                          "direction": "horizontal",
                           "type": "stack",
                           "gap": "sm",
-                          "direction": "horizontal",
                           "children": [
                             {
                               "type": "icon",
@@ -584,33 +587,33 @@
                         },
                         {
                           "cols": 4.0,
-                          "type": "simple-grid",
                           "children": [
                             {
-                              "value": "@payload.data.length",
                               "icon": "clock",
+                              "value": "@payload.data.length",
                               "type": "stat-display",
                               "label": "Active trials"
                             },
                             {
-                              "label": "Conversion rate",
-                              "icon": "trending-up",
                               "value": "42%",
+                              "icon": "trending-up",
+                              "label": "Conversion rate",
                               "type": "stat-display"
                             },
                             {
-                              "type": "stat-display",
-                              "label": "Expiring 7d",
                               "value": "18",
-                              "icon": "alert-triangle"
+                              "type": "stat-display",
+                              "icon": "alert-triangle",
+                              "label": "Expiring 7d"
                             },
                             {
-                              "label": "Converted this mo",
-                              "type": "stat-display",
                               "value": "31",
-                              "icon": "check-circle"
+                              "icon": "check-circle",
+                              "type": "stat-display",
+                              "label": "Converted this mo"
                             }
-                          ]
+                          ],
+                          "type": "simple-grid"
                         },
                         {
                           "type": "divider"
@@ -618,15 +621,12 @@
                         {
                           "type": "data-grid",
                           "entity": "@payload.data",
+                          "fields": "@config.fields",
                           "gap": "sm",
                           "cols": 1.0,
-                          "itemActions": "@config.itemActions",
-                          "fields": "@config.fields"
+                          "itemActions": "@config.itemActions"
                         }
-                      ],
-                      "direction": "vertical",
-                      "type": "stack",
-                      "gap": "md"
+                      ]
                     }
                   ]
                 ]
@@ -701,35 +701,37 @@
                     "render-ui",
                     "main",
                     {
+                      "type": "stack",
+                      "direction": "vertical",
                       "gap": "md",
                       "children": [
                         {
+                          "type": "stack",
+                          "align": "center",
                           "gap": "sm",
+                          "direction": "horizontal",
                           "children": [
                             {
                               "type": "button",
-                              "variant": "ghost",
                               "action": "CLOSE_VIEW",
-                              "label": "Back"
+                              "label": "Back",
+                              "variant": "ghost"
                             },
                             {
-                              "type": "icon",
-                              "name": "clock"
+                              "name": "clock",
+                              "type": "icon"
                             },
                             {
                               "type": "typography",
-                              "content": "@entity.customerId",
-                              "variant": "h3"
+                              "variant": "h3",
+                              "content": "@entity.customerId"
                             },
                             {
                               "variant": "primary",
                               "type": "badge",
                               "label": "@entity.status"
                             }
-                          ],
-                          "type": "stack",
-                          "align": "center",
-                          "direction": "horizontal"
+                          ]
                         },
                         {
                           "type": "divider"
@@ -737,45 +739,45 @@
                         {
                           "children": [
                             {
+                              "direction": "horizontal",
+                              "gap": "md",
+                              "type": "stack",
+                              "children": [
+                                {
+                                  "color": "muted",
+                                  "type": "typography",
+                                  "content": "Plan",
+                                  "variant": "caption"
+                                },
+                                {
+                                  "content": "@entity.planId",
+                                  "variant": "body",
+                                  "type": "typography"
+                                }
+                              ]
+                            },
+                            {
                               "gap": "md",
                               "type": "stack",
                               "direction": "horizontal",
                               "children": [
                                 {
-                                  "type": "typography",
-                                  "variant": "caption",
-                                  "content": "Plan",
-                                  "color": "muted"
-                                },
-                                {
-                                  "variant": "body",
-                                  "type": "typography",
-                                  "content": "@entity.planId"
-                                }
-                              ]
-                            },
-                            {
-                              "children": [
-                                {
                                   "color": "muted",
-                                  "variant": "caption",
                                   "content": "Subscription",
-                                  "type": "typography"
+                                  "type": "typography",
+                                  "variant": "caption"
                                 },
                                 {
-                                  "type": "typography",
                                   "variant": "body",
+                                  "type": "typography",
                                   "content": "@entity.subscriptionId"
                                 }
-                              ],
-                              "direction": "horizontal",
-                              "gap": "md",
-                              "type": "stack"
+                              ]
                             }
                           ],
-                          "type": "stack",
+                          "direction": "vertical",
                           "gap": "sm",
-                          "direction": "vertical"
+                          "type": "stack"
                         },
                         {
                           "type": "divider"
@@ -784,74 +786,72 @@
                           "cols": 4.0,
                           "children": [
                             {
-                              "icon": "calendar",
-                              "label": "Started",
+                              "type": "stat-display",
                               "value": "@entity.startedAt",
-                              "type": "stat-display"
+                              "label": "Started",
+                              "icon": "calendar"
                             },
                             {
-                              "value": "@entity.expiresAt",
-                              "type": "stat-display",
                               "label": "Expires",
+                              "type": "stat-display",
+                              "value": "@entity.expiresAt",
                               "icon": "calendar-clock"
                             },
                             {
-                              "icon": "check-circle",
-                              "value": "@entity.convertedAt",
                               "type": "stat-display",
+                              "value": "@entity.convertedAt",
+                              "icon": "check-circle",
                               "label": "Converted"
                             },
                             {
-                              "type": "stat-display",
                               "value": "@entity.notifiedAt",
-                              "label": "Notified",
-                              "icon": "bell"
+                              "type": "stat-display",
+                              "icon": "bell",
+                              "label": "Notified"
                             }
                           ],
                           "type": "simple-grid"
                         },
                         {
-                          "align": "center",
                           "type": "stack",
+                          "align": "center",
                           "children": [
                             {
-                              "variant": "primary",
+                              "label": "Convert",
                               "type": "button",
                               "action": "CONVERT",
-                              "label": "Convert",
                               "actionPayload": {
                                 "convertedAt": "@entity.expiresAt",
+                                "trialId": "@entity.id",
+                                "row": "@entity"
+                              },
+                              "variant": "primary"
+                            },
+                            {
+                              "action": "EXPIRE",
+                              "label": "Expire",
+                              "type": "button",
+                              "variant": "secondary",
+                              "actionPayload": {
                                 "row": "@entity",
                                 "trialId": "@entity.id"
                               }
                             },
                             {
-                              "type": "button",
-                              "actionPayload": {
-                                "row": "@entity",
-                                "trialId": "@entity.id"
-                              },
-                              "label": "Expire",
-                              "action": "EXPIRE",
-                              "variant": "secondary"
-                            },
-                            {
-                              "type": "button",
                               "variant": "danger",
-                              "label": "Cancel",
                               "action": "CANCEL",
+                              "type": "button",
+                              "label": "Cancel",
                               "actionPayload": {
                                 "row": "@entity",
                                 "trialId": "@entity.id"
                               }
                             }
                           ],
-                          "gap": "sm",
-                          "direction": "horizontal"
+                          "direction": "horizontal",
+                          "gap": "sm"
                         }
-                      ],
-                      "type": "stack",
-                      "direction": "vertical"
+                      ]
                     }
                   ]
                 ]
@@ -880,22 +880,22 @@
                     "render-ui",
                     "main",
                     {
-                      "align": "center",
-                      "direction": "vertical",
-                      "className": "py-12",
-                      "gap": "md",
                       "children": [
                         {
                           "type": "spinner"
                         },
                         {
+                          "type": "typography",
                           "variant": "caption",
                           "color": "muted",
-                          "content": "Cancelling trial…",
-                          "type": "typography"
+                          "content": "Cancelling trial…"
                         }
                       ],
-                      "type": "stack"
+                      "direction": "vertical",
+                      "className": "py-12",
+                      "gap": "md",
+                      "type": "stack",
+                      "align": "center"
                     }
                   ]
                 ]
@@ -931,22 +931,22 @@
                     "render-ui",
                     "main",
                     {
+                      "align": "center",
+                      "direction": "vertical",
+                      "type": "stack",
+                      "className": "py-12",
+                      "gap": "md",
                       "children": [
                         {
                           "type": "spinner"
                         },
                         {
-                          "content": "Updating trial status…",
-                          "color": "muted",
                           "type": "typography",
-                          "variant": "caption"
+                          "variant": "caption",
+                          "color": "muted",
+                          "content": "Updating trial status…"
                         }
-                      ],
-                      "gap": "md",
-                      "type": "stack",
-                      "direction": "vertical",
-                      "align": "center",
-                      "className": "py-12"
+                      ]
                     }
                   ]
                 ]
@@ -961,8 +961,8 @@
                     "Trial",
                     {
                       "emit": {
-                        "failure": "TrialLoadFailed",
-                        "success": "TrialLoaded"
+                        "success": "TrialLoaded",
+                        "failure": "TrialLoadFailed"
                       }
                     }
                   ]
@@ -1003,19 +1003,19 @@
                     "render-ui",
                     "main",
                     {
+                      "className": "py-12",
+                      "gap": "md",
                       "direction": "vertical",
                       "align": "center",
-                      "gap": "md",
                       "type": "stack",
-                      "className": "py-12",
                       "children": [
                         {
                           "type": "spinner"
                         },
                         {
+                          "color": "muted",
                           "content": "Loading trials…",
                           "type": "typography",
-                          "color": "muted",
                           "variant": "caption"
                         }
                       ]
@@ -1047,10 +1047,6 @@
                     "render-ui",
                     "main",
                     {
-                      "align": "center",
-                      "gap": "md",
-                      "direction": "vertical",
-                      "type": "stack",
                       "className": "py-12",
                       "children": [
                         {
@@ -1058,11 +1054,15 @@
                         },
                         {
                           "type": "typography",
-                          "content": "Converting trial…",
                           "variant": "caption",
-                          "color": "muted"
+                          "color": "muted",
+                          "content": "Converting trial…"
                         }
-                      ]
+                      ],
+                      "direction": "vertical",
+                      "type": "stack",
+                      "gap": "md",
+                      "align": "center"
                     }
                   ]
                 ]
@@ -1092,21 +1092,21 @@
                     "main",
                     {
                       "className": "py-12",
-                      "type": "stack",
+                      "gap": "md",
+                      "align": "center",
                       "children": [
                         {
                           "type": "spinner"
                         },
                         {
-                          "type": "typography",
                           "color": "muted",
-                          "content": "Expiring trial…",
-                          "variant": "caption"
+                          "variant": "caption",
+                          "type": "typography",
+                          "content": "Expiring trial…"
                         }
                       ],
                       "direction": "vertical",
-                      "gap": "md",
-                      "align": "center"
+                      "type": "stack"
                     }
                   ]
                 ]
@@ -1126,8 +1126,8 @@
                     "Trial",
                     {
                       "emit": {
-                        "success": "TrialLoaded",
-                        "failure": "TrialLoadFailed"
+                        "failure": "TrialLoadFailed",
+                        "success": "TrialLoaded"
                       }
                     }
                   ],
@@ -1135,22 +1135,22 @@
                     "render-ui",
                     "main",
                     {
-                      "type": "stack",
+                      "className": "py-12",
+                      "gap": "md",
+                      "direction": "vertical",
+                      "align": "center",
                       "children": [
                         {
                           "type": "spinner"
                         },
                         {
-                          "color": "muted",
-                          "content": "Cancelling trial…",
                           "type": "typography",
-                          "variant": "caption"
+                          "variant": "caption",
+                          "content": "Cancelling trial…",
+                          "color": "muted"
                         }
                       ],
-                      "gap": "md",
-                      "direction": "vertical",
-                      "align": "center",
-                      "className": "py-12"
+                      "type": "stack"
                     }
                   ]
                 ]
@@ -1174,8 +1174,8 @@
                     "render-ui",
                     "main",
                     {
-                      "size": "sm",
-                      "type": "spinner"
+                      "type": "spinner",
+                      "size": "sm"
                     }
                   ]
                 ]
@@ -1183,83 +1183,80 @@
             ]
           },
           "config": {
-            "itemActions": {
-              "type": "[ItemAction]",
+            "healthScoreThresholdAlert": {
+              "type": "number",
+              "default": 30.0,
+              "label": "Health score threshold",
+              "description": "Trial users below this engagement score get flagged for CSM outreach. Declarative; wire via sibling std-notify.",
+              "tier": "domain"
+            },
+            "renewalReminderDaysBefore": {
+              "type": "[number]",
               "default": [
-                {
-                  "icon": "arrow-right",
-                  "label": "Open",
-                  "event": "OPEN_TRIAL",
-                  "variant": "primary"
-                },
-                {
-                  "icon": "x",
-                  "label": "Cancel",
-                  "event": "CANCEL",
-                  "variant": "danger"
-                }
+                7.0,
+                3.0,
+                1.0
               ],
-              "label": "Row actions",
-              "description": "Buttons users can click on each trial row",
-              "tier": "customization",
+              "label": "Trial reminder days-before",
+              "description": "Days before expiresAt to send conversion reminders. Declarative; wire via sibling std-reminder-scheduler.",
+              "tier": "domain",
               "items": {
-                "type": "object",
-                "properties": {
-                  "icon": {
-                    "name": "icon",
-                    "type": "string",
-                    "required": false
-                  },
-                  "variant": {
-                    "name": "variant",
-                    "type": "string",
-                    "required": false
-                  },
-                  "label": {
-                    "name": "label",
-                    "type": "string",
-                    "required": true
-                  },
-                  "event": {
-                    "name": "event",
-                    "type": "string",
-                    "required": true
-                  }
-                }
+                "type": "number"
               }
+            },
+            "title": {
+              "type": "string",
+              "default": "Trials",
+              "label": "Section title",
+              "description": "Heading shown above the trial subscriptions list",
+              "tier": "presentation"
+            },
+            "consentTrackingEnabled": {
+              "type": "boolean",
+              "default": true,
+              "label": "Track consent",
+              "description": "Whether to record marketing consent during trial signup. Declarative.",
+              "tier": "domain"
+            },
+            "archiveInactiveAfterDays": {
+              "type": "number",
+              "default": 90.0,
+              "label": "Archive inactive after (days)",
+              "description": "Days post-expiration before trial record is archived. Declarative; wire via sibling std-lifecycle.",
+              "tier": "domain"
             },
             "fields": {
               "type": "[FieldSpec]",
               "default": [
                 {
                   "label": "Customer",
-                  "name": "customerId",
-                  "variant": "caption"
+                  "variant": "caption",
+                  "name": "customerId"
                 },
                 {
-                  "variant": "caption",
                   "label": "Plan",
+                  "variant": "caption",
                   "name": "planId"
                 },
                 {
+                  "name": "status",
                   "label": "Status",
-                  "variant": "badge",
-                  "name": "status"
+                  "variant": "badge"
                 },
                 {
                   "name": "startedAt",
-                  "label": "Started",
+                  "variant": "caption",
+                  "label": "Started"
+                },
+                {
+                  "name": "expiresAt",
+                  "label": "Expires",
                   "variant": "caption"
                 },
                 {
-                  "label": "Expires",
-                  "variant": "caption",
-                  "name": "expiresAt"
-                },
-                {
-                  "variant": "caption",
+                  "name": "convertedAt",
                   "label": "Converted",
-                  "name": "convertedAt"
+                  "variant": "caption"
                 },
                 {
                   "name": "notifiedAt",
@@ -1269,17 +1266,17 @@
               ],
               "label": "Columns to show",
               "description": "Each column maps to one field on the Trial entity",
-              "tier": "advanced",
+              "tier": "presentation",
               "items": {
                 "type": "object",
                 "properties": {
+                  "name": {
+                    "name": "name",
+                    "type": "string",
+                    "required": true
+                  },
                   "format": {
                     "name": "format",
-                    "type": "string",
-                    "required": false
-                  },
-                  "label": {
-                    "name": "label",
                     "type": "string",
                     "required": false
                   },
@@ -1293,13 +1290,58 @@
                     "type": "string",
                     "required": false
                   },
+                  "label": {
+                    "name": "label",
+                    "type": "string",
+                    "required": false
+                  },
                   "icon": {
                     "name": "icon",
                     "type": "string",
                     "required": false
                   },
-                  "name": {
-                    "name": "name",
+                  "variant": {
+                    "name": "variant",
+                    "type": "string",
+                    "required": false
+                  }
+                }
+              }
+            },
+            "itemActions": {
+              "type": "[ItemAction]",
+              "default": [
+                {
+                  "label": "Open",
+                  "event": "OPEN_TRIAL",
+                  "icon": "arrow-right",
+                  "variant": "primary"
+                },
+                {
+                  "label": "Cancel",
+                  "event": "CANCEL",
+                  "variant": "danger",
+                  "icon": "x"
+                }
+              ],
+              "label": "Row actions",
+              "description": "Buttons users can click on each trial row",
+              "tier": "presentation",
+              "items": {
+                "type": "object",
+                "properties": {
+                  "icon": {
+                    "name": "icon",
+                    "type": "string",
+                    "required": false
+                  },
+                  "event": {
+                    "name": "event",
+                    "type": "string",
+                    "required": true
+                  },
+                  "label": {
+                    "name": "label",
                     "type": "string",
                     "required": true
                   },
@@ -1310,48 +1352,6 @@
                   }
                 }
               }
-            },
-            "healthScoreThresholdAlert": {
-              "type": "number",
-              "default": 30.0,
-              "label": "Health score threshold",
-              "description": "Trial users below this engagement score get flagged for CSM outreach. Declarative; wire via sibling std-notify.",
-              "tier": "customization"
-            },
-            "renewalReminderDaysBefore": {
-              "type": "[number]",
-              "default": [
-                7.0,
-                3.0,
-                1.0
-              ],
-              "label": "Trial reminder days-before",
-              "description": "Days before expiresAt to send conversion reminders. Declarative; wire via sibling std-reminder-scheduler.",
-              "tier": "customization",
-              "items": {
-                "type": "number"
-              }
-            },
-            "archiveInactiveAfterDays": {
-              "type": "number",
-              "default": 90.0,
-              "label": "Archive inactive after (days)",
-              "description": "Days post-expiration before trial record is archived. Declarative; wire via sibling std-lifecycle.",
-              "tier": "advanced"
-            },
-            "title": {
-              "type": "string",
-              "default": "Trials",
-              "label": "Section title",
-              "description": "Heading shown above the trial subscriptions list",
-              "tier": "customization"
-            },
-            "consentTrackingEnabled": {
-              "type": "boolean",
-              "default": true,
-              "label": "Track consent",
-              "description": "Whether to record marketing consent during trial signup. Declarative.",
-              "tier": "customization"
             }
           },
           "scope": "collection"
