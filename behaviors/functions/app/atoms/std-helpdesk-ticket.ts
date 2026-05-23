@@ -155,32 +155,32 @@ export interface StdHelpdeskTicketTicketLoadFailedPayload {
  * without modifying its state-machine topology.
  */
 export interface StdHelpdeskTicketConfig {
-  /** Default: `1` */
-  csatSurveySentAfterDays?: number;
-  /** Default: `"skills"` */
-  routingStrategy?: 'round-robin' | 'skills' | 'manual' | 'load-balanced';
-  /** Default: `"medium"` */
-  severity?: 'low' | 'medium' | 'high' | 'critical';
-  /** Default: `60` */
-  firstReplyDeadline?: number;
-  /** Default: `[{"event":"OPEN_TICKET","variant":"primary","label":"Open","icon":"arrow-right"},{"label":"Close","variant":"danger","icon":"x","event":"CLOSE"}]` */
-  itemActions?: EntityRow[];
-  /** Default: `7` */
-  autoCloseInactiveDays?: number;
-  /** Default: `"silver"` */
-  slaTier?: 'bronze' | 'silver' | 'gold' | 'platinum';
-  /** Default: `60` */
-  responseTimeMinutes?: number;
   /** Default: `["L1","L2","manager"]` */
   escalationMatrix?: string[];
+  /** Default: `"medium"` */
+  severity?: 'low' | 'medium' | 'high' | 'critical';
   /** Default: `"Tickets"` */
   title?: string;
-  /** Default: `[{"variant":"caption","name":"subject","label":"Subject"},{"variant":"caption","name":"requester","label":"Requester"},{"label":"Priority","variant":"badge","name":"priority"},{"name":"status","variant":"badge","label":"Status"},{"label":"Assigned","variant":"caption","name":"assignedTo"},{"label":"Category","name":"category","variant":"caption"}]` */
-  fields?: EntityRow[];
-  /** Default: `24` */
-  resolutionSLAHours?: number;
+  /** Default: `60` */
+  firstReplyDeadline?: number;
+  /** Default: `60` */
+  responseTimeMinutes?: number;
+  /** Default: `[{"label":"Open","icon":"arrow-right","variant":"primary","event":"OPEN_TICKET"},{"icon":"x","label":"Close","variant":"danger","event":"CLOSE"}]` */
+  itemActions?: EntityRow[];
+  /** Default: `"silver"` */
+  slaTier?: 'bronze' | 'silver' | 'gold' | 'platinum';
   /** Default: `["billing","technical","account","general"]` */
   categories?: string[];
+  /** Default: `"skills"` */
+  routingStrategy?: 'round-robin' | 'skills' | 'manual' | 'load-balanced';
+  /** Default: `[{"variant":"caption","name":"subject","label":"Subject"},{"variant":"caption","name":"requester","label":"Requester"},{"variant":"badge","name":"priority","label":"Priority"},{"variant":"badge","name":"status","label":"Status"},{"label":"Assigned","variant":"caption","name":"assignedTo"},{"name":"category","label":"Category","variant":"caption"}]` */
+  fields?: EntityRow[];
+  /** Default: `7` */
+  autoCloseInactiveDays?: number;
+  /** Default: `1` */
+  csatSurveySentAfterDays?: number;
+  /** Default: `24` */
+  resolutionSLAHours?: number;
 }
 
 /**

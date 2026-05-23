@@ -37,6 +37,14 @@
         {
           "from": "std/behaviors/std-browse",
           "as": "Browse"
+        },
+        {
+          "from": "std/behaviors/std-audit-capture",
+          "as": "Audit"
+        },
+        {
+          "from": "std/behaviors/std-notify-on-event",
+          "as": "Notify"
         }
       ],
       "entity": {
@@ -101,32 +109,32 @@
           "ref": "AppShell.traits.AppLayout",
           "name": "RouteAppLayout",
           "config": {
-            "searchEvent": "ROUTE_SEARCH",
             "notificationClickEvent": "ROUTE_NOTIFICATIONS_OPEN",
-            "contentTrait": "@trait.RouteCatalog",
-            "notifications": [],
-            "appName": "API Gateway",
             "navItems": [
               {
                 "label": "Routes",
-                "href": "/routes",
-                "icon": "git-branch"
+                "icon": "git-branch",
+                "href": "/routes"
               },
               {
-                "href": "/backends",
                 "icon": "server",
-                "label": "Backends"
+                "label": "Backends",
+                "href": "/backends"
               },
               {
+                "href": "/analytics",
                 "label": "Analytics",
-                "icon": "bar-chart-2",
-                "href": "/analytics"
+                "icon": "bar-chart-2"
               }
-            ]
+            ],
+            "appName": "API Gateway",
+            "searchEvent": "ROUTE_SEARCH",
+            "contentTrait": "@trait.RouteCatalog",
+            "notifications": []
           },
           "events": {
-            "SEARCH": "ROUTE_SEARCH",
-            "NOTIFY_CLICK": "ROUTE_NOTIFICATIONS_OPEN"
+            "NOTIFY_CLICK": "ROUTE_NOTIFICATIONS_OPEN",
+            "SEARCH": "ROUTE_SEARCH"
           }
         },
         {
@@ -209,61 +217,62 @@
                     "render-ui",
                     "main",
                     {
-                      "direction": "vertical",
                       "type": "stack",
+                      "gap": "lg",
+                      "direction": "vertical",
                       "children": [
                         {
-                          "type": "stack",
                           "gap": "md",
+                          "direction": "horizontal",
+                          "type": "stack",
+                          "justify": "between",
                           "align": "center",
                           "children": [
                             {
-                              "align": "center",
                               "gap": "sm",
+                              "type": "stack",
+                              "align": "center",
                               "children": [
                                 {
-                                  "name": "git-branch",
-                                  "type": "icon"
+                                  "type": "icon",
+                                  "name": "git-branch"
                                 },
                                 {
-                                  "content": "Routes",
+                                  "variant": "h2",
                                   "type": "typography",
-                                  "variant": "h2"
+                                  "content": "Routes"
                                 }
                               ],
-                              "type": "stack",
                               "direction": "horizontal"
                             },
                             {
-                              "type": "stack",
-                              "direction": "horizontal",
                               "gap": "sm",
+                              "direction": "horizontal",
                               "children": [
                                 {
-                                  "icon": "plus",
                                   "type": "button",
+                                  "icon": "plus",
                                   "label": "Create Route",
                                   "action": "CREATE",
                                   "variant": "primary"
                                 }
-                              ]
+                              ],
+                              "type": "stack"
                             }
-                          ],
-                          "justify": "between",
-                          "direction": "horizontal"
+                          ]
                         },
                         {
                           "type": "divider"
                         },
                         {
-                          "gap": "md",
+                          "type": "stack",
                           "align": "center",
+                          "gap": "md",
+                          "direction": "horizontal",
                           "children": [
                             "@trait.RouteSearch",
                             "@trait.RouteFilter"
-                          ],
-                          "type": "stack",
-                          "direction": "horizontal"
+                          ]
                         },
                         "@trait.RouteStats",
                         "@trait.RouteGraphs",
@@ -271,8 +280,7 @@
                           "type": "divider"
                         },
                         "@trait.RouteBrowseList"
-                      ],
-                      "gap": "lg"
+                      ]
                     }
                   ]
                 ]
@@ -291,16 +299,15 @@
                     "render-ui",
                     "main",
                     {
-                      "type": "stack",
                       "children": [
                         {
-                          "name": "bell",
-                          "type": "icon"
+                          "type": "icon",
+                          "name": "bell"
                         },
                         {
-                          "type": "typography",
                           "variant": "h3",
-                          "content": "No notifications"
+                          "content": "No notifications",
+                          "type": "typography"
                         },
                         {
                           "variant": "caption",
@@ -309,15 +316,16 @@
                           "content": "You're all caught up."
                         },
                         {
-                          "type": "button",
-                          "variant": "ghost",
                           "label": "Back to routes",
-                          "action": "INIT"
+                          "type": "button",
+                          "action": "INIT",
+                          "variant": "ghost"
                         }
                       ],
                       "direction": "vertical",
-                      "align": "center",
+                      "type": "stack",
                       "gap": "md",
+                      "align": "center",
                       "className": "py-8"
                     }
                   ]
@@ -339,29 +347,29 @@
           "ref": "Filter.traits.FilterTargetFilter",
           "name": "RouteFilter",
           "config": {
-            "event": "ROUTE_FILTER",
             "filters": [
               {
-                "filterType": "select",
-                "label": "Method",
                 "options": [
                   "GET",
                   "POST",
                   "PUT",
                   "DELETE"
                 ],
-                "field": "method"
+                "field": "method",
+                "label": "Method",
+                "filterType": "select"
               },
               {
                 "filterType": "select",
-                "label": "Status",
                 "field": "status",
                 "options": [
                   "active",
                   "disabled"
-                ]
+                ],
+                "label": "Status"
               }
-            ]
+            ],
+            "event": "ROUTE_FILTER"
           }
         },
         {
@@ -372,17 +380,15 @@
             "metrics": [
               {
                 "label": "Total",
-                "aggregation": "count",
                 "icon": "git-branch",
                 "variant": "primary",
+                "aggregation": "count",
                 "format": "number"
               },
               {
-                "label": "Active",
-                "icon": "check-circle",
-                "format": "number",
                 "aggregation": "count",
-                "variant": "success",
+                "format": "number",
+                "label": "Active",
                 "filter": [
                   "fn",
                   "row",
@@ -391,14 +397,14 @@
                     "@row.status",
                     "active"
                   ]
-                ]
+                ],
+                "variant": "success",
+                "icon": "check-circle"
               },
               {
-                "aggregation": "count",
-                "icon": "x-circle",
-                "variant": "warning",
                 "format": "number",
                 "label": "Disabled",
+                "aggregation": "count",
                 "filter": [
                   "fn",
                   "row",
@@ -407,7 +413,9 @@
                     "@row.status",
                     "disabled"
                   ]
-                ]
+                ],
+                "icon": "x-circle",
+                "variant": "warning"
               }
             ]
           },
@@ -426,12 +434,12 @@
           "ref": "Graphs.traits.GraphItemGraph",
           "name": "RouteGraphs",
           "config": {
+            "chartType": "pie",
+            "aggregation": "count",
             "height": 240.0,
-            "categoryField": "method",
             "showLegend": true,
             "subtitle": "Distribution across HTTP methods",
-            "aggregation": "count",
-            "chartType": "pie",
+            "categoryField": "method",
             "title": "Routes by Method"
           },
           "listens": [
@@ -452,48 +460,48 @@
           "config": {
             "fields": [
               {
-                "variant": "h3",
+                "name": "path",
                 "icon": "git-branch",
-                "name": "path"
+                "variant": "h3"
+              },
+              {
+                "name": "method",
+                "variant": "badge"
               },
               {
                 "variant": "badge",
-                "name": "method"
-              },
-              {
-                "name": "status",
-                "variant": "badge"
+                "name": "status"
               },
               {
                 "variant": "body",
                 "name": "target"
               },
               {
+                "format": "number",
                 "name": "hits",
                 "variant": "caption",
-                "label": "Hits",
-                "format": "number"
+                "label": "Hits"
               }
             ],
+            "gap": "sm",
             "itemActions": [
               {
+                "event": "VIEW",
                 "label": "View",
-                "variant": "ghost",
-                "event": "VIEW"
-              },
-              {
-                "label": "Edit",
-                "event": "EDIT",
                 "variant": "ghost"
               },
               {
+                "event": "EDIT",
+                "variant": "ghost",
+                "label": "Edit"
+              },
+              {
+                "variant": "danger",
                 "label": "Delete",
-                "event": "DELETE",
-                "variant": "danger"
+                "event": "DELETE"
               }
             ],
-            "cols": 1.0,
-            "gap": "sm"
+            "cols": 1.0
           },
           "listens": [
             {
@@ -543,7 +551,6 @@
           "name": "RouteCreate",
           "linkedEntity": "Route",
           "config": {
-            "mode": "create",
             "fields": [
               "path",
               "method",
@@ -552,6 +559,7 @@
               "rateLimit"
             ],
             "icon": "plus-circle",
+            "mode": "create",
             "title": "New Route"
           },
           "events": {
@@ -581,8 +589,8 @@
               "target",
               "rateLimit"
             ],
-            "title": "Edit Route",
-            "mode": "edit"
+            "mode": "edit",
+            "title": "Edit Route"
           },
           "events": {
             "OPEN": "EDIT"
@@ -604,7 +612,6 @@
           "linkedEntity": "Route",
           "config": {
             "icon": "eye",
-            "title": "View Route",
             "mode": "edit",
             "fields": [
               "path",
@@ -612,7 +619,8 @@
               "status",
               "target",
               "rateLimit"
-            ]
+            ],
+            "title": "View Route"
           },
           "events": {
             "OPEN": "VIEW"
@@ -634,9 +642,9 @@
           "linkedEntity": "Route",
           "config": {
             "alertMessage": "This action cannot be undone.",
-            "title": "Delete Route",
             "confirmLabel": "Delete",
-            "icon": "alert-triangle"
+            "icon": "alert-triangle",
+            "title": "Delete Route"
           },
           "events": {
             "REQUEST": "DELETE",
@@ -835,6 +843,37 @@
             ]
           },
           "scope": "instance"
+        },
+        {
+          "ref": "Audit.traits.AuditCaptureListener",
+          "name": "RouteAuditCapture",
+          "config": {
+            "retentionDays": 2555.0,
+            "captureEventTypes": [],
+            "excludeFields": [],
+            "captureBeforeAfter": true,
+            "captureEntity": "Route"
+          },
+          "events": {
+            "EntityMutated": "ROUTE_UPDATED"
+          }
+        },
+        {
+          "ref": "Notify.traits.NotifyOnEventListener",
+          "name": "RouteUptimeNotifier",
+          "config": {
+            "severity": "warning",
+            "notifyChannel": "email",
+            "listensFor": [
+              "ROUTE_UPDATED"
+            ],
+            "template": "Route uptime alert",
+            "recipients": [],
+            "suppressionList": []
+          },
+          "events": {
+            "EventOccurred": "ROUTE_UPDATED"
+          }
         }
       ],
       "pages": [
@@ -877,6 +916,12 @@
             },
             {
               "ref": "RoutePersistor"
+            },
+            {
+              "ref": "RouteAuditCapture"
+            },
+            {
+              "ref": "RouteUptimeNotifier"
             }
           ]
         }
@@ -961,32 +1006,32 @@
           "name": "BackendAppLayout",
           "linkedEntity": "Backend",
           "config": {
-            "searchEvent": "BACKEND_SEARCH",
-            "contentTrait": "@trait.BackendCatalog",
             "notifications": [],
+            "contentTrait": "@trait.BackendCatalog",
             "notificationClickEvent": "BACKEND_NOTIFICATIONS_OPEN",
+            "appName": "API Gateway",
+            "searchEvent": "BACKEND_SEARCH",
             "navItems": [
               {
-                "icon": "git-branch",
                 "label": "Routes",
-                "href": "/routes"
+                "href": "/routes",
+                "icon": "git-branch"
               },
               {
-                "href": "/backends",
                 "label": "Backends",
-                "icon": "server"
+                "icon": "server",
+                "href": "/backends"
               },
               {
-                "label": "Analytics",
                 "icon": "bar-chart-2",
-                "href": "/analytics"
+                "href": "/analytics",
+                "label": "Analytics"
               }
-            ],
-            "appName": "API Gateway"
+            ]
           },
           "events": {
-            "SEARCH": "BACKEND_SEARCH",
-            "NOTIFY_CLICK": "BACKEND_NOTIFICATIONS_OPEN"
+            "NOTIFY_CLICK": "BACKEND_NOTIFICATIONS_OPEN",
+            "SEARCH": "BACKEND_SEARCH"
           }
         },
         {
@@ -1069,28 +1114,30 @@
                     "render-ui",
                     "main",
                     {
-                      "type": "stack",
-                      "gap": "lg",
                       "direction": "vertical",
                       "children": [
                         {
+                          "gap": "md",
+                          "direction": "horizontal",
+                          "type": "stack",
+                          "align": "center",
                           "children": [
                             {
-                              "align": "center",
                               "type": "stack",
+                              "direction": "horizontal",
                               "gap": "sm",
+                              "align": "center",
                               "children": [
                                 {
                                   "type": "icon",
                                   "name": "server"
                                 },
                                 {
-                                  "content": "Backends",
                                   "variant": "h2",
-                                  "type": "typography"
+                                  "type": "typography",
+                                  "content": "Backends"
                                 }
-                              ],
-                              "direction": "horizontal"
+                              ]
                             },
                             {
                               "type": "stack",
@@ -1098,19 +1145,15 @@
                               "gap": "sm",
                               "children": [
                                 {
-                                  "icon": "plus",
-                                  "variant": "primary",
+                                  "action": "CREATE",
                                   "type": "button",
+                                  "icon": "plus",
                                   "label": "Create Backend",
-                                  "action": "CREATE"
+                                  "variant": "primary"
                                 }
                               ]
                             }
                           ],
-                          "direction": "horizontal",
-                          "align": "center",
-                          "type": "stack",
-                          "gap": "md",
                           "justify": "between"
                         },
                         {
@@ -1121,14 +1164,16 @@
                           "type": "divider"
                         },
                         {
+                          "content": "Service Health",
                           "type": "typography",
-                          "variant": "h3",
-                          "content": "Service Health"
+                          "variant": "h3"
                         },
                         "@trait.BackendCircuitBreaker",
                         "@trait.BackendRateLimiter",
                         "@trait.BackendCache"
-                      ]
+                      ],
+                      "type": "stack",
+                      "gap": "lg"
                     }
                   ]
                 ]
@@ -1147,34 +1192,34 @@
                     "render-ui",
                     "main",
                     {
-                      "type": "stack",
-                      "direction": "vertical",
-                      "align": "center",
                       "className": "py-8",
-                      "gap": "md",
                       "children": [
                         {
                           "type": "icon",
                           "name": "bell"
                         },
                         {
-                          "content": "No notifications",
                           "type": "typography",
-                          "variant": "h3"
+                          "variant": "h3",
+                          "content": "No notifications"
                         },
                         {
                           "content": "You're all caught up.",
-                          "variant": "caption",
+                          "color": "muted",
                           "type": "typography",
-                          "color": "muted"
+                          "variant": "caption"
                         },
                         {
                           "label": "Back to backends",
+                          "action": "INIT",
                           "variant": "ghost",
-                          "type": "button",
-                          "action": "INIT"
+                          "type": "button"
                         }
-                      ]
+                      ],
+                      "type": "stack",
+                      "gap": "md",
+                      "align": "center",
+                      "direction": "vertical"
                     }
                   ]
                 ]
@@ -1188,30 +1233,11 @@
           "name": "BackendBrowseList",
           "linkedEntity": "Backend",
           "config": {
-            "itemActions": [
-              {
-                "variant": "ghost",
-                "label": "View",
-                "event": "VIEW"
-              },
-              {
-                "label": "Edit",
-                "event": "EDIT",
-                "variant": "ghost"
-              },
-              {
-                "variant": "danger",
-                "event": "DELETE",
-                "label": "Delete"
-              }
-            ],
-            "gap": "sm",
-            "cols": 1.0,
             "fields": [
               {
                 "icon": "server",
-                "name": "name",
-                "variant": "h3"
+                "variant": "h3",
+                "name": "name"
               },
               {
                 "name": "url",
@@ -1222,10 +1248,29 @@
                 "variant": "badge"
               },
               {
-                "label": "Latency",
-                "name": "latency",
                 "variant": "caption",
-                "format": "number"
+                "label": "Latency",
+                "format": "number",
+                "name": "latency"
+              }
+            ],
+            "cols": 1.0,
+            "gap": "sm",
+            "itemActions": [
+              {
+                "variant": "ghost",
+                "event": "VIEW",
+                "label": "View"
+              },
+              {
+                "variant": "ghost",
+                "label": "Edit",
+                "event": "EDIT"
+              },
+              {
+                "variant": "danger",
+                "label": "Delete",
+                "event": "DELETE"
               }
             ]
           },
@@ -1273,15 +1318,15 @@
           "name": "BackendCreate",
           "linkedEntity": "Backend",
           "config": {
+            "icon": "plus-circle",
+            "mode": "create",
             "title": "New Backend",
             "fields": [
               "name",
               "url",
               "status",
               "latency"
-            ],
-            "mode": "create",
-            "icon": "plus-circle"
+            ]
           },
           "events": {
             "OPEN": "CREATE"
@@ -1302,15 +1347,15 @@
           "name": "BackendEdit",
           "linkedEntity": "Backend",
           "config": {
+            "title": "Edit Backend",
             "fields": [
               "name",
               "url",
               "status",
               "latency"
             ],
-            "icon": "edit",
-            "title": "Edit Backend",
-            "mode": "edit"
+            "mode": "edit",
+            "icon": "edit"
           },
           "events": {
             "OPEN": "EDIT"
@@ -1331,15 +1376,15 @@
           "name": "BackendView",
           "linkedEntity": "Backend",
           "config": {
+            "icon": "eye",
+            "mode": "edit",
+            "title": "View Backend",
             "fields": [
               "name",
               "url",
               "status",
               "latency"
-            ],
-            "title": "View Backend",
-            "mode": "edit",
-            "icon": "eye"
+            ]
           },
           "events": {
             "OPEN": "VIEW"
@@ -1360,14 +1405,14 @@
           "name": "BackendDelete",
           "linkedEntity": "Backend",
           "config": {
-            "alertMessage": "This action cannot be undone.",
             "confirmLabel": "Delete",
-            "title": "Delete Backend",
-            "icon": "alert-triangle"
+            "alertMessage": "This action cannot be undone.",
+            "icon": "alert-triangle",
+            "title": "Delete Backend"
           },
           "events": {
-            "REQUEST": "DELETE",
-            "CONFIRM": "CONFIRM_DELETE"
+            "CONFIRM": "CONFIRM_DELETE",
+            "REQUEST": "DELETE"
           },
           "listens": [
             {
@@ -1660,32 +1705,32 @@
           "name": "AnalyticsAppLayout",
           "linkedEntity": "AnalyticsRecord",
           "config": {
-            "notifications": [],
-            "contentTrait": "@trait.AnalyticsDisplay",
-            "appName": "API Gateway",
             "navItems": [
               {
                 "href": "/routes",
-                "label": "Routes",
-                "icon": "git-branch"
+                "icon": "git-branch",
+                "label": "Routes"
               },
               {
-                "href": "/backends",
                 "icon": "server",
+                "href": "/backends",
                 "label": "Backends"
               },
               {
-                "icon": "bar-chart-2",
                 "label": "Analytics",
-                "href": "/analytics"
+                "href": "/analytics",
+                "icon": "bar-chart-2"
               }
             ],
+            "notifications": [],
+            "appName": "API Gateway",
+            "contentTrait": "@trait.AnalyticsDisplay",
             "searchEvent": "ANALYTICS_SEARCH",
             "notificationClickEvent": "ANALYTICS_NOTIFICATIONS_OPEN"
           },
           "events": {
-            "NOTIFY_CLICK": "ANALYTICS_NOTIFICATIONS_OPEN",
-            "SEARCH": "ANALYTICS_SEARCH"
+            "SEARCH": "ANALYTICS_SEARCH",
+            "NOTIFY_CLICK": "ANALYTICS_NOTIFICATIONS_OPEN"
           }
         },
         {
@@ -1693,40 +1738,40 @@
           "name": "AnalyticsBrowseList",
           "linkedEntity": "AnalyticsRecord",
           "config": {
-            "fields": [
-              {
-                "name": "routePath",
-                "label": "Route",
-                "variant": "h4",
-                "icon": "bar-chart-2"
-              },
-              {
-                "name": "method",
-                "label": "Method",
-                "variant": "badge"
-              },
-              {
-                "name": "statusCode",
-                "label": "Status",
-                "variant": "badge"
-              },
-              {
-                "variant": "caption",
-                "name": "latencyMs",
-                "label": "Latency",
-                "format": "number"
-              },
-              {
-                "label": "Time",
-                "variant": "caption",
-                "name": "timestamp",
-                "format": "date"
-              }
-            ],
+            "pageSize": 100.0,
             "cols": 1.0,
             "gap": "sm",
-            "pageSize": 100.0,
-            "displayPageSize": 10.0
+            "displayPageSize": 10.0,
+            "fields": [
+              {
+                "variant": "h4",
+                "name": "routePath",
+                "icon": "bar-chart-2",
+                "label": "Route"
+              },
+              {
+                "variant": "badge",
+                "name": "method",
+                "label": "Method"
+              },
+              {
+                "label": "Status",
+                "variant": "badge",
+                "name": "statusCode"
+              },
+              {
+                "name": "latencyMs",
+                "label": "Latency",
+                "format": "number",
+                "variant": "caption"
+              },
+              {
+                "format": "date",
+                "name": "timestamp",
+                "variant": "caption",
+                "label": "Time"
+              }
+            ]
           }
         },
         {
@@ -1793,37 +1838,37 @@
                     "render-ui",
                     "main",
                     {
+                      "direction": "vertical",
                       "className": "max-w-6xl mx-auto w-full p-4",
+                      "type": "stack",
                       "children": [
                         {
-                          "align": "center",
                           "gap": "sm",
+                          "type": "stack",
                           "direction": "horizontal",
+                          "align": "center",
                           "children": [
                             {
                               "type": "icon",
                               "name": "bar-chart-2"
                             },
                             {
-                              "type": "typography",
                               "content": "Analytics",
+                              "type": "typography",
                               "variant": "h2"
                             }
-                          ],
-                          "type": "stack"
+                          ]
                         },
                         {
                           "type": "divider"
                         },
                         {
                           "content": "Recent requests",
-                          "type": "typography",
-                          "variant": "h3"
+                          "variant": "h3",
+                          "type": "typography"
                         },
                         "@trait.AnalyticsBrowseList"
                       ],
-                      "direction": "vertical",
-                      "type": "stack",
                       "gap": "lg"
                     }
                   ]
@@ -1843,32 +1888,32 @@
                     "render-ui",
                     "main",
                     {
-                      "gap": "md",
-                      "className": "py-8",
-                      "direction": "vertical",
                       "type": "stack",
+                      "gap": "md",
+                      "direction": "vertical",
                       "align": "center",
+                      "className": "py-8",
                       "children": [
                         {
-                          "name": "bell",
-                          "type": "icon"
+                          "type": "icon",
+                          "name": "bell"
+                        },
+                        {
+                          "content": "No notifications",
+                          "type": "typography",
+                          "variant": "h3"
                         },
                         {
                           "type": "typography",
-                          "variant": "h3",
-                          "content": "No notifications"
-                        },
-                        {
                           "content": "You're all caught up.",
                           "color": "muted",
-                          "type": "typography",
                           "variant": "caption"
                         },
                         {
-                          "type": "button",
-                          "label": "Back to analytics",
                           "action": "INIT",
-                          "variant": "ghost"
+                          "variant": "ghost",
+                          "type": "button",
+                          "label": "Back to analytics"
                         }
                       ]
                     }

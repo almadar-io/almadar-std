@@ -31,8 +31,8 @@ const ALIAS = 'ProjectManager';
  * without modifying its state-machine topology.
  */
 export interface StdProjectManagerConfig {
-  notifications?: TraitConfig;
   navItems?: TraitConfig;
+  notifications?: TraitConfig;
 }
 
 /**
@@ -75,7 +75,7 @@ export interface StdProjectManagerTaskOrbitalParams {
    * atom-owned (use `listens` via a sibling trait instead).
    */
   traitOverrides?: Partial<Record<
-    'TaskAppLayout' | 'TaskSearch' | 'TaskFilter' | 'TaskStats' | 'TaskGraphs' | 'TaskCalendar' | 'TaskBrowseList' | 'TaskCreate' | 'TaskEdit' | 'TaskView' | 'TaskDelete' | 'TaskCatalog' | 'TaskPersistor',
+    'TaskAppLayout' | 'TaskSearch' | 'TaskFilter' | 'TaskStats' | 'TaskGraphs' | 'TaskCalendar' | 'TaskBrowseList' | 'TaskCreate' | 'TaskEdit' | 'TaskView' | 'TaskDelete' | 'TaskNotifier' | 'TaskLifecycleScan' | 'TaskReminder' | 'TaskCatalog' | 'TaskPersistor',
     Pick<MakeTraitRefOpts, 'config' | 'linkedEntity' | 'events' | 'name' | 'emitsScope' | 'listens'>
   >>;
 }
@@ -127,6 +127,18 @@ export function stdProjectManagerTaskOrbital(params: StdProjectManagerTaskOrbita
       {
         'from': 'std/behaviors/std-browse',
         'as': 'Browse',
+      },
+      {
+        'from': 'std/behaviors/std-notify-on-event',
+        'as': 'Notify',
+      },
+      {
+        'from': 'std/behaviors/std-lifecycle',
+        'as': 'Lifecycle',
+      },
+      {
+        'from': 'std/behaviors/std-reminder-scheduler',
+        'as': 'Reminder',
       },
     ],
     entity: {
@@ -209,11 +221,6 @@ export function stdProjectManagerTaskOrbital(params: StdProjectManagerTaskOrbita
         'ref': 'AppShell.traits.AppLayout',
         'name': 'TaskAppLayout',
         'config': {
-          'notifications': [],
-          'contentTrait': '@trait.TaskCatalog',
-          'appName': 'ProjectManagerApp',
-          'notificationClickEvent': 'TASK_NOTIFICATIONS_OPEN',
-          'searchEvent': 'TASK_SEARCH',
           'navItems': [
             {
               'icon': 'list-todo',
@@ -222,19 +229,24 @@ export function stdProjectManagerTaskOrbital(params: StdProjectManagerTaskOrbita
             },
             {
               'href': '/sprints',
-              'label': 'Sprints',
               'icon': 'zap',
+              'label': 'Sprints',
             },
             {
-              'href': '/burndown',
               'icon': 'trending-down',
               'label': 'Burndown',
+              'href': '/burndown',
             },
           ],
+          'notificationClickEvent': 'TASK_NOTIFICATIONS_OPEN',
+          'searchEvent': 'TASK_SEARCH',
+          'notifications': [],
+          'contentTrait': '@trait.TaskCatalog',
+          'appName': 'ProjectManagerApp',
         },
         'events': {
-          'NOTIFY_CLICK': 'TASK_NOTIFICATIONS_OPEN',
           'SEARCH': 'TASK_SEARCH',
+          'NOTIFY_CLICK': 'TASK_NOTIFICATIONS_OPEN',
         },
       }),
       rebindInlineTraitEntity({
@@ -317,60 +329,61 @@ export function stdProjectManagerTaskOrbital(params: StdProjectManagerTaskOrbita
                   'render-ui',
                   'main',
                   {
+                    'type': 'stack',
                     'direction': 'vertical',
                     'children': [
                       {
-                        'direction': 'horizontal',
                         'gap': 'md',
-                        'justify': 'between',
                         'align': 'center',
+                        'type': 'stack',
+                        'justify': 'between',
                         'children': [
                           {
-                            'direction': 'horizontal',
                             'gap': 'sm',
-                            'type': 'stack',
                             'align': 'center',
                             'children': [
                               {
-                                'type': 'icon',
                                 'name': 'list-todo',
+                                'type': 'icon',
                               },
                               {
                                 'type': 'typography',
-                                'content': 'Tasks',
                                 'variant': 'h2',
+                                'content': 'Tasks',
                               },
                             ],
+                            'type': 'stack',
+                            'direction': 'horizontal',
                           },
                           {
-                            'direction': 'horizontal',
                             'gap': 'sm',
                             'type': 'stack',
                             'children': [
                               {
-                                'action': 'CREATE',
-                                'type': 'button',
-                                'label': 'New Task',
                                 'variant': 'primary',
+                                'label': 'New Task',
+                                'type': 'button',
+                                'action': 'CREATE',
                                 'icon': 'plus',
                               },
                             ],
+                            'direction': 'horizontal',
                           },
                         ],
-                        'type': 'stack',
+                        'direction': 'horizontal',
                       },
                       {
                         'type': 'divider',
                       },
                       {
+                        'type': 'stack',
+                        'align': 'center',
+                        'direction': 'horizontal',
+                        'gap': 'md',
                         'children': [
                           '@trait.TaskSearch',
                           '@trait.TaskFilter',
                         ],
-                        'align': 'center',
-                        'direction': 'horizontal',
-                        'gap': 'md',
-                        'type': 'stack',
                       },
                       '@trait.TaskStats',
                       '@trait.TaskGraphs',
@@ -381,7 +394,6 @@ export function stdProjectManagerTaskOrbital(params: StdProjectManagerTaskOrbita
                       '@trait.TaskBrowseList',
                     ],
                     'gap': 'lg',
-                    'type': 'stack',
                   },
                 ],
               ],
@@ -400,34 +412,34 @@ export function stdProjectManagerTaskOrbital(params: StdProjectManagerTaskOrbita
                   'render-ui',
                   'main',
                   {
-                    'type': 'stack',
                     'children': [
                       {
-                        'type': 'icon',
                         'name': 'bell',
+                        'type': 'icon',
                       },
                       {
                         'type': 'typography',
-                        'content': 'No notifications',
                         'variant': 'h3',
+                        'content': 'No notifications',
                       },
                       {
-                        'variant': 'caption',
+                        'type': 'typography',
                         'color': 'muted',
                         'content': 'You\'re all caught up.',
-                        'type': 'typography',
+                        'variant': 'caption',
                       },
                       {
-                        'label': 'Back to tasks',
                         'action': 'INIT',
-                        'variant': 'ghost',
                         'type': 'button',
+                        'label': 'Back to tasks',
+                        'variant': 'ghost',
                       },
                     ],
-                    'className': 'py-8',
-                    'align': 'center',
-                    'direction': 'vertical',
                     'gap': 'md',
+                    'direction': 'vertical',
+                    'type': 'stack',
+                    'align': 'center',
+                    'className': 'py-8',
                   },
                 ],
               ],
@@ -440,49 +452,49 @@ export function stdProjectManagerTaskOrbital(params: StdProjectManagerTaskOrbita
         'ref': 'Search.traits.SearchResultSearch',
         'name': 'TaskSearch',
         'config': {
-          'placeholder': 'Search tasks…',
           'event': 'TASK_SEARCH',
+          'placeholder': 'Search tasks…',
         },
       }),
       makeTraitRef({
         'ref': 'Filter.traits.FilterTargetFilter',
         'name': 'TaskFilter',
         'config': {
-          'event': 'TASK_FILTER',
           'filters': [
             {
-              'label': 'Status',
+              'field': 'status',
+              'filterType': 'select',
               'options': [
                 'todo',
                 'in-progress',
                 'review',
                 'done',
               ],
-              'field': 'status',
-              'filterType': 'select',
+              'label': 'Status',
             },
             {
-              'field': 'assignee',
               'label': 'Assignee',
+              'field': 'assignee',
               'filterType': 'text',
             },
             {
-              'filterType': 'select',
-              'field': 'priority',
-              'label': 'Priority',
               'options': [
                 'low',
                 'medium',
                 'high',
                 'critical',
               ],
+              'field': 'priority',
+              'filterType': 'select',
+              'label': 'Priority',
             },
             {
               'field': 'sprint',
-              'label': 'Sprint',
               'filterType': 'text',
+              'label': 'Sprint',
             },
           ],
+          'event': 'TASK_FILTER',
         },
       }),
       makeTraitRef({
@@ -491,13 +503,16 @@ export function stdProjectManagerTaskOrbital(params: StdProjectManagerTaskOrbita
         'config': {
           'metrics': [
             {
-              'icon': 'list-todo',
-              'aggregation': 'count',
-              'variant': 'primary',
-              'format': 'number',
               'label': 'Total',
+              'aggregation': 'count',
+              'format': 'number',
+              'icon': 'list-todo',
+              'variant': 'primary',
             },
             {
+              'icon': 'circle',
+              'aggregation': 'count',
+              'label': 'Todo',
               'variant': 'default',
               'filter': [
                 'fn',
@@ -508,14 +523,12 @@ export function stdProjectManagerTaskOrbital(params: StdProjectManagerTaskOrbita
                   'todo',
                 ],
               ],
-              'label': 'Todo',
-              'icon': 'circle',
-              'aggregation': 'count',
               'format': 'number',
             },
             {
               'aggregation': 'count',
               'icon': 'loader',
+              'label': 'In Progress',
               'variant': 'warning',
               'format': 'number',
               'filter': [
@@ -527,13 +540,10 @@ export function stdProjectManagerTaskOrbital(params: StdProjectManagerTaskOrbita
                   'in-progress',
                 ],
               ],
-              'label': 'In Progress',
             },
             {
-              'aggregation': 'count',
               'icon': 'check-circle',
               'variant': 'success',
-              'label': 'Done',
               'format': 'number',
               'filter': [
                 'fn',
@@ -544,8 +554,15 @@ export function stdProjectManagerTaskOrbital(params: StdProjectManagerTaskOrbita
                   'done',
                 ],
               ],
+              'aggregation': 'count',
+              'label': 'Done',
             },
             {
+              'format': 'number',
+              'icon': 'alert-octagon',
+              'aggregation': 'count',
+              'label': 'Critical',
+              'variant': 'error',
               'filter': [
                 'fn',
                 'row',
@@ -555,11 +572,6 @@ export function stdProjectManagerTaskOrbital(params: StdProjectManagerTaskOrbita
                   'critical',
                 ],
               ],
-              'label': 'Critical',
-              'icon': 'alert-octagon',
-              'format': 'number',
-              'aggregation': 'count',
-              'variant': 'error',
             },
           ],
           'title': 'Tasks',
@@ -579,13 +591,13 @@ export function stdProjectManagerTaskOrbital(params: StdProjectManagerTaskOrbita
         'ref': 'Graphs.traits.GraphItemGraph',
         'name': 'TaskGraphs',
         'config': {
+          'subtitle': 'Workload distribution across status buckets',
+          'chartType': 'bar',
           'categoryField': 'status',
           'aggregation': 'count',
-          'showLegend': false,
-          'chartType': 'bar',
           'height': 240,
+          'showLegend': false,
           'title': 'Tasks by Status',
-          'subtitle': 'Workload distribution across status buckets',
         },
         'listens': [
           {
@@ -603,9 +615,9 @@ export function stdProjectManagerTaskOrbital(params: StdProjectManagerTaskOrbita
         'name': 'TaskCalendar',
         'linkedEntity': canonicalName,
         'config': {
+          'titleField': 'title',
           'colorField': 'priority',
           'dateField': 'dueDate',
-          'titleField': 'title',
         },
       }),
       makeTraitRef({
@@ -613,11 +625,11 @@ export function stdProjectManagerTaskOrbital(params: StdProjectManagerTaskOrbita
         'name': 'TaskBrowseList',
         'linkedEntity': canonicalName,
         'config': {
-          'gap': 'sm',
+          'cols': 1,
           'fields': [
             {
-              'variant': 'h3',
               'name': 'title',
+              'variant': 'h3',
               'icon': 'list-todo',
             },
             {
@@ -625,38 +637,38 @@ export function stdProjectManagerTaskOrbital(params: StdProjectManagerTaskOrbita
               'variant': 'badge',
             },
             {
-              'variant': 'body',
               'name': 'assignee',
+              'variant': 'body',
             },
             {
-              'name': 'priority',
               'variant': 'badge',
+              'name': 'priority',
             },
             {
-              'label': 'Due',
-              'name': 'dueDate',
-              'variant': 'caption',
               'format': 'date',
+              'name': 'dueDate',
+              'label': 'Due',
+              'variant': 'caption',
             },
           ],
           'itemActions': [
             {
+              'variant': 'ghost',
               'event': 'VIEW',
               'label': 'View',
-              'variant': 'ghost',
             },
             {
               'variant': 'ghost',
-              'label': 'Edit',
               'event': 'EDIT',
+              'label': 'Edit',
             },
             {
-              'variant': 'danger',
               'event': 'DELETE',
+              'variant': 'danger',
               'label': 'Delete',
             },
           ],
-          'cols': 1,
+          'gap': 'sm',
         },
         'listens': [
           {
@@ -706,6 +718,8 @@ export function stdProjectManagerTaskOrbital(params: StdProjectManagerTaskOrbita
         'name': 'TaskCreate',
         'linkedEntity': canonicalName,
         'config': {
+          'icon': 'plus-circle',
+          'mode': 'create',
           'title': 'New Task',
           'fields': [
             'title',
@@ -717,8 +731,6 @@ export function stdProjectManagerTaskOrbital(params: StdProjectManagerTaskOrbita
             'storyPoints',
             'dueDate',
           ],
-          'icon': 'plus-circle',
-          'mode': 'create',
         },
         'events': {
           'OPEN': 'CREATE',
@@ -739,6 +751,8 @@ export function stdProjectManagerTaskOrbital(params: StdProjectManagerTaskOrbita
         'name': 'TaskEdit',
         'linkedEntity': canonicalName,
         'config': {
+          'icon': 'edit',
+          'mode': 'edit',
           'fields': [
             'title',
             'description',
@@ -750,8 +764,6 @@ export function stdProjectManagerTaskOrbital(params: StdProjectManagerTaskOrbita
             'dueDate',
           ],
           'title': 'Edit Task',
-          'mode': 'edit',
-          'icon': 'edit',
         },
         'events': {
           'OPEN': 'EDIT',
@@ -773,6 +785,8 @@ export function stdProjectManagerTaskOrbital(params: StdProjectManagerTaskOrbita
         'linkedEntity': canonicalName,
         'config': {
           'mode': 'edit',
+          'icon': 'eye',
+          'title': 'View Task',
           'fields': [
             'title',
             'description',
@@ -783,8 +797,6 @@ export function stdProjectManagerTaskOrbital(params: StdProjectManagerTaskOrbita
             'storyPoints',
             'dueDate',
           ],
-          'icon': 'eye',
-          'title': 'View Task',
         },
         'events': {
           'OPEN': 'VIEW',
@@ -806,13 +818,13 @@ export function stdProjectManagerTaskOrbital(params: StdProjectManagerTaskOrbita
         'linkedEntity': canonicalName,
         'config': {
           'icon': 'alert-triangle',
-          'title': 'Delete Task',
-          'confirmLabel': 'Delete',
           'alertMessage': 'This action cannot be undone.',
+          'confirmLabel': 'Delete',
+          'title': 'Delete Task',
         },
         'events': {
-          'REQUEST': 'DELETE',
           'CONFIRM': 'CONFIRM_DELETE',
+          'REQUEST': 'DELETE',
         },
         'listens': [
           {
@@ -1008,6 +1020,75 @@ export function stdProjectManagerTaskOrbital(params: StdProjectManagerTaskOrbita
         },
         'scope': 'instance',
       } as never, 'Task', canonicalName) as never,
+      makeTraitRef({
+        'ref': 'Notify.traits.NotifyOnEventListener',
+        'name': 'TaskNotifier',
+        'config': {
+          'severity': 'info',
+          'suppressionList': [],
+          'recipients': [],
+          'template': 'Task updated',
+          'listensFor': [
+            'TASK_UPDATED',
+          ],
+          'notifyChannel': 'in-app',
+        },
+        'events': {
+          'EventOccurred': 'TASK_UPDATED',
+        },
+      }),
+      makeTraitRef({
+        'ref': 'Lifecycle.traits.LifecycleScheduler',
+        'name': 'TaskLifecycleScan',
+        'config': {
+          'targetEntity': 'Task',
+          'rules': [
+            {
+              'toStatus': 'stale',
+              'condition': {
+                'value': 30,
+                'dateField': 'dueDate',
+                'kind': 'ageDays',
+              },
+              'fromStatus': 'todo',
+            },
+            {
+              'fromStatus': 'in-progress',
+              'toStatus': 'stale',
+              'condition': {
+                'kind': 'ageDays',
+                'value': 30,
+                'dateField': 'dueDate',
+              },
+            },
+            {
+              'toStatus': 'archived',
+              'condition': {
+                'dateField': 'dueDate',
+                'value': 90,
+                'kind': 'ageDays',
+              },
+              'fromStatus': 'stale',
+            },
+          ],
+          'dryRun': false,
+        },
+      }),
+      makeTraitRef({
+        'ref': 'Reminder.traits.ReminderScheduler',
+        'name': 'TaskReminder',
+        'config': {
+          'template': 'Task due soon',
+          'windowToleranceMinutes': 60,
+          'offsetsHours': [
+            24,
+            1,
+          ],
+          'targetEntity': 'Task',
+          'dateField': 'dueDate',
+          'severity': 'warning',
+        },
+      }),
     ],
     pages: [
       {
@@ -1052,6 +1133,15 @@ export function stdProjectManagerTaskOrbital(params: StdProjectManagerTaskOrbita
           },
           {
             'ref': 'TaskPersistor',
+          },
+          {
+            'ref': 'TaskNotifier',
+          },
+          {
+            'ref': 'TaskLifecycleScan',
+          },
+          {
+            'ref': 'TaskReminder',
           },
         ],
       } as never,
@@ -1117,6 +1207,9 @@ export const StdProjectManagerTaskOrbitalManifest = {
     'TaskEdit',
     'TaskView',
     'TaskDelete',
+    'TaskNotifier',
+    'TaskLifecycleScan',
+    'TaskReminder',
   ] as const,
   inlineTraitNames: [
     'TaskCatalog',
@@ -1181,7 +1274,7 @@ export interface StdProjectManagerSprintOrbitalParams {
    * atom-owned (use `listens` via a sibling trait instead).
    */
   traitOverrides?: Partial<Record<
-    'SprintAppLayout' | 'SprintBrowseList' | 'SprintCreate' | 'SprintEdit' | 'SprintView' | 'SprintDelete' | 'SprintCatalog' | 'SprintPersistor',
+    'SprintAppLayout' | 'SprintBrowseList' | 'SprintCreate' | 'SprintEdit' | 'SprintView' | 'SprintDelete' | 'SprintApproval' | 'SprintCascade' | 'SprintCatalog' | 'SprintPersistor',
     Pick<MakeTraitRefOpts, 'config' | 'linkedEntity' | 'events' | 'name' | 'emitsScope' | 'listens'>
   >>;
 }
@@ -1209,6 +1302,14 @@ export function stdProjectManagerSprintOrbital(params: StdProjectManagerSprintOr
       {
         'from': 'std/behaviors/std-browse',
         'as': 'Browse',
+      },
+      {
+        'from': 'std/behaviors/std-approval-gate',
+        'as': 'Approval',
+      },
+      {
+        'from': 'std/behaviors/std-cascade-on-delete',
+        'as': 'Cascade',
       },
     ],
     entity: {
@@ -1275,7 +1376,9 @@ export function stdProjectManagerSprintOrbital(params: StdProjectManagerSprintOr
         'name': 'SprintAppLayout',
         'linkedEntity': canonicalName,
         'config': {
+          'notificationClickEvent': 'SPRINT_NOTIFICATIONS_OPEN',
           'contentTrait': '@trait.SprintCatalog',
+          'appName': 'ProjectManagerApp',
           'searchEvent': 'SPRINT_SEARCH',
           'navItems': [
             {
@@ -1284,19 +1387,17 @@ export function stdProjectManagerSprintOrbital(params: StdProjectManagerSprintOr
               'label': 'Tasks',
             },
             {
-              'label': 'Sprints',
               'icon': 'zap',
+              'label': 'Sprints',
               'href': '/sprints',
             },
             {
-              'label': 'Burndown',
               'href': '/burndown',
               'icon': 'trending-down',
+              'label': 'Burndown',
             },
           ],
           'notifications': [],
-          'notificationClickEvent': 'SPRINT_NOTIFICATIONS_OPEN',
-          'appName': 'ProjectManagerApp',
         },
         'events': {
           'SEARCH': 'SPRINT_SEARCH',
@@ -1345,15 +1446,14 @@ export function stdProjectManagerSprintOrbital(params: StdProjectManagerSprintOr
                   'render-ui',
                   'main',
                   {
-                    'gap': 'lg',
+                    'type': 'stack',
+                    'direction': 'vertical',
                     'className': 'max-w-5xl mx-auto w-full',
                     'children': [
                       {
-                        'justify': 'between',
-                        'align': 'center',
                         'children': [
                           {
-                            'direction': 'horizontal',
+                            'gap': 'sm',
                             'align': 'center',
                             'children': [
                               {
@@ -1361,40 +1461,41 @@ export function stdProjectManagerSprintOrbital(params: StdProjectManagerSprintOr
                                 'type': 'icon',
                               },
                               {
+                                'variant': 'h2',
                                 'content': 'Sprints',
                                 'type': 'typography',
-                                'variant': 'h2',
                               },
                             ],
                             'type': 'stack',
-                            'gap': 'sm',
+                            'direction': 'horizontal',
                           },
                           {
+                            'direction': 'horizontal',
+                            'gap': 'sm',
                             'children': [
                               {
+                                'label': 'New Sprint',
                                 'type': 'button',
                                 'action': 'CREATE',
-                                'label': 'New Sprint',
                                 'icon': 'plus',
                                 'variant': 'primary',
                               },
                             ],
                             'type': 'stack',
-                            'direction': 'horizontal',
-                            'gap': 'sm',
                           },
                         ],
-                        'gap': 'md',
-                        'direction': 'horizontal',
                         'type': 'stack',
+                        'direction': 'horizontal',
+                        'justify': 'between',
+                        'align': 'center',
+                        'gap': 'md',
                       },
                       {
                         'type': 'divider',
                       },
                       '@trait.SprintBrowseList',
                     ],
-                    'type': 'stack',
-                    'direction': 'vertical',
+                    'gap': 'lg',
                   },
                 ],
               ],
@@ -1408,55 +1509,55 @@ export function stdProjectManagerSprintOrbital(params: StdProjectManagerSprintOr
         'name': 'SprintBrowseList',
         'linkedEntity': canonicalName,
         'config': {
-          'fields': [
-            {
-              'icon': 'zap',
-              'name': 'name',
-              'variant': 'h3',
-            },
-            {
-              'variant': 'badge',
-              'name': 'status',
-            },
-            {
-              'variant': 'body',
-              'name': 'goal',
-            },
-            {
-              'format': 'date',
-              'name': 'startDate',
-              'label': 'Start',
-              'variant': 'caption',
-            },
-            {
-              'format': 'date',
-              'name': 'endDate',
-              'variant': 'caption',
-              'label': 'End',
-            },
-            {
-              'label': 'Tasks',
-              'format': 'number',
-              'name': 'taskCount',
-              'variant': 'body',
-            },
-          ],
           'gap': 'sm',
           'itemActions': [
             {
-              'variant': 'ghost',
               'event': 'VIEW',
+              'variant': 'ghost',
               'label': 'View',
             },
             {
-              'label': 'Edit',
               'variant': 'ghost',
               'event': 'EDIT',
+              'label': 'Edit',
             },
             {
-              'variant': 'danger',
-              'label': 'Delete',
               'event': 'DELETE',
+              'label': 'Delete',
+              'variant': 'danger',
+            },
+          ],
+          'fields': [
+            {
+              'icon': 'zap',
+              'variant': 'h3',
+              'name': 'name',
+            },
+            {
+              'name': 'status',
+              'variant': 'badge',
+            },
+            {
+              'name': 'goal',
+              'variant': 'body',
+            },
+            {
+              'name': 'startDate',
+              'label': 'Start',
+              'variant': 'caption',
+              'format': 'date',
+            },
+            {
+              'name': 'endDate',
+              'variant': 'caption',
+              'format': 'date',
+              'label': 'End',
+            },
+            {
+              'variant': 'body',
+              'format': 'number',
+              'name': 'taskCount',
+              'label': 'Tasks',
             },
           ],
           'cols': 1,
@@ -1493,6 +1594,9 @@ export function stdProjectManagerSprintOrbital(params: StdProjectManagerSprintOr
         'name': 'SprintCreate',
         'linkedEntity': canonicalName,
         'config': {
+          'icon': 'plus-circle',
+          'mode': 'create',
+          'title': 'New Sprint',
           'fields': [
             'name',
             'startDate',
@@ -1501,9 +1605,6 @@ export function stdProjectManagerSprintOrbital(params: StdProjectManagerSprintOr
             'status',
             'taskCount',
           ],
-          'mode': 'create',
-          'icon': 'plus-circle',
-          'title': 'New Sprint',
         },
         'events': {
           'OPEN': 'CREATE',
@@ -1555,9 +1656,7 @@ export function stdProjectManagerSprintOrbital(params: StdProjectManagerSprintOr
         'name': 'SprintView',
         'linkedEntity': canonicalName,
         'config': {
-          'icon': 'eye',
           'mode': 'edit',
-          'title': 'View Sprint',
           'fields': [
             'name',
             'startDate',
@@ -1566,6 +1665,8 @@ export function stdProjectManagerSprintOrbital(params: StdProjectManagerSprintOr
             'status',
             'taskCount',
           ],
+          'icon': 'eye',
+          'title': 'View Sprint',
         },
         'events': {
           'OPEN': 'VIEW',
@@ -1586,10 +1687,10 @@ export function stdProjectManagerSprintOrbital(params: StdProjectManagerSprintOr
         'name': 'SprintDelete',
         'linkedEntity': canonicalName,
         'config': {
-          'title': 'Delete Sprint',
-          'alertMessage': 'This action cannot be undone.',
-          'icon': 'alert-triangle',
           'confirmLabel': 'Delete',
+          'icon': 'alert-triangle',
+          'alertMessage': 'This action cannot be undone.',
+          'title': 'Delete Sprint',
         },
         'events': {
           'REQUEST': 'DELETE',
@@ -1789,6 +1890,36 @@ export function stdProjectManagerSprintOrbital(params: StdProjectManagerSprintOr
         },
         'scope': 'instance',
       } as never, 'Sprint', canonicalName) as never,
+      makeTraitRef({
+        'ref': 'Approval.traits.ApprovalGateReview',
+        'name': 'SprintApproval',
+        'config': {
+          'threshold': 100,
+          'valueField': 'taskCount',
+          'approverRoles': [
+            'product-owner',
+          ],
+          'autoApproveBelowThreshold': true,
+          'escalationHours': 48,
+          'escalationRoles': [
+            'engineering-manager',
+          ],
+        },
+      }),
+      makeTraitRef({
+        'ref': 'Cascade.traits.CascadeOnDeleteGate',
+        'name': 'SprintCascade',
+        'config': {
+          'parentEntity': 'Sprint',
+          'dependentEntities': [
+            'Task',
+          ],
+          'foreignKeyField': 'sprint',
+        },
+        'events': {
+          'ParentDeleted': 'SPRINT_DELETED',
+        },
+      }),
     ],
     pages: [
       {
@@ -1818,6 +1949,12 @@ export function stdProjectManagerSprintOrbital(params: StdProjectManagerSprintOr
           },
           {
             'ref': 'SprintPersistor',
+          },
+          {
+            'ref': 'SprintApproval',
+          },
+          {
+            'ref': 'SprintCascade',
           },
         ],
       } as never,
@@ -1878,6 +2015,8 @@ export const StdProjectManagerSprintOrbitalManifest = {
     'SprintEdit',
     'SprintView',
     'SprintDelete',
+    'SprintApproval',
+    'SprintCascade',
   ] as const,
   inlineTraitNames: [
     'SprintCatalog',
@@ -2006,13 +2145,11 @@ export function stdProjectManagerBurndownOrbital(params: StdProjectManagerBurndo
         'name': 'BurndownAppLayout',
         'linkedEntity': canonicalName,
         'config': {
-          'notificationClickEvent': 'BURNDOWN_NOTIFICATIONS_OPEN',
-          'appName': 'ProjectManagerApp',
           'navItems': [
             {
               'href': '/tasks',
-              'icon': 'list-todo',
               'label': 'Tasks',
+              'icon': 'list-todo',
             },
             {
               'icon': 'zap',
@@ -2020,14 +2157,16 @@ export function stdProjectManagerBurndownOrbital(params: StdProjectManagerBurndo
               'label': 'Sprints',
             },
             {
-              'label': 'Burndown',
-              'href': '/burndown',
               'icon': 'trending-down',
+              'href': '/burndown',
+              'label': 'Burndown',
             },
           ],
-          'contentTrait': '@trait.BurndownDisplay',
-          'searchEvent': 'BURNDOWN_SEARCH',
           'notifications': [],
+          'appName': 'ProjectManagerApp',
+          'searchEvent': 'BURNDOWN_SEARCH',
+          'contentTrait': '@trait.BurndownDisplay',
+          'notificationClickEvent': 'BURNDOWN_NOTIFICATIONS_OPEN',
         },
         'events': {
           'NOTIFY_CLICK': 'BURNDOWN_NOTIFICATIONS_OPEN',
@@ -2166,15 +2305,15 @@ export function stdProjectManagerBurndownOrbital(params: StdProjectManagerBurndo
                   'render-ui',
                   'main',
                   {
-                    'direction': 'vertical',
-                    'gap': 'lg',
-                    'type': 'stack',
+                    'className': 'max-w-6xl mx-auto w-full',
                     'children': [
                       {
+                        'direction': 'horizontal',
+                        'align': 'center',
                         'children': [
                           {
-                            'type': 'icon',
                             'name': 'trending-down',
+                            'type': 'icon',
                           },
                           {
                             'variant': 'h2',
@@ -2183,54 +2322,51 @@ export function stdProjectManagerBurndownOrbital(params: StdProjectManagerBurndo
                           },
                         ],
                         'gap': 'sm',
-                        'direction': 'horizontal',
                         'type': 'stack',
-                        'align': 'center',
                       },
                       {
                         'type': 'divider',
                       },
                       {
                         'type': 'simple-grid',
+                        'cols': 5,
                         'children': [
                           {
-                            'type': 'stat-display',
                             'label': 'Total Points',
+                            'type': 'stat-display',
                             'value': '@entity.totalPoints',
                             'icon': 'target',
                           },
                           {
                             'type': 'stat-display',
                             'label': 'Completed',
-                            'value': '@entity.completedPoints',
                             'icon': 'check-circle',
+                            'value': '@entity.completedPoints',
                           },
                           {
+                            'icon': 'circle',
                             'type': 'stat-display',
                             'value': '@entity.remainingPoints',
                             'label': 'Remaining',
-                            'icon': 'circle',
                           },
                           {
-                            'type': 'stat-display',
-                            'icon': 'zap',
                             'value': '@entity.velocity',
+                            'icon': 'zap',
                             'label': 'Velocity',
+                            'type': 'stat-display',
                           },
                           {
-                            'icon': 'calendar',
-                            'label': 'Days Remaining',
                             'value': '@entity.daysRemaining',
                             'type': 'stat-display',
+                            'label': 'Days Remaining',
+                            'icon': 'calendar',
                           },
                         ],
-                        'cols': 5,
                       },
                       {
                         'type': 'divider',
                       },
                       {
-                        'type': 'line-chart',
                         'data': [
                           {
                             'value': 100,
@@ -2241,61 +2377,64 @@ export function stdProjectManagerBurndownOrbital(params: StdProjectManagerBurndo
                             'value': 92,
                           },
                           {
-                            'date': 'Day 3',
                             'value': 85,
+                            'date': 'Day 3',
                           },
                           {
-                            'value': 70,
                             'date': 'Day 4',
+                            'value': 70,
                           },
                           {
-                            'date': 'Day 5',
                             'value': 60,
+                            'date': 'Day 5',
                           },
                           {
                             'date': 'Day 6',
                             'value': 45,
                           },
                           {
-                            'date': 'Day 7',
                             'value': 30,
+                            'date': 'Day 7',
                           },
                           {
                             'date': 'Day 8',
                             'value': 15,
                           },
                         ],
+                        'type': 'line-chart',
                       },
                       {
+                        'type': 'chart-legend',
                         'items': [
                           {
-                            'label': 'Remaining points',
                             'color': 'primary',
+                            'label': 'Remaining points',
                           },
                           {
-                            'label': 'Ideal burndown',
                             'color': 'muted',
+                            'label': 'Ideal burndown',
                           },
                         ],
-                        'type': 'chart-legend',
                       },
                       {
+                        'gap': 'sm',
+                        'justify': 'end',
                         'type': 'stack',
                         'direction': 'horizontal',
-                        'justify': 'end',
-                        'gap': 'sm',
                         'children': [
                           {
-                            'variant': 'secondary',
-                            'label': 'Refresh',
-                            'icon': 'refresh-cw',
-                            'action': 'REFRESH',
                             'type': 'button',
+                            'icon': 'refresh-cw',
+                            'label': 'Refresh',
+                            'action': 'REFRESH',
+                            'variant': 'secondary',
                           },
                         ],
                       },
                     ],
-                    'className': 'max-w-6xl mx-auto w-full',
+                    'gap': 'lg',
+                    'type': 'stack',
+                    'direction': 'vertical',
                   },
                 ],
               ],

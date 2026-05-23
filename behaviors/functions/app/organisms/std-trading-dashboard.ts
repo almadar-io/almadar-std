@@ -31,8 +31,8 @@ const ALIAS = 'TradingDashboard';
  * without modifying its state-machine topology.
  */
 export interface StdTradingDashboardConfig {
-  notifications?: TraitConfig;
   navItems?: TraitConfig;
+  notifications?: TraitConfig;
 }
 
 /**
@@ -174,32 +174,32 @@ export function stdTradingDashboardPortfolioOrbital(params: StdTradingDashboardP
         'ref': 'AppShell.traits.AppLayout',
         'name': 'PortfolioAppLayout',
         'config': {
-          'contentTrait': '@trait.PortfolioCatalog',
-          'notifications': [],
-          'appName': 'Trading Dashboard',
           'notificationClickEvent': 'PORTFOLIO_NOTIFICATIONS_OPEN',
+          'contentTrait': '@trait.PortfolioCatalog',
           'navItems': [
             {
               'icon': 'layout-list',
-              'href': '/portfolio',
               'label': 'Portfolio',
+              'href': '/portfolio',
             },
             {
-              'href': '/orders',
               'icon': 'clipboard-list',
               'label': 'Orders',
+              'href': '/orders',
             },
             {
-              'label': 'Market',
               'href': '/market',
+              'label': 'Market',
               'icon': 'activity',
             },
           ],
           'searchEvent': 'PORTFOLIO_SEARCH',
+          'notifications': [],
+          'appName': 'Trading Dashboard',
         },
         'events': {
-          'NOTIFY_CLICK': 'PORTFOLIO_NOTIFICATIONS_OPEN',
           'SEARCH': 'PORTFOLIO_SEARCH',
+          'NOTIFY_CLICK': 'PORTFOLIO_NOTIFICATIONS_OPEN',
         },
       }),
       rebindInlineTraitEntity({
@@ -282,62 +282,61 @@ export function stdTradingDashboardPortfolioOrbital(params: StdTradingDashboardP
                   'render-ui',
                   'main',
                   {
-                    'direction': 'vertical',
-                    'type': 'stack',
                     'gap': 'lg',
+                    'type': 'stack',
                     'children': [
                       {
-                        'direction': 'horizontal',
-                        'gap': 'md',
-                        'align': 'center',
-                        'type': 'stack',
                         'justify': 'between',
+                        'align': 'center',
                         'children': [
                           {
-                            'align': 'center',
                             'direction': 'horizontal',
+                            'gap': 'sm',
                             'children': [
                               {
-                                'name': 'trending-up',
                                 'type': 'icon',
+                                'name': 'trending-up',
                               },
                               {
+                                'variant': 'h2',
                                 'content': 'Portfolio',
                                 'type': 'typography',
-                                'variant': 'h2',
                               },
                             ],
+                            'align': 'center',
                             'type': 'stack',
-                            'gap': 'sm',
                           },
                           {
-                            'direction': 'horizontal',
-                            'gap': 'sm',
                             'type': 'stack',
+                            'direction': 'horizontal',
                             'children': [
                               {
                                 'type': 'button',
-                                'icon': 'plus',
-                                'action': 'CREATE',
-                                'variant': 'primary',
                                 'label': 'Add Position',
+                                'variant': 'primary',
+                                'action': 'CREATE',
+                                'icon': 'plus',
                               },
                             ],
+                            'gap': 'sm',
                           },
                         ],
+                        'type': 'stack',
+                        'direction': 'horizontal',
+                        'gap': 'md',
                       },
                       {
                         'type': 'divider',
                       },
                       {
-                        'direction': 'horizontal',
+                        'align': 'center',
                         'children': [
                           '@trait.PortfolioSearch',
                           '@trait.PortfolioFilter',
                         ],
+                        'direction': 'horizontal',
                         'gap': 'md',
                         'type': 'stack',
-                        'align': 'center',
                       },
                       '@trait.PortfolioStats',
                       '@trait.PortfolioGraphs',
@@ -346,6 +345,7 @@ export function stdTradingDashboardPortfolioOrbital(params: StdTradingDashboardP
                       },
                       '@trait.PortfolioBrowseList',
                     ],
+                    'direction': 'vertical',
                   },
                 ],
               ],
@@ -365,33 +365,33 @@ export function stdTradingDashboardPortfolioOrbital(params: StdTradingDashboardP
                   'main',
                   {
                     'type': 'stack',
+                    'align': 'center',
+                    'className': 'py-8',
                     'children': [
                       {
-                        'type': 'icon',
                         'name': 'bell',
+                        'type': 'icon',
                       },
                       {
-                        'content': 'No notifications',
                         'type': 'typography',
+                        'content': 'No notifications',
                         'variant': 'h3',
                       },
                       {
-                        'content': 'You\'re all caught up.',
-                        'variant': 'caption',
                         'type': 'typography',
+                        'content': 'You\'re all caught up.',
                         'color': 'muted',
+                        'variant': 'caption',
                       },
                       {
-                        'action': 'INIT',
-                        'type': 'button',
                         'variant': 'ghost',
+                        'type': 'button',
                         'label': 'Back to portfolio',
+                        'action': 'INIT',
                       },
                     ],
                     'direction': 'vertical',
                     'gap': 'md',
-                    'align': 'center',
-                    'className': 'py-8',
                   },
                 ],
               ],
@@ -404,8 +404,8 @@ export function stdTradingDashboardPortfolioOrbital(params: StdTradingDashboardP
         'ref': 'Search.traits.SearchResultSearch',
         'name': 'PortfolioSearch',
         'config': {
-          'event': 'PORTFOLIO_SEARCH',
           'placeholder': 'Search positions…',
+          'event': 'PORTFOLIO_SEARCH',
         },
       }),
       makeTraitRef({
@@ -414,9 +414,9 @@ export function stdTradingDashboardPortfolioOrbital(params: StdTradingDashboardP
         'config': {
           'filters': [
             {
-              'filterType': 'text',
-              'label': 'Symbol',
               'field': 'symbol',
+              'label': 'Symbol',
+              'filterType': 'text',
             },
           ],
           'event': 'PORTFOLIO_FILTER',
@@ -426,34 +426,37 @@ export function stdTradingDashboardPortfolioOrbital(params: StdTradingDashboardP
         'ref': 'Stats.traits.StatsItemStats',
         'name': 'PortfolioStats',
         'config': {
+          'title': 'Portfolio',
           'metrics': [
             {
-              'label': 'Total Value',
               'format': 'currency',
-              'variant': 'primary',
+              'label': 'Total Value',
               'aggregation': 'sum',
-              'icon': 'dollar-sign',
               'field': 'marketValue',
+              'icon': 'dollar-sign',
+              'variant': 'primary',
             },
             {
-              'variant': 'success',
               'label': 'Daily PnL',
+              'icon': 'trending-up',
+              'variant': 'success',
+              'aggregation': 'sum',
               'field': 'dailyPnl',
               'format': 'currency',
-              'aggregation': 'sum',
-              'icon': 'trending-up',
             },
             {
               'format': 'number',
-              'aggregation': 'count',
-              'label': 'Positions',
               'icon': 'layout-list',
+              'label': 'Positions',
+              'aggregation': 'count',
               'variant': 'info',
             },
             {
               'aggregation': 'count',
-              'icon': 'check-circle',
+              'variant': 'success',
               'label': 'Winners',
+              'icon': 'check-circle',
+              'format': 'number',
               'filter': [
                 'fn',
                 'row',
@@ -463,11 +466,8 @@ export function stdTradingDashboardPortfolioOrbital(params: StdTradingDashboardP
                   0,
                 ],
               ],
-              'format': 'number',
-              'variant': 'success',
             },
           ],
-          'title': 'Portfolio',
         },
         'listens': [
           {
@@ -484,14 +484,14 @@ export function stdTradingDashboardPortfolioOrbital(params: StdTradingDashboardP
         'ref': 'Graphs.traits.GraphItemGraph',
         'name': 'PortfolioGraphs',
         'config': {
-          'subtitle': 'Profit and loss across positions',
           'title': 'Daily PnL',
           'height': 240,
-          'categoryField': 'symbol',
-          'showLegend': false,
-          'chartType': 'line',
           'valueField': 'dailyPnl',
+          'subtitle': 'Profit and loss across positions',
+          'chartType': 'line',
+          'showLegend': false,
           'aggregation': 'sum',
+          'categoryField': 'symbol',
         },
         'listens': [
           {
@@ -509,54 +509,54 @@ export function stdTradingDashboardPortfolioOrbital(params: StdTradingDashboardP
         'name': 'PortfolioBrowseList',
         'linkedEntity': canonicalName,
         'config': {
-          'gap': 'sm',
-          'cols': 1,
-          'fields': [
-            {
-              'variant': 'h3',
-              'icon': 'trending-up',
-              'name': 'symbol',
-            },
-            {
-              'format': 'number',
-              'variant': 'body',
-              'name': 'qty',
-              'label': 'Qty',
-            },
-            {
-              'label': 'Avg Cost',
-              'name': 'avgCost',
-              'format': 'currency',
-              'variant': 'body',
-            },
-            {
-              'label': 'Market Value',
-              'variant': 'h4',
-              'format': 'currency',
-              'name': 'marketValue',
-            },
-            {
-              'format': 'currency',
-              'variant': 'badge',
-              'name': 'dailyPnl',
-              'label': 'Daily PnL',
-            },
-          ],
           'itemActions': [
             {
               'label': 'View',
-              'variant': 'ghost',
               'event': 'VIEW',
+              'variant': 'ghost',
             },
             {
               'variant': 'ghost',
-              'label': 'Edit',
               'event': 'EDIT',
+              'label': 'Edit',
             },
             {
               'variant': 'danger',
               'label': 'Delete',
               'event': 'DELETE',
+            },
+          ],
+          'gap': 'sm',
+          'cols': 1,
+          'fields': [
+            {
+              'icon': 'trending-up',
+              'variant': 'h3',
+              'name': 'symbol',
+            },
+            {
+              'name': 'qty',
+              'format': 'number',
+              'label': 'Qty',
+              'variant': 'body',
+            },
+            {
+              'label': 'Avg Cost',
+              'format': 'currency',
+              'name': 'avgCost',
+              'variant': 'body',
+            },
+            {
+              'name': 'marketValue',
+              'format': 'currency',
+              'label': 'Market Value',
+              'variant': 'h4',
+            },
+            {
+              'variant': 'badge',
+              'name': 'dailyPnl',
+              'format': 'currency',
+              'label': 'Daily PnL',
             },
           ],
         },
@@ -608,7 +608,7 @@ export function stdTradingDashboardPortfolioOrbital(params: StdTradingDashboardP
         'name': 'PortfolioCreate',
         'linkedEntity': canonicalName,
         'config': {
-          'title': 'Add Position',
+          'icon': 'plus-circle',
           'fields': [
             'symbol',
             'qty',
@@ -616,8 +616,8 @@ export function stdTradingDashboardPortfolioOrbital(params: StdTradingDashboardP
             'marketValue',
             'dailyPnl',
           ],
-          'icon': 'plus-circle',
           'mode': 'create',
+          'title': 'Add Position',
         },
         'events': {
           'OPEN': 'CREATE',
@@ -638,8 +638,9 @@ export function stdTradingDashboardPortfolioOrbital(params: StdTradingDashboardP
         'name': 'PortfolioEdit',
         'linkedEntity': canonicalName,
         'config': {
-          'mode': 'edit',
+          'title': 'Edit Position',
           'icon': 'edit',
+          'mode': 'edit',
           'fields': [
             'symbol',
             'qty',
@@ -647,7 +648,6 @@ export function stdTradingDashboardPortfolioOrbital(params: StdTradingDashboardP
             'marketValue',
             'dailyPnl',
           ],
-          'title': 'Edit Position',
         },
         'events': {
           'OPEN': 'EDIT',
@@ -669,6 +669,8 @@ export function stdTradingDashboardPortfolioOrbital(params: StdTradingDashboardP
         'linkedEntity': canonicalName,
         'config': {
           'mode': 'edit',
+          'title': 'View Position',
+          'icon': 'eye',
           'fields': [
             'symbol',
             'qty',
@@ -676,8 +678,6 @@ export function stdTradingDashboardPortfolioOrbital(params: StdTradingDashboardP
             'marketValue',
             'dailyPnl',
           ],
-          'icon': 'eye',
-          'title': 'View Position',
         },
         'events': {
           'OPEN': 'VIEW',
@@ -698,9 +698,9 @@ export function stdTradingDashboardPortfolioOrbital(params: StdTradingDashboardP
         'name': 'PortfolioDelete',
         'linkedEntity': canonicalName,
         'config': {
-          'title': 'Close Position',
           'confirmLabel': 'Close',
           'icon': 'alert-triangle',
+          'title': 'Close Position',
           'alertMessage': 'This action cannot be undone.',
         },
         'events': {
@@ -1070,7 +1070,7 @@ export interface StdTradingDashboardTradeOrderOrbitalParams {
    * atom-owned (use `listens` via a sibling trait instead).
    */
   traitOverrides?: Partial<Record<
-    'TradeOrderAppLayout' | 'TradeOrderBrowseList' | 'TradeOrderCreate' | 'TradeOrderEdit' | 'TradeOrderView' | 'TradeOrderDelete' | 'TradeOrderCatalog' | 'TradeOrderPersistor',
+    'TradeOrderAppLayout' | 'TradeOrderBrowseList' | 'TradeOrderCreate' | 'TradeOrderEdit' | 'TradeOrderView' | 'TradeOrderDelete' | 'TradingNotifier' | 'TradingAuditCapture' | 'TradingApprovalGate' | 'TradeOrderCatalog' | 'TradeOrderPersistor',
     Pick<MakeTraitRefOpts, 'config' | 'linkedEntity' | 'events' | 'name' | 'emitsScope' | 'listens'>
   >>;
 }
@@ -1098,6 +1098,18 @@ export function stdTradingDashboardTradeOrderOrbital(params: StdTradingDashboard
       {
         'from': 'std/behaviors/std-browse',
         'as': 'Browse',
+      },
+      {
+        'from': 'std/behaviors/std-notify-on-event',
+        'as': 'Notify',
+      },
+      {
+        'from': 'std/behaviors/std-audit-capture',
+        'as': 'Audit',
+      },
+      {
+        'from': 'std/behaviors/std-approval-gate',
+        'as': 'Approval',
       },
     ],
     entity: {
@@ -1170,9 +1182,9 @@ export function stdTradingDashboardTradeOrderOrbital(params: StdTradingDashboard
               'label': 'Portfolio',
             },
             {
-              'label': 'Orders',
               'href': '/orders',
               'icon': 'clipboard-list',
+              'label': 'Orders',
             },
             {
               'icon': 'activity',
@@ -1181,10 +1193,10 @@ export function stdTradingDashboardTradeOrderOrbital(params: StdTradingDashboard
             },
           ],
           'contentTrait': '@trait.TradeOrderCatalog',
-          'notifications': [],
-          'notificationClickEvent': 'TRADE_ORDER_NOTIFICATIONS_OPEN',
           'appName': 'Trading Dashboard',
           'searchEvent': 'TRADE_ORDER_SEARCH',
+          'notifications': [],
+          'notificationClickEvent': 'TRADE_ORDER_NOTIFICATIONS_OPEN',
         },
         'events': {
           'SEARCH': 'TRADE_ORDER_SEARCH',
@@ -1233,46 +1245,47 @@ export function stdTradingDashboardTradeOrderOrbital(params: StdTradingDashboard
                   'render-ui',
                   'main',
                   {
+                    'type': 'stack',
                     'children': [
                       {
-                        'type': 'stack',
-                        'gap': 'md',
-                        'direction': 'horizontal',
                         'children': [
                           {
+                            'gap': 'sm',
+                            'type': 'stack',
+                            'direction': 'horizontal',
+                            'align': 'center',
                             'children': [
                               {
-                                'name': 'clipboard-list',
                                 'type': 'icon',
+                                'name': 'clipboard-list',
                               },
                               {
                                 'type': 'typography',
-                                'content': 'Trade Orders',
                                 'variant': 'h2',
+                                'content': 'Trade Orders',
                               },
                             ],
-                            'direction': 'horizontal',
-                            'type': 'stack',
-                            'gap': 'sm',
-                            'align': 'center',
                           },
                           {
-                            'direction': 'horizontal',
-                            'gap': 'sm',
                             'children': [
                               {
-                                'type': 'button',
-                                'variant': 'primary',
                                 'icon': 'plus',
-                                'label': 'New Order',
                                 'action': 'CREATE',
+                                'type': 'button',
+                                'label': 'New Order',
+                                'variant': 'primary',
                               },
                             ],
+                            'direction': 'horizontal',
                             'type': 'stack',
+                            'gap': 'sm',
                           },
                         ],
-                        'justify': 'between',
                         'align': 'center',
+                        'gap': 'md',
+                        'justify': 'between',
+                        'direction': 'horizontal',
+                        'type': 'stack',
                       },
                       {
                         'type': 'divider',
@@ -1281,7 +1294,6 @@ export function stdTradingDashboardTradeOrderOrbital(params: StdTradingDashboard
                     ],
                     'direction': 'vertical',
                     'gap': 'lg',
-                    'type': 'stack',
                   },
                 ],
               ],
@@ -1295,12 +1307,30 @@ export function stdTradingDashboardTradeOrderOrbital(params: StdTradingDashboard
         'name': 'TradeOrderBrowseList',
         'linkedEntity': canonicalName,
         'config': {
+          'itemActions': [
+            {
+              'label': 'View',
+              'event': 'VIEW',
+              'variant': 'ghost',
+            },
+            {
+              'event': 'EDIT',
+              'variant': 'ghost',
+              'label': 'Edit',
+            },
+            {
+              'variant': 'danger',
+              'event': 'DELETE',
+              'label': 'Cancel',
+            },
+          ],
+          'gap': 'sm',
           'cols': 1,
           'fields': [
             {
-              'variant': 'h3',
-              'icon': 'trending-up',
               'name': 'symbol',
+              'icon': 'trending-up',
+              'variant': 'h3',
             },
             {
               'variant': 'badge',
@@ -1321,24 +1351,6 @@ export function stdTradingDashboardTradeOrderOrbital(params: StdTradingDashboard
               'name': 'status',
             },
           ],
-          'itemActions': [
-            {
-              'variant': 'ghost',
-              'event': 'VIEW',
-              'label': 'View',
-            },
-            {
-              'event': 'EDIT',
-              'label': 'Edit',
-              'variant': 'ghost',
-            },
-            {
-              'variant': 'danger',
-              'label': 'Cancel',
-              'event': 'DELETE',
-            },
-          ],
-          'gap': 'sm',
         },
         'listens': [
           {
@@ -1372,6 +1384,8 @@ export function stdTradingDashboardTradeOrderOrbital(params: StdTradingDashboard
         'name': 'TradeOrderCreate',
         'linkedEntity': canonicalName,
         'config': {
+          'icon': 'plus-circle',
+          'mode': 'create',
           'fields': [
             'symbol',
             'side',
@@ -1380,8 +1394,6 @@ export function stdTradingDashboardTradeOrderOrbital(params: StdTradingDashboard
             'status',
           ],
           'title': 'New Order',
-          'icon': 'plus-circle',
-          'mode': 'create',
         },
         'events': {
           'OPEN': 'CREATE',
@@ -1404,7 +1416,6 @@ export function stdTradingDashboardTradeOrderOrbital(params: StdTradingDashboard
         'config': {
           'icon': 'edit',
           'mode': 'edit',
-          'title': 'Edit Order',
           'fields': [
             'symbol',
             'side',
@@ -1412,6 +1423,7 @@ export function stdTradingDashboardTradeOrderOrbital(params: StdTradingDashboard
             'price',
             'status',
           ],
+          'title': 'Edit Order',
         },
         'events': {
           'OPEN': 'EDIT',
@@ -1432,7 +1444,6 @@ export function stdTradingDashboardTradeOrderOrbital(params: StdTradingDashboard
         'name': 'TradeOrderView',
         'linkedEntity': canonicalName,
         'config': {
-          'mode': 'edit',
           'fields': [
             'symbol',
             'side',
@@ -1440,8 +1451,9 @@ export function stdTradingDashboardTradeOrderOrbital(params: StdTradingDashboard
             'price',
             'status',
           ],
-          'icon': 'eye',
           'title': 'View Order',
+          'mode': 'edit',
+          'icon': 'eye',
         },
         'events': {
           'OPEN': 'VIEW',
@@ -1462,14 +1474,14 @@ export function stdTradingDashboardTradeOrderOrbital(params: StdTradingDashboard
         'name': 'TradeOrderDelete',
         'linkedEntity': canonicalName,
         'config': {
-          'confirmLabel': 'Cancel Order',
-          'alertMessage': 'Cancel this pending order?',
-          'title': 'Cancel Order',
           'icon': 'alert-triangle',
+          'title': 'Cancel Order',
+          'alertMessage': 'Cancel this pending order?',
+          'confirmLabel': 'Cancel Order',
         },
         'events': {
-          'REQUEST': 'DELETE',
           'CONFIRM': 'CONFIRM_DELETE',
+          'REQUEST': 'DELETE',
         },
         'listens': [
           {
@@ -1665,6 +1677,53 @@ export function stdTradingDashboardTradeOrderOrbital(params: StdTradingDashboard
         },
         'scope': 'instance',
       } as never, 'TradeOrder', canonicalName) as never,
+      makeTraitRef({
+        'ref': 'Notify.traits.NotifyOnEventListener',
+        'name': 'TradingNotifier',
+        'config': {
+          'template': 'Price or order alert',
+          'recipients': [],
+          'listensFor': [
+            'TRADE_ORDER_UPDATED',
+          ],
+          'severity': 'warning',
+          'suppressionList': [],
+          'notifyChannel': 'in-app',
+        },
+        'events': {
+          'EventOccurred': 'TRADE_ORDER_UPDATED',
+        },
+      }),
+      makeTraitRef({
+        'ref': 'Audit.traits.AuditCaptureListener',
+        'name': 'TradingAuditCapture',
+        'config': {
+          'captureEventTypes': [],
+          'captureBeforeAfter': true,
+          'retentionDays': 2555,
+          'captureEntity': 'TradeOrder',
+          'excludeFields': [],
+        },
+        'events': {
+          'EntityMutated': 'TRADE_ORDER_UPDATED',
+        },
+      }),
+      makeTraitRef({
+        'ref': 'Approval.traits.ApprovalGateReview',
+        'name': 'TradingApprovalGate',
+        'config': {
+          'threshold': 100000,
+          'valueField': 'price',
+          'escalationRoles': [
+            'compliance-officer',
+          ],
+          'approverRoles': [
+            'trading-desk-lead',
+          ],
+          'autoApproveBelowThreshold': true,
+          'escalationHours': 1,
+        },
+      }),
     ],
     pages: [
       {
@@ -1694,6 +1753,15 @@ export function stdTradingDashboardTradeOrderOrbital(params: StdTradingDashboard
           },
           {
             'ref': 'TradeOrderPersistor',
+          },
+          {
+            'ref': 'TradingNotifier',
+          },
+          {
+            'ref': 'TradingAuditCapture',
+          },
+          {
+            'ref': 'TradingApprovalGate',
           },
         ],
       } as never,
@@ -1754,6 +1822,9 @@ export const StdTradingDashboardTradeOrderOrbitalManifest = {
     'TradeOrderEdit',
     'TradeOrderView',
     'TradeOrderDelete',
+    'TradingNotifier',
+    'TradingAuditCapture',
+    'TradingApprovalGate',
   ] as const,
   inlineTraitNames: [
     'TradeOrderCatalog',
@@ -1886,32 +1957,32 @@ export function stdTradingDashboardMarketFeedOrbital(params: StdTradingDashboard
         'name': 'MarketFeedAppLayout',
         'linkedEntity': canonicalName,
         'config': {
-          'contentTrait': '@trait.MarketFeedDisplay',
-          'appName': 'Trading Dashboard',
-          'notificationClickEvent': 'MARKET_FEED_NOTIFICATIONS_OPEN',
           'notifications': [],
-          'searchEvent': 'MARKET_FEED_SEARCH',
+          'contentTrait': '@trait.MarketFeedDisplay',
           'navItems': [
             {
-              'label': 'Portfolio',
               'href': '/portfolio',
+              'label': 'Portfolio',
               'icon': 'layout-list',
             },
             {
-              'href': '/orders',
               'label': 'Orders',
+              'href': '/orders',
               'icon': 'clipboard-list',
             },
             {
+              'href': '/market',
               'icon': 'activity',
               'label': 'Market',
-              'href': '/market',
             },
           ],
+          'searchEvent': 'MARKET_FEED_SEARCH',
+          'appName': 'Trading Dashboard',
+          'notificationClickEvent': 'MARKET_FEED_NOTIFICATIONS_OPEN',
         },
         'events': {
-          'SEARCH': 'MARKET_FEED_SEARCH',
           'NOTIFY_CLICK': 'MARKET_FEED_NOTIFICATIONS_OPEN',
+          'SEARCH': 'MARKET_FEED_SEARCH',
         },
       }),
       rebindInlineTraitEntity({
@@ -1940,13 +2011,13 @@ export function stdTradingDashboardMarketFeedOrbital(params: StdTradingDashboard
                   'render-ui',
                   'main',
                   {
-                    'className': 'max-w-6xl mx-auto w-full p-4',
                     'children': [
                       '@trait.MarketFeedAsync',
                     ],
-                    'type': 'stack',
                     'direction': 'vertical',
                     'gap': 'lg',
+                    'type': 'stack',
+                    'className': 'max-w-6xl mx-auto w-full p-4',
                   },
                 ],
               ],
@@ -2135,24 +2206,27 @@ export function stdTradingDashboardMarketFeedOrbital(params: StdTradingDashboard
                   'render-ui',
                   'main',
                   {
+                    'gap': 'lg',
+                    'direction': 'vertical',
                     'align': 'center',
+                    'type': 'stack',
                     'children': [
                       {
-                        'direction': 'horizontal',
-                        'align': 'center',
-                        'type': 'stack',
                         'gap': 'md',
+                        'align': 'center',
+                        'direction': 'horizontal',
                         'children': [
                           {
-                            'type': 'icon',
                             'name': 'activity',
+                            'type': 'icon',
                           },
                           {
-                            'content': 'Market Feed',
                             'type': 'typography',
                             'variant': 'h2',
+                            'content': 'Market Feed',
                           },
                         ],
+                        'type': 'stack',
                       },
                       {
                         'type': 'divider',
@@ -2160,20 +2234,17 @@ export function stdTradingDashboardMarketFeedOrbital(params: StdTradingDashboard
                       {
                         'color': 'muted',
                         'content': 'Connect to live market data.',
-                        'type': 'typography',
                         'variant': 'body',
+                        'type': 'typography',
                       },
                       {
                         'type': 'button',
-                        'label': 'Start Stream',
+                        'icon': 'play',
                         'action': 'START',
                         'variant': 'primary',
-                        'icon': 'play',
+                        'label': 'Start Stream',
                       },
                     ],
-                    'type': 'stack',
-                    'gap': 'lg',
-                    'direction': 'vertical',
                   },
                 ],
               ],
@@ -2199,8 +2270,8 @@ export function stdTradingDashboardMarketFeedOrbital(params: StdTradingDashboard
                       },
                     ],
                     'align': 'center',
-                    'direction': 'vertical',
                     'gap': 'lg',
+                    'direction': 'vertical',
                     'type': 'stack',
                   },
                 ],
@@ -2218,8 +2289,8 @@ export function stdTradingDashboardMarketFeedOrbital(params: StdTradingDashboard
                   '@payload.data',
                   {
                     'emit': {
-                      'success': 'MarketFeedSaved',
                       'failure': 'MarketFeedSaveFailed',
+                      'success': 'MarketFeedSaved',
                     },
                   },
                 ],
@@ -2227,71 +2298,67 @@ export function stdTradingDashboardMarketFeedOrbital(params: StdTradingDashboard
                   'render-ui',
                   'main',
                   {
-                    'type': 'stack',
                     'children': [
                       {
-                        'align': 'center',
+                        'type': 'stack',
                         'children': [
                           {
-                            'type': 'stack',
                             'direction': 'horizontal',
-                            'gap': 'sm',
+                            'type': 'stack',
                             'align': 'center',
+                            'gap': 'sm',
                             'children': [
                               {
-                                'type': 'icon',
                                 'name': 'activity',
+                                'type': 'icon',
                               },
                               {
+                                'type': 'typography',
                                 'variant': 'h2',
                                 'content': 'Live Market Feed',
-                                'type': 'typography',
                               },
                             ],
                           },
                           {
+                            'direction': 'horizontal',
                             'gap': 'sm',
                             'type': 'stack',
                             'children': [
                               {
-                                'type': 'alert',
                                 'message': 'Connected',
+                                'type': 'alert',
                                 'variant': 'success',
                               },
                               {
+                                'type': 'button',
+                                'variant': 'ghost',
+                                'icon': 'rotate-ccw',
                                 'action': 'RESET',
                                 'label': 'Reset',
-                                'icon': 'rotate-ccw',
-                                'variant': 'ghost',
-                                'type': 'button',
                               },
                             ],
-                            'direction': 'horizontal',
                           },
                         ],
-                        'direction': 'horizontal',
                         'gap': 'md',
                         'justify': 'between',
-                        'type': 'stack',
+                        'direction': 'horizontal',
+                        'align': 'center',
                       },
                       {
                         'type': 'divider',
                       },
                       {
                         'gap': 'sm',
-                        'entity': '@payload.data',
-                        'type': 'data-list',
-                        'variant': 'card',
                         'fields': [
                           {
-                            'icon': 'trending-up',
-                            'variant': 'h4',
                             'name': 'symbol',
+                            'variant': 'h4',
+                            'icon': 'trending-up',
                           },
                           {
-                            'variant': 'h3',
-                            'name': 'price',
                             'format': 'currency',
+                            'name': 'price',
+                            'variant': 'h3',
                           },
                           {
                             'variant': 'badge',
@@ -2299,11 +2366,14 @@ export function stdTradingDashboardMarketFeedOrbital(params: StdTradingDashboard
                             'format': 'currency',
                           },
                           {
-                            'variant': 'caption',
                             'format': 'number',
                             'name': 'volume',
+                            'variant': 'caption',
                           },
                         ],
+                        'entity': '@payload.data',
+                        'variant': 'card',
+                        'type': 'data-list',
                       },
                       {
                         'type': 'divider',
@@ -2328,31 +2398,32 @@ export function stdTradingDashboardMarketFeedOrbital(params: StdTradingDashboard
                             'value': 105,
                           },
                           {
-                            'date': '11:30',
                             'value': 107,
+                            'date': '11:30',
                           },
                           {
-                            'date': '12:00',
                             'value': 104,
+                            'date': '12:00',
                           },
                         ],
                       },
                       {
+                        'type': 'chart-legend',
                         'items': [
                           {
-                            'color': 'primary',
                             'label': 'Price',
+                            'color': 'primary',
                           },
                           {
-                            'label': 'Volume',
                             'color': 'muted',
+                            'label': 'Volume',
                           },
                         ],
-                        'type': 'chart-legend',
                       },
                     ],
                     'direction': 'vertical',
                     'gap': 'lg',
+                    'type': 'stack',
                   },
                 ],
               ],
@@ -2366,6 +2437,10 @@ export function stdTradingDashboardMarketFeedOrbital(params: StdTradingDashboard
                   'render-ui',
                   'main',
                   {
+                    'direction': 'vertical',
+                    'type': 'stack',
+                    'gap': 'lg',
+                    'align': 'center',
                     'children': [
                       {
                         'type': 'error-state',
@@ -2375,31 +2450,27 @@ export function stdTradingDashboardMarketFeedOrbital(params: StdTradingDashboard
                       },
                       {
                         'type': 'stack',
-                        'justify': 'center',
-                        'gap': 'sm',
                         'children': [
                           {
-                            'action': 'RETRY',
-                            'variant': 'primary',
-                            'label': 'Retry',
                             'type': 'button',
+                            'variant': 'primary',
+                            'action': 'RETRY',
                             'icon': 'refresh-cw',
+                            'label': 'Retry',
                           },
                           {
+                            'label': 'Reset',
+                            'variant': 'ghost',
                             'icon': 'rotate-ccw',
                             'type': 'button',
                             'action': 'RESET',
-                            'label': 'Reset',
-                            'variant': 'ghost',
                           },
                         ],
+                        'justify': 'center',
+                        'gap': 'sm',
                         'direction': 'horizontal',
                       },
                     ],
-                    'align': 'center',
-                    'type': 'stack',
-                    'gap': 'lg',
-                    'direction': 'vertical',
                   },
                 ],
               ],
@@ -2413,45 +2484,45 @@ export function stdTradingDashboardMarketFeedOrbital(params: StdTradingDashboard
                   'render-ui',
                   'main',
                   {
+                    'align': 'center',
                     'type': 'stack',
+                    'direction': 'vertical',
                     'children': [
                       {
-                        'gap': 'md',
+                        'align': 'center',
                         'children': [
                           {
-                            'type': 'icon',
                             'name': 'activity',
+                            'type': 'icon',
                           },
                           {
-                            'content': 'Market Feed',
-                            'variant': 'h2',
                             'type': 'typography',
+                            'variant': 'h2',
+                            'content': 'Market Feed',
                           },
                         ],
                         'type': 'stack',
-                        'align': 'center',
+                        'gap': 'md',
                         'direction': 'horizontal',
                       },
                       {
                         'type': 'divider',
                       },
                       {
-                        'content': 'Connect to live market data.',
                         'variant': 'body',
                         'color': 'muted',
+                        'content': 'Connect to live market data.',
                         'type': 'typography',
                       },
                       {
-                        'action': 'START',
                         'type': 'button',
                         'variant': 'primary',
                         'icon': 'play',
+                        'action': 'START',
                         'label': 'Start Stream',
                       },
                     ],
                     'gap': 'lg',
-                    'align': 'center',
-                    'direction': 'vertical',
                   },
                 ],
               ],
@@ -2465,45 +2536,45 @@ export function stdTradingDashboardMarketFeedOrbital(params: StdTradingDashboard
                   'render-ui',
                   'main',
                   {
-                    'type': 'stack',
-                    'align': 'center',
-                    'direction': 'vertical',
-                    'gap': 'lg',
                     'children': [
                       {
+                        'align': 'center',
                         'direction': 'horizontal',
                         'type': 'stack',
                         'gap': 'md',
                         'children': [
                           {
-                            'type': 'icon',
                             'name': 'activity',
+                            'type': 'icon',
                           },
                           {
-                            'type': 'typography',
-                            'content': 'Market Feed',
                             'variant': 'h2',
+                            'content': 'Market Feed',
+                            'type': 'typography',
                           },
                         ],
-                        'align': 'center',
                       },
                       {
                         'type': 'divider',
                       },
                       {
-                        'color': 'muted',
-                        'content': 'Connect to live market data.',
                         'variant': 'body',
+                        'color': 'muted',
                         'type': 'typography',
+                        'content': 'Connect to live market data.',
                       },
                       {
-                        'label': 'Start Stream',
                         'variant': 'primary',
-                        'icon': 'play',
+                        'label': 'Start Stream',
                         'action': 'START',
+                        'icon': 'play',
                         'type': 'button',
                       },
                     ],
+                    'align': 'center',
+                    'gap': 'lg',
+                    'type': 'stack',
+                    'direction': 'vertical',
                   },
                 ],
               ],
@@ -2517,21 +2588,21 @@ export function stdTradingDashboardMarketFeedOrbital(params: StdTradingDashboard
                   'render-ui',
                   'main',
                   {
+                    'gap': 'lg',
                     'type': 'stack',
-                    'direction': 'vertical',
+                    'align': 'center',
                     'children': [
                       {
-                        'message': 'Streaming ticks…',
                         'title': 'Connecting to market feed…',
                         'type': 'loading-state',
+                        'message': 'Streaming ticks…',
                       },
                       {
                         'type': 'skeleton',
                         'variant': 'text',
                       },
                     ],
-                    'gap': 'lg',
-                    'align': 'center',
+                    'direction': 'vertical',
                   },
                 ],
               ],
@@ -2638,6 +2709,807 @@ export function isStdTradingDashboardMarketFeedOrbitalParams(p: object): p is St
 }
 
 /**
+ * Tunable params for the VenueTradeOrderFromStdOrbital orbital.
+ *
+ * Canonical entity: VenueTradeOrder — overridable via
+ * `entityName`. The factory threads the effective name through every
+ * trait's `linkedEntity` binding; the `.orb` compiler's inline phase
+ * auto-rewrites every `@Entity.x`, `["ref",X]`, `["fetch",X,…]`,
+ * `["persist",…,X,…]` and payload type string accordingly.
+ *
+ * Override surface (mirrors `.lolo`'s native overrides 1:1):
+ *   fields         — extra entity fields (appended)
+ *   pagePath       — first-page URL override
+ *   persistence    — entity persistence mode
+ *   entityName     — rename the canonical entity
+ *   collection     — override the derived collection key
+ *   traitOverrides — per-imported-trait `config`, `linkedEntity`,
+ *                    `events`, `name`, `emitsScope`, `listens`.
+ *                    `effects` is NOT exposed — `.lolo` removed it
+ *                    in Phase 9.5.H. Use `listens` via a sibling
+ *                    trait to react to atom events.
+ */
+export interface StdTradingDashboardVenueTradeOrderFromStdOrbitalParams {
+  /** Extra fields appended to the canonical entity. */
+  fields?: EntityField[];
+  /** URL path override for the orbital's first page. */
+  pagePath?: string;
+  /** Override the canonical entity persistence mode. */
+  persistence?: EntityPersistence;
+  /** Rename the canonical entity (PascalCase singular, ≤32 chars). */
+  entityName?: string;
+  /** Override derived collection key (defaults to plural(entityName).toLowerCase()). */
+  collection?: string;
+  /**
+   * Per-imported-trait override surface keyed on each imported
+   * trait's canonical `name`. Accepts every override `.lolo`
+   * natively supports: `config`, `linkedEntity`, `events`,
+   * `name`, `emitsScope`, `listens`. `effects` is excluded —
+   * atom-owned (use `listens` via a sibling trait instead).
+   */
+  traitOverrides?: Partial<Record<
+    'VenueTradeOrderFromStdAppLayout' | 'VenueTradeOrderFromStdManageBlock',
+    Pick<MakeTraitRefOpts, 'config' | 'linkedEntity' | 'events' | 'name' | 'emitsScope' | 'listens'>
+  >>;
+}
+
+/** Per-orbital factory: builds the VenueTradeOrderFromStdOrbital orbital with consumer params. */
+export function stdTradingDashboardVenueTradeOrderFromStdOrbital(params: StdTradingDashboardVenueTradeOrderFromStdOrbitalParams = {}): OrbitalDefinition {
+  const canonicalName = params.entityName ?? 'VenueTradeOrder';
+  const collectionName = params.collection
+    ?? (params.entityName ? `${params.entityName.toLowerCase()}s` : 'venuetradeorders');
+  const built = makeOrbitalWithUses({
+    name: 'VenueTradeOrderFromStdOrbital',
+    uses: [
+      {
+        'from': 'std/behaviors/std-app-layout',
+        'as': 'AppShell',
+      },
+      {
+        'from': 'std/behaviors/std-trade-order',
+        'as': 'Orders',
+      },
+    ],
+    entity: {
+      name: canonicalName,
+      collection: collectionName,
+      persistence: params.persistence ?? 'persistent',
+      fields: ((): EntityField[] => {
+        const canonical: EntityField[] = [
+          {
+            'name': 'id',
+            'type': 'string',
+            'required': true,
+          },
+          {
+            'name': 'instrument',
+            'type': 'string',
+            'required': true,
+          },
+          {
+            'name': 'side',
+            'type': 'string',
+            'default': 'buy',
+            'values': [
+              'buy',
+              'sell',
+            ],
+          },
+          {
+            'name': 'orderType',
+            'type': 'string',
+            'default': 'market',
+            'values': [
+              'market',
+              'limit',
+              'stop',
+              'stop-limit',
+              'trailing',
+            ],
+          },
+          {
+            'name': 'quantity',
+            'type': 'number',
+            'default': 0,
+          },
+          {
+            'name': 'price',
+            'type': 'number',
+            'default': 0,
+          },
+          {
+            'name': 'limitPrice',
+            'type': 'number',
+            'default': 0,
+          },
+          {
+            'name': 'stopPrice',
+            'type': 'number',
+            'default': 0,
+          },
+          {
+            'name': 'status',
+            'type': 'string',
+            'default': 'pending',
+            'values': [
+              'pending',
+              'working',
+              'filled',
+              'partially-filled',
+              'cancelled',
+              'rejected',
+            ],
+          },
+          {
+            'name': 'venue',
+            'type': 'string',
+            'default': '',
+          },
+          {
+            'name': 'filledAt',
+            'type': 'string',
+            'default': '',
+          },
+          {
+            'name': 'createdAt',
+            'type': 'string',
+            'default': '',
+          },
+        ];
+        const extras = params.fields ?? [];
+        if (extras.length === 0) return canonical;
+        const extraNames = new Set(extras.map((f) => f.name));
+        return [...canonical.filter((f) => !extraNames.has(f.name)), ...extras];
+      })(),
+    } as Entity,
+    traits: [
+      makeTraitRef({
+        'ref': 'AppShell.traits.AppLayout',
+        'name': 'VenueTradeOrderFromStdAppLayout',
+        'linkedEntity': canonicalName,
+        'config': {
+          'notifications': [],
+          'notificationClickEvent': 'VENUE_ORDER_NOTIFICATIONS_OPEN',
+          'navItems': [
+            {
+              'href': '/portfolio',
+              'icon': 'layout-list',
+              'label': 'Portfolio',
+            },
+            {
+              'label': 'Orders',
+              'href': '/orders',
+              'icon': 'clipboard-list',
+            },
+            {
+              'href': '/market',
+              'icon': 'activity',
+              'label': 'Market',
+            },
+            {
+              'label': 'Venue Orders',
+              'icon': 'trending-up',
+              'href': '/orders-venue',
+            },
+          ],
+          'appName': 'Trading Dashboard',
+          'searchEvent': 'VENUE_ORDER_SEARCH',
+          'contentTrait': '@trait.VenueTradeOrderFromStdManageBlock',
+        },
+        'events': {
+          'SEARCH': 'VENUE_ORDER_SEARCH',
+          'NOTIFY_CLICK': 'VENUE_ORDER_NOTIFICATIONS_OPEN',
+        },
+      }),
+      makeTraitRef({
+        'ref': 'Orders.traits.TradeOrderManage',
+        'name': 'VenueTradeOrderFromStdManageBlock',
+        'linkedEntity': canonicalName,
+        'config': {
+          'title': 'Venue Trade Orders',
+        },
+      }),
+    ],
+    pages: [
+      {
+        'name': 'VenueTradeOrderFromStdPage',
+        'path': '/orders-venue',
+        'traits': [
+          {
+            'ref': 'VenueTradeOrderFromStdAppLayout',
+          },
+          {
+            'ref': 'VenueTradeOrderFromStdManageBlock',
+          },
+        ],
+      } as never,
+    ],
+  });
+  type _OrbTrait = OrbitalDefinition["traits"][number];
+  type _OrbPage = NonNullable<OrbitalDefinition["pages"]>[number];
+  type _RefOverride = Pick<MakeTraitRefOpts, "config" | "linkedEntity" | "events" | "name" | "emitsScope" | "listens">;
+  if (built.traits && params.traitOverrides !== undefined) {
+    built.traits = (built.traits as _OrbTrait[]).map((t): _OrbTrait => {
+      if (!t || typeof t !== "object") return t;
+      const tr = t as TraitReference & { name?: string };
+      // Match by name so inline traits (no `ref`) and
+      // reference traits (with `ref`) both pick up the
+      // override surface keyed on the trait's `name`.
+      if (typeof tr.name !== "string") return t;
+      const overrides = params.traitOverrides as Record<string, _RefOverride | undefined> | undefined;
+      const override = overrides?.[tr.name];
+      if (!override) return t;
+      const merged: TraitReference = { ...tr };
+      if (override.config !== undefined) merged.config = { ...(tr.config ?? {}), ...override.config };
+      if (override.linkedEntity !== undefined) merged.linkedEntity = override.linkedEntity;
+      if (override.events !== undefined) merged.events = { ...(tr.events ?? {}), ...override.events };
+      if (override.name !== undefined) merged.name = override.name;
+      if (override.emitsScope !== undefined) merged.emitsScope = override.emitsScope;
+      if (override.listens !== undefined) merged.listens = override.listens;
+      return merged;
+    });
+  }
+  if (built.pages && params.pagePath !== undefined) {
+    built.pages = (built.pages as _OrbPage[]).map((p, idx) => {
+      if (!p || typeof p !== "object") return p;
+      if (idx !== 0) return p;
+      const out = { ...p } as _OrbPage & { path?: string };
+      out.path = params.pagePath;
+      return out;
+    });
+  }
+  return built;
+}
+
+/** Manifest — describes the params surface of stdTradingDashboardVenueTradeOrderFromStdOrbital. */
+export const StdTradingDashboardVenueTradeOrderFromStdOrbitalManifest = {
+  organism: 'std-trading-dashboard',
+  orbitalName: 'VenueTradeOrderFromStdOrbital',
+  paramFields: [
+    { name: 'fields', type: 'EntityField[]', description: 'Extra fields appended to the canonical entity.' },
+    { name: 'pagePath', type: 'string', description: 'URL override for the orbital first page.' },
+    { name: 'persistence', type: "'persistent' | 'runtime' | 'singleton' | 'instance' | 'local'", description: 'Override the canonical entity persistence mode.' },
+    { name: 'entityName', type: 'string', description: 'Rename the canonical entity. PascalCase singular, ≤32 chars. Threads through every trait\'s linkedEntity binding; compiler rewrites @Entity.x refs.' },
+    { name: 'collection', type: 'string', description: 'Override derived collection key. Defaults to plural(entityName).toLowerCase().' },
+    { name: 'traitOverrides', type: "Partial<Record<TraitName, { config?, linkedEntity?, events?, name?, emitsScope?, listens? }>>", description: 'Per-imported-trait overrides — mirrors .lolo\'s native trait-composition surface 1:1. effects is excluded (atom-owned; use listens via a sibling trait).' },
+  ] as const,
+  traitNames: [
+    'VenueTradeOrderFromStdAppLayout',
+    'VenueTradeOrderFromStdManageBlock',
+  ] as const,
+  inlineTraitNames: [
+  ] as const,
+};
+
+/** Typed guard — runtime validates StdTradingDashboardVenueTradeOrderFromStdOrbitalParams keys. */
+export function isStdTradingDashboardVenueTradeOrderFromStdOrbitalParams(p: object): p is StdTradingDashboardVenueTradeOrderFromStdOrbitalParams {
+  type _OverrideRecord = NonNullable<StdTradingDashboardVenueTradeOrderFromStdOrbitalParams['traitOverrides']>;
+  const obj = p as { traitOverrides?: _OverrideRecord };
+  if (obj.traitOverrides !== undefined) {
+    if (typeof obj.traitOverrides !== "object" || obj.traitOverrides === null) return false;
+    const allowed: readonly string[] = [
+      ...StdTradingDashboardVenueTradeOrderFromStdOrbitalManifest.traitNames,
+      ...StdTradingDashboardVenueTradeOrderFromStdOrbitalManifest.inlineTraitNames,
+    ];
+    for (const k of Object.keys(obj.traitOverrides)) {
+      if (!allowed.includes(k)) return false;
+    }
+  }
+  return true;
+}
+
+/**
+ * Tunable params for the PortfolioFromStdOrbital orbital.
+ *
+ * Canonical entity: ManagedPortfolio — overridable via
+ * `entityName`. The factory threads the effective name through every
+ * trait's `linkedEntity` binding; the `.orb` compiler's inline phase
+ * auto-rewrites every `@Entity.x`, `["ref",X]`, `["fetch",X,…]`,
+ * `["persist",…,X,…]` and payload type string accordingly.
+ *
+ * Override surface (mirrors `.lolo`'s native overrides 1:1):
+ *   fields         — extra entity fields (appended)
+ *   pagePath       — first-page URL override
+ *   persistence    — entity persistence mode
+ *   entityName     — rename the canonical entity
+ *   collection     — override the derived collection key
+ *   traitOverrides — per-imported-trait `config`, `linkedEntity`,
+ *                    `events`, `name`, `emitsScope`, `listens`.
+ *                    `effects` is NOT exposed — `.lolo` removed it
+ *                    in Phase 9.5.H. Use `listens` via a sibling
+ *                    trait to react to atom events.
+ */
+export interface StdTradingDashboardPortfolioFromStdOrbitalParams {
+  /** Extra fields appended to the canonical entity. */
+  fields?: EntityField[];
+  /** URL path override for the orbital's first page. */
+  pagePath?: string;
+  /** Override the canonical entity persistence mode. */
+  persistence?: EntityPersistence;
+  /** Rename the canonical entity (PascalCase singular, ≤32 chars). */
+  entityName?: string;
+  /** Override derived collection key (defaults to plural(entityName).toLowerCase()). */
+  collection?: string;
+  /**
+   * Per-imported-trait override surface keyed on each imported
+   * trait's canonical `name`. Accepts every override `.lolo`
+   * natively supports: `config`, `linkedEntity`, `events`,
+   * `name`, `emitsScope`, `listens`. `effects` is excluded —
+   * atom-owned (use `listens` via a sibling trait instead).
+   */
+  traitOverrides?: Partial<Record<
+    'ManagedPortfolioFromStdAppLayout' | 'ManagedPortfolioFromStdManageBlock',
+    Pick<MakeTraitRefOpts, 'config' | 'linkedEntity' | 'events' | 'name' | 'emitsScope' | 'listens'>
+  >>;
+}
+
+/** Per-orbital factory: builds the PortfolioFromStdOrbital orbital with consumer params. */
+export function stdTradingDashboardPortfolioFromStdOrbital(params: StdTradingDashboardPortfolioFromStdOrbitalParams = {}): OrbitalDefinition {
+  const canonicalName = params.entityName ?? 'ManagedPortfolio';
+  const collectionName = params.collection
+    ?? (params.entityName ? `${params.entityName.toLowerCase()}s` : 'managed_portfolios');
+  const built = makeOrbitalWithUses({
+    name: 'PortfolioFromStdOrbital',
+    uses: [
+      {
+        'from': 'std/behaviors/std-app-layout',
+        'as': 'AppShell',
+      },
+      {
+        'from': 'std/behaviors/std-portfolio',
+        'as': 'Portfolios',
+      },
+    ],
+    entity: {
+      name: canonicalName,
+      collection: collectionName,
+      persistence: params.persistence ?? 'persistent',
+      fields: ((): EntityField[] => {
+        const canonical: EntityField[] = [
+          {
+            'name': 'id',
+            'type': 'string',
+            'required': true,
+          },
+          {
+            'name': 'name',
+            'type': 'string',
+            'required': true,
+          },
+          {
+            'name': 'ownerAccountId',
+            'type': 'string',
+            'required': true,
+          },
+          {
+            'name': 'currentValueUSD',
+            'type': 'number',
+          },
+          {
+            'name': 'targetAllocationJson',
+            'type': 'string',
+            'default': '{}',
+          },
+          {
+            'name': 'driftBps',
+            'type': 'number',
+            'default': 0,
+          },
+          {
+            'name': 'status',
+            'type': 'string',
+            'default': 'active',
+            'values': [
+              'active',
+              'rebalancing',
+              'frozen',
+              'archived',
+            ],
+          },
+          {
+            'name': 'lastRebalancedAt',
+            'type': 'string',
+          },
+          {
+            'name': 'createdAt',
+            'type': 'string',
+          },
+        ];
+        const extras = params.fields ?? [];
+        if (extras.length === 0) return canonical;
+        const extraNames = new Set(extras.map((f) => f.name));
+        return [...canonical.filter((f) => !extraNames.has(f.name)), ...extras];
+      })(),
+    } as Entity,
+    traits: [
+      makeTraitRef({
+        'ref': 'AppShell.traits.AppLayout',
+        'name': 'ManagedPortfolioFromStdAppLayout',
+        'linkedEntity': canonicalName,
+        'config': {
+          'notificationClickEvent': 'MANAGED_PORTFOLIO_NOTIFICATIONS_OPEN',
+          'searchEvent': 'MANAGED_PORTFOLIO_SEARCH',
+          'navItems': [
+            {
+              'href': '/portfolio',
+              'icon': 'layout-list',
+              'label': 'Portfolio',
+            },
+            {
+              'icon': 'clipboard-list',
+              'href': '/orders',
+              'label': 'Orders',
+            },
+            {
+              'label': 'Market',
+              'href': '/market',
+              'icon': 'activity',
+            },
+            {
+              'label': 'Managed Portfolios',
+              'href': '/portfolios-managed',
+              'icon': 'briefcase',
+            },
+          ],
+          'contentTrait': '@trait.ManagedPortfolioFromStdManageBlock',
+          'notifications': [],
+          'appName': 'Trading Dashboard',
+        },
+        'events': {
+          'SEARCH': 'MANAGED_PORTFOLIO_SEARCH',
+          'NOTIFY_CLICK': 'MANAGED_PORTFOLIO_NOTIFICATIONS_OPEN',
+        },
+      }),
+      makeTraitRef({
+        'ref': 'Portfolios.traits.PortfolioManage',
+        'name': 'ManagedPortfolioFromStdManageBlock',
+        'linkedEntity': canonicalName,
+        'config': {
+          'title': 'Managed Portfolios',
+        },
+      }),
+    ],
+    pages: [
+      {
+        'name': 'ManagedPortfolioFromStdPage',
+        'path': '/portfolios-managed',
+        'traits': [
+          {
+            'ref': 'ManagedPortfolioFromStdAppLayout',
+          },
+          {
+            'ref': 'ManagedPortfolioFromStdManageBlock',
+          },
+        ],
+      } as never,
+    ],
+  });
+  type _OrbTrait = OrbitalDefinition["traits"][number];
+  type _OrbPage = NonNullable<OrbitalDefinition["pages"]>[number];
+  type _RefOverride = Pick<MakeTraitRefOpts, "config" | "linkedEntity" | "events" | "name" | "emitsScope" | "listens">;
+  if (built.traits && params.traitOverrides !== undefined) {
+    built.traits = (built.traits as _OrbTrait[]).map((t): _OrbTrait => {
+      if (!t || typeof t !== "object") return t;
+      const tr = t as TraitReference & { name?: string };
+      // Match by name so inline traits (no `ref`) and
+      // reference traits (with `ref`) both pick up the
+      // override surface keyed on the trait's `name`.
+      if (typeof tr.name !== "string") return t;
+      const overrides = params.traitOverrides as Record<string, _RefOverride | undefined> | undefined;
+      const override = overrides?.[tr.name];
+      if (!override) return t;
+      const merged: TraitReference = { ...tr };
+      if (override.config !== undefined) merged.config = { ...(tr.config ?? {}), ...override.config };
+      if (override.linkedEntity !== undefined) merged.linkedEntity = override.linkedEntity;
+      if (override.events !== undefined) merged.events = { ...(tr.events ?? {}), ...override.events };
+      if (override.name !== undefined) merged.name = override.name;
+      if (override.emitsScope !== undefined) merged.emitsScope = override.emitsScope;
+      if (override.listens !== undefined) merged.listens = override.listens;
+      return merged;
+    });
+  }
+  if (built.pages && params.pagePath !== undefined) {
+    built.pages = (built.pages as _OrbPage[]).map((p, idx) => {
+      if (!p || typeof p !== "object") return p;
+      if (idx !== 0) return p;
+      const out = { ...p } as _OrbPage & { path?: string };
+      out.path = params.pagePath;
+      return out;
+    });
+  }
+  return built;
+}
+
+/** Manifest — describes the params surface of stdTradingDashboardPortfolioFromStdOrbital. */
+export const StdTradingDashboardPortfolioFromStdOrbitalManifest = {
+  organism: 'std-trading-dashboard',
+  orbitalName: 'PortfolioFromStdOrbital',
+  paramFields: [
+    { name: 'fields', type: 'EntityField[]', description: 'Extra fields appended to the canonical entity.' },
+    { name: 'pagePath', type: 'string', description: 'URL override for the orbital first page.' },
+    { name: 'persistence', type: "'persistent' | 'runtime' | 'singleton' | 'instance' | 'local'", description: 'Override the canonical entity persistence mode.' },
+    { name: 'entityName', type: 'string', description: 'Rename the canonical entity. PascalCase singular, ≤32 chars. Threads through every trait\'s linkedEntity binding; compiler rewrites @Entity.x refs.' },
+    { name: 'collection', type: 'string', description: 'Override derived collection key. Defaults to plural(entityName).toLowerCase().' },
+    { name: 'traitOverrides', type: "Partial<Record<TraitName, { config?, linkedEntity?, events?, name?, emitsScope?, listens? }>>", description: 'Per-imported-trait overrides — mirrors .lolo\'s native trait-composition surface 1:1. effects is excluded (atom-owned; use listens via a sibling trait).' },
+  ] as const,
+  traitNames: [
+    'ManagedPortfolioFromStdAppLayout',
+    'ManagedPortfolioFromStdManageBlock',
+  ] as const,
+  inlineTraitNames: [
+  ] as const,
+};
+
+/** Typed guard — runtime validates StdTradingDashboardPortfolioFromStdOrbitalParams keys. */
+export function isStdTradingDashboardPortfolioFromStdOrbitalParams(p: object): p is StdTradingDashboardPortfolioFromStdOrbitalParams {
+  type _OverrideRecord = NonNullable<StdTradingDashboardPortfolioFromStdOrbitalParams['traitOverrides']>;
+  const obj = p as { traitOverrides?: _OverrideRecord };
+  if (obj.traitOverrides !== undefined) {
+    if (typeof obj.traitOverrides !== "object" || obj.traitOverrides === null) return false;
+    const allowed: readonly string[] = [
+      ...StdTradingDashboardPortfolioFromStdOrbitalManifest.traitNames,
+      ...StdTradingDashboardPortfolioFromStdOrbitalManifest.inlineTraitNames,
+    ];
+    for (const k of Object.keys(obj.traitOverrides)) {
+      if (!allowed.includes(k)) return false;
+    }
+  }
+  return true;
+}
+
+/**
+ * Tunable params for the MarginAccountFromStdOrbital orbital.
+ *
+ * Canonical entity: MarginAccount — overridable via
+ * `entityName`. The factory threads the effective name through every
+ * trait's `linkedEntity` binding; the `.orb` compiler's inline phase
+ * auto-rewrites every `@Entity.x`, `["ref",X]`, `["fetch",X,…]`,
+ * `["persist",…,X,…]` and payload type string accordingly.
+ *
+ * Override surface (mirrors `.lolo`'s native overrides 1:1):
+ *   fields         — extra entity fields (appended)
+ *   pagePath       — first-page URL override
+ *   persistence    — entity persistence mode
+ *   entityName     — rename the canonical entity
+ *   collection     — override the derived collection key
+ *   traitOverrides — per-imported-trait `config`, `linkedEntity`,
+ *                    `events`, `name`, `emitsScope`, `listens`.
+ *                    `effects` is NOT exposed — `.lolo` removed it
+ *                    in Phase 9.5.H. Use `listens` via a sibling
+ *                    trait to react to atom events.
+ */
+export interface StdTradingDashboardMarginAccountFromStdOrbitalParams {
+  /** Extra fields appended to the canonical entity. */
+  fields?: EntityField[];
+  /** URL path override for the orbital's first page. */
+  pagePath?: string;
+  /** Override the canonical entity persistence mode. */
+  persistence?: EntityPersistence;
+  /** Rename the canonical entity (PascalCase singular, ≤32 chars). */
+  entityName?: string;
+  /** Override derived collection key (defaults to plural(entityName).toLowerCase()). */
+  collection?: string;
+  /**
+   * Per-imported-trait override surface keyed on each imported
+   * trait's canonical `name`. Accepts every override `.lolo`
+   * natively supports: `config`, `linkedEntity`, `events`,
+   * `name`, `emitsScope`, `listens`. `effects` is excluded —
+   * atom-owned (use `listens` via a sibling trait instead).
+   */
+  traitOverrides?: Partial<Record<
+    'MarginAccountFromStdAppLayout' | 'MarginAccountFromStdManageBlock',
+    Pick<MakeTraitRefOpts, 'config' | 'linkedEntity' | 'events' | 'name' | 'emitsScope' | 'listens'>
+  >>;
+}
+
+/** Per-orbital factory: builds the MarginAccountFromStdOrbital orbital with consumer params. */
+export function stdTradingDashboardMarginAccountFromStdOrbital(params: StdTradingDashboardMarginAccountFromStdOrbitalParams = {}): OrbitalDefinition {
+  const canonicalName = params.entityName ?? 'MarginAccount';
+  const collectionName = params.collection
+    ?? (params.entityName ? `${params.entityName.toLowerCase()}s` : 'margin_accounts');
+  const built = makeOrbitalWithUses({
+    name: 'MarginAccountFromStdOrbital',
+    uses: [
+      {
+        'from': 'std/behaviors/std-app-layout',
+        'as': 'AppShell',
+      },
+      {
+        'from': 'std/behaviors/std-margin-account',
+        'as': 'Margin',
+      },
+    ],
+    entity: {
+      name: canonicalName,
+      collection: collectionName,
+      persistence: params.persistence ?? 'persistent',
+      fields: ((): EntityField[] => {
+        const canonical: EntityField[] = [
+          {
+            'name': 'id',
+            'type': 'string',
+            'required': true,
+          },
+          {
+            'name': 'accountHolderId',
+            'type': 'string',
+            'required': true,
+          },
+          {
+            'name': 'equityUSD',
+            'type': 'number',
+          },
+          {
+            'name': 'marginUsedUSD',
+            'type': 'number',
+          },
+          {
+            'name': 'marginAvailableUSD',
+            'type': 'number',
+          },
+          {
+            'name': 'status',
+            'type': 'string',
+            'default': 'good-standing',
+            'values': [
+              'good-standing',
+              'warning',
+              'margin-call',
+              'liquidated',
+            ],
+          },
+          {
+            'name': 'lastCallAt',
+            'type': 'string',
+          },
+          {
+            'name': 'createdAt',
+            'type': 'string',
+          },
+        ];
+        const extras = params.fields ?? [];
+        if (extras.length === 0) return canonical;
+        const extraNames = new Set(extras.map((f) => f.name));
+        return [...canonical.filter((f) => !extraNames.has(f.name)), ...extras];
+      })(),
+    } as Entity,
+    traits: [
+      makeTraitRef({
+        'ref': 'AppShell.traits.AppLayout',
+        'name': 'MarginAccountFromStdAppLayout',
+        'linkedEntity': canonicalName,
+        'config': {
+          'notifications': [],
+          'appName': 'Trading Dashboard',
+          'searchEvent': 'MARGIN_ACCOUNT_SEARCH',
+          'navItems': [
+            {
+              'href': '/portfolio',
+              'icon': 'layout-list',
+              'label': 'Portfolio',
+            },
+            {
+              'label': 'Orders',
+              'href': '/orders',
+              'icon': 'clipboard-list',
+            },
+            {
+              'icon': 'activity',
+              'label': 'Market',
+              'href': '/market',
+            },
+            {
+              'href': '/margin-accounts',
+              'icon': 'dollar-sign',
+              'label': 'Margin Accounts',
+            },
+          ],
+          'contentTrait': '@trait.MarginAccountFromStdManageBlock',
+          'notificationClickEvent': 'MARGIN_ACCOUNT_NOTIFICATIONS_OPEN',
+        },
+        'events': {
+          'SEARCH': 'MARGIN_ACCOUNT_SEARCH',
+          'NOTIFY_CLICK': 'MARGIN_ACCOUNT_NOTIFICATIONS_OPEN',
+        },
+      }),
+      makeTraitRef({
+        'ref': 'Margin.traits.MarginAccountManage',
+        'name': 'MarginAccountFromStdManageBlock',
+        'linkedEntity': canonicalName,
+        'config': {
+          'title': 'Margin Accounts',
+        },
+      }),
+    ],
+    pages: [
+      {
+        'name': 'MarginAccountFromStdPage',
+        'path': '/margin-accounts',
+        'traits': [
+          {
+            'ref': 'MarginAccountFromStdAppLayout',
+          },
+          {
+            'ref': 'MarginAccountFromStdManageBlock',
+          },
+        ],
+      } as never,
+    ],
+  });
+  type _OrbTrait = OrbitalDefinition["traits"][number];
+  type _OrbPage = NonNullable<OrbitalDefinition["pages"]>[number];
+  type _RefOverride = Pick<MakeTraitRefOpts, "config" | "linkedEntity" | "events" | "name" | "emitsScope" | "listens">;
+  if (built.traits && params.traitOverrides !== undefined) {
+    built.traits = (built.traits as _OrbTrait[]).map((t): _OrbTrait => {
+      if (!t || typeof t !== "object") return t;
+      const tr = t as TraitReference & { name?: string };
+      // Match by name so inline traits (no `ref`) and
+      // reference traits (with `ref`) both pick up the
+      // override surface keyed on the trait's `name`.
+      if (typeof tr.name !== "string") return t;
+      const overrides = params.traitOverrides as Record<string, _RefOverride | undefined> | undefined;
+      const override = overrides?.[tr.name];
+      if (!override) return t;
+      const merged: TraitReference = { ...tr };
+      if (override.config !== undefined) merged.config = { ...(tr.config ?? {}), ...override.config };
+      if (override.linkedEntity !== undefined) merged.linkedEntity = override.linkedEntity;
+      if (override.events !== undefined) merged.events = { ...(tr.events ?? {}), ...override.events };
+      if (override.name !== undefined) merged.name = override.name;
+      if (override.emitsScope !== undefined) merged.emitsScope = override.emitsScope;
+      if (override.listens !== undefined) merged.listens = override.listens;
+      return merged;
+    });
+  }
+  if (built.pages && params.pagePath !== undefined) {
+    built.pages = (built.pages as _OrbPage[]).map((p, idx) => {
+      if (!p || typeof p !== "object") return p;
+      if (idx !== 0) return p;
+      const out = { ...p } as _OrbPage & { path?: string };
+      out.path = params.pagePath;
+      return out;
+    });
+  }
+  return built;
+}
+
+/** Manifest — describes the params surface of stdTradingDashboardMarginAccountFromStdOrbital. */
+export const StdTradingDashboardMarginAccountFromStdOrbitalManifest = {
+  organism: 'std-trading-dashboard',
+  orbitalName: 'MarginAccountFromStdOrbital',
+  paramFields: [
+    { name: 'fields', type: 'EntityField[]', description: 'Extra fields appended to the canonical entity.' },
+    { name: 'pagePath', type: 'string', description: 'URL override for the orbital first page.' },
+    { name: 'persistence', type: "'persistent' | 'runtime' | 'singleton' | 'instance' | 'local'", description: 'Override the canonical entity persistence mode.' },
+    { name: 'entityName', type: 'string', description: 'Rename the canonical entity. PascalCase singular, ≤32 chars. Threads through every trait\'s linkedEntity binding; compiler rewrites @Entity.x refs.' },
+    { name: 'collection', type: 'string', description: 'Override derived collection key. Defaults to plural(entityName).toLowerCase().' },
+    { name: 'traitOverrides', type: "Partial<Record<TraitName, { config?, linkedEntity?, events?, name?, emitsScope?, listens? }>>", description: 'Per-imported-trait overrides — mirrors .lolo\'s native trait-composition surface 1:1. effects is excluded (atom-owned; use listens via a sibling trait).' },
+  ] as const,
+  traitNames: [
+    'MarginAccountFromStdAppLayout',
+    'MarginAccountFromStdManageBlock',
+  ] as const,
+  inlineTraitNames: [
+  ] as const,
+};
+
+/** Typed guard — runtime validates StdTradingDashboardMarginAccountFromStdOrbitalParams keys. */
+export function isStdTradingDashboardMarginAccountFromStdOrbitalParams(p: object): p is StdTradingDashboardMarginAccountFromStdOrbitalParams {
+  type _OverrideRecord = NonNullable<StdTradingDashboardMarginAccountFromStdOrbitalParams['traitOverrides']>;
+  const obj = p as { traitOverrides?: _OverrideRecord };
+  if (obj.traitOverrides !== undefined) {
+    if (typeof obj.traitOverrides !== "object" || obj.traitOverrides === null) return false;
+    const allowed: readonly string[] = [
+      ...StdTradingDashboardMarginAccountFromStdOrbitalManifest.traitNames,
+      ...StdTradingDashboardMarginAccountFromStdOrbitalManifest.inlineTraitNames,
+    ];
+    for (const k of Object.keys(obj.traitOverrides)) {
+      if (!allowed.includes(k)) return false;
+    }
+  }
+  return true;
+}
+
+/**
  * Bundled params for std-trading-dashboard — one optional entry per orbital.
  * Each entry maps to its per-orbital factory above.
  */
@@ -2645,13 +3517,19 @@ export interface StdTradingDashboardParams {
   Portfolio?: StdTradingDashboardPortfolioOrbitalParams;
   TradeOrder?: StdTradingDashboardTradeOrderOrbitalParams;
   MarketFeed?: StdTradingDashboardMarketFeedOrbitalParams;
+  VenueTradeOrderFromStd?: StdTradingDashboardVenueTradeOrderFromStdOrbitalParams;
+  PortfolioFromStd?: StdTradingDashboardPortfolioFromStdOrbitalParams;
+  MarginAccountFromStd?: StdTradingDashboardMarginAccountFromStdOrbitalParams;
 }
 
-/** Whole-organism descriptor (3 orbitals). Composes per-orbital factories. */
+/** Whole-organism descriptor (6 orbitals). Composes per-orbital factories. */
 export function stdTradingDashboard(params: StdTradingDashboardParams = {}): OrbitalDefinition[] {
   return [
     stdTradingDashboardPortfolioOrbital(params.Portfolio ?? {}),
     stdTradingDashboardTradeOrderOrbital(params.TradeOrder ?? {}),
     stdTradingDashboardMarketFeedOrbital(params.MarketFeed ?? {}),
+    stdTradingDashboardVenueTradeOrderFromStdOrbital(params.VenueTradeOrderFromStd ?? {}),
+    stdTradingDashboardPortfolioFromStdOrbital(params.PortfolioFromStd ?? {}),
+    stdTradingDashboardMarginAccountFromStdOrbital(params.MarginAccountFromStd ?? {}),
   ];
 }

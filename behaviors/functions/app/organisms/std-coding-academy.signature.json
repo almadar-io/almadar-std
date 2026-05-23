@@ -362,24 +362,24 @@
             "type": "unknown",
             "default": [
               {
-                "icon": "list-ordered",
+                "label": "Sequencer",
                 "href": "/sequencer",
-                "label": "Sequencer"
+                "icon": "list-ordered"
               },
               {
+                "label": "Builder",
                 "href": "/builder",
-                "icon": "wrench",
-                "label": "Builder"
+                "icon": "wrench"
               },
               {
-                "icon": "zap",
                 "label": "Events",
-                "href": "/events"
+                "href": "/events",
+                "icon": "zap"
               },
               {
-                "icon": "trending-up",
+                "label": "Progress",
                 "href": "/progress",
-                "label": "Progress"
+                "icon": "trending-up"
               }
             ]
           },
@@ -424,38 +424,38 @@
             "type": "unknown",
             "default": [
               {
-                "variant": "success",
+                "field": "lessonsCompleted",
+                "label": "Lessons Completed",
                 "format": "number",
                 "aggregation": "sum",
                 "icon": "check-circle",
-                "label": "Lessons Completed",
-                "field": "lessonsCompleted"
+                "variant": "success"
               },
               {
                 "variant": "primary",
                 "format": "number",
-                "label": "Average Score",
+                "field": "avgScore",
                 "aggregation": "avg",
-                "icon": "star",
-                "field": "avgScore"
+                "label": "Average Score",
+                "icon": "star"
               },
               {
+                "variant": "warning",
+                "icon": "flame",
+                "format": "number",
                 "aggregation": "max",
                 "field": "streak",
-                "icon": "flame",
-                "variant": "warning",
                 "label": "Streak",
-                "format": "number",
                 "suffix": "d"
               },
               {
-                "label": "Total Time",
                 "icon": "clock",
-                "aggregation": "sum",
-                "variant": "info",
-                "suffix": "m",
                 "field": "totalTimeMinutes",
-                "format": "number"
+                "variant": "info",
+                "format": "number",
+                "suffix": "m",
+                "label": "Total Time",
+                "aggregation": "sum"
               }
             ]
           },
@@ -532,25 +532,25 @@
             "type": "unknown",
             "default": [
               {
-                "icon": "user",
+                "variant": "h4",
                 "name": "student",
-                "label": "Student",
-                "variant": "h4"
+                "icon": "user",
+                "label": "Student"
               },
               {
-                "variant": "body",
                 "label": "Lessons Completed",
+                "variant": "body",
                 "name": "lessonsCompleted"
               },
               {
+                "label": "Avg Score",
                 "variant": "badge",
-                "name": "avgScore",
-                "label": "Avg Score"
+                "name": "avgScore"
               },
               {
+                "name": "streak",
                 "variant": "body",
-                "label": "Streak",
-                "name": "streak"
+                "label": "Streak"
               },
               {
                 "variant": "caption",
@@ -570,18 +570,18 @@
             "type": "unknown",
             "default": [
               {
-                "label": "View",
+                "event": "VIEW",
                 "variant": "ghost",
-                "event": "VIEW"
+                "label": "View"
               },
               {
-                "variant": "ghost",
+                "label": "Edit",
                 "event": "EDIT",
-                "label": "Edit"
+                "variant": "ghost"
               },
               {
-                "event": "DELETE",
                 "variant": "danger",
+                "event": "DELETE",
                 "label": "Delete"
               }
             ]
@@ -711,6 +711,132 @@
         ],
         "overridableConfigKeys": [],
         "capabilities": []
+      },
+      {
+        "name": "StudentReminder",
+        "emittedEvents": [],
+        "listenedEvents": [],
+        "overridableConfigKeys": [
+          {
+            "key": "dateField",
+            "type": "unknown",
+            "default": "lastActiveAt"
+          },
+          {
+            "key": "offsetsHours",
+            "type": "unknown",
+            "default": [
+              168,
+              24
+            ]
+          },
+          {
+            "key": "severity",
+            "type": "unknown",
+            "default": "info"
+          },
+          {
+            "key": "targetEntity",
+            "type": "unknown",
+            "default": "StudentProgress"
+          },
+          {
+            "key": "template",
+            "type": "unknown",
+            "default": "Assignment due soon"
+          },
+          {
+            "key": "windowToleranceMinutes",
+            "type": "unknown",
+            "default": 60
+          }
+        ],
+        "capabilities": [],
+        "ref": "Reminder.traits.ReminderScheduler"
+      },
+      {
+        "name": "StudentGradeNotifier",
+        "emittedEvents": [],
+        "listenedEvents": [],
+        "overridableConfigKeys": [
+          {
+            "key": "listensFor",
+            "type": "unknown",
+            "default": [
+              "PROGRESS_UPDATED"
+            ]
+          },
+          {
+            "key": "notifyChannel",
+            "type": "unknown",
+            "default": "in-app"
+          },
+          {
+            "key": "recipients",
+            "type": "unknown",
+            "default": []
+          },
+          {
+            "key": "severity",
+            "type": "unknown",
+            "default": "success"
+          },
+          {
+            "key": "suppressionList",
+            "type": "unknown",
+            "default": []
+          },
+          {
+            "key": "template",
+            "type": "unknown",
+            "default": "Grade posted"
+          }
+        ],
+        "capabilities": [],
+        "ref": "Notify.traits.NotifyOnEventListener"
+      },
+      {
+        "name": "StudentInstructorApproval",
+        "emittedEvents": [],
+        "listenedEvents": [],
+        "overridableConfigKeys": [
+          {
+            "key": "approverRoles",
+            "type": "unknown",
+            "default": [
+              "instructor"
+            ]
+          },
+          {
+            "key": "autoApproveBelowThreshold",
+            "type": "unknown",
+            "default": false
+          },
+          {
+            "key": "escalationHours",
+            "type": "unknown",
+            "default": 72
+          },
+          {
+            "key": "escalationRoles",
+            "type": "unknown",
+            "default": [
+              "program-director"
+            ]
+          },
+          {
+            "key": "threshold",
+            "type": "unknown",
+            "default": 70
+          },
+          {
+            "key": "valueField",
+            "type": "unknown",
+            "default": "avgScore"
+          }
+        ],
+        "capabilities": [],
+        "ref": "Approval.traits.ApprovalGateReview"
       }
     ],
     "pages": [
@@ -736,5 +862,154 @@
       "STUDENT_PROGRESS_SEARCH",
       "VIEW"
     ]
+  },
+  {
+    "organism": "std-coding-academy",
+    "orbital": "AppointmentPolicyFromStdOrbital",
+    "tier": "organisms",
+    "factoryPath": "behaviors/functions/app/organisms/std-coding-academy.ts",
+    "entities": [
+      {
+        "name": "AppointmentPolicy",
+        "fields": [
+          {
+            "name": "name",
+            "type": "string",
+            "required": true
+          },
+          {
+            "name": "description",
+            "type": "string",
+            "required": false
+          },
+          {
+            "name": "rescheduleWindowHours",
+            "type": "number",
+            "required": false
+          },
+          {
+            "name": "maxReschedules",
+            "type": "number",
+            "required": false
+          },
+          {
+            "name": "cancellationPolicy",
+            "type": "string",
+            "required": false
+          },
+          {
+            "name": "noShowGracePeriodMinutes",
+            "type": "number",
+            "required": false
+          },
+          {
+            "name": "noShowFeeAmount",
+            "type": "number",
+            "required": false
+          },
+          {
+            "name": "lateArrivalGraceMinutes",
+            "type": "number",
+            "required": false
+          },
+          {
+            "name": "status",
+            "type": "string",
+            "required": false
+          }
+        ],
+        "persistence": "persistent"
+      }
+    ],
+    "traits": [
+      {
+        "name": "AppointmentPolicyFromStdAppLayout",
+        "emittedEvents": [],
+        "listenedEvents": [],
+        "overridableConfigKeys": [
+          {
+            "key": "appName",
+            "type": "unknown",
+            "default": "Coding Academy"
+          },
+          {
+            "key": "contentTrait",
+            "type": "unknown",
+            "default": "@trait.AppointmentPolicyFromStdManageBlock"
+          },
+          {
+            "key": "navItems",
+            "type": "unknown",
+            "default": [
+              {
+                "label": "Sequencer",
+                "href": "/sequencer",
+                "icon": "list-ordered"
+              },
+              {
+                "href": "/builder",
+                "label": "Builder",
+                "icon": "wrench"
+              },
+              {
+                "href": "/events",
+                "icon": "zap",
+                "label": "Events"
+              },
+              {
+                "href": "/progress",
+                "label": "Progress",
+                "icon": "trending-up"
+              },
+              {
+                "href": "/appointment-policies-from-std",
+                "icon": "calendar-check",
+                "label": "Appointment Policies"
+              }
+            ]
+          },
+          {
+            "key": "notificationClickEvent",
+            "type": "unknown",
+            "default": "APPOINTMENT_POLICY_NOTIFICATIONS_OPEN"
+          },
+          {
+            "key": "notifications",
+            "type": "unknown",
+            "default": []
+          },
+          {
+            "key": "searchEvent",
+            "type": "unknown",
+            "default": "APPOINTMENT_POLICY_SEARCH"
+          }
+        ],
+        "capabilities": [],
+        "ref": "AppShell.traits.AppLayout"
+      },
+      {
+        "name": "AppointmentPolicyFromStdManageBlock",
+        "emittedEvents": [],
+        "listenedEvents": [],
+        "overridableConfigKeys": [
+          {
+            "key": "title",
+            "type": "unknown",
+            "default": "Appointment Policies"
+          }
+        ],
+        "capabilities": [],
+        "ref": "Policies.traits.AppointmentPolicyManage"
+      }
+    ],
+    "pages": [
+      {
+        "name": "AppointmentPolicyFromStdPage",
+        "defaultPath": "/appointment-policies-from-std",
+        "primaryEntity": "AppointmentPolicy"
+      }
+    ],
+    "emittedEvents": [],
+    "listenedEvents": []
   }
 ]

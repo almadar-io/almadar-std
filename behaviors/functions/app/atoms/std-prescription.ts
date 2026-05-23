@@ -133,26 +133,26 @@ export interface StdPrescriptionPrescriptionUpdateFailedPayload {
 export interface StdPrescriptionConfig {
   /** Default: `false` */
   epaRequired?: boolean;
-  /** Default: `"none"` */
-  controlledSubstanceSchedule?: 'none' | 'II' | 'III' | 'IV' | 'V';
-  /** Default: `"patient-consent"` */
-  genericSubstitutionAllowed?: 'always' | 'patient-consent' | 'prescriber-only' | 'never';
-  /** Default: `[]` */
-  priorAuthRequiredFor?: string[];
-  /** Default: `5` */
-  refillsAllowedPerYear?: number;
-  /** Default: `"controlled-only"` */
-  pharmacistConsultationRequired?: 'always' | 'controlled-only' | 'high-risk' | 'never';
-  /** Default: `[{"icon":"arrow-right","event":"OPEN_RX","variant":"primary","label":"Open"},{"event":"VOID_RX","label":"Void","icon":"x","variant":"danger"}]` */
-  itemActions?: EntityRow[];
-  /** Default: `"Prescriptions"` */
-  title?: string;
+  /** Default: `[{"label":"Medication","variant":"caption","name":"medication"},{"variant":"caption","name":"patientId","label":"Patient"},{"label":"Dosage","variant":"caption","name":"dosage"},{"name":"status","label":"Status","variant":"badge"},{"name":"pharmacy","label":"Pharmacy","variant":"caption"},{"name":"prescribedBy","label":"Prescriber","variant":"caption"}]` */
+  fields?: EntityRow[];
   /** Default: `90` */
   dispenseQuantityLimit?: number;
   /** Default: `false` */
   dawCodeRequired?: boolean;
-  /** Default: `[{"name":"medication","label":"Medication","variant":"caption"},{"label":"Patient","variant":"caption","name":"patientId"},{"label":"Dosage","variant":"caption","name":"dosage"},{"name":"status","label":"Status","variant":"badge"},{"label":"Pharmacy","name":"pharmacy","variant":"caption"},{"variant":"caption","name":"prescribedBy","label":"Prescriber"}]` */
-  fields?: EntityRow[];
+  /** Default: `"patient-consent"` */
+  genericSubstitutionAllowed?: 'always' | 'patient-consent' | 'prescriber-only' | 'never';
+  /** Default: `[]` */
+  priorAuthRequiredFor?: string[];
+  /** Default: `"none"` */
+  controlledSubstanceSchedule?: 'none' | 'II' | 'III' | 'IV' | 'V';
+  /** Default: `[{"variant":"primary","event":"OPEN_RX","label":"Open","icon":"arrow-right"},{"event":"VOID_RX","variant":"danger","label":"Void","icon":"x"}]` */
+  itemActions?: EntityRow[];
+  /** Default: `5` */
+  refillsAllowedPerYear?: number;
+  /** Default: `"Prescriptions"` */
+  title?: string;
+  /** Default: `"controlled-only"` */
+  pharmacistConsultationRequired?: 'always' | 'controlled-only' | 'high-risk' | 'never';
 }
 
 /**

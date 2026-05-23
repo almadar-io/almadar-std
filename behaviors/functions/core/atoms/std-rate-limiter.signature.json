@@ -47,7 +47,53 @@
         "name": "RateBucketRateLimiter",
         "emittedEvents": [],
         "listenedEvents": [],
-        "overridableConfigKeys": [],
+        "overridableConfigKeys": [
+          {
+            "key": "burstSize",
+            "type": "number",
+            "default": 10,
+            "label": "Burst size",
+            "description": "Number of requests allowed to burst above the per-minute rate before steady-state throttling kicks in.",
+            "synonyms": "burst capacity, allowance",
+            "tier": "domain"
+          },
+          {
+            "key": "keyStrategy",
+            "type": "string",
+            "default": "user",
+            "label": "Rate-limit key strategy",
+            "description": "What identifier the per-bucket counter is keyed on: source IP, authenticated user, API key, or one global bucket.",
+            "synonyms": "limiter key, bucket key",
+            "tier": "domain",
+            "enumValues": [
+              "ip",
+              "user",
+              "api-key",
+              "global"
+            ]
+          },
+          {
+            "key": "overrideRoles",
+            "type": "[string]",
+            "default": [],
+            "label": "Override roles",
+            "description": "Roles exempt from rate limiting (e.g. internal services, admin override). Empty = no exemptions.",
+            "synonyms": "exempt roles, bypass list",
+            "tier": "domain",
+            "items": {
+              "type": "string"
+            }
+          },
+          {
+            "key": "requestsPerMinute",
+            "type": "number",
+            "default": 60,
+            "label": "Requests per minute",
+            "description": "Maximum number of requests allowed per minute before throttling begins.",
+            "synonyms": "rate limit, request cap, RPS, throttle threshold",
+            "tier": "domain"
+          }
+        ],
         "capabilities": []
       }
     ],

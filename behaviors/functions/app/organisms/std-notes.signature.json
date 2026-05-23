@@ -79,23 +79,23 @@
             "default": [
               {
                 "label": "Notes",
-                "href": "/notes",
-                "icon": "file-text"
+                "icon": "file-text",
+                "href": "/notes"
               },
               {
-                "label": "Tree",
                 "href": "/notes/tree",
-                "icon": "list-tree"
+                "icon": "list-tree",
+                "label": "Tree"
               },
               {
                 "href": "/notes/editor",
-                "icon": "edit",
-                "label": "Editor"
+                "label": "Editor",
+                "icon": "edit"
               },
               {
-                "icon": "star",
                 "label": "Favorites",
-                "href": "/notes/favorites"
+                "href": "/notes/favorites",
+                "icon": "star"
               }
             ]
           },
@@ -169,8 +169,8 @@
                   "false"
                 ],
                 "field": "isFavorite",
-                "label": "Favorite",
-                "filterType": "select"
+                "filterType": "select",
+                "label": "Favorite"
               }
             ]
           }
@@ -190,16 +190,18 @@
             "type": "unknown",
             "default": [
               {
-                "format": "number",
                 "variant": "primary",
-                "icon": "file-text",
+                "format": "number",
                 "aggregation": "count",
-                "label": "Total"
+                "label": "Total",
+                "icon": "file-text"
               },
               {
-                "variant": "warning",
-                "aggregation": "count",
                 "label": "Favorites",
+                "variant": "warning",
+                "icon": "star",
+                "format": "number",
+                "aggregation": "count",
                 "filter": [
                   "fn",
                   "row",
@@ -208,12 +210,10 @@
                     "@row.isFavorite",
                     true
                   ]
-                ],
-                "format": "number",
-                "icon": "star"
+                ]
               },
               {
-                "aggregation": "count",
+                "format": "number",
                 "filter": [
                   "fn",
                   "row",
@@ -223,10 +223,10 @@
                     ""
                   ]
                 ],
+                "icon": "folder",
+                "aggregation": "count",
                 "variant": "info",
-                "format": "number",
-                "label": "Top-level",
-                "icon": "folder"
+                "label": "Top-level"
               }
             ]
           },
@@ -306,22 +306,22 @@
             "type": "unknown",
             "default": [
               {
+                "name": "title",
                 "variant": "h3",
-                "icon": "file-text",
-                "name": "title"
+                "icon": "file-text"
               },
               {
-                "variant": "badge",
-                "name": "icon"
-              },
-              {
-                "name": "isFavorite",
+                "name": "icon",
                 "variant": "badge"
               },
               {
+                "variant": "badge",
+                "name": "isFavorite"
+              },
+              {
+                "name": "lastEditedAt",
                 "variant": "caption",
-                "label": "Edited",
-                "name": "lastEditedAt"
+                "label": "Edited"
               }
             ]
           },
@@ -336,13 +336,13 @@
             "default": [
               {
                 "variant": "ghost",
-                "label": "View",
-                "event": "VIEW"
+                "event": "VIEW",
+                "label": "View"
               },
               {
+                "variant": "ghost",
                 "label": "Edit",
-                "event": "EDIT",
-                "variant": "ghost"
+                "event": "EDIT"
               },
               {
                 "event": "DELETE",
@@ -528,6 +528,115 @@
         ],
         "overridableConfigKeys": [],
         "capabilities": []
+      },
+      {
+        "name": "NoteAuditCapture",
+        "emittedEvents": [],
+        "listenedEvents": [],
+        "overridableConfigKeys": [
+          {
+            "key": "captureBeforeAfter",
+            "type": "unknown",
+            "default": false
+          },
+          {
+            "key": "captureEntity",
+            "type": "unknown",
+            "default": "Note"
+          },
+          {
+            "key": "captureEventTypes",
+            "type": "unknown",
+            "default": []
+          },
+          {
+            "key": "excludeFields",
+            "type": "unknown",
+            "default": []
+          },
+          {
+            "key": "retentionDays",
+            "type": "unknown",
+            "default": 2555
+          }
+        ],
+        "capabilities": [],
+        "ref": "Audit.traits.AuditCaptureListener"
+      },
+      {
+        "name": "NoteLifecycleScan",
+        "emittedEvents": [],
+        "listenedEvents": [],
+        "overridableConfigKeys": [
+          {
+            "key": "dryRun",
+            "type": "unknown",
+            "default": false
+          },
+          {
+            "key": "rules",
+            "type": "unknown",
+            "default": [
+              {
+                "condition": {
+                  "dateField": "lastEditedAt",
+                  "kind": "ageDays",
+                  "value": 180
+                },
+                "toStatus": "archived",
+                "fromStatus": "active"
+              },
+              {
+                "condition": {
+                  "value": 365,
+                  "dateField": "lastEditedAt",
+                  "kind": "ageDays"
+                },
+                "fromStatus": "archived",
+                "toStatus": "deleted"
+              }
+            ]
+          },
+          {
+            "key": "targetEntity",
+            "type": "unknown",
+            "default": "Note"
+          }
+        ],
+        "capabilities": [],
+        "ref": "Lifecycle.traits.LifecycleScheduler"
+      },
+      {
+        "name": "NoteErasure",
+        "emittedEvents": [],
+        "listenedEvents": [],
+        "overridableConfigKeys": [
+          {
+            "key": "anonymizeVsDelete",
+            "type": "unknown",
+            "default": "anonymize"
+          },
+          {
+            "key": "gracePeriodDays",
+            "type": "unknown",
+            "default": 30
+          },
+          {
+            "key": "piiFields",
+            "type": "unknown",
+            "default": [
+              "content",
+              "blocksJson"
+            ]
+          },
+          {
+            "key": "targetEntity",
+            "type": "unknown",
+            "default": "Note"
+          }
+        ],
+        "capabilities": [],
+        "ref": "Erasure.traits.ErasureWorkflow"
       }
     ],
     "pages": [
@@ -649,19 +758,19 @@
                 "href": "/notes"
               },
               {
-                "label": "Tree",
+                "href": "/notes/tree",
                 "icon": "list-tree",
-                "href": "/notes/tree"
+                "label": "Tree"
               },
               {
+                "href": "/notes/editor",
                 "icon": "edit",
-                "label": "Editor",
-                "href": "/notes/editor"
+                "label": "Editor"
               },
               {
-                "label": "Favorites",
+                "href": "/notes/favorites",
                 "icon": "star",
-                "href": "/notes/favorites"
+                "label": "Favorites"
               },
               {
                 "href": "/editor",

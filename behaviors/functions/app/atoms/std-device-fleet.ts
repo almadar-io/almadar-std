@@ -118,22 +118,22 @@ export interface StdDeviceFleetDeviceUpdateFailedPayload {
  * without modifying its state-machine topology.
  */
 export interface StdDeviceFleetConfig {
-  /** Default: `[{"label":"Name","variant":"caption","name":"name"},{"label":"Type","variant":"caption","name":"deviceType"},{"variant":"caption","name":"firmwareVersion","label":"Firmware"},{"variant":"badge","name":"status","label":"Status"},{"name":"lastSeenAt","variant":"caption","label":"Last seen"},{"label":"Cert expires","name":"certExpiresAt","variant":"caption"}]` */
+  /** Default: `90` */
+  certificateRotationDays?: number;
+  /** Default: `30` */
+  otaUpdateCadenceDays?: number;
+  /** Default: `[{"label":"Name","variant":"caption","name":"name"},{"variant":"caption","name":"deviceType","label":"Type"},{"label":"Firmware","name":"firmwareVersion","variant":"caption"},{"variant":"badge","label":"Status","name":"status"},{"label":"Last seen","name":"lastSeenAt","variant":"caption"},{"variant":"caption","name":"certExpiresAt","label":"Cert expires"}]` */
   fields?: EntityRow[];
+  /** Default: `90` */
+  dataRetentionDays?: number;
+  /** Default: `"queue"` */
+  offlineActionPolicy?: 'queue' | 'drop' | 'fail-fast';
   /** Default: `"Devices"` */
   title?: string;
   /** Default: `"zero-touch"` */
   provisioningModel?: 'zero-touch' | 'claim-then-bind' | 'manual';
-  /** Default: `[{"event":"OPEN_DEVICE","variant":"primary","icon":"arrow-right","label":"Open"},{"event":"RETIRE","icon":"x","label":"Retire","variant":"danger"}]` */
+  /** Default: `[{"icon":"arrow-right","label":"Open","event":"OPEN_DEVICE","variant":"primary"},{"icon":"x","event":"RETIRE","variant":"danger","label":"Retire"}]` */
   itemActions?: EntityRow[];
-  /** Default: `"queue"` */
-  offlineActionPolicy?: 'queue' | 'drop' | 'fail-fast';
-  /** Default: `30` */
-  otaUpdateCadenceDays?: number;
-  /** Default: `90` */
-  dataRetentionDays?: number;
-  /** Default: `90` */
-  certificateRotationDays?: number;
 }
 
 /**

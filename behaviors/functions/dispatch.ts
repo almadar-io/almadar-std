@@ -177,6 +177,9 @@ import {
   stdBookingSystemScheduleOrbital,
   StdBookingSystemScheduleOrbitalManifest,
   isStdBookingSystemScheduleOrbitalParams,
+  stdBookingSystemAppointmentPolicyFromStdOrbital,
+  StdBookingSystemAppointmentPolicyFromStdOrbitalManifest,
+  isStdBookingSystemAppointmentPolicyFromStdOrbitalParams,
 } from './app/organisms/std-booking-system.js';
 import {
   stdCicdPipelineBuildOrbital,
@@ -216,6 +219,9 @@ import {
   stdCodingAcademyStudentProgressOrbital,
   StdCodingAcademyStudentProgressOrbitalManifest,
   isStdCodingAcademyStudentProgressOrbitalParams,
+  stdCodingAcademyAppointmentPolicyFromStdOrbital,
+  StdCodingAcademyAppointmentPolicyFromStdOrbitalManifest,
+  isStdCodingAcademyAppointmentPolicyFromStdOrbitalParams,
 } from './app/organisms/std-coding-academy.js';
 import {
   stdConstructionPmProjectOrbital,
@@ -263,11 +269,20 @@ import {
   stdDevopsDashboardSystemMetricOrbital,
   StdDevopsDashboardSystemMetricOrbitalManifest,
   isStdDevopsDashboardSystemMetricOrbitalParams,
+  stdDevopsDashboardIncidentFromStdOrbital,
+  StdDevopsDashboardIncidentFromStdOrbitalManifest,
+  isStdDevopsDashboardIncidentFromStdOrbitalParams,
+  stdDevopsDashboardRunbookFromStdOrbital,
+  StdDevopsDashboardRunbookFromStdOrbitalManifest,
+  isStdDevopsDashboardRunbookFromStdOrbitalParams,
 } from './app/organisms/std-devops-dashboard.js';
 import {
   stdDocumentMgmtDocumentOrbital,
   StdDocumentMgmtDocumentOrbitalManifest,
   isStdDocumentMgmtDocumentOrbitalParams,
+  stdDocumentMgmtClassifiedDocumentFromStdOrbital,
+  StdDocumentMgmtClassifiedDocumentFromStdOrbitalManifest,
+  isStdDocumentMgmtClassifiedDocumentFromStdOrbitalParams,
 } from './app/organisms/std-document-mgmt.js';
 import {
   stdEcommerceProductOrbital,
@@ -337,6 +352,9 @@ import {
   stdFitnessStudioClassRosterOrbital,
   StdFitnessStudioClassRosterOrbitalManifest,
   isStdFitnessStudioClassRosterOrbitalParams,
+  stdFitnessStudioAppointmentPolicyFromStdOrbital,
+  StdFitnessStudioAppointmentPolicyFromStdOrbitalManifest,
+  isStdFitnessStudioAppointmentPolicyFromStdOrbitalParams,
 } from './app/organisms/std-fitness-studio.js';
 import {
   stdFleetMgmtFleetOrbital,
@@ -359,6 +377,9 @@ import {
   stdForumModQueueOrbital,
   StdForumModQueueOrbitalManifest,
   isStdForumModQueueOrbitalParams,
+  stdForumModerationRuleFromStdOrbital,
+  StdForumModerationRuleFromStdOrbitalManifest,
+  isStdForumModerationRuleFromStdOrbitalParams,
 } from './app/organisms/std-forum.js';
 import {
   stdGenericAppContactOrbital,
@@ -402,6 +423,18 @@ import {
   stdHealthcareDashboardOrbital,
   StdHealthcareDashboardOrbitalManifest,
   isStdHealthcareDashboardOrbitalParams,
+  stdHealthcarePhiPatientFromStdOrbital,
+  StdHealthcarePhiPatientFromStdOrbitalManifest,
+  isStdHealthcarePhiPatientFromStdOrbitalParams,
+  stdHealthcareControlledRxFromStdOrbital,
+  StdHealthcareControlledRxFromStdOrbitalManifest,
+  isStdHealthcareControlledRxFromStdOrbitalParams,
+  stdHealthcareInsuranceClaimFromStdOrbital,
+  StdHealthcareInsuranceClaimFromStdOrbitalManifest,
+  isStdHealthcareInsuranceClaimFromStdOrbitalParams,
+  stdHealthcareAppointmentPolicyFromStdOrbital,
+  StdHealthcareAppointmentPolicyFromStdOrbitalManifest,
+  isStdHealthcareAppointmentPolicyFromStdOrbitalParams,
 } from './app/organisms/std-healthcare.js';
 import {
   stdHelpdeskTicketOrbital,
@@ -413,6 +446,9 @@ import {
   stdHelpdeskSupportMetricsOrbital,
   StdHelpdeskSupportMetricsOrbitalManifest,
   isStdHelpdeskSupportMetricsOrbitalParams,
+  stdHelpdeskTicketFromStdOrbital,
+  StdHelpdeskTicketFromStdOrbitalManifest,
+  isStdHelpdeskTicketFromStdOrbitalParams,
 } from './app/organisms/std-helpdesk.js';
 import {
   stdHrPortalEmployeeOrbital,
@@ -455,6 +491,15 @@ import {
   stdIotDashboardDeviceAlertOrbital,
   StdIotDashboardDeviceAlertOrbitalManifest,
   isStdIotDashboardDeviceAlertOrbitalParams,
+  stdIotDashboardFleetDeviceFromStdOrbital,
+  StdIotDashboardFleetDeviceFromStdOrbitalManifest,
+  isStdIotDashboardFleetDeviceFromStdOrbitalParams,
+  stdIotDashboardSensorThresholdFromStdOrbital,
+  StdIotDashboardSensorThresholdFromStdOrbitalManifest,
+  isStdIotDashboardSensorThresholdFromStdOrbitalParams,
+  stdIotDashboardRunbookFromStdOrbital,
+  StdIotDashboardRunbookFromStdOrbitalManifest,
+  isStdIotDashboardRunbookFromStdOrbitalParams,
 } from './app/organisms/std-iot-dashboard.js';
 import {
   stdLegalCaseMatterOrbital,
@@ -469,6 +514,12 @@ import {
   stdLegalCaseMatterPanelOrbital,
   StdLegalCaseMatterPanelOrbitalManifest,
   isStdLegalCaseMatterPanelOrbitalParams,
+  stdLegalCaseLegalHoldFromStdOrbital,
+  StdLegalCaseLegalHoldFromStdOrbitalManifest,
+  isStdLegalCaseLegalHoldFromStdOrbitalParams,
+  stdLegalCaseAppointmentPolicyFromStdOrbital,
+  StdLegalCaseAppointmentPolicyFromStdOrbitalManifest,
+  isStdLegalCaseAppointmentPolicyFromStdOrbitalParams,
 } from './app/organisms/std-legal-case.js';
 import {
   stdListingsListingOrbital,
@@ -488,6 +539,9 @@ import {
   stdLmsProgressOrbital,
   StdLmsProgressOrbitalManifest,
   isStdLmsProgressOrbitalParams,
+  stdLmsAppointmentPolicyFromStdOrbital,
+  StdLmsAppointmentPolicyFromStdOrbitalManifest,
+  isStdLmsAppointmentPolicyFromStdOrbitalParams,
 } from './app/organisms/std-lms.js';
 import {
   stdLogicTrainingDebugChallengeOrbital,
@@ -602,6 +656,9 @@ import {
   stdRealtimeChatOnlineUserOrbital,
   StdRealtimeChatOnlineUserOrbitalManifest,
   isStdRealtimeChatOnlineUserOrbitalParams,
+  stdRealtimeChatConversationPolicyFromStdOrbital,
+  StdRealtimeChatConversationPolicyFromStdOrbitalManifest,
+  isStdRealtimeChatConversationPolicyFromStdOrbitalParams,
 } from './app/organisms/std-realtime-chat.js';
 import {
   stdRestaurantPosMenuOrbital,
@@ -680,6 +737,9 @@ import {
   stdSocialFeedCommentOrbital,
   StdSocialFeedCommentOrbitalManifest,
   isStdSocialFeedCommentOrbitalParams,
+  stdSocialFeedModerationRuleFromStdOrbital,
+  StdSocialFeedModerationRuleFromStdOrbitalManifest,
+  isStdSocialFeedModerationRuleFromStdOrbitalParams,
 } from './app/organisms/std-social-feed.js';
 import {
   stdStemLabExperimentOrbital,
@@ -749,6 +809,15 @@ import {
   stdTradingDashboardMarketFeedOrbital,
   StdTradingDashboardMarketFeedOrbitalManifest,
   isStdTradingDashboardMarketFeedOrbitalParams,
+  stdTradingDashboardVenueTradeOrderFromStdOrbital,
+  StdTradingDashboardVenueTradeOrderFromStdOrbitalManifest,
+  isStdTradingDashboardVenueTradeOrderFromStdOrbitalParams,
+  stdTradingDashboardPortfolioFromStdOrbital,
+  StdTradingDashboardPortfolioFromStdOrbitalManifest,
+  isStdTradingDashboardPortfolioFromStdOrbitalParams,
+  stdTradingDashboardMarginAccountFromStdOrbital,
+  StdTradingDashboardMarginAccountFromStdOrbitalManifest,
+  isStdTradingDashboardMarginAccountFromStdOrbitalParams,
 } from './app/organisms/std-trading-dashboard.js';
 import {
   stdWikiDocumentOrbital,
@@ -1211,6 +1280,15 @@ const REGISTRY: ReadonlyMap<string, DispatchEntry> = new Map<string, DispatchEnt
     },
     manifest: StdBookingSystemScheduleOrbitalManifest,
   }],
+  ['std-booking-system::AppointmentPolicyFromStdOrbital', {
+    factory: (p: object): OrbitalDefinition => {
+      if (!isStdBookingSystemAppointmentPolicyFromStdOrbitalParams(p)) {
+        throw new TypeError('Invalid params for std-booking-system::AppointmentPolicyFromStdOrbital');
+      }
+      return stdBookingSystemAppointmentPolicyFromStdOrbital(p);
+    },
+    manifest: StdBookingSystemAppointmentPolicyFromStdOrbitalManifest,
+  }],
   ['std-cicd-pipeline::BuildOrbital', {
     factory: (p: object): OrbitalDefinition => {
       if (!isStdCicdPipelineBuildOrbitalParams(p)) {
@@ -1309,6 +1387,15 @@ const REGISTRY: ReadonlyMap<string, DispatchEntry> = new Map<string, DispatchEnt
       return stdCodingAcademyStudentProgressOrbital(p);
     },
     manifest: StdCodingAcademyStudentProgressOrbitalManifest,
+  }],
+  ['std-coding-academy::AppointmentPolicyFromStdOrbital', {
+    factory: (p: object): OrbitalDefinition => {
+      if (!isStdCodingAcademyAppointmentPolicyFromStdOrbitalParams(p)) {
+        throw new TypeError('Invalid params for std-coding-academy::AppointmentPolicyFromStdOrbital');
+      }
+      return stdCodingAcademyAppointmentPolicyFromStdOrbital(p);
+    },
+    manifest: StdCodingAcademyAppointmentPolicyFromStdOrbitalManifest,
   }],
   ['std-construction-pm::ProjectOrbital', {
     factory: (p: object): OrbitalDefinition => {
@@ -1427,6 +1514,24 @@ const REGISTRY: ReadonlyMap<string, DispatchEntry> = new Map<string, DispatchEnt
     },
     manifest: StdDevopsDashboardSystemMetricOrbitalManifest,
   }],
+  ['std-devops-dashboard::IncidentFromStdOrbital', {
+    factory: (p: object): OrbitalDefinition => {
+      if (!isStdDevopsDashboardIncidentFromStdOrbitalParams(p)) {
+        throw new TypeError('Invalid params for std-devops-dashboard::IncidentFromStdOrbital');
+      }
+      return stdDevopsDashboardIncidentFromStdOrbital(p);
+    },
+    manifest: StdDevopsDashboardIncidentFromStdOrbitalManifest,
+  }],
+  ['std-devops-dashboard::RunbookFromStdOrbital', {
+    factory: (p: object): OrbitalDefinition => {
+      if (!isStdDevopsDashboardRunbookFromStdOrbitalParams(p)) {
+        throw new TypeError('Invalid params for std-devops-dashboard::RunbookFromStdOrbital');
+      }
+      return stdDevopsDashboardRunbookFromStdOrbital(p);
+    },
+    manifest: StdDevopsDashboardRunbookFromStdOrbitalManifest,
+  }],
   ['std-document-mgmt::DocumentOrbital', {
     factory: (p: object): OrbitalDefinition => {
       if (!isStdDocumentMgmtDocumentOrbitalParams(p)) {
@@ -1435,6 +1540,15 @@ const REGISTRY: ReadonlyMap<string, DispatchEntry> = new Map<string, DispatchEnt
       return stdDocumentMgmtDocumentOrbital(p);
     },
     manifest: StdDocumentMgmtDocumentOrbitalManifest,
+  }],
+  ['std-document-mgmt::ClassifiedDocumentFromStdOrbital', {
+    factory: (p: object): OrbitalDefinition => {
+      if (!isStdDocumentMgmtClassifiedDocumentFromStdOrbitalParams(p)) {
+        throw new TypeError('Invalid params for std-document-mgmt::ClassifiedDocumentFromStdOrbital');
+      }
+      return stdDocumentMgmtClassifiedDocumentFromStdOrbital(p);
+    },
+    manifest: StdDocumentMgmtClassifiedDocumentFromStdOrbitalManifest,
   }],
   ['std-ecommerce::ProductOrbital', {
     factory: (p: object): OrbitalDefinition => {
@@ -1607,6 +1721,15 @@ const REGISTRY: ReadonlyMap<string, DispatchEntry> = new Map<string, DispatchEnt
     },
     manifest: StdFitnessStudioClassRosterOrbitalManifest,
   }],
+  ['std-fitness-studio::AppointmentPolicyFromStdOrbital', {
+    factory: (p: object): OrbitalDefinition => {
+      if (!isStdFitnessStudioAppointmentPolicyFromStdOrbitalParams(p)) {
+        throw new TypeError('Invalid params for std-fitness-studio::AppointmentPolicyFromStdOrbital');
+      }
+      return stdFitnessStudioAppointmentPolicyFromStdOrbital(p);
+    },
+    manifest: StdFitnessStudioAppointmentPolicyFromStdOrbitalManifest,
+  }],
   ['std-fleet-mgmt::FleetOrbital', {
     factory: (p: object): OrbitalDefinition => {
       if (!isStdFleetMgmtFleetOrbitalParams(p)) {
@@ -1660,6 +1783,15 @@ const REGISTRY: ReadonlyMap<string, DispatchEntry> = new Map<string, DispatchEnt
       return stdForumModQueueOrbital(p);
     },
     manifest: StdForumModQueueOrbitalManifest,
+  }],
+  ['std-forum::ModerationRuleFromStdOrbital', {
+    factory: (p: object): OrbitalDefinition => {
+      if (!isStdForumModerationRuleFromStdOrbitalParams(p)) {
+        throw new TypeError('Invalid params for std-forum::ModerationRuleFromStdOrbital');
+      }
+      return stdForumModerationRuleFromStdOrbital(p);
+    },
+    manifest: StdForumModerationRuleFromStdOrbitalManifest,
   }],
   ['std-generic-app::ContactOrbital', {
     factory: (p: object): OrbitalDefinition => {
@@ -1778,6 +1910,42 @@ const REGISTRY: ReadonlyMap<string, DispatchEntry> = new Map<string, DispatchEnt
     },
     manifest: StdHealthcareDashboardOrbitalManifest,
   }],
+  ['std-healthcare::PhiPatientFromStdOrbital', {
+    factory: (p: object): OrbitalDefinition => {
+      if (!isStdHealthcarePhiPatientFromStdOrbitalParams(p)) {
+        throw new TypeError('Invalid params for std-healthcare::PhiPatientFromStdOrbital');
+      }
+      return stdHealthcarePhiPatientFromStdOrbital(p);
+    },
+    manifest: StdHealthcarePhiPatientFromStdOrbitalManifest,
+  }],
+  ['std-healthcare::ControlledRxFromStdOrbital', {
+    factory: (p: object): OrbitalDefinition => {
+      if (!isStdHealthcareControlledRxFromStdOrbitalParams(p)) {
+        throw new TypeError('Invalid params for std-healthcare::ControlledRxFromStdOrbital');
+      }
+      return stdHealthcareControlledRxFromStdOrbital(p);
+    },
+    manifest: StdHealthcareControlledRxFromStdOrbitalManifest,
+  }],
+  ['std-healthcare::InsuranceClaimFromStdOrbital', {
+    factory: (p: object): OrbitalDefinition => {
+      if (!isStdHealthcareInsuranceClaimFromStdOrbitalParams(p)) {
+        throw new TypeError('Invalid params for std-healthcare::InsuranceClaimFromStdOrbital');
+      }
+      return stdHealthcareInsuranceClaimFromStdOrbital(p);
+    },
+    manifest: StdHealthcareInsuranceClaimFromStdOrbitalManifest,
+  }],
+  ['std-healthcare::AppointmentPolicyFromStdOrbital', {
+    factory: (p: object): OrbitalDefinition => {
+      if (!isStdHealthcareAppointmentPolicyFromStdOrbitalParams(p)) {
+        throw new TypeError('Invalid params for std-healthcare::AppointmentPolicyFromStdOrbital');
+      }
+      return stdHealthcareAppointmentPolicyFromStdOrbital(p);
+    },
+    manifest: StdHealthcareAppointmentPolicyFromStdOrbitalManifest,
+  }],
   ['std-helpdesk::TicketOrbital', {
     factory: (p: object): OrbitalDefinition => {
       if (!isStdHelpdeskTicketOrbitalParams(p)) {
@@ -1804,6 +1972,15 @@ const REGISTRY: ReadonlyMap<string, DispatchEntry> = new Map<string, DispatchEnt
       return stdHelpdeskSupportMetricsOrbital(p);
     },
     manifest: StdHelpdeskSupportMetricsOrbitalManifest,
+  }],
+  ['std-helpdesk::TicketFromStdOrbital', {
+    factory: (p: object): OrbitalDefinition => {
+      if (!isStdHelpdeskTicketFromStdOrbitalParams(p)) {
+        throw new TypeError('Invalid params for std-helpdesk::TicketFromStdOrbital');
+      }
+      return stdHelpdeskTicketFromStdOrbital(p);
+    },
+    manifest: StdHelpdeskTicketFromStdOrbitalManifest,
   }],
   ['std-hr-portal::EmployeeOrbital', {
     factory: (p: object): OrbitalDefinition => {
@@ -1913,6 +2090,33 @@ const REGISTRY: ReadonlyMap<string, DispatchEntry> = new Map<string, DispatchEnt
     },
     manifest: StdIotDashboardDeviceAlertOrbitalManifest,
   }],
+  ['std-iot-dashboard::FleetDeviceFromStdOrbital', {
+    factory: (p: object): OrbitalDefinition => {
+      if (!isStdIotDashboardFleetDeviceFromStdOrbitalParams(p)) {
+        throw new TypeError('Invalid params for std-iot-dashboard::FleetDeviceFromStdOrbital');
+      }
+      return stdIotDashboardFleetDeviceFromStdOrbital(p);
+    },
+    manifest: StdIotDashboardFleetDeviceFromStdOrbitalManifest,
+  }],
+  ['std-iot-dashboard::SensorThresholdFromStdOrbital', {
+    factory: (p: object): OrbitalDefinition => {
+      if (!isStdIotDashboardSensorThresholdFromStdOrbitalParams(p)) {
+        throw new TypeError('Invalid params for std-iot-dashboard::SensorThresholdFromStdOrbital');
+      }
+      return stdIotDashboardSensorThresholdFromStdOrbital(p);
+    },
+    manifest: StdIotDashboardSensorThresholdFromStdOrbitalManifest,
+  }],
+  ['std-iot-dashboard::RunbookFromStdOrbital', {
+    factory: (p: object): OrbitalDefinition => {
+      if (!isStdIotDashboardRunbookFromStdOrbitalParams(p)) {
+        throw new TypeError('Invalid params for std-iot-dashboard::RunbookFromStdOrbital');
+      }
+      return stdIotDashboardRunbookFromStdOrbital(p);
+    },
+    manifest: StdIotDashboardRunbookFromStdOrbitalManifest,
+  }],
   ['std-legal-case::MatterOrbital', {
     factory: (p: object): OrbitalDefinition => {
       if (!isStdLegalCaseMatterOrbitalParams(p)) {
@@ -1948,6 +2152,24 @@ const REGISTRY: ReadonlyMap<string, DispatchEntry> = new Map<string, DispatchEnt
       return stdLegalCaseMatterPanelOrbital(p);
     },
     manifest: StdLegalCaseMatterPanelOrbitalManifest,
+  }],
+  ['std-legal-case::LegalHoldFromStdOrbital', {
+    factory: (p: object): OrbitalDefinition => {
+      if (!isStdLegalCaseLegalHoldFromStdOrbitalParams(p)) {
+        throw new TypeError('Invalid params for std-legal-case::LegalHoldFromStdOrbital');
+      }
+      return stdLegalCaseLegalHoldFromStdOrbital(p);
+    },
+    manifest: StdLegalCaseLegalHoldFromStdOrbitalManifest,
+  }],
+  ['std-legal-case::AppointmentPolicyFromStdOrbital', {
+    factory: (p: object): OrbitalDefinition => {
+      if (!isStdLegalCaseAppointmentPolicyFromStdOrbitalParams(p)) {
+        throw new TypeError('Invalid params for std-legal-case::AppointmentPolicyFromStdOrbital');
+      }
+      return stdLegalCaseAppointmentPolicyFromStdOrbital(p);
+    },
+    manifest: StdLegalCaseAppointmentPolicyFromStdOrbitalManifest,
   }],
   ['std-listings::ListingOrbital', {
     factory: (p: object): OrbitalDefinition => {
@@ -1993,6 +2215,15 @@ const REGISTRY: ReadonlyMap<string, DispatchEntry> = new Map<string, DispatchEnt
       return stdLmsProgressOrbital(p);
     },
     manifest: StdLmsProgressOrbitalManifest,
+  }],
+  ['std-lms::AppointmentPolicyFromStdOrbital', {
+    factory: (p: object): OrbitalDefinition => {
+      if (!isStdLmsAppointmentPolicyFromStdOrbitalParams(p)) {
+        throw new TypeError('Invalid params for std-lms::AppointmentPolicyFromStdOrbital');
+      }
+      return stdLmsAppointmentPolicyFromStdOrbital(p);
+    },
+    manifest: StdLmsAppointmentPolicyFromStdOrbitalManifest,
   }],
   ['std-logic-training::DebugChallengeOrbital', {
     factory: (p: object): OrbitalDefinition => {
@@ -2264,6 +2495,15 @@ const REGISTRY: ReadonlyMap<string, DispatchEntry> = new Map<string, DispatchEnt
     },
     manifest: StdRealtimeChatOnlineUserOrbitalManifest,
   }],
+  ['std-realtime-chat::ConversationPolicyFromStdOrbital', {
+    factory: (p: object): OrbitalDefinition => {
+      if (!isStdRealtimeChatConversationPolicyFromStdOrbitalParams(p)) {
+        throw new TypeError('Invalid params for std-realtime-chat::ConversationPolicyFromStdOrbital');
+      }
+      return stdRealtimeChatConversationPolicyFromStdOrbital(p);
+    },
+    manifest: StdRealtimeChatConversationPolicyFromStdOrbitalManifest,
+  }],
   ['std-restaurant-pos::MenuOrbital', {
     factory: (p: object): OrbitalDefinition => {
       if (!isStdRestaurantPosMenuOrbitalParams(p)) {
@@ -2462,6 +2702,15 @@ const REGISTRY: ReadonlyMap<string, DispatchEntry> = new Map<string, DispatchEnt
     },
     manifest: StdSocialFeedCommentOrbitalManifest,
   }],
+  ['std-social-feed::ModerationRuleFromStdOrbital', {
+    factory: (p: object): OrbitalDefinition => {
+      if (!isStdSocialFeedModerationRuleFromStdOrbitalParams(p)) {
+        throw new TypeError('Invalid params for std-social-feed::ModerationRuleFromStdOrbital');
+      }
+      return stdSocialFeedModerationRuleFromStdOrbital(p);
+    },
+    manifest: StdSocialFeedModerationRuleFromStdOrbitalManifest,
+  }],
   ['std-stem-lab::ExperimentOrbital', {
     factory: (p: object): OrbitalDefinition => {
       if (!isStdStemLabExperimentOrbitalParams(p)) {
@@ -2632,6 +2881,33 @@ const REGISTRY: ReadonlyMap<string, DispatchEntry> = new Map<string, DispatchEnt
       return stdTradingDashboardMarketFeedOrbital(p);
     },
     manifest: StdTradingDashboardMarketFeedOrbitalManifest,
+  }],
+  ['std-trading-dashboard::VenueTradeOrderFromStdOrbital', {
+    factory: (p: object): OrbitalDefinition => {
+      if (!isStdTradingDashboardVenueTradeOrderFromStdOrbitalParams(p)) {
+        throw new TypeError('Invalid params for std-trading-dashboard::VenueTradeOrderFromStdOrbital');
+      }
+      return stdTradingDashboardVenueTradeOrderFromStdOrbital(p);
+    },
+    manifest: StdTradingDashboardVenueTradeOrderFromStdOrbitalManifest,
+  }],
+  ['std-trading-dashboard::PortfolioFromStdOrbital', {
+    factory: (p: object): OrbitalDefinition => {
+      if (!isStdTradingDashboardPortfolioFromStdOrbitalParams(p)) {
+        throw new TypeError('Invalid params for std-trading-dashboard::PortfolioFromStdOrbital');
+      }
+      return stdTradingDashboardPortfolioFromStdOrbital(p);
+    },
+    manifest: StdTradingDashboardPortfolioFromStdOrbitalManifest,
+  }],
+  ['std-trading-dashboard::MarginAccountFromStdOrbital', {
+    factory: (p: object): OrbitalDefinition => {
+      if (!isStdTradingDashboardMarginAccountFromStdOrbitalParams(p)) {
+        throw new TypeError('Invalid params for std-trading-dashboard::MarginAccountFromStdOrbital');
+      }
+      return stdTradingDashboardMarginAccountFromStdOrbital(p);
+    },
+    manifest: StdTradingDashboardMarginAccountFromStdOrbitalManifest,
   }],
   ['std-wiki::DocumentOrbital', {
     factory: (p: object): OrbitalDefinition => {

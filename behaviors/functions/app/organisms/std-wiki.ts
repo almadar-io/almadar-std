@@ -31,8 +31,8 @@ const ALIAS = 'Wiki';
  * without modifying its state-machine topology.
  */
 export interface StdWikiConfig {
-  navItems?: TraitConfig;
   notifications?: TraitConfig;
+  navItems?: TraitConfig;
 }
 
 /**
@@ -75,7 +75,7 @@ export interface StdWikiDocumentOrbitalParams {
    * atom-owned (use `listens` via a sibling trait instead).
    */
   traitOverrides?: Partial<Record<
-    'WikiAppLayout' | 'WikiSearch' | 'WikiFilter' | 'WikiPageTree' | 'WikiBrowseList' | 'WikiBacklinks' | 'WikiCreate' | 'WikiEdit' | 'WikiView' | 'WikiDelete' | 'WikiVersionHistory' | 'WikiTagBrowse' | 'WikiWorkspace' | 'WikiPersistor',
+    'WikiAppLayout' | 'WikiSearch' | 'WikiFilter' | 'WikiPageTree' | 'WikiBrowseList' | 'WikiBacklinks' | 'WikiCreate' | 'WikiEdit' | 'WikiView' | 'WikiDelete' | 'WikiVersionHistory' | 'WikiTagBrowse' | 'WikiAuditCapture' | 'WikiLifecycleScan' | 'WikiErasure' | 'WikiWorkspace' | 'WikiPersistor',
     Pick<MakeTraitRefOpts, 'config' | 'linkedEntity' | 'events' | 'name' | 'emitsScope' | 'listens'>
   >>;
 }
@@ -131,6 +131,18 @@ export function stdWikiDocumentOrbital(params: StdWikiDocumentOrbitalParams = {}
       {
         'from': 'std/behaviors/std-tag-taxonomy',
         'as': 'Tags',
+      },
+      {
+        'from': 'std/behaviors/std-audit-capture',
+        'as': 'Audit',
+      },
+      {
+        'from': 'std/behaviors/std-lifecycle',
+        'as': 'Lifecycle',
+      },
+      {
+        'from': 'std/behaviors/std-data-erasure',
+        'as': 'Erasure',
       },
     ],
     entity: {
@@ -247,17 +259,18 @@ export function stdWikiDocumentOrbital(params: StdWikiDocumentOrbitalParams = {}
         'ref': 'AppShell.traits.AppLayout',
         'name': 'WikiAppLayout',
         'config': {
-          'contentTrait': '@trait.WikiWorkspace',
+          'notifications': [],
           'appName': 'Wiki',
+          'contentTrait': '@trait.WikiWorkspace',
           'navItems': [
             {
+              'href': '/wiki',
               'icon': 'book-open',
               'label': 'Pages',
-              'href': '/wiki',
             },
             {
-              'icon': 'history',
               'label': 'History',
+              'icon': 'history',
               'href': '/revisions',
             },
             {
@@ -267,7 +280,6 @@ export function stdWikiDocumentOrbital(params: StdWikiDocumentOrbitalParams = {}
             },
           ],
           'searchEvent': 'WIKI_SEARCH',
-          'notifications': [],
           'notificationClickEvent': 'WIKI_NOTIFICATIONS_OPEN',
         },
         'events': {
@@ -360,42 +372,42 @@ export function stdWikiDocumentOrbital(params: StdWikiDocumentOrbitalParams = {}
                     'gap': 'lg',
                     'children': [
                       {
-                        'justify': 'between',
-                        'gap': 'md',
-                        'type': 'stack',
-                        'direction': 'horizontal',
                         'align': 'center',
+                        'type': 'stack',
+                        'gap': 'md',
+                        'justify': 'between',
+                        'direction': 'horizontal',
                         'children': [
                           {
+                            'type': 'stack',
+                            'gap': 'sm',
                             'align': 'center',
-                            'direction': 'horizontal',
                             'children': [
                               {
                                 'type': 'icon',
                                 'name': 'book-open',
                               },
                               {
+                                'content': 'Wiki',
                                 'variant': 'h2',
                                 'type': 'typography',
-                                'content': 'Wiki',
                               },
                             ],
-                            'type': 'stack',
-                            'gap': 'sm',
+                            'direction': 'horizontal',
                           },
                           {
-                            'type': 'stack',
-                            'direction': 'horizontal',
                             'gap': 'sm',
                             'children': [
                               {
-                                'icon': 'plus',
                                 'action': 'CREATE',
-                                'variant': 'primary',
                                 'type': 'button',
                                 'label': 'New Page',
+                                'icon': 'plus',
+                                'variant': 'primary',
                               },
                             ],
+                            'direction': 'horizontal',
+                            'type': 'stack',
                           },
                         ],
                       },
@@ -404,33 +416,31 @@ export function stdWikiDocumentOrbital(params: StdWikiDocumentOrbitalParams = {}
                       },
                       {
                         'direction': 'horizontal',
-                        'align': 'center',
+                        'type': 'stack',
                         'gap': 'md',
                         'children': [
                           '@trait.WikiSearch',
                           '@trait.WikiFilter',
                         ],
-                        'type': 'stack',
+                        'align': 'center',
                       },
                       {
-                        'gap': 'lg',
-                        'type': 'stack',
                         'direction': 'horizontal',
                         'children': [
                           {
-                            'className': 'w-72 shrink-0',
-                            'gap': 'md',
+                            'type': 'stack',
+                            'direction': 'vertical',
                             'children': [
                               '@trait.WikiPageTree',
                             ],
-                            'type': 'stack',
-                            'direction': 'vertical',
+                            'className': 'w-72 shrink-0',
+                            'gap': 'md',
                           },
                           {
-                            'direction': 'vertical',
                             'gap': 'md',
                             'className': 'flex-1',
                             'type': 'stack',
+                            'direction': 'vertical',
                             'children': [
                               '@trait.WikiBrowseList',
                               {
@@ -440,6 +450,8 @@ export function stdWikiDocumentOrbital(params: StdWikiDocumentOrbitalParams = {}
                             ],
                           },
                         ],
+                        'type': 'stack',
+                        'gap': 'lg',
                       },
                     ],
                   },
@@ -460,6 +472,11 @@ export function stdWikiDocumentOrbital(params: StdWikiDocumentOrbitalParams = {}
                   'render-ui',
                   'main',
                   {
+                    'direction': 'vertical',
+                    'className': 'py-8',
+                    'type': 'stack',
+                    'gap': 'md',
+                    'align': 'center',
                     'children': [
                       {
                         'name': 'bell',
@@ -467,8 +484,8 @@ export function stdWikiDocumentOrbital(params: StdWikiDocumentOrbitalParams = {}
                       },
                       {
                         'variant': 'h3',
-                        'type': 'typography',
                         'content': 'No notifications',
+                        'type': 'typography',
                       },
                       {
                         'type': 'typography',
@@ -477,17 +494,12 @@ export function stdWikiDocumentOrbital(params: StdWikiDocumentOrbitalParams = {}
                         'variant': 'caption',
                       },
                       {
-                        'action': 'INIT',
                         'type': 'button',
-                        'variant': 'ghost',
                         'label': 'Back to wiki',
+                        'variant': 'ghost',
+                        'action': 'INIT',
                       },
                     ],
-                    'type': 'stack',
-                    'direction': 'vertical',
-                    'className': 'py-8',
-                    'gap': 'md',
-                    'align': 'center',
                   },
                 ],
               ],
@@ -510,24 +522,24 @@ export function stdWikiDocumentOrbital(params: StdWikiDocumentOrbitalParams = {}
         'config': {
           'filters': [
             {
-              'filterType': 'select',
               'options': [
                 'page',
                 'doc',
                 'post',
               ],
-              'label': 'Kind',
+              'filterType': 'select',
               'field': 'kind',
+              'label': 'Kind',
             },
             {
-              'label': 'Status',
-              'filterType': 'select',
               'field': 'status',
               'options': [
                 'draft',
                 'published',
                 'archived',
               ],
+              'label': 'Status',
+              'filterType': 'select',
             },
           ],
           'event': 'WIKI_FILTER',
@@ -545,59 +557,59 @@ export function stdWikiDocumentOrbital(params: StdWikiDocumentOrbitalParams = {}
         'name': 'WikiBrowseList',
         'linkedEntity': canonicalName,
         'config': {
-          'itemActions': [
-            {
-              'icon': 'eye',
-              'label': 'Open',
-              'variant': 'ghost',
-              'event': 'VIEW',
-            },
-            {
-              'icon': 'edit',
-              'label': 'Edit',
-              'variant': 'ghost',
-              'event': 'EDIT',
-            },
-            {
-              'label': 'History',
-              'icon': 'history',
-              'event': 'VIEW_HISTORY',
-              'variant': 'ghost',
-            },
-            {
-              'icon': 'trash',
-              'event': 'DELETE',
-              'label': 'Delete',
-              'variant': 'danger',
-            },
-          ],
+          'gap': 'sm',
+          'cols': 1,
           'fields': [
             {
               'name': 'title',
-              'icon': 'file-text',
               'variant': 'h3',
+              'icon': 'file-text',
             },
             {
+              'variant': 'badge',
               'name': 'kind',
-              'variant': 'badge',
             },
             {
+              'variant': 'badge',
               'name': 'status',
-              'variant': 'badge',
             },
             {
-              'variant': 'caption',
               'label': 'v',
+              'variant': 'caption',
               'name': 'version',
             },
             {
               'label': 'Updated',
-              'variant': 'caption',
               'name': 'updatedAt',
+              'variant': 'caption',
             },
           ],
-          'cols': 1,
-          'gap': 'sm',
+          'itemActions': [
+            {
+              'event': 'VIEW',
+              'variant': 'ghost',
+              'icon': 'eye',
+              'label': 'Open',
+            },
+            {
+              'icon': 'edit',
+              'variant': 'ghost',
+              'label': 'Edit',
+              'event': 'EDIT',
+            },
+            {
+              'event': 'VIEW_HISTORY',
+              'variant': 'ghost',
+              'label': 'History',
+              'icon': 'history',
+            },
+            {
+              'icon': 'trash',
+              'event': 'DELETE',
+              'variant': 'danger',
+              'label': 'Delete',
+            },
+          ],
         },
         'listens': [
           {
@@ -662,7 +674,6 @@ export function stdWikiDocumentOrbital(params: StdWikiDocumentOrbitalParams = {}
         'name': 'WikiCreate',
         'linkedEntity': canonicalName,
         'config': {
-          'mode': 'create',
           'fields': [
             'title',
             'slug',
@@ -671,8 +682,9 @@ export function stdWikiDocumentOrbital(params: StdWikiDocumentOrbitalParams = {}
             'parentId',
             'authorId',
           ],
-          'icon': 'plus-circle',
+          'mode': 'create',
           'title': 'New Page',
+          'icon': 'plus-circle',
         },
         'events': {
           'OPEN': 'CREATE',
@@ -693,7 +705,6 @@ export function stdWikiDocumentOrbital(params: StdWikiDocumentOrbitalParams = {}
         'name': 'WikiEdit',
         'linkedEntity': canonicalName,
         'config': {
-          'mode': 'edit',
           'fields': [
             'title',
             'slug',
@@ -704,6 +715,7 @@ export function stdWikiDocumentOrbital(params: StdWikiDocumentOrbitalParams = {}
             'blocksJson',
           ],
           'icon': 'edit',
+          'mode': 'edit',
           'title': 'Edit Page',
         },
         'events': {
@@ -725,9 +737,9 @@ export function stdWikiDocumentOrbital(params: StdWikiDocumentOrbitalParams = {}
         'name': 'WikiView',
         'linkedEntity': canonicalName,
         'config': {
+          'mode': 'edit',
           'icon': 'eye',
           'title': 'View Page',
-          'mode': 'edit',
           'fields': [
             'title',
             'slug',
@@ -757,14 +769,14 @@ export function stdWikiDocumentOrbital(params: StdWikiDocumentOrbitalParams = {}
         'name': 'WikiDelete',
         'linkedEntity': canonicalName,
         'config': {
-          'title': 'Delete Page',
           'alertMessage': 'This action cannot be undone.',
           'confirmLabel': 'Delete',
+          'title': 'Delete Page',
           'icon': 'alert-triangle',
         },
         'events': {
-          'REQUEST': 'DELETE',
           'CONFIRM': 'CONFIRM_DELETE',
+          'REQUEST': 'DELETE',
         },
         'listens': [
           {
@@ -975,6 +987,60 @@ export function stdWikiDocumentOrbital(params: StdWikiDocumentOrbitalParams = {}
         },
         'scope': 'instance',
       } as never, 'WikiPage', canonicalName) as never,
+      makeTraitRef({
+        'ref': 'Audit.traits.AuditCaptureListener',
+        'name': 'WikiAuditCapture',
+        'config': {
+          'captureBeforeAfter': true,
+          'captureEntity': 'WikiPage',
+          'captureEventTypes': [],
+          'excludeFields': [],
+          'retentionDays': 2555,
+        },
+        'events': {
+          'EntityMutated': 'WIKI_UPDATED',
+        },
+      }),
+      makeTraitRef({
+        'ref': 'Lifecycle.traits.LifecycleScheduler',
+        'name': 'WikiLifecycleScan',
+        'config': {
+          'targetEntity': 'WikiPage',
+          'rules': [
+            {
+              'condition': {
+                'value': 365,
+                'dateField': 'updatedAt',
+                'kind': 'ageDays',
+              },
+              'toStatus': 'archived',
+              'fromStatus': 'published',
+            },
+            {
+              'toStatus': 'deleted',
+              'fromStatus': 'archived',
+              'condition': {
+                'value': 730,
+                'dateField': 'updatedAt',
+                'kind': 'ageDays',
+              },
+            },
+          ],
+          'dryRun': false,
+        },
+      }),
+      makeTraitRef({
+        'ref': 'Erasure.traits.ErasureWorkflow',
+        'name': 'WikiErasure',
+        'config': {
+          'anonymizeVsDelete': 'anonymize',
+          'gracePeriodDays': 30,
+          'piiFields': [
+            'authorId',
+          ],
+          'targetEntity': 'WikiPage',
+        },
+      }),
     ],
     pages: [
       {
@@ -1016,6 +1082,15 @@ export function stdWikiDocumentOrbital(params: StdWikiDocumentOrbitalParams = {}
           },
           {
             'ref': 'WikiPersistor',
+          },
+          {
+            'ref': 'WikiAuditCapture',
+          },
+          {
+            'ref': 'WikiLifecycleScan',
+          },
+          {
+            'ref': 'WikiErasure',
           },
         ],
       } as never,
@@ -1112,6 +1187,9 @@ export const StdWikiDocumentOrbitalManifest = {
     'WikiDelete',
     'WikiVersionHistory',
     'WikiTagBrowse',
+    'WikiAuditCapture',
+    'WikiLifecycleScan',
+    'WikiErasure',
   ] as const,
   inlineTraitNames: [
     'WikiWorkspace',
@@ -1271,10 +1349,6 @@ export function stdWikiRevisionOrbital(params: StdWikiRevisionOrbitalParams = {}
         'name': 'RevisionAppLayout',
         'config': {
           'appName': 'Wiki',
-          'notificationClickEvent': 'REVISION_NOTIFICATIONS_OPEN',
-          'contentTrait': '@trait.RevisionWorkspace',
-          'notifications': [],
-          'searchEvent': 'REVISION_SEARCH',
           'navItems': [
             {
               'label': 'Pages',
@@ -1282,9 +1356,9 @@ export function stdWikiRevisionOrbital(params: StdWikiRevisionOrbitalParams = {}
               'icon': 'book-open',
             },
             {
+              'icon': 'history',
               'label': 'History',
               'href': '/revisions',
-              'icon': 'history',
             },
             {
               'href': '/wiki/tags',
@@ -1292,6 +1366,10 @@ export function stdWikiRevisionOrbital(params: StdWikiRevisionOrbitalParams = {}
               'icon': 'tag',
             },
           ],
+          'searchEvent': 'REVISION_SEARCH',
+          'contentTrait': '@trait.RevisionWorkspace',
+          'notifications': [],
+          'notificationClickEvent': 'REVISION_NOTIFICATIONS_OPEN',
         },
         'events': {
           'SEARCH': 'REVISION_SEARCH',
@@ -1340,18 +1418,13 @@ export function stdWikiRevisionOrbital(params: StdWikiRevisionOrbitalParams = {}
                   'render-ui',
                   'main',
                   {
-                    'type': 'stack',
-                    'gap': 'lg',
-                    'direction': 'vertical',
                     'children': [
                       {
-                        'align': 'center',
-                        'type': 'stack',
                         'direction': 'horizontal',
-                        'justify': 'between',
-                        'gap': 'md',
                         'children': [
                           {
+                            'direction': 'horizontal',
+                            'type': 'stack',
                             'children': [
                               {
                                 'name': 'history',
@@ -1363,37 +1436,42 @@ export function stdWikiRevisionOrbital(params: StdWikiRevisionOrbitalParams = {}
                                 'variant': 'h2',
                               },
                             ],
-                            'gap': 'sm',
-                            'type': 'stack',
-                            'direction': 'horizontal',
                             'align': 'center',
+                            'gap': 'sm',
                           },
                           {
+                            'direction': 'horizontal',
+                            'type': 'stack',
                             'gap': 'sm',
                             'children': [
                               {
-                                'action': 'CREATE',
-                                'label': 'New Revision',
                                 'variant': 'primary',
+                                'label': 'New Revision',
                                 'icon': 'plus',
                                 'type': 'button',
+                                'action': 'CREATE',
                               },
                             ],
-                            'type': 'stack',
-                            'direction': 'horizontal',
                           },
                         ],
+                        'type': 'stack',
+                        'justify': 'between',
+                        'align': 'center',
+                        'gap': 'md',
                       },
                       {
                         'type': 'divider',
                       },
                       {
-                        'variant': 'h3',
                         'type': 'typography',
                         'content': 'Recent',
+                        'variant': 'h3',
                       },
                       '@trait.RevisionBrowseList',
                     ],
+                    'type': 'stack',
+                    'gap': 'lg',
+                    'direction': 'vertical',
                   },
                 ],
               ],
@@ -1407,41 +1485,41 @@ export function stdWikiRevisionOrbital(params: StdWikiRevisionOrbitalParams = {}
         'name': 'RevisionBrowseList',
         'linkedEntity': canonicalName,
         'config': {
+          'itemActions': [
+            {
+              'variant': 'ghost',
+              'event': 'VIEW',
+              'label': 'Inspect',
+              'icon': 'eye',
+            },
+          ],
           'fields': [
             {
+              'icon': 'history',
               'variant': 'h4',
               'name': 'summary',
-              'icon': 'history',
             },
             {
               'name': 'documentType',
               'variant': 'badge',
             },
             {
+              'label': 'v',
               'variant': 'badge',
               'name': 'versionNumber',
-              'label': 'v',
             },
             {
+              'variant': 'caption',
               'name': 'authorName',
-              'variant': 'caption',
             },
             {
-              'variant': 'caption',
               'name': 'createdAt',
               'label': 'Saved',
+              'variant': 'caption',
             },
           ],
           'cols': 1,
           'gap': 'sm',
-          'itemActions': [
-            {
-              'event': 'VIEW',
-              'variant': 'ghost',
-              'label': 'Inspect',
-              'icon': 'eye',
-            },
-          ],
         },
         'listens': [
           {
@@ -1459,9 +1537,6 @@ export function stdWikiRevisionOrbital(params: StdWikiRevisionOrbitalParams = {}
         'name': 'RevisionCreate',
         'linkedEntity': canonicalName,
         'config': {
-          'icon': 'plus-circle',
-          'mode': 'create',
-          'title': 'New Revision',
           'fields': [
             'documentId',
             'documentType',
@@ -1471,6 +1546,9 @@ export function stdWikiRevisionOrbital(params: StdWikiRevisionOrbitalParams = {}
             'summary',
             'content',
           ],
+          'icon': 'plus-circle',
+          'mode': 'create',
+          'title': 'New Revision',
         },
         'events': {
           'OPEN': 'CREATE',

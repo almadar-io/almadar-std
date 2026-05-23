@@ -89,26 +89,26 @@ export interface StdHealthScoreHealthScoreLoadFailedPayload {
  * without modifying its state-machine topology.
  */
 export interface StdHealthScoreConfig {
-  /** Default: `[30,7,1]` */
-  renewalReminderDaysBefore?: number[];
-  /** Default: `["csm-lead","customer-success-director"]` */
-  alertEscalationRoles?: string[];
-  /** Default: `[{"label":"Open","event":"OPEN_SCORE","icon":"arrow-right","variant":"primary"},{"event":"RECALCULATE","label":"Recalculate","variant":"secondary"}]` */
-  itemActions?: EntityRow[];
   /** Default: `24` */
   recomputeIntervalHours?: number;
+  /** Default: `[30,7,1]` */
+  renewalReminderDaysBefore?: number[];
+  /** Default: `[{"label":"Open","icon":"arrow-right","event":"OPEN_SCORE","variant":"primary"},{"event":"RECALCULATE","variant":"secondary","label":"Recalculate"}]` */
+  itemActions?: EntityRow[];
+  /** Default: `[{"variant":"caption","name":"customerName","label":"Customer"},{"variant":"badge","name":"score","label":"Score"},{"variant":"badge","name":"tier","label":"Tier"},{"name":"usageScore","label":"Usage","variant":"caption"},{"label":"Support","name":"supportScore","variant":"caption"},{"name":"trend","label":"Trend","variant":"badge"},{"label":"CSM","variant":"caption","name":"assignedCsm"}]` */
+  fields?: EntityRow[];
   /** Default: `false` */
   consentTrackingEnabled?: boolean;
-  /** Default: `[{"name":"customerName","label":"Customer","variant":"caption"},{"variant":"badge","name":"score","label":"Score"},{"name":"tier","label":"Tier","variant":"badge"},{"label":"Usage","name":"usageScore","variant":"caption"},{"name":"supportScore","label":"Support","variant":"caption"},{"label":"Trend","variant":"badge","name":"trend"},{"variant":"caption","label":"CSM","name":"assignedCsm"}]` */
-  fields?: EntityRow[];
-  /** Default: `30` */
-  churnRiskThreshold?: number;
   /** Default: `"Customer Health Scores"` */
   title?: string;
-  /** Default: `40` */
-  healthScoreThresholdAlert?: number;
   /** Default: `365` */
   archiveInactiveAfterDays?: number;
+  /** Default: `30` */
+  churnRiskThreshold?: number;
+  /** Default: `["csm-lead","customer-success-director"]` */
+  alertEscalationRoles?: string[];
+  /** Default: `40` */
+  healthScoreThresholdAlert?: number;
 }
 
 /**

@@ -64,17 +64,17 @@
             "default": [
               {
                 "icon": "layout-list",
-                "href": "/portfolio",
-                "label": "Portfolio"
+                "label": "Portfolio",
+                "href": "/portfolio"
               },
               {
-                "href": "/orders",
                 "icon": "clipboard-list",
-                "label": "Orders"
+                "label": "Orders",
+                "href": "/orders"
               },
               {
-                "label": "Market",
                 "href": "/market",
+                "label": "Market",
                 "icon": "activity"
               }
             ]
@@ -144,9 +144,9 @@
             "type": "unknown",
             "default": [
               {
-                "filterType": "text",
+                "field": "symbol",
                 "label": "Symbol",
-                "field": "symbol"
+                "filterType": "text"
               }
             ]
           }
@@ -166,32 +166,34 @@
             "type": "unknown",
             "default": [
               {
-                "label": "Total Value",
                 "format": "currency",
-                "variant": "primary",
+                "label": "Total Value",
                 "aggregation": "sum",
+                "field": "marketValue",
                 "icon": "dollar-sign",
-                "field": "marketValue"
+                "variant": "primary"
               },
               {
-                "variant": "success",
                 "label": "Daily PnL",
-                "field": "dailyPnl",
-                "format": "currency",
+                "icon": "trending-up",
+                "variant": "success",
                 "aggregation": "sum",
-                "icon": "trending-up"
+                "field": "dailyPnl",
+                "format": "currency"
               },
               {
                 "format": "number",
-                "aggregation": "count",
-                "label": "Positions",
                 "icon": "layout-list",
+                "label": "Positions",
+                "aggregation": "count",
                 "variant": "info"
               },
               {
                 "aggregation": "count",
-                "icon": "check-circle",
+                "variant": "success",
                 "label": "Winners",
+                "icon": "check-circle",
+                "format": "number",
                 "filter": [
                   "fn",
                   "row",
@@ -200,9 +202,7 @@
                     "@row.dailyPnl",
                     0
                   ]
-                ],
-                "format": "number",
-                "variant": "success"
+                ]
               }
             ]
           },
@@ -287,32 +287,32 @@
             "type": "unknown",
             "default": [
               {
-                "variant": "h3",
                 "icon": "trending-up",
+                "variant": "h3",
                 "name": "symbol"
               },
               {
-                "format": "number",
-                "variant": "body",
                 "name": "qty",
-                "label": "Qty"
-              },
-              {
-                "label": "Avg Cost",
-                "name": "avgCost",
-                "format": "currency",
+                "format": "number",
+                "label": "Qty",
                 "variant": "body"
               },
               {
-                "label": "Market Value",
-                "variant": "h4",
+                "label": "Avg Cost",
                 "format": "currency",
-                "name": "marketValue"
+                "name": "avgCost",
+                "variant": "body"
               },
               {
+                "name": "marketValue",
                 "format": "currency",
+                "label": "Market Value",
+                "variant": "h4"
+              },
+              {
                 "variant": "badge",
                 "name": "dailyPnl",
+                "format": "currency",
                 "label": "Daily PnL"
               }
             ]
@@ -328,13 +328,13 @@
             "default": [
               {
                 "label": "View",
-                "variant": "ghost",
-                "event": "VIEW"
+                "event": "VIEW",
+                "variant": "ghost"
               },
               {
                 "variant": "ghost",
-                "label": "Edit",
-                "event": "EDIT"
+                "event": "EDIT",
+                "label": "Edit"
               },
               {
                 "variant": "danger",
@@ -604,9 +604,9 @@
                 "label": "Portfolio"
               },
               {
-                "label": "Orders",
                 "href": "/orders",
-                "icon": "clipboard-list"
+                "icon": "clipboard-list",
+                "label": "Orders"
               },
               {
                 "icon": "activity",
@@ -662,9 +662,9 @@
             "type": "unknown",
             "default": [
               {
-                "variant": "h3",
+                "name": "symbol",
                 "icon": "trending-up",
-                "name": "symbol"
+                "variant": "h3"
               },
               {
                 "variant": "badge",
@@ -696,19 +696,19 @@
             "type": "unknown",
             "default": [
               {
-                "variant": "ghost",
+                "label": "View",
                 "event": "VIEW",
-                "label": "View"
-              },
-              {
-                "event": "EDIT",
-                "label": "Edit",
                 "variant": "ghost"
               },
               {
+                "event": "EDIT",
+                "variant": "ghost",
+                "label": "Edit"
+              },
+              {
                 "variant": "danger",
-                "label": "Cancel",
-                "event": "DELETE"
+                "event": "DELETE",
+                "label": "Cancel"
               }
             ]
           }
@@ -872,6 +872,124 @@
         ],
         "overridableConfigKeys": [],
         "capabilities": []
+      },
+      {
+        "name": "TradingNotifier",
+        "emittedEvents": [],
+        "listenedEvents": [],
+        "overridableConfigKeys": [
+          {
+            "key": "listensFor",
+            "type": "unknown",
+            "default": [
+              "TRADE_ORDER_UPDATED"
+            ]
+          },
+          {
+            "key": "notifyChannel",
+            "type": "unknown",
+            "default": "in-app"
+          },
+          {
+            "key": "recipients",
+            "type": "unknown",
+            "default": []
+          },
+          {
+            "key": "severity",
+            "type": "unknown",
+            "default": "warning"
+          },
+          {
+            "key": "suppressionList",
+            "type": "unknown",
+            "default": []
+          },
+          {
+            "key": "template",
+            "type": "unknown",
+            "default": "Price or order alert"
+          }
+        ],
+        "capabilities": [],
+        "ref": "Notify.traits.NotifyOnEventListener"
+      },
+      {
+        "name": "TradingAuditCapture",
+        "emittedEvents": [],
+        "listenedEvents": [],
+        "overridableConfigKeys": [
+          {
+            "key": "captureBeforeAfter",
+            "type": "unknown",
+            "default": true
+          },
+          {
+            "key": "captureEntity",
+            "type": "unknown",
+            "default": "TradeOrder"
+          },
+          {
+            "key": "captureEventTypes",
+            "type": "unknown",
+            "default": []
+          },
+          {
+            "key": "excludeFields",
+            "type": "unknown",
+            "default": []
+          },
+          {
+            "key": "retentionDays",
+            "type": "unknown",
+            "default": 2555
+          }
+        ],
+        "capabilities": [],
+        "ref": "Audit.traits.AuditCaptureListener"
+      },
+      {
+        "name": "TradingApprovalGate",
+        "emittedEvents": [],
+        "listenedEvents": [],
+        "overridableConfigKeys": [
+          {
+            "key": "approverRoles",
+            "type": "unknown",
+            "default": [
+              "trading-desk-lead"
+            ]
+          },
+          {
+            "key": "autoApproveBelowThreshold",
+            "type": "unknown",
+            "default": true
+          },
+          {
+            "key": "escalationHours",
+            "type": "unknown",
+            "default": 1
+          },
+          {
+            "key": "escalationRoles",
+            "type": "unknown",
+            "default": [
+              "compliance-officer"
+            ]
+          },
+          {
+            "key": "threshold",
+            "type": "unknown",
+            "default": 100000
+          },
+          {
+            "key": "valueField",
+            "type": "unknown",
+            "default": "price"
+          }
+        ],
+        "capabilities": [],
+        "ref": "Approval.traits.ApprovalGateReview"
       }
     ],
     "pages": [
@@ -958,19 +1076,19 @@
             "type": "unknown",
             "default": [
               {
-                "label": "Portfolio",
                 "href": "/portfolio",
+                "label": "Portfolio",
                 "icon": "layout-list"
               },
               {
-                "href": "/orders",
                 "label": "Orders",
+                "href": "/orders",
                 "icon": "clipboard-list"
               },
               {
+                "href": "/market",
                 "icon": "activity",
-                "label": "Market",
-                "href": "/market"
+                "label": "Market"
               }
             ]
           },
@@ -1040,6 +1158,418 @@
       "MarketFeedSaveFailed",
       "MarketFeedSaved"
     ],
+    "listenedEvents": []
+  },
+  {
+    "organism": "std-trading-dashboard",
+    "orbital": "VenueTradeOrderFromStdOrbital",
+    "tier": "organisms",
+    "factoryPath": "behaviors/functions/app/organisms/std-trading-dashboard.ts",
+    "entities": [
+      {
+        "name": "VenueTradeOrder",
+        "fields": [
+          {
+            "name": "instrument",
+            "type": "string",
+            "required": true
+          },
+          {
+            "name": "side",
+            "type": "string",
+            "required": false
+          },
+          {
+            "name": "orderType",
+            "type": "string",
+            "required": false
+          },
+          {
+            "name": "quantity",
+            "type": "number",
+            "required": false
+          },
+          {
+            "name": "price",
+            "type": "number",
+            "required": false
+          },
+          {
+            "name": "limitPrice",
+            "type": "number",
+            "required": false
+          },
+          {
+            "name": "stopPrice",
+            "type": "number",
+            "required": false
+          },
+          {
+            "name": "status",
+            "type": "string",
+            "required": false
+          },
+          {
+            "name": "venue",
+            "type": "string",
+            "required": false
+          },
+          {
+            "name": "filledAt",
+            "type": "string",
+            "required": false
+          }
+        ],
+        "persistence": "persistent"
+      }
+    ],
+    "traits": [
+      {
+        "name": "VenueTradeOrderFromStdAppLayout",
+        "emittedEvents": [],
+        "listenedEvents": [],
+        "overridableConfigKeys": [
+          {
+            "key": "appName",
+            "type": "unknown",
+            "default": "Trading Dashboard"
+          },
+          {
+            "key": "contentTrait",
+            "type": "unknown",
+            "default": "@trait.VenueTradeOrderFromStdManageBlock"
+          },
+          {
+            "key": "navItems",
+            "type": "unknown",
+            "default": [
+              {
+                "href": "/portfolio",
+                "icon": "layout-list",
+                "label": "Portfolio"
+              },
+              {
+                "label": "Orders",
+                "href": "/orders",
+                "icon": "clipboard-list"
+              },
+              {
+                "href": "/market",
+                "icon": "activity",
+                "label": "Market"
+              },
+              {
+                "label": "Venue Orders",
+                "icon": "trending-up",
+                "href": "/orders-venue"
+              }
+            ]
+          },
+          {
+            "key": "notificationClickEvent",
+            "type": "unknown",
+            "default": "VENUE_ORDER_NOTIFICATIONS_OPEN"
+          },
+          {
+            "key": "notifications",
+            "type": "unknown",
+            "default": []
+          },
+          {
+            "key": "searchEvent",
+            "type": "unknown",
+            "default": "VENUE_ORDER_SEARCH"
+          }
+        ],
+        "capabilities": [],
+        "ref": "AppShell.traits.AppLayout"
+      },
+      {
+        "name": "VenueTradeOrderFromStdManageBlock",
+        "emittedEvents": [],
+        "listenedEvents": [],
+        "overridableConfigKeys": [
+          {
+            "key": "title",
+            "type": "unknown",
+            "default": "Venue Trade Orders"
+          }
+        ],
+        "capabilities": [],
+        "ref": "Orders.traits.TradeOrderManage"
+      }
+    ],
+    "pages": [
+      {
+        "name": "VenueTradeOrderFromStdPage",
+        "defaultPath": "/orders-venue",
+        "primaryEntity": "VenueTradeOrder"
+      }
+    ],
+    "emittedEvents": [],
+    "listenedEvents": []
+  },
+  {
+    "organism": "std-trading-dashboard",
+    "orbital": "PortfolioFromStdOrbital",
+    "tier": "organisms",
+    "factoryPath": "behaviors/functions/app/organisms/std-trading-dashboard.ts",
+    "entities": [
+      {
+        "name": "ManagedPortfolio",
+        "fields": [
+          {
+            "name": "name",
+            "type": "string",
+            "required": true
+          },
+          {
+            "name": "ownerAccountId",
+            "type": "string",
+            "required": true
+          },
+          {
+            "name": "currentValueUSD",
+            "type": "number",
+            "required": false
+          },
+          {
+            "name": "targetAllocationJson",
+            "type": "string",
+            "required": false
+          },
+          {
+            "name": "driftBps",
+            "type": "number",
+            "required": false
+          },
+          {
+            "name": "status",
+            "type": "string",
+            "required": false
+          },
+          {
+            "name": "lastRebalancedAt",
+            "type": "string",
+            "required": false
+          }
+        ],
+        "persistence": "persistent"
+      }
+    ],
+    "traits": [
+      {
+        "name": "ManagedPortfolioFromStdAppLayout",
+        "emittedEvents": [],
+        "listenedEvents": [],
+        "overridableConfigKeys": [
+          {
+            "key": "appName",
+            "type": "unknown",
+            "default": "Trading Dashboard"
+          },
+          {
+            "key": "contentTrait",
+            "type": "unknown",
+            "default": "@trait.ManagedPortfolioFromStdManageBlock"
+          },
+          {
+            "key": "navItems",
+            "type": "unknown",
+            "default": [
+              {
+                "href": "/portfolio",
+                "icon": "layout-list",
+                "label": "Portfolio"
+              },
+              {
+                "icon": "clipboard-list",
+                "href": "/orders",
+                "label": "Orders"
+              },
+              {
+                "label": "Market",
+                "href": "/market",
+                "icon": "activity"
+              },
+              {
+                "label": "Managed Portfolios",
+                "href": "/portfolios-managed",
+                "icon": "briefcase"
+              }
+            ]
+          },
+          {
+            "key": "notificationClickEvent",
+            "type": "unknown",
+            "default": "MANAGED_PORTFOLIO_NOTIFICATIONS_OPEN"
+          },
+          {
+            "key": "notifications",
+            "type": "unknown",
+            "default": []
+          },
+          {
+            "key": "searchEvent",
+            "type": "unknown",
+            "default": "MANAGED_PORTFOLIO_SEARCH"
+          }
+        ],
+        "capabilities": [],
+        "ref": "AppShell.traits.AppLayout"
+      },
+      {
+        "name": "ManagedPortfolioFromStdManageBlock",
+        "emittedEvents": [],
+        "listenedEvents": [],
+        "overridableConfigKeys": [
+          {
+            "key": "title",
+            "type": "unknown",
+            "default": "Managed Portfolios"
+          }
+        ],
+        "capabilities": [],
+        "ref": "Portfolios.traits.PortfolioManage"
+      }
+    ],
+    "pages": [
+      {
+        "name": "ManagedPortfolioFromStdPage",
+        "defaultPath": "/portfolios-managed",
+        "primaryEntity": "ManagedPortfolio"
+      }
+    ],
+    "emittedEvents": [],
+    "listenedEvents": []
+  },
+  {
+    "organism": "std-trading-dashboard",
+    "orbital": "MarginAccountFromStdOrbital",
+    "tier": "organisms",
+    "factoryPath": "behaviors/functions/app/organisms/std-trading-dashboard.ts",
+    "entities": [
+      {
+        "name": "MarginAccount",
+        "fields": [
+          {
+            "name": "accountHolderId",
+            "type": "string",
+            "required": true
+          },
+          {
+            "name": "equityUSD",
+            "type": "number",
+            "required": false
+          },
+          {
+            "name": "marginUsedUSD",
+            "type": "number",
+            "required": false
+          },
+          {
+            "name": "marginAvailableUSD",
+            "type": "number",
+            "required": false
+          },
+          {
+            "name": "status",
+            "type": "string",
+            "required": false
+          },
+          {
+            "name": "lastCallAt",
+            "type": "string",
+            "required": false
+          }
+        ],
+        "persistence": "persistent"
+      }
+    ],
+    "traits": [
+      {
+        "name": "MarginAccountFromStdAppLayout",
+        "emittedEvents": [],
+        "listenedEvents": [],
+        "overridableConfigKeys": [
+          {
+            "key": "appName",
+            "type": "unknown",
+            "default": "Trading Dashboard"
+          },
+          {
+            "key": "contentTrait",
+            "type": "unknown",
+            "default": "@trait.MarginAccountFromStdManageBlock"
+          },
+          {
+            "key": "navItems",
+            "type": "unknown",
+            "default": [
+              {
+                "href": "/portfolio",
+                "icon": "layout-list",
+                "label": "Portfolio"
+              },
+              {
+                "label": "Orders",
+                "href": "/orders",
+                "icon": "clipboard-list"
+              },
+              {
+                "icon": "activity",
+                "label": "Market",
+                "href": "/market"
+              },
+              {
+                "href": "/margin-accounts",
+                "icon": "dollar-sign",
+                "label": "Margin Accounts"
+              }
+            ]
+          },
+          {
+            "key": "notificationClickEvent",
+            "type": "unknown",
+            "default": "MARGIN_ACCOUNT_NOTIFICATIONS_OPEN"
+          },
+          {
+            "key": "notifications",
+            "type": "unknown",
+            "default": []
+          },
+          {
+            "key": "searchEvent",
+            "type": "unknown",
+            "default": "MARGIN_ACCOUNT_SEARCH"
+          }
+        ],
+        "capabilities": [],
+        "ref": "AppShell.traits.AppLayout"
+      },
+      {
+        "name": "MarginAccountFromStdManageBlock",
+        "emittedEvents": [],
+        "listenedEvents": [],
+        "overridableConfigKeys": [
+          {
+            "key": "title",
+            "type": "unknown",
+            "default": "Margin Accounts"
+          }
+        ],
+        "capabilities": [],
+        "ref": "Margin.traits.MarginAccountManage"
+      }
+    ],
+    "pages": [
+      {
+        "name": "MarginAccountFromStdPage",
+        "defaultPath": "/margin-accounts",
+        "primaryEntity": "MarginAccount"
+      }
+    ],
+    "emittedEvents": [],
     "listenedEvents": []
   }
 ]

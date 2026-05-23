@@ -97,30 +97,30 @@ export interface StdEventEventLoadFailedPayload {
  * without modifying its state-machine topology.
  */
 export interface StdEventConfig {
-  /** Default: `180` */
-  bookingWindowDays?: number;
-  /** Default: `"00:00-23:59"` */
-  bookingHours?: string;
-  /** Default: `60` */
-  leadTimeMinutes?: number;
-  /** Default: `[{"variant":"caption","label":"Name","name":"name"},{"variant":"caption","name":"venue","label":"Venue"},{"variant":"caption","label":"Starts","name":"startsAt"},{"name":"endsAt","label":"Ends","variant":"caption"},{"variant":"caption","name":"capacity","label":"Capacity"},{"label":"Status","name":"status","variant":"badge"}]` */
-  fields?: EntityRow[];
-  /** Default: `""` */
-  policyId?: string;
-  /** Default: `[]` */
-  blackoutDates?: string[];
-  /** Default: `30` */
-  noShowGracePeriodMinutes?: number;
-  /** Default: `48` */
-  rescheduleWindowHours?: number;
   /** Default: `"Events"` */
   title?: string;
+  /** Default: `[{"icon":"arrow-right","label":"Open","variant":"primary","event":"OPEN_EVENT"},{"label":"Cancel","event":"CANCEL","icon":"x","variant":"danger"}]` */
+  itemActions?: EntityRow[];
+  /** Default: `48` */
+  rescheduleWindowHours?: number;
+  /** Default: `"00:00-23:59"` */
+  bookingHours?: string;
+  /** Default: `""` */
+  policyId?: string;
+  /** Default: `60` */
+  leadTimeMinutes?: number;
+  /** Default: `30` */
+  noShowGracePeriodMinutes?: number;
+  /** Default: `180` */
+  bookingWindowDays?: number;
   /** Default: `1` */
   maxReschedules?: number;
+  /** Default: `[]` */
+  blackoutDates?: string[];
   /** Default: `"partial-refund"` */
   cancellationPolicy?: 'free' | 'partial-refund' | 'no-refund';
-  /** Default: `[{"label":"Open","variant":"primary","event":"OPEN_EVENT","icon":"arrow-right"},{"icon":"x","label":"Cancel","event":"CANCEL","variant":"danger"}]` */
-  itemActions?: EntityRow[];
+  /** Default: `[{"name":"name","label":"Name","variant":"caption"},{"name":"venue","label":"Venue","variant":"caption"},{"name":"startsAt","label":"Starts","variant":"caption"},{"variant":"caption","name":"endsAt","label":"Ends"},{"name":"capacity","label":"Capacity","variant":"caption"},{"name":"status","label":"Status","variant":"badge"}]` */
+  fields?: EntityRow[];
 }
 
 /**

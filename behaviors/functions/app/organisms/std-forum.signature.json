@@ -78,9 +78,9 @@
             "type": "unknown",
             "default": [
               {
+                "icon": "help-circle",
                 "label": "Questions",
-                "href": "/questions",
-                "icon": "help-circle"
+                "href": "/questions"
               },
               {
                 "label": "Categories",
@@ -88,8 +88,8 @@
                 "icon": "tag"
               },
               {
-                "href": "/moderation",
                 "icon": "shield-alert",
+                "href": "/moderation",
                 "label": "Moderation"
               }
             ]
@@ -159,19 +159,19 @@
             "type": "unknown",
             "default": [
               {
-                "field": "status",
                 "options": [
                   "open",
                   "answered",
                   "closed"
                 ],
+                "label": "Status",
                 "filterType": "select",
-                "label": "Status"
+                "field": "status"
               },
               {
+                "field": "tag",
                 "filterType": "select",
                 "label": "Tag",
-                "field": "tag",
                 "options": []
               }
             ]
@@ -192,17 +192,15 @@
             "type": "unknown",
             "default": [
               {
-                "label": "Total",
                 "format": "number",
                 "icon": "help-circle",
-                "aggregation": "count",
-                "variant": "primary"
+                "variant": "primary",
+                "label": "Total",
+                "aggregation": "count"
               },
               {
                 "aggregation": "count",
-                "label": "Open",
-                "format": "number",
-                "icon": "circle",
+                "variant": "warning",
                 "filter": [
                   "fn",
                   "row",
@@ -212,14 +210,12 @@
                     "open"
                   ]
                 ],
-                "variant": "warning"
+                "icon": "circle",
+                "format": "number",
+                "label": "Open"
               },
               {
-                "aggregation": "count",
                 "format": "number",
-                "variant": "success",
-                "icon": "check-circle",
-                "label": "Answered",
                 "filter": [
                   "fn",
                   "row",
@@ -228,7 +224,11 @@
                     "@row.status",
                     "answered"
                   ]
-                ]
+                ],
+                "icon": "check-circle",
+                "variant": "success",
+                "aggregation": "count",
+                "label": "Answered"
               }
             ]
           },
@@ -281,9 +281,9 @@
             "type": "unknown",
             "default": [
               {
+                "variant": "h3",
                 "icon": "help-circle",
-                "name": "title",
-                "variant": "h3"
+                "name": "title"
               },
               {
                 "name": "authorName",
@@ -298,14 +298,14 @@
                 "variant": "badge"
               },
               {
-                "variant": "caption",
                 "format": "number",
+                "variant": "caption",
                 "name": "voteCount"
               },
               {
-                "name": "replyCount",
                 "variant": "caption",
-                "format": "number"
+                "format": "number",
+                "name": "replyCount"
               }
             ]
           },
@@ -319,19 +319,19 @@
             "type": "unknown",
             "default": [
               {
-                "label": "View",
                 "event": "VIEW",
+                "label": "View",
                 "variant": "ghost"
               },
               {
                 "label": "Edit",
-                "event": "EDIT",
-                "variant": "ghost"
+                "variant": "ghost",
+                "event": "EDIT"
               },
               {
-                "variant": "danger",
                 "label": "Delete",
-                "event": "DELETE"
+                "event": "DELETE",
+                "variant": "danger"
               }
             ]
           },
@@ -535,6 +535,113 @@
         ],
         "overridableConfigKeys": [],
         "capabilities": []
+      },
+      {
+        "name": "QuestionReplyNotifier",
+        "emittedEvents": [],
+        "listenedEvents": [],
+        "overridableConfigKeys": [
+          {
+            "key": "listensFor",
+            "type": "unknown",
+            "default": [
+              "ReplyAdded"
+            ]
+          },
+          {
+            "key": "notifyChannel",
+            "type": "unknown",
+            "default": "in-app"
+          },
+          {
+            "key": "recipients",
+            "type": "unknown",
+            "default": []
+          },
+          {
+            "key": "severity",
+            "type": "unknown",
+            "default": "info"
+          },
+          {
+            "key": "suppressionList",
+            "type": "unknown",
+            "default": []
+          },
+          {
+            "key": "template",
+            "type": "unknown",
+            "default": "A new reply was posted on your question"
+          }
+        ],
+        "capabilities": [],
+        "ref": "Notify.traits.NotifyOnEventListener"
+      },
+      {
+        "name": "QuestionErasure",
+        "emittedEvents": [],
+        "listenedEvents": [],
+        "overridableConfigKeys": [
+          {
+            "key": "anonymizeVsDelete",
+            "type": "unknown",
+            "default": "anonymize"
+          },
+          {
+            "key": "gracePeriodDays",
+            "type": "unknown",
+            "default": 30
+          },
+          {
+            "key": "piiFields",
+            "type": "unknown",
+            "default": [
+              "authorName",
+              "body"
+            ]
+          },
+          {
+            "key": "targetEntity",
+            "type": "unknown",
+            "default": "Question"
+          }
+        ],
+        "capabilities": [],
+        "ref": "Erasure.traits.ErasureWorkflow"
+      },
+      {
+        "name": "QuestionAudit",
+        "emittedEvents": [],
+        "listenedEvents": [],
+        "overridableConfigKeys": [
+          {
+            "key": "captureBeforeAfter",
+            "type": "unknown",
+            "default": false
+          },
+          {
+            "key": "captureEntity",
+            "type": "unknown",
+            "default": "Question"
+          },
+          {
+            "key": "captureEventTypes",
+            "type": "unknown",
+            "default": []
+          },
+          {
+            "key": "excludeFields",
+            "type": "unknown",
+            "default": []
+          },
+          {
+            "key": "retentionDays",
+            "type": "unknown",
+            "default": 2555
+          }
+        ],
+        "capabilities": [],
+        "ref": "Audit.traits.AuditCaptureListener"
       }
     ],
     "pages": [
@@ -631,19 +738,19 @@
             "type": "unknown",
             "default": [
               {
-                "label": "Questions",
                 "href": "/questions",
-                "icon": "help-circle"
+                "icon": "help-circle",
+                "label": "Questions"
               },
               {
+                "icon": "tag",
                 "label": "Categories",
-                "href": "/questions",
-                "icon": "tag"
+                "href": "/questions"
               },
               {
                 "label": "Moderation",
-                "href": "/moderation",
-                "icon": "shield-alert"
+                "icon": "shield-alert",
+                "href": "/moderation"
               }
             ]
           },
@@ -739,18 +846,18 @@
             "type": "unknown",
             "default": [
               {
-                "name": "targetType",
                 "label": "Target",
-                "variant": "badge"
-              },
-              {
                 "variant": "badge",
-                "name": "verdict",
-                "label": "Verdict"
+                "name": "targetType"
               },
               {
-                "variant": "caption",
+                "label": "Verdict",
+                "variant": "badge",
+                "name": "verdict"
+              },
+              {
                 "label": "Reviewer",
+                "variant": "caption",
                 "name": "reviewerId"
               },
               {
@@ -759,10 +866,10 @@
                 "name": "notes"
               },
               {
-                "label": "When",
-                "variant": "caption",
+                "format": "date",
                 "name": "createdAt",
-                "format": "date"
+                "label": "When",
+                "variant": "caption"
               }
             ]
           },
@@ -777,8 +884,8 @@
             "default": [
               {
                 "label": "Revert",
-                "event": "DELETE",
-                "variant": "danger"
+                "variant": "danger",
+                "event": "DELETE"
               }
             ]
           }
@@ -851,5 +958,129 @@
       "MODERATION_SEARCH",
       "ModQueueItemReviewed"
     ]
+  },
+  {
+    "organism": "std-forum",
+    "orbital": "ModerationRuleFromStdOrbital",
+    "tier": "organisms",
+    "factoryPath": "behaviors/functions/app/organisms/std-forum.ts",
+    "entities": [
+      {
+        "name": "ModerationRule",
+        "fields": [
+          {
+            "name": "name",
+            "type": "string",
+            "required": true
+          },
+          {
+            "name": "description",
+            "type": "string",
+            "required": false
+          },
+          {
+            "name": "appliesTo",
+            "type": "string",
+            "required": false
+          },
+          {
+            "name": "priority",
+            "type": "number",
+            "required": false
+          },
+          {
+            "name": "status",
+            "type": "string",
+            "required": false
+          }
+        ],
+        "persistence": "persistent"
+      }
+    ],
+    "traits": [
+      {
+        "name": "ModerationRuleFromStdAppLayout",
+        "emittedEvents": [],
+        "listenedEvents": [],
+        "overridableConfigKeys": [
+          {
+            "key": "appName",
+            "type": "unknown",
+            "default": "Forum"
+          },
+          {
+            "key": "contentTrait",
+            "type": "unknown",
+            "default": "@trait.ModerationRuleFromStdManageBlock"
+          },
+          {
+            "key": "navItems",
+            "type": "unknown",
+            "default": [
+              {
+                "icon": "help-circle",
+                "label": "Questions",
+                "href": "/questions"
+              },
+              {
+                "icon": "tag",
+                "label": "Categories",
+                "href": "/questions"
+              },
+              {
+                "icon": "shield-alert",
+                "label": "Moderation",
+                "href": "/moderation"
+              },
+              {
+                "label": "Moderation Rules",
+                "icon": "filter",
+                "href": "/moderation-rules"
+              }
+            ]
+          },
+          {
+            "key": "notificationClickEvent",
+            "type": "unknown",
+            "default": "MODERATION_RULE_NOTIFICATIONS_OPEN"
+          },
+          {
+            "key": "notifications",
+            "type": "unknown",
+            "default": []
+          },
+          {
+            "key": "searchEvent",
+            "type": "unknown",
+            "default": "MODERATION_RULE_SEARCH"
+          }
+        ],
+        "capabilities": [],
+        "ref": "AppShell.traits.AppLayout"
+      },
+      {
+        "name": "ModerationRuleFromStdManageBlock",
+        "emittedEvents": [],
+        "listenedEvents": [],
+        "overridableConfigKeys": [
+          {
+            "key": "title",
+            "type": "unknown",
+            "default": "Moderation Rules"
+          }
+        ],
+        "capabilities": [],
+        "ref": "Rules.traits.ModerationRuleManage"
+      }
+    ],
+    "pages": [
+      {
+        "name": "ModerationRuleFromStdPage",
+        "defaultPath": "/moderation-rules",
+        "primaryEntity": "ModerationRule"
+      }
+    ],
+    "emittedEvents": [],
+    "listenedEvents": []
   }
 ]

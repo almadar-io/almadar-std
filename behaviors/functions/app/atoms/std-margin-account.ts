@@ -105,16 +105,16 @@ export interface StdMarginAccountMarginAccountLoadFailedPayload {
  * without modifying its state-machine topology.
  */
 export interface StdMarginAccountConfig {
-  /** Default: `"2x"` */
-  marginLeverage?: '2x' | '4x' | '10x' | '20x';
-  /** Default: `[{"icon":"arrow-right","event":"OPEN_ACCOUNT","label":"Open","variant":"primary"},{"label":"Issue Call","event":"ISSUE_CALL","icon":"alert-triangle","variant":"danger"}]` */
-  itemActions?: EntityRow[];
   /** Default: `"Margin Accounts"` */
   title?: string;
+  /** Default: `[{"label":"Holder","name":"accountHolderId","variant":"caption"},{"variant":"caption","label":"Equity","name":"equityUSD"},{"name":"marginUsedUSD","variant":"caption","label":"Used"},{"name":"marginAvailableUSD","label":"Available","variant":"caption"},{"name":"status","label":"Status","variant":"badge"},{"variant":"caption","name":"lastCallAt","label":"Last Call"}]` */
+  fields?: EntityRow[];
+  /** Default: `[{"variant":"primary","icon":"arrow-right","event":"OPEN_ACCOUNT","label":"Open"},{"label":"Issue Call","event":"ISSUE_CALL","variant":"danger","icon":"alert-triangle"}]` */
+  itemActions?: EntityRow[];
   /** Default: `30` */
   marginCallThresholdPct?: number;
-  /** Default: `[{"name":"accountHolderId","variant":"caption","label":"Holder"},{"variant":"caption","name":"equityUSD","label":"Equity"},{"variant":"caption","name":"marginUsedUSD","label":"Used"},{"label":"Available","variant":"caption","name":"marginAvailableUSD"},{"label":"Status","name":"status","variant":"badge"},{"variant":"caption","label":"Last Call","name":"lastCallAt"}]` */
-  fields?: EntityRow[];
+  /** Default: `"2x"` */
+  marginLeverage?: '2x' | '4x' | '10x' | '20x';
   /** Default: `20` */
   forcedLiquidationThresholdPct?: number;
 }

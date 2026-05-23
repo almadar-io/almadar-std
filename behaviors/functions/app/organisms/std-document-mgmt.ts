@@ -75,7 +75,7 @@ export interface StdDocumentMgmtDocumentOrbitalParams {
    * atom-owned (use `listens` via a sibling trait instead).
    */
   traitOverrides?: Partial<Record<
-    'DocumentAppLayout' | 'DocumentSearch' | 'DocumentFilter' | 'DocumentStats' | 'DocumentGraphs' | 'DocumentBrowseList' | 'DocumentCreate' | 'DocumentEdit' | 'DocumentView' | 'DocumentDelete' | 'DocumentESignFlow' | 'DocumentESignCreate' | 'DocumentESignDelete' | 'DocumentESignPersistor' | 'DocumentFileStore' | 'DocumentESignRequest' | 'DocumentVersionHistory' | 'DocumentCatalog' | 'DocumentPersistor',
+    'DocumentAppLayout' | 'DocumentSearch' | 'DocumentFilter' | 'DocumentStats' | 'DocumentGraphs' | 'DocumentBrowseList' | 'DocumentCreate' | 'DocumentEdit' | 'DocumentView' | 'DocumentDelete' | 'DocumentESignFlow' | 'DocumentESignCreate' | 'DocumentESignDelete' | 'DocumentESignPersistor' | 'DocumentFileStore' | 'DocumentESignRequest' | 'DocumentVersionHistory' | 'DocumentLifecycleScan' | 'DocumentNotifier' | 'DocumentAuditCapture' | 'DocumentApprovalGate' | 'DocumentErasureWorkflow' | 'DocumentCatalog' | 'DocumentPersistor',
     Pick<MakeTraitRefOpts, 'config' | 'linkedEntity' | 'events' | 'name' | 'emitsScope' | 'listens'>
   >>;
 }
@@ -135,6 +135,26 @@ export function stdDocumentMgmtDocumentOrbital(params: StdDocumentMgmtDocumentOr
       {
         'from': 'std/behaviors/std-version-history',
         'as': 'VersionHistory',
+      },
+      {
+        'from': 'std/behaviors/std-lifecycle',
+        'as': 'Lifecycle',
+      },
+      {
+        'from': 'std/behaviors/std-notify-on-event',
+        'as': 'Notify',
+      },
+      {
+        'from': 'std/behaviors/std-audit-capture',
+        'as': 'Audit',
+      },
+      {
+        'from': 'std/behaviors/std-approval-gate',
+        'as': 'Approval',
+      },
+      {
+        'from': 'std/behaviors/std-data-erasure',
+        'as': 'Erasure',
       },
     ],
     entity: {
@@ -200,42 +220,42 @@ export function stdDocumentMgmtDocumentOrbital(params: StdDocumentMgmtDocumentOr
         'ref': 'AppShell.traits.AppLayout',
         'name': 'DocumentAppLayout',
         'config': {
+          'contentTrait': '@trait.DocumentCatalog',
           'notifications': [],
+          'searchEvent': 'DOCUMENT_SEARCH',
           'appName': 'Documents',
           'notificationClickEvent': 'DOCUMENT_NOTIFICATIONS_OPEN',
           'navItems': [
             {
-              'icon': 'file-text',
-              'href': '/documents',
               'label': 'Documents',
+              'href': '/documents',
+              'icon': 'file-text',
             },
             {
-              'href': '/esign-flow',
               'label': 'E-Sign Flow',
+              'href': '/esign-flow',
               'icon': 'file-signature',
             },
             {
-              'href': '/files',
-              'label': 'Files',
               'icon': 'folder',
+              'label': 'Files',
+              'href': '/files',
             },
             {
-              'icon': 'pen-tool',
-              'href': '/esign',
               'label': 'Signatures',
+              'href': '/esign',
+              'icon': 'pen-tool',
             },
             {
-              'icon': 'history',
               'label': 'Versions',
               'href': '/revisions/manage',
+              'icon': 'history',
             },
           ],
-          'searchEvent': 'DOCUMENT_SEARCH',
-          'contentTrait': '@trait.DocumentCatalog',
         },
         'events': {
-          'NOTIFY_CLICK': 'DOCUMENT_NOTIFICATIONS_OPEN',
           'SEARCH': 'DOCUMENT_SEARCH',
+          'NOTIFY_CLICK': 'DOCUMENT_NOTIFICATIONS_OPEN',
         },
       }),
       rebindInlineTraitEntity({
@@ -321,56 +341,56 @@ export function stdDocumentMgmtDocumentOrbital(params: StdDocumentMgmtDocumentOr
                     'direction': 'vertical',
                     'children': [
                       {
-                        'align': 'center',
+                        'type': 'stack',
                         'direction': 'horizontal',
                         'justify': 'between',
+                        'align': 'center',
                         'children': [
                           {
-                            'direction': 'horizontal',
+                            'gap': 'sm',
                             'type': 'stack',
+                            'direction': 'horizontal',
                             'align': 'center',
                             'children': [
                               {
-                                'type': 'icon',
                                 'name': 'file-text',
+                                'type': 'icon',
                               },
                               {
-                                'type': 'typography',
                                 'variant': 'h2',
+                                'type': 'typography',
                                 'content': 'Documents',
                               },
                             ],
-                            'gap': 'sm',
                           },
                           {
                             'type': 'stack',
+                            'direction': 'horizontal',
                             'gap': 'sm',
                             'children': [
                               {
+                                'icon': 'plus',
                                 'label': 'New Document',
                                 'type': 'button',
-                                'icon': 'plus',
-                                'action': 'CREATE',
                                 'variant': 'primary',
+                                'action': 'CREATE',
                               },
                             ],
-                            'direction': 'horizontal',
                           },
                         ],
-                        'type': 'stack',
                         'gap': 'md',
                       },
                       {
                         'type': 'divider',
                       },
                       {
+                        'type': 'stack',
+                        'align': 'center',
                         'children': [
                           '@trait.DocumentSearch',
                           '@trait.DocumentFilter',
                         ],
-                        'align': 'center',
                         'direction': 'horizontal',
-                        'type': 'stack',
                         'gap': 'md',
                       },
                       '@trait.DocumentStats',
@@ -380,8 +400,8 @@ export function stdDocumentMgmtDocumentOrbital(params: StdDocumentMgmtDocumentOr
                       },
                       '@trait.DocumentBrowseList',
                     ],
-                    'gap': 'lg',
                     'type': 'stack',
+                    'gap': 'lg',
                   },
                 ],
               ],
@@ -400,12 +420,11 @@ export function stdDocumentMgmtDocumentOrbital(params: StdDocumentMgmtDocumentOr
                   'render-ui',
                   'main',
                   {
-                    'align': 'center',
-                    'gap': 'md',
+                    'className': 'py-8',
                     'children': [
                       {
-                        'name': 'bell',
                         'type': 'icon',
+                        'name': 'bell',
                       },
                       {
                         'type': 'typography',
@@ -413,21 +432,22 @@ export function stdDocumentMgmtDocumentOrbital(params: StdDocumentMgmtDocumentOr
                         'content': 'No notifications',
                       },
                       {
-                        'type': 'typography',
-                        'content': 'You\'re all caught up.',
-                        'variant': 'caption',
                         'color': 'muted',
+                        'type': 'typography',
+                        'variant': 'caption',
+                        'content': 'You\'re all caught up.',
                       },
                       {
-                        'type': 'button',
-                        'variant': 'ghost',
                         'label': 'Back to documents',
                         'action': 'INIT',
+                        'variant': 'ghost',
+                        'type': 'button',
                       },
                     ],
-                    'direction': 'vertical',
-                    'className': 'py-8',
                     'type': 'stack',
+                    'direction': 'vertical',
+                    'gap': 'md',
+                    'align': 'center',
                   },
                 ],
               ],
@@ -440,8 +460,8 @@ export function stdDocumentMgmtDocumentOrbital(params: StdDocumentMgmtDocumentOr
         'ref': 'Search.traits.SearchResultSearch',
         'name': 'DocumentSearch',
         'config': {
-          'event': 'DOCUMENT_SEARCH',
           'placeholder': 'Search documents…',
+          'event': 'DOCUMENT_SEARCH',
         },
       }),
       makeTraitRef({
@@ -450,9 +470,9 @@ export function stdDocumentMgmtDocumentOrbital(params: StdDocumentMgmtDocumentOr
         'config': {
           'filters': [
             {
-              'field': 'status',
               'label': 'Status',
               'filterType': 'select',
+              'field': 'status',
               'options': [
                 'active',
                 'archived',
@@ -460,7 +480,6 @@ export function stdDocumentMgmtDocumentOrbital(params: StdDocumentMgmtDocumentOr
               ],
             },
             {
-              'field': 'mimeType',
               'filterType': 'select',
               'options': [
                 'pdf',
@@ -469,6 +488,7 @@ export function stdDocumentMgmtDocumentOrbital(params: StdDocumentMgmtDocumentOr
                 'image',
               ],
               'label': 'Type',
+              'field': 'mimeType',
             },
           ],
           'event': 'DOCUMENT_FILTER',
@@ -478,18 +498,19 @@ export function stdDocumentMgmtDocumentOrbital(params: StdDocumentMgmtDocumentOr
         'ref': 'Stats.traits.StatsItemStats',
         'name': 'DocumentStats',
         'config': {
+          'title': 'Documents',
           'metrics': [
             {
-              'variant': 'primary',
-              'aggregation': 'count',
+              'format': 'number',
               'label': 'Total',
               'icon': 'file-text',
-              'format': 'number',
+              'aggregation': 'count',
+              'variant': 'primary',
             },
             {
+              'variant': 'success',
               'format': 'number',
               'aggregation': 'count',
-              'label': 'Active',
               'filter': [
                 'fn',
                 'row',
@@ -499,14 +520,13 @@ export function stdDocumentMgmtDocumentOrbital(params: StdDocumentMgmtDocumentOr
                   'active',
                 ],
               ],
-              'variant': 'success',
               'icon': 'check-circle',
+              'label': 'Active',
             },
             {
-              'aggregation': 'count',
               'label': 'Pending Review',
-              'icon': 'clock',
               'format': 'number',
+              'aggregation': 'count',
               'variant': 'warning',
               'filter': [
                 'fn',
@@ -517,17 +537,17 @@ export function stdDocumentMgmtDocumentOrbital(params: StdDocumentMgmtDocumentOr
                   'pending-review',
                 ],
               ],
+              'icon': 'clock',
             },
             {
               'field': 'sizeBytes',
-              'icon': 'hard-drive',
+              'aggregation': 'sum',
               'label': 'Total Size',
+              'icon': 'hard-drive',
               'variant': 'primary',
               'format': 'number',
-              'aggregation': 'sum',
             },
           ],
-          'title': 'Documents',
         },
         'listens': [
           {
@@ -544,13 +564,13 @@ export function stdDocumentMgmtDocumentOrbital(params: StdDocumentMgmtDocumentOr
         'ref': 'Graphs.traits.GraphItemGraph',
         'name': 'DocumentGraphs',
         'config': {
-          'title': 'Documents by Status',
-          'subtitle': 'Volume across status buckets',
+          'chartType': 'bar',
+          'categoryField': 'status',
           'height': 240,
           'aggregation': 'count',
-          'chartType': 'bar',
+          'title': 'Documents by Status',
           'showLegend': false,
-          'categoryField': 'status',
+          'subtitle': 'Volume across status buckets',
         },
         'listens': [
           {
@@ -570,13 +590,13 @@ export function stdDocumentMgmtDocumentOrbital(params: StdDocumentMgmtDocumentOr
         'config': {
           'fields': [
             {
-              'variant': 'h3',
               'name': 'name',
+              'variant': 'h3',
               'icon': 'file-text',
             },
             {
-              'name': 'status',
               'variant': 'badge',
+              'name': 'status',
             },
             {
               'name': 'mimeType',
@@ -587,27 +607,27 @@ export function stdDocumentMgmtDocumentOrbital(params: StdDocumentMgmtDocumentOr
               'variant': 'body',
             },
             {
-              'format': 'date',
               'variant': 'caption',
+              'format': 'date',
               'name': 'lastModified',
             },
           ],
           'cols': 1,
           'itemActions': [
             {
+              'label': 'View',
               'event': 'VIEW',
               'variant': 'ghost',
-              'label': 'View',
             },
             {
-              'variant': 'ghost',
               'event': 'EDIT',
+              'variant': 'ghost',
               'label': 'Edit',
             },
             {
-              'label': 'Delete',
               'event': 'DELETE',
               'variant': 'danger',
+              'label': 'Delete',
             },
           ],
           'gap': 'sm',
@@ -661,6 +681,7 @@ export function stdDocumentMgmtDocumentOrbital(params: StdDocumentMgmtDocumentOr
         'linkedEntity': canonicalName,
         'config': {
           'title': 'New Document',
+          'mode': 'create',
           'icon': 'plus-circle',
           'fields': [
             'name',
@@ -669,7 +690,6 @@ export function stdDocumentMgmtDocumentOrbital(params: StdDocumentMgmtDocumentOr
             'owner',
             'status',
           ],
-          'mode': 'create',
         },
         'events': {
           'OPEN': 'CREATE',
@@ -698,8 +718,8 @@ export function stdDocumentMgmtDocumentOrbital(params: StdDocumentMgmtDocumentOr
             'owner',
             'status',
           ],
-          'mode': 'edit',
           'title': 'Edit Document',
+          'mode': 'edit',
         },
         'events': {
           'OPEN': 'EDIT',
@@ -720,7 +740,8 @@ export function stdDocumentMgmtDocumentOrbital(params: StdDocumentMgmtDocumentOr
         'name': 'DocumentView',
         'linkedEntity': canonicalName,
         'config': {
-          'mode': 'edit',
+          'title': 'View Document',
+          'icon': 'eye',
           'fields': [
             'name',
             'mimeType',
@@ -729,8 +750,7 @@ export function stdDocumentMgmtDocumentOrbital(params: StdDocumentMgmtDocumentOr
             'status',
             'lastModified',
           ],
-          'title': 'View Document',
-          'icon': 'eye',
+          'mode': 'edit',
         },
         'events': {
           'OPEN': 'VIEW',
@@ -752,13 +772,13 @@ export function stdDocumentMgmtDocumentOrbital(params: StdDocumentMgmtDocumentOr
         'linkedEntity': canonicalName,
         'config': {
           'icon': 'alert-triangle',
-          'title': 'Delete Document',
           'alertMessage': 'This action cannot be undone.',
           'confirmLabel': 'Delete',
+          'title': 'Delete Document',
         },
         'events': {
-          'REQUEST': 'DELETE',
           'CONFIRM': 'CONFIRM_DELETE',
+          'REQUEST': 'DELETE',
         },
         'listens': [
           {
@@ -1063,6 +1083,91 @@ export function stdDocumentMgmtDocumentOrbital(params: StdDocumentMgmtDocumentOr
         },
         'scope': 'instance',
       } as never, 'Document', canonicalName) as never,
+      makeTraitRef({
+        'ref': 'Lifecycle.traits.LifecycleScheduler',
+        'name': 'DocumentLifecycleScan',
+        'config': {
+          'rules': [
+            {
+              'condition': {
+                'dateField': 'lastModified',
+                'kind': 'ageDays',
+                'value': 365,
+              },
+              'fromStatus': 'active',
+              'toStatus': 'pending-review',
+            },
+            {
+              'fromStatus': 'pending-review',
+              'toStatus': 'archived',
+              'condition': {
+                'kind': 'ageDays',
+                'dateField': 'lastModified',
+                'value': 730,
+              },
+            },
+          ],
+          'targetEntity': 'Document',
+          'dryRun': false,
+        },
+      }),
+      makeTraitRef({
+        'ref': 'Notify.traits.NotifyOnEventListener',
+        'name': 'DocumentNotifier',
+        'config': {
+          'template': 'Document shared or updated',
+          'suppressionList': [],
+          'listensFor': [
+            'DOCUMENT_UPDATED',
+          ],
+          'notifyChannel': 'in-app',
+          'severity': 'info',
+          'recipients': [],
+        },
+        'events': {
+          'EventOccurred': 'DOCUMENT_UPDATED',
+        },
+      }),
+      makeTraitRef({
+        'ref': 'Audit.traits.AuditCaptureListener',
+        'name': 'DocumentAuditCapture',
+        'config': {
+          'retentionDays': 2555,
+          'captureEventTypes': [],
+          'captureEntity': 'Document',
+          'captureBeforeAfter': true,
+          'excludeFields': [],
+        },
+        'events': {
+          'EntityMutated': 'DOCUMENT_UPDATED',
+        },
+      }),
+      makeTraitRef({
+        'ref': 'Approval.traits.ApprovalGateReview',
+        'name': 'DocumentApprovalGate',
+        'config': {
+          'valueField': '',
+          'autoApproveBelowThreshold': false,
+          'approverRoles': [
+            'records-officer',
+          ],
+          'escalationRoles': [
+            'compliance-lead',
+          ],
+          'threshold': 0,
+          'escalationHours': 48,
+        },
+      }),
+      makeTraitRef({
+        'ref': 'Erasure.traits.ErasureWorkflow',
+        'name': 'DocumentErasureWorkflow',
+        'config': {
+          'piiFields': [],
+          'gracePeriodDays': 30,
+          'anonymizeVsDelete': 'delete',
+          'targetEntity': 'Document',
+        },
+      }),
     ],
     pages: [
       {
@@ -1104,6 +1209,21 @@ export function stdDocumentMgmtDocumentOrbital(params: StdDocumentMgmtDocumentOr
           },
           {
             'ref': 'DocumentPersistor',
+          },
+          {
+            'ref': 'DocumentLifecycleScan',
+          },
+          {
+            'ref': 'DocumentNotifier',
+          },
+          {
+            'ref': 'DocumentAuditCapture',
+          },
+          {
+            'ref': 'DocumentApprovalGate',
+          },
+          {
+            'ref': 'DocumentErasureWorkflow',
           },
         ],
       } as never,
@@ -1232,6 +1352,11 @@ export const StdDocumentMgmtDocumentOrbitalManifest = {
     'DocumentFileStore',
     'DocumentESignRequest',
     'DocumentVersionHistory',
+    'DocumentLifecycleScan',
+    'DocumentNotifier',
+    'DocumentAuditCapture',
+    'DocumentApprovalGate',
+    'DocumentErasureWorkflow',
   ] as const,
   inlineTraitNames: [
     'DocumentCatalog',
@@ -1257,16 +1382,285 @@ export function isStdDocumentMgmtDocumentOrbitalParams(p: object): p is StdDocum
 }
 
 /**
+ * Tunable params for the ClassifiedDocumentFromStdOrbital orbital.
+ *
+ * Canonical entity: ClassifiedDocument — overridable via
+ * `entityName`. The factory threads the effective name through every
+ * trait's `linkedEntity` binding; the `.orb` compiler's inline phase
+ * auto-rewrites every `@Entity.x`, `["ref",X]`, `["fetch",X,…]`,
+ * `["persist",…,X,…]` and payload type string accordingly.
+ *
+ * Override surface (mirrors `.lolo`'s native overrides 1:1):
+ *   fields         — extra entity fields (appended)
+ *   pagePath       — first-page URL override
+ *   persistence    — entity persistence mode
+ *   entityName     — rename the canonical entity
+ *   collection     — override the derived collection key
+ *   traitOverrides — per-imported-trait `config`, `linkedEntity`,
+ *                    `events`, `name`, `emitsScope`, `listens`.
+ *                    `effects` is NOT exposed — `.lolo` removed it
+ *                    in Phase 9.5.H. Use `listens` via a sibling
+ *                    trait to react to atom events.
+ */
+export interface StdDocumentMgmtClassifiedDocumentFromStdOrbitalParams {
+  /** Extra fields appended to the canonical entity. */
+  fields?: EntityField[];
+  /** URL path override for the orbital's first page. */
+  pagePath?: string;
+  /** Override the canonical entity persistence mode. */
+  persistence?: EntityPersistence;
+  /** Rename the canonical entity (PascalCase singular, ≤32 chars). */
+  entityName?: string;
+  /** Override derived collection key (defaults to plural(entityName).toLowerCase()). */
+  collection?: string;
+  /**
+   * Per-imported-trait override surface keyed on each imported
+   * trait's canonical `name`. Accepts every override `.lolo`
+   * natively supports: `config`, `linkedEntity`, `events`,
+   * `name`, `emitsScope`, `listens`. `effects` is excluded —
+   * atom-owned (use `listens` via a sibling trait instead).
+   */
+  traitOverrides?: Partial<Record<
+    'ClassifiedDocumentFromStdAppLayout' | 'ClassifiedDocumentFromStdManageBlock',
+    Pick<MakeTraitRefOpts, 'config' | 'linkedEntity' | 'events' | 'name' | 'emitsScope' | 'listens'>
+  >>;
+}
+
+/** Per-orbital factory: builds the ClassifiedDocumentFromStdOrbital orbital with consumer params. */
+export function stdDocumentMgmtClassifiedDocumentFromStdOrbital(params: StdDocumentMgmtClassifiedDocumentFromStdOrbitalParams = {}): OrbitalDefinition {
+  const canonicalName = params.entityName ?? 'ClassifiedDocument';
+  const collectionName = params.collection
+    ?? (params.entityName ? `${params.entityName.toLowerCase()}s` : 'classifieddocuments');
+  const built = makeOrbitalWithUses({
+    name: 'ClassifiedDocumentFromStdOrbital',
+    uses: [
+      {
+        'from': 'std/behaviors/std-app-layout',
+        'as': 'AppShell',
+      },
+      {
+        'from': 'std/behaviors/std-document',
+        'as': 'Documents',
+      },
+    ],
+    entity: {
+      name: canonicalName,
+      collection: collectionName,
+      persistence: params.persistence ?? 'persistent',
+      fields: ((): EntityField[] => {
+        const canonical: EntityField[] = [
+          {
+            'name': 'id',
+            'type': 'string',
+            'required': true,
+          },
+          {
+            'name': 'title',
+            'type': 'string',
+            'required': true,
+          },
+          {
+            'name': 'description',
+            'type': 'string',
+          },
+          {
+            'name': 'mimeType',
+            'type': 'string',
+          },
+          {
+            'name': 'classification',
+            'type': 'string',
+          },
+          {
+            'name': 'lockedBy',
+            'type': 'string',
+          },
+          {
+            'name': 'lockedAt',
+            'type': 'string',
+          },
+          {
+            'name': 'retentionUntil',
+            'type': 'string',
+          },
+          {
+            'name': 'legalHold',
+            'type': 'boolean',
+          },
+          {
+            'name': 'createdAt',
+            'type': 'string',
+          },
+          {
+            'name': 'updatedAt',
+            'type': 'string',
+          },
+        ];
+        const extras = params.fields ?? [];
+        if (extras.length === 0) return canonical;
+        const extraNames = new Set(extras.map((f) => f.name));
+        return [...canonical.filter((f) => !extraNames.has(f.name)), ...extras];
+      })(),
+    } as Entity,
+    traits: [
+      makeTraitRef({
+        'ref': 'AppShell.traits.AppLayout',
+        'name': 'ClassifiedDocumentFromStdAppLayout',
+        'linkedEntity': canonicalName,
+        'config': {
+          'navItems': [
+            {
+              'href': '/documents',
+              'icon': 'file-text',
+              'label': 'Documents',
+            },
+            {
+              'href': '/esign-flow',
+              'icon': 'file-signature',
+              'label': 'E-Sign Flow',
+            },
+            {
+              'icon': 'folder',
+              'label': 'Files',
+              'href': '/files',
+            },
+            {
+              'icon': 'pen-tool',
+              'href': '/esign',
+              'label': 'Signatures',
+            },
+            {
+              'icon': 'history',
+              'label': 'Versions',
+              'href': '/revisions/manage',
+            },
+            {
+              'href': '/documents-classified',
+              'icon': 'shield',
+              'label': 'Classified',
+            },
+          ],
+          'notificationClickEvent': 'CLASSIFIED_DOC_NOTIFICATIONS_OPEN',
+          'appName': 'Documents',
+          'searchEvent': 'CLASSIFIED_DOC_SEARCH',
+          'notifications': [],
+          'contentTrait': '@trait.ClassifiedDocumentFromStdManageBlock',
+        },
+        'events': {
+          'NOTIFY_CLICK': 'CLASSIFIED_DOC_NOTIFICATIONS_OPEN',
+          'SEARCH': 'CLASSIFIED_DOC_SEARCH',
+        },
+      }),
+      makeTraitRef({
+        'ref': 'Documents.traits.DocumentManage',
+        'name': 'ClassifiedDocumentFromStdManageBlock',
+        'linkedEntity': canonicalName,
+        'config': {
+          'title': 'Classified Documents',
+        },
+      }),
+    ],
+    pages: [
+      {
+        'name': 'ClassifiedDocumentFromStdPage',
+        'path': '/documents-classified',
+        'traits': [
+          {
+            'ref': 'ClassifiedDocumentFromStdAppLayout',
+          },
+          {
+            'ref': 'ClassifiedDocumentFromStdManageBlock',
+          },
+        ],
+      } as never,
+    ],
+  });
+  type _OrbTrait = OrbitalDefinition["traits"][number];
+  type _OrbPage = NonNullable<OrbitalDefinition["pages"]>[number];
+  type _RefOverride = Pick<MakeTraitRefOpts, "config" | "linkedEntity" | "events" | "name" | "emitsScope" | "listens">;
+  if (built.traits && params.traitOverrides !== undefined) {
+    built.traits = (built.traits as _OrbTrait[]).map((t): _OrbTrait => {
+      if (!t || typeof t !== "object") return t;
+      const tr = t as TraitReference & { name?: string };
+      // Match by name so inline traits (no `ref`) and
+      // reference traits (with `ref`) both pick up the
+      // override surface keyed on the trait's `name`.
+      if (typeof tr.name !== "string") return t;
+      const overrides = params.traitOverrides as Record<string, _RefOverride | undefined> | undefined;
+      const override = overrides?.[tr.name];
+      if (!override) return t;
+      const merged: TraitReference = { ...tr };
+      if (override.config !== undefined) merged.config = { ...(tr.config ?? {}), ...override.config };
+      if (override.linkedEntity !== undefined) merged.linkedEntity = override.linkedEntity;
+      if (override.events !== undefined) merged.events = { ...(tr.events ?? {}), ...override.events };
+      if (override.name !== undefined) merged.name = override.name;
+      if (override.emitsScope !== undefined) merged.emitsScope = override.emitsScope;
+      if (override.listens !== undefined) merged.listens = override.listens;
+      return merged;
+    });
+  }
+  if (built.pages && params.pagePath !== undefined) {
+    built.pages = (built.pages as _OrbPage[]).map((p, idx) => {
+      if (!p || typeof p !== "object") return p;
+      if (idx !== 0) return p;
+      const out = { ...p } as _OrbPage & { path?: string };
+      out.path = params.pagePath;
+      return out;
+    });
+  }
+  return built;
+}
+
+/** Manifest — describes the params surface of stdDocumentMgmtClassifiedDocumentFromStdOrbital. */
+export const StdDocumentMgmtClassifiedDocumentFromStdOrbitalManifest = {
+  organism: 'std-document-mgmt',
+  orbitalName: 'ClassifiedDocumentFromStdOrbital',
+  paramFields: [
+    { name: 'fields', type: 'EntityField[]', description: 'Extra fields appended to the canonical entity.' },
+    { name: 'pagePath', type: 'string', description: 'URL override for the orbital first page.' },
+    { name: 'persistence', type: "'persistent' | 'runtime' | 'singleton' | 'instance' | 'local'", description: 'Override the canonical entity persistence mode.' },
+    { name: 'entityName', type: 'string', description: 'Rename the canonical entity. PascalCase singular, ≤32 chars. Threads through every trait\'s linkedEntity binding; compiler rewrites @Entity.x refs.' },
+    { name: 'collection', type: 'string', description: 'Override derived collection key. Defaults to plural(entityName).toLowerCase().' },
+    { name: 'traitOverrides', type: "Partial<Record<TraitName, { config?, linkedEntity?, events?, name?, emitsScope?, listens? }>>", description: 'Per-imported-trait overrides — mirrors .lolo\'s native trait-composition surface 1:1. effects is excluded (atom-owned; use listens via a sibling trait).' },
+  ] as const,
+  traitNames: [
+    'ClassifiedDocumentFromStdAppLayout',
+    'ClassifiedDocumentFromStdManageBlock',
+  ] as const,
+  inlineTraitNames: [
+  ] as const,
+};
+
+/** Typed guard — runtime validates StdDocumentMgmtClassifiedDocumentFromStdOrbitalParams keys. */
+export function isStdDocumentMgmtClassifiedDocumentFromStdOrbitalParams(p: object): p is StdDocumentMgmtClassifiedDocumentFromStdOrbitalParams {
+  type _OverrideRecord = NonNullable<StdDocumentMgmtClassifiedDocumentFromStdOrbitalParams['traitOverrides']>;
+  const obj = p as { traitOverrides?: _OverrideRecord };
+  if (obj.traitOverrides !== undefined) {
+    if (typeof obj.traitOverrides !== "object" || obj.traitOverrides === null) return false;
+    const allowed: readonly string[] = [
+      ...StdDocumentMgmtClassifiedDocumentFromStdOrbitalManifest.traitNames,
+      ...StdDocumentMgmtClassifiedDocumentFromStdOrbitalManifest.inlineTraitNames,
+    ];
+    for (const k of Object.keys(obj.traitOverrides)) {
+      if (!allowed.includes(k)) return false;
+    }
+  }
+  return true;
+}
+
+/**
  * Bundled params for std-document-mgmt — one optional entry per orbital.
  * Each entry maps to its per-orbital factory above.
  */
 export interface StdDocumentMgmtParams {
   Document?: StdDocumentMgmtDocumentOrbitalParams;
+  ClassifiedDocumentFromStd?: StdDocumentMgmtClassifiedDocumentFromStdOrbitalParams;
 }
 
-/** Whole-organism descriptor (1 orbitals). Composes per-orbital factories. */
+/** Whole-organism descriptor (2 orbitals). Composes per-orbital factories. */
 export function stdDocumentMgmt(params: StdDocumentMgmtParams = {}): OrbitalDefinition[] {
   return [
     stdDocumentMgmtDocumentOrbital(params.Document ?? {}),
+    stdDocumentMgmtClassifiedDocumentFromStdOrbital(params.ClassifiedDocumentFromStd ?? {}),
   ];
 }

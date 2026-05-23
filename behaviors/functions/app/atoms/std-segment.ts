@@ -76,28 +76,28 @@ export interface StdSegmentSegmentLoadFailedPayload {
  * without modifying its state-machine topology.
  */
 export interface StdSegmentConfig {
-  /** Default: `"Segments"` */
-  title?: string;
+  /** Default: `"stale-and-empty"` */
+  autoArchivePolicy?: 'never' | 'empty-segment' | 'stale-and-empty';
   /** Default: `365` */
   archiveInactiveAfterDays?: number;
   /** Default: `50` */
   healthScoreThresholdAlert?: number;
-  /** Default: `"stale-and-empty"` */
-  autoArchivePolicy?: 'never' | 'empty-segment' | 'stale-and-empty';
-  /** Default: `true` */
-  consentTrackingEnabled?: boolean;
-  /** Default: `"score-based"` */
-  dealAdvancementCriteria?: 'score-based' | 'rule-based' | 'manual';
-  /** Default: `100` */
-  crossSellThreshold?: number;
+  /** Default: `"Segments"` */
+  title?: string;
   /** Default: `90` */
   staleAfterDays?: number;
-  /** Default: `[{"label":"Name","name":"name","variant":"caption"},{"label":"Description","name":"description","variant":"caption"},{"name":"memberCount","label":"Members","variant":"badge"},{"name":"lastUpdated","variant":"caption","label":"Updated"}]` */
-  fields?: EntityRow[];
-  /** Default: `[{"event":"OPEN_SEGMENT","label":"Open","variant":"primary","icon":"arrow-right"},{"variant":"danger","label":"Recalculate","event":"RECALCULATE"}]` */
+  /** Default: `true` */
+  consentTrackingEnabled?: boolean;
+  /** Default: `[{"label":"Open","event":"OPEN_SEGMENT","variant":"primary","icon":"arrow-right"},{"event":"RECALCULATE","variant":"danger","label":"Recalculate"}]` */
   itemActions?: EntityRow[];
   /** Default: `[30,7]` */
   renewalReminderDaysBefore?: number[];
+  /** Default: `100` */
+  crossSellThreshold?: number;
+  /** Default: `[{"label":"Name","variant":"caption","name":"name"},{"variant":"caption","name":"description","label":"Description"},{"name":"memberCount","variant":"badge","label":"Members"},{"label":"Updated","name":"lastUpdated","variant":"caption"}]` */
+  fields?: EntityRow[];
+  /** Default: `"score-based"` */
+  dealAdvancementCriteria?: 'score-based' | 'rule-based' | 'manual';
 }
 
 /**

@@ -108,20 +108,20 @@ export interface StdLegalHoldLegalHoldLoadFailedPayload {
  * without modifying its state-machine topology.
  */
 export interface StdLegalHoldConfig {
-  /** Default: `["general-counsel","compliance-officer"]` */
-  releaseApprovalRoles?: string[];
+  /** Default: `[{"variant":"caption","label":"Matter","name":"matterId"},{"name":"triggeredBy","variant":"caption","label":"Trigger"},{"label":"Status","variant":"badge","name":"status"},{"label":"Started","name":"triggeredAt","variant":"caption"},{"name":"expectedReleaseAt","variant":"caption","label":"Releases"}]` */
+  fields?: EntityRow[];
+  /** Default: `"Legal Holds"` */
+  title?: string;
+  /** Default: `[{"icon":"arrow-right","event":"OPEN_HOLD","variant":"primary","label":"Open"},{"event":"RELEASE_HOLD","variant":"danger","label":"Release"}]` */
+  itemActions?: EntityRow[];
   /** Default: `"litigation"` */
   triggeredBy?: 'litigation' | 'regulatory-inquiry' | 'internal-investigation' | 'audit';
   /** Default: `365` */
   holdDurationDays?: number;
+  /** Default: `["general-counsel","compliance-officer"]` */
+  releaseApprovalRoles?: string[];
   /** Default: `["records-manager","it-admin"]` */
   notifyRolesOnHold?: string[];
-  /** Default: `[{"variant":"caption","name":"matterId","label":"Matter"},{"label":"Trigger","variant":"caption","name":"triggeredBy"},{"variant":"badge","name":"status","label":"Status"},{"name":"triggeredAt","variant":"caption","label":"Started"},{"variant":"caption","name":"expectedReleaseAt","label":"Releases"}]` */
-  fields?: EntityRow[];
-  /** Default: `[{"variant":"primary","label":"Open","icon":"arrow-right","event":"OPEN_HOLD"},{"variant":"danger","event":"RELEASE_HOLD","label":"Release"}]` */
-  itemActions?: EntityRow[];
-  /** Default: `"Legal Holds"` */
-  title?: string;
 }
 
 /**

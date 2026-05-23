@@ -126,20 +126,20 @@ export interface StdRunbookRunbookLoadFailedPayload {
  * without modifying its state-machine topology.
  */
 export interface StdRunbookConfig {
-  /** Default: `[{"variant":"caption","name":"title","label":"Title"},{"label":"Trigger","name":"triggerEvent","variant":"caption"},{"variant":"badge","name":"status","label":"Status"},{"variant":"caption","label":"Runs","name":"executionCount"},{"label":"Last run","name":"lastExecutedAt","variant":"caption"}]` */
+  /** Default: `[{"name":"title","variant":"caption","label":"Title"},{"name":"triggerEvent","label":"Trigger","variant":"caption"},{"label":"Status","name":"status","variant":"badge"},{"name":"executionCount","label":"Runs","variant":"caption"},{"variant":"caption","name":"lastExecutedAt","label":"Last run"}]` */
   fields?: EntityRow[];
-  /** Default: `[{"label":"Open","variant":"primary","event":"OPEN_RUNBOOK","icon":"arrow-right"},{"variant":"secondary","event":"EXECUTE_RUNBOOK","label":"Execute","icon":"play"}]` */
+  /** Default: `[{"event":"OPEN_RUNBOOK","icon":"arrow-right","variant":"primary","label":"Open"},{"label":"Execute","event":"EXECUTE_RUNBOOK","icon":"play","variant":"secondary"}]` */
   itemActions?: EntityRow[];
-  /** Default: `[]` */
-  triggersOn?: string[];
+  /** Default: `true` */
+  rollbackOnFailure?: boolean;
   /** Default: `"Runbooks"` */
   title?: string;
   /** Default: `"never"` */
   autoExecutePolicy?: 'never' | 'dry-run-first' | 'approve-then-execute' | 'always';
+  /** Default: `[]` */
+  triggersOn?: string[];
   /** Default: `"medium"` */
   approvalRequiredAbove?: 'low' | 'medium' | 'high' | 'critical';
-  /** Default: `true` */
-  rollbackOnFailure?: boolean;
 }
 
 /**

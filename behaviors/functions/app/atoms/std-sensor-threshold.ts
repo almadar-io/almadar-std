@@ -108,20 +108,20 @@ export interface StdSensorThresholdSensorThresholdLoadFailedPayload {
  * without modifying its state-machine topology.
  */
 export interface StdSensorThresholdConfig {
-  /** Default: `30` */
-  dwellTimeSeconds?: number;
   /** Default: `5` */
   hysteresisPct?: number;
+  /** Default: `30` */
+  dwellTimeSeconds?: number;
   /** Default: `["oncall-l1","oncall-l2"]` */
   escalationRoles?: string[];
+  /** Default: `[{"variant":"caption","name":"sensorId","label":"Sensor"},{"name":"metric","label":"Metric","variant":"caption"},{"variant":"caption","name":"warningHigh","label":"Warn"},{"variant":"caption","name":"criticalHigh","label":"Crit"},{"label":"Status","variant":"badge","name":"status"}]` */
+  fields?: EntityRow[];
+  /** Default: `[{"event":"OPEN_THRESHOLD","icon":"arrow-right","label":"Open","variant":"primary"},{"event":"MUTE_THRESHOLD","variant":"secondary","label":"Mute"}]` */
+  itemActions?: EntityRow[];
+  /** Default: `[{"low":0,"high":70,"band":"warning"},{"high":100,"low":70,"band":"critical"}]` */
+  thresholdBands?: EntityRow[];
   /** Default: `"Sensor Thresholds"` */
   title?: string;
-  /** Default: `[{"variant":"caption","name":"sensorId","label":"Sensor"},{"label":"Metric","name":"metric","variant":"caption"},{"variant":"caption","label":"Warn","name":"warningHigh"},{"label":"Crit","name":"criticalHigh","variant":"caption"},{"variant":"badge","name":"status","label":"Status"}]` */
-  fields?: EntityRow[];
-  /** Default: `[{"event":"OPEN_THRESHOLD","label":"Open","icon":"arrow-right","variant":"primary"},{"label":"Mute","variant":"secondary","event":"MUTE_THRESHOLD"}]` */
-  itemActions?: EntityRow[];
-  /** Default: `[{"low":0,"band":"warning","high":70},{"low":70,"high":100,"band":"critical"}]` */
-  thresholdBands?: EntityRow[];
 }
 
 /**

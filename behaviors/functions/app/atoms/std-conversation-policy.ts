@@ -84,22 +84,22 @@ export interface StdConversationPolicyConversationPolicyLoadFailedPayload {
  * without modifying its state-machine topology.
  */
 export interface StdConversationPolicyConfig {
-  /** Default: `"Conversation Policies"` */
-  title?: string;
-  /** Default: `"post-hoc"` */
-  moderationMode?: 'off' | 'post-hoc' | 'pre-publish' | 'human-only';
-  /** Default: `15` */
-  editWindowMinutes?: number;
-  /** Default: `[{"variant":"caption","label":"Policy","name":"name"},{"variant":"caption","name":"appliesTo","label":"Applies to"},{"name":"status","label":"Status","variant":"badge"}]` */
-  fields?: EntityRow[];
-  /** Default: `[{"label":"Open","variant":"primary","event":"OPEN_POLICY","icon":"arrow-right"},{"label":"Archive","event":"ARCHIVE_POLICY","variant":"danger"}]` */
-  itemActions?: EntityRow[];
   /** Default: `false` */
   e2eeRequired?: boolean;
-  /** Default: `1440` */
-  deleteWindowMinutes?: number;
+  /** Default: `"Conversation Policies"` */
+  title?: string;
+  /** Default: `15` */
+  editWindowMinutes?: number;
+  /** Default: `[{"variant":"primary","label":"Open","event":"OPEN_POLICY","icon":"arrow-right"},{"event":"ARCHIVE_POLICY","label":"Archive","variant":"danger"}]` */
+  itemActions?: EntityRow[];
   /** Default: `365` */
   retentionDays?: number;
+  /** Default: `"post-hoc"` */
+  moderationMode?: 'off' | 'post-hoc' | 'pre-publish' | 'human-only';
+  /** Default: `1440` */
+  deleteWindowMinutes?: number;
+  /** Default: `[{"label":"Policy","variant":"caption","name":"name"},{"name":"appliesTo","label":"Applies to","variant":"caption"},{"name":"status","label":"Status","variant":"badge"}]` */
+  fields?: EntityRow[];
 }
 
 /**

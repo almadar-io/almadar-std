@@ -31,8 +31,8 @@ const ALIAS = 'Healthcare';
  * without modifying its state-machine topology.
  */
 export interface StdHealthcareConfig {
-  navItems?: TraitConfig;
   notifications?: TraitConfig;
+  navItems?: TraitConfig;
 }
 
 /**
@@ -75,7 +75,7 @@ export interface StdHealthcarePatientOrbitalParams {
    * atom-owned (use `listens` via a sibling trait instead).
    */
   traitOverrides?: Partial<Record<
-    'PatientAppLayout' | 'PatientSearch' | 'PatientFilter' | 'PatientStats' | 'PatientGraphs' | 'PatientBrowseList' | 'PatientCreate' | 'PatientEdit' | 'PatientView' | 'PatientDelete' | 'PatientCatalog' | 'PatientPersistor' | 'PatientDocumentUpload',
+    'PatientAppLayout' | 'PatientSearch' | 'PatientFilter' | 'PatientStats' | 'PatientGraphs' | 'PatientBrowseList' | 'PatientCreate' | 'PatientEdit' | 'PatientView' | 'PatientDelete' | 'PatientLifecycleScan' | 'PatientNotifier' | 'PatientAuditCapture' | 'PatientErasureWorkflow' | 'PatientCatalog' | 'PatientPersistor' | 'PatientDocumentUpload',
     Pick<MakeTraitRefOpts, 'config' | 'linkedEntity' | 'events' | 'name' | 'emitsScope' | 'listens'>
   >>;
 }
@@ -123,6 +123,22 @@ export function stdHealthcarePatientOrbital(params: StdHealthcarePatientOrbitalP
       {
         'from': 'std/behaviors/std-service-storage',
         'as': 'Storage',
+      },
+      {
+        'from': 'std/behaviors/std-lifecycle',
+        'as': 'Lifecycle',
+      },
+      {
+        'from': 'std/behaviors/std-notify-on-event',
+        'as': 'Notify',
+      },
+      {
+        'from': 'std/behaviors/std-audit-capture',
+        'as': 'Audit',
+      },
+      {
+        'from': 'std/behaviors/std-data-erasure',
+        'as': 'Erasure',
       },
     ],
     entity: {
@@ -190,38 +206,38 @@ export function stdHealthcarePatientOrbital(params: StdHealthcarePatientOrbitalP
         'ref': 'AppShell.traits.AppLayout',
         'name': 'PatientAppLayout',
         'config': {
-          'contentTrait': '@trait.PatientCatalog',
           'appName': 'HealthcareApp',
+          'contentTrait': '@trait.PatientCatalog',
+          'notificationClickEvent': 'PATIENT_NOTIFICATIONS_OPEN',
+          'notifications': [],
           'navItems': [
             {
               'href': '/patients',
-              'label': 'Patients',
               'icon': 'user-plus',
+              'label': 'Patients',
             },
             {
-              'icon': 'calendar',
               'label': 'Appointments',
+              'icon': 'calendar',
               'href': '/appointments',
             },
             {
-              'href': '/intake',
-              'label': 'Intake',
               'icon': 'layout-list',
+              'label': 'Intake',
+              'href': '/intake',
             },
             {
               'label': 'Prescriptions',
-              'icon': 'pill',
               'href': '/prescriptions',
+              'icon': 'pill',
             },
             {
-              'href': '/dashboard',
-              'icon': 'layout-dashboard',
               'label': 'Dashboard',
+              'icon': 'layout-dashboard',
+              'href': '/dashboard',
             },
           ],
           'searchEvent': 'PATIENT_SEARCH',
-          'notifications': [],
-          'notificationClickEvent': 'PATIENT_NOTIFICATIONS_OPEN',
         },
         'events': {
           'NOTIFY_CLICK': 'PATIENT_NOTIFICATIONS_OPEN',
@@ -308,58 +324,60 @@ export function stdHealthcarePatientOrbital(params: StdHealthcarePatientOrbitalP
                   'render-ui',
                   'main',
                   {
+                    'direction': 'vertical',
+                    'gap': 'lg',
                     'children': [
                       {
+                        'align': 'center',
+                        'direction': 'horizontal',
                         'children': [
                           {
-                            'direction': 'horizontal',
                             'align': 'center',
                             'gap': 'sm',
                             'type': 'stack',
+                            'direction': 'horizontal',
                             'children': [
                               {
                                 'type': 'icon',
                                 'name': 'user-plus',
                               },
                               {
+                                'variant': 'h2',
                                 'type': 'typography',
                                 'content': 'Patients',
-                                'variant': 'h2',
                               },
                             ],
                           },
                           {
+                            'direction': 'horizontal',
                             'children': [
                               {
                                 'variant': 'primary',
-                                'action': 'CREATE',
-                                'label': 'New Patient',
                                 'type': 'button',
+                                'label': 'New Patient',
+                                'action': 'CREATE',
                                 'icon': 'plus',
                               },
                             ],
-                            'direction': 'horizontal',
-                            'type': 'stack',
                             'gap': 'sm',
+                            'type': 'stack',
                           },
                         ],
                         'gap': 'md',
-                        'justify': 'between',
-                        'align': 'center',
-                        'direction': 'horizontal',
                         'type': 'stack',
+                        'justify': 'between',
                       },
                       {
                         'type': 'divider',
                       },
                       {
+                        'type': 'stack',
+                        'gap': 'sm',
                         'children': [
                           '@trait.PatientSearch',
                           '@trait.PatientFilter',
                         ],
                         'direction': 'horizontal',
-                        'type': 'stack',
-                        'gap': 'sm',
                       },
                       '@trait.PatientStats',
                       '@trait.PatientGraphs',
@@ -368,8 +386,6 @@ export function stdHealthcarePatientOrbital(params: StdHealthcarePatientOrbitalP
                       },
                       '@trait.PatientBrowseList',
                     ],
-                    'direction': 'vertical',
-                    'gap': 'lg',
                     'type': 'stack',
                   },
                 ],
@@ -389,32 +405,32 @@ export function stdHealthcarePatientOrbital(params: StdHealthcarePatientOrbitalP
                   'render-ui',
                   'main',
                   {
-                    'type': 'stack',
-                    'align': 'center',
                     'direction': 'vertical',
-                    'className': 'py-8',
                     'gap': 'md',
+                    'type': 'stack',
+                    'className': 'py-8',
+                    'align': 'center',
                     'children': [
                       {
-                        'type': 'icon',
                         'name': 'bell',
+                        'type': 'icon',
                       },
                       {
+                        'variant': 'h3',
                         'type': 'typography',
                         'content': 'No notifications',
-                        'variant': 'h3',
                       },
                       {
-                        'color': 'muted',
-                        'variant': 'caption',
-                        'content': 'You\'re all caught up.',
                         'type': 'typography',
+                        'variant': 'caption',
+                        'color': 'muted',
+                        'content': 'You\'re all caught up.',
                       },
                       {
                         'action': 'INIT',
-                        'label': 'Back to patients',
-                        'type': 'button',
                         'variant': 'ghost',
+                        'type': 'button',
+                        'label': 'Back to patients',
                       },
                     ],
                   },
@@ -429,27 +445,28 @@ export function stdHealthcarePatientOrbital(params: StdHealthcarePatientOrbitalP
         'ref': 'Search.traits.SearchResultSearch',
         'name': 'PatientSearch',
         'config': {
-          'placeholder': 'Search patients by name…',
           'event': 'SEARCH',
+          'placeholder': 'Search patients by name…',
         },
       }),
       makeTraitRef({
         'ref': 'Filter.traits.FilterTargetFilter',
         'name': 'PatientFilter',
         'config': {
-          'event': 'FILTER',
           'filters': [
             {
-              'label': 'Status',
-              'filterType': 'select',
               'field': 'status',
               'options': [
                 'active',
                 'inactive',
                 'discharged',
               ],
+              'label': 'Status',
+              'filterType': 'select',
             },
             {
+              'filterType': 'select',
+              'label': 'Insurance',
               'field': 'insuranceId',
               'options': [
                 'aetna',
@@ -457,10 +474,9 @@ export function stdHealthcarePatientOrbital(params: StdHealthcarePatientOrbitalP
                 'cigna',
                 'uhc',
               ],
-              'label': 'Insurance',
-              'filterType': 'select',
             },
           ],
+          'event': 'FILTER',
         },
       }),
       makeTraitRef({
@@ -470,18 +486,18 @@ export function stdHealthcarePatientOrbital(params: StdHealthcarePatientOrbitalP
           'title': 'Patient Overview',
           'metrics': [
             {
-              'icon': 'users',
               'variant': 'primary',
-              'aggregation': 'count',
-              'label': 'Total Patients',
               'format': 'number',
+              'aggregation': 'count',
+              'icon': 'users',
+              'label': 'Total Patients',
             },
             {
-              'aggregation': 'count',
               'format': 'number',
-              'icon': 'check-circle',
-              'label': 'Active',
+              'aggregation': 'count',
               'variant': 'success',
+              'label': 'Active',
+              'icon': 'check-circle',
               'filter': [
                 'fn',
                 'row',
@@ -493,18 +509,18 @@ export function stdHealthcarePatientOrbital(params: StdHealthcarePatientOrbitalP
               ],
             },
             {
+              'aggregation': 'count',
+              'icon': 'user-plus',
+              'label': 'New This Month',
               'variant': 'info',
               'format': 'number',
-              'aggregation': 'count',
-              'label': 'New This Month',
-              'icon': 'user-plus',
             },
             {
+              'format': 'number',
               'label': 'By Insurance',
               'variant': 'default',
-              'format': 'number',
-              'aggregation': 'count',
               'icon': 'shield',
+              'aggregation': 'count',
             },
           ],
         },
@@ -523,13 +539,13 @@ export function stdHealthcarePatientOrbital(params: StdHealthcarePatientOrbitalP
         'ref': 'Graphs.traits.GraphItemGraph',
         'name': 'PatientGraphs',
         'config': {
-          'title': 'Patients by Insurance',
-          'aggregation': 'count',
-          'height': 280,
           'showLegend': true,
           'subtitle': 'Distribution across providers',
           'chartType': 'pie',
           'categoryField': 'insuranceId',
+          'height': 280,
+          'title': 'Patients by Insurance',
+          'aggregation': 'count',
         },
         'listens': [
           {
@@ -549,26 +565,27 @@ export function stdHealthcarePatientOrbital(params: StdHealthcarePatientOrbitalP
         'config': {
           'itemActions': [
             {
+              'variant': 'ghost',
               'event': 'VIEW',
               'label': 'View',
-              'variant': 'ghost',
             },
             {
+              'variant': 'ghost',
               'label': 'Edit',
               'event': 'EDIT',
-              'variant': 'ghost',
             },
             {
+              'label': 'Delete',
               'event': 'DELETE',
               'variant': 'danger',
-              'label': 'Delete',
             },
           ],
+          'gap': 'sm',
           'fields': [
             {
+              'name': 'firstName',
               'variant': 'h3',
               'label': 'Name',
-              'name': 'firstName',
               'icon': 'user',
             },
             {
@@ -577,9 +594,9 @@ export function stdHealthcarePatientOrbital(params: StdHealthcarePatientOrbitalP
             },
             {
               'name': 'dateOfBirth',
-              'variant': 'caption',
               'format': 'date',
               'label': 'DOB',
+              'variant': 'caption',
             },
             {
               'name': 'insuranceId',
@@ -591,11 +608,10 @@ export function stdHealthcarePatientOrbital(params: StdHealthcarePatientOrbitalP
               'name': 'status',
             },
             {
-              'variant': 'caption',
               'name': 'email',
+              'variant': 'caption',
             },
           ],
-          'gap': 'sm',
         },
         'listens': [
           {
@@ -654,6 +670,8 @@ export function stdHealthcarePatientOrbital(params: StdHealthcarePatientOrbitalP
         'name': 'PatientCreate',
         'linkedEntity': canonicalName,
         'config': {
+          'title': 'Create Patient',
+          'mode': 'create',
           'icon': 'plus-circle',
           'fields': [
             'firstName',
@@ -664,12 +682,10 @@ export function stdHealthcarePatientOrbital(params: StdHealthcarePatientOrbitalP
             'insuranceId',
             'status',
           ],
-          'mode': 'create',
-          'title': 'Create Patient',
         },
         'events': {
-          'SAVE': 'PATIENT_CREATED',
           'OPEN': 'CREATE',
+          'SAVE': 'PATIENT_CREATED',
         },
         'listens': [
           {
@@ -687,6 +703,7 @@ export function stdHealthcarePatientOrbital(params: StdHealthcarePatientOrbitalP
         'name': 'PatientEdit',
         'linkedEntity': canonicalName,
         'config': {
+          'title': 'Edit Patient',
           'mode': 'edit',
           'icon': 'edit',
           'fields': [
@@ -698,7 +715,6 @@ export function stdHealthcarePatientOrbital(params: StdHealthcarePatientOrbitalP
             'insuranceId',
             'status',
           ],
-          'title': 'Edit Patient',
         },
         'events': {
           'SAVE': 'PATIENT_UPDATED',
@@ -720,8 +736,6 @@ export function stdHealthcarePatientOrbital(params: StdHealthcarePatientOrbitalP
         'name': 'PatientView',
         'linkedEntity': canonicalName,
         'config': {
-          'icon': 'eye',
-          'mode': 'edit',
           'fields': [
             'firstName',
             'lastName',
@@ -731,6 +745,8 @@ export function stdHealthcarePatientOrbital(params: StdHealthcarePatientOrbitalP
             'insuranceId',
             'status',
           ],
+          'mode': 'edit',
+          'icon': 'eye',
           'title': 'Patient Details',
         },
         'events': {
@@ -1041,13 +1057,8 @@ export function stdHealthcarePatientOrbital(params: StdHealthcarePatientOrbitalP
                   'render-ui',
                   'main',
                   {
-                    'gap': 'md',
-                    'direction': 'vertical',
-                    'type': 'stack',
                     'children': [
                       {
-                        'type': 'stack',
-                        'direction': 'horizontal',
                         'children': [
                           {
                             'name': 'paperclip',
@@ -1055,26 +1066,31 @@ export function stdHealthcarePatientOrbital(params: StdHealthcarePatientOrbitalP
                           },
                           {
                             'variant': 'h3',
-                            'type': 'typography',
                             'content': 'Upload Medical Record',
+                            'type': 'typography',
                           },
                         ],
                         'align': 'center',
+                        'direction': 'horizontal',
                         'gap': 'sm',
+                        'type': 'stack',
                       },
                       {
-                        'inputType': 'text',
-                        'type': 'input',
                         'placeholder': 'Choose file path…',
+                        'type': 'input',
+                        'inputType': 'text',
                       },
                       {
-                        'label': 'Upload',
-                        'action': 'UPLOAD',
                         'icon': 'upload',
                         'type': 'button',
                         'variant': 'primary',
+                        'label': 'Upload',
+                        'action': 'UPLOAD',
                       },
                     ],
+                    'direction': 'vertical',
+                    'type': 'stack',
+                    'gap': 'md',
                   },
                 ],
               ],
@@ -1089,15 +1105,15 @@ export function stdHealthcarePatientOrbital(params: StdHealthcarePatientOrbitalP
                   'storage',
                   'upload',
                   {
+                    'bucket': 'patient-records',
+                    'acl': 'private',
                     'file': '@payload.file',
                     'maxSize': 10485760,
-                    'acl': 'private',
-                    'bucket': 'patient-records',
                   },
                   {
                     'emit': {
-                      'success': 'DocumentUploaded',
                       'failure': 'DocumentUploadFailed',
+                      'success': 'DocumentUploaded',
                     },
                   },
                 ],
@@ -1105,21 +1121,21 @@ export function stdHealthcarePatientOrbital(params: StdHealthcarePatientOrbitalP
                   'render-ui',
                   'main',
                   {
-                    'gap': 'md',
-                    'type': 'stack',
+                    'direction': 'vertical',
                     'children': [
                       {
                         'type': 'spinner',
                       },
                       {
-                        'color': 'muted',
                         'variant': 'caption',
-                        'content': 'Uploading…',
                         'type': 'typography',
+                        'color': 'muted',
+                        'content': 'Uploading…',
                       },
                     ],
+                    'type': 'stack',
                     'align': 'center',
-                    'direction': 'vertical',
+                    'gap': 'md',
                   },
                 ],
               ],
@@ -1152,6 +1168,81 @@ export function stdHealthcarePatientOrbital(params: StdHealthcarePatientOrbitalP
         },
         'scope': 'instance',
       } as never, 'Patient', canonicalName) as never,
+      makeTraitRef({
+        'ref': 'Lifecycle.traits.LifecycleScheduler',
+        'name': 'PatientLifecycleScan',
+        'config': {
+          'rules': [
+            {
+              'fromStatus': 'active',
+              'toStatus': 'inactive',
+              'condition': {
+                'value': 365,
+                'kind': 'ageDays',
+                'dateField': 'dateOfBirth',
+              },
+            },
+            {
+              'toStatus': 'discharged',
+              'condition': {
+                'dateField': 'dateOfBirth',
+                'kind': 'ageDays',
+                'value': 1095,
+              },
+              'fromStatus': 'inactive',
+            },
+          ],
+          'targetEntity': 'Patient',
+          'dryRun': false,
+        },
+      }),
+      makeTraitRef({
+        'ref': 'Notify.traits.NotifyOnEventListener',
+        'name': 'PatientNotifier',
+        'config': {
+          'severity': 'info',
+          'notifyChannel': 'in-app',
+          'recipients': [],
+          'listensFor': [
+            'PATIENT_UPDATED',
+          ],
+          'template': 'Patient record updated',
+          'suppressionList': [],
+        },
+        'events': {
+          'EventOccurred': 'PATIENT_UPDATED',
+        },
+      }),
+      makeTraitRef({
+        'ref': 'Audit.traits.AuditCaptureListener',
+        'name': 'PatientAuditCapture',
+        'config': {
+          'captureEventTypes': [],
+          'captureBeforeAfter': true,
+          'excludeFields': [],
+          'retentionDays': 2555,
+          'captureEntity': 'Patient',
+        },
+        'events': {
+          'EntityMutated': 'PATIENT_UPDATED',
+        },
+      }),
+      makeTraitRef({
+        'ref': 'Erasure.traits.ErasureWorkflow',
+        'name': 'PatientErasureWorkflow',
+        'config': {
+          'gracePeriodDays': 30,
+          'anonymizeVsDelete': 'anonymize',
+          'piiFields': [
+            'firstName',
+            'lastName',
+            'phone',
+            'email',
+            'dateOfBirth',
+          ],
+          'targetEntity': 'Patient',
+        },
+      }),
     ],
     pages: [
       {
@@ -1193,6 +1284,18 @@ export function stdHealthcarePatientOrbital(params: StdHealthcarePatientOrbitalP
           },
           {
             'ref': 'PatientPersistor',
+          },
+          {
+            'ref': 'PatientLifecycleScan',
+          },
+          {
+            'ref': 'PatientNotifier',
+          },
+          {
+            'ref': 'PatientAuditCapture',
+          },
+          {
+            'ref': 'PatientErasureWorkflow',
           },
         ],
       } as never,
@@ -1269,6 +1372,10 @@ export const StdHealthcarePatientOrbitalManifest = {
     'PatientEdit',
     'PatientView',
     'PatientDelete',
+    'PatientLifecycleScan',
+    'PatientNotifier',
+    'PatientAuditCapture',
+    'PatientErasureWorkflow',
   ] as const,
   inlineTraitNames: [
     'PatientCatalog',
@@ -1334,7 +1441,7 @@ export interface StdHealthcareAppointmentOrbitalParams {
    * atom-owned (use `listens` via a sibling trait instead).
    */
   traitOverrides?: Partial<Record<
-    'AppointmentAppLayout' | 'AppointmentCalendar' | 'AppointmentBrowseList' | 'AppointmentCreate' | 'AppointmentEdit' | 'AppointmentView' | 'AppointmentDelete' | 'AppointmentCatalog' | 'AppointmentPersistor' | 'AppointmentReminderSms',
+    'AppointmentAppLayout' | 'AppointmentCalendar' | 'AppointmentBrowseList' | 'AppointmentCreate' | 'AppointmentEdit' | 'AppointmentView' | 'AppointmentDelete' | 'AppointmentReminderScheduler' | 'AppointmentCatalog' | 'AppointmentPersistor' | 'AppointmentReminderSms',
     Pick<MakeTraitRefOpts, 'config' | 'linkedEntity' | 'events' | 'name' | 'emitsScope' | 'listens'>
   >>;
 }
@@ -1374,6 +1481,10 @@ export function stdHealthcareAppointmentOrbital(params: StdHealthcareAppointment
       {
         'from': 'std/behaviors/std-service-twilio',
         'as': 'Twilio',
+      },
+      {
+        'from': 'std/behaviors/std-reminder-scheduler',
+        'as': 'Reminder',
       },
     ],
     entity: {
@@ -1448,43 +1559,43 @@ export function stdHealthcareAppointmentOrbital(params: StdHealthcareAppointment
         'name': 'AppointmentAppLayout',
         'linkedEntity': canonicalName,
         'config': {
-          'searchEvent': 'APPOINTMENT_SEARCH',
-          'notifications': [],
+          'contentTrait': '@trait.AppointmentCatalog',
           'appName': 'HealthcareApp',
           'navItems': [
             {
-              'icon': 'user-plus',
               'label': 'Patients',
+              'icon': 'user-plus',
               'href': '/patients',
             },
             {
+              'icon': 'calendar',
               'label': 'Appointments',
               'href': '/appointments',
-              'icon': 'calendar',
             },
             {
               'label': 'Intake',
-              'href': '/intake',
               'icon': 'layout-list',
+              'href': '/intake',
             },
             {
+              'label': 'Prescriptions',
               'href': '/prescriptions',
               'icon': 'pill',
-              'label': 'Prescriptions',
             },
             {
-              'label': 'Dashboard',
               'icon': 'layout-dashboard',
+              'label': 'Dashboard',
               'href': '/dashboard',
             },
           ],
-          'contentTrait': '@trait.AppointmentCatalog',
-          'topBarActions': [],
           'notificationClickEvent': 'APPOINTMENT_NOTIFICATIONS_OPEN',
+          'topBarActions': [],
+          'notifications': [],
+          'searchEvent': 'APPOINTMENT_SEARCH',
         },
         'events': {
-          'NOTIFY_CLICK': 'APPOINTMENT_NOTIFICATIONS_OPEN',
           'SEARCH': 'APPOINTMENT_SEARCH',
+          'NOTIFY_CLICK': 'APPOINTMENT_NOTIFICATIONS_OPEN',
         },
       }),
       rebindInlineTraitEntity({
@@ -1530,46 +1641,45 @@ export function stdHealthcareAppointmentOrbital(params: StdHealthcareAppointment
                   'main',
                   {
                     'gap': 'lg',
-                    'direction': 'vertical',
                     'type': 'stack',
                     'children': [
                       {
-                        'direction': 'horizontal',
+                        'type': 'stack',
                         'children': [
                           {
                             'type': 'stack',
-                            'direction': 'horizontal',
+                            'gap': 'sm',
                             'align': 'center',
                             'children': [
                               {
-                                'type': 'icon',
                                 'name': 'calendar',
+                                'type': 'icon',
                               },
                               {
-                                'content': 'Appointments',
-                                'variant': 'h2',
                                 'type': 'typography',
+                                'variant': 'h2',
+                                'content': 'Appointments',
                               },
                             ],
-                            'gap': 'sm',
+                            'direction': 'horizontal',
                           },
                           {
                             'direction': 'horizontal',
-                            'gap': 'sm',
-                            'type': 'stack',
                             'children': [
                               {
                                 'type': 'button',
                                 'action': 'CREATE',
-                                'label': 'New Appointment',
                                 'icon': 'plus',
+                                'label': 'New Appointment',
                                 'variant': 'primary',
                               },
                             ],
+                            'type': 'stack',
+                            'gap': 'sm',
                           },
                         ],
+                        'direction': 'horizontal',
                         'align': 'center',
-                        'type': 'stack',
                         'justify': 'between',
                         'gap': 'md',
                       },
@@ -1582,6 +1692,7 @@ export function stdHealthcareAppointmentOrbital(params: StdHealthcareAppointment
                       },
                       '@trait.AppointmentBrowseList',
                     ],
+                    'direction': 'vertical',
                   },
                 ],
               ],
@@ -1595,8 +1706,8 @@ export function stdHealthcareAppointmentOrbital(params: StdHealthcareAppointment
         'name': 'AppointmentCalendar',
         'linkedEntity': canonicalName,
         'config': {
-          'colorField': 'status',
           'dateField': 'scheduledAt',
+          'colorField': 'status',
           'titleField': 'summary',
         },
         'listens': [
@@ -1631,23 +1742,24 @@ export function stdHealthcareAppointmentOrbital(params: StdHealthcareAppointment
         'name': 'AppointmentBrowseList',
         'linkedEntity': canonicalName,
         'config': {
+          'gap': 'sm',
           'fields': [
             {
-              'variant': 'h4',
               'name': 'patientName',
+              'variant': 'h4',
               'icon': 'user',
               'label': 'Patient',
             },
             {
-              'name': 'doctorName',
               'label': 'Doctor',
               'variant': 'body',
+              'name': 'doctorName',
             },
             {
-              'name': 'scheduledAt',
-              'format': 'date',
-              'label': 'When',
               'variant': 'caption',
+              'format': 'date',
+              'name': 'scheduledAt',
+              'label': 'When',
             },
             {
               'name': 'status',
@@ -1658,17 +1770,16 @@ export function stdHealthcareAppointmentOrbital(params: StdHealthcareAppointment
               'variant': 'caption',
             },
           ],
-          'gap': 'sm',
           'itemActions': [
             {
+              'variant': 'ghost',
               'event': 'VIEW',
               'label': 'View',
-              'variant': 'ghost',
             },
             {
-              'label': 'Edit',
-              'event': 'EDIT',
               'variant': 'ghost',
+              'event': 'EDIT',
+              'label': 'Edit',
             },
             {
               'variant': 'danger',
@@ -1709,8 +1820,9 @@ export function stdHealthcareAppointmentOrbital(params: StdHealthcareAppointment
         'name': 'AppointmentCreate',
         'linkedEntity': canonicalName,
         'config': {
-          'icon': 'plus-circle',
           'title': 'Create Appointment',
+          'mode': 'create',
+          'icon': 'plus-circle',
           'fields': [
             'patientName',
             'patientEmail',
@@ -1721,11 +1833,10 @@ export function stdHealthcareAppointmentOrbital(params: StdHealthcareAppointment
             'reason',
             'status',
           ],
-          'mode': 'create',
         },
         'events': {
-          'OPEN': 'CREATE',
           'SAVE': 'APPOINTMENT_CREATED',
+          'OPEN': 'CREATE',
         },
         'listens': [
           {
@@ -1743,6 +1854,7 @@ export function stdHealthcareAppointmentOrbital(params: StdHealthcareAppointment
         'name': 'AppointmentEdit',
         'linkedEntity': canonicalName,
         'config': {
+          'mode': 'edit',
           'fields': [
             'patientName',
             'patientEmail',
@@ -1753,9 +1865,8 @@ export function stdHealthcareAppointmentOrbital(params: StdHealthcareAppointment
             'reason',
             'status',
           ],
-          'title': 'Edit Appointment',
-          'mode': 'edit',
           'icon': 'edit',
+          'title': 'Edit Appointment',
         },
         'events': {
           'OPEN': 'EDIT',
@@ -1777,7 +1888,7 @@ export function stdHealthcareAppointmentOrbital(params: StdHealthcareAppointment
         'name': 'AppointmentView',
         'linkedEntity': canonicalName,
         'config': {
-          'mode': 'edit',
+          'icon': 'eye',
           'fields': [
             'patientName',
             'doctorName',
@@ -1786,8 +1897,8 @@ export function stdHealthcareAppointmentOrbital(params: StdHealthcareAppointment
             'reason',
             'status',
           ],
-          'icon': 'eye',
           'title': 'Appointment Details',
+          'mode': 'edit',
         },
         'events': {
           'OPEN': 'VIEW',
@@ -1809,9 +1920,9 @@ export function stdHealthcareAppointmentOrbital(params: StdHealthcareAppointment
         'linkedEntity': canonicalName,
         'config': {
           'alertMessage': 'This action cannot be undone.',
-          'icon': 'alert-triangle',
           'confirmLabel': 'Delete',
           'title': 'Delete Appointment',
+          'icon': 'alert-triangle',
         },
         'events': {
           'REQUEST': 'DELETE',
@@ -2026,13 +2137,13 @@ export function stdHealthcareAppointmentOrbital(params: StdHealthcareAppointment
                   {
                     'sender': 'noreply@clinic.example',
                     'recipient': '@payload.data.patientEmail',
-                    'body': 'Your appointment is scheduled.',
                     'subject': 'Appointment Confirmed',
+                    'body': 'Your appointment is scheduled.',
                   },
                   {
                     'emit': {
-                      'success': 'AppointmentEmailSent',
                       'failure': 'AppointmentEmailFailed',
+                      'success': 'AppointmentEmailSent',
                     },
                   },
                 ],
@@ -2184,18 +2295,17 @@ export function stdHealthcareAppointmentOrbital(params: StdHealthcareAppointment
                   'render-ui',
                   'main',
                   {
-                    'direction': 'vertical',
+                    'gap': 'md',
                     'type': 'stack',
+                    'direction': 'vertical',
                     'children': [
                       {
-                        'type': 'stack',
-                        'direction': 'horizontal',
                         'gap': 'sm',
                         'align': 'center',
                         'children': [
                           {
-                            'type': 'icon',
                             'name': 'bell',
+                            'type': 'icon',
                           },
                           {
                             'variant': 'h3',
@@ -2203,16 +2313,17 @@ export function stdHealthcareAppointmentOrbital(params: StdHealthcareAppointment
                             'content': 'Send Appointment Reminder',
                           },
                         ],
+                        'type': 'stack',
+                        'direction': 'horizontal',
                       },
                       {
                         'type': 'button',
+                        'icon': 'send',
                         'label': 'Send SMS Reminder',
                         'action': 'SEND_REMINDER',
                         'variant': 'primary',
-                        'icon': 'send',
                       },
                     ],
-                    'gap': 'md',
                   },
                 ],
               ],
@@ -2227,14 +2338,14 @@ export function stdHealthcareAppointmentOrbital(params: StdHealthcareAppointment
                   'twilio',
                   'sendSMS',
                   {
+                    'recipient': '@payload.data.patientPhone',
                     'body': 'Reminder: appointment tomorrow.',
                     'sender': '+15551234567',
-                    'recipient': '@payload.data.patientPhone',
                   },
                   {
                     'emit': {
-                      'success': 'ReminderSent',
                       'failure': 'ReminderFailed',
+                      'success': 'ReminderSent',
                     },
                   },
                 ],
@@ -2242,21 +2353,21 @@ export function stdHealthcareAppointmentOrbital(params: StdHealthcareAppointment
                   'render-ui',
                   'main',
                   {
-                    'align': 'center',
-                    'type': 'stack',
+                    'direction': 'vertical',
                     'gap': 'md',
+                    'align': 'center',
                     'children': [
                       {
                         'type': 'spinner',
                       },
                       {
-                        'variant': 'caption',
-                        'type': 'typography',
                         'color': 'muted',
+                        'type': 'typography',
                         'content': 'Sending reminder…',
+                        'variant': 'caption',
                       },
                     ],
-                    'direction': 'vertical',
+                    'type': 'stack',
                   },
                 ],
               ],
@@ -2289,6 +2400,22 @@ export function stdHealthcareAppointmentOrbital(params: StdHealthcareAppointment
         },
         'scope': 'instance',
       } as never, 'Appointment', canonicalName) as never,
+      makeTraitRef({
+        'ref': 'Reminder.traits.ReminderScheduler',
+        'name': 'AppointmentReminderScheduler',
+        'config': {
+          'targetEntity': 'Appointment',
+          'severity': 'info',
+          'offsetsHours': [
+            168,
+            24,
+            1,
+          ],
+          'windowToleranceMinutes': 60,
+          'template': 'Upcoming appointment reminder',
+          'dateField': 'scheduledAt',
+        },
+      }),
     ],
     pages: [
       {
@@ -2321,6 +2448,9 @@ export function stdHealthcareAppointmentOrbital(params: StdHealthcareAppointment
           },
           {
             'ref': 'AppointmentPersistor',
+          },
+          {
+            'ref': 'AppointmentReminderScheduler',
           },
         ],
       } as never,
@@ -2391,6 +2521,7 @@ export const StdHealthcareAppointmentOrbitalManifest = {
     'AppointmentEdit',
     'AppointmentView',
     'AppointmentDelete',
+    'AppointmentReminderScheduler',
   ] as const,
   inlineTraitNames: [
     'AppointmentCatalog',
@@ -2539,16 +2670,16 @@ export function stdHealthcareIntakeFormOrbital(params: StdHealthcareIntakeFormOr
         'linkedEntity': canonicalName,
         'config': {
           'searchEvent': 'INTAKE_SEARCH',
-          'contentTrait': '@trait.IntakeFormWizard',
-          'topBarActions': [],
           'appName': 'HealthcareApp',
           'notifications': [],
           'notificationClickEvent': 'INTAKE_NOTIFICATIONS_OPEN',
+          'contentTrait': '@trait.IntakeFormWizard',
+          'topBarActions': [],
           'navItems': [
             {
-              'icon': 'user-plus',
               'label': 'Patients',
               'href': '/patients',
+              'icon': 'user-plus',
             },
             {
               'href': '/appointments',
@@ -2557,13 +2688,13 @@ export function stdHealthcareIntakeFormOrbital(params: StdHealthcareIntakeFormOr
             },
             {
               'href': '/intake',
-              'label': 'Intake',
               'icon': 'layout-list',
+              'label': 'Intake',
             },
             {
               'href': '/prescriptions',
-              'icon': 'pill',
               'label': 'Prescriptions',
+              'icon': 'pill',
             },
             {
               'label': 'Dashboard',
@@ -2573,8 +2704,8 @@ export function stdHealthcareIntakeFormOrbital(params: StdHealthcareIntakeFormOr
           ],
         },
         'events': {
-          'SEARCH': 'INTAKE_SEARCH',
           'NOTIFY_CLICK': 'INTAKE_NOTIFICATIONS_OPEN',
+          'SEARCH': 'INTAKE_SEARCH',
         },
       }),
       rebindInlineTraitEntity({
@@ -2802,59 +2933,59 @@ export function stdHealthcareIntakeFormOrbital(params: StdHealthcareIntakeFormOr
                   'main',
                   {
                     'direction': 'vertical',
-                    'type': 'stack',
-                    'gap': 'lg',
                     'className': 'max-w-xl mx-auto w-full',
+                    'gap': 'lg',
+                    'type': 'stack',
                     'children': [
                       {
-                        'direction': 'horizontal',
-                        'align': 'center',
                         'type': 'stack',
+                        'gap': 'sm',
                         'children': [
                           {
-                            'type': 'icon',
                             'name': 'clipboard',
+                            'type': 'icon',
                           },
                           {
-                            'type': 'typography',
                             'content': 'Patient Intake',
                             'variant': 'h2',
+                            'type': 'typography',
                           },
                         ],
-                        'gap': 'sm',
+                        'direction': 'horizontal',
+                        'align': 'center',
                       },
                       {
+                        'type': 'wizard-progress',
+                        'currentStep': 0,
                         'steps': [
                           'Personal Info',
                           'Medical History',
                           'Insurance',
                           'Review',
                         ],
-                        'currentStep': 0,
-                        'type': 'wizard-progress',
                       },
                       {
                         'type': 'divider',
                       },
                       {
-                        'content': 'Personal Info',
                         'type': 'typography',
                         'variant': 'h3',
+                        'content': 'Personal Info',
                       },
                       {
-                        'type': 'form-section',
                         'submitEvent': 'NEXT',
                         'showCancel': false,
-                        'submitLabel': 'Continue',
                         'mode': 'create',
+                        'type': 'form-section',
+                        'submitLabel': 'Continue',
                         'fields': [
                           {
-                            'name': 'firstName',
                             'required': true,
+                            'name': 'firstName',
                           },
                           {
-                            'name': 'lastName',
                             'required': true,
+                            'name': 'lastName',
                           },
                           {
                             'name': 'dateOfBirth',
@@ -2899,46 +3030,46 @@ export function stdHealthcareIntakeFormOrbital(params: StdHealthcareIntakeFormOr
                   {
                     'direction': 'vertical',
                     'gap': 'lg',
-                    'type': 'stack',
+                    'className': 'max-w-xl mx-auto w-full',
                     'children': [
                       {
-                        'content': 'Patient Intake',
                         'type': 'typography',
+                        'content': 'Patient Intake',
                         'variant': 'h2',
                       },
                       {
                         'currentStep': 1,
-                        'type': 'wizard-progress',
                         'steps': [
                           'Personal Info',
                           'Medical History',
                           'Insurance',
                           'Review',
                         ],
+                        'type': 'wizard-progress',
                       },
                       {
                         'type': 'divider',
                       },
                       {
-                        'type': 'typography',
                         'content': 'Medical History',
                         'variant': 'h3',
+                        'type': 'typography',
                       },
                       {
-                        'cancelEvent': 'PREV',
-                        'submitLabel': 'Continue',
+                        'mode': 'edit',
                         'type': 'form-section',
+                        'submitLabel': 'Continue',
+                        'entity': '@entity',
+                        'cancelEvent': 'PREV',
+                        'cancelLabel': 'Back',
+                        'submitEvent': 'NEXT',
                         'fields': [
                           'allergies',
                           'medications',
                         ],
-                        'cancelLabel': 'Back',
-                        'submitEvent': 'NEXT',
-                        'entity': '@entity',
-                        'mode': 'edit',
                       },
                     ],
-                    'className': 'max-w-xl mx-auto w-full',
+                    'type': 'stack',
                   },
                 ],
               ],
@@ -2968,38 +3099,41 @@ export function stdHealthcareIntakeFormOrbital(params: StdHealthcareIntakeFormOr
                   'render-ui',
                   'main',
                   {
+                    'gap': 'lg',
+                    'direction': 'vertical',
+                    'className': 'max-w-xl mx-auto w-full',
                     'children': [
                       {
-                        'content': 'Patient Intake',
                         'type': 'typography',
                         'variant': 'h2',
+                        'content': 'Patient Intake',
                       },
                       {
+                        'currentStep': 2,
                         'steps': [
                           'Personal Info',
                           'Medical History',
                           'Insurance',
                           'Review',
                         ],
-                        'currentStep': 2,
                         'type': 'wizard-progress',
                       },
                       {
                         'type': 'divider',
                       },
                       {
-                        'type': 'typography',
                         'variant': 'h3',
                         'content': 'Insurance',
+                        'type': 'typography',
                       },
                       {
-                        'submitEvent': 'NEXT',
-                        'entity': '@entity',
                         'mode': 'edit',
+                        'type': 'form-section',
+                        'cancelEvent': 'PREV',
                         'fields': [
                           {
-                            'name': 'emergencyContact',
                             'required': true,
+                            'name': 'emergencyContact',
                           },
                           {
                             'required': true,
@@ -3010,15 +3144,12 @@ export function stdHealthcareIntakeFormOrbital(params: StdHealthcareIntakeFormOr
                             'required': true,
                           },
                         ],
-                        'type': 'form-section',
-                        'cancelLabel': 'Back',
                         'submitLabel': 'Continue',
-                        'cancelEvent': 'PREV',
+                        'entity': '@entity',
+                        'cancelLabel': 'Back',
+                        'submitEvent': 'NEXT',
                       },
                     ],
-                    'className': 'max-w-xl mx-auto w-full',
-                    'gap': 'lg',
-                    'direction': 'vertical',
                     'type': 'stack',
                   },
                 ],
@@ -3033,18 +3164,19 @@ export function stdHealthcareIntakeFormOrbital(params: StdHealthcareIntakeFormOr
                   'render-ui',
                   'main',
                   {
-                    'gap': 'lg',
                     'direction': 'vertical',
+                    'gap': 'lg',
+                    'type': 'stack',
                     'className': 'max-w-xl mx-auto w-full',
                     'children': [
                       {
-                        'content': 'Patient Intake',
-                        'variant': 'h2',
                         'type': 'typography',
+                        'variant': 'h2',
+                        'content': 'Patient Intake',
                       },
                       {
-                        'currentStep': 0,
                         'type': 'wizard-progress',
+                        'currentStep': 0,
                         'steps': [
                           'Personal Info',
                           'Medical History',
@@ -3056,34 +3188,33 @@ export function stdHealthcareIntakeFormOrbital(params: StdHealthcareIntakeFormOr
                         'type': 'divider',
                       },
                       {
-                        'type': 'typography',
-                        'variant': 'h3',
                         'content': 'Personal Info',
+                        'variant': 'h3',
+                        'type': 'typography',
                       },
                       {
-                        'type': 'form-section',
-                        'entity': '@entity',
-                        'submitEvent': 'NEXT',
-                        'mode': 'edit',
                         'showCancel': false,
-                        'submitLabel': 'Continue',
                         'fields': [
                           {
-                            'required': true,
                             'name': 'firstName',
+                            'required': true,
                           },
                           {
                             'name': 'lastName',
                             'required': true,
                           },
                           {
-                            'required': true,
                             'name': 'dateOfBirth',
+                            'required': true,
                           },
                         ],
+                        'mode': 'edit',
+                        'type': 'form-section',
+                        'entity': '@entity',
+                        'submitEvent': 'NEXT',
+                        'submitLabel': 'Continue',
                       },
                     ],
-                    'type': 'stack',
                   },
                 ],
               ],
@@ -3121,145 +3252,141 @@ export function stdHealthcareIntakeFormOrbital(params: StdHealthcareIntakeFormOr
                   'render-ui',
                   'main',
                   {
-                    'type': 'stack',
-                    'direction': 'vertical',
                     'className': 'max-w-xl mx-auto w-full',
                     'children': [
                       {
-                        'type': 'typography',
                         'variant': 'h2',
+                        'type': 'typography',
                         'content': 'Review intake',
                       },
                       {
+                        'type': 'wizard-progress',
                         'steps': [
                           'Personal Info',
                           'Medical History',
                           'Insurance',
                           'Review',
                         ],
-                        'type': 'wizard-progress',
                         'currentStep': 3,
                       },
                       {
                         'type': 'divider',
                       },
                       {
-                        'gap': 'sm',
-                        'direction': 'vertical',
-                        'type': 'stack',
                         'children': [
                           {
+                            'gap': 'md',
                             'children': [
                               {
-                                'content': 'First Name',
                                 'type': 'typography',
+                                'content': 'First Name',
                                 'variant': 'caption',
                               },
                               {
-                                'type': 'typography',
                                 'variant': 'body',
                                 'content': '@entity.firstName',
+                                'type': 'typography',
                               },
                             ],
                             'type': 'stack',
                             'justify': 'between',
                             'direction': 'horizontal',
-                            'gap': 'md',
                           },
                           {
-                            'direction': 'horizontal',
-                            'gap': 'md',
                             'type': 'stack',
+                            'gap': 'md',
+                            'direction': 'horizontal',
+                            'justify': 'between',
                             'children': [
                               {
-                                'type': 'typography',
-                                'variant': 'caption',
                                 'content': 'Last Name',
+                                'variant': 'caption',
+                                'type': 'typography',
                               },
                               {
                                 'variant': 'body',
-                                'type': 'typography',
                                 'content': '@entity.lastName',
+                                'type': 'typography',
                               },
                             ],
-                            'justify': 'between',
                           },
                           {
                             'direction': 'horizontal',
-                            'type': 'stack',
-                            'justify': 'between',
                             'gap': 'md',
+                            'justify': 'between',
                             'children': [
                               {
-                                'variant': 'caption',
                                 'type': 'typography',
+                                'variant': 'caption',
                                 'content': 'Date of Birth',
                               },
                               {
-                                'variant': 'body',
                                 'type': 'typography',
                                 'content': '@entity.dateOfBirth',
+                                'variant': 'body',
                               },
                             ],
+                            'type': 'stack',
                           },
                           {
+                            'type': 'stack',
+                            'gap': 'md',
+                            'direction': 'horizontal',
+                            'justify': 'between',
                             'children': [
                               {
                                 'content': 'Allergies',
-                                'variant': 'caption',
                                 'type': 'typography',
+                                'variant': 'caption',
                               },
                               {
-                                'type': 'typography',
-                                'variant': 'body',
                                 'content': '@entity.allergies',
+                                'variant': 'body',
+                                'type': 'typography',
                               },
                             ],
-                            'gap': 'md',
-                            'direction': 'horizontal',
-                            'justify': 'between',
-                            'type': 'stack',
                           },
                           {
-                            'type': 'stack',
-                            'direction': 'horizontal',
                             'justify': 'between',
                             'children': [
                               {
-                                'variant': 'caption',
                                 'content': 'Medications',
                                 'type': 'typography',
+                                'variant': 'caption',
                               },
                               {
+                                'type': 'typography',
                                 'variant': 'body',
                                 'content': '@entity.medications',
-                                'type': 'typography',
                               },
                             ],
+                            'direction': 'horizontal',
+                            'type': 'stack',
                             'gap': 'md',
                           },
                           {
-                            'gap': 'md',
                             'children': [
                               {
-                                'variant': 'caption',
                                 'type': 'typography',
+                                'variant': 'caption',
                                 'content': 'Emergency Contact',
                               },
                               {
                                 'type': 'typography',
-                                'variant': 'body',
                                 'content': '@entity.emergencyContact',
+                                'variant': 'body',
                               },
                             ],
                             'direction': 'horizontal',
-                            'justify': 'between',
+                            'gap': 'md',
                             'type': 'stack',
+                            'justify': 'between',
                           },
                           {
+                            'type': 'stack',
+                            'gap': 'md',
                             'direction': 'horizontal',
                             'justify': 'between',
-                            'gap': 'md',
                             'children': [
                               {
                                 'content': 'Insurance Provider',
@@ -3268,58 +3395,62 @@ export function stdHealthcareIntakeFormOrbital(params: StdHealthcareIntakeFormOr
                               },
                               {
                                 'variant': 'body',
-                                'type': 'typography',
                                 'content': '@entity.insuranceProvider',
+                                'type': 'typography',
                               },
                             ],
-                            'type': 'stack',
                           },
                           {
-                            'gap': 'md',
-                            'type': 'stack',
                             'children': [
                               {
-                                'content': 'Insurance ID',
                                 'type': 'typography',
                                 'variant': 'caption',
+                                'content': 'Insurance ID',
                               },
                               {
-                                'content': '@entity.insuranceId',
                                 'type': 'typography',
                                 'variant': 'body',
+                                'content': '@entity.insuranceId',
                               },
                             ],
-                            'justify': 'between',
                             'direction': 'horizontal',
+                            'type': 'stack',
+                            'justify': 'between',
+                            'gap': 'md',
                           },
                         ],
+                        'gap': 'sm',
+                        'type': 'stack',
+                        'direction': 'vertical',
                       },
                       {
                         'type': 'divider',
                       },
                       {
+                        'direction': 'horizontal',
                         'gap': 'sm',
                         'justify': 'between',
-                        'direction': 'horizontal',
-                        'type': 'stack',
                         'children': [
                           {
-                            'label': 'Back',
-                            'variant': 'ghost',
                             'icon': 'arrow-left',
                             'action': 'PREV',
+                            'label': 'Back',
                             'type': 'button',
+                            'variant': 'ghost',
                           },
                           {
-                            'action': 'COMPLETE',
                             'variant': 'primary',
+                            'action': 'COMPLETE',
+                            'icon': 'check',
                             'label': 'Submit Intake',
                             'type': 'button',
-                            'icon': 'check',
                           },
                         ],
+                        'type': 'stack',
                       },
                     ],
+                    'direction': 'vertical',
+                    'type': 'stack',
                     'gap': 'lg',
                   },
                 ],
@@ -3334,48 +3465,48 @@ export function stdHealthcareIntakeFormOrbital(params: StdHealthcareIntakeFormOr
                   'render-ui',
                   'main',
                   {
-                    'className': 'max-w-xl mx-auto w-full',
                     'gap': 'lg',
+                    'className': 'max-w-xl mx-auto w-full',
+                    'type': 'stack',
                     'direction': 'vertical',
                     'children': [
                       {
-                        'type': 'typography',
                         'content': 'Patient Intake',
                         'variant': 'h2',
+                        'type': 'typography',
                       },
                       {
+                        'type': 'wizard-progress',
                         'steps': [
                           'Personal Info',
                           'Medical History',
                           'Insurance',
                           'Review',
                         ],
-                        'type': 'wizard-progress',
                         'currentStep': 1,
                       },
                       {
                         'type': 'divider',
                       },
                       {
-                        'type': 'typography',
                         'variant': 'h3',
                         'content': 'Medical History',
+                        'type': 'typography',
                       },
                       {
-                        'submitEvent': 'NEXT',
                         'cancelLabel': 'Back',
                         'type': 'form-section',
+                        'entity': '@entity',
                         'submitLabel': 'Continue',
                         'mode': 'edit',
+                        'submitEvent': 'NEXT',
                         'fields': [
                           'allergies',
                           'medications',
                         ],
-                        'entity': '@entity',
                         'cancelEvent': 'PREV',
                       },
                     ],
-                    'type': 'stack',
                   },
                 ],
               ],
@@ -3422,35 +3553,35 @@ export function stdHealthcareIntakeFormOrbital(params: StdHealthcareIntakeFormOr
                   'render-ui',
                   'main',
                   {
-                    'className': 'max-w-xl mx-auto w-full py-12',
+                    'align': 'center',
+                    'direction': 'vertical',
                     'children': [
                       {
                         'name': 'check-circle',
                         'type': 'icon',
                       },
                       {
-                        'content': 'Intake Complete',
-                        'type': 'typography',
                         'variant': 'h2',
+                        'type': 'typography',
+                        'content': 'Intake Complete',
                       },
                       {
-                        'variant': 'body',
-                        'content': 'Patient intake has been submitted.',
                         'type': 'typography',
+                        'content': 'Patient intake has been submitted.',
                         'color': 'muted',
+                        'variant': 'body',
                       },
                       {
                         'label': 'Start new intake',
-                        'type': 'button',
-                        'variant': 'ghost',
-                        'icon': 'rotate-ccw',
                         'action': 'RESTART',
+                        'variant': 'ghost',
+                        'type': 'button',
+                        'icon': 'rotate-ccw',
                       },
                     ],
-                    'type': 'stack',
                     'gap': 'lg',
-                    'direction': 'vertical',
-                    'align': 'center',
+                    'type': 'stack',
+                    'className': 'max-w-xl mx-auto w-full py-12',
                   },
                 ],
               ],
@@ -3464,57 +3595,57 @@ export function stdHealthcareIntakeFormOrbital(params: StdHealthcareIntakeFormOr
                   'render-ui',
                   'main',
                   {
+                    'type': 'stack',
+                    'direction': 'vertical',
                     'gap': 'lg',
                     'children': [
                       {
-                        'variant': 'h2',
                         'type': 'typography',
                         'content': 'Patient Intake',
+                        'variant': 'h2',
                       },
                       {
-                        'currentStep': 2,
-                        'type': 'wizard-progress',
                         'steps': [
                           'Personal Info',
                           'Medical History',
                           'Insurance',
                           'Review',
                         ],
+                        'currentStep': 2,
+                        'type': 'wizard-progress',
                       },
                       {
                         'type': 'divider',
                       },
                       {
-                        'variant': 'h3',
-                        'content': 'Insurance',
                         'type': 'typography',
+                        'content': 'Insurance',
+                        'variant': 'h3',
                       },
                       {
-                        'cancelLabel': 'Back',
-                        'submitLabel': 'Continue',
-                        'mode': 'edit',
-                        'cancelEvent': 'PREV',
-                        'entity': '@entity',
-                        'submitEvent': 'NEXT',
                         'fields': [
                           {
-                            'required': true,
                             'name': 'emergencyContact',
+                            'required': true,
                           },
                           {
+                            'required': true,
                             'name': 'insuranceProvider',
-                            'required': true,
                           },
                           {
-                            'name': 'insuranceId',
                             'required': true,
+                            'name': 'insuranceId',
                           },
                         ],
+                        'submitLabel': 'Continue',
+                        'submitEvent': 'NEXT',
+                        'cancelEvent': 'PREV',
+                        'entity': '@entity',
                         'type': 'form-section',
+                        'mode': 'edit',
+                        'cancelLabel': 'Back',
                       },
                     ],
-                    'type': 'stack',
-                    'direction': 'vertical',
                     'className': 'max-w-xl mx-auto w-full',
                   },
                 ],
@@ -3570,7 +3701,6 @@ export function stdHealthcareIntakeFormOrbital(params: StdHealthcareIntakeFormOr
                   'main',
                   {
                     'direction': 'vertical',
-                    'className': 'max-w-xl mx-auto w-full',
                     'children': [
                       {
                         'type': 'typography',
@@ -3578,46 +3708,47 @@ export function stdHealthcareIntakeFormOrbital(params: StdHealthcareIntakeFormOr
                         'variant': 'h2',
                       },
                       {
-                        'type': 'wizard-progress',
                         'steps': [
                           'Personal Info',
                           'Medical History',
                           'Insurance',
                           'Review',
                         ],
+                        'type': 'wizard-progress',
                         'currentStep': 0,
                       },
                       {
                         'type': 'divider',
                       },
                       {
+                        'content': 'Personal Info',
                         'type': 'typography',
                         'variant': 'h3',
-                        'content': 'Personal Info',
                       },
                       {
-                        'submitLabel': 'Continue',
                         'showCancel': false,
-                        'mode': 'create',
-                        'submitEvent': 'NEXT',
                         'fields': [
                           {
                             'name': 'firstName',
                             'required': true,
                           },
                           {
-                            'name': 'lastName',
                             'required': true,
+                            'name': 'lastName',
                           },
                           {
-                            'required': true,
                             'name': 'dateOfBirth',
+                            'required': true,
                           },
                         ],
                         'type': 'form-section',
+                        'submitEvent': 'NEXT',
+                        'mode': 'create',
+                        'submitLabel': 'Continue',
                       },
                     ],
                     'gap': 'lg',
+                    'className': 'max-w-xl mx-auto w-full',
                     'type': 'stack',
                   },
                 ],
@@ -3756,7 +3887,7 @@ export interface StdHealthcarePrescriptionOrbitalParams {
    * atom-owned (use `listens` via a sibling trait instead).
    */
   traitOverrides?: Partial<Record<
-    'PrescriptionAppLayout' | 'PrescriptionBrowseList' | 'PrescriptionCreate' | 'PrescriptionEdit' | 'PrescriptionDelete' | 'PrescriptionCatalog' | 'PrescriptionView' | 'PrescriptionPersistor',
+    'PrescriptionAppLayout' | 'PrescriptionBrowseList' | 'PrescriptionCreate' | 'PrescriptionEdit' | 'PrescriptionDelete' | 'PrescriptionApprovalGate' | 'PrescriptionCatalog' | 'PrescriptionView' | 'PrescriptionPersistor',
     Pick<MakeTraitRefOpts, 'config' | 'linkedEntity' | 'events' | 'name' | 'emitsScope' | 'listens'>
   >>;
 }
@@ -3784,6 +3915,10 @@ export function stdHealthcarePrescriptionOrbital(params: StdHealthcarePrescripti
       {
         'from': 'std/behaviors/std-confirmation',
         'as': 'Confirmation',
+      },
+      {
+        'from': 'std/behaviors/std-approval-gate',
+        'as': 'Approval',
       },
     ],
     entity: {
@@ -3857,43 +3992,43 @@ export function stdHealthcarePrescriptionOrbital(params: StdHealthcarePrescripti
         'name': 'PrescriptionAppLayout',
         'linkedEntity': canonicalName,
         'config': {
-          'contentTrait': '@trait.PrescriptionCatalog',
           'navItems': [
             {
-              'href': '/patients',
               'label': 'Patients',
+              'href': '/patients',
               'icon': 'user-plus',
             },
             {
+              'label': 'Appointments',
               'href': '/appointments',
               'icon': 'calendar',
-              'label': 'Appointments',
             },
             {
-              'icon': 'layout-list',
               'label': 'Intake',
               'href': '/intake',
+              'icon': 'layout-list',
             },
             {
+              'icon': 'pill',
               'href': '/prescriptions',
               'label': 'Prescriptions',
-              'icon': 'pill',
             },
             {
-              'label': 'Dashboard',
               'href': '/dashboard',
+              'label': 'Dashboard',
               'icon': 'layout-dashboard',
             },
           ],
-          'notificationClickEvent': 'PRESCRIPTION_NOTIFICATIONS_OPEN',
+          'contentTrait': '@trait.PrescriptionCatalog',
           'appName': 'HealthcareApp',
-          'notifications': [],
           'searchEvent': 'PRESCRIPTION_SEARCH',
+          'notifications': [],
           'topBarActions': [],
+          'notificationClickEvent': 'PRESCRIPTION_NOTIFICATIONS_OPEN',
         },
         'events': {
-          'SEARCH': 'PRESCRIPTION_SEARCH',
           'NOTIFY_CLICK': 'PRESCRIPTION_NOTIFICATIONS_OPEN',
+          'SEARCH': 'PRESCRIPTION_SEARCH',
         },
       }),
       rebindInlineTraitEntity({
@@ -3938,55 +4073,55 @@ export function stdHealthcarePrescriptionOrbital(params: StdHealthcarePrescripti
                   'render-ui',
                   'main',
                   {
-                    'type': 'stack',
+                    'direction': 'vertical',
                     'gap': 'lg',
                     'children': [
                       {
-                        'type': 'stack',
-                        'justify': 'between',
                         'align': 'center',
+                        'type': 'stack',
+                        'direction': 'horizontal',
                         'children': [
                           {
                             'type': 'stack',
                             'align': 'center',
                             'direction': 'horizontal',
-                            'gap': 'sm',
                             'children': [
                               {
-                                'type': 'icon',
                                 'name': 'pill',
+                                'type': 'icon',
                               },
                               {
-                                'type': 'typography',
                                 'content': 'Prescriptions',
+                                'type': 'typography',
                                 'variant': 'h2',
                               },
                             ],
+                            'gap': 'sm',
                           },
                           {
-                            'type': 'stack',
-                            'direction': 'horizontal',
-                            'gap': 'sm',
                             'children': [
                               {
-                                'variant': 'primary',
-                                'action': 'CREATE',
                                 'label': 'New Prescription',
                                 'icon': 'plus',
+                                'variant': 'primary',
+                                'action': 'CREATE',
                                 'type': 'button',
                               },
                             ],
+                            'gap': 'sm',
+                            'type': 'stack',
+                            'direction': 'horizontal',
                           },
                         ],
-                        'direction': 'horizontal',
                         'gap': 'md',
+                        'justify': 'between',
                       },
                       {
                         'type': 'divider',
                       },
                       '@trait.PrescriptionBrowseList',
                     ],
-                    'direction': 'vertical',
+                    'type': 'stack',
                   },
                 ],
               ],
@@ -4000,10 +4135,28 @@ export function stdHealthcarePrescriptionOrbital(params: StdHealthcarePrescripti
         'name': 'PrescriptionBrowseList',
         'linkedEntity': canonicalName,
         'config': {
+          'gap': 'sm',
+          'itemActions': [
+            {
+              'event': 'VIEW',
+              'label': 'View',
+              'variant': 'ghost',
+            },
+            {
+              'variant': 'ghost',
+              'label': 'Edit',
+              'event': 'EDIT',
+            },
+            {
+              'label': 'Delete',
+              'variant': 'danger',
+              'event': 'DELETE',
+            },
+          ],
           'fields': [
             {
-              'icon': 'pill',
               'variant': 'h3',
+              'icon': 'pill',
               'name': 'medication',
             },
             {
@@ -4011,23 +4164,23 @@ export function stdHealthcarePrescriptionOrbital(params: StdHealthcarePrescripti
               'name': 'dosage',
             },
             {
-              'variant': 'body',
               'name': 'frequency',
+              'variant': 'body',
             },
             {
-              'name': 'patientName',
-              'label': 'Patient',
               'variant': 'body',
+              'label': 'Patient',
+              'name': 'patientName',
             },
             {
               'name': 'prescribedBy',
-              'label': 'Prescribed By',
               'variant': 'caption',
+              'label': 'Prescribed By',
             },
             {
               'format': 'date',
-              'label': 'Start',
               'name': 'startDate',
+              'label': 'Start',
               'variant': 'caption',
             },
             {
@@ -4035,24 +4188,6 @@ export function stdHealthcarePrescriptionOrbital(params: StdHealthcarePrescripti
               'variant': 'badge',
             },
           ],
-          'itemActions': [
-            {
-              'label': 'View',
-              'event': 'VIEW',
-              'variant': 'ghost',
-            },
-            {
-              'variant': 'ghost',
-              'event': 'EDIT',
-              'label': 'Edit',
-            },
-            {
-              'variant': 'danger',
-              'label': 'Delete',
-              'event': 'DELETE',
-            },
-          ],
-          'gap': 'sm',
         },
         'listens': [
           {
@@ -4086,6 +4221,7 @@ export function stdHealthcarePrescriptionOrbital(params: StdHealthcarePrescripti
         'name': 'PrescriptionCreate',
         'linkedEntity': canonicalName,
         'config': {
+          'mode': 'create',
           'fields': [
             'medication',
             'dosage',
@@ -4096,7 +4232,6 @@ export function stdHealthcarePrescriptionOrbital(params: StdHealthcarePrescripti
             'endDate',
             'status',
           ],
-          'mode': 'create',
           'title': 'New Prescription',
           'icon': 'plus-circle',
         },
@@ -4120,8 +4255,8 @@ export function stdHealthcarePrescriptionOrbital(params: StdHealthcarePrescripti
         'name': 'PrescriptionEdit',
         'linkedEntity': canonicalName,
         'config': {
-          'mode': 'edit',
           'title': 'Edit Prescription',
+          'icon': 'edit',
           'fields': [
             'medication',
             'dosage',
@@ -4132,7 +4267,7 @@ export function stdHealthcarePrescriptionOrbital(params: StdHealthcarePrescripti
             'endDate',
             'status',
           ],
-          'icon': 'edit',
+          'mode': 'edit',
         },
         'events': {
           'OPEN': 'EDIT',
@@ -4348,177 +4483,177 @@ export function stdHealthcarePrescriptionOrbital(params: StdHealthcarePrescripti
                   'render-ui',
                   'modal',
                   {
+                    'gap': 'md',
                     'direction': 'vertical',
+                    'type': 'stack',
                     'children': [
                       {
+                        'direction': 'horizontal',
+                        'gap': 'sm',
                         'type': 'stack',
-                        'align': 'center',
                         'children': [
                           {
-                            'type': 'icon',
                             'name': 'pill',
+                            'type': 'icon',
                           },
                           {
                             'type': 'typography',
-                            'content': '@entity.medication',
                             'variant': 'h3',
+                            'content': '@entity.medication',
                           },
                         ],
-                        'direction': 'horizontal',
-                        'gap': 'sm',
+                        'align': 'center',
                       },
                       {
                         'type': 'divider',
                       },
                       {
-                        'gap': 'md',
+                        'type': 'simple-grid',
                         'children': [
                           {
-                            'gap': 'xs',
                             'direction': 'vertical',
+                            'gap': 'xs',
                             'children': [
                               {
-                                'type': 'typography',
                                 'variant': 'caption',
+                                'type': 'typography',
                                 'content': 'Drug',
                               },
                               {
                                 'content': '@entity.medication',
-                                'type': 'typography',
                                 'variant': 'h4',
+                                'type': 'typography',
                               },
                             ],
                             'type': 'stack',
                           },
                           {
+                            'type': 'stack',
                             'children': [
                               {
-                                'variant': 'caption',
                                 'content': 'Dose',
                                 'type': 'typography',
+                                'variant': 'caption',
                               },
                               {
                                 'type': 'typography',
-                                'content': '@entity.dosage',
                                 'variant': 'h4',
+                                'content': '@entity.dosage',
                               },
                             ],
                             'gap': 'xs',
                             'direction': 'vertical',
-                            'type': 'stack',
                           },
                           {
+                            'gap': 'xs',
                             'children': [
                               {
-                                'content': 'Frequency',
                                 'type': 'typography',
                                 'variant': 'caption',
+                                'content': 'Frequency',
                               },
                               {
                                 'type': 'typography',
-                                'content': '@entity.frequency',
                                 'variant': 'h4',
+                                'content': '@entity.frequency',
                               },
                             ],
-                            'gap': 'xs',
                             'type': 'stack',
                             'direction': 'vertical',
                           },
                         ],
+                        'gap': 'md',
                         'cols': 3,
-                        'type': 'simple-grid',
                       },
                       {
                         'type': 'divider',
                       },
                       {
-                        'direction': 'horizontal',
-                        'gap': 'md',
                         'type': 'stack',
                         'children': [
                           {
                             'type': 'typography',
-                            'content': 'Patient',
                             'variant': 'caption',
+                            'content': 'Patient',
                           },
                           {
-                            'type': 'typography',
-                            'content': '@entity.patientName',
                             'variant': 'body',
+                            'content': '@entity.patientName',
+                            'type': 'typography',
                           },
                         ],
+                        'direction': 'horizontal',
+                        'gap': 'md',
                       },
                       {
-                        'direction': 'horizontal',
                         'type': 'stack',
+                        'gap': 'md',
+                        'direction': 'horizontal',
                         'children': [
                           {
-                            'content': 'Prescribed By',
                             'type': 'typography',
                             'variant': 'caption',
+                            'content': 'Prescribed By',
                           },
                           {
+                            'type': 'typography',
                             'content': '@entity.prescribedBy',
                             'variant': 'body',
-                            'type': 'typography',
                           },
                         ],
-                        'gap': 'md',
                       },
                       {
                         'type': 'stack',
+                        'direction': 'horizontal',
+                        'gap': 'md',
                         'children': [
                           {
-                            'variant': 'caption',
                             'content': 'Start',
                             'type': 'typography',
+                            'variant': 'caption',
                           },
                           {
                             'content': '@entity.startDate',
-                            'type': 'typography',
                             'variant': 'body',
+                            'type': 'typography',
                           },
                         ],
-                        'gap': 'md',
-                        'direction': 'horizontal',
                       },
                       {
+                        'children': [
+                          {
+                            'content': 'End',
+                            'variant': 'caption',
+                            'type': 'typography',
+                          },
+                          {
+                            'content': '@entity.endDate',
+                            'variant': 'body',
+                            'type': 'typography',
+                          },
+                        ],
                         'direction': 'horizontal',
                         'type': 'stack',
                         'gap': 'md',
-                        'children': [
-                          {
-                            'variant': 'caption',
-                            'type': 'typography',
-                            'content': 'End',
-                          },
-                          {
-                            'type': 'typography',
-                            'content': '@entity.endDate',
-                            'variant': 'body',
-                          },
-                        ],
                       },
                       {
                         'type': 'divider',
                       },
                       {
                         'type': 'stack',
+                        'justify': 'end',
                         'children': [
                           {
-                            'type': 'button',
-                            'label': 'Close',
                             'action': 'CLOSE',
+                            'label': 'Close',
                             'variant': 'ghost',
+                            'type': 'button',
                           },
                         ],
-                        'justify': 'end',
-                        'gap': 'sm',
                         'direction': 'horizontal',
+                        'gap': 'sm',
                       },
                     ],
-                    'type': 'stack',
-                    'gap': 'md',
                   },
                 ],
               ],
@@ -4545,13 +4680,13 @@ export function stdHealthcarePrescriptionOrbital(params: StdHealthcarePrescripti
         'linkedEntity': canonicalName,
         'config': {
           'alertMessage': 'This action cannot be undone.',
-          'confirmLabel': 'Delete',
           'title': 'Delete Prescription',
+          'confirmLabel': 'Delete',
           'icon': 'alert-triangle',
         },
         'events': {
-          'CONFIRM': 'PRESCRIPTION_DELETED',
           'REQUEST': 'DELETE',
+          'CONFIRM': 'PRESCRIPTION_DELETED',
         },
         'listens': [
           {
@@ -4751,6 +4886,23 @@ export function stdHealthcarePrescriptionOrbital(params: StdHealthcarePrescripti
         },
         'scope': 'instance',
       } as never, 'Prescription', canonicalName) as never,
+      makeTraitRef({
+        'ref': 'Approval.traits.ApprovalGateReview',
+        'name': 'PrescriptionApprovalGate',
+        'config': {
+          'escalationRoles': [
+            'chief-medical-officer',
+          ],
+          'approverRoles': [
+            'prescribing-physician',
+            'pharmacy-supervisor',
+          ],
+          'autoApproveBelowThreshold': false,
+          'threshold': 0,
+          'valueField': '',
+          'escalationHours': 4,
+        },
+      }),
     ],
     pages: [
       {
@@ -4780,6 +4932,9 @@ export function stdHealthcarePrescriptionOrbital(params: StdHealthcarePrescripti
           },
           {
             'ref': 'PrescriptionPersistor',
+          },
+          {
+            'ref': 'PrescriptionApprovalGate',
           },
         ],
       } as never,
@@ -4839,6 +4994,7 @@ export const StdHealthcarePrescriptionOrbitalManifest = {
     'PrescriptionCreate',
     'PrescriptionEdit',
     'PrescriptionDelete',
+    'PrescriptionApprovalGate',
   ] as const,
   inlineTraitNames: [
     'PrescriptionCatalog',
@@ -4943,39 +5099,39 @@ export function stdHealthcareDashboardOrbital(params: StdHealthcareDashboardOrbi
         'name': 'DashboardAppLayout',
         'linkedEntity': canonicalName,
         'config': {
-          'navItems': [
-            {
-              'href': '/patients',
-              'icon': 'user-plus',
-              'label': 'Patients',
-            },
-            {
-              'label': 'Appointments',
-              'href': '/appointments',
-              'icon': 'calendar',
-            },
-            {
-              'label': 'Intake',
-              'href': '/intake',
-              'icon': 'layout-list',
-            },
-            {
-              'href': '/prescriptions',
-              'icon': 'pill',
-              'label': 'Prescriptions',
-            },
-            {
-              'icon': 'layout-dashboard',
-              'label': 'Dashboard',
-              'href': '/dashboard',
-            },
-          ],
-          'searchEvent': 'DASHBOARD_SEARCH',
-          'topBarActions': [],
           'notificationClickEvent': 'DASHBOARD_NOTIFICATIONS_OPEN',
           'contentTrait': '@trait.DashboardDisplay',
           'notifications': [],
           'appName': 'HealthcareApp',
+          'topBarActions': [],
+          'navItems': [
+            {
+              'label': 'Patients',
+              'href': '/patients',
+              'icon': 'user-plus',
+            },
+            {
+              'href': '/appointments',
+              'icon': 'calendar',
+              'label': 'Appointments',
+            },
+            {
+              'icon': 'layout-list',
+              'label': 'Intake',
+              'href': '/intake',
+            },
+            {
+              'label': 'Prescriptions',
+              'href': '/prescriptions',
+              'icon': 'pill',
+            },
+            {
+              'icon': 'layout-dashboard',
+              'href': '/dashboard',
+              'label': 'Dashboard',
+            },
+          ],
+          'searchEvent': 'DASHBOARD_SEARCH',
         },
         'events': {
           'NOTIFY_CLICK': 'DASHBOARD_NOTIFICATIONS_OPEN',
@@ -5009,12 +5165,12 @@ export function stdHealthcareDashboardOrbital(params: StdHealthcareDashboardOrbi
                   'render-ui',
                   'main',
                   {
-                    'type': 'stack',
+                    'direction': 'vertical',
+                    'className': 'max-w-6xl mx-auto w-full p-4',
                     'children': [
                       {
                         'type': 'stack',
                         'align': 'center',
-                        'direction': 'horizontal',
                         'gap': 'sm',
                         'children': [
                           {
@@ -5022,57 +5178,57 @@ export function stdHealthcareDashboardOrbital(params: StdHealthcareDashboardOrbi
                             'name': 'activity',
                           },
                           {
-                            'type': 'typography',
                             'variant': 'h2',
                             'content': 'Clinic Dashboard',
+                            'type': 'typography',
                           },
                         ],
+                        'direction': 'horizontal',
                       },
                       {
                         'type': 'divider',
                       },
                       {
-                        'type': 'stack',
-                        'direction': 'vertical',
                         'children': [
                           {
                             'variant': 'h3',
-                            'content': 'Quick Links',
                             'type': 'typography',
+                            'content': 'Quick Links',
                           },
                           {
-                            'type': 'breadcrumb',
                             'items': [
                               {
                                 'href': '/patients',
                                 'label': 'Patients',
                               },
                               {
-                                'label': 'Appointments',
                                 'href': '/appointments',
+                                'label': 'Appointments',
                               },
                               {
                                 'label': 'Prescriptions',
                                 'href': '/prescriptions',
                               },
                             ],
+                            'type': 'breadcrumb',
                           },
                         ],
+                        'type': 'stack',
+                        'direction': 'vertical',
                         'gap': 'md',
                       },
                       {
                         'type': 'divider',
                       },
                       {
-                        'variant': 'caption',
                         'color': 'muted',
-                        'content': 'Patient stats, graphs, and the appointment calendar live on their respective pages.',
+                        'variant': 'caption',
                         'type': 'typography',
+                        'content': 'Patient stats, graphs, and the appointment calendar live on their respective pages.',
                       },
                     ],
-                    'direction': 'vertical',
-                    'className': 'max-w-6xl mx-auto w-full p-4',
                     'gap': 'lg',
+                    'type': 'stack',
                   },
                 ],
               ],
@@ -5171,6 +5327,1139 @@ export function isStdHealthcareDashboardOrbitalParams(p: object): p is StdHealth
 }
 
 /**
+ * Tunable params for the PhiPatientFromStdOrbital orbital.
+ *
+ * Canonical entity: PhiPatient — overridable via
+ * `entityName`. The factory threads the effective name through every
+ * trait's `linkedEntity` binding; the `.orb` compiler's inline phase
+ * auto-rewrites every `@Entity.x`, `["ref",X]`, `["fetch",X,…]`,
+ * `["persist",…,X,…]` and payload type string accordingly.
+ *
+ * Override surface (mirrors `.lolo`'s native overrides 1:1):
+ *   fields         — extra entity fields (appended)
+ *   pagePath       — first-page URL override
+ *   persistence    — entity persistence mode
+ *   entityName     — rename the canonical entity
+ *   collection     — override the derived collection key
+ *   traitOverrides — per-imported-trait `config`, `linkedEntity`,
+ *                    `events`, `name`, `emitsScope`, `listens`.
+ *                    `effects` is NOT exposed — `.lolo` removed it
+ *                    in Phase 9.5.H. Use `listens` via a sibling
+ *                    trait to react to atom events.
+ */
+export interface StdHealthcarePhiPatientFromStdOrbitalParams {
+  /** Extra fields appended to the canonical entity. */
+  fields?: EntityField[];
+  /** URL path override for the orbital's first page. */
+  pagePath?: string;
+  /** Override the canonical entity persistence mode. */
+  persistence?: EntityPersistence;
+  /** Rename the canonical entity (PascalCase singular, ≤32 chars). */
+  entityName?: string;
+  /** Override derived collection key (defaults to plural(entityName).toLowerCase()). */
+  collection?: string;
+  /**
+   * Per-imported-trait override surface keyed on each imported
+   * trait's canonical `name`. Accepts every override `.lolo`
+   * natively supports: `config`, `linkedEntity`, `events`,
+   * `name`, `emitsScope`, `listens`. `effects` is excluded —
+   * atom-owned (use `listens` via a sibling trait instead).
+   */
+  traitOverrides?: Partial<Record<
+    'PhiPatientFromStdAppLayout' | 'PhiPatientFromStdManageBlock',
+    Pick<MakeTraitRefOpts, 'config' | 'linkedEntity' | 'events' | 'name' | 'emitsScope' | 'listens'>
+  >>;
+}
+
+/** Per-orbital factory: builds the PhiPatientFromStdOrbital orbital with consumer params. */
+export function stdHealthcarePhiPatientFromStdOrbital(params: StdHealthcarePhiPatientFromStdOrbitalParams = {}): OrbitalDefinition {
+  const canonicalName = params.entityName ?? 'PhiPatient';
+  const collectionName = params.collection
+    ?? (params.entityName ? `${params.entityName.toLowerCase()}s` : 'phipatients');
+  const built = makeOrbitalWithUses({
+    name: 'PhiPatientFromStdOrbital',
+    uses: [
+      {
+        'from': 'std/behaviors/std-app-layout',
+        'as': 'AppShell',
+      },
+      {
+        'from': 'std/behaviors/std-patient',
+        'as': 'Patients',
+      },
+    ],
+    entity: {
+      name: canonicalName,
+      collection: collectionName,
+      persistence: params.persistence ?? 'persistent',
+      fields: ((): EntityField[] => {
+        const canonical: EntityField[] = [
+          {
+            'name': 'id',
+            'type': 'string',
+            'required': true,
+          },
+          {
+            'name': 'firstName',
+            'type': 'string',
+            'required': true,
+          },
+          {
+            'name': 'lastName',
+            'type': 'string',
+            'required': true,
+          },
+          {
+            'name': 'dateOfBirth',
+            'type': 'string',
+            'default': '',
+          },
+          {
+            'name': 'consentType',
+            'type': 'string',
+            'default': 'standard',
+            'values': [
+              'standard',
+              'research',
+              'parental',
+              'minor',
+            ],
+          },
+          {
+            'name': 'mrn',
+            'type': 'string',
+            'default': '',
+          },
+          {
+            'name': 'primaryProvider',
+            'type': 'string',
+            'default': '',
+          },
+          {
+            'name': 'status',
+            'type': 'string',
+            'default': 'active',
+            'values': [
+              'active',
+              'inactive',
+              'deceased',
+            ],
+          },
+          {
+            'name': 'createdAt',
+            'type': 'string',
+            'default': '',
+          },
+          {
+            'name': 'updatedAt',
+            'type': 'string',
+            'default': '',
+          },
+        ];
+        const extras = params.fields ?? [];
+        if (extras.length === 0) return canonical;
+        const extraNames = new Set(extras.map((f) => f.name));
+        return [...canonical.filter((f) => !extraNames.has(f.name)), ...extras];
+      })(),
+    } as Entity,
+    traits: [
+      makeTraitRef({
+        'ref': 'AppShell.traits.AppLayout',
+        'name': 'PhiPatientFromStdAppLayout',
+        'linkedEntity': canonicalName,
+        'config': {
+          'notifications': [],
+          'navItems': [
+            {
+              'label': 'Patients',
+              'icon': 'user-plus',
+              'href': '/patients',
+            },
+            {
+              'icon': 'calendar',
+              'href': '/appointments',
+              'label': 'Appointments',
+            },
+            {
+              'icon': 'layout-list',
+              'label': 'Intake',
+              'href': '/intake',
+            },
+            {
+              'icon': 'pill',
+              'label': 'Prescriptions',
+              'href': '/prescriptions',
+            },
+            {
+              'label': 'Dashboard',
+              'href': '/dashboard',
+              'icon': 'layout-dashboard',
+            },
+            {
+              'icon': 'shield',
+              'label': 'PHI Patients',
+              'href': '/patients-phi',
+            },
+          ],
+          'appName': 'HealthcareApp',
+          'contentTrait': '@trait.PhiPatientFromStdManageBlock',
+          'searchEvent': 'PHI_PATIENT_SEARCH',
+          'notificationClickEvent': 'PHI_PATIENT_NOTIFICATIONS_OPEN',
+        },
+        'events': {
+          'NOTIFY_CLICK': 'PHI_PATIENT_NOTIFICATIONS_OPEN',
+          'SEARCH': 'PHI_PATIENT_SEARCH',
+        },
+      }),
+      makeTraitRef({
+        'ref': 'Patients.traits.PatientManage',
+        'name': 'PhiPatientFromStdManageBlock',
+        'linkedEntity': canonicalName,
+        'config': {
+          'title': 'Patients (PHI)',
+        },
+      }),
+    ],
+    pages: [
+      {
+        'name': 'PhiPatientFromStdPage',
+        'path': '/patients-phi',
+        'traits': [
+          {
+            'ref': 'PhiPatientFromStdAppLayout',
+          },
+          {
+            'ref': 'PhiPatientFromStdManageBlock',
+          },
+        ],
+      } as never,
+    ],
+  });
+  type _OrbTrait = OrbitalDefinition["traits"][number];
+  type _OrbPage = NonNullable<OrbitalDefinition["pages"]>[number];
+  type _RefOverride = Pick<MakeTraitRefOpts, "config" | "linkedEntity" | "events" | "name" | "emitsScope" | "listens">;
+  if (built.traits && params.traitOverrides !== undefined) {
+    built.traits = (built.traits as _OrbTrait[]).map((t): _OrbTrait => {
+      if (!t || typeof t !== "object") return t;
+      const tr = t as TraitReference & { name?: string };
+      // Match by name so inline traits (no `ref`) and
+      // reference traits (with `ref`) both pick up the
+      // override surface keyed on the trait's `name`.
+      if (typeof tr.name !== "string") return t;
+      const overrides = params.traitOverrides as Record<string, _RefOverride | undefined> | undefined;
+      const override = overrides?.[tr.name];
+      if (!override) return t;
+      const merged: TraitReference = { ...tr };
+      if (override.config !== undefined) merged.config = { ...(tr.config ?? {}), ...override.config };
+      if (override.linkedEntity !== undefined) merged.linkedEntity = override.linkedEntity;
+      if (override.events !== undefined) merged.events = { ...(tr.events ?? {}), ...override.events };
+      if (override.name !== undefined) merged.name = override.name;
+      if (override.emitsScope !== undefined) merged.emitsScope = override.emitsScope;
+      if (override.listens !== undefined) merged.listens = override.listens;
+      return merged;
+    });
+  }
+  if (built.pages && params.pagePath !== undefined) {
+    built.pages = (built.pages as _OrbPage[]).map((p, idx) => {
+      if (!p || typeof p !== "object") return p;
+      if (idx !== 0) return p;
+      const out = { ...p } as _OrbPage & { path?: string };
+      out.path = params.pagePath;
+      return out;
+    });
+  }
+  return built;
+}
+
+/** Manifest — describes the params surface of stdHealthcarePhiPatientFromStdOrbital. */
+export const StdHealthcarePhiPatientFromStdOrbitalManifest = {
+  organism: 'std-healthcare',
+  orbitalName: 'PhiPatientFromStdOrbital',
+  paramFields: [
+    { name: 'fields', type: 'EntityField[]', description: 'Extra fields appended to the canonical entity.' },
+    { name: 'pagePath', type: 'string', description: 'URL override for the orbital first page.' },
+    { name: 'persistence', type: "'persistent' | 'runtime' | 'singleton' | 'instance' | 'local'", description: 'Override the canonical entity persistence mode.' },
+    { name: 'entityName', type: 'string', description: 'Rename the canonical entity. PascalCase singular, ≤32 chars. Threads through every trait\'s linkedEntity binding; compiler rewrites @Entity.x refs.' },
+    { name: 'collection', type: 'string', description: 'Override derived collection key. Defaults to plural(entityName).toLowerCase().' },
+    { name: 'traitOverrides', type: "Partial<Record<TraitName, { config?, linkedEntity?, events?, name?, emitsScope?, listens? }>>", description: 'Per-imported-trait overrides — mirrors .lolo\'s native trait-composition surface 1:1. effects is excluded (atom-owned; use listens via a sibling trait).' },
+  ] as const,
+  traitNames: [
+    'PhiPatientFromStdAppLayout',
+    'PhiPatientFromStdManageBlock',
+  ] as const,
+  inlineTraitNames: [
+  ] as const,
+};
+
+/** Typed guard — runtime validates StdHealthcarePhiPatientFromStdOrbitalParams keys. */
+export function isStdHealthcarePhiPatientFromStdOrbitalParams(p: object): p is StdHealthcarePhiPatientFromStdOrbitalParams {
+  type _OverrideRecord = NonNullable<StdHealthcarePhiPatientFromStdOrbitalParams['traitOverrides']>;
+  const obj = p as { traitOverrides?: _OverrideRecord };
+  if (obj.traitOverrides !== undefined) {
+    if (typeof obj.traitOverrides !== "object" || obj.traitOverrides === null) return false;
+    const allowed: readonly string[] = [
+      ...StdHealthcarePhiPatientFromStdOrbitalManifest.traitNames,
+      ...StdHealthcarePhiPatientFromStdOrbitalManifest.inlineTraitNames,
+    ];
+    for (const k of Object.keys(obj.traitOverrides)) {
+      if (!allowed.includes(k)) return false;
+    }
+  }
+  return true;
+}
+
+/**
+ * Tunable params for the ControlledRxFromStdOrbital orbital.
+ *
+ * Canonical entity: ControlledRx — overridable via
+ * `entityName`. The factory threads the effective name through every
+ * trait's `linkedEntity` binding; the `.orb` compiler's inline phase
+ * auto-rewrites every `@Entity.x`, `["ref",X]`, `["fetch",X,…]`,
+ * `["persist",…,X,…]` and payload type string accordingly.
+ *
+ * Override surface (mirrors `.lolo`'s native overrides 1:1):
+ *   fields         — extra entity fields (appended)
+ *   pagePath       — first-page URL override
+ *   persistence    — entity persistence mode
+ *   entityName     — rename the canonical entity
+ *   collection     — override the derived collection key
+ *   traitOverrides — per-imported-trait `config`, `linkedEntity`,
+ *                    `events`, `name`, `emitsScope`, `listens`.
+ *                    `effects` is NOT exposed — `.lolo` removed it
+ *                    in Phase 9.5.H. Use `listens` via a sibling
+ *                    trait to react to atom events.
+ */
+export interface StdHealthcareControlledRxFromStdOrbitalParams {
+  /** Extra fields appended to the canonical entity. */
+  fields?: EntityField[];
+  /** URL path override for the orbital's first page. */
+  pagePath?: string;
+  /** Override the canonical entity persistence mode. */
+  persistence?: EntityPersistence;
+  /** Rename the canonical entity (PascalCase singular, ≤32 chars). */
+  entityName?: string;
+  /** Override derived collection key (defaults to plural(entityName).toLowerCase()). */
+  collection?: string;
+  /**
+   * Per-imported-trait override surface keyed on each imported
+   * trait's canonical `name`. Accepts every override `.lolo`
+   * natively supports: `config`, `linkedEntity`, `events`,
+   * `name`, `emitsScope`, `listens`. `effects` is excluded —
+   * atom-owned (use `listens` via a sibling trait instead).
+   */
+  traitOverrides?: Partial<Record<
+    'ControlledRxFromStdAppLayout' | 'ControlledRxFromStdManageBlock',
+    Pick<MakeTraitRefOpts, 'config' | 'linkedEntity' | 'events' | 'name' | 'emitsScope' | 'listens'>
+  >>;
+}
+
+/** Per-orbital factory: builds the ControlledRxFromStdOrbital orbital with consumer params. */
+export function stdHealthcareControlledRxFromStdOrbital(params: StdHealthcareControlledRxFromStdOrbitalParams = {}): OrbitalDefinition {
+  const canonicalName = params.entityName ?? 'ControlledRx';
+  const collectionName = params.collection
+    ?? (params.entityName ? `${params.entityName.toLowerCase()}s` : 'controlledrxs');
+  const built = makeOrbitalWithUses({
+    name: 'ControlledRxFromStdOrbital',
+    uses: [
+      {
+        'from': 'std/behaviors/std-app-layout',
+        'as': 'AppShell',
+      },
+      {
+        'from': 'std/behaviors/std-prescription',
+        'as': 'Prescriptions',
+      },
+    ],
+    entity: {
+      name: canonicalName,
+      collection: collectionName,
+      persistence: params.persistence ?? 'persistent',
+      fields: ((): EntityField[] => {
+        const canonical: EntityField[] = [
+          {
+            'name': 'id',
+            'type': 'string',
+            'required': true,
+          },
+          {
+            'name': 'patientId',
+            'type': 'string',
+            'required': true,
+          },
+          {
+            'name': 'medication',
+            'type': 'string',
+            'required': true,
+          },
+          {
+            'name': 'dosage',
+            'type': 'string',
+            'default': '',
+          },
+          {
+            'name': 'quantity',
+            'type': 'number',
+            'default': 0,
+          },
+          {
+            'name': 'refillsRemaining',
+            'type': 'number',
+            'default': 0,
+          },
+          {
+            'name': 'controlled',
+            'type': 'boolean',
+            'default': false,
+          },
+          {
+            'name': 'status',
+            'type': 'string',
+            'default': 'draft',
+            'values': [
+              'draft',
+              'signed',
+              'sent',
+              'dispensed',
+              'expired',
+              'voided',
+            ],
+          },
+          {
+            'name': 'prescribedBy',
+            'type': 'string',
+            'default': '',
+          },
+          {
+            'name': 'pharmacy',
+            'type': 'string',
+            'default': '',
+          },
+          {
+            'name': 'signedAt',
+            'type': 'string',
+            'default': '',
+          },
+          {
+            'name': 'createdAt',
+            'type': 'string',
+            'default': '',
+          },
+        ];
+        const extras = params.fields ?? [];
+        if (extras.length === 0) return canonical;
+        const extraNames = new Set(extras.map((f) => f.name));
+        return [...canonical.filter((f) => !extraNames.has(f.name)), ...extras];
+      })(),
+    } as Entity,
+    traits: [
+      makeTraitRef({
+        'ref': 'AppShell.traits.AppLayout',
+        'name': 'ControlledRxFromStdAppLayout',
+        'linkedEntity': canonicalName,
+        'config': {
+          'appName': 'HealthcareApp',
+          'notifications': [],
+          'contentTrait': '@trait.ControlledRxFromStdManageBlock',
+          'searchEvent': 'CONTROLLED_RX_SEARCH',
+          'notificationClickEvent': 'CONTROLLED_RX_NOTIFICATIONS_OPEN',
+          'navItems': [
+            {
+              'label': 'Patients',
+              'icon': 'user-plus',
+              'href': '/patients',
+            },
+            {
+              'label': 'Appointments',
+              'href': '/appointments',
+              'icon': 'calendar',
+            },
+            {
+              'icon': 'layout-list',
+              'href': '/intake',
+              'label': 'Intake',
+            },
+            {
+              'icon': 'pill',
+              'href': '/prescriptions',
+              'label': 'Prescriptions',
+            },
+            {
+              'label': 'Dashboard',
+              'icon': 'layout-dashboard',
+              'href': '/dashboard',
+            },
+            {
+              'label': 'Controlled Rx',
+              'href': '/rx-controlled',
+              'icon': 'shield',
+            },
+          ],
+        },
+        'events': {
+          'NOTIFY_CLICK': 'CONTROLLED_RX_NOTIFICATIONS_OPEN',
+          'SEARCH': 'CONTROLLED_RX_SEARCH',
+        },
+      }),
+      makeTraitRef({
+        'ref': 'Prescriptions.traits.PrescriptionManage',
+        'name': 'ControlledRxFromStdManageBlock',
+        'linkedEntity': canonicalName,
+        'config': {
+          'title': 'Controlled Prescriptions',
+        },
+      }),
+    ],
+    pages: [
+      {
+        'name': 'ControlledRxFromStdPage',
+        'path': '/rx-controlled',
+        'traits': [
+          {
+            'ref': 'ControlledRxFromStdAppLayout',
+          },
+          {
+            'ref': 'ControlledRxFromStdManageBlock',
+          },
+        ],
+      } as never,
+    ],
+  });
+  type _OrbTrait = OrbitalDefinition["traits"][number];
+  type _OrbPage = NonNullable<OrbitalDefinition["pages"]>[number];
+  type _RefOverride = Pick<MakeTraitRefOpts, "config" | "linkedEntity" | "events" | "name" | "emitsScope" | "listens">;
+  if (built.traits && params.traitOverrides !== undefined) {
+    built.traits = (built.traits as _OrbTrait[]).map((t): _OrbTrait => {
+      if (!t || typeof t !== "object") return t;
+      const tr = t as TraitReference & { name?: string };
+      // Match by name so inline traits (no `ref`) and
+      // reference traits (with `ref`) both pick up the
+      // override surface keyed on the trait's `name`.
+      if (typeof tr.name !== "string") return t;
+      const overrides = params.traitOverrides as Record<string, _RefOverride | undefined> | undefined;
+      const override = overrides?.[tr.name];
+      if (!override) return t;
+      const merged: TraitReference = { ...tr };
+      if (override.config !== undefined) merged.config = { ...(tr.config ?? {}), ...override.config };
+      if (override.linkedEntity !== undefined) merged.linkedEntity = override.linkedEntity;
+      if (override.events !== undefined) merged.events = { ...(tr.events ?? {}), ...override.events };
+      if (override.name !== undefined) merged.name = override.name;
+      if (override.emitsScope !== undefined) merged.emitsScope = override.emitsScope;
+      if (override.listens !== undefined) merged.listens = override.listens;
+      return merged;
+    });
+  }
+  if (built.pages && params.pagePath !== undefined) {
+    built.pages = (built.pages as _OrbPage[]).map((p, idx) => {
+      if (!p || typeof p !== "object") return p;
+      if (idx !== 0) return p;
+      const out = { ...p } as _OrbPage & { path?: string };
+      out.path = params.pagePath;
+      return out;
+    });
+  }
+  return built;
+}
+
+/** Manifest — describes the params surface of stdHealthcareControlledRxFromStdOrbital. */
+export const StdHealthcareControlledRxFromStdOrbitalManifest = {
+  organism: 'std-healthcare',
+  orbitalName: 'ControlledRxFromStdOrbital',
+  paramFields: [
+    { name: 'fields', type: 'EntityField[]', description: 'Extra fields appended to the canonical entity.' },
+    { name: 'pagePath', type: 'string', description: 'URL override for the orbital first page.' },
+    { name: 'persistence', type: "'persistent' | 'runtime' | 'singleton' | 'instance' | 'local'", description: 'Override the canonical entity persistence mode.' },
+    { name: 'entityName', type: 'string', description: 'Rename the canonical entity. PascalCase singular, ≤32 chars. Threads through every trait\'s linkedEntity binding; compiler rewrites @Entity.x refs.' },
+    { name: 'collection', type: 'string', description: 'Override derived collection key. Defaults to plural(entityName).toLowerCase().' },
+    { name: 'traitOverrides', type: "Partial<Record<TraitName, { config?, linkedEntity?, events?, name?, emitsScope?, listens? }>>", description: 'Per-imported-trait overrides — mirrors .lolo\'s native trait-composition surface 1:1. effects is excluded (atom-owned; use listens via a sibling trait).' },
+  ] as const,
+  traitNames: [
+    'ControlledRxFromStdAppLayout',
+    'ControlledRxFromStdManageBlock',
+  ] as const,
+  inlineTraitNames: [
+  ] as const,
+};
+
+/** Typed guard — runtime validates StdHealthcareControlledRxFromStdOrbitalParams keys. */
+export function isStdHealthcareControlledRxFromStdOrbitalParams(p: object): p is StdHealthcareControlledRxFromStdOrbitalParams {
+  type _OverrideRecord = NonNullable<StdHealthcareControlledRxFromStdOrbitalParams['traitOverrides']>;
+  const obj = p as { traitOverrides?: _OverrideRecord };
+  if (obj.traitOverrides !== undefined) {
+    if (typeof obj.traitOverrides !== "object" || obj.traitOverrides === null) return false;
+    const allowed: readonly string[] = [
+      ...StdHealthcareControlledRxFromStdOrbitalManifest.traitNames,
+      ...StdHealthcareControlledRxFromStdOrbitalManifest.inlineTraitNames,
+    ];
+    for (const k of Object.keys(obj.traitOverrides)) {
+      if (!allowed.includes(k)) return false;
+    }
+  }
+  return true;
+}
+
+/**
+ * Tunable params for the InsuranceClaimFromStdOrbital orbital.
+ *
+ * Canonical entity: InsuranceClaim — overridable via
+ * `entityName`. The factory threads the effective name through every
+ * trait's `linkedEntity` binding; the `.orb` compiler's inline phase
+ * auto-rewrites every `@Entity.x`, `["ref",X]`, `["fetch",X,…]`,
+ * `["persist",…,X,…]` and payload type string accordingly.
+ *
+ * Override surface (mirrors `.lolo`'s native overrides 1:1):
+ *   fields         — extra entity fields (appended)
+ *   pagePath       — first-page URL override
+ *   persistence    — entity persistence mode
+ *   entityName     — rename the canonical entity
+ *   collection     — override the derived collection key
+ *   traitOverrides — per-imported-trait `config`, `linkedEntity`,
+ *                    `events`, `name`, `emitsScope`, `listens`.
+ *                    `effects` is NOT exposed — `.lolo` removed it
+ *                    in Phase 9.5.H. Use `listens` via a sibling
+ *                    trait to react to atom events.
+ */
+export interface StdHealthcareInsuranceClaimFromStdOrbitalParams {
+  /** Extra fields appended to the canonical entity. */
+  fields?: EntityField[];
+  /** URL path override for the orbital's first page. */
+  pagePath?: string;
+  /** Override the canonical entity persistence mode. */
+  persistence?: EntityPersistence;
+  /** Rename the canonical entity (PascalCase singular, ≤32 chars). */
+  entityName?: string;
+  /** Override derived collection key (defaults to plural(entityName).toLowerCase()). */
+  collection?: string;
+  /**
+   * Per-imported-trait override surface keyed on each imported
+   * trait's canonical `name`. Accepts every override `.lolo`
+   * natively supports: `config`, `linkedEntity`, `events`,
+   * `name`, `emitsScope`, `listens`. `effects` is excluded —
+   * atom-owned (use `listens` via a sibling trait instead).
+   */
+  traitOverrides?: Partial<Record<
+    'InsuranceClaimFromStdAppLayout' | 'InsuranceClaimFromStdManageBlock',
+    Pick<MakeTraitRefOpts, 'config' | 'linkedEntity' | 'events' | 'name' | 'emitsScope' | 'listens'>
+  >>;
+}
+
+/** Per-orbital factory: builds the InsuranceClaimFromStdOrbital orbital with consumer params. */
+export function stdHealthcareInsuranceClaimFromStdOrbital(params: StdHealthcareInsuranceClaimFromStdOrbitalParams = {}): OrbitalDefinition {
+  const canonicalName = params.entityName ?? 'InsuranceClaim';
+  const collectionName = params.collection
+    ?? (params.entityName ? `${params.entityName.toLowerCase()}s` : 'insurance_claims');
+  const built = makeOrbitalWithUses({
+    name: 'InsuranceClaimFromStdOrbital',
+    uses: [
+      {
+        'from': 'std/behaviors/std-app-layout',
+        'as': 'AppShell',
+      },
+      {
+        'from': 'std/behaviors/std-insurance-claim',
+        'as': 'Claims',
+      },
+    ],
+    entity: {
+      name: canonicalName,
+      collection: collectionName,
+      persistence: params.persistence ?? 'persistent',
+      fields: ((): EntityField[] => {
+        const canonical: EntityField[] = [
+          {
+            'name': 'id',
+            'type': 'string',
+            'required': true,
+          },
+          {
+            'name': 'patientId',
+            'type': 'string',
+            'required': true,
+          },
+          {
+            'name': 'payerId',
+            'type': 'string',
+            'required': true,
+          },
+          {
+            'name': 'serviceDate',
+            'type': 'string',
+          },
+          {
+            'name': 'submittedAt',
+            'type': 'string',
+          },
+          {
+            'name': 'status',
+            'type': 'string',
+            'default': 'draft',
+            'values': [
+              'draft',
+              'eligible',
+              'submitted',
+              'accepted',
+              'denied',
+              'paid',
+            ],
+          },
+          {
+            'name': 'claimAmount',
+            'type': 'number',
+          },
+          {
+            'name': 'paidAmount',
+            'type': 'number',
+            'default': 0,
+          },
+          {
+            'name': 'denialReason',
+            'type': 'string',
+          },
+          {
+            'name': 'priorAuthNumber',
+            'type': 'string',
+          },
+          {
+            'name': 'createdAt',
+            'type': 'string',
+          },
+        ];
+        const extras = params.fields ?? [];
+        if (extras.length === 0) return canonical;
+        const extraNames = new Set(extras.map((f) => f.name));
+        return [...canonical.filter((f) => !extraNames.has(f.name)), ...extras];
+      })(),
+    } as Entity,
+    traits: [
+      makeTraitRef({
+        'ref': 'AppShell.traits.AppLayout',
+        'name': 'InsuranceClaimFromStdAppLayout',
+        'linkedEntity': canonicalName,
+        'config': {
+          'notifications': [],
+          'appName': 'HealthcareApp',
+          'searchEvent': 'INSURANCE_CLAIM_SEARCH',
+          'notificationClickEvent': 'INSURANCE_CLAIM_NOTIFICATIONS_OPEN',
+          'navItems': [
+            {
+              'href': '/patients',
+              'icon': 'user-plus',
+              'label': 'Patients',
+            },
+            {
+              'icon': 'calendar',
+              'label': 'Appointments',
+              'href': '/appointments',
+            },
+            {
+              'label': 'Intake',
+              'href': '/intake',
+              'icon': 'layout-list',
+            },
+            {
+              'icon': 'pill',
+              'href': '/prescriptions',
+              'label': 'Prescriptions',
+            },
+            {
+              'label': 'Dashboard',
+              'href': '/dashboard',
+              'icon': 'layout-dashboard',
+            },
+            {
+              'label': 'Insurance Claims',
+              'href': '/insurance-claims-from-std',
+              'icon': 'shield',
+            },
+          ],
+          'contentTrait': '@trait.InsuranceClaimFromStdManageBlock',
+        },
+        'events': {
+          'NOTIFY_CLICK': 'INSURANCE_CLAIM_NOTIFICATIONS_OPEN',
+          'SEARCH': 'INSURANCE_CLAIM_SEARCH',
+        },
+      }),
+      makeTraitRef({
+        'ref': 'Claims.traits.InsuranceClaimManage',
+        'name': 'InsuranceClaimFromStdManageBlock',
+        'linkedEntity': canonicalName,
+        'config': {
+          'title': 'Insurance Claims',
+        },
+      }),
+    ],
+    pages: [
+      {
+        'name': 'InsuranceClaimFromStdPage',
+        'path': '/insurance-claims-from-std',
+        'traits': [
+          {
+            'ref': 'InsuranceClaimFromStdAppLayout',
+          },
+          {
+            'ref': 'InsuranceClaimFromStdManageBlock',
+          },
+        ],
+      } as never,
+    ],
+  });
+  type _OrbTrait = OrbitalDefinition["traits"][number];
+  type _OrbPage = NonNullable<OrbitalDefinition["pages"]>[number];
+  type _RefOverride = Pick<MakeTraitRefOpts, "config" | "linkedEntity" | "events" | "name" | "emitsScope" | "listens">;
+  if (built.traits && params.traitOverrides !== undefined) {
+    built.traits = (built.traits as _OrbTrait[]).map((t): _OrbTrait => {
+      if (!t || typeof t !== "object") return t;
+      const tr = t as TraitReference & { name?: string };
+      // Match by name so inline traits (no `ref`) and
+      // reference traits (with `ref`) both pick up the
+      // override surface keyed on the trait's `name`.
+      if (typeof tr.name !== "string") return t;
+      const overrides = params.traitOverrides as Record<string, _RefOverride | undefined> | undefined;
+      const override = overrides?.[tr.name];
+      if (!override) return t;
+      const merged: TraitReference = { ...tr };
+      if (override.config !== undefined) merged.config = { ...(tr.config ?? {}), ...override.config };
+      if (override.linkedEntity !== undefined) merged.linkedEntity = override.linkedEntity;
+      if (override.events !== undefined) merged.events = { ...(tr.events ?? {}), ...override.events };
+      if (override.name !== undefined) merged.name = override.name;
+      if (override.emitsScope !== undefined) merged.emitsScope = override.emitsScope;
+      if (override.listens !== undefined) merged.listens = override.listens;
+      return merged;
+    });
+  }
+  if (built.pages && params.pagePath !== undefined) {
+    built.pages = (built.pages as _OrbPage[]).map((p, idx) => {
+      if (!p || typeof p !== "object") return p;
+      if (idx !== 0) return p;
+      const out = { ...p } as _OrbPage & { path?: string };
+      out.path = params.pagePath;
+      return out;
+    });
+  }
+  return built;
+}
+
+/** Manifest — describes the params surface of stdHealthcareInsuranceClaimFromStdOrbital. */
+export const StdHealthcareInsuranceClaimFromStdOrbitalManifest = {
+  organism: 'std-healthcare',
+  orbitalName: 'InsuranceClaimFromStdOrbital',
+  paramFields: [
+    { name: 'fields', type: 'EntityField[]', description: 'Extra fields appended to the canonical entity.' },
+    { name: 'pagePath', type: 'string', description: 'URL override for the orbital first page.' },
+    { name: 'persistence', type: "'persistent' | 'runtime' | 'singleton' | 'instance' | 'local'", description: 'Override the canonical entity persistence mode.' },
+    { name: 'entityName', type: 'string', description: 'Rename the canonical entity. PascalCase singular, ≤32 chars. Threads through every trait\'s linkedEntity binding; compiler rewrites @Entity.x refs.' },
+    { name: 'collection', type: 'string', description: 'Override derived collection key. Defaults to plural(entityName).toLowerCase().' },
+    { name: 'traitOverrides', type: "Partial<Record<TraitName, { config?, linkedEntity?, events?, name?, emitsScope?, listens? }>>", description: 'Per-imported-trait overrides — mirrors .lolo\'s native trait-composition surface 1:1. effects is excluded (atom-owned; use listens via a sibling trait).' },
+  ] as const,
+  traitNames: [
+    'InsuranceClaimFromStdAppLayout',
+    'InsuranceClaimFromStdManageBlock',
+  ] as const,
+  inlineTraitNames: [
+  ] as const,
+};
+
+/** Typed guard — runtime validates StdHealthcareInsuranceClaimFromStdOrbitalParams keys. */
+export function isStdHealthcareInsuranceClaimFromStdOrbitalParams(p: object): p is StdHealthcareInsuranceClaimFromStdOrbitalParams {
+  type _OverrideRecord = NonNullable<StdHealthcareInsuranceClaimFromStdOrbitalParams['traitOverrides']>;
+  const obj = p as { traitOverrides?: _OverrideRecord };
+  if (obj.traitOverrides !== undefined) {
+    if (typeof obj.traitOverrides !== "object" || obj.traitOverrides === null) return false;
+    const allowed: readonly string[] = [
+      ...StdHealthcareInsuranceClaimFromStdOrbitalManifest.traitNames,
+      ...StdHealthcareInsuranceClaimFromStdOrbitalManifest.inlineTraitNames,
+    ];
+    for (const k of Object.keys(obj.traitOverrides)) {
+      if (!allowed.includes(k)) return false;
+    }
+  }
+  return true;
+}
+
+/**
+ * Tunable params for the AppointmentPolicyFromStdOrbital orbital.
+ *
+ * Canonical entity: AppointmentPolicy — overridable via
+ * `entityName`. The factory threads the effective name through every
+ * trait's `linkedEntity` binding; the `.orb` compiler's inline phase
+ * auto-rewrites every `@Entity.x`, `["ref",X]`, `["fetch",X,…]`,
+ * `["persist",…,X,…]` and payload type string accordingly.
+ *
+ * Override surface (mirrors `.lolo`'s native overrides 1:1):
+ *   fields         — extra entity fields (appended)
+ *   pagePath       — first-page URL override
+ *   persistence    — entity persistence mode
+ *   entityName     — rename the canonical entity
+ *   collection     — override the derived collection key
+ *   traitOverrides — per-imported-trait `config`, `linkedEntity`,
+ *                    `events`, `name`, `emitsScope`, `listens`.
+ *                    `effects` is NOT exposed — `.lolo` removed it
+ *                    in Phase 9.5.H. Use `listens` via a sibling
+ *                    trait to react to atom events.
+ */
+export interface StdHealthcareAppointmentPolicyFromStdOrbitalParams {
+  /** Extra fields appended to the canonical entity. */
+  fields?: EntityField[];
+  /** URL path override for the orbital's first page. */
+  pagePath?: string;
+  /** Override the canonical entity persistence mode. */
+  persistence?: EntityPersistence;
+  /** Rename the canonical entity (PascalCase singular, ≤32 chars). */
+  entityName?: string;
+  /** Override derived collection key (defaults to plural(entityName).toLowerCase()). */
+  collection?: string;
+  /**
+   * Per-imported-trait override surface keyed on each imported
+   * trait's canonical `name`. Accepts every override `.lolo`
+   * natively supports: `config`, `linkedEntity`, `events`,
+   * `name`, `emitsScope`, `listens`. `effects` is excluded —
+   * atom-owned (use `listens` via a sibling trait instead).
+   */
+  traitOverrides?: Partial<Record<
+    'AppointmentPolicyFromStdAppLayout' | 'AppointmentPolicyFromStdManageBlock',
+    Pick<MakeTraitRefOpts, 'config' | 'linkedEntity' | 'events' | 'name' | 'emitsScope' | 'listens'>
+  >>;
+}
+
+/** Per-orbital factory: builds the AppointmentPolicyFromStdOrbital orbital with consumer params. */
+export function stdHealthcareAppointmentPolicyFromStdOrbital(params: StdHealthcareAppointmentPolicyFromStdOrbitalParams = {}): OrbitalDefinition {
+  const canonicalName = params.entityName ?? 'AppointmentPolicy';
+  const collectionName = params.collection
+    ?? (params.entityName ? `${params.entityName.toLowerCase()}s` : 'appointment_policies');
+  const built = makeOrbitalWithUses({
+    name: 'AppointmentPolicyFromStdOrbital',
+    uses: [
+      {
+        'from': 'std/behaviors/std-app-layout',
+        'as': 'AppShell',
+      },
+      {
+        'from': 'std/behaviors/std-appointment-policy',
+        'as': 'Policies',
+      },
+    ],
+    entity: {
+      name: canonicalName,
+      collection: collectionName,
+      persistence: params.persistence ?? 'persistent',
+      fields: ((): EntityField[] => {
+        const canonical: EntityField[] = [
+          {
+            'name': 'id',
+            'type': 'string',
+            'required': true,
+          },
+          {
+            'name': 'name',
+            'type': 'string',
+            'required': true,
+          },
+          {
+            'name': 'description',
+            'type': 'string',
+            'default': '',
+          },
+          {
+            'name': 'rescheduleWindowHours',
+            'type': 'number',
+            'default': 24,
+          },
+          {
+            'name': 'maxReschedules',
+            'type': 'number',
+            'default': 2,
+          },
+          {
+            'name': 'cancellationPolicy',
+            'type': 'string',
+            'default': 'free',
+            'values': [
+              'free',
+              'partial-refund',
+              'no-refund',
+            ],
+          },
+          {
+            'name': 'noShowGracePeriodMinutes',
+            'type': 'number',
+            'default': 15,
+          },
+          {
+            'name': 'noShowFeeAmount',
+            'type': 'number',
+            'default': 0,
+          },
+          {
+            'name': 'lateArrivalGraceMinutes',
+            'type': 'number',
+            'default': 10,
+          },
+          {
+            'name': 'status',
+            'type': 'string',
+            'default': 'active',
+            'values': [
+              'active',
+              'archived',
+            ],
+          },
+          {
+            'name': 'createdAt',
+            'type': 'string',
+          },
+        ];
+        const extras = params.fields ?? [];
+        if (extras.length === 0) return canonical;
+        const extraNames = new Set(extras.map((f) => f.name));
+        return [...canonical.filter((f) => !extraNames.has(f.name)), ...extras];
+      })(),
+    } as Entity,
+    traits: [
+      makeTraitRef({
+        'ref': 'AppShell.traits.AppLayout',
+        'name': 'AppointmentPolicyFromStdAppLayout',
+        'linkedEntity': canonicalName,
+        'config': {
+          'appName': 'HealthcareApp',
+          'navItems': [
+            {
+              'href': '/patients',
+              'icon': 'user-plus',
+              'label': 'Patients',
+            },
+            {
+              'label': 'Appointments',
+              'href': '/appointments',
+              'icon': 'calendar',
+            },
+            {
+              'href': '/intake',
+              'icon': 'layout-list',
+              'label': 'Intake',
+            },
+            {
+              'href': '/prescriptions',
+              'icon': 'pill',
+              'label': 'Prescriptions',
+            },
+            {
+              'icon': 'layout-dashboard',
+              'label': 'Dashboard',
+              'href': '/dashboard',
+            },
+            {
+              'icon': 'calendar-check',
+              'label': 'Appointment Policies',
+              'href': '/appointment-policies-from-std',
+            },
+          ],
+          'searchEvent': 'APPOINTMENT_POLICY_SEARCH',
+          'notifications': [],
+          'contentTrait': '@trait.AppointmentPolicyFromStdManageBlock',
+          'notificationClickEvent': 'APPOINTMENT_POLICY_NOTIFICATIONS_OPEN',
+        },
+        'events': {
+          'NOTIFY_CLICK': 'APPOINTMENT_POLICY_NOTIFICATIONS_OPEN',
+          'SEARCH': 'APPOINTMENT_POLICY_SEARCH',
+        },
+      }),
+      makeTraitRef({
+        'ref': 'Policies.traits.AppointmentPolicyManage',
+        'name': 'AppointmentPolicyFromStdManageBlock',
+        'linkedEntity': canonicalName,
+        'config': {
+          'title': 'Appointment Policies',
+        },
+      }),
+    ],
+    pages: [
+      {
+        'name': 'AppointmentPolicyFromStdPage',
+        'path': '/appointment-policies-from-std',
+        'traits': [
+          {
+            'ref': 'AppointmentPolicyFromStdAppLayout',
+          },
+          {
+            'ref': 'AppointmentPolicyFromStdManageBlock',
+          },
+        ],
+      } as never,
+    ],
+  });
+  type _OrbTrait = OrbitalDefinition["traits"][number];
+  type _OrbPage = NonNullable<OrbitalDefinition["pages"]>[number];
+  type _RefOverride = Pick<MakeTraitRefOpts, "config" | "linkedEntity" | "events" | "name" | "emitsScope" | "listens">;
+  if (built.traits && params.traitOverrides !== undefined) {
+    built.traits = (built.traits as _OrbTrait[]).map((t): _OrbTrait => {
+      if (!t || typeof t !== "object") return t;
+      const tr = t as TraitReference & { name?: string };
+      // Match by name so inline traits (no `ref`) and
+      // reference traits (with `ref`) both pick up the
+      // override surface keyed on the trait's `name`.
+      if (typeof tr.name !== "string") return t;
+      const overrides = params.traitOverrides as Record<string, _RefOverride | undefined> | undefined;
+      const override = overrides?.[tr.name];
+      if (!override) return t;
+      const merged: TraitReference = { ...tr };
+      if (override.config !== undefined) merged.config = { ...(tr.config ?? {}), ...override.config };
+      if (override.linkedEntity !== undefined) merged.linkedEntity = override.linkedEntity;
+      if (override.events !== undefined) merged.events = { ...(tr.events ?? {}), ...override.events };
+      if (override.name !== undefined) merged.name = override.name;
+      if (override.emitsScope !== undefined) merged.emitsScope = override.emitsScope;
+      if (override.listens !== undefined) merged.listens = override.listens;
+      return merged;
+    });
+  }
+  if (built.pages && params.pagePath !== undefined) {
+    built.pages = (built.pages as _OrbPage[]).map((p, idx) => {
+      if (!p || typeof p !== "object") return p;
+      if (idx !== 0) return p;
+      const out = { ...p } as _OrbPage & { path?: string };
+      out.path = params.pagePath;
+      return out;
+    });
+  }
+  return built;
+}
+
+/** Manifest — describes the params surface of stdHealthcareAppointmentPolicyFromStdOrbital. */
+export const StdHealthcareAppointmentPolicyFromStdOrbitalManifest = {
+  organism: 'std-healthcare',
+  orbitalName: 'AppointmentPolicyFromStdOrbital',
+  paramFields: [
+    { name: 'fields', type: 'EntityField[]', description: 'Extra fields appended to the canonical entity.' },
+    { name: 'pagePath', type: 'string', description: 'URL override for the orbital first page.' },
+    { name: 'persistence', type: "'persistent' | 'runtime' | 'singleton' | 'instance' | 'local'", description: 'Override the canonical entity persistence mode.' },
+    { name: 'entityName', type: 'string', description: 'Rename the canonical entity. PascalCase singular, ≤32 chars. Threads through every trait\'s linkedEntity binding; compiler rewrites @Entity.x refs.' },
+    { name: 'collection', type: 'string', description: 'Override derived collection key. Defaults to plural(entityName).toLowerCase().' },
+    { name: 'traitOverrides', type: "Partial<Record<TraitName, { config?, linkedEntity?, events?, name?, emitsScope?, listens? }>>", description: 'Per-imported-trait overrides — mirrors .lolo\'s native trait-composition surface 1:1. effects is excluded (atom-owned; use listens via a sibling trait).' },
+  ] as const,
+  traitNames: [
+    'AppointmentPolicyFromStdAppLayout',
+    'AppointmentPolicyFromStdManageBlock',
+  ] as const,
+  inlineTraitNames: [
+  ] as const,
+};
+
+/** Typed guard — runtime validates StdHealthcareAppointmentPolicyFromStdOrbitalParams keys. */
+export function isStdHealthcareAppointmentPolicyFromStdOrbitalParams(p: object): p is StdHealthcareAppointmentPolicyFromStdOrbitalParams {
+  type _OverrideRecord = NonNullable<StdHealthcareAppointmentPolicyFromStdOrbitalParams['traitOverrides']>;
+  const obj = p as { traitOverrides?: _OverrideRecord };
+  if (obj.traitOverrides !== undefined) {
+    if (typeof obj.traitOverrides !== "object" || obj.traitOverrides === null) return false;
+    const allowed: readonly string[] = [
+      ...StdHealthcareAppointmentPolicyFromStdOrbitalManifest.traitNames,
+      ...StdHealthcareAppointmentPolicyFromStdOrbitalManifest.inlineTraitNames,
+    ];
+    for (const k of Object.keys(obj.traitOverrides)) {
+      if (!allowed.includes(k)) return false;
+    }
+  }
+  return true;
+}
+
+/**
  * Bundled params for std-healthcare — one optional entry per orbital.
  * Each entry maps to its per-orbital factory above.
  */
@@ -5180,9 +6469,13 @@ export interface StdHealthcareParams {
   IntakeForm?: StdHealthcareIntakeFormOrbitalParams;
   Prescription?: StdHealthcarePrescriptionOrbitalParams;
   Dashboard?: StdHealthcareDashboardOrbitalParams;
+  PhiPatientFromStd?: StdHealthcarePhiPatientFromStdOrbitalParams;
+  ControlledRxFromStd?: StdHealthcareControlledRxFromStdOrbitalParams;
+  InsuranceClaimFromStd?: StdHealthcareInsuranceClaimFromStdOrbitalParams;
+  AppointmentPolicyFromStd?: StdHealthcareAppointmentPolicyFromStdOrbitalParams;
 }
 
-/** Whole-organism descriptor (5 orbitals). Composes per-orbital factories. */
+/** Whole-organism descriptor (9 orbitals). Composes per-orbital factories. */
 export function stdHealthcare(params: StdHealthcareParams = {}): OrbitalDefinition[] {
   return [
     stdHealthcarePatientOrbital(params.Patient ?? {}),
@@ -5190,5 +6483,9 @@ export function stdHealthcare(params: StdHealthcareParams = {}): OrbitalDefiniti
     stdHealthcareIntakeFormOrbital(params.IntakeForm ?? {}),
     stdHealthcarePrescriptionOrbital(params.Prescription ?? {}),
     stdHealthcareDashboardOrbital(params.Dashboard ?? {}),
+    stdHealthcarePhiPatientFromStdOrbital(params.PhiPatientFromStd ?? {}),
+    stdHealthcareControlledRxFromStdOrbital(params.ControlledRxFromStd ?? {}),
+    stdHealthcareInsuranceClaimFromStdOrbital(params.InsuranceClaimFromStd ?? {}),
+    stdHealthcareAppointmentPolicyFromStdOrbital(params.AppointmentPolicyFromStd ?? {}),
   ];
 }

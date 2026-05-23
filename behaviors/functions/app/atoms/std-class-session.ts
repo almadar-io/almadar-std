@@ -87,30 +87,30 @@ export interface StdClassSessionClassSessionLoadFailedPayload {
  * without modifying its state-machine topology.
  */
 export interface StdClassSessionConfig {
-  /** Default: `[{"label":"Class","variant":"caption","name":"className"},{"label":"Instructor","name":"instructorName","variant":"caption"},{"label":"Start","name":"startTime","variant":"caption"},{"label":"Capacity","name":"capacity","variant":"badge"},{"variant":"badge","name":"bookedCount","label":"Booked"},{"variant":"badge","label":"Status","name":"status"}]` */
-  fields?: EntityRow[];
-  /** Default: `4` */
-  rescheduleWindowHours?: number;
-  /** Default: `10` */
-  noShowGracePeriodMinutes?: number;
-  /** Default: `3` */
-  maxReschedules?: number;
-  /** Default: `""` */
-  policyId?: string;
-  /** Default: `[]` */
-  blackoutDates?: string[];
-  /** Default: `[{"variant":"primary","event":"OPEN_SESSION","label":"Open","icon":"arrow-right"},{"label":"Cancel","event":"CANCEL_CLASS","variant":"danger"}]` */
-  itemActions?: EntityRow[];
-  /** Default: `"06:00-22:00"` */
-  bookingHours?: string;
-  /** Default: `"Class Sessions"` */
-  title?: string;
-  /** Default: `30` */
-  bookingWindowDays?: number;
   /** Default: `60` */
   leadTimeMinutes?: number;
   /** Default: `"free"` */
   cancellationPolicy?: 'free' | 'partial-refund' | 'no-refund';
+  /** Default: `4` */
+  rescheduleWindowHours?: number;
+  /** Default: `[{"label":"Class","name":"className","variant":"caption"},{"variant":"caption","label":"Instructor","name":"instructorName"},{"label":"Start","variant":"caption","name":"startTime"},{"variant":"badge","name":"capacity","label":"Capacity"},{"variant":"badge","label":"Booked","name":"bookedCount"},{"name":"status","variant":"badge","label":"Status"}]` */
+  fields?: EntityRow[];
+  /** Default: `""` */
+  policyId?: string;
+  /** Default: `30` */
+  bookingWindowDays?: number;
+  /** Default: `"Class Sessions"` */
+  title?: string;
+  /** Default: `[{"variant":"primary","label":"Open","icon":"arrow-right","event":"OPEN_SESSION"},{"event":"CANCEL_CLASS","variant":"danger","label":"Cancel"}]` */
+  itemActions?: EntityRow[];
+  /** Default: `[]` */
+  blackoutDates?: string[];
+  /** Default: `10` */
+  noShowGracePeriodMinutes?: number;
+  /** Default: `"06:00-22:00"` */
+  bookingHours?: string;
+  /** Default: `3` */
+  maxReschedules?: number;
 }
 
 /**

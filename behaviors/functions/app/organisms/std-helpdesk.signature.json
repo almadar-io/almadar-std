@@ -68,19 +68,19 @@
             "type": "unknown",
             "default": [
               {
+                "label": "Tickets",
                 "href": "/tickets",
-                "icon": "inbox",
-                "label": "Tickets"
+                "icon": "inbox"
               },
               {
-                "icon": "message-circle",
                 "label": "Replies",
-                "href": "/replies"
+                "href": "/replies",
+                "icon": "message-circle"
               },
               {
-                "label": "Metrics",
                 "href": "/metrics",
-                "icon": "layout-list"
+                "icon": "layout-list",
+                "label": "Metrics"
               }
             ]
           },
@@ -149,26 +149,26 @@
             "type": "unknown",
             "default": [
               {
+                "label": "Priority",
+                "field": "priority",
                 "options": [
                   "low",
                   "medium",
                   "high",
                   "critical"
                 ],
-                "filterType": "select",
-                "field": "priority",
-                "label": "Priority"
+                "filterType": "select"
               },
               {
+                "label": "Status",
+                "field": "status",
+                "filterType": "select",
                 "options": [
                   "open",
                   "in-progress",
                   "resolved",
                   "closed"
-                ],
-                "label": "Status",
-                "field": "status",
-                "filterType": "select"
+                ]
               }
             ]
           }
@@ -188,14 +188,15 @@
             "type": "unknown",
             "default": [
               {
-                "variant": "primary",
+                "format": "number",
                 "aggregation": "count",
                 "label": "Total",
                 "icon": "inbox",
-                "format": "number"
+                "variant": "primary"
               },
               {
                 "variant": "warning",
+                "format": "number",
                 "filter": [
                   "fn",
                   "row",
@@ -206,11 +207,13 @@
                   ]
                 ],
                 "icon": "circle",
-                "label": "Open",
                 "aggregation": "count",
-                "format": "number"
+                "label": "Open"
               },
               {
+                "icon": "check-circle",
+                "label": "Resolved",
+                "aggregation": "count",
                 "filter": [
                   "fn",
                   "row",
@@ -220,9 +223,6 @@
                     "resolved"
                   ]
                 ],
-                "aggregation": "count",
-                "label": "Resolved",
-                "icon": "check-circle",
                 "format": "number",
                 "variant": "success"
               }
@@ -304,21 +304,21 @@
             "type": "unknown",
             "default": [
               {
-                "icon": "inbox",
                 "variant": "h3",
-                "name": "subject"
+                "name": "subject",
+                "icon": "inbox"
               },
               {
-                "variant": "badge",
-                "name": "priority"
-              },
-              {
-                "name": "status",
+                "name": "priority",
                 "variant": "badge"
               },
               {
-                "name": "assignee",
-                "variant": "body"
+                "variant": "badge",
+                "name": "status"
+              },
+              {
+                "variant": "body",
+                "name": "assignee"
               },
               {
                 "variant": "caption",
@@ -337,18 +337,18 @@
             "default": [
               {
                 "variant": "ghost",
-                "event": "VIEW",
-                "label": "View"
+                "label": "View",
+                "event": "VIEW"
               },
               {
                 "variant": "ghost",
-                "event": "EDIT",
-                "label": "Edit"
+                "label": "Edit",
+                "event": "EDIT"
               },
               {
-                "label": "Delete",
                 "event": "DELETE",
-                "variant": "danger"
+                "variant": "danger",
+                "label": "Delete"
               }
             ]
           }
@@ -515,6 +515,219 @@
         ],
         "overridableConfigKeys": [],
         "capabilities": []
+      },
+      {
+        "name": "HelpdeskLifecycleScan",
+        "emittedEvents": [],
+        "listenedEvents": [],
+        "overridableConfigKeys": [
+          {
+            "key": "dryRun",
+            "type": "unknown",
+            "default": false
+          },
+          {
+            "key": "rules",
+            "type": "unknown",
+            "default": [
+              {
+                "fromStatus": "open",
+                "condition": {
+                  "dateField": "pendingId",
+                  "value": 1,
+                  "kind": "ageDays"
+                },
+                "toStatus": "in-progress"
+              },
+              {
+                "toStatus": "resolved",
+                "condition": {
+                  "value": 3,
+                  "dateField": "pendingId",
+                  "kind": "ageDays"
+                },
+                "fromStatus": "in-progress"
+              },
+              {
+                "condition": {
+                  "value": 7,
+                  "kind": "ageDays",
+                  "dateField": "pendingId"
+                },
+                "fromStatus": "resolved",
+                "toStatus": "closed"
+              }
+            ]
+          },
+          {
+            "key": "targetEntity",
+            "type": "unknown",
+            "default": "Ticket"
+          }
+        ],
+        "capabilities": [],
+        "ref": "Lifecycle.traits.LifecycleScheduler"
+      },
+      {
+        "name": "HelpdeskNotifier",
+        "emittedEvents": [],
+        "listenedEvents": [],
+        "overridableConfigKeys": [
+          {
+            "key": "listensFor",
+            "type": "unknown",
+            "default": [
+              "TICKET_UPDATED"
+            ]
+          },
+          {
+            "key": "notifyChannel",
+            "type": "unknown",
+            "default": "in-app"
+          },
+          {
+            "key": "recipients",
+            "type": "unknown",
+            "default": []
+          },
+          {
+            "key": "severity",
+            "type": "unknown",
+            "default": "info"
+          },
+          {
+            "key": "suppressionList",
+            "type": "unknown",
+            "default": []
+          },
+          {
+            "key": "template",
+            "type": "unknown",
+            "default": "Ticket updated"
+          }
+        ],
+        "capabilities": [],
+        "ref": "Notify.traits.NotifyOnEventListener"
+      },
+      {
+        "name": "HelpdeskAuditCapture",
+        "emittedEvents": [],
+        "listenedEvents": [],
+        "overridableConfigKeys": [
+          {
+            "key": "captureBeforeAfter",
+            "type": "unknown",
+            "default": false
+          },
+          {
+            "key": "captureEntity",
+            "type": "unknown",
+            "default": "Ticket"
+          },
+          {
+            "key": "captureEventTypes",
+            "type": "unknown",
+            "default": []
+          },
+          {
+            "key": "excludeFields",
+            "type": "unknown",
+            "default": []
+          },
+          {
+            "key": "retentionDays",
+            "type": "unknown",
+            "default": 2555
+          }
+        ],
+        "capabilities": [],
+        "ref": "Audit.traits.AuditCaptureListener"
+      },
+      {
+        "name": "HelpdeskApprovalGate",
+        "emittedEvents": [],
+        "listenedEvents": [],
+        "overridableConfigKeys": [
+          {
+            "key": "approverRoles",
+            "type": "unknown",
+            "default": [
+              "support-manager"
+            ]
+          },
+          {
+            "key": "autoApproveBelowThreshold",
+            "type": "unknown",
+            "default": true
+          },
+          {
+            "key": "escalationHours",
+            "type": "unknown",
+            "default": 24
+          },
+          {
+            "key": "escalationRoles",
+            "type": "unknown",
+            "default": [
+              "support-lead"
+            ]
+          },
+          {
+            "key": "threshold",
+            "type": "unknown",
+            "default": 100
+          },
+          {
+            "key": "valueField",
+            "type": "unknown",
+            "default": "refundAmount"
+          }
+        ],
+        "capabilities": [],
+        "ref": "Approval.traits.ApprovalGateReview"
+      },
+      {
+        "name": "HelpdeskReminderScheduler",
+        "emittedEvents": [],
+        "listenedEvents": [],
+        "overridableConfigKeys": [
+          {
+            "key": "dateField",
+            "type": "unknown",
+            "default": "pendingId"
+          },
+          {
+            "key": "offsetsHours",
+            "type": "unknown",
+            "default": [
+              1,
+              4,
+              24
+            ]
+          },
+          {
+            "key": "severity",
+            "type": "unknown",
+            "default": "warning"
+          },
+          {
+            "key": "targetEntity",
+            "type": "unknown",
+            "default": "Ticket"
+          },
+          {
+            "key": "template",
+            "type": "unknown",
+            "default": "SLA deadline approaching for ticket"
+          },
+          {
+            "key": "windowToleranceMinutes",
+            "type": "unknown",
+            "default": 60
+          }
+        ],
+        "capabilities": [],
+        "ref": "Reminder.traits.ReminderScheduler"
       }
     ],
     "pages": [
@@ -617,13 +830,13 @@
               },
               {
                 "icon": "message-circle",
-                "label": "Replies",
-                "href": "/replies"
+                "href": "/replies",
+                "label": "Replies"
               },
               {
-                "href": "/metrics",
                 "icon": "layout-list",
-                "label": "Metrics"
+                "label": "Metrics",
+                "href": "/metrics"
               }
             ]
           },
@@ -835,18 +1048,18 @@
             "type": "unknown",
             "default": [
               {
-                "href": "/tickets",
                 "label": "Tickets",
+                "href": "/tickets",
                 "icon": "inbox"
               },
               {
-                "icon": "message-circle",
+                "href": "/replies",
                 "label": "Replies",
-                "href": "/replies"
+                "icon": "message-circle"
               },
               {
-                "href": "/metrics",
                 "label": "Metrics",
+                "href": "/metrics",
                 "icon": "layout-list"
               }
             ]
@@ -885,24 +1098,24 @@
             "type": "unknown",
             "default": [
               {
-                "label": "Name",
                 "variant": "h4",
+                "label": "Name",
                 "name": "name"
               },
               {
-                "label": "Category",
                 "name": "category",
-                "variant": "caption"
-              },
-              {
-                "label": "Status",
-                "name": "status",
-                "variant": "badge"
+                "variant": "caption",
+                "label": "Category"
               },
               {
                 "variant": "badge",
-                "label": "Priority",
-                "name": "priority"
+                "name": "status",
+                "label": "Status"
+              },
+              {
+                "name": "priority",
+                "variant": "badge",
+                "label": "Priority"
               }
             ]
           },
@@ -928,6 +1141,150 @@
         "name": "Metrics",
         "defaultPath": "/metrics",
         "primaryEntity": "SupportMetric"
+      }
+    ],
+    "emittedEvents": [],
+    "listenedEvents": []
+  },
+  {
+    "organism": "std-helpdesk",
+    "orbital": "TicketFromStdOrbital",
+    "tier": "organisms",
+    "factoryPath": "behaviors/functions/app/organisms/std-helpdesk.ts",
+    "entities": [
+      {
+        "name": "SlaTicket",
+        "fields": [
+          {
+            "name": "subject",
+            "type": "string",
+            "required": true
+          },
+          {
+            "name": "description",
+            "type": "string",
+            "required": true
+          },
+          {
+            "name": "requester",
+            "type": "string",
+            "required": true
+          },
+          {
+            "name": "assignedTo",
+            "type": "string",
+            "required": false
+          },
+          {
+            "name": "priority",
+            "type": "string",
+            "required": false
+          },
+          {
+            "name": "status",
+            "type": "string",
+            "required": false
+          },
+          {
+            "name": "category",
+            "type": "string",
+            "required": false
+          },
+          {
+            "name": "firstReplyAt",
+            "type": "string",
+            "required": false
+          },
+          {
+            "name": "resolvedAt",
+            "type": "string",
+            "required": false
+          }
+        ],
+        "persistence": "persistent"
+      }
+    ],
+    "traits": [
+      {
+        "name": "SlaTicketFromStdAppLayout",
+        "emittedEvents": [],
+        "listenedEvents": [],
+        "overridableConfigKeys": [
+          {
+            "key": "appName",
+            "type": "unknown",
+            "default": "Helpdesk"
+          },
+          {
+            "key": "contentTrait",
+            "type": "unknown",
+            "default": "@trait.SlaTicketFromStdManageBlock"
+          },
+          {
+            "key": "navItems",
+            "type": "unknown",
+            "default": [
+              {
+                "href": "/tickets",
+                "icon": "inbox",
+                "label": "Tickets"
+              },
+              {
+                "href": "/replies",
+                "label": "Replies",
+                "icon": "message-circle"
+              },
+              {
+                "label": "Metrics",
+                "href": "/metrics",
+                "icon": "layout-list"
+              },
+              {
+                "icon": "life-buoy",
+                "href": "/tickets-std",
+                "label": "SLA Tickets"
+              }
+            ]
+          },
+          {
+            "key": "notificationClickEvent",
+            "type": "unknown",
+            "default": "SLA_TICKET_NOTIFICATIONS_OPEN"
+          },
+          {
+            "key": "notifications",
+            "type": "unknown",
+            "default": []
+          },
+          {
+            "key": "searchEvent",
+            "type": "unknown",
+            "default": "SLA_TICKET_SEARCH"
+          }
+        ],
+        "capabilities": [],
+        "ref": "AppShell.traits.AppLayout"
+      },
+      {
+        "name": "SlaTicketFromStdManageBlock",
+        "emittedEvents": [],
+        "listenedEvents": [],
+        "overridableConfigKeys": [
+          {
+            "key": "title",
+            "type": "unknown",
+            "default": "SLA Tickets"
+          }
+        ],
+        "capabilities": [],
+        "ref": "Tickets.traits.TicketManage"
+      }
+    ],
+    "pages": [
+      {
+        "name": "SlaTicketFromStdPage",
+        "defaultPath": "/tickets-std",
+        "primaryEntity": "SlaTicket"
       }
     ],
     "emittedEvents": [],

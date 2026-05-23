@@ -120,26 +120,26 @@ export interface StdCustomerAccountCustomerAccountUpdateFailedPayload {
  * without modifying its state-machine topology.
  */
 export interface StdCustomerAccountConfig {
+  /** Default: `[{"variant":"primary","event":"OPEN_CUSTOMER","icon":"arrow-right","label":"Open"},{"variant":"danger","label":"Ban","event":"BAN_CUSTOMER"}]` */
+  itemActions?: EntityRow[];
+  /** Default: `[{"variant":"caption","label":"Name","name":"name"},{"label":"Email","variant":"caption","name":"email"},{"name":"phone","label":"Phone","variant":"caption"},{"name":"loyaltyPoints","label":"Points","variant":"caption"},{"name":"totalSpent","label":"Total Spent","variant":"caption"},{"name":"status","variant":"badge","label":"Status"}]` */
+  fields?: EntityRow[];
+  /** Default: `5` */
+  contactFrequencyCapPerWeek?: number;
+  /** Default: `"linear"` */
+  lifecycleStagePolicy?: 'linear' | 'branching' | 'none';
+  /** Default: `7` */
+  defaultRetentionYears?: number;
+  /** Default: `50` */
+  healthScoreThresholdAlert?: number;
   /** Default: `"Customers"` */
   title?: string;
-  /** Default: `[{"event":"OPEN_CUSTOMER","label":"Open","variant":"primary","icon":"arrow-right"},{"label":"Ban","variant":"danger","event":"BAN_CUSTOMER"}]` */
-  itemActions?: EntityRow[];
+  /** Default: `[30,7,1]` */
+  renewalReminderDaysBefore?: number[];
   /** Default: `true` */
   gdprConsentRequired?: boolean;
   /** Default: `true` */
   consentTrackingEnabled?: boolean;
-  /** Default: `5` */
-  contactFrequencyCapPerWeek?: number;
-  /** Default: `[30,7,1]` */
-  renewalReminderDaysBefore?: number[];
-  /** Default: `[{"variant":"caption","name":"name","label":"Name"},{"name":"email","variant":"caption","label":"Email"},{"name":"phone","label":"Phone","variant":"caption"},{"name":"loyaltyPoints","variant":"caption","label":"Points"},{"label":"Total Spent","name":"totalSpent","variant":"caption"},{"variant":"badge","name":"status","label":"Status"}]` */
-  fields?: EntityRow[];
-  /** Default: `7` */
-  defaultRetentionYears?: number;
-  /** Default: `"linear"` */
-  lifecycleStagePolicy?: 'linear' | 'branching' | 'none';
-  /** Default: `50` */
-  healthScoreThresholdAlert?: number;
   /** Default: `365` */
   archiveInactiveAfterDays?: number;
 }

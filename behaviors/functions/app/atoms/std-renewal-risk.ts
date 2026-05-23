@@ -117,26 +117,26 @@ export interface StdRenewalRiskRenewalRiskUpdateFailedPayload {
  * without modifying its state-machine topology.
  */
 export interface StdRenewalRiskConfig {
-  /** Default: `[{"name":"customerName","label":"Customer","variant":"caption"},{"variant":"caption","name":"renewalDate","label":"Renewal"},{"label":"ARR","variant":"caption","name":"arrAmount"},{"name":"riskLevel","variant":"badge","label":"Risk"},{"name":"status","label":"Status","variant":"badge"},{"label":"CSM","name":"assignedCsm","variant":"caption"}]` */
-  fields?: EntityRow[];
-  /** Default: `[{"scoreLow":70,"scoreHigh":100,"tier":"low"},{"tier":"medium","scoreLow":40,"scoreHigh":70},{"tier":"high","scoreLow":0,"scoreHigh":40}]` */
-  riskTierThresholds?: EntityRow[];
-  /** Default: `540` */
-  archiveInactiveAfterDays?: number;
-  /** Default: `[{"icon":"arrow-right","event":"OPEN_RISK","variant":"primary","label":"Open"},{"variant":"danger","label":"Mark Churned","event":"MARK_CHURNED"}]` */
-  itemActions?: EntityRow[];
-  /** Default: `[60,30,14]` */
-  renewalReminderDaysBefore_csm?: number[];
+  /** Default: `40` */
+  healthScoreThresholdAlert?: number;
   /** Default: `""` */
   interventionPlaybookId?: string;
   /** Default: `"Renewal Risk"` */
   title?: string;
-  /** Default: `[90,60,30,14]` */
-  renewalReminderDaysBefore?: number[];
+  /** Default: `[{"name":"customerName","label":"Customer","variant":"caption"},{"variant":"caption","label":"Renewal","name":"renewalDate"},{"variant":"caption","label":"ARR","name":"arrAmount"},{"variant":"badge","name":"riskLevel","label":"Risk"},{"name":"status","label":"Status","variant":"badge"},{"name":"assignedCsm","variant":"caption","label":"CSM"}]` */
+  fields?: EntityRow[];
   /** Default: `false` */
   consentTrackingEnabled?: boolean;
-  /** Default: `40` */
-  healthScoreThresholdAlert?: number;
+  /** Default: `[90,60,30,14]` */
+  renewalReminderDaysBefore?: number[];
+  /** Default: `[60,30,14]` */
+  renewalReminderDaysBefore_csm?: number[];
+  /** Default: `[{"variant":"primary","event":"OPEN_RISK","label":"Open","icon":"arrow-right"},{"label":"Mark Churned","variant":"danger","event":"MARK_CHURNED"}]` */
+  itemActions?: EntityRow[];
+  /** Default: `540` */
+  archiveInactiveAfterDays?: number;
+  /** Default: `[{"scoreLow":70,"tier":"low","scoreHigh":100},{"tier":"medium","scoreHigh":70,"scoreLow":40},{"scoreLow":0,"tier":"high","scoreHigh":40}]` */
+  riskTierThresholds?: EntityRow[];
 }
 
 /**

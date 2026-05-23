@@ -74,28 +74,28 @@
             "default": [
               {
                 "href": "/patients",
-                "label": "Patients",
-                "icon": "user-plus"
+                "icon": "user-plus",
+                "label": "Patients"
               },
               {
-                "icon": "calendar",
                 "label": "Appointments",
+                "icon": "calendar",
                 "href": "/appointments"
               },
               {
-                "href": "/intake",
+                "icon": "layout-list",
                 "label": "Intake",
-                "icon": "layout-list"
+                "href": "/intake"
               },
               {
                 "label": "Prescriptions",
-                "icon": "pill",
-                "href": "/prescriptions"
+                "href": "/prescriptions",
+                "icon": "pill"
               },
               {
-                "href": "/dashboard",
+                "label": "Dashboard",
                 "icon": "layout-dashboard",
-                "label": "Dashboard"
+                "href": "/dashboard"
               }
             ]
           },
@@ -164,25 +164,25 @@
             "type": "unknown",
             "default": [
               {
-                "label": "Status",
-                "filterType": "select",
                 "field": "status",
                 "options": [
                   "active",
                   "inactive",
                   "discharged"
-                ]
+                ],
+                "label": "Status",
+                "filterType": "select"
               },
               {
+                "filterType": "select",
+                "label": "Insurance",
                 "field": "insuranceId",
                 "options": [
                   "aetna",
                   "bcbs",
                   "cigna",
                   "uhc"
-                ],
-                "label": "Insurance",
-                "filterType": "select"
+                ]
               }
             ]
           }
@@ -202,18 +202,18 @@
             "type": "unknown",
             "default": [
               {
-                "icon": "users",
                 "variant": "primary",
+                "format": "number",
                 "aggregation": "count",
-                "label": "Total Patients",
-                "format": "number"
+                "icon": "users",
+                "label": "Total Patients"
               },
               {
-                "aggregation": "count",
                 "format": "number",
-                "icon": "check-circle",
-                "label": "Active",
+                "aggregation": "count",
                 "variant": "success",
+                "label": "Active",
+                "icon": "check-circle",
                 "filter": [
                   "fn",
                   "row",
@@ -225,18 +225,18 @@
                 ]
               },
               {
-                "variant": "info",
-                "format": "number",
                 "aggregation": "count",
+                "icon": "user-plus",
                 "label": "New This Month",
-                "icon": "user-plus"
+                "variant": "info",
+                "format": "number"
               },
               {
+                "format": "number",
                 "label": "By Insurance",
                 "variant": "default",
-                "format": "number",
-                "aggregation": "count",
-                "icon": "shield"
+                "icon": "shield",
+                "aggregation": "count"
               }
             ]
           },
@@ -312,9 +312,9 @@
             "type": "unknown",
             "default": [
               {
+                "name": "firstName",
                 "variant": "h3",
                 "label": "Name",
-                "name": "firstName",
                 "icon": "user"
               },
               {
@@ -323,9 +323,9 @@
               },
               {
                 "name": "dateOfBirth",
-                "variant": "caption",
                 "format": "date",
-                "label": "DOB"
+                "label": "DOB",
+                "variant": "caption"
               },
               {
                 "name": "insuranceId",
@@ -337,8 +337,8 @@
                 "name": "status"
               },
               {
-                "variant": "caption",
-                "name": "email"
+                "name": "email",
+                "variant": "caption"
               }
             ]
           },
@@ -352,19 +352,19 @@
             "type": "unknown",
             "default": [
               {
+                "variant": "ghost",
                 "event": "VIEW",
-                "label": "View",
-                "variant": "ghost"
+                "label": "View"
               },
               {
+                "variant": "ghost",
                 "label": "Edit",
-                "event": "EDIT",
-                "variant": "ghost"
+                "event": "EDIT"
               },
               {
+                "label": "Delete",
                 "event": "DELETE",
-                "variant": "danger",
-                "label": "Delete"
+                "variant": "danger"
               }
             ]
           }
@@ -544,6 +544,159 @@
         "listenedEvents": [],
         "overridableConfigKeys": [],
         "capabilities": []
+      },
+      {
+        "name": "PatientLifecycleScan",
+        "emittedEvents": [],
+        "listenedEvents": [],
+        "overridableConfigKeys": [
+          {
+            "key": "dryRun",
+            "type": "unknown",
+            "default": false
+          },
+          {
+            "key": "rules",
+            "type": "unknown",
+            "default": [
+              {
+                "fromStatus": "active",
+                "toStatus": "inactive",
+                "condition": {
+                  "value": 365,
+                  "kind": "ageDays",
+                  "dateField": "dateOfBirth"
+                }
+              },
+              {
+                "toStatus": "discharged",
+                "condition": {
+                  "dateField": "dateOfBirth",
+                  "kind": "ageDays",
+                  "value": 1095
+                },
+                "fromStatus": "inactive"
+              }
+            ]
+          },
+          {
+            "key": "targetEntity",
+            "type": "unknown",
+            "default": "Patient"
+          }
+        ],
+        "capabilities": [],
+        "ref": "Lifecycle.traits.LifecycleScheduler"
+      },
+      {
+        "name": "PatientNotifier",
+        "emittedEvents": [],
+        "listenedEvents": [],
+        "overridableConfigKeys": [
+          {
+            "key": "listensFor",
+            "type": "unknown",
+            "default": [
+              "PATIENT_UPDATED"
+            ]
+          },
+          {
+            "key": "notifyChannel",
+            "type": "unknown",
+            "default": "in-app"
+          },
+          {
+            "key": "recipients",
+            "type": "unknown",
+            "default": []
+          },
+          {
+            "key": "severity",
+            "type": "unknown",
+            "default": "info"
+          },
+          {
+            "key": "suppressionList",
+            "type": "unknown",
+            "default": []
+          },
+          {
+            "key": "template",
+            "type": "unknown",
+            "default": "Patient record updated"
+          }
+        ],
+        "capabilities": [],
+        "ref": "Notify.traits.NotifyOnEventListener"
+      },
+      {
+        "name": "PatientAuditCapture",
+        "emittedEvents": [],
+        "listenedEvents": [],
+        "overridableConfigKeys": [
+          {
+            "key": "captureBeforeAfter",
+            "type": "unknown",
+            "default": true
+          },
+          {
+            "key": "captureEntity",
+            "type": "unknown",
+            "default": "Patient"
+          },
+          {
+            "key": "captureEventTypes",
+            "type": "unknown",
+            "default": []
+          },
+          {
+            "key": "excludeFields",
+            "type": "unknown",
+            "default": []
+          },
+          {
+            "key": "retentionDays",
+            "type": "unknown",
+            "default": 2555
+          }
+        ],
+        "capabilities": [],
+        "ref": "Audit.traits.AuditCaptureListener"
+      },
+      {
+        "name": "PatientErasureWorkflow",
+        "emittedEvents": [],
+        "listenedEvents": [],
+        "overridableConfigKeys": [
+          {
+            "key": "anonymizeVsDelete",
+            "type": "unknown",
+            "default": "anonymize"
+          },
+          {
+            "key": "gracePeriodDays",
+            "type": "unknown",
+            "default": 30
+          },
+          {
+            "key": "piiFields",
+            "type": "unknown",
+            "default": [
+              "firstName",
+              "lastName",
+              "phone",
+              "email",
+              "dateOfBirth"
+            ]
+          },
+          {
+            "key": "targetEntity",
+            "type": "unknown",
+            "default": "Patient"
+          }
+        ],
+        "capabilities": [],
+        "ref": "Erasure.traits.ErasureWorkflow"
       }
     ],
     "pages": [
@@ -661,28 +814,28 @@
             "type": "unknown",
             "default": [
               {
-                "icon": "user-plus",
                 "label": "Patients",
+                "icon": "user-plus",
                 "href": "/patients"
               },
               {
+                "icon": "calendar",
                 "label": "Appointments",
-                "href": "/appointments",
-                "icon": "calendar"
+                "href": "/appointments"
               },
               {
                 "label": "Intake",
-                "href": "/intake",
-                "icon": "layout-list"
+                "icon": "layout-list",
+                "href": "/intake"
               },
               {
+                "label": "Prescriptions",
                 "href": "/prescriptions",
-                "icon": "pill",
-                "label": "Prescriptions"
+                "icon": "pill"
               },
               {
-                "label": "Dashboard",
                 "icon": "layout-dashboard",
+                "label": "Dashboard",
                 "href": "/dashboard"
               }
             ]
@@ -762,21 +915,21 @@
             "type": "unknown",
             "default": [
               {
-                "variant": "h4",
                 "name": "patientName",
+                "variant": "h4",
                 "icon": "user",
                 "label": "Patient"
               },
               {
-                "name": "doctorName",
                 "label": "Doctor",
-                "variant": "body"
+                "variant": "body",
+                "name": "doctorName"
               },
               {
-                "name": "scheduledAt",
+                "variant": "caption",
                 "format": "date",
-                "label": "When",
-                "variant": "caption"
+                "name": "scheduledAt",
+                "label": "When"
               },
               {
                 "name": "status",
@@ -798,14 +951,14 @@
             "type": "unknown",
             "default": [
               {
+                "variant": "ghost",
                 "event": "VIEW",
-                "label": "View",
-                "variant": "ghost"
+                "label": "View"
               },
               {
-                "label": "Edit",
+                "variant": "ghost",
                 "event": "EDIT",
-                "variant": "ghost"
+                "label": "Edit"
               },
               {
                 "variant": "danger",
@@ -993,6 +1146,49 @@
         "listenedEvents": [],
         "overridableConfigKeys": [],
         "capabilities": []
+      },
+      {
+        "name": "AppointmentReminderScheduler",
+        "emittedEvents": [],
+        "listenedEvents": [],
+        "overridableConfigKeys": [
+          {
+            "key": "dateField",
+            "type": "unknown",
+            "default": "scheduledAt"
+          },
+          {
+            "key": "offsetsHours",
+            "type": "unknown",
+            "default": [
+              168,
+              24,
+              1
+            ]
+          },
+          {
+            "key": "severity",
+            "type": "unknown",
+            "default": "info"
+          },
+          {
+            "key": "targetEntity",
+            "type": "unknown",
+            "default": "Appointment"
+          },
+          {
+            "key": "template",
+            "type": "unknown",
+            "default": "Upcoming appointment reminder"
+          },
+          {
+            "key": "windowToleranceMinutes",
+            "type": "unknown",
+            "default": 60
+          }
+        ],
+        "capabilities": [],
+        "ref": "Reminder.traits.ReminderScheduler"
       }
     ],
     "pages": [
@@ -1101,9 +1297,9 @@
             "type": "unknown",
             "default": [
               {
-                "icon": "user-plus",
                 "label": "Patients",
-                "href": "/patients"
+                "href": "/patients",
+                "icon": "user-plus"
               },
               {
                 "href": "/appointments",
@@ -1112,13 +1308,13 @@
               },
               {
                 "href": "/intake",
-                "label": "Intake",
-                "icon": "layout-list"
+                "icon": "layout-list",
+                "label": "Intake"
               },
               {
                 "href": "/prescriptions",
-                "icon": "pill",
-                "label": "Prescriptions"
+                "label": "Prescriptions",
+                "icon": "pill"
               },
               {
                 "label": "Dashboard",
@@ -1260,28 +1456,28 @@
             "type": "unknown",
             "default": [
               {
-                "href": "/patients",
                 "label": "Patients",
+                "href": "/patients",
                 "icon": "user-plus"
               },
               {
+                "label": "Appointments",
                 "href": "/appointments",
-                "icon": "calendar",
-                "label": "Appointments"
+                "icon": "calendar"
               },
               {
-                "icon": "layout-list",
                 "label": "Intake",
-                "href": "/intake"
+                "href": "/intake",
+                "icon": "layout-list"
               },
               {
+                "icon": "pill",
                 "href": "/prescriptions",
-                "label": "Prescriptions",
-                "icon": "pill"
+                "label": "Prescriptions"
               },
               {
-                "label": "Dashboard",
                 "href": "/dashboard",
+                "label": "Dashboard",
                 "icon": "layout-dashboard"
               }
             ]
@@ -1333,8 +1529,8 @@
             "type": "unknown",
             "default": [
               {
-                "icon": "pill",
                 "variant": "h3",
+                "icon": "pill",
                 "name": "medication"
               },
               {
@@ -1342,23 +1538,23 @@
                 "name": "dosage"
               },
               {
-                "variant": "body",
-                "name": "frequency"
-              },
-              {
-                "name": "patientName",
-                "label": "Patient",
+                "name": "frequency",
                 "variant": "body"
               },
               {
+                "variant": "body",
+                "label": "Patient",
+                "name": "patientName"
+              },
+              {
                 "name": "prescribedBy",
-                "label": "Prescribed By",
-                "variant": "caption"
+                "variant": "caption",
+                "label": "Prescribed By"
               },
               {
                 "format": "date",
-                "label": "Start",
                 "name": "startDate",
+                "label": "Start",
                 "variant": "caption"
               },
               {
@@ -1377,18 +1573,18 @@
             "type": "unknown",
             "default": [
               {
-                "label": "View",
                 "event": "VIEW",
+                "label": "View",
                 "variant": "ghost"
               },
               {
                 "variant": "ghost",
-                "event": "EDIT",
-                "label": "Edit"
+                "label": "Edit",
+                "event": "EDIT"
               },
               {
-                "variant": "danger",
                 "label": "Delete",
+                "variant": "danger",
                 "event": "DELETE"
               }
             ]
@@ -1535,6 +1731,50 @@
         ],
         "overridableConfigKeys": [],
         "capabilities": []
+      },
+      {
+        "name": "PrescriptionApprovalGate",
+        "emittedEvents": [],
+        "listenedEvents": [],
+        "overridableConfigKeys": [
+          {
+            "key": "approverRoles",
+            "type": "unknown",
+            "default": [
+              "prescribing-physician",
+              "pharmacy-supervisor"
+            ]
+          },
+          {
+            "key": "autoApproveBelowThreshold",
+            "type": "unknown",
+            "default": false
+          },
+          {
+            "key": "escalationHours",
+            "type": "unknown",
+            "default": 4
+          },
+          {
+            "key": "escalationRoles",
+            "type": "unknown",
+            "default": [
+              "chief-medical-officer"
+            ]
+          },
+          {
+            "key": "threshold",
+            "type": "unknown",
+            "default": 0
+          },
+          {
+            "key": "valueField",
+            "type": "unknown",
+            "default": ""
+          }
+        ],
+        "capabilities": [],
+        "ref": "Approval.traits.ApprovalGateReview"
       }
     ],
     "pages": [
@@ -1596,29 +1836,29 @@
             "type": "unknown",
             "default": [
               {
+                "label": "Patients",
                 "href": "/patients",
-                "icon": "user-plus",
-                "label": "Patients"
+                "icon": "user-plus"
               },
               {
-                "label": "Appointments",
                 "href": "/appointments",
-                "icon": "calendar"
+                "icon": "calendar",
+                "label": "Appointments"
               },
               {
+                "icon": "layout-list",
                 "label": "Intake",
-                "href": "/intake",
-                "icon": "layout-list"
+                "href": "/intake"
               },
               {
+                "label": "Prescriptions",
                 "href": "/prescriptions",
-                "icon": "pill",
-                "label": "Prescriptions"
+                "icon": "pill"
               },
               {
                 "icon": "layout-dashboard",
-                "label": "Dashboard",
-                "href": "/dashboard"
+                "href": "/dashboard",
+                "label": "Dashboard"
               }
             ]
           },
@@ -1659,6 +1899,617 @@
         "name": "DashboardPage",
         "defaultPath": "/dashboard",
         "primaryEntity": "DashboardSummary"
+      }
+    ],
+    "emittedEvents": [],
+    "listenedEvents": []
+  },
+  {
+    "organism": "std-healthcare",
+    "orbital": "PhiPatientFromStdOrbital",
+    "tier": "organisms",
+    "factoryPath": "behaviors/functions/app/organisms/std-healthcare.ts",
+    "entities": [
+      {
+        "name": "PhiPatient",
+        "fields": [
+          {
+            "name": "firstName",
+            "type": "string",
+            "required": true
+          },
+          {
+            "name": "lastName",
+            "type": "string",
+            "required": true
+          },
+          {
+            "name": "dateOfBirth",
+            "type": "string",
+            "required": false
+          },
+          {
+            "name": "consentType",
+            "type": "string",
+            "required": false
+          },
+          {
+            "name": "mrn",
+            "type": "string",
+            "required": false
+          },
+          {
+            "name": "primaryProvider",
+            "type": "string",
+            "required": false
+          },
+          {
+            "name": "status",
+            "type": "string",
+            "required": false
+          }
+        ],
+        "persistence": "persistent"
+      }
+    ],
+    "traits": [
+      {
+        "name": "PhiPatientFromStdAppLayout",
+        "emittedEvents": [],
+        "listenedEvents": [],
+        "overridableConfigKeys": [
+          {
+            "key": "appName",
+            "type": "unknown",
+            "default": "HealthcareApp"
+          },
+          {
+            "key": "contentTrait",
+            "type": "unknown",
+            "default": "@trait.PhiPatientFromStdManageBlock"
+          },
+          {
+            "key": "navItems",
+            "type": "unknown",
+            "default": [
+              {
+                "label": "Patients",
+                "icon": "user-plus",
+                "href": "/patients"
+              },
+              {
+                "icon": "calendar",
+                "href": "/appointments",
+                "label": "Appointments"
+              },
+              {
+                "icon": "layout-list",
+                "label": "Intake",
+                "href": "/intake"
+              },
+              {
+                "icon": "pill",
+                "label": "Prescriptions",
+                "href": "/prescriptions"
+              },
+              {
+                "label": "Dashboard",
+                "href": "/dashboard",
+                "icon": "layout-dashboard"
+              },
+              {
+                "icon": "shield",
+                "label": "PHI Patients",
+                "href": "/patients-phi"
+              }
+            ]
+          },
+          {
+            "key": "notificationClickEvent",
+            "type": "unknown",
+            "default": "PHI_PATIENT_NOTIFICATIONS_OPEN"
+          },
+          {
+            "key": "notifications",
+            "type": "unknown",
+            "default": []
+          },
+          {
+            "key": "searchEvent",
+            "type": "unknown",
+            "default": "PHI_PATIENT_SEARCH"
+          }
+        ],
+        "capabilities": [],
+        "ref": "AppShell.traits.AppLayout"
+      },
+      {
+        "name": "PhiPatientFromStdManageBlock",
+        "emittedEvents": [],
+        "listenedEvents": [],
+        "overridableConfigKeys": [
+          {
+            "key": "title",
+            "type": "unknown",
+            "default": "Patients (PHI)"
+          }
+        ],
+        "capabilities": [],
+        "ref": "Patients.traits.PatientManage"
+      }
+    ],
+    "pages": [
+      {
+        "name": "PhiPatientFromStdPage",
+        "defaultPath": "/patients-phi",
+        "primaryEntity": "PhiPatient"
+      }
+    ],
+    "emittedEvents": [],
+    "listenedEvents": []
+  },
+  {
+    "organism": "std-healthcare",
+    "orbital": "ControlledRxFromStdOrbital",
+    "tier": "organisms",
+    "factoryPath": "behaviors/functions/app/organisms/std-healthcare.ts",
+    "entities": [
+      {
+        "name": "ControlledRx",
+        "fields": [
+          {
+            "name": "patientId",
+            "type": "string",
+            "required": true
+          },
+          {
+            "name": "medication",
+            "type": "string",
+            "required": true
+          },
+          {
+            "name": "dosage",
+            "type": "string",
+            "required": false
+          },
+          {
+            "name": "quantity",
+            "type": "number",
+            "required": false
+          },
+          {
+            "name": "refillsRemaining",
+            "type": "number",
+            "required": false
+          },
+          {
+            "name": "controlled",
+            "type": "boolean",
+            "required": false
+          },
+          {
+            "name": "status",
+            "type": "string",
+            "required": false
+          },
+          {
+            "name": "prescribedBy",
+            "type": "string",
+            "required": false
+          },
+          {
+            "name": "pharmacy",
+            "type": "string",
+            "required": false
+          },
+          {
+            "name": "signedAt",
+            "type": "string",
+            "required": false
+          }
+        ],
+        "persistence": "persistent"
+      }
+    ],
+    "traits": [
+      {
+        "name": "ControlledRxFromStdAppLayout",
+        "emittedEvents": [],
+        "listenedEvents": [],
+        "overridableConfigKeys": [
+          {
+            "key": "appName",
+            "type": "unknown",
+            "default": "HealthcareApp"
+          },
+          {
+            "key": "contentTrait",
+            "type": "unknown",
+            "default": "@trait.ControlledRxFromStdManageBlock"
+          },
+          {
+            "key": "navItems",
+            "type": "unknown",
+            "default": [
+              {
+                "label": "Patients",
+                "icon": "user-plus",
+                "href": "/patients"
+              },
+              {
+                "label": "Appointments",
+                "href": "/appointments",
+                "icon": "calendar"
+              },
+              {
+                "icon": "layout-list",
+                "href": "/intake",
+                "label": "Intake"
+              },
+              {
+                "icon": "pill",
+                "href": "/prescriptions",
+                "label": "Prescriptions"
+              },
+              {
+                "label": "Dashboard",
+                "icon": "layout-dashboard",
+                "href": "/dashboard"
+              },
+              {
+                "label": "Controlled Rx",
+                "href": "/rx-controlled",
+                "icon": "shield"
+              }
+            ]
+          },
+          {
+            "key": "notificationClickEvent",
+            "type": "unknown",
+            "default": "CONTROLLED_RX_NOTIFICATIONS_OPEN"
+          },
+          {
+            "key": "notifications",
+            "type": "unknown",
+            "default": []
+          },
+          {
+            "key": "searchEvent",
+            "type": "unknown",
+            "default": "CONTROLLED_RX_SEARCH"
+          }
+        ],
+        "capabilities": [],
+        "ref": "AppShell.traits.AppLayout"
+      },
+      {
+        "name": "ControlledRxFromStdManageBlock",
+        "emittedEvents": [],
+        "listenedEvents": [],
+        "overridableConfigKeys": [
+          {
+            "key": "title",
+            "type": "unknown",
+            "default": "Controlled Prescriptions"
+          }
+        ],
+        "capabilities": [],
+        "ref": "Prescriptions.traits.PrescriptionManage"
+      }
+    ],
+    "pages": [
+      {
+        "name": "ControlledRxFromStdPage",
+        "defaultPath": "/rx-controlled",
+        "primaryEntity": "ControlledRx"
+      }
+    ],
+    "emittedEvents": [],
+    "listenedEvents": []
+  },
+  {
+    "organism": "std-healthcare",
+    "orbital": "InsuranceClaimFromStdOrbital",
+    "tier": "organisms",
+    "factoryPath": "behaviors/functions/app/organisms/std-healthcare.ts",
+    "entities": [
+      {
+        "name": "InsuranceClaim",
+        "fields": [
+          {
+            "name": "patientId",
+            "type": "string",
+            "required": true
+          },
+          {
+            "name": "payerId",
+            "type": "string",
+            "required": true
+          },
+          {
+            "name": "serviceDate",
+            "type": "string",
+            "required": false
+          },
+          {
+            "name": "submittedAt",
+            "type": "string",
+            "required": false
+          },
+          {
+            "name": "status",
+            "type": "string",
+            "required": false
+          },
+          {
+            "name": "claimAmount",
+            "type": "number",
+            "required": false
+          },
+          {
+            "name": "paidAmount",
+            "type": "number",
+            "required": false
+          },
+          {
+            "name": "denialReason",
+            "type": "string",
+            "required": false
+          },
+          {
+            "name": "priorAuthNumber",
+            "type": "string",
+            "required": false
+          }
+        ],
+        "persistence": "persistent"
+      }
+    ],
+    "traits": [
+      {
+        "name": "InsuranceClaimFromStdAppLayout",
+        "emittedEvents": [],
+        "listenedEvents": [],
+        "overridableConfigKeys": [
+          {
+            "key": "appName",
+            "type": "unknown",
+            "default": "HealthcareApp"
+          },
+          {
+            "key": "contentTrait",
+            "type": "unknown",
+            "default": "@trait.InsuranceClaimFromStdManageBlock"
+          },
+          {
+            "key": "navItems",
+            "type": "unknown",
+            "default": [
+              {
+                "href": "/patients",
+                "icon": "user-plus",
+                "label": "Patients"
+              },
+              {
+                "icon": "calendar",
+                "label": "Appointments",
+                "href": "/appointments"
+              },
+              {
+                "label": "Intake",
+                "href": "/intake",
+                "icon": "layout-list"
+              },
+              {
+                "icon": "pill",
+                "href": "/prescriptions",
+                "label": "Prescriptions"
+              },
+              {
+                "label": "Dashboard",
+                "href": "/dashboard",
+                "icon": "layout-dashboard"
+              },
+              {
+                "label": "Insurance Claims",
+                "href": "/insurance-claims-from-std",
+                "icon": "shield"
+              }
+            ]
+          },
+          {
+            "key": "notificationClickEvent",
+            "type": "unknown",
+            "default": "INSURANCE_CLAIM_NOTIFICATIONS_OPEN"
+          },
+          {
+            "key": "notifications",
+            "type": "unknown",
+            "default": []
+          },
+          {
+            "key": "searchEvent",
+            "type": "unknown",
+            "default": "INSURANCE_CLAIM_SEARCH"
+          }
+        ],
+        "capabilities": [],
+        "ref": "AppShell.traits.AppLayout"
+      },
+      {
+        "name": "InsuranceClaimFromStdManageBlock",
+        "emittedEvents": [],
+        "listenedEvents": [],
+        "overridableConfigKeys": [
+          {
+            "key": "title",
+            "type": "unknown",
+            "default": "Insurance Claims"
+          }
+        ],
+        "capabilities": [],
+        "ref": "Claims.traits.InsuranceClaimManage"
+      }
+    ],
+    "pages": [
+      {
+        "name": "InsuranceClaimFromStdPage",
+        "defaultPath": "/insurance-claims-from-std",
+        "primaryEntity": "InsuranceClaim"
+      }
+    ],
+    "emittedEvents": [],
+    "listenedEvents": []
+  },
+  {
+    "organism": "std-healthcare",
+    "orbital": "AppointmentPolicyFromStdOrbital",
+    "tier": "organisms",
+    "factoryPath": "behaviors/functions/app/organisms/std-healthcare.ts",
+    "entities": [
+      {
+        "name": "AppointmentPolicy",
+        "fields": [
+          {
+            "name": "name",
+            "type": "string",
+            "required": true
+          },
+          {
+            "name": "description",
+            "type": "string",
+            "required": false
+          },
+          {
+            "name": "rescheduleWindowHours",
+            "type": "number",
+            "required": false
+          },
+          {
+            "name": "maxReschedules",
+            "type": "number",
+            "required": false
+          },
+          {
+            "name": "cancellationPolicy",
+            "type": "string",
+            "required": false
+          },
+          {
+            "name": "noShowGracePeriodMinutes",
+            "type": "number",
+            "required": false
+          },
+          {
+            "name": "noShowFeeAmount",
+            "type": "number",
+            "required": false
+          },
+          {
+            "name": "lateArrivalGraceMinutes",
+            "type": "number",
+            "required": false
+          },
+          {
+            "name": "status",
+            "type": "string",
+            "required": false
+          }
+        ],
+        "persistence": "persistent"
+      }
+    ],
+    "traits": [
+      {
+        "name": "AppointmentPolicyFromStdAppLayout",
+        "emittedEvents": [],
+        "listenedEvents": [],
+        "overridableConfigKeys": [
+          {
+            "key": "appName",
+            "type": "unknown",
+            "default": "HealthcareApp"
+          },
+          {
+            "key": "contentTrait",
+            "type": "unknown",
+            "default": "@trait.AppointmentPolicyFromStdManageBlock"
+          },
+          {
+            "key": "navItems",
+            "type": "unknown",
+            "default": [
+              {
+                "href": "/patients",
+                "icon": "user-plus",
+                "label": "Patients"
+              },
+              {
+                "label": "Appointments",
+                "href": "/appointments",
+                "icon": "calendar"
+              },
+              {
+                "href": "/intake",
+                "icon": "layout-list",
+                "label": "Intake"
+              },
+              {
+                "href": "/prescriptions",
+                "icon": "pill",
+                "label": "Prescriptions"
+              },
+              {
+                "icon": "layout-dashboard",
+                "label": "Dashboard",
+                "href": "/dashboard"
+              },
+              {
+                "icon": "calendar-check",
+                "label": "Appointment Policies",
+                "href": "/appointment-policies-from-std"
+              }
+            ]
+          },
+          {
+            "key": "notificationClickEvent",
+            "type": "unknown",
+            "default": "APPOINTMENT_POLICY_NOTIFICATIONS_OPEN"
+          },
+          {
+            "key": "notifications",
+            "type": "unknown",
+            "default": []
+          },
+          {
+            "key": "searchEvent",
+            "type": "unknown",
+            "default": "APPOINTMENT_POLICY_SEARCH"
+          }
+        ],
+        "capabilities": [],
+        "ref": "AppShell.traits.AppLayout"
+      },
+      {
+        "name": "AppointmentPolicyFromStdManageBlock",
+        "emittedEvents": [],
+        "listenedEvents": [],
+        "overridableConfigKeys": [
+          {
+            "key": "title",
+            "type": "unknown",
+            "default": "Appointment Policies"
+          }
+        ],
+        "capabilities": [],
+        "ref": "Policies.traits.AppointmentPolicyManage"
+      }
+    ],
+    "pages": [
+      {
+        "name": "AppointmentPolicyFromStdPage",
+        "defaultPath": "/appointment-policies-from-std",
+        "primaryEntity": "AppointmentPolicy"
       }
     ],
     "emittedEvents": [],

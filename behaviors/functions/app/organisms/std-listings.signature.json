@@ -88,14 +88,14 @@
                 "href": "/listings"
               },
               {
-                "label": "Saved",
                 "href": "/saved",
+                "label": "Saved",
                 "icon": "bookmark"
               },
               {
+                "icon": "message-circle",
                 "label": "Inquiries",
-                "href": "/inquiries",
-                "icon": "message-circle"
+                "href": "/inquiries"
               }
             ]
           },
@@ -170,14 +170,14 @@
             "type": "unknown",
             "default": [
               {
-                "label": "Status",
-                "field": "status",
-                "filterType": "select",
                 "options": [
                   "active",
                   "sold",
                   "expired"
-                ]
+                ],
+                "field": "status",
+                "filterType": "select",
+                "label": "Status"
               }
             ]
           }
@@ -260,14 +260,15 @@
             "default": [
               {
                 "label": "Total",
+                "format": "number",
                 "icon": "list",
                 "aggregation": "count",
-                "variant": "primary",
-                "format": "number"
+                "variant": "primary"
               },
               {
                 "icon": "check-circle",
-                "aggregation": "count",
+                "variant": "success",
+                "format": "number",
                 "filter": [
                   "fn",
                   "row",
@@ -277,12 +278,13 @@
                     "active"
                   ]
                 ],
-                "label": "Active",
-                "format": "number",
-                "variant": "success"
+                "aggregation": "count",
+                "label": "Active"
               },
               {
-                "icon": "tag",
+                "aggregation": "count",
+                "label": "Sold",
+                "variant": "info",
                 "filter": [
                   "fn",
                   "row",
@@ -292,18 +294,16 @@
                     "sold"
                   ]
                 ],
-                "format": "number",
-                "variant": "info",
-                "aggregation": "count",
-                "label": "Sold"
+                "icon": "tag",
+                "format": "number"
               },
               {
-                "field": "price",
-                "icon": "trending-up",
-                "aggregation": "avg",
-                "label": "Avg Price",
                 "variant": "warning",
-                "format": "number"
+                "label": "Avg Price",
+                "icon": "trending-up",
+                "format": "number",
+                "aggregation": "avg",
+                "field": "price"
               }
             ]
           },
@@ -346,8 +346,8 @@
                 "variant": "badge"
               },
               {
-                "name": "status",
-                "variant": "badge"
+                "variant": "badge",
+                "name": "status"
               },
               {
                 "name": "location",
@@ -369,14 +369,14 @@
             "type": "unknown",
             "default": [
               {
+                "event": "VIEW",
                 "variant": "ghost",
-                "label": "View",
-                "event": "VIEW"
+                "label": "View"
               },
               {
-                "label": "Edit",
                 "variant": "ghost",
-                "event": "EDIT"
+                "event": "EDIT",
+                "label": "Edit"
               },
               {
                 "variant": "secondary",
@@ -384,9 +384,9 @@
                 "event": "INQUIRE"
               },
               {
+                "variant": "danger",
                 "label": "Delete",
-                "event": "DELETE",
-                "variant": "danger"
+                "event": "DELETE"
               }
             ]
           }
@@ -569,6 +569,198 @@
         ],
         "overridableConfigKeys": [],
         "capabilities": []
+      },
+      {
+        "name": "ListingExpireNotifier",
+        "emittedEvents": [],
+        "listenedEvents": [],
+        "overridableConfigKeys": [
+          {
+            "key": "listensFor",
+            "type": "unknown",
+            "default": [
+              "ListingExpiring"
+            ]
+          },
+          {
+            "key": "notifyChannel",
+            "type": "unknown",
+            "default": "in-app"
+          },
+          {
+            "key": "recipients",
+            "type": "unknown",
+            "default": []
+          },
+          {
+            "key": "severity",
+            "type": "unknown",
+            "default": "warning"
+          },
+          {
+            "key": "suppressionList",
+            "type": "unknown",
+            "default": []
+          },
+          {
+            "key": "template",
+            "type": "unknown",
+            "default": "Your listing is expiring soon"
+          }
+        ],
+        "capabilities": [],
+        "ref": "Notify.traits.NotifyOnEventListener"
+      },
+      {
+        "name": "ListingReminder",
+        "emittedEvents": [],
+        "listenedEvents": [],
+        "overridableConfigKeys": [
+          {
+            "key": "dateField",
+            "type": "unknown",
+            "default": "createdAt"
+          },
+          {
+            "key": "offsetsHours",
+            "type": "unknown",
+            "default": [
+              168,
+              24
+            ]
+          },
+          {
+            "key": "severity",
+            "type": "unknown",
+            "default": "info"
+          },
+          {
+            "key": "targetEntity",
+            "type": "unknown",
+            "default": "Listing"
+          },
+          {
+            "key": "template",
+            "type": "unknown",
+            "default": "Your listing is approaching expiration"
+          },
+          {
+            "key": "windowToleranceMinutes",
+            "type": "unknown",
+            "default": 60
+          }
+        ],
+        "capabilities": [],
+        "ref": "Reminder.traits.ReminderScheduler"
+      },
+      {
+        "name": "ListingRefundApproval",
+        "emittedEvents": [],
+        "listenedEvents": [],
+        "overridableConfigKeys": [
+          {
+            "key": "approverRoles",
+            "type": "unknown",
+            "default": [
+              "listings-ops"
+            ]
+          },
+          {
+            "key": "autoApproveBelowThreshold",
+            "type": "unknown",
+            "default": true
+          },
+          {
+            "key": "escalationHours",
+            "type": "unknown",
+            "default": 24
+          },
+          {
+            "key": "escalationRoles",
+            "type": "unknown",
+            "default": [
+              "operations-manager"
+            ]
+          },
+          {
+            "key": "threshold",
+            "type": "unknown",
+            "default": 100
+          },
+          {
+            "key": "valueField",
+            "type": "unknown",
+            "default": "price"
+          }
+        ],
+        "capabilities": [],
+        "ref": "Approval.traits.ApprovalGateReview"
+      },
+      {
+        "name": "ListingErasure",
+        "emittedEvents": [],
+        "listenedEvents": [],
+        "overridableConfigKeys": [
+          {
+            "key": "anonymizeVsDelete",
+            "type": "unknown",
+            "default": "anonymize"
+          },
+          {
+            "key": "gracePeriodDays",
+            "type": "unknown",
+            "default": 30
+          },
+          {
+            "key": "piiFields",
+            "type": "unknown",
+            "default": [
+              "description",
+              "location"
+            ]
+          },
+          {
+            "key": "targetEntity",
+            "type": "unknown",
+            "default": "Listing"
+          }
+        ],
+        "capabilities": [],
+        "ref": "Erasure.traits.ErasureWorkflow"
+      },
+      {
+        "name": "ListingAudit",
+        "emittedEvents": [],
+        "listenedEvents": [],
+        "overridableConfigKeys": [
+          {
+            "key": "captureBeforeAfter",
+            "type": "unknown",
+            "default": false
+          },
+          {
+            "key": "captureEntity",
+            "type": "unknown",
+            "default": "Listing"
+          },
+          {
+            "key": "captureEventTypes",
+            "type": "unknown",
+            "default": []
+          },
+          {
+            "key": "excludeFields",
+            "type": "unknown",
+            "default": []
+          },
+          {
+            "key": "retentionDays",
+            "type": "unknown",
+            "default": 2555
+          }
+        ],
+        "capabilities": [],
+        "ref": "Audit.traits.AuditCaptureListener"
       }
     ],
     "pages": [

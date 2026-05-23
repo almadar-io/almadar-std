@@ -37,6 +37,26 @@
         {
           "from": "std/behaviors/std-browse",
           "as": "Browse"
+        },
+        {
+          "from": "std/behaviors/std-lifecycle",
+          "as": "Lifecycle"
+        },
+        {
+          "from": "std/behaviors/std-notify-on-event",
+          "as": "Notify"
+        },
+        {
+          "from": "std/behaviors/std-audit-capture",
+          "as": "Audit"
+        },
+        {
+          "from": "std/behaviors/std-approval-gate",
+          "as": "Approval"
+        },
+        {
+          "from": "std/behaviors/std-reminder-scheduler",
+          "as": "Reminder"
         }
       ],
       "entity": {
@@ -103,28 +123,28 @@
           "ref": "AppShell.traits.AppLayout",
           "name": "TicketAppLayout",
           "config": {
-            "searchEvent": "TICKET_SEARCH",
-            "notifications": [],
             "notificationClickEvent": "TICKET_NOTIFICATIONS_OPEN",
             "contentTrait": "@trait.TicketCatalog",
-            "appName": "Helpdesk",
             "navItems": [
               {
+                "label": "Tickets",
                 "href": "/tickets",
-                "icon": "inbox",
-                "label": "Tickets"
+                "icon": "inbox"
               },
               {
-                "icon": "message-circle",
                 "label": "Replies",
-                "href": "/replies"
+                "href": "/replies",
+                "icon": "message-circle"
               },
               {
-                "label": "Metrics",
                 "href": "/metrics",
-                "icon": "layout-list"
+                "icon": "layout-list",
+                "label": "Metrics"
               }
-            ]
+            ],
+            "appName": "Helpdesk",
+            "searchEvent": "TICKET_SEARCH",
+            "notifications": []
           },
           "events": {
             "SEARCH": "TICKET_SEARCH",
@@ -211,61 +231,59 @@
                     "render-ui",
                     "main",
                     {
-                      "direction": "vertical",
-                      "type": "stack",
                       "children": [
                         {
-                          "align": "center",
+                          "gap": "md",
                           "children": [
                             {
                               "align": "center",
+                              "gap": "sm",
                               "children": [
                                 {
-                                  "name": "inbox",
-                                  "type": "icon"
+                                  "type": "icon",
+                                  "name": "inbox"
                                 },
                                 {
                                   "content": "Tickets",
-                                  "type": "typography",
-                                  "variant": "h2"
+                                  "variant": "h2",
+                                  "type": "typography"
                                 }
                               ],
-                              "gap": "sm",
-                              "direction": "horizontal",
-                              "type": "stack"
+                              "type": "stack",
+                              "direction": "horizontal"
                             },
                             {
+                              "direction": "horizontal",
+                              "gap": "sm",
                               "children": [
                                 {
                                   "type": "button",
-                                  "label": "New Ticket",
-                                  "action": "CREATE",
                                   "variant": "primary",
-                                  "icon": "plus"
+                                  "label": "New Ticket",
+                                  "icon": "plus",
+                                  "action": "CREATE"
                                 }
                               ],
-                              "direction": "horizontal",
-                              "gap": "sm",
                               "type": "stack"
                             }
                           ],
                           "justify": "between",
-                          "gap": "md",
                           "direction": "horizontal",
-                          "type": "stack"
+                          "type": "stack",
+                          "align": "center"
                         },
                         {
                           "type": "divider"
                         },
                         {
-                          "direction": "horizontal",
+                          "gap": "md",
+                          "type": "stack",
                           "align": "center",
+                          "direction": "horizontal",
                           "children": [
                             "@trait.TicketSearch",
                             "@trait.TicketFilter"
-                          ],
-                          "type": "stack",
-                          "gap": "md"
+                          ]
                         },
                         "@trait.TicketStats",
                         "@trait.TicketGraphs",
@@ -274,6 +292,8 @@
                         },
                         "@trait.TicketBrowseList"
                       ],
+                      "type": "stack",
+                      "direction": "vertical",
                       "gap": "lg"
                     }
                   ]
@@ -293,33 +313,33 @@
                     "render-ui",
                     "main",
                     {
+                      "type": "stack",
+                      "className": "py-8",
+                      "direction": "vertical",
                       "align": "center",
                       "children": [
                         {
-                          "type": "icon",
-                          "name": "bell"
+                          "name": "bell",
+                          "type": "icon"
                         },
                         {
-                          "variant": "h3",
                           "content": "No notifications",
+                          "variant": "h3",
                           "type": "typography"
                         },
                         {
-                          "content": "You're all caught up.",
-                          "color": "muted",
                           "variant": "caption",
+                          "color": "muted",
+                          "content": "You're all caught up.",
                           "type": "typography"
                         },
                         {
-                          "action": "INIT",
+                          "label": "Back to tickets",
                           "variant": "ghost",
                           "type": "button",
-                          "label": "Back to tickets"
+                          "action": "INIT"
                         }
                       ],
-                      "direction": "vertical",
-                      "className": "py-8",
-                      "type": "stack",
                       "gap": "md"
                     }
                   ]
@@ -343,26 +363,26 @@
           "config": {
             "filters": [
               {
+                "label": "Priority",
+                "field": "priority",
                 "options": [
                   "low",
                   "medium",
                   "high",
                   "critical"
                 ],
-                "filterType": "select",
-                "field": "priority",
-                "label": "Priority"
+                "filterType": "select"
               },
               {
+                "label": "Status",
+                "field": "status",
+                "filterType": "select",
                 "options": [
                   "open",
                   "in-progress",
                   "resolved",
                   "closed"
-                ],
-                "label": "Status",
-                "field": "status",
-                "filterType": "select"
+                ]
               }
             ],
             "event": "TICKET_FILTER"
@@ -372,16 +392,18 @@
           "ref": "Stats.traits.StatsItemStats",
           "name": "TicketStats",
           "config": {
+            "title": "Tickets",
             "metrics": [
               {
-                "variant": "primary",
+                "format": "number",
                 "aggregation": "count",
                 "label": "Total",
                 "icon": "inbox",
-                "format": "number"
+                "variant": "primary"
               },
               {
                 "variant": "warning",
+                "format": "number",
                 "filter": [
                   "fn",
                   "row",
@@ -392,11 +414,13 @@
                   ]
                 ],
                 "icon": "circle",
-                "label": "Open",
                 "aggregation": "count",
-                "format": "number"
+                "label": "Open"
               },
               {
+                "icon": "check-circle",
+                "label": "Resolved",
+                "aggregation": "count",
                 "filter": [
                   "fn",
                   "row",
@@ -406,14 +430,10 @@
                     "resolved"
                   ]
                 ],
-                "aggregation": "count",
-                "label": "Resolved",
-                "icon": "check-circle",
                 "format": "number",
                 "variant": "success"
               }
-            ],
-            "title": "Tickets"
+            ]
           },
           "listens": [
             {
@@ -430,13 +450,13 @@
           "ref": "Graphs.traits.GraphItemGraph",
           "name": "TicketGraphs",
           "config": {
-            "title": "Tickets by Priority",
+            "showLegend": false,
             "subtitle": "Volume across priority buckets",
-            "categoryField": "priority",
-            "aggregation": "count",
+            "title": "Tickets by Priority",
             "chartType": "bar",
-            "height": 240.0,
-            "showLegend": false
+            "aggregation": "count",
+            "categoryField": "priority",
+            "height": 240.0
           },
           "listens": [
             {
@@ -456,21 +476,21 @@
           "config": {
             "fields": [
               {
-                "icon": "inbox",
                 "variant": "h3",
-                "name": "subject"
+                "name": "subject",
+                "icon": "inbox"
               },
               {
-                "variant": "badge",
-                "name": "priority"
-              },
-              {
-                "name": "status",
+                "name": "priority",
                 "variant": "badge"
               },
               {
-                "name": "assignee",
-                "variant": "body"
+                "variant": "badge",
+                "name": "status"
+              },
+              {
+                "variant": "body",
+                "name": "assignee"
               },
               {
                 "variant": "caption",
@@ -478,24 +498,24 @@
               }
             ],
             "cols": 1.0,
+            "gap": "sm",
             "itemActions": [
               {
                 "variant": "ghost",
-                "event": "VIEW",
-                "label": "View"
+                "label": "View",
+                "event": "VIEW"
               },
               {
                 "variant": "ghost",
-                "event": "EDIT",
-                "label": "Edit"
+                "label": "Edit",
+                "event": "EDIT"
               },
               {
-                "label": "Delete",
                 "event": "DELETE",
-                "variant": "danger"
+                "variant": "danger",
+                "label": "Delete"
               }
-            ],
-            "gap": "sm"
+            ]
           },
           "listens": [
             {
@@ -545,7 +565,6 @@
           "name": "TicketCreate",
           "linkedEntity": "Ticket",
           "config": {
-            "mode": "create",
             "fields": [
               "subject",
               "description",
@@ -555,7 +574,8 @@
               "customerEmail"
             ],
             "title": "New Ticket",
-            "icon": "plus-circle"
+            "icon": "plus-circle",
+            "mode": "create"
           },
           "events": {
             "OPEN": "CREATE"
@@ -576,6 +596,7 @@
           "name": "TicketEdit",
           "linkedEntity": "Ticket",
           "config": {
+            "icon": "edit",
             "title": "Edit Ticket",
             "fields": [
               "subject",
@@ -585,7 +606,6 @@
               "assignee",
               "customerEmail"
             ],
-            "icon": "edit",
             "mode": "edit"
           },
           "events": {
@@ -638,10 +658,10 @@
           "name": "TicketDelete",
           "linkedEntity": "Ticket",
           "config": {
-            "confirmLabel": "Delete",
-            "icon": "alert-triangle",
+            "alertMessage": "This action cannot be undone.",
             "title": "Delete Ticket",
-            "alertMessage": "This action cannot be undone."
+            "icon": "alert-triangle",
+            "confirmLabel": "Delete"
           },
           "events": {
             "REQUEST": "DELETE",
@@ -840,6 +860,106 @@
             ]
           },
           "scope": "instance"
+        },
+        {
+          "ref": "Lifecycle.traits.LifecycleScheduler",
+          "name": "HelpdeskLifecycleScan",
+          "config": {
+            "dryRun": false,
+            "targetEntity": "Ticket",
+            "rules": [
+              {
+                "fromStatus": "open",
+                "condition": {
+                  "dateField": "pendingId",
+                  "value": 1.0,
+                  "kind": "ageDays"
+                },
+                "toStatus": "in-progress"
+              },
+              {
+                "toStatus": "resolved",
+                "condition": {
+                  "value": 3.0,
+                  "dateField": "pendingId",
+                  "kind": "ageDays"
+                },
+                "fromStatus": "in-progress"
+              },
+              {
+                "condition": {
+                  "value": 7.0,
+                  "kind": "ageDays",
+                  "dateField": "pendingId"
+                },
+                "fromStatus": "resolved",
+                "toStatus": "closed"
+              }
+            ]
+          }
+        },
+        {
+          "ref": "Notify.traits.NotifyOnEventListener",
+          "name": "HelpdeskNotifier",
+          "config": {
+            "suppressionList": [],
+            "listensFor": [
+              "TICKET_UPDATED"
+            ],
+            "notifyChannel": "in-app",
+            "recipients": [],
+            "template": "Ticket updated",
+            "severity": "info"
+          },
+          "events": {
+            "EventOccurred": "TICKET_UPDATED"
+          }
+        },
+        {
+          "ref": "Audit.traits.AuditCaptureListener",
+          "name": "HelpdeskAuditCapture",
+          "config": {
+            "captureEntity": "Ticket",
+            "captureEventTypes": [],
+            "retentionDays": 2555.0,
+            "excludeFields": [],
+            "captureBeforeAfter": false
+          },
+          "events": {
+            "EntityMutated": "TICKET_UPDATED"
+          }
+        },
+        {
+          "ref": "Approval.traits.ApprovalGateReview",
+          "name": "HelpdeskApprovalGate",
+          "config": {
+            "autoApproveBelowThreshold": true,
+            "valueField": "refundAmount",
+            "threshold": 100.0,
+            "escalationRoles": [
+              "support-lead"
+            ],
+            "approverRoles": [
+              "support-manager"
+            ],
+            "escalationHours": 24.0
+          }
+        },
+        {
+          "ref": "Reminder.traits.ReminderScheduler",
+          "name": "HelpdeskReminderScheduler",
+          "config": {
+            "severity": "warning",
+            "windowToleranceMinutes": 60.0,
+            "targetEntity": "Ticket",
+            "dateField": "pendingId",
+            "offsetsHours": [
+              1.0,
+              4.0,
+              24.0
+            ],
+            "template": "SLA deadline approaching for ticket"
+          }
         }
       ],
       "pages": [
@@ -882,6 +1002,21 @@
             },
             {
               "ref": "TicketPersistor"
+            },
+            {
+              "ref": "HelpdeskLifecycleScan"
+            },
+            {
+              "ref": "HelpdeskNotifier"
+            },
+            {
+              "ref": "HelpdeskAuditCapture"
+            },
+            {
+              "ref": "HelpdeskApprovalGate"
+            },
+            {
+              "ref": "HelpdeskReminderScheduler"
             }
           ]
         }
@@ -956,6 +1091,7 @@
           "name": "TicketReplyAppLayout",
           "linkedEntity": "TicketReply",
           "config": {
+            "contentTrait": "@trait.TicketReplyBrowse",
             "searchEvent": "TICKET_REPLY_SEARCH",
             "notifications": [],
             "notificationClickEvent": "TICKET_REPLY_NOTIFICATIONS_OPEN",
@@ -967,16 +1103,15 @@
               },
               {
                 "icon": "message-circle",
-                "label": "Replies",
-                "href": "/replies"
+                "href": "/replies",
+                "label": "Replies"
               },
               {
-                "href": "/metrics",
                 "icon": "layout-list",
-                "label": "Metrics"
+                "label": "Metrics",
+                "href": "/metrics"
               }
             ],
-            "contentTrait": "@trait.TicketReplyBrowse",
             "appName": "Helpdesk"
           },
           "events": {
@@ -1088,8 +1223,8 @@
                     "TicketReply",
                     {
                       "emit": {
-                        "failure": "TicketReplyLoadFailed",
-                        "success": "TicketReplyLoaded"
+                        "success": "TicketReplyLoaded",
+                        "failure": "TicketReplyLoadFailed"
                       }
                     }
                   ],
@@ -1097,22 +1232,22 @@
                     "render-ui",
                     "main",
                     {
-                      "className": "py-12",
                       "type": "stack",
                       "gap": "md",
-                      "direction": "vertical",
+                      "align": "center",
+                      "className": "py-12",
                       "children": [
                         {
                           "type": "spinner"
                         },
                         {
-                          "type": "typography",
                           "color": "muted",
-                          "content": "Loading…",
-                          "variant": "caption"
+                          "type": "typography",
+                          "variant": "caption",
+                          "content": "Loading…"
                         }
                       ],
-                      "align": "center"
+                      "direction": "vertical"
                     }
                   ]
                 ]
@@ -1126,16 +1261,14 @@
                     "render-ui",
                     "main",
                     {
+                      "className": "max-w-5xl mx-auto w-full",
+                      "type": "stack",
+                      "gap": "lg",
                       "children": [
                         {
-                          "direction": "horizontal",
-                          "type": "stack",
-                          "gap": "md",
-                          "justify": "between",
                           "align": "center",
                           "children": [
                             {
-                              "gap": "sm",
                               "align": "center",
                               "children": [
                                 {
@@ -1144,21 +1277,26 @@
                                 },
                                 {
                                   "variant": "h2",
-                                  "type": "typography",
-                                  "content": "Replies"
+                                  "content": "Replies",
+                                  "type": "typography"
                                 }
                               ],
                               "type": "stack",
-                              "direction": "horizontal"
+                              "direction": "horizontal",
+                              "gap": "sm"
                             },
                             {
                               "action": "CREATE",
-                              "icon": "edit",
                               "label": "Compose",
+                              "icon": "edit",
                               "variant": "primary",
                               "type": "button"
                             }
-                          ]
+                          ],
+                          "direction": "horizontal",
+                          "type": "stack",
+                          "justify": "between",
+                          "gap": "md"
                         },
                         {
                           "type": "divider"
@@ -1168,32 +1306,29 @@
                           "type": "divider"
                         },
                         {
-                          "gap": "sm",
-                          "entity": "@payload.data",
                           "fields": [
                             {
-                              "icon": "message-circle",
                               "name": "author",
+                              "icon": "message-circle",
                               "variant": "h4"
                             },
                             {
-                              "variant": "body",
-                              "name": "body"
+                              "name": "body",
+                              "variant": "body"
                             },
                             {
-                              "name": "createdAt",
+                              "variant": "caption",
                               "format": "date",
-                              "variant": "caption"
+                              "name": "createdAt"
                             }
                           ],
-                          "type": "data-list",
-                          "variant": "card"
+                          "entity": "@payload.data",
+                          "gap": "sm",
+                          "variant": "card",
+                          "type": "data-list"
                         }
                       ],
-                      "direction": "vertical",
-                      "className": "max-w-5xl mx-auto w-full",
-                      "type": "stack",
-                      "gap": "lg"
+                      "direction": "vertical"
                     }
                   ]
                 ]
@@ -1207,34 +1342,34 @@
                     "render-ui",
                     "main",
                     {
-                      "direction": "vertical",
-                      "className": "py-12",
                       "type": "stack",
-                      "align": "center",
+                      "direction": "vertical",
                       "gap": "md",
+                      "className": "py-12",
+                      "align": "center",
                       "children": [
                         {
-                          "color": "destructive",
                           "name": "alert-triangle",
+                          "color": "destructive",
                           "type": "icon"
                         },
                         {
+                          "type": "typography",
                           "variant": "h3",
-                          "content": "Failed to load replies",
+                          "content": "Failed to load replies"
+                        },
+                        {
+                          "variant": "body",
+                          "content": "@payload.error",
+                          "color": "muted",
                           "type": "typography"
                         },
                         {
-                          "type": "typography",
-                          "content": "@payload.error",
-                          "variant": "body",
-                          "color": "muted"
-                        },
-                        {
-                          "label": "Retry",
+                          "type": "button",
                           "action": "INIT",
                           "variant": "primary",
                           "icon": "rotate-ccw",
-                          "type": "button"
+                          "label": "Retry"
                         }
                       ]
                     }
@@ -1301,42 +1436,42 @@
                     "render-ui",
                     "main",
                     {
+                      "direction": "vertical",
+                      "gap": "md",
+                      "type": "stack",
                       "children": [
                         {
                           "type": "typography",
-                          "variant": "h3",
-                          "content": "New reply"
+                          "content": "New reply",
+                          "variant": "h3"
                         },
                         {
                           "placeholder": "Write your reply…",
                           "type": "textarea"
                         },
                         {
-                          "justify": "end",
-                          "gap": "sm",
                           "type": "stack",
+                          "justify": "end",
                           "direction": "horizontal",
+                          "gap": "sm",
                           "children": [
                             {
                               "type": "button",
                               "label": "Save Draft",
                               "action": "CREATE",
-                              "variant": "ghost",
-                              "icon": "save"
+                              "icon": "save",
+                              "variant": "ghost"
                             },
                             {
                               "type": "button",
                               "action": "SEND",
                               "label": "Send Reply",
-                              "variant": "primary",
-                              "icon": "send"
+                              "icon": "send",
+                              "variant": "primary"
                             }
                           ]
                         }
-                      ],
-                      "direction": "vertical",
-                      "gap": "md",
-                      "type": "stack"
+                      ]
                     }
                   ]
                 ]
@@ -1351,8 +1486,8 @@
           "linkedEntity": "TicketReply",
           "config": {
             "title": "New Reply",
-            "mode": "create",
             "icon": "message-circle",
+            "mode": "create",
             "fields": [
               "ticketId",
               "body",
@@ -1387,11 +1522,11 @@
           "ref": "Email.traits.ServiceEmailEmail",
           "name": "TicketReplyEmail",
           "config": {
-            "recipient": "",
+            "subject": "Re: your ticket",
+            "body": "",
             "sender": "support@example.com",
             "uiTrait": "@trait.TicketReplyComposerForm",
-            "subject": "Re: your ticket",
-            "body": ""
+            "recipient": ""
           },
           "listens": [
             {
@@ -1579,28 +1714,28 @@
           "name": "SupportMetricsAppLayout",
           "linkedEntity": "SupportMetric",
           "config": {
-            "contentTrait": "@trait.SupportMetricsDisplay",
+            "appName": "Helpdesk",
             "navItems": [
               {
-                "href": "/tickets",
                 "label": "Tickets",
+                "href": "/tickets",
                 "icon": "inbox"
               },
               {
-                "icon": "message-circle",
+                "href": "/replies",
                 "label": "Replies",
-                "href": "/replies"
+                "icon": "message-circle"
               },
               {
-                "href": "/metrics",
                 "label": "Metrics",
+                "href": "/metrics",
                 "icon": "layout-list"
               }
             ],
+            "notificationClickEvent": "SUPPORT_METRICS_NOTIFICATIONS_OPEN",
             "notifications": [],
             "searchEvent": "SUPPORT_METRICS_SEARCH",
-            "notificationClickEvent": "SUPPORT_METRICS_NOTIFICATIONS_OPEN",
-            "appName": "Helpdesk"
+            "contentTrait": "@trait.SupportMetricsDisplay"
           },
           "events": {
             "SEARCH": "SUPPORT_METRICS_SEARCH",
@@ -1612,28 +1747,28 @@
           "name": "SupportMetricsBrowse",
           "linkedEntity": "SupportMetric",
           "config": {
-            "displayPageSize": 5.0,
             "pageSize": 100.0,
+            "displayPageSize": 5.0,
             "fields": [
               {
-                "label": "Name",
                 "variant": "h4",
+                "label": "Name",
                 "name": "name"
               },
               {
-                "label": "Category",
                 "name": "category",
-                "variant": "caption"
-              },
-              {
-                "label": "Status",
-                "name": "status",
-                "variant": "badge"
+                "variant": "caption",
+                "label": "Category"
               },
               {
                 "variant": "badge",
-                "label": "Priority",
-                "name": "priority"
+                "name": "status",
+                "label": "Status"
+              },
+              {
+                "name": "priority",
+                "variant": "badge",
+                "label": "Priority"
               }
             ]
           }
@@ -1664,38 +1799,38 @@
                     "render-ui",
                     "main",
                     {
-                      "direction": "vertical",
-                      "className": "max-w-6xl mx-auto w-full p-4",
-                      "gap": "lg",
                       "children": [
                         {
-                          "direction": "horizontal",
                           "type": "stack",
-                          "gap": "sm",
-                          "align": "center",
+                          "direction": "horizontal",
                           "children": [
                             {
-                              "type": "icon",
-                              "name": "activity"
+                              "name": "activity",
+                              "type": "icon"
                             },
                             {
-                              "type": "typography",
                               "variant": "h2",
-                              "content": "Support Metrics"
+                              "content": "Support Metrics",
+                              "type": "typography"
                             }
-                          ]
+                          ],
+                          "align": "center",
+                          "gap": "sm"
                         },
                         {
                           "type": "divider"
                         },
                         {
-                          "content": "Recent",
                           "type": "typography",
+                          "content": "Recent",
                           "variant": "h3"
                         },
                         "@trait.SupportMetricsBrowse"
                       ],
-                      "type": "stack"
+                      "className": "max-w-6xl mx-auto w-full p-4",
+                      "direction": "vertical",
+                      "type": "stack",
+                      "gap": "lg"
                     }
                   ]
                 ]
@@ -1718,6 +1853,151 @@
             },
             {
               "ref": "SupportMetricsBrowse"
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "name": "TicketFromStdOrbital",
+      "uses": [
+        {
+          "from": "std/behaviors/std-app-layout",
+          "as": "AppShell"
+        },
+        {
+          "from": "std/behaviors/std-helpdesk-ticket",
+          "as": "Tickets"
+        }
+      ],
+      "entity": {
+        "name": "SlaTicket",
+        "collection": "slatickets",
+        "persistence": "persistent",
+        "fields": [
+          {
+            "name": "id",
+            "type": "string",
+            "required": true
+          },
+          {
+            "name": "subject",
+            "type": "string",
+            "required": true
+          },
+          {
+            "name": "description",
+            "type": "string",
+            "required": true
+          },
+          {
+            "name": "requester",
+            "type": "string",
+            "required": true
+          },
+          {
+            "name": "assignedTo",
+            "type": "string"
+          },
+          {
+            "name": "priority",
+            "type": "string",
+            "default": "normal",
+            "values": [
+              "low",
+              "normal",
+              "high",
+              "urgent"
+            ]
+          },
+          {
+            "name": "status",
+            "type": "string",
+            "default": "new",
+            "values": [
+              "new",
+              "open",
+              "pending",
+              "resolved",
+              "closed"
+            ]
+          },
+          {
+            "name": "category",
+            "type": "string"
+          },
+          {
+            "name": "firstReplyAt",
+            "type": "string"
+          },
+          {
+            "name": "resolvedAt",
+            "type": "string"
+          },
+          {
+            "name": "createdAt",
+            "type": "string"
+          }
+        ]
+      },
+      "traits": [
+        {
+          "ref": "AppShell.traits.AppLayout",
+          "name": "SlaTicketFromStdAppLayout",
+          "linkedEntity": "SlaTicket",
+          "config": {
+            "searchEvent": "SLA_TICKET_SEARCH",
+            "contentTrait": "@trait.SlaTicketFromStdManageBlock",
+            "appName": "Helpdesk",
+            "navItems": [
+              {
+                "href": "/tickets",
+                "icon": "inbox",
+                "label": "Tickets"
+              },
+              {
+                "href": "/replies",
+                "label": "Replies",
+                "icon": "message-circle"
+              },
+              {
+                "label": "Metrics",
+                "href": "/metrics",
+                "icon": "layout-list"
+              },
+              {
+                "icon": "life-buoy",
+                "href": "/tickets-std",
+                "label": "SLA Tickets"
+              }
+            ],
+            "notifications": [],
+            "notificationClickEvent": "SLA_TICKET_NOTIFICATIONS_OPEN"
+          },
+          "events": {
+            "SEARCH": "SLA_TICKET_SEARCH",
+            "NOTIFY_CLICK": "SLA_TICKET_NOTIFICATIONS_OPEN"
+          }
+        },
+        {
+          "ref": "Tickets.traits.TicketManage",
+          "name": "SlaTicketFromStdManageBlock",
+          "linkedEntity": "SlaTicket",
+          "config": {
+            "title": "SLA Tickets"
+          }
+        }
+      ],
+      "pages": [
+        {
+          "name": "SlaTicketFromStdPage",
+          "path": "/tickets-std",
+          "traits": [
+            {
+              "ref": "SlaTicketFromStdAppLayout"
+            },
+            {
+              "ref": "SlaTicketFromStdManageBlock"
             }
           ]
         }

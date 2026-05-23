@@ -174,37 +174,37 @@ export function stdBookingSystemProviderOrbital(params: StdBookingSystemProvider
         'ref': 'AppShell.traits.AppLayout',
         'name': 'BookingProviderAppLayout',
         'config': {
-          'searchEvent': 'BOOKING_SEARCH',
           'notificationClickEvent': 'BOOKING_NOTIFICATIONS_OPEN',
+          'contentTrait': '@trait.ProviderCatalog',
           'appName': 'BookingSystemApp',
           'navItems': [
             {
               'href': '/providers',
-              'label': 'Providers',
               'icon': 'user-check',
+              'label': 'Providers',
             },
             {
-              'label': 'Book',
               'href': '/book',
+              'label': 'Book',
               'icon': 'calendar-plus',
             },
             {
-              'href': '/appointments',
               'icon': 'calendar',
+              'href': '/appointments',
               'label': 'Appointments',
             },
             {
+              'icon': 'clock',
               'href': '/schedule',
               'label': 'Schedule',
-              'icon': 'clock',
             },
           ],
-          'contentTrait': '@trait.ProviderCatalog',
+          'searchEvent': 'BOOKING_SEARCH',
           'notifications': [],
         },
         'events': {
-          'NOTIFY_CLICK': 'BOOKING_NOTIFICATIONS_OPEN',
           'SEARCH': 'BOOKING_SEARCH',
+          'NOTIFY_CLICK': 'BOOKING_NOTIFICATIONS_OPEN',
         },
       }),
       rebindInlineTraitEntity({
@@ -287,56 +287,56 @@ export function stdBookingSystemProviderOrbital(params: StdBookingSystemProvider
                   'render-ui',
                   'main',
                   {
-                    'direction': 'vertical',
+                    'gap': 'lg',
                     'children': [
                       {
-                        'gap': 'md',
-                        'justify': 'between',
+                        'align': 'center',
                         'type': 'stack',
                         'direction': 'horizontal',
-                        'align': 'center',
+                        'justify': 'between',
+                        'gap': 'md',
                         'children': [
                           {
-                            'gap': 'sm',
-                            'direction': 'horizontal',
                             'type': 'stack',
                             'children': [
                               {
-                                'name': 'user',
                                 'type': 'icon',
+                                'name': 'user',
                               },
                               {
-                                'content': 'Providers',
-                                'variant': 'h2',
                                 'type': 'typography',
+                                'variant': 'h2',
+                                'content': 'Providers',
                               },
                             ],
+                            'direction': 'horizontal',
                             'align': 'center',
+                            'gap': 'sm',
                           },
                           {
+                            'type': 'stack',
                             'direction': 'horizontal',
                             'gap': 'sm',
                             'children': [
                               {
-                                'type': 'button',
+                                'variant': 'primary',
+                                'label': 'Add Provider',
                                 'action': 'CREATE',
                                 'icon': 'plus',
-                                'label': 'Add Provider',
-                                'variant': 'primary',
+                                'type': 'button',
                               },
                             ],
-                            'type': 'stack',
                           },
                         ],
                       },
                       {
-                        'align': 'center',
                         'direction': 'horizontal',
+                        'type': 'stack',
                         'children': [
                           '@trait.ProviderSearch',
                           '@trait.ProviderFilter',
                         ],
-                        'type': 'stack',
+                        'align': 'center',
                         'gap': 'md',
                       },
                       {
@@ -349,7 +349,7 @@ export function stdBookingSystemProviderOrbital(params: StdBookingSystemProvider
                       },
                       '@trait.ProviderBrowseList',
                     ],
-                    'gap': 'lg',
+                    'direction': 'vertical',
                     'type': 'stack',
                   },
                 ],
@@ -369,34 +369,34 @@ export function stdBookingSystemProviderOrbital(params: StdBookingSystemProvider
                   'render-ui',
                   'main',
                   {
+                    'gap': 'md',
                     'align': 'center',
+                    'direction': 'vertical',
+                    'type': 'stack',
+                    'className': 'py-8',
                     'children': [
                       {
-                        'type': 'icon',
                         'name': 'bell',
+                        'type': 'icon',
                       },
                       {
-                        'content': 'No notifications',
                         'type': 'typography',
+                        'content': 'No notifications',
                         'variant': 'h3',
                       },
                       {
-                        'type': 'typography',
                         'variant': 'caption',
-                        'color': 'muted',
+                        'type': 'typography',
                         'content': 'You\'re all caught up.',
+                        'color': 'muted',
                       },
                       {
                         'action': 'INIT',
+                        'type': 'button',
                         'variant': 'ghost',
                         'label': 'Back to providers',
-                        'type': 'button',
                       },
                     ],
-                    'type': 'stack',
-                    'direction': 'vertical',
-                    'gap': 'md',
-                    'className': 'py-8',
                   },
                 ],
               ],
@@ -417,11 +417,11 @@ export function stdBookingSystemProviderOrbital(params: StdBookingSystemProvider
         'ref': 'Filter.traits.FilterTargetFilter',
         'name': 'ProviderFilter',
         'config': {
+          'event': 'FILTER',
           'filters': [
             {
-              'field': 'specialty',
               'label': 'Specialty',
-              'filterType': 'select',
+              'field': 'specialty',
               'options': [
                 'general',
                 'dental',
@@ -429,6 +429,7 @@ export function stdBookingSystemProviderOrbital(params: StdBookingSystemProvider
                 'cardiology',
                 'psychiatry',
               ],
+              'filterType': 'select',
             },
             {
               'filterType': 'select',
@@ -439,11 +440,10 @@ export function stdBookingSystemProviderOrbital(params: StdBookingSystemProvider
                 '4',
                 '5',
               ],
-              'label': 'Rating',
               'field': 'rating',
+              'label': 'Rating',
             },
           ],
-          'event': 'FILTER',
         },
       }),
       makeTraitRef({
@@ -453,37 +453,37 @@ export function stdBookingSystemProviderOrbital(params: StdBookingSystemProvider
           'title': 'Provider Overview',
           'metrics': [
             {
-              'format': 'number',
-              'icon': 'users',
               'label': 'Total Providers',
               'aggregation': 'count',
+              'icon': 'users',
               'variant': 'primary',
+              'format': 'number',
             },
             {
               'filter': {
                 'available': true,
               },
-              'label': 'Active',
               'variant': 'success',
-              'aggregation': 'count',
               'format': 'number',
               'icon': 'check-circle',
+              'label': 'Active',
+              'aggregation': 'count',
             },
             {
-              'aggregation': 'avg',
               'icon': 'star',
-              'variant': 'info',
               'format': 'number',
+              'aggregation': 'avg',
               'field': 'rating',
+              'variant': 'info',
               'label': 'Avg Rating',
             },
             {
+              'variant': 'info',
               'format': 'currency',
               'field': 'hourlyRate',
-              'icon': 'dollar-sign',
               'aggregation': 'avg',
+              'icon': 'dollar-sign',
               'label': 'Avg Hourly Rate',
-              'variant': 'info',
             },
           ],
         },
@@ -502,11 +502,11 @@ export function stdBookingSystemProviderOrbital(params: StdBookingSystemProvider
         'ref': 'Graphs.traits.GraphItemGraph',
         'name': 'ProviderGraphs',
         'config': {
-          'title': 'Providers by Specialty',
           'subtitle': 'Distribution across specialties',
-          'categoryField': 'specialty',
           'aggregation': 'count',
           'chartType': 'pie',
+          'categoryField': 'specialty',
+          'title': 'Providers by Specialty',
         },
         'listens': [
           {
@@ -524,8 +524,36 @@ export function stdBookingSystemProviderOrbital(params: StdBookingSystemProvider
         'name': 'ProviderBrowseList',
         'linkedEntity': canonicalName,
         'config': {
-          'cols': 2,
+          'fields': [
+            {
+              'variant': 'h3',
+              'name': 'name',
+              'icon': 'user',
+            },
+            {
+              'name': 'specialty',
+              'variant': 'badge',
+            },
+            {
+              'format': 'number',
+              'variant': 'body',
+              'name': 'rating',
+            },
+            {
+              'variant': 'h4',
+              'label': 'Hourly Rate',
+              'name': 'hourlyRate',
+              'format': 'currency',
+            },
+            {
+              'name': 'available',
+              'format': 'boolean',
+              'variant': 'body',
+              'label': 'Availability',
+            },
+          ],
           'gap': 'md',
+          'cols': 2,
           'itemActions': [
             {
               'label': 'View',
@@ -533,42 +561,14 @@ export function stdBookingSystemProviderOrbital(params: StdBookingSystemProvider
               'variant': 'ghost',
             },
             {
-              'event': 'EDIT',
-              'label': 'Edit',
               'variant': 'ghost',
+              'label': 'Edit',
+              'event': 'EDIT',
             },
             {
-              'label': 'Delete',
               'variant': 'danger',
+              'label': 'Delete',
               'event': 'DELETE',
-            },
-          ],
-          'fields': [
-            {
-              'name': 'name',
-              'variant': 'h3',
-              'icon': 'user',
-            },
-            {
-              'variant': 'badge',
-              'name': 'specialty',
-            },
-            {
-              'variant': 'body',
-              'format': 'number',
-              'name': 'rating',
-            },
-            {
-              'name': 'hourlyRate',
-              'label': 'Hourly Rate',
-              'variant': 'h4',
-              'format': 'currency',
-            },
-            {
-              'name': 'available',
-              'variant': 'body',
-              'label': 'Availability',
-              'format': 'boolean',
             },
           ],
         },
@@ -789,8 +789,8 @@ export function stdBookingSystemProviderOrbital(params: StdBookingSystemProvider
                   'Provider',
                   {
                     'emit': {
-                      'success': 'ProviderLoaded',
                       'failure': 'ProviderLoadFailed',
+                      'success': 'ProviderLoaded',
                     },
                   },
                 ],
@@ -806,8 +806,8 @@ export function stdBookingSystemProviderOrbital(params: StdBookingSystemProvider
                   'Provider',
                   {
                     'emit': {
-                      'success': 'ProviderLoaded',
                       'failure': 'ProviderLoadFailed',
+                      'success': 'ProviderLoaded',
                     },
                   },
                 ],
@@ -816,14 +816,15 @@ export function stdBookingSystemProviderOrbital(params: StdBookingSystemProvider
                   'modal',
                   {
                     'gap': 'md',
+                    'type': 'stack',
                     'children': [
                       {
                         'type': 'stack',
                         'direction': 'horizontal',
                         'children': [
                           {
-                            'type': 'icon',
                             'name': 'plus-circle',
+                            'type': 'icon',
                           },
                           {
                             'content': 'Add Provider',
@@ -837,9 +838,6 @@ export function stdBookingSystemProviderOrbital(params: StdBookingSystemProvider
                         'type': 'divider',
                       },
                       {
-                        'cancelEvent': 'CLOSE',
-                        'mode': 'create',
-                        'type': 'form-section',
                         'fields': [
                           'name',
                           'specialty',
@@ -850,10 +848,12 @@ export function stdBookingSystemProviderOrbital(params: StdBookingSystemProvider
                           'available',
                         ],
                         'submitEvent': 'SAVE',
+                        'type': 'form-section',
+                        'mode': 'create',
+                        'cancelEvent': 'CLOSE',
                       },
                     ],
                     'direction': 'vertical',
-                    'type': 'stack',
                   },
                 ],
               ],
@@ -1131,8 +1131,8 @@ export function stdBookingSystemProviderOrbital(params: StdBookingSystemProvider
                   'Provider',
                   {
                     'emit': {
-                      'success': 'ProviderLoaded',
                       'failure': 'ProviderLoadFailed',
+                      'success': 'ProviderLoaded',
                     },
                     'id': '@payload.id',
                   },
@@ -1141,11 +1141,11 @@ export function stdBookingSystemProviderOrbital(params: StdBookingSystemProvider
                   'render-ui',
                   'modal',
                   {
-                    'gap': 'md',
+                    'direction': 'vertical',
                     'children': [
                       {
-                        'gap': 'sm',
                         'direction': 'horizontal',
+                        'gap': 'sm',
                         'type': 'stack',
                         'children': [
                           {
@@ -1153,9 +1153,9 @@ export function stdBookingSystemProviderOrbital(params: StdBookingSystemProvider
                             'type': 'icon',
                           },
                           {
-                            'variant': 'h3',
                             'type': 'typography',
                             'content': 'Edit Provider',
+                            'variant': 'h3',
                           },
                         ],
                       },
@@ -1163,9 +1163,6 @@ export function stdBookingSystemProviderOrbital(params: StdBookingSystemProvider
                         'type': 'divider',
                       },
                       {
-                        'entity': '@payload.row',
-                        'submitEvent': 'SAVE',
-                        'cancelEvent': 'CLOSE',
                         'fields': [
                           'name',
                           'specialty',
@@ -1175,12 +1172,15 @@ export function stdBookingSystemProviderOrbital(params: StdBookingSystemProvider
                           'hourlyRate',
                           'available',
                         ],
-                        'mode': 'edit',
+                        'entity': '@payload.row',
                         'type': 'form-section',
+                        'submitEvent': 'SAVE',
+                        'mode': 'edit',
+                        'cancelEvent': 'CLOSE',
                       },
                     ],
-                    'direction': 'vertical',
                     'type': 'stack',
+                    'gap': 'md',
                   },
                 ],
               ],
@@ -1221,8 +1221,8 @@ export function stdBookingSystemProviderOrbital(params: StdBookingSystemProvider
                   '@payload.data',
                   {
                     'emit': {
-                      'success': 'ProviderUpdated',
                       'failure': 'ProviderUpdateFailed',
+                      'success': 'ProviderUpdated',
                     },
                   },
                 ],
@@ -1431,11 +1431,11 @@ export function stdBookingSystemProviderOrbital(params: StdBookingSystemProvider
                   'fetch',
                   'Provider',
                   {
+                    'id': '@payload.id',
                     'emit': {
                       'success': 'ProviderLoaded',
                       'failure': 'ProviderLoadFailed',
                     },
-                    'id': '@payload.id',
                   },
                 ],
                 [
@@ -1444,65 +1444,65 @@ export function stdBookingSystemProviderOrbital(params: StdBookingSystemProvider
                   {
                     'gap': 'md',
                     'type': 'stack',
+                    'direction': 'vertical',
                     'children': [
                       {
+                        'gap': 'sm',
                         'children': [
                           {
-                            'type': 'icon',
                             'name': 'eye',
+                            'type': 'icon',
                           },
                           {
                             'content': '@entity.name',
-                            'variant': 'h3',
                             'type': 'typography',
+                            'variant': 'h3',
                           },
                         ],
-                        'gap': 'sm',
-                        'direction': 'horizontal',
-                        'type': 'stack',
                         'align': 'center',
+                        'type': 'stack',
+                        'direction': 'horizontal',
                       },
                       {
                         'type': 'divider',
                       },
                       {
-                        'type': 'stack',
                         'gap': 'md',
                         'children': [
                           {
-                            'variant': 'caption',
                             'content': 'Name',
+                            'variant': 'caption',
                             'type': 'typography',
                           },
                           {
+                            'variant': 'body',
                             'type': 'typography',
                             'content': '@entity.name',
-                            'variant': 'body',
                           },
                         ],
                         'direction': 'horizontal',
+                        'type': 'stack',
                       },
                       {
                         'type': 'stack',
                         'direction': 'horizontal',
-                        'gap': 'md',
                         'children': [
                           {
                             'variant': 'caption',
-                            'type': 'typography',
                             'content': 'Specialty',
+                            'type': 'typography',
                           },
                           {
                             'content': '@entity.specialty',
-                            'variant': 'body',
                             'type': 'typography',
+                            'variant': 'body',
                           },
                         ],
+                        'gap': 'md',
                       },
                       {
                         'gap': 'md',
                         'direction': 'horizontal',
-                        'type': 'stack',
                         'children': [
                           {
                             'variant': 'caption',
@@ -1510,13 +1510,16 @@ export function stdBookingSystemProviderOrbital(params: StdBookingSystemProvider
                             'type': 'typography',
                           },
                           {
+                            'type': 'typography',
                             'variant': 'body',
                             'content': '@entity.location',
-                            'type': 'typography',
                           },
                         ],
+                        'type': 'stack',
                       },
                       {
+                        'type': 'stack',
+                        'gap': 'md',
                         'direction': 'horizontal',
                         'children': [
                           {
@@ -1525,15 +1528,14 @@ export function stdBookingSystemProviderOrbital(params: StdBookingSystemProvider
                             'content': 'Phone',
                           },
                           {
-                            'type': 'typography',
                             'variant': 'body',
                             'content': '@entity.phone',
+                            'type': 'typography',
                           },
                         ],
-                        'type': 'stack',
-                        'gap': 'md',
                       },
                       {
+                        'gap': 'md',
                         'children': [
                           {
                             'type': 'typography',
@@ -1546,41 +1548,40 @@ export function stdBookingSystemProviderOrbital(params: StdBookingSystemProvider
                             'content': '@entity.rating',
                           },
                         ],
-                        'type': 'stack',
                         'direction': 'horizontal',
-                        'gap': 'md',
+                        'type': 'stack',
                       },
                       {
                         'children': [
                           {
-                            'variant': 'caption',
                             'content': 'Hourly Rate',
                             'type': 'typography',
-                          },
-                          {
-                            'content': '@entity.hourlyRate',
-                            'type': 'typography',
-                            'variant': 'body',
-                          },
-                        ],
-                        'direction': 'horizontal',
-                        'gap': 'md',
-                        'type': 'stack',
-                      },
-                      {
-                        'type': 'stack',
-                        'gap': 'md',
-                        'direction': 'horizontal',
-                        'children': [
-                          {
-                            'content': 'Available',
-                            'type': 'typography',
                             'variant': 'caption',
                           },
                           {
+                            'type': 'typography',
+                            'variant': 'body',
+                            'content': '@entity.hourlyRate',
+                          },
+                        ],
+                        'type': 'stack',
+                        'gap': 'md',
+                        'direction': 'horizontal',
+                      },
+                      {
+                        'gap': 'md',
+                        'type': 'stack',
+                        'direction': 'horizontal',
+                        'children': [
+                          {
+                            'variant': 'caption',
+                            'content': 'Available',
+                            'type': 'typography',
+                          },
+                          {
+                            'type': 'typography',
                             'variant': 'body',
                             'content': '@entity.available',
-                            'type': 'typography',
                           },
                         ],
                       },
@@ -1588,28 +1589,27 @@ export function stdBookingSystemProviderOrbital(params: StdBookingSystemProvider
                         'type': 'divider',
                       },
                       {
-                        'direction': 'horizontal',
-                        'justify': 'end',
                         'children': [
                           {
+                            'label': 'Edit',
+                            'action': 'EDIT',
                             'icon': 'edit',
                             'type': 'button',
                             'variant': 'primary',
-                            'action': 'EDIT',
-                            'label': 'Edit',
                           },
                           {
-                            'variant': 'ghost',
                             'label': 'Close',
-                            'type': 'button',
                             'action': 'CLOSE',
+                            'type': 'button',
+                            'variant': 'ghost',
                           },
                         ],
                         'type': 'stack',
                         'gap': 'sm',
+                        'direction': 'horizontal',
+                        'justify': 'end',
                       },
                     ],
-                    'direction': 'vertical',
                   },
                 ],
               ],
@@ -1839,8 +1839,8 @@ export function stdBookingSystemProviderOrbital(params: StdBookingSystemProvider
                   'Provider',
                   {
                     'emit': {
-                      'failure': 'ProviderLoadFailed',
                       'success': 'ProviderLoaded',
+                      'failure': 'ProviderLoadFailed',
                     },
                   },
                 ],
@@ -1860,68 +1860,68 @@ export function stdBookingSystemProviderOrbital(params: StdBookingSystemProvider
                   'fetch',
                   'Provider',
                   {
-                    'emit': {
-                      'success': 'ProviderLoaded',
-                      'failure': 'ProviderLoadFailed',
-                    },
                     'id': '@payload.id',
+                    'emit': {
+                      'failure': 'ProviderLoadFailed',
+                      'success': 'ProviderLoaded',
+                    },
                   },
                 ],
                 [
                   'render-ui',
                   'modal',
                   {
+                    'direction': 'vertical',
+                    'type': 'stack',
+                    'gap': 'md',
                     'children': [
                       {
+                        'gap': 'sm',
+                        'direction': 'horizontal',
+                        'type': 'stack',
+                        'align': 'center',
                         'children': [
                           {
-                            'name': 'alert-triangle',
                             'type': 'icon',
+                            'name': 'alert-triangle',
                           },
                           {
-                            'type': 'typography',
                             'variant': 'h3',
+                            'type': 'typography',
                             'content': 'Delete Provider',
                           },
                         ],
-                        'type': 'stack',
-                        'gap': 'sm',
-                        'direction': 'horizontal',
-                        'align': 'center',
                       },
                       {
                         'type': 'divider',
                       },
                       {
-                        'type': 'alert',
-                        'variant': 'error',
                         'message': 'This action cannot be undone.',
+                        'variant': 'error',
+                        'type': 'alert',
                       },
                       {
                         'type': 'stack',
+                        'direction': 'horizontal',
                         'gap': 'sm',
+                        'justify': 'end',
                         'children': [
                           {
-                            'type': 'button',
                             'label': 'Cancel',
                             'action': 'CANCEL',
+                            'type': 'button',
                             'variant': 'ghost',
                           },
                           {
-                            'action': 'CONFIRM_DELETE',
-                            'label': 'Delete',
-                            'variant': 'danger',
                             'icon': 'check',
                             'type': 'button',
+                            'action': 'CONFIRM_DELETE',
+                            'variant': 'danger',
+                            'label': 'Delete',
                           },
                         ],
-                        'direction': 'horizontal',
-                        'justify': 'end',
                       },
                     ],
-                    'gap': 'md',
-                    'type': 'stack',
-                    'direction': 'vertical',
                   },
                 ],
               ],
@@ -2022,8 +2022,8 @@ export function stdBookingSystemProviderOrbital(params: StdBookingSystemProvider
                   'Provider',
                   {
                     'emit': {
-                      'failure': 'ProviderLoadFailed',
                       'success': 'ProviderLoaded',
+                      'failure': 'ProviderLoadFailed',
                     },
                   },
                 ],
@@ -2281,47 +2281,47 @@ export function stdBookingSystemBookingOrbital(params: StdBookingSystemBookingOr
         'linkedEntity': canonicalName,
         'config': {
           'appName': 'BookingSystemApp',
+          'searchEvent': 'BOOKING_SEARCH',
+          'topBarActions': [],
+          'notifications': [],
           'navItems': [
             {
-              'icon': 'user-check',
               'href': '/providers',
               'label': 'Providers',
+              'icon': 'user-check',
             },
             {
+              'icon': 'calendar-plus',
               'href': '/book',
               'label': 'Book',
-              'icon': 'calendar-plus',
             },
             {
-              'href': '/appointments',
               'label': 'Appointments',
+              'href': '/appointments',
               'icon': 'calendar',
             },
             {
               'label': 'Schedule',
-              'icon': 'clock',
               'href': '/schedule',
+              'icon': 'clock',
             },
           ],
-          'searchEvent': 'BOOKING_SEARCH',
           'notificationClickEvent': 'BOOKING_NOTIFICATIONS_OPEN',
-          'notifications': [],
-          'topBarActions': [],
           'contentTrait': '@trait.BookingWizard',
         },
         'events': {
-          'SEARCH': 'BOOKING_SEARCH',
           'NOTIFY_CLICK': 'BOOKING_NOTIFICATIONS_OPEN',
+          'SEARCH': 'BOOKING_SEARCH',
         },
       }),
       makeTraitRef({
         'ref': 'Stripe.traits.ServiceStripeStripe',
         'name': 'BookingPayment',
         'config': {
-          'amount': 0,
           'metadata': {},
-          'currency': 'usd',
           'uiTrait': '@trait.BookingPaymentForm',
+          'currency': 'usd',
+          'amount': 0,
         },
         'listens': [
           {
@@ -2376,12 +2376,11 @@ export function stdBookingSystemBookingOrbital(params: StdBookingSystemBookingOr
                   'render-ui',
                   'main',
                   {
-                    'gap': 'md',
                     'children': [
                       {
+                        'variant': 'info',
                         'message': 'Enter card details to pay your booking deposit.',
                         'type': 'alert',
-                        'variant': 'info',
                       },
                       {
                         'placeholder': 'Card number',
@@ -2391,9 +2390,9 @@ export function stdBookingSystemBookingOrbital(params: StdBookingSystemBookingOr
                       {
                         'children': [
                           {
+                            'inputType': 'text',
                             'placeholder': 'MM/YY',
                             'type': 'input',
-                            'inputType': 'text',
                           },
                           {
                             'type': 'input',
@@ -2401,19 +2400,20 @@ export function stdBookingSystemBookingOrbital(params: StdBookingSystemBookingOr
                             'placeholder': 'CVC',
                           },
                         ],
-                        'direction': 'horizontal',
-                        'type': 'stack',
                         'gap': 'sm',
+                        'type': 'stack',
+                        'direction': 'horizontal',
                       },
                       {
-                        'action': 'CREATE_PAYMENT',
                         'icon': 'credit-card',
+                        'action': 'CREATE_PAYMENT',
+                        'variant': 'primary',
                         'type': 'button',
                         'label': 'Pay deposit',
-                        'variant': 'primary',
                       },
                     ],
                     'type': 'stack',
+                    'gap': 'md',
                     'direction': 'vertical',
                   },
                 ],
@@ -2770,16 +2770,14 @@ export function stdBookingSystemBookingOrbital(params: StdBookingSystemBookingOr
                   'main',
                   {
                     'type': 'stack',
-                    'direction': 'vertical',
-                    'className': 'max-w-xl mx-auto w-full',
-                    'gap': 'lg',
                     'children': [
                       {
                         'type': 'typography',
-                        'content': 'Book Appointment',
                         'variant': 'h2',
+                        'content': 'Book Appointment',
                       },
                       {
+                        'currentStep': 0,
                         'type': 'wizard-progress',
                         'steps': [
                           'Select Provider',
@@ -2788,20 +2786,18 @@ export function stdBookingSystemBookingOrbital(params: StdBookingSystemBookingOr
                           'Payment',
                           'Confirmation',
                         ],
-                        'currentStep': 0,
                       },
                       {
                         'type': 'divider',
                       },
                       {
-                        'type': 'typography',
                         'variant': 'h3',
+                        'type': 'typography',
                         'content': 'Select Provider',
                       },
                       {
-                        'type': 'form-section',
-                        'submitLabel': 'Continue',
                         'mode': 'create',
+                        'submitEvent': 'NEXT',
                         'fields': [
                           {
                             'min': 2,
@@ -2809,10 +2805,14 @@ export function stdBookingSystemBookingOrbital(params: StdBookingSystemBookingOr
                             'required': true,
                           },
                         ],
+                        'type': 'form-section',
+                        'submitLabel': 'Continue',
                         'showCancel': false,
-                        'submitEvent': 'NEXT',
                       },
                     ],
+                    'className': 'max-w-xl mx-auto w-full',
+                    'gap': 'lg',
+                    'direction': 'vertical',
                   },
                 ],
               ],
@@ -2832,15 +2832,13 @@ export function stdBookingSystemBookingOrbital(params: StdBookingSystemBookingOr
                   'render-ui',
                   'main',
                   {
-                    'className': 'max-w-xl mx-auto w-full',
                     'children': [
                       {
                         'variant': 'h2',
-                        'content': 'Book Appointment',
                         'type': 'typography',
+                        'content': 'Book Appointment',
                       },
                       {
-                        'type': 'wizard-progress',
                         'steps': [
                           'Select Provider',
                           'Select Time',
@@ -2848,6 +2846,7 @@ export function stdBookingSystemBookingOrbital(params: StdBookingSystemBookingOr
                           'Payment',
                           'Confirmation',
                         ],
+                        'type': 'wizard-progress',
                         'currentStep': 1,
                       },
                       {
@@ -2855,28 +2854,29 @@ export function stdBookingSystemBookingOrbital(params: StdBookingSystemBookingOr
                       },
                       {
                         'type': 'typography',
-                        'variant': 'h3',
                         'content': 'Select Time',
+                        'variant': 'h3',
                       },
                       {
-                        'cancelEvent': 'PREV',
-                        'submitLabel': 'Continue',
+                        'cancelLabel': 'Back',
+                        'submitEvent': 'NEXT',
                         'fields': [
                           {
-                            'name': 'scheduledAt',
                             'required': true,
+                            'name': 'scheduledAt',
                           },
                         ],
-                        'cancelLabel': 'Back',
+                        'cancelEvent': 'PREV',
                         'entity': '@entity',
+                        'submitLabel': 'Continue',
                         'mode': 'edit',
                         'type': 'form-section',
-                        'submitEvent': 'NEXT',
                       },
                     ],
+                    'direction': 'vertical',
                     'gap': 'lg',
                     'type': 'stack',
-                    'direction': 'vertical',
+                    'className': 'max-w-xl mx-auto w-full',
                   },
                 ],
               ],
@@ -2902,8 +2902,8 @@ export function stdBookingSystemBookingOrbital(params: StdBookingSystemBookingOr
                   {
                     'children': [
                       {
-                        'content': 'Book Appointment',
                         'type': 'typography',
+                        'content': 'Book Appointment',
                         'variant': 'h2',
                       },
                       {
@@ -2921,43 +2921,43 @@ export function stdBookingSystemBookingOrbital(params: StdBookingSystemBookingOr
                         'type': 'divider',
                       },
                       {
+                        'content': 'Your Details',
                         'type': 'typography',
                         'variant': 'h3',
-                        'content': 'Your Details',
                       },
                       {
-                        'mode': 'edit',
+                        'submitEvent': 'NEXT',
+                        'type': 'form-section',
                         'fields': [
                           {
-                            'required': true,
                             'name': 'customerName',
+                            'required': true,
                             'min': 2,
                           },
                           {
-                            'type': 'email',
                             'required': true,
+                            'type': 'email',
                             'name': 'email',
                           },
                           {
-                            'required': true,
                             'name': 'phone',
+                            'required': true,
                           },
                           {
                             'name': 'notes',
                           },
                         ],
-                        'submitEvent': 'NEXT',
-                        'type': 'form-section',
                         'cancelEvent': 'PREV',
-                        'cancelLabel': 'Back',
-                        'submitLabel': 'Continue',
+                        'mode': 'edit',
                         'entity': '@entity',
+                        'submitLabel': 'Continue',
+                        'cancelLabel': 'Back',
                       },
                     ],
                     'direction': 'vertical',
-                    'gap': 'lg',
-                    'type': 'stack',
                     'className': 'max-w-xl mx-auto w-full',
+                    'type': 'stack',
+                    'gap': 'lg',
                   },
                 ],
               ],
@@ -2971,13 +2971,18 @@ export function stdBookingSystemBookingOrbital(params: StdBookingSystemBookingOr
                   'render-ui',
                   'main',
                   {
+                    'direction': 'vertical',
+                    'type': 'stack',
+                    'className': 'max-w-xl mx-auto w-full',
+                    'gap': 'lg',
                     'children': [
                       {
+                        'variant': 'h2',
                         'content': 'Book Appointment',
                         'type': 'typography',
-                        'variant': 'h2',
                       },
                       {
+                        'currentStep': 0,
                         'type': 'wizard-progress',
                         'steps': [
                           'Select Provider',
@@ -2986,22 +2991,17 @@ export function stdBookingSystemBookingOrbital(params: StdBookingSystemBookingOr
                           'Payment',
                           'Confirmation',
                         ],
-                        'currentStep': 0,
                       },
                       {
                         'type': 'divider',
                       },
                       {
-                        'variant': 'h3',
                         'content': 'Select Provider',
+                        'variant': 'h3',
                         'type': 'typography',
                       },
                       {
-                        'submitEvent': 'NEXT',
-                        'showCancel': false,
-                        'mode': 'edit',
-                        'entity': '@entity',
-                        'submitLabel': 'Continue',
+                        'type': 'form-section',
                         'fields': [
                           {
                             'required': true,
@@ -3009,13 +3009,13 @@ export function stdBookingSystemBookingOrbital(params: StdBookingSystemBookingOr
                             'name': 'providerName',
                           },
                         ],
-                        'type': 'form-section',
+                        'mode': 'edit',
+                        'entity': '@entity',
+                        'submitEvent': 'NEXT',
+                        'submitLabel': 'Continue',
+                        'showCancel': false,
                       },
                     ],
-                    'gap': 'lg',
-                    'className': 'max-w-xl mx-auto w-full',
-                    'direction': 'vertical',
-                    'type': 'stack',
                   },
                 ],
               ],
@@ -3055,18 +3055,17 @@ export function stdBookingSystemBookingOrbital(params: StdBookingSystemBookingOr
                   'render-ui',
                   'main',
                   {
-                    'type': 'stack',
-                    'gap': 'lg',
                     'className': 'max-w-xl mx-auto w-full',
+                    'type': 'stack',
                     'direction': 'vertical',
+                    'gap': 'lg',
                     'children': [
                       {
-                        'content': 'Book Appointment',
                         'type': 'typography',
                         'variant': 'h2',
+                        'content': 'Book Appointment',
                       },
                       {
-                        'currentStep': 3,
                         'type': 'wizard-progress',
                         'steps': [
                           'Select Provider',
@@ -3075,30 +3074,31 @@ export function stdBookingSystemBookingOrbital(params: StdBookingSystemBookingOr
                           'Payment',
                           'Confirmation',
                         ],
+                        'currentStep': 3,
                       },
                       {
                         'type': 'divider',
                       },
                       {
-                        'type': 'typography',
-                        'content': 'Pay Deposit',
                         'variant': 'h3',
+                        'content': 'Pay Deposit',
+                        'type': 'typography',
                       },
                       '@trait.BookingPayment',
                       {
+                        'justify': 'start',
+                        'direction': 'horizontal',
+                        'type': 'stack',
+                        'gap': 'sm',
                         'children': [
                           {
+                            'label': 'Back',
                             'type': 'button',
                             'variant': 'ghost',
                             'icon': 'arrow-left',
-                            'label': 'Back',
                             'action': 'PREV',
                           },
                         ],
-                        'type': 'stack',
-                        'direction': 'horizontal',
-                        'gap': 'sm',
-                        'justify': 'start',
                       },
                     ],
                   },
@@ -3114,16 +3114,15 @@ export function stdBookingSystemBookingOrbital(params: StdBookingSystemBookingOr
                   'render-ui',
                   'main',
                   {
-                    'gap': 'lg',
                     'type': 'stack',
+                    'className': 'max-w-xl mx-auto w-full',
                     'children': [
                       {
                         'variant': 'h2',
-                        'content': 'Book Appointment',
                         'type': 'typography',
+                        'content': 'Book Appointment',
                       },
                       {
-                        'currentStep': 1,
                         'steps': [
                           'Select Provider',
                           'Select Time',
@@ -3131,6 +3130,7 @@ export function stdBookingSystemBookingOrbital(params: StdBookingSystemBookingOr
                           'Payment',
                           'Confirmation',
                         ],
+                        'currentStep': 1,
                         'type': 'wizard-progress',
                       },
                       {
@@ -3138,27 +3138,27 @@ export function stdBookingSystemBookingOrbital(params: StdBookingSystemBookingOr
                       },
                       {
                         'type': 'typography',
-                        'content': 'Select Time',
                         'variant': 'h3',
+                        'content': 'Select Time',
                       },
                       {
-                        'submitEvent': 'NEXT',
-                        'fields': [
-                          {
-                            'required': true,
-                            'name': 'scheduledAt',
-                          },
-                        ],
+                        'cancelLabel': 'Back',
                         'entity': '@entity',
                         'type': 'form-section',
                         'mode': 'edit',
-                        'cancelEvent': 'PREV',
+                        'fields': [
+                          {
+                            'name': 'scheduledAt',
+                            'required': true,
+                          },
+                        ],
                         'submitLabel': 'Continue',
-                        'cancelLabel': 'Back',
+                        'submitEvent': 'NEXT',
+                        'cancelEvent': 'PREV',
                       },
                     ],
-                    'className': 'max-w-xl mx-auto w-full',
                     'direction': 'vertical',
+                    'gap': 'lg',
                   },
                 ],
               ],
@@ -3180,15 +3180,17 @@ export function stdBookingSystemBookingOrbital(params: StdBookingSystemBookingOr
                   'render-ui',
                   'main',
                   {
+                    'direction': 'vertical',
+                    'type': 'stack',
+                    'gap': 'lg',
+                    'className': 'max-w-xl mx-auto w-full',
                     'children': [
                       {
-                        'variant': 'h2',
-                        'content': 'Review your booking',
                         'type': 'typography',
+                        'content': 'Review your booking',
+                        'variant': 'h2',
                       },
                       {
-                        'currentStep': 4,
-                        'type': 'wizard-progress',
                         'steps': [
                           'Select Provider',
                           'Select Time',
@@ -3196,15 +3198,19 @@ export function stdBookingSystemBookingOrbital(params: StdBookingSystemBookingOr
                           'Payment',
                           'Confirmation',
                         ],
+                        'currentStep': 4,
+                        'type': 'wizard-progress',
                       },
                       {
                         'type': 'divider',
                       },
                       {
                         'direction': 'vertical',
+                        'type': 'stack',
                         'gap': 'sm',
                         'children': [
                           {
+                            'type': 'stack',
                             'direction': 'horizontal',
                             'children': [
                               {
@@ -3214,42 +3220,37 @@ export function stdBookingSystemBookingOrbital(params: StdBookingSystemBookingOr
                               },
                               {
                                 'content': '@entity.providerName',
-                                'variant': 'body',
                                 'type': 'typography',
+                                'variant': 'body',
                               },
                             ],
-                            'type': 'stack',
-                            'gap': 'md',
                             'justify': 'between',
+                            'gap': 'md',
                           },
                           {
                             'type': 'stack',
-                            'direction': 'horizontal',
-                            'gap': 'md',
-                            'justify': 'between',
                             'children': [
                               {
                                 'variant': 'caption',
-                                'type': 'typography',
                                 'content': 'When',
+                                'type': 'typography',
                               },
                               {
-                                'type': 'typography',
                                 'variant': 'body',
+                                'type': 'typography',
                                 'content': '@entity.scheduledAt',
                               },
                             ],
-                          },
-                          {
-                            'type': 'stack',
                             'gap': 'md',
                             'direction': 'horizontal',
                             'justify': 'between',
+                          },
+                          {
                             'children': [
                               {
                                 'type': 'typography',
-                                'variant': 'caption',
                                 'content': 'Customer',
+                                'variant': 'caption',
                               },
                               {
                                 'content': '@entity.customerName',
@@ -3257,94 +3258,93 @@ export function stdBookingSystemBookingOrbital(params: StdBookingSystemBookingOr
                                 'type': 'typography',
                               },
                             ],
+                            'gap': 'md',
+                            'direction': 'horizontal',
+                            'justify': 'between',
+                            'type': 'stack',
                           },
                           {
-                            'justify': 'between',
+                            'gap': 'md',
+                            'type': 'stack',
                             'children': [
                               {
-                                'type': 'typography',
                                 'content': 'Email',
                                 'variant': 'caption',
+                                'type': 'typography',
                               },
                               {
-                                'type': 'typography',
                                 'variant': 'body',
+                                'type': 'typography',
                                 'content': '@entity.email',
                               },
                             ],
                             'direction': 'horizontal',
-                            'type': 'stack',
-                            'gap': 'md',
+                            'justify': 'between',
                           },
                           {
-                            'type': 'stack',
+                            'gap': 'md',
                             'children': [
                               {
+                                'content': 'Phone',
                                 'type': 'typography',
                                 'variant': 'caption',
-                                'content': 'Phone',
                               },
                               {
-                                'type': 'typography',
                                 'variant': 'body',
+                                'type': 'typography',
                                 'content': '@entity.phone',
                               },
                             ],
-                            'gap': 'md',
                             'direction': 'horizontal',
+                            'type': 'stack',
                             'justify': 'between',
                           },
                           {
-                            'justify': 'between',
                             'direction': 'horizontal',
                             'gap': 'md',
+                            'type': 'stack',
+                            'justify': 'between',
                             'children': [
                               {
+                                'content': 'Deposit Paid',
                                 'variant': 'caption',
                                 'type': 'typography',
-                                'content': 'Deposit Paid',
                               },
                               {
-                                'content': '@entity.depositAmount',
                                 'type': 'typography',
+                                'content': '@entity.depositAmount',
                                 'variant': 'body',
                               },
                             ],
-                            'type': 'stack',
                           },
                         ],
-                        'type': 'stack',
                       },
                       {
                         'type': 'divider',
                       },
                       {
-                        'gap': 'sm',
                         'type': 'stack',
                         'direction': 'horizontal',
+                        'gap': 'sm',
                         'justify': 'between',
                         'children': [
                           {
+                            'action': 'PREV',
+                            'icon': 'arrow-left',
+                            'type': 'button',
                             'variant': 'ghost',
                             'label': 'Back',
-                            'icon': 'arrow-left',
-                            'action': 'PREV',
-                            'type': 'button',
                           },
                           {
                             'label': 'Confirm booking',
                             'icon': 'check',
                             'action': 'COMPLETE',
-                            'type': 'button',
                             'variant': 'primary',
+                            'type': 'button',
                           },
                         ],
                       },
                     ],
-                    'direction': 'vertical',
-                    'type': 'stack',
-                    'className': 'max-w-xl mx-auto w-full',
-                    'gap': 'lg',
                   },
                 ],
               ],
@@ -3359,16 +3359,16 @@ export function stdBookingSystemBookingOrbital(params: StdBookingSystemBookingOr
                   'main',
                   {
                     'type': 'stack',
-                    'direction': 'vertical',
                     'gap': 'lg',
                     'className': 'max-w-xl mx-auto w-full',
                     'children': [
                       {
-                        'variant': 'h2',
                         'content': 'Book Appointment',
+                        'variant': 'h2',
                         'type': 'typography',
                       },
                       {
+                        'currentStep': 2,
                         'steps': [
                           'Select Provider',
                           'Select Time',
@@ -3376,46 +3376,46 @@ export function stdBookingSystemBookingOrbital(params: StdBookingSystemBookingOr
                           'Payment',
                           'Confirmation',
                         ],
-                        'currentStep': 2,
                         'type': 'wizard-progress',
                       },
                       {
                         'type': 'divider',
                       },
                       {
+                        'type': 'typography',
                         'variant': 'h3',
                         'content': 'Your Details',
-                        'type': 'typography',
                       },
                       {
-                        'submitLabel': 'Continue',
+                        'entity': '@entity',
+                        'mode': 'edit',
                         'cancelEvent': 'PREV',
+                        'submitLabel': 'Continue',
+                        'cancelLabel': 'Back',
                         'fields': [
                           {
-                            'name': 'customerName',
+                            'required': true,
                             'min': 2,
-                            'required': true,
+                            'name': 'customerName',
                           },
                           {
-                            'name': 'email',
-                            'required': true,
                             'type': 'email',
+                            'required': true,
+                            'name': 'email',
                           },
                           {
-                            'required': true,
                             'name': 'phone',
+                            'required': true,
                           },
                           {
                             'name': 'notes',
                           },
                         ],
-                        'cancelLabel': 'Back',
                         'type': 'form-section',
-                        'entity': '@entity',
-                        'mode': 'edit',
                         'submitEvent': 'NEXT',
                       },
                     ],
+                    'direction': 'vertical',
                   },
                 ],
               ],
@@ -3455,10 +3455,10 @@ export function stdBookingSystemBookingOrbital(params: StdBookingSystemBookingOr
                   'email',
                   'send',
                   {
-                    'subject': 'Booking Confirmed',
-                    'sender': 'noreply@bookings.example',
                     'body': 'Your booking is confirmed.',
                     'recipient': '@entity.email',
+                    'sender': 'noreply@bookings.example',
+                    'subject': 'Booking Confirmed',
                   },
                   {
                     'emit': {
@@ -3472,9 +3472,9 @@ export function stdBookingSystemBookingOrbital(params: StdBookingSystemBookingOr
                   'twilio',
                   'sendSMS',
                   {
-                    'recipient': '@entity.phone',
                     'body': 'Booking confirmed for @entity.scheduledAt',
                     'sender': '+15551234567',
+                    'recipient': '@entity.phone',
                   },
                   {
                     'emit': {
@@ -3499,35 +3499,35 @@ export function stdBookingSystemBookingOrbital(params: StdBookingSystemBookingOr
                   'render-ui',
                   'main',
                   {
-                    'className': 'max-w-xl mx-auto w-full py-12',
-                    'direction': 'vertical',
-                    'type': 'stack',
-                    'gap': 'lg',
-                    'align': 'center',
                     'children': [
                       {
-                        'type': 'icon',
                         'name': 'check-circle',
+                        'type': 'icon',
                       },
                       {
-                        'type': 'typography',
                         'variant': 'h2',
                         'content': 'Booking confirmed',
+                        'type': 'typography',
                       },
                       {
-                        'color': 'muted',
-                        'type': 'typography',
                         'content': 'We have emailed and SMS-confirmed your appointment.',
                         'variant': 'body',
+                        'color': 'muted',
+                        'type': 'typography',
                       },
                       {
+                        'action': 'RESTART',
+                        'icon': 'rotate-ccw',
+                        'variant': 'ghost',
                         'type': 'button',
                         'label': 'Book another',
-                        'variant': 'ghost',
-                        'icon': 'rotate-ccw',
-                        'action': 'RESTART',
                       },
                     ],
+                    'align': 'center',
+                    'type': 'stack',
+                    'direction': 'vertical',
+                    'gap': 'lg',
+                    'className': 'max-w-xl mx-auto w-full py-12',
                   },
                 ],
               ],
@@ -3541,14 +3541,11 @@ export function stdBookingSystemBookingOrbital(params: StdBookingSystemBookingOr
                   'render-ui',
                   'main',
                   {
-                    'type': 'stack',
-                    'gap': 'lg',
-                    'className': 'max-w-xl mx-auto w-full',
                     'children': [
                       {
                         'variant': 'h2',
-                        'content': 'Book Appointment',
                         'type': 'typography',
+                        'content': 'Book Appointment',
                       },
                       {
                         'steps': [
@@ -3558,8 +3555,8 @@ export function stdBookingSystemBookingOrbital(params: StdBookingSystemBookingOr
                           'Payment',
                           'Confirmation',
                         ],
-                        'currentStep': 3,
                         'type': 'wizard-progress',
+                        'currentStep': 3,
                       },
                       {
                         'type': 'divider',
@@ -3571,21 +3568,24 @@ export function stdBookingSystemBookingOrbital(params: StdBookingSystemBookingOr
                       },
                       '@trait.BookingPayment',
                       {
-                        'direction': 'horizontal',
+                        'justify': 'start',
                         'gap': 'sm',
-                        'type': 'stack',
                         'children': [
                           {
-                            'label': 'Back',
                             'action': 'PREV',
+                            'icon': 'arrow-left',
+                            'label': 'Back',
                             'variant': 'ghost',
                             'type': 'button',
-                            'icon': 'arrow-left',
                           },
                         ],
-                        'justify': 'start',
+                        'type': 'stack',
+                        'direction': 'horizontal',
                       },
                     ],
+                    'gap': 'lg',
+                    'className': 'max-w-xl mx-auto w-full',
+                    'type': 'stack',
                     'direction': 'vertical',
                   },
                 ],
@@ -3640,15 +3640,11 @@ export function stdBookingSystemBookingOrbital(params: StdBookingSystemBookingOr
                   'render-ui',
                   'main',
                   {
-                    'className': 'max-w-xl mx-auto w-full',
-                    'direction': 'vertical',
-                    'type': 'stack',
-                    'gap': 'lg',
                     'children': [
                       {
+                        'type': 'typography',
                         'variant': 'h2',
                         'content': 'Book Appointment',
-                        'type': 'typography',
                       },
                       {
                         'steps': [
@@ -3658,8 +3654,8 @@ export function stdBookingSystemBookingOrbital(params: StdBookingSystemBookingOr
                           'Payment',
                           'Confirmation',
                         ],
-                        'currentStep': 0,
                         'type': 'wizard-progress',
+                        'currentStep': 0,
                       },
                       {
                         'type': 'divider',
@@ -3670,20 +3666,24 @@ export function stdBookingSystemBookingOrbital(params: StdBookingSystemBookingOr
                         'content': 'Select Provider',
                       },
                       {
-                        'type': 'form-section',
-                        'submitEvent': 'NEXT',
-                        'mode': 'create',
                         'showCancel': false,
+                        'type': 'form-section',
                         'fields': [
                           {
+                            'min': 2,
                             'required': true,
                             'name': 'providerName',
-                            'min': 2,
                           },
                         ],
+                        'mode': 'create',
+                        'submitEvent': 'NEXT',
                         'submitLabel': 'Continue',
                       },
                     ],
+                    'type': 'stack',
+                    'gap': 'lg',
+                    'className': 'max-w-xl mx-auto w-full',
+                    'direction': 'vertical',
                   },
                 ],
               ],
@@ -3829,7 +3829,7 @@ export interface StdBookingSystemAppointmentOrbitalParams {
    * atom-owned (use `listens` via a sibling trait instead).
    */
   traitOverrides?: Partial<Record<
-    'AppointmentAppLayout' | 'AppointmentCalendar' | 'AppointmentBrowseList' | 'AppointmentDashboard' | 'AppointmentCreate' | 'AppointmentEdit' | 'AppointmentView' | 'AppointmentDelete',
+    'AppointmentAppLayout' | 'AppointmentCalendar' | 'AppointmentBrowseList' | 'AppointmentReminder' | 'AppointmentNotifier' | 'AppointmentOverbookApproval' | 'AppointmentDashboard' | 'AppointmentCreate' | 'AppointmentEdit' | 'AppointmentView' | 'AppointmentDelete',
     Pick<MakeTraitRefOpts, 'config' | 'linkedEntity' | 'events' | 'name' | 'emitsScope' | 'listens'>
   >>;
 }
@@ -3853,6 +3853,18 @@ export function stdBookingSystemAppointmentOrbital(params: StdBookingSystemAppoi
       {
         'from': 'std/behaviors/std-browse',
         'as': 'Browse',
+      },
+      {
+        'from': 'std/behaviors/std-reminder-scheduler',
+        'as': 'Reminder',
+      },
+      {
+        'from': 'std/behaviors/std-notify-on-event',
+        'as': 'Notify',
+      },
+      {
+        'from': 'std/behaviors/std-approval-gate',
+        'as': 'Approval',
       },
     ],
     entity: {
@@ -3918,38 +3930,38 @@ export function stdBookingSystemAppointmentOrbital(params: StdBookingSystemAppoi
         'name': 'AppointmentAppLayout',
         'linkedEntity': canonicalName,
         'config': {
+          'notificationClickEvent': 'APPOINTMENT_NOTIFICATIONS_OPEN',
+          'topBarActions': [],
+          'contentTrait': '@trait.AppointmentDashboard',
+          'appName': 'BookingSystemApp',
           'navItems': [
             {
               'icon': 'user-check',
-              'href': '/providers',
               'label': 'Providers',
+              'href': '/providers',
             },
             {
-              'href': '/book',
               'icon': 'calendar-plus',
               'label': 'Book',
+              'href': '/book',
             },
             {
+              'label': 'Appointments',
               'href': '/appointments',
               'icon': 'calendar',
-              'label': 'Appointments',
             },
             {
-              'icon': 'clock',
               'href': '/schedule',
+              'icon': 'clock',
               'label': 'Schedule',
             },
           ],
-          'notifications': [],
-          'notificationClickEvent': 'APPOINTMENT_NOTIFICATIONS_OPEN',
           'searchEvent': 'APPOINTMENT_SEARCH',
-          'topBarActions': [],
-          'appName': 'BookingSystemApp',
-          'contentTrait': '@trait.AppointmentDashboard',
+          'notifications': [],
         },
         'events': {
-          'NOTIFY_CLICK': 'APPOINTMENT_NOTIFICATIONS_OPEN',
           'SEARCH': 'APPOINTMENT_SEARCH',
+          'NOTIFY_CLICK': 'APPOINTMENT_NOTIFICATIONS_OPEN',
         },
       }),
       rebindInlineTraitEntity({
@@ -3994,47 +4006,47 @@ export function stdBookingSystemAppointmentOrbital(params: StdBookingSystemAppoi
                   'render-ui',
                   'main',
                   {
-                    'gap': 'lg',
+                    'type': 'stack',
                     'children': [
                       {
                         'direction': 'horizontal',
-                        'align': 'center',
+                        'type': 'stack',
+                        'gap': 'md',
                         'children': [
                           {
+                            'align': 'center',
+                            'direction': 'horizontal',
                             'children': [
                               {
-                                'type': 'icon',
                                 'name': 'calendar',
+                                'type': 'icon',
                               },
                               {
-                                'content': 'Appointments',
                                 'variant': 'h2',
                                 'type': 'typography',
+                                'content': 'Appointments',
                               },
                             ],
-                            'type': 'stack',
                             'gap': 'sm',
-                            'direction': 'horizontal',
-                            'align': 'center',
+                            'type': 'stack',
                           },
                           {
                             'direction': 'horizontal',
+                            'gap': 'sm',
                             'type': 'stack',
                             'children': [
                               {
-                                'variant': 'primary',
-                                'type': 'button',
-                                'label': 'Create Appointment',
-                                'action': 'CREATE',
                                 'icon': 'plus',
+                                'action': 'CREATE',
+                                'label': 'Create Appointment',
+                                'type': 'button',
+                                'variant': 'primary',
                               },
                             ],
-                            'gap': 'sm',
                           },
                         ],
-                        'type': 'stack',
                         'justify': 'between',
-                        'gap': 'md',
+                        'align': 'center',
                       },
                       {
                         'type': 'divider',
@@ -4045,8 +4057,8 @@ export function stdBookingSystemAppointmentOrbital(params: StdBookingSystemAppoi
                       },
                       '@trait.AppointmentBrowseList',
                     ],
+                    'gap': 'lg',
                     'direction': 'vertical',
-                    'type': 'stack',
                   },
                 ],
               ],
@@ -4060,9 +4072,9 @@ export function stdBookingSystemAppointmentOrbital(params: StdBookingSystemAppoi
         'name': 'AppointmentCalendar',
         'linkedEntity': canonicalName,
         'config': {
-          'dateField': 'scheduledAt',
-          'titleField': 'summary',
           'colorField': 'status',
+          'titleField': 'summary',
+          'dateField': 'scheduledAt',
         },
         'listens': [
           {
@@ -4105,17 +4117,19 @@ export function stdBookingSystemAppointmentOrbital(params: StdBookingSystemAppoi
         'name': 'AppointmentBrowseList',
         'linkedEntity': canonicalName,
         'config': {
+          'gap': 'sm',
+          'cols': 1,
           'fields': [
             {
-              'name': 'summary',
               'icon': 'calendar',
-              'variant': 'h3',
               'label': 'Summary',
+              'variant': 'h3',
+              'name': 'summary',
             },
             {
-              'variant': 'body',
               'name': 'providerName',
               'label': 'Provider',
+              'variant': 'body',
             },
             {
               'label': 'Customer',
@@ -4123,37 +4137,35 @@ export function stdBookingSystemAppointmentOrbital(params: StdBookingSystemAppoi
               'variant': 'body',
             },
             {
-              'variant': 'body',
               'name': 'scheduledAt',
+              'variant': 'body',
               'label': 'When',
               'format': 'date',
             },
             {
-              'variant': 'caption',
               'name': 'time',
+              'variant': 'caption',
             },
             {
               'name': 'status',
               'variant': 'badge',
             },
           ],
-          'gap': 'sm',
-          'cols': 1,
           'itemActions': [
             {
               'label': 'View',
-              'variant': 'ghost',
               'event': 'VIEW',
-            },
-            {
-              'event': 'EDIT',
-              'label': 'Edit',
               'variant': 'ghost',
             },
             {
-              'event': 'DELETE',
+              'variant': 'ghost',
+              'label': 'Edit',
+              'event': 'EDIT',
+            },
+            {
               'variant': 'danger',
               'label': 'Delete',
+              'event': 'DELETE',
             },
           ],
         },
@@ -4359,8 +4371,8 @@ export function stdBookingSystemAppointmentOrbital(params: StdBookingSystemAppoi
                   'Appointment',
                   {
                     'emit': {
-                      'success': 'AppointmentLoaded',
                       'failure': 'AppointmentLoadFailed',
+                      'success': 'AppointmentLoaded',
                     },
                   },
                 ],
@@ -4376,8 +4388,8 @@ export function stdBookingSystemAppointmentOrbital(params: StdBookingSystemAppoi
                   'Appointment',
                   {
                     'emit': {
-                      'success': 'AppointmentLoaded',
                       'failure': 'AppointmentLoadFailed',
+                      'success': 'AppointmentLoaded',
                     },
                   },
                 ],
@@ -4386,29 +4398,30 @@ export function stdBookingSystemAppointmentOrbital(params: StdBookingSystemAppoi
                   'modal',
                   {
                     'type': 'stack',
+                    'direction': 'vertical',
                     'children': [
                       {
-                        'gap': 'sm',
-                        'direction': 'horizontal',
                         'children': [
                           {
                             'type': 'icon',
                             'name': 'plus-circle',
                           },
                           {
-                            'content': 'Create Appointment',
                             'variant': 'h3',
                             'type': 'typography',
+                            'content': 'Create Appointment',
                           },
                         ],
+                        'gap': 'sm',
                         'type': 'stack',
+                        'direction': 'horizontal',
                       },
                       {
                         'type': 'divider',
                       },
                       {
-                        'submitEvent': 'SAVE',
-                        'cancelEvent': 'CLOSE',
+                        'type': 'form-section',
+                        'mode': 'create',
                         'fields': [
                           'providerName',
                           'customerName',
@@ -4418,12 +4431,11 @@ export function stdBookingSystemAppointmentOrbital(params: StdBookingSystemAppoi
                           'status',
                           'notes',
                         ],
-                        'type': 'form-section',
-                        'mode': 'create',
+                        'submitEvent': 'SAVE',
+                        'cancelEvent': 'CLOSE',
                       },
                     ],
                     'gap': 'md',
-                    'direction': 'vertical',
                   },
                 ],
               ],
@@ -4675,8 +4687,8 @@ export function stdBookingSystemAppointmentOrbital(params: StdBookingSystemAppoi
                   'Appointment',
                   {
                     'emit': {
-                      'success': 'AppointmentLoaded',
                       'failure': 'AppointmentLoadFailed',
+                      'success': 'AppointmentLoaded',
                     },
                   },
                 ],
@@ -4692,8 +4704,8 @@ export function stdBookingSystemAppointmentOrbital(params: StdBookingSystemAppoi
                   'Appointment',
                   {
                     'emit': {
-                      'failure': 'AppointmentLoadFailed',
                       'success': 'AppointmentLoaded',
+                      'failure': 'AppointmentLoadFailed',
                     },
                     'id': '@payload.id',
                   },
@@ -4703,11 +4715,11 @@ export function stdBookingSystemAppointmentOrbital(params: StdBookingSystemAppoi
                   'modal',
                   {
                     'direction': 'vertical',
-                    'gap': 'md',
                     'type': 'stack',
+                    'gap': 'md',
                     'children': [
                       {
-                        'type': 'stack',
+                        'direction': 'horizontal',
                         'gap': 'sm',
                         'children': [
                           {
@@ -4715,20 +4727,18 @@ export function stdBookingSystemAppointmentOrbital(params: StdBookingSystemAppoi
                             'name': 'edit',
                           },
                           {
-                            'type': 'typography',
                             'content': 'Edit Appointment',
+                            'type': 'typography',
                             'variant': 'h3',
                           },
                         ],
-                        'direction': 'horizontal',
+                        'type': 'stack',
                       },
                       {
                         'type': 'divider',
                       },
                       {
-                        'type': 'form-section',
-                        'entity': '@payload.row',
-                        'submitEvent': 'SAVE',
+                        'mode': 'edit',
                         'cancelEvent': 'CLOSE',
                         'fields': [
                           'providerName',
@@ -4739,7 +4749,9 @@ export function stdBookingSystemAppointmentOrbital(params: StdBookingSystemAppoi
                           'status',
                           'notes',
                         ],
-                        'mode': 'edit',
+                        'entity': '@payload.row',
+                        'type': 'form-section',
+                        'submitEvent': 'SAVE',
                       },
                     ],
                   },
@@ -4782,8 +4794,8 @@ export function stdBookingSystemAppointmentOrbital(params: StdBookingSystemAppoi
                   '@payload.data',
                   {
                     'emit': {
-                      'failure': 'AppointmentUpdateFailed',
                       'success': 'AppointmentUpdated',
+                      'failure': 'AppointmentUpdateFailed',
                     },
                   },
                 ],
@@ -4995,26 +5007,26 @@ export function stdBookingSystemAppointmentOrbital(params: StdBookingSystemAppoi
                   'render-ui',
                   'modal',
                   {
-                    'direction': 'vertical',
                     'type': 'stack',
+                    'direction': 'vertical',
                     'gap': 'md',
                     'children': [
                       {
+                        'gap': 'sm',
                         'direction': 'horizontal',
+                        'align': 'center',
                         'children': [
                           {
-                            'name': 'eye',
                             'type': 'icon',
+                            'name': 'eye',
                           },
                           {
+                            'type': 'typography',
                             'variant': 'h3',
                             'content': '@entity.summary',
-                            'type': 'typography',
                           },
                         ],
-                        'gap': 'sm',
                         'type': 'stack',
-                        'align': 'center',
                       },
                       {
                         'type': 'divider',
@@ -5025,19 +5037,18 @@ export function stdBookingSystemAppointmentOrbital(params: StdBookingSystemAppoi
                         'gap': 'md',
                         'children': [
                           {
+                            'variant': 'caption',
                             'type': 'typography',
                             'content': 'Provider',
-                            'variant': 'caption',
                           },
                           {
                             'content': '@entity.providerName',
-                            'variant': 'body',
                             'type': 'typography',
+                            'variant': 'body',
                           },
                         ],
                       },
                       {
-                        'type': 'stack',
                         'children': [
                           {
                             'type': 'typography',
@@ -5045,34 +5056,33 @@ export function stdBookingSystemAppointmentOrbital(params: StdBookingSystemAppoi
                             'variant': 'caption',
                           },
                           {
+                            'variant': 'body',
                             'type': 'typography',
                             'content': '@entity.customerName',
-                            'variant': 'body',
                           },
                         ],
-                        'direction': 'horizontal',
+                        'type': 'stack',
                         'gap': 'md',
+                        'direction': 'horizontal',
                       },
                       {
+                        'type': 'stack',
                         'children': [
                           {
-                            'variant': 'caption',
                             'type': 'typography',
+                            'variant': 'caption',
                             'content': 'When',
                           },
                           {
+                            'variant': 'body',
                             'content': '@entity.scheduledAt',
                             'type': 'typography',
-                            'variant': 'body',
                           },
                         ],
                         'direction': 'horizontal',
                         'gap': 'md',
-                        'type': 'stack',
                       },
                       {
-                        'type': 'stack',
-                        'direction': 'horizontal',
                         'children': [
                           {
                             'content': 'Time',
@@ -5081,69 +5091,71 @@ export function stdBookingSystemAppointmentOrbital(params: StdBookingSystemAppoi
                           },
                           {
                             'type': 'typography',
+                            'variant': 'body',
                             'content': '@entity.time',
-                            'variant': 'body',
                           },
                         ],
+                        'type': 'stack',
+                        'direction': 'horizontal',
                         'gap': 'md',
                       },
                       {
                         'type': 'stack',
+                        'direction': 'horizontal',
                         'gap': 'md',
                         'children': [
                           {
-                            'type': 'typography',
-                            'variant': 'caption',
                             'content': 'Status',
+                            'variant': 'caption',
+                            'type': 'typography',
                           },
                           {
-                            'type': 'typography',
                             'content': '@entity.status',
+                            'type': 'typography',
                             'variant': 'body',
                           },
                         ],
-                        'direction': 'horizontal',
                       },
                       {
                         'gap': 'md',
+                        'type': 'stack',
                         'children': [
                           {
-                            'content': 'Notes',
                             'type': 'typography',
                             'variant': 'caption',
+                            'content': 'Notes',
                           },
                           {
                             'variant': 'body',
-                            'content': '@entity.notes',
                             'type': 'typography',
+                            'content': '@entity.notes',
                           },
                         ],
                         'direction': 'horizontal',
-                        'type': 'stack',
                       },
                       {
                         'type': 'divider',
                       },
                       {
-                        'direction': 'horizontal',
-                        'justify': 'end',
+                        'gap': 'sm',
                         'children': [
                           {
-                            'type': 'button',
-                            'label': 'Edit',
                             'variant': 'primary',
+                            'label': 'Edit',
                             'icon': 'edit',
+                            'type': 'button',
                             'action': 'EDIT',
                           },
                           {
-                            'type': 'button',
                             'label': 'Close',
                             'action': 'CLOSE',
                             'variant': 'ghost',
+                            'type': 'button',
                           },
                         ],
+                        'direction': 'horizontal',
+                        'justify': 'end',
                         'type': 'stack',
-                        'gap': 'sm',
                       },
                     ],
                   },
@@ -5367,8 +5379,8 @@ export function stdBookingSystemAppointmentOrbital(params: StdBookingSystemAppoi
                   'Appointment',
                   {
                     'emit': {
-                      'success': 'AppointmentLoaded',
                       'failure': 'AppointmentLoadFailed',
+                      'success': 'AppointmentLoaded',
                     },
                   },
                 ],
@@ -5389,8 +5401,8 @@ export function stdBookingSystemAppointmentOrbital(params: StdBookingSystemAppoi
                   'Appointment',
                   {
                     'emit': {
-                      'success': 'AppointmentLoaded',
                       'failure': 'AppointmentLoadFailed',
+                      'success': 'AppointmentLoaded',
                     },
                     'id': '@payload.id',
                   },
@@ -5399,57 +5411,57 @@ export function stdBookingSystemAppointmentOrbital(params: StdBookingSystemAppoi
                   'render-ui',
                   'modal',
                   {
-                    'direction': 'vertical',
-                    'gap': 'md',
                     'type': 'stack',
+                    'direction': 'vertical',
                     'children': [
                       {
-                        'align': 'center',
                         'children': [
                           {
-                            'type': 'icon',
                             'name': 'alert-triangle',
+                            'type': 'icon',
                           },
                           {
-                            'variant': 'h3',
                             'content': 'Delete Appointment',
                             'type': 'typography',
+                            'variant': 'h3',
                           },
                         ],
                         'gap': 'sm',
-                        'type': 'stack',
                         'direction': 'horizontal',
+                        'type': 'stack',
+                        'align': 'center',
                       },
                       {
                         'type': 'divider',
                       },
                       {
-                        'message': 'This action cannot be undone.',
                         'variant': 'error',
+                        'message': 'This action cannot be undone.',
                         'type': 'alert',
                       },
                       {
                         'type': 'stack',
+                        'justify': 'end',
+                        'gap': 'sm',
+                        'direction': 'horizontal',
                         'children': [
                           {
-                            'label': 'Cancel',
-                            'action': 'CANCEL',
                             'variant': 'ghost',
+                            'action': 'CANCEL',
+                            'label': 'Cancel',
                             'type': 'button',
                           },
                           {
-                            'variant': 'danger',
-                            'type': 'button',
                             'label': 'Delete',
                             'action': 'CONFIRM_DELETE',
+                            'type': 'button',
+                            'variant': 'danger',
                             'icon': 'check',
                           },
                         ],
-                        'justify': 'end',
-                        'direction': 'horizontal',
-                        'gap': 'sm',
                       },
                     ],
+                    'gap': 'md',
                   },
                 ],
               ],
@@ -5521,8 +5533,8 @@ export function stdBookingSystemAppointmentOrbital(params: StdBookingSystemAppoi
                   'Appointment',
                   {
                     'emit': {
-                      'success': 'AppointmentLoaded',
                       'failure': 'AppointmentLoadFailed',
+                      'success': 'AppointmentLoaded',
                     },
                   },
                 ],
@@ -5550,8 +5562,8 @@ export function stdBookingSystemAppointmentOrbital(params: StdBookingSystemAppoi
                   'Appointment',
                   {
                     'emit': {
-                      'failure': 'AppointmentLoadFailed',
                       'success': 'AppointmentLoaded',
+                      'failure': 'AppointmentLoadFailed',
                     },
                   },
                 ],
@@ -5561,6 +5573,55 @@ export function stdBookingSystemAppointmentOrbital(params: StdBookingSystemAppoi
         },
         'scope': 'collection',
       } as never, 'Appointment', canonicalName) as never,
+      makeTraitRef({
+        'ref': 'Reminder.traits.ReminderScheduler',
+        'name': 'AppointmentReminder',
+        'config': {
+          'offsetsHours': [
+            24,
+            1,
+          ],
+          'windowToleranceMinutes': 60,
+          'dateField': 'scheduledAt',
+          'severity': 'info',
+          'template': 'Reminder: your appointment is approaching',
+          'targetEntity': 'Appointment',
+        },
+      }),
+      makeTraitRef({
+        'ref': 'Notify.traits.NotifyOnEventListener',
+        'name': 'AppointmentNotifier',
+        'config': {
+          'listensFor': [
+            'BookingConfirmed',
+            'BookingCancelled',
+          ],
+          'suppressionList': [],
+          'severity': 'info',
+          'recipients': [],
+          'notifyChannel': 'in-app',
+          'template': 'Your booking has been updated',
+        },
+        'events': {
+          'EventOccurred': 'BookingConfirmed',
+        },
+      }),
+      makeTraitRef({
+        'ref': 'Approval.traits.ApprovalGateReview',
+        'name': 'AppointmentOverbookApproval',
+        'config': {
+          'escalationRoles': [
+            'director',
+          ],
+          'approverRoles': [
+            'manager',
+          ],
+          'autoApproveBelowThreshold': true,
+          'valueField': 'overbookCount',
+          'escalationHours': 4,
+          'threshold': 0,
+        },
+      }),
     ],
     pages: [
       {
@@ -5590,6 +5651,15 @@ export function stdBookingSystemAppointmentOrbital(params: StdBookingSystemAppoi
           },
           {
             'ref': 'AppointmentDelete',
+          },
+          {
+            'ref': 'AppointmentReminder',
+          },
+          {
+            'ref': 'AppointmentNotifier',
+          },
+          {
+            'ref': 'AppointmentOverbookApproval',
           },
         ],
       } as never,
@@ -5647,6 +5717,9 @@ export const StdBookingSystemAppointmentOrbitalManifest = {
     'AppointmentAppLayout',
     'AppointmentCalendar',
     'AppointmentBrowseList',
+    'AppointmentReminder',
+    'AppointmentNotifier',
+    'AppointmentOverbookApproval',
   ] as const,
   inlineTraitNames: [
     'AppointmentDashboard',
@@ -5773,38 +5846,38 @@ export function stdBookingSystemScheduleOrbital(params: StdBookingSystemSchedule
         'name': 'ScheduleAppLayout',
         'linkedEntity': canonicalName,
         'config': {
-          'appName': 'BookingSystemApp',
           'searchEvent': 'SCHEDULE_SEARCH',
-          'topBarActions': [],
-          'notifications': [],
-          'notificationClickEvent': 'SCHEDULE_NOTIFICATIONS_OPEN',
-          'contentTrait': '@trait.ScheduleDisplay',
           'navItems': [
             {
+              'href': '/providers',
               'label': 'Providers',
               'icon': 'user-check',
-              'href': '/providers',
             },
             {
-              'label': 'Book',
               'href': '/book',
+              'label': 'Book',
               'icon': 'calendar-plus',
             },
             {
               'href': '/appointments',
-              'icon': 'calendar',
               'label': 'Appointments',
+              'icon': 'calendar',
             },
             {
+              'href': '/schedule',
               'label': 'Schedule',
               'icon': 'clock',
-              'href': '/schedule',
             },
           ],
+          'topBarActions': [],
+          'contentTrait': '@trait.ScheduleDisplay',
+          'notifications': [],
+          'notificationClickEvent': 'SCHEDULE_NOTIFICATIONS_OPEN',
+          'appName': 'BookingSystemApp',
         },
         'events': {
-          'NOTIFY_CLICK': 'SCHEDULE_NOTIFICATIONS_OPEN',
           'SEARCH': 'SCHEDULE_SEARCH',
+          'NOTIFY_CLICK': 'SCHEDULE_NOTIFICATIONS_OPEN',
         },
       }),
       rebindInlineTraitEntity({
@@ -5928,8 +6001,8 @@ export function stdBookingSystemScheduleOrbital(params: StdBookingSystemSchedule
                   'Schedule',
                   {
                     'emit': {
-                      'success': 'ScheduleLoaded',
                       'failure': 'ScheduleLoadFailed',
+                      'success': 'ScheduleLoaded',
                     },
                   },
                 ],
@@ -5937,16 +6010,20 @@ export function stdBookingSystemScheduleOrbital(params: StdBookingSystemSchedule
                   'render-ui',
                   'main',
                   {
-                    'gap': 'lg',
+                    'type': 'stack',
+                    'direction': 'vertical',
                     'children': [
                       {
+                        'justify': 'between',
                         'type': 'stack',
                         'gap': 'md',
                         'align': 'center',
-                        'justify': 'between',
                         'children': [
                           {
+                            'gap': 'sm',
                             'direction': 'horizontal',
+                            'align': 'center',
+                            'type': 'stack',
                             'children': [
                               {
                                 'type': 'icon',
@@ -5958,16 +6035,13 @@ export function stdBookingSystemScheduleOrbital(params: StdBookingSystemSchedule
                                 'content': 'Schedule Overview',
                               },
                             ],
-                            'type': 'stack',
-                            'gap': 'sm',
-                            'align': 'center',
                           },
                           {
-                            'variant': 'secondary',
-                            'action': 'REFRESH',
                             'label': 'Refresh',
                             'icon': 'refresh-cw',
+                            'action': 'REFRESH',
                             'type': 'button',
+                            'variant': 'secondary',
                           },
                         ],
                         'direction': 'horizontal',
@@ -5979,31 +6053,31 @@ export function stdBookingSystemScheduleOrbital(params: StdBookingSystemSchedule
                         'children': [
                           {
                             'type': 'stat-display',
-                            'value': '@entity.totalBookings',
                             'label': 'Total Bookings',
                             'icon': 'calendar',
+                            'value': '@entity.totalBookings',
                           },
                           {
+                            'type': 'stat-display',
                             'label': 'Confirmed Today',
-                            'icon': 'check-circle',
                             'value': '@entity.confirmedToday',
-                            'type': 'stat-display',
+                            'icon': 'check-circle',
                           },
                           {
-                            'icon': 'clock',
                             'label': 'Pending',
-                            'value': '@entity.pendingBookings',
                             'type': 'stat-display',
+                            'icon': 'clock',
+                            'value': '@entity.pendingBookings',
                           },
                           {
                             'value': '@entity.availableSlots',
-                            'label': 'Available Slots',
-                            'type': 'stat-display',
                             'icon': 'calendar-plus',
+                            'type': 'stat-display',
+                            'label': 'Available Slots',
                           },
                         ],
-                        'type': 'simple-grid',
                         'cols': 4,
+                        'type': 'simple-grid',
                       },
                       {
                         'type': 'divider',
@@ -6012,8 +6086,7 @@ export function stdBookingSystemScheduleOrbital(params: StdBookingSystemSchedule
                         'type': 'calendar-grid',
                       },
                     ],
-                    'type': 'stack',
-                    'direction': 'vertical',
+                    'gap': 'lg',
                   },
                 ],
               ],
@@ -6028,8 +6101,8 @@ export function stdBookingSystemScheduleOrbital(params: StdBookingSystemSchedule
                   'Schedule',
                   {
                     'emit': {
-                      'failure': 'ScheduleLoadFailed',
                       'success': 'ScheduleLoaded',
+                      'failure': 'ScheduleLoadFailed',
                     },
                   },
                 ],
@@ -6037,22 +6110,22 @@ export function stdBookingSystemScheduleOrbital(params: StdBookingSystemSchedule
                   'render-ui',
                   'main',
                   {
-                    'direction': 'vertical',
-                    'type': 'stack',
-                    'className': 'py-12',
-                    'align': 'center',
-                    'gap': 'md',
                     'children': [
                       {
                         'type': 'spinner',
                       },
                       {
+                        'type': 'typography',
                         'color': 'muted',
                         'content': 'Refreshing…',
                         'variant': 'caption',
-                        'type': 'typography',
                       },
                     ],
+                    'className': 'py-12',
+                    'type': 'stack',
+                    'direction': 'vertical',
+                    'align': 'center',
+                    'gap': 'md',
                   },
                 ],
               ],
@@ -6066,73 +6139,75 @@ export function stdBookingSystemScheduleOrbital(params: StdBookingSystemSchedule
                   'render-ui',
                   'main',
                   {
+                    'type': 'stack',
+                    'gap': 'lg',
                     'direction': 'vertical',
                     'children': [
                       {
                         'children': [
                           {
                             'align': 'center',
-                            'direction': 'horizontal',
                             'children': [
                               {
-                                'name': 'clock',
                                 'type': 'icon',
+                                'name': 'clock',
                               },
                               {
-                                'type': 'typography',
                                 'content': 'Schedule Overview',
+                                'type': 'typography',
                                 'variant': 'h2',
                               },
                             ],
+                            'direction': 'horizontal',
                             'type': 'stack',
                             'gap': 'sm',
                           },
                           {
-                            'type': 'button',
-                            'variant': 'secondary',
-                            'label': 'Refresh',
                             'icon': 'refresh-cw',
+                            'type': 'button',
+                            'label': 'Refresh',
                             'action': 'REFRESH',
+                            'variant': 'secondary',
                           },
                         ],
                         'gap': 'md',
-                        'type': 'stack',
-                        'align': 'center',
                         'justify': 'between',
+                        'align': 'center',
+                        'type': 'stack',
                         'direction': 'horizontal',
                       },
                       {
                         'type': 'divider',
                       },
                       {
-                        'cols': 4,
                         'type': 'simple-grid',
                         'children': [
                           {
-                            'type': 'stat-display',
                             'value': '@entity.totalBookings',
                             'label': 'Total Bookings',
+                            'type': 'stat-display',
                             'icon': 'calendar',
                           },
                           {
                             'icon': 'check-circle',
-                            'type': 'stat-display',
-                            'value': '@entity.confirmedToday',
                             'label': 'Confirmed Today',
+                            'value': '@entity.confirmedToday',
+                            'type': 'stat-display',
                           },
                           {
-                            'label': 'Pending',
-                            'value': '@entity.pendingBookings',
                             'type': 'stat-display',
                             'icon': 'clock',
+                            'value': '@entity.pendingBookings',
+                            'label': 'Pending',
                           },
                           {
-                            'icon': 'calendar-plus',
-                            'type': 'stat-display',
                             'value': '@entity.availableSlots',
                             'label': 'Available Slots',
+                            'type': 'stat-display',
+                            'icon': 'calendar-plus',
                           },
                         ],
+                        'cols': 4,
                       },
                       {
                         'type': 'divider',
@@ -6141,8 +6216,6 @@ export function stdBookingSystemScheduleOrbital(params: StdBookingSystemSchedule
                         'type': 'calendar-grid',
                       },
                     ],
-                    'gap': 'lg',
-                    'type': 'stack',
                   },
                 ],
               ],
@@ -6156,73 +6229,72 @@ export function stdBookingSystemScheduleOrbital(params: StdBookingSystemSchedule
                   'render-ui',
                   'main',
                   {
-                    'gap': 'lg',
                     'children': [
                       {
-                        'direction': 'horizontal',
                         'gap': 'md',
-                        'align': 'center',
-                        'justify': 'between',
-                        'type': 'stack',
+                        'direction': 'horizontal',
                         'children': [
                           {
-                            'gap': 'sm',
-                            'direction': 'horizontal',
-                            'align': 'center',
                             'children': [
                               {
                                 'name': 'clock',
                                 'type': 'icon',
                               },
                               {
-                                'variant': 'h2',
-                                'content': 'Schedule Overview',
                                 'type': 'typography',
+                                'content': 'Schedule Overview',
+                                'variant': 'h2',
                               },
                             ],
                             'type': 'stack',
+                            'gap': 'sm',
+                            'align': 'center',
+                            'direction': 'horizontal',
                           },
                           {
-                            'type': 'button',
+                            'icon': 'refresh-cw',
                             'label': 'Refresh',
                             'action': 'REFRESH',
                             'variant': 'secondary',
-                            'icon': 'refresh-cw',
+                            'type': 'button',
                           },
                         ],
+                        'justify': 'between',
+                        'align': 'center',
+                        'type': 'stack',
                       },
                       {
                         'type': 'divider',
                       },
                       {
-                        'cols': 4,
                         'children': [
                           {
-                            'value': '@entity.totalBookings',
+                            'type': 'stat-display',
                             'label': 'Total Bookings',
                             'icon': 'calendar',
-                            'type': 'stat-display',
+                            'value': '@entity.totalBookings',
                           },
                           {
-                            'type': 'stat-display',
-                            'label': 'Confirmed Today',
                             'value': '@entity.confirmedToday',
+                            'label': 'Confirmed Today',
                             'icon': 'check-circle',
+                            'type': 'stat-display',
                           },
                           {
-                            'type': 'stat-display',
-                            'label': 'Pending',
-                            'icon': 'clock',
                             'value': '@entity.pendingBookings',
+                            'icon': 'clock',
+                            'label': 'Pending',
+                            'type': 'stat-display',
                           },
                           {
-                            'type': 'stat-display',
-                            'value': '@entity.availableSlots',
-                            'icon': 'calendar-plus',
                             'label': 'Available Slots',
+                            'value': '@entity.availableSlots',
+                            'type': 'stat-display',
+                            'icon': 'calendar-plus',
                           },
                         ],
                         'type': 'simple-grid',
+                        'cols': 4,
                       },
                       {
                         'type': 'divider',
@@ -6231,8 +6303,9 @@ export function stdBookingSystemScheduleOrbital(params: StdBookingSystemSchedule
                         'type': 'calendar-grid',
                       },
                     ],
-                    'direction': 'vertical',
+                    'gap': 'lg',
                     'type': 'stack',
+                    'direction': 'vertical',
                   },
                 ],
               ],
@@ -6246,36 +6319,36 @@ export function stdBookingSystemScheduleOrbital(params: StdBookingSystemSchedule
                   'render-ui',
                   'main',
                   {
-                    'direction': 'vertical',
-                    'children': [
-                      {
-                        'type': 'icon',
-                        'name': 'alert-triangle',
-                        'color': 'destructive',
-                      },
-                      {
-                        'variant': 'h3',
-                        'content': 'Failed to refresh schedule',
-                        'type': 'typography',
-                      },
-                      {
-                        'type': 'typography',
-                        'variant': 'body',
-                        'content': '@payload.error',
-                        'color': 'muted',
-                      },
-                      {
-                        'action': 'REFRESH',
-                        'type': 'button',
-                        'variant': 'primary',
-                        'label': 'Retry',
-                        'icon': 'rotate-ccw',
-                      },
-                    ],
                     'className': 'py-12',
                     'gap': 'md',
                     'type': 'stack',
+                    'direction': 'vertical',
                     'align': 'center',
+                    'children': [
+                      {
+                        'name': 'alert-triangle',
+                        'color': 'destructive',
+                        'type': 'icon',
+                      },
+                      {
+                        'content': 'Failed to refresh schedule',
+                        'type': 'typography',
+                        'variant': 'h3',
+                      },
+                      {
+                        'content': '@payload.error',
+                        'variant': 'body',
+                        'type': 'typography',
+                        'color': 'muted',
+                      },
+                      {
+                        'icon': 'rotate-ccw',
+                        'label': 'Retry',
+                        'action': 'REFRESH',
+                        'variant': 'primary',
+                        'type': 'button',
+                      },
+                    ],
                   },
                 ],
               ],
@@ -6374,6 +6447,285 @@ export function isStdBookingSystemScheduleOrbitalParams(p: object): p is StdBook
 }
 
 /**
+ * Tunable params for the AppointmentPolicyFromStdOrbital orbital.
+ *
+ * Canonical entity: AppointmentPolicy — overridable via
+ * `entityName`. The factory threads the effective name through every
+ * trait's `linkedEntity` binding; the `.orb` compiler's inline phase
+ * auto-rewrites every `@Entity.x`, `["ref",X]`, `["fetch",X,…]`,
+ * `["persist",…,X,…]` and payload type string accordingly.
+ *
+ * Override surface (mirrors `.lolo`'s native overrides 1:1):
+ *   fields         — extra entity fields (appended)
+ *   pagePath       — first-page URL override
+ *   persistence    — entity persistence mode
+ *   entityName     — rename the canonical entity
+ *   collection     — override the derived collection key
+ *   traitOverrides — per-imported-trait `config`, `linkedEntity`,
+ *                    `events`, `name`, `emitsScope`, `listens`.
+ *                    `effects` is NOT exposed — `.lolo` removed it
+ *                    in Phase 9.5.H. Use `listens` via a sibling
+ *                    trait to react to atom events.
+ */
+export interface StdBookingSystemAppointmentPolicyFromStdOrbitalParams {
+  /** Extra fields appended to the canonical entity. */
+  fields?: EntityField[];
+  /** URL path override for the orbital's first page. */
+  pagePath?: string;
+  /** Override the canonical entity persistence mode. */
+  persistence?: EntityPersistence;
+  /** Rename the canonical entity (PascalCase singular, ≤32 chars). */
+  entityName?: string;
+  /** Override derived collection key (defaults to plural(entityName).toLowerCase()). */
+  collection?: string;
+  /**
+   * Per-imported-trait override surface keyed on each imported
+   * trait's canonical `name`. Accepts every override `.lolo`
+   * natively supports: `config`, `linkedEntity`, `events`,
+   * `name`, `emitsScope`, `listens`. `effects` is excluded —
+   * atom-owned (use `listens` via a sibling trait instead).
+   */
+  traitOverrides?: Partial<Record<
+    'AppointmentPolicyFromStdAppLayout' | 'AppointmentPolicyFromStdManageBlock',
+    Pick<MakeTraitRefOpts, 'config' | 'linkedEntity' | 'events' | 'name' | 'emitsScope' | 'listens'>
+  >>;
+}
+
+/** Per-orbital factory: builds the AppointmentPolicyFromStdOrbital orbital with consumer params. */
+export function stdBookingSystemAppointmentPolicyFromStdOrbital(params: StdBookingSystemAppointmentPolicyFromStdOrbitalParams = {}): OrbitalDefinition {
+  const canonicalName = params.entityName ?? 'AppointmentPolicy';
+  const collectionName = params.collection
+    ?? (params.entityName ? `${params.entityName.toLowerCase()}s` : 'appointment_policies');
+  const built = makeOrbitalWithUses({
+    name: 'AppointmentPolicyFromStdOrbital',
+    uses: [
+      {
+        'from': 'std/behaviors/std-app-layout',
+        'as': 'AppShell',
+      },
+      {
+        'from': 'std/behaviors/std-appointment-policy',
+        'as': 'Policies',
+      },
+    ],
+    entity: {
+      name: canonicalName,
+      collection: collectionName,
+      persistence: params.persistence ?? 'persistent',
+      fields: ((): EntityField[] => {
+        const canonical: EntityField[] = [
+          {
+            'name': 'id',
+            'type': 'string',
+            'required': true,
+          },
+          {
+            'name': 'name',
+            'type': 'string',
+            'required': true,
+          },
+          {
+            'name': 'description',
+            'type': 'string',
+            'default': '',
+          },
+          {
+            'name': 'rescheduleWindowHours',
+            'type': 'number',
+            'default': 24,
+          },
+          {
+            'name': 'maxReschedules',
+            'type': 'number',
+            'default': 2,
+          },
+          {
+            'name': 'cancellationPolicy',
+            'type': 'string',
+            'default': 'free',
+            'values': [
+              'free',
+              'partial-refund',
+              'no-refund',
+            ],
+          },
+          {
+            'name': 'noShowGracePeriodMinutes',
+            'type': 'number',
+            'default': 15,
+          },
+          {
+            'name': 'noShowFeeAmount',
+            'type': 'number',
+            'default': 0,
+          },
+          {
+            'name': 'lateArrivalGraceMinutes',
+            'type': 'number',
+            'default': 10,
+          },
+          {
+            'name': 'status',
+            'type': 'string',
+            'default': 'active',
+            'values': [
+              'active',
+              'archived',
+            ],
+          },
+          {
+            'name': 'createdAt',
+            'type': 'string',
+          },
+        ];
+        const extras = params.fields ?? [];
+        if (extras.length === 0) return canonical;
+        const extraNames = new Set(extras.map((f) => f.name));
+        return [...canonical.filter((f) => !extraNames.has(f.name)), ...extras];
+      })(),
+    } as Entity,
+    traits: [
+      makeTraitRef({
+        'ref': 'AppShell.traits.AppLayout',
+        'name': 'AppointmentPolicyFromStdAppLayout',
+        'linkedEntity': canonicalName,
+        'config': {
+          'searchEvent': 'APPOINTMENT_POLICY_SEARCH',
+          'contentTrait': '@trait.AppointmentPolicyFromStdManageBlock',
+          'notifications': [],
+          'appName': 'BookingSystemApp',
+          'notificationClickEvent': 'APPOINTMENT_POLICY_NOTIFICATIONS_OPEN',
+          'navItems': [
+            {
+              'icon': 'user-check',
+              'label': 'Providers',
+              'href': '/providers',
+            },
+            {
+              'icon': 'calendar-plus',
+              'href': '/book',
+              'label': 'Book',
+            },
+            {
+              'icon': 'calendar',
+              'label': 'Appointments',
+              'href': '/appointments',
+            },
+            {
+              'href': '/schedule',
+              'icon': 'clock',
+              'label': 'Schedule',
+            },
+            {
+              'label': 'Appointment Policies',
+              'icon': 'calendar-check',
+              'href': '/appointment-policies-from-std',
+            },
+          ],
+        },
+        'events': {
+          'SEARCH': 'APPOINTMENT_POLICY_SEARCH',
+          'NOTIFY_CLICK': 'APPOINTMENT_POLICY_NOTIFICATIONS_OPEN',
+        },
+      }),
+      makeTraitRef({
+        'ref': 'Policies.traits.AppointmentPolicyManage',
+        'name': 'AppointmentPolicyFromStdManageBlock',
+        'linkedEntity': canonicalName,
+        'config': {
+          'title': 'Appointment Policies',
+        },
+      }),
+    ],
+    pages: [
+      {
+        'name': 'AppointmentPolicyFromStdPage',
+        'path': '/appointment-policies-from-std',
+        'traits': [
+          {
+            'ref': 'AppointmentPolicyFromStdAppLayout',
+          },
+          {
+            'ref': 'AppointmentPolicyFromStdManageBlock',
+          },
+        ],
+      } as never,
+    ],
+  });
+  type _OrbTrait = OrbitalDefinition["traits"][number];
+  type _OrbPage = NonNullable<OrbitalDefinition["pages"]>[number];
+  type _RefOverride = Pick<MakeTraitRefOpts, "config" | "linkedEntity" | "events" | "name" | "emitsScope" | "listens">;
+  if (built.traits && params.traitOverrides !== undefined) {
+    built.traits = (built.traits as _OrbTrait[]).map((t): _OrbTrait => {
+      if (!t || typeof t !== "object") return t;
+      const tr = t as TraitReference & { name?: string };
+      // Match by name so inline traits (no `ref`) and
+      // reference traits (with `ref`) both pick up the
+      // override surface keyed on the trait's `name`.
+      if (typeof tr.name !== "string") return t;
+      const overrides = params.traitOverrides as Record<string, _RefOverride | undefined> | undefined;
+      const override = overrides?.[tr.name];
+      if (!override) return t;
+      const merged: TraitReference = { ...tr };
+      if (override.config !== undefined) merged.config = { ...(tr.config ?? {}), ...override.config };
+      if (override.linkedEntity !== undefined) merged.linkedEntity = override.linkedEntity;
+      if (override.events !== undefined) merged.events = { ...(tr.events ?? {}), ...override.events };
+      if (override.name !== undefined) merged.name = override.name;
+      if (override.emitsScope !== undefined) merged.emitsScope = override.emitsScope;
+      if (override.listens !== undefined) merged.listens = override.listens;
+      return merged;
+    });
+  }
+  if (built.pages && params.pagePath !== undefined) {
+    built.pages = (built.pages as _OrbPage[]).map((p, idx) => {
+      if (!p || typeof p !== "object") return p;
+      if (idx !== 0) return p;
+      const out = { ...p } as _OrbPage & { path?: string };
+      out.path = params.pagePath;
+      return out;
+    });
+  }
+  return built;
+}
+
+/** Manifest — describes the params surface of stdBookingSystemAppointmentPolicyFromStdOrbital. */
+export const StdBookingSystemAppointmentPolicyFromStdOrbitalManifest = {
+  organism: 'std-booking-system',
+  orbitalName: 'AppointmentPolicyFromStdOrbital',
+  paramFields: [
+    { name: 'fields', type: 'EntityField[]', description: 'Extra fields appended to the canonical entity.' },
+    { name: 'pagePath', type: 'string', description: 'URL override for the orbital first page.' },
+    { name: 'persistence', type: "'persistent' | 'runtime' | 'singleton' | 'instance' | 'local'", description: 'Override the canonical entity persistence mode.' },
+    { name: 'entityName', type: 'string', description: 'Rename the canonical entity. PascalCase singular, ≤32 chars. Threads through every trait\'s linkedEntity binding; compiler rewrites @Entity.x refs.' },
+    { name: 'collection', type: 'string', description: 'Override derived collection key. Defaults to plural(entityName).toLowerCase().' },
+    { name: 'traitOverrides', type: "Partial<Record<TraitName, { config?, linkedEntity?, events?, name?, emitsScope?, listens? }>>", description: 'Per-imported-trait overrides — mirrors .lolo\'s native trait-composition surface 1:1. effects is excluded (atom-owned; use listens via a sibling trait).' },
+  ] as const,
+  traitNames: [
+    'AppointmentPolicyFromStdAppLayout',
+    'AppointmentPolicyFromStdManageBlock',
+  ] as const,
+  inlineTraitNames: [
+  ] as const,
+};
+
+/** Typed guard — runtime validates StdBookingSystemAppointmentPolicyFromStdOrbitalParams keys. */
+export function isStdBookingSystemAppointmentPolicyFromStdOrbitalParams(p: object): p is StdBookingSystemAppointmentPolicyFromStdOrbitalParams {
+  type _OverrideRecord = NonNullable<StdBookingSystemAppointmentPolicyFromStdOrbitalParams['traitOverrides']>;
+  const obj = p as { traitOverrides?: _OverrideRecord };
+  if (obj.traitOverrides !== undefined) {
+    if (typeof obj.traitOverrides !== "object" || obj.traitOverrides === null) return false;
+    const allowed: readonly string[] = [
+      ...StdBookingSystemAppointmentPolicyFromStdOrbitalManifest.traitNames,
+      ...StdBookingSystemAppointmentPolicyFromStdOrbitalManifest.inlineTraitNames,
+    ];
+    for (const k of Object.keys(obj.traitOverrides)) {
+      if (!allowed.includes(k)) return false;
+    }
+  }
+  return true;
+}
+
+/**
  * Bundled params for std-booking-system — one optional entry per orbital.
  * Each entry maps to its per-orbital factory above.
  */
@@ -6382,14 +6734,16 @@ export interface StdBookingSystemParams {
   Booking?: StdBookingSystemBookingOrbitalParams;
   Appointment?: StdBookingSystemAppointmentOrbitalParams;
   Schedule?: StdBookingSystemScheduleOrbitalParams;
+  AppointmentPolicyFromStd?: StdBookingSystemAppointmentPolicyFromStdOrbitalParams;
 }
 
-/** Whole-organism descriptor (4 orbitals). Composes per-orbital factories. */
+/** Whole-organism descriptor (5 orbitals). Composes per-orbital factories. */
 export function stdBookingSystem(params: StdBookingSystemParams = {}): OrbitalDefinition[] {
   return [
     stdBookingSystemProviderOrbital(params.Provider ?? {}),
     stdBookingSystemBookingOrbital(params.Booking ?? {}),
     stdBookingSystemAppointmentOrbital(params.Appointment ?? {}),
     stdBookingSystemScheduleOrbital(params.Schedule ?? {}),
+    stdBookingSystemAppointmentPolicyFromStdOrbital(params.AppointmentPolicyFromStd ?? {}),
   ];
 }

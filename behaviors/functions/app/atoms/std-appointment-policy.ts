@@ -94,24 +94,24 @@ export interface StdAppointmentPolicyAppointmentPolicyLoadFailedPayload {
  * without modifying its state-machine topology.
  */
 export interface StdAppointmentPolicyConfig {
-  /** Default: `15` */
-  noShowGracePeriodMinutes?: number;
-  /** Default: `2` */
-  maxReschedules?: number;
-  /** Default: `0` */
-  noShowFeeAmount?: number;
-  /** Default: `10` */
-  lateArrivalGraceMinutes?: number;
-  /** Default: `[{"variant":"primary","icon":"arrow-right","label":"Open","event":"OPEN_POLICY"},{"event":"ARCHIVE_POLICY","label":"Archive","variant":"danger"}]` */
+  /** Default: `[{"variant":"primary","event":"OPEN_POLICY","icon":"arrow-right","label":"Open"},{"variant":"danger","event":"ARCHIVE_POLICY","label":"Archive"}]` */
   itemActions?: EntityRow[];
-  /** Default: `[{"label":"Name","variant":"caption","name":"name"},{"name":"rescheduleWindowHours","label":"Reschedule (h)","variant":"caption"},{"label":"Max reschedules","variant":"caption","name":"maxReschedules"},{"variant":"badge","name":"cancellationPolicy","label":"Cancellation"},{"name":"noShowGracePeriodMinutes","label":"No-show grace","variant":"caption"},{"variant":"caption","label":"No-show fee","name":"noShowFeeAmount"},{"name":"status","label":"Status","variant":"badge"}]` */
-  fields?: EntityRow[];
   /** Default: `24` */
   rescheduleWindowHours?: number;
   /** Default: `"Appointment Policies"` */
   title?: string;
+  /** Default: `[{"name":"name","variant":"caption","label":"Name"},{"label":"Reschedule (h)","name":"rescheduleWindowHours","variant":"caption"},{"label":"Max reschedules","variant":"caption","name":"maxReschedules"},{"variant":"badge","name":"cancellationPolicy","label":"Cancellation"},{"label":"No-show grace","variant":"caption","name":"noShowGracePeriodMinutes"},{"name":"noShowFeeAmount","label":"No-show fee","variant":"caption"},{"name":"status","label":"Status","variant":"badge"}]` */
+  fields?: EntityRow[];
+  /** Default: `2` */
+  maxReschedules?: number;
+  /** Default: `10` */
+  lateArrivalGraceMinutes?: number;
   /** Default: `"free"` */
   cancellationPolicy?: 'free' | 'partial-refund' | 'no-refund';
+  /** Default: `0` */
+  noShowFeeAmount?: number;
+  /** Default: `15` */
+  noShowGracePeriodMinutes?: number;
 }
 
 /**
