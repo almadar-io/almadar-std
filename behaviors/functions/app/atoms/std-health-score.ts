@@ -89,20 +89,26 @@ export interface StdHealthScoreHealthScoreLoadFailedPayload {
  * without modifying its state-machine topology.
  */
 export interface StdHealthScoreConfig {
-  /** Default: `365` */
-  archiveInactiveAfterDays?: number;
-  /** Default: `false` */
-  consentTrackingEnabled?: boolean;
-  /** Default: `"Customer Health Scores"` */
-  title?: string;
-  /** Default: `[{"label":"Customer","name":"customerName","variant":"caption"},{"name":"score","label":"Score","variant":"badge"},{"variant":"badge","label":"Tier","name":"tier"},{"name":"usageScore","label":"Usage","variant":"caption"},{"label":"Support","name":"supportScore","variant":"caption"},{"name":"trend","variant":"badge","label":"Trend"},{"variant":"caption","label":"CSM","name":"assignedCsm"}]` */
-  fields?: EntityRow[];
-  /** Default: `[{"variant":"primary","label":"Open","icon":"arrow-right","event":"OPEN_SCORE"},{"label":"Recalculate","event":"RECALCULATE","variant":"secondary"}]` */
-  itemActions?: EntityRow[];
-  /** Default: `40` */
-  healthScoreThresholdAlert?: number;
   /** Default: `[30,7,1]` */
   renewalReminderDaysBefore?: number[];
+  /** Default: `["csm-lead","customer-success-director"]` */
+  alertEscalationRoles?: string[];
+  /** Default: `[{"label":"Open","event":"OPEN_SCORE","icon":"arrow-right","variant":"primary"},{"event":"RECALCULATE","label":"Recalculate","variant":"secondary"}]` */
+  itemActions?: EntityRow[];
+  /** Default: `24` */
+  recomputeIntervalHours?: number;
+  /** Default: `false` */
+  consentTrackingEnabled?: boolean;
+  /** Default: `[{"name":"customerName","label":"Customer","variant":"caption"},{"variant":"badge","name":"score","label":"Score"},{"name":"tier","label":"Tier","variant":"badge"},{"label":"Usage","name":"usageScore","variant":"caption"},{"name":"supportScore","label":"Support","variant":"caption"},{"label":"Trend","variant":"badge","name":"trend"},{"variant":"caption","label":"CSM","name":"assignedCsm"}]` */
+  fields?: EntityRow[];
+  /** Default: `30` */
+  churnRiskThreshold?: number;
+  /** Default: `"Customer Health Scores"` */
+  title?: string;
+  /** Default: `40` */
+  healthScoreThresholdAlert?: number;
+  /** Default: `365` */
+  archiveInactiveAfterDays?: number;
 }
 
 /**

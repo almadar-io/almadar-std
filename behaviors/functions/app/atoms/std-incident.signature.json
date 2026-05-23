@@ -1,0 +1,317 @@
+[
+  {
+    "organism": "std-incident",
+    "orbital": "IncidentOrbital",
+    "tier": "atoms",
+    "factoryPath": "behaviors/functions/app/atoms/std-incident.ts",
+    "entities": [
+      {
+        "name": "Incident",
+        "fields": [
+          {
+            "name": "title",
+            "type": "string",
+            "required": true
+          },
+          {
+            "name": "description",
+            "type": "string",
+            "required": true
+          },
+          {
+            "name": "severity",
+            "type": "string",
+            "required": false
+          },
+          {
+            "name": "status",
+            "type": "string",
+            "required": false
+          },
+          {
+            "name": "pagedTo",
+            "type": "string",
+            "required": false
+          },
+          {
+            "name": "runbookId",
+            "type": "string",
+            "required": false
+          },
+          {
+            "name": "acknowledgedAt",
+            "type": "string",
+            "required": false
+          },
+          {
+            "name": "mitigatedAt",
+            "type": "string",
+            "required": false
+          },
+          {
+            "name": "resolvedAt",
+            "type": "string",
+            "required": false
+          }
+        ],
+        "persistence": "persistent"
+      }
+    ],
+    "traits": [
+      {
+        "name": "IncidentManage",
+        "emittedEvents": [
+          "INCIDENT_OPEN",
+          "CLOSE_VIEW",
+          "ACK",
+          "MITIGATE",
+          "RESOLVE",
+          "IncidentLoaded",
+          "IncidentLoadFailed"
+        ],
+        "listenedEvents": [],
+        "overridableConfigKeys": [
+          {
+            "key": "acknowledgementDeadlineMinutes",
+            "type": "number",
+            "default": 5,
+            "label": "Acknowledgement deadline (min)",
+            "description": "Minutes from page to acknowledgement before re-paging.",
+            "tier": "domain"
+          },
+          {
+            "key": "autoCloseAfterResolution",
+            "type": "boolean",
+            "default": true,
+            "label": "Auto-close after resolution",
+            "description": "When true, an incident moves to 'closed' automatically after the resolved-mitigated window.",
+            "tier": "domain"
+          },
+          {
+            "key": "customerCommsRequired",
+            "type": "string",
+            "default": "sev1-2",
+            "label": "Customer comms required",
+            "description": "When to require a customer-facing status page update.",
+            "synonyms": "status page, customer notification",
+            "tier": "domain",
+            "enumValues": [
+              "always",
+              "sev1-only",
+              "sev1-2",
+              "never"
+            ]
+          },
+          {
+            "key": "fields",
+            "type": "[FieldSpec]",
+            "default": [
+              {
+                "name": "title",
+                "label": "Title",
+                "variant": "caption"
+              },
+              {
+                "name": "severity",
+                "label": "Severity",
+                "variant": "badge"
+              },
+              {
+                "variant": "badge",
+                "name": "status",
+                "label": "Status"
+              },
+              {
+                "label": "Paged",
+                "name": "pagedTo",
+                "variant": "caption"
+              },
+              {
+                "name": "runbookId",
+                "label": "Runbook",
+                "variant": "caption"
+              }
+            ],
+            "label": "Columns to show",
+            "description": "Each column maps to one field on the Incident entity",
+            "tier": "presentation",
+            "items": {
+              "properties": {
+                "format": {
+                  "name": "format",
+                  "required": false,
+                  "type": "string"
+                },
+                "key": {
+                  "name": "key",
+                  "required": false,
+                  "type": "string"
+                },
+                "header": {
+                  "name": "header",
+                  "required": false,
+                  "type": "string"
+                },
+                "variant": {
+                  "name": "variant",
+                  "required": false,
+                  "type": "string"
+                },
+                "label": {
+                  "name": "label",
+                  "required": false,
+                  "type": "string"
+                },
+                "name": {
+                  "name": "name",
+                  "required": true,
+                  "type": "string"
+                },
+                "icon": {
+                  "name": "icon",
+                  "required": false,
+                  "type": "string"
+                }
+              },
+              "type": "object"
+            }
+          },
+          {
+            "key": "itemActions",
+            "type": "[ItemAction]",
+            "default": [
+              {
+                "label": "Open",
+                "variant": "primary",
+                "event": "INCIDENT_OPEN",
+                "icon": "arrow-right"
+              },
+              {
+                "event": "RESOLVE",
+                "icon": "check",
+                "variant": "primary",
+                "label": "Resolve"
+              }
+            ],
+            "label": "Row actions",
+            "description": "Buttons users can click on each incident row",
+            "tier": "presentation",
+            "items": {
+              "properties": {
+                "label": {
+                  "name": "label",
+                  "required": true,
+                  "type": "string"
+                },
+                "icon": {
+                  "name": "icon",
+                  "required": false,
+                  "type": "string"
+                },
+                "variant": {
+                  "name": "variant",
+                  "required": false,
+                  "type": "string"
+                },
+                "event": {
+                  "name": "event",
+                  "required": true,
+                  "type": "string"
+                }
+              },
+              "type": "object"
+            }
+          },
+          {
+            "key": "pageEscalationMinutes",
+            "type": "number",
+            "default": 15,
+            "label": "Page escalation (min)",
+            "description": "Minutes after open before paging the next role in the escalation chain.",
+            "tier": "domain"
+          },
+          {
+            "key": "pagedRoles",
+            "type": "[string]",
+            "default": [
+              "oncall-primary"
+            ],
+            "label": "Paged roles",
+            "description": "Roles auto-paged when an incident opens. Compose std-notify-on-event for delivery.",
+            "synonyms": "on-call roles, paging list",
+            "tier": "domain",
+            "items": {
+              "type": "string"
+            }
+          },
+          {
+            "key": "postmortemRequiredAbove",
+            "type": "string",
+            "default": "sev2",
+            "label": "Postmortem required above",
+            "description": "Severity threshold at-or-above which a postmortem doc is mandatory.",
+            "synonyms": "RCA required",
+            "tier": "domain",
+            "enumValues": [
+              "sev1",
+              "sev2",
+              "sev3",
+              "sev4",
+              "sev5"
+            ]
+          },
+          {
+            "key": "runbookId",
+            "type": "string",
+            "default": "",
+            "label": "Default runbook ID",
+            "description": "ID of a sibling std-runbook (when composed) to consult on alert. Empty = no auto-suggested runbook.",
+            "tier": "domain"
+          },
+          {
+            "key": "severity",
+            "type": "string",
+            "default": "sev3",
+            "label": "Default severity",
+            "description": "Default severity classification for new incidents.",
+            "synonyms": "impact level, sev",
+            "tier": "domain",
+            "enumValues": [
+              "sev1",
+              "sev2",
+              "sev3",
+              "sev4",
+              "sev5"
+            ]
+          },
+          {
+            "key": "title",
+            "type": "string",
+            "default": "Incidents",
+            "label": "Section title",
+            "description": "Heading shown above the incidents list",
+            "tier": "presentation"
+          }
+        ],
+        "capabilities": []
+      }
+    ],
+    "pages": [
+      {
+        "name": "IncidentManagePage",
+        "defaultPath": "/incidents",
+        "primaryEntity": "Incident"
+      }
+    ],
+    "emittedEvents": [
+      "ACK",
+      "CLOSE_VIEW",
+      "INCIDENT_OPEN",
+      "IncidentLoadFailed",
+      "IncidentLoaded",
+      "MITIGATE",
+      "RESOLVE"
+    ],
+    "listenedEvents": []
+  }
+]

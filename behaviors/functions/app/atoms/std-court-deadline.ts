@@ -87,38 +87,40 @@ export interface StdCourtDeadlineCourtDeadlineLoadFailedPayload {
  * without modifying its state-machine topology.
  */
 export interface StdCourtDeadlineConfig {
-  /** Default: `[]` */
-  blackoutDates?: string[];
+  /** Default: `0` */
+  billingRateDefault?: number;
+  /** Default: `""` */
+  policyId?: string;
+  /** Default: `1440` */
+  leadTimeMinutes?: number;
+  /** Default: `365` */
+  bookingWindowDays?: number;
+  /** Default: `"Deadlines"` */
+  title?: string;
+  /** Default: `0` */
+  noShowGracePeriodMinutes?: number;
+  /** Default: `"no-refund"` */
+  cancellationPolicy?: 'free' | 'partial-refund' | 'no-refund';
+  /** Default: `false` */
+  retainerRequired?: boolean;
+  /** Default: `""` */
+  practiceArea?: string;
   /** Default: `2` */
   maxReschedules?: number;
   /** Default: `"00:00-23:59"` */
   bookingHours?: string;
-  /** Default: `false` */
-  retainerRequired?: boolean;
-  /** Default: `1440` */
-  leadTimeMinutes?: number;
-  /** Default: `[{"label":"Title","variant":"caption","name":"title"},{"variant":"badge","name":"deadlineType","label":"Type"},{"variant":"caption","name":"dueAt","label":"Due"},{"name":"jurisdiction","label":"Jurisdiction","variant":"caption"},{"name":"assignedTo","label":"Assigned","variant":"caption"},{"label":"Status","variant":"badge","name":"status"}]` */
-  fields?: EntityRow[];
   /** Default: `72` */
   rescheduleWindowHours?: number;
-  /** Default: `"Deadlines"` */
-  title?: string;
-  /** Default: `0` */
-  billingRateDefault?: number;
-  /** Default: `365` */
-  bookingWindowDays?: number;
-  /** Default: `"no-refund"` */
-  cancellationPolicy?: 'free' | 'partial-refund' | 'no-refund';
-  /** Default: `""` */
-  practiceArea?: string;
-  /** Default: `[{"variant":"primary","icon":"arrow-right","event":"OPEN_DEADLINE","label":"Open"},{"event":"MARK_COMPLETED","variant":"danger","label":"Complete"}]` */
-  itemActions?: EntityRow[];
-  /** Default: `0` */
-  noShowGracePeriodMinutes?: number;
-  /** Default: `true` */
-  conflictCheckRequired?: boolean;
   /** Default: `"standard"` */
   clientConfidentialityLevel?: 'standard' | 'elevated' | 'restricted';
+  /** Default: `true` */
+  conflictCheckRequired?: boolean;
+  /** Default: `[{"name":"title","variant":"caption","label":"Title"},{"label":"Type","name":"deadlineType","variant":"badge"},{"name":"dueAt","variant":"caption","label":"Due"},{"variant":"caption","name":"jurisdiction","label":"Jurisdiction"},{"variant":"caption","name":"assignedTo","label":"Assigned"},{"variant":"badge","label":"Status","name":"status"}]` */
+  fields?: EntityRow[];
+  /** Default: `[{"event":"OPEN_DEADLINE","label":"Open","icon":"arrow-right","variant":"primary"},{"label":"Complete","event":"MARK_COMPLETED","variant":"danger"}]` */
+  itemActions?: EntityRow[];
+  /** Default: `[]` */
+  blackoutDates?: string[];
 }
 
 /**

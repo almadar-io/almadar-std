@@ -120,20 +120,28 @@ export interface StdCustomerAccountCustomerAccountUpdateFailedPayload {
  * without modifying its state-machine topology.
  */
 export interface StdCustomerAccountConfig {
-  /** Default: `true` */
-  consentTrackingEnabled?: boolean;
-  /** Default: `[{"label":"Name","variant":"caption","name":"name"},{"name":"email","label":"Email","variant":"caption"},{"label":"Phone","name":"phone","variant":"caption"},{"label":"Points","variant":"caption","name":"loyaltyPoints"},{"name":"totalSpent","variant":"caption","label":"Total Spent"},{"variant":"badge","name":"status","label":"Status"}]` */
-  fields?: EntityRow[];
   /** Default: `"Customers"` */
   title?: string;
-  /** Default: `[{"label":"Open","event":"OPEN_CUSTOMER","variant":"primary","icon":"arrow-right"},{"variant":"danger","label":"Ban","event":"BAN_CUSTOMER"}]` */
+  /** Default: `[{"event":"OPEN_CUSTOMER","label":"Open","variant":"primary","icon":"arrow-right"},{"label":"Ban","variant":"danger","event":"BAN_CUSTOMER"}]` */
   itemActions?: EntityRow[];
+  /** Default: `true` */
+  gdprConsentRequired?: boolean;
+  /** Default: `true` */
+  consentTrackingEnabled?: boolean;
+  /** Default: `5` */
+  contactFrequencyCapPerWeek?: number;
   /** Default: `[30,7,1]` */
   renewalReminderDaysBefore?: number[];
-  /** Default: `365` */
-  archiveInactiveAfterDays?: number;
+  /** Default: `[{"variant":"caption","name":"name","label":"Name"},{"name":"email","variant":"caption","label":"Email"},{"name":"phone","label":"Phone","variant":"caption"},{"name":"loyaltyPoints","variant":"caption","label":"Points"},{"label":"Total Spent","name":"totalSpent","variant":"caption"},{"variant":"badge","name":"status","label":"Status"}]` */
+  fields?: EntityRow[];
+  /** Default: `7` */
+  defaultRetentionYears?: number;
+  /** Default: `"linear"` */
+  lifecycleStagePolicy?: 'linear' | 'branching' | 'none';
   /** Default: `50` */
   healthScoreThresholdAlert?: number;
+  /** Default: `365` */
+  archiveInactiveAfterDays?: number;
 }
 
 /**

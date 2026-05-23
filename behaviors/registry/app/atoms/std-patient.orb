@@ -1,0 +1,1155 @@
+{
+  "name": "std-patient",
+  "version": "1.0.0",
+  "description": "std-patient — patient record management with PHI handling, consent gating, and status lifecycle. Listens for SET_STATUS so std-lifecycle can drive transitions.",
+  "orbitals": [
+    {
+      "name": "PatientOrbital",
+      "entity": {
+        "name": "Patient",
+        "collection": "patients",
+        "persistence": "persistent",
+        "fields": [
+          {
+            "name": "id",
+            "type": "string",
+            "required": true
+          },
+          {
+            "name": "firstName",
+            "type": "string",
+            "required": true
+          },
+          {
+            "name": "lastName",
+            "type": "string",
+            "required": true
+          },
+          {
+            "name": "dateOfBirth",
+            "type": "string",
+            "default": ""
+          },
+          {
+            "name": "consentType",
+            "type": "string",
+            "default": "standard",
+            "values": [
+              "standard",
+              "research",
+              "parental",
+              "minor"
+            ]
+          },
+          {
+            "name": "mrn",
+            "type": "string",
+            "default": ""
+          },
+          {
+            "name": "primaryProvider",
+            "type": "string",
+            "default": ""
+          },
+          {
+            "name": "status",
+            "type": "string",
+            "default": "active",
+            "values": [
+              "active",
+              "inactive",
+              "deceased"
+            ]
+          },
+          {
+            "name": "createdAt",
+            "type": "string",
+            "default": ""
+          },
+          {
+            "name": "updatedAt",
+            "type": "string",
+            "default": ""
+          }
+        ]
+      },
+      "traits": [
+        {
+          "name": "PatientManage",
+          "category": "interaction",
+          "linkedEntity": "Patient",
+          "emits": [
+            {
+              "event": "OPEN_PATIENT",
+              "payloadSchema": [
+                {
+                  "name": "id",
+                  "type": "string",
+                  "required": true
+                },
+                {
+                  "name": "row.id",
+                  "type": "string",
+                  "required": true
+                },
+                {
+                  "name": "row.firstName",
+                  "type": "string",
+                  "required": true
+                },
+                {
+                  "name": "row.lastName",
+                  "type": "string",
+                  "required": true
+                },
+                {
+                  "name": "row.dateOfBirth",
+                  "type": "string"
+                },
+                {
+                  "name": "row.consentType",
+                  "type": "string"
+                },
+                {
+                  "name": "row.mrn",
+                  "type": "string"
+                },
+                {
+                  "name": "row.primaryProvider",
+                  "type": "string"
+                },
+                {
+                  "name": "row.status",
+                  "type": "string"
+                },
+                {
+                  "name": "row.createdAt",
+                  "type": "string"
+                },
+                {
+                  "name": "row.updatedAt",
+                  "type": "string"
+                }
+              ]
+            },
+            {
+              "event": "CLOSE_VIEW"
+            },
+            {
+              "event": "DEACTIVATE",
+              "payloadSchema": [
+                {
+                  "name": "id",
+                  "type": "string",
+                  "required": true
+                }
+              ]
+            },
+            {
+              "event": "PatientLoaded",
+              "payloadSchema": [
+                {
+                  "name": "data",
+                  "type": "[Patient]"
+                }
+              ]
+            },
+            {
+              "event": "PatientLoadFailed",
+              "payloadSchema": [
+                {
+                  "name": "error",
+                  "type": "string"
+                },
+                {
+                  "name": "code",
+                  "type": "string"
+                }
+              ]
+            },
+            {
+              "event": "PatientUpdated",
+              "payloadSchema": [
+                {
+                  "name": "row.id",
+                  "type": "string",
+                  "required": true
+                },
+                {
+                  "name": "row.firstName",
+                  "type": "string",
+                  "required": true
+                },
+                {
+                  "name": "row.lastName",
+                  "type": "string",
+                  "required": true
+                },
+                {
+                  "name": "row.dateOfBirth",
+                  "type": "string"
+                },
+                {
+                  "name": "row.consentType",
+                  "type": "string"
+                },
+                {
+                  "name": "row.mrn",
+                  "type": "string"
+                },
+                {
+                  "name": "row.primaryProvider",
+                  "type": "string"
+                },
+                {
+                  "name": "row.status",
+                  "type": "string"
+                },
+                {
+                  "name": "row.createdAt",
+                  "type": "string"
+                },
+                {
+                  "name": "row.updatedAt",
+                  "type": "string"
+                }
+              ]
+            },
+            {
+              "event": "PatientUpdateFailed",
+              "payloadSchema": [
+                {
+                  "name": "error",
+                  "type": "string"
+                },
+                {
+                  "name": "code",
+                  "type": "string"
+                }
+              ]
+            }
+          ],
+          "stateMachine": {
+            "states": [
+              {
+                "name": "loading",
+                "isInitial": true
+              },
+              {
+                "name": "browsing"
+              },
+              {
+                "name": "viewing_single"
+              },
+              {
+                "name": "error"
+              }
+            ],
+            "events": [
+              {
+                "key": "INIT",
+                "name": "Initialize"
+              },
+              {
+                "key": "PatientLoaded",
+                "name": "Patient loaded",
+                "payloadSchema": [
+                  {
+                    "name": "data",
+                    "type": "[Patient]"
+                  }
+                ]
+              },
+              {
+                "key": "PatientLoadFailed",
+                "name": "Patient load failed",
+                "payloadSchema": [
+                  {
+                    "name": "error",
+                    "type": "string"
+                  },
+                  {
+                    "name": "code",
+                    "type": "string"
+                  }
+                ]
+              },
+              {
+                "key": "OPEN_PATIENT",
+                "name": "Open Patient",
+                "payloadSchema": [
+                  {
+                    "name": "id",
+                    "type": "string",
+                    "required": true
+                  },
+                  {
+                    "name": "row",
+                    "type": "Patient"
+                  }
+                ]
+              },
+              {
+                "key": "DEACTIVATE",
+                "name": "Deactivate",
+                "payloadSchema": [
+                  {
+                    "name": "id",
+                    "type": "string",
+                    "required": true
+                  }
+                ]
+              },
+              {
+                "key": "PatientUpdated",
+                "name": "Patient updated",
+                "payloadSchema": [
+                  {
+                    "name": "row",
+                    "type": "Patient"
+                  }
+                ]
+              },
+              {
+                "key": "PatientUpdateFailed",
+                "name": "Patient update failed",
+                "payloadSchema": [
+                  {
+                    "name": "error",
+                    "type": "string"
+                  },
+                  {
+                    "name": "code",
+                    "type": "string"
+                  }
+                ]
+              },
+              {
+                "key": "SET_STATUS",
+                "name": "Set Status",
+                "payloadSchema": [
+                  {
+                    "name": "entityId",
+                    "type": "string",
+                    "required": true
+                  },
+                  {
+                    "name": "newStatus",
+                    "type": "string",
+                    "required": true
+                  }
+                ]
+              },
+              {
+                "key": "CLOSE_VIEW",
+                "name": "Close View"
+              }
+            ],
+            "transitions": [
+              {
+                "from": "loading",
+                "to": "loading",
+                "event": "INIT",
+                "effects": [
+                  [
+                    "fetch",
+                    "Patient",
+                    {
+                      "emit": {
+                        "success": "PatientLoaded",
+                        "failure": "PatientLoadFailed"
+                      }
+                    }
+                  ],
+                  [
+                    "render-ui",
+                    "main",
+                    {
+                      "direction": "vertical",
+                      "className": "py-12",
+                      "children": [
+                        {
+                          "type": "spinner"
+                        },
+                        {
+                          "type": "typography",
+                          "color": "muted",
+                          "content": "Loading patients…",
+                          "variant": "caption"
+                        }
+                      ],
+                      "gap": "md",
+                      "align": "center",
+                      "type": "stack"
+                    }
+                  ]
+                ]
+              },
+              {
+                "from": "loading",
+                "to": "browsing",
+                "event": "PatientLoaded",
+                "effects": [
+                  [
+                    "render-ui",
+                    "main",
+                    {
+                      "type": "stack",
+                      "direction": "vertical",
+                      "children": [
+                        {
+                          "direction": "horizontal",
+                          "gap": "sm",
+                          "type": "stack",
+                          "align": "center",
+                          "children": [
+                            {
+                              "type": "icon",
+                              "name": "user"
+                            },
+                            {
+                              "variant": "h3",
+                              "type": "typography",
+                              "content": "@config.title"
+                            }
+                          ]
+                        },
+                        {
+                          "cols": 4.0,
+                          "type": "simple-grid",
+                          "children": [
+                            {
+                              "label": "Total patients",
+                              "value": "@payload.data.length",
+                              "icon": "users",
+                              "type": "stat-display"
+                            },
+                            {
+                              "icon": "check-circle",
+                              "label": "Active",
+                              "type": "stat-display",
+                              "value": "0"
+                            },
+                            {
+                              "label": "New this month",
+                              "type": "stat-display",
+                              "icon": "user-plus",
+                              "value": "0"
+                            },
+                            {
+                              "icon": "alert-triangle",
+                              "value": "0",
+                              "type": "stat-display",
+                              "label": "Pending consent"
+                            }
+                          ]
+                        },
+                        {
+                          "type": "divider"
+                        },
+                        {
+                          "itemActions": "@config.itemActions",
+                          "fields": "@config.fields",
+                          "entity": "@payload.data",
+                          "cols": 1.0,
+                          "type": "data-grid",
+                          "gap": "sm"
+                        }
+                      ],
+                      "gap": "md"
+                    }
+                  ]
+                ]
+              },
+              {
+                "from": "loading",
+                "to": "error",
+                "event": "PatientLoadFailed",
+                "effects": [
+                  [
+                    "render-ui",
+                    "main",
+                    {
+                      "variant": "error",
+                      "type": "alert",
+                      "message": "@payload.error"
+                    }
+                  ]
+                ]
+              },
+              {
+                "from": "browsing",
+                "to": "viewing_single",
+                "event": "OPEN_PATIENT",
+                "effects": [
+                  [
+                    "set",
+                    "@entity.id",
+                    "@payload.row.id"
+                  ],
+                  [
+                    "set",
+                    "@entity.firstName",
+                    "@payload.row.firstName"
+                  ],
+                  [
+                    "set",
+                    "@entity.lastName",
+                    "@payload.row.lastName"
+                  ],
+                  [
+                    "set",
+                    "@entity.dateOfBirth",
+                    "@payload.row.dateOfBirth"
+                  ],
+                  [
+                    "set",
+                    "@entity.consentType",
+                    "@payload.row.consentType"
+                  ],
+                  [
+                    "set",
+                    "@entity.mrn",
+                    "@payload.row.mrn"
+                  ],
+                  [
+                    "set",
+                    "@entity.primaryProvider",
+                    "@payload.row.primaryProvider"
+                  ],
+                  [
+                    "set",
+                    "@entity.status",
+                    "@payload.row.status"
+                  ],
+                  [
+                    "set",
+                    "@entity.createdAt",
+                    "@payload.row.createdAt"
+                  ],
+                  [
+                    "set",
+                    "@entity.updatedAt",
+                    "@payload.row.updatedAt"
+                  ],
+                  [
+                    "render-ui",
+                    "main",
+                    {
+                      "gap": "md",
+                      "direction": "vertical",
+                      "type": "stack",
+                      "children": [
+                        {
+                          "gap": "sm",
+                          "direction": "horizontal",
+                          "align": "center",
+                          "children": [
+                            {
+                              "type": "button",
+                              "label": "Back",
+                              "variant": "ghost",
+                              "action": "CLOSE_VIEW"
+                            },
+                            {
+                              "type": "icon",
+                              "name": "user"
+                            },
+                            {
+                              "content": "@entity.firstName",
+                              "variant": "h3",
+                              "type": "typography"
+                            },
+                            {
+                              "label": "@entity.status",
+                              "variant": "primary",
+                              "type": "badge"
+                            }
+                          ],
+                          "type": "stack"
+                        },
+                        {
+                          "type": "divider"
+                        },
+                        {
+                          "type": "stack",
+                          "direction": "vertical",
+                          "children": [
+                            {
+                              "gap": "md",
+                              "children": [
+                                {
+                                  "content": "MRN",
+                                  "variant": "caption",
+                                  "type": "typography",
+                                  "color": "muted"
+                                },
+                                {
+                                  "content": "@entity.mrn",
+                                  "type": "typography",
+                                  "variant": "body"
+                                }
+                              ],
+                              "type": "stack",
+                              "direction": "horizontal"
+                            },
+                            {
+                              "children": [
+                                {
+                                  "variant": "caption",
+                                  "type": "typography",
+                                  "content": "Date of birth",
+                                  "color": "muted"
+                                },
+                                {
+                                  "type": "typography",
+                                  "variant": "body",
+                                  "content": "@entity.dateOfBirth"
+                                }
+                              ],
+                              "direction": "horizontal",
+                              "type": "stack",
+                              "gap": "md"
+                            },
+                            {
+                              "children": [
+                                {
+                                  "type": "typography",
+                                  "variant": "caption",
+                                  "color": "muted",
+                                  "content": "Provider"
+                                },
+                                {
+                                  "type": "typography",
+                                  "content": "@entity.primaryProvider",
+                                  "variant": "body"
+                                }
+                              ],
+                              "type": "stack",
+                              "gap": "md",
+                              "direction": "horizontal"
+                            },
+                            {
+                              "gap": "md",
+                              "children": [
+                                {
+                                  "content": "Consent",
+                                  "variant": "caption",
+                                  "color": "muted",
+                                  "type": "typography"
+                                },
+                                {
+                                  "variant": "body",
+                                  "content": "@entity.consentType",
+                                  "type": "typography"
+                                }
+                              ],
+                              "type": "stack",
+                              "direction": "horizontal"
+                            }
+                          ],
+                          "gap": "sm"
+                        },
+                        {
+                          "type": "divider"
+                        },
+                        {
+                          "type": "stack",
+                          "children": [
+                            {
+                              "type": "button",
+                              "variant": "danger",
+                              "label": "Deactivate",
+                              "action": "DEACTIVATE",
+                              "actionPayload": {
+                                "id": "@entity.id"
+                              }
+                            }
+                          ],
+                          "gap": "sm",
+                          "align": "center",
+                          "direction": "horizontal"
+                        }
+                      ]
+                    }
+                  ]
+                ]
+              },
+              {
+                "from": "browsing",
+                "to": "loading",
+                "event": "DEACTIVATE",
+                "effects": [
+                  [
+                    "set",
+                    "@entity.id",
+                    "@payload.id"
+                  ],
+                  [
+                    "set",
+                    "@entity.status",
+                    "inactive"
+                  ],
+                  [
+                    "persist",
+                    "update",
+                    "Patient",
+                    "@entity",
+                    {
+                      "emit": {
+                        "failure": "PatientUpdateFailed",
+                        "success": "PatientUpdated"
+                      }
+                    }
+                  ],
+                  [
+                    "render-ui",
+                    "main",
+                    {
+                      "direction": "vertical",
+                      "className": "py-12",
+                      "align": "center",
+                      "type": "stack",
+                      "gap": "md",
+                      "children": [
+                        {
+                          "type": "spinner"
+                        },
+                        {
+                          "color": "muted",
+                          "type": "typography",
+                          "content": "Deactivating patient…",
+                          "variant": "caption"
+                        }
+                      ]
+                    }
+                  ]
+                ]
+              },
+              {
+                "from": "browsing",
+                "to": "loading",
+                "event": "PatientUpdated",
+                "effects": [
+                  [
+                    "fetch",
+                    "Patient",
+                    {
+                      "emit": {
+                        "success": "PatientLoaded",
+                        "failure": "PatientLoadFailed"
+                      }
+                    }
+                  ]
+                ]
+              },
+              {
+                "from": "browsing",
+                "to": "browsing",
+                "event": "PatientUpdateFailed",
+                "effects": [
+                  [
+                    "render-ui",
+                    "main",
+                    {
+                      "variant": "error",
+                      "type": "alert",
+                      "message": "@payload.error"
+                    }
+                  ]
+                ]
+              },
+              {
+                "from": "browsing",
+                "to": "loading",
+                "event": "SET_STATUS",
+                "effects": [
+                  [
+                    "set",
+                    "@entity.id",
+                    "@payload.entityId"
+                  ],
+                  [
+                    "set",
+                    "@entity.status",
+                    "@payload.newStatus"
+                  ],
+                  [
+                    "persist",
+                    "update",
+                    "Patient",
+                    "@entity",
+                    {
+                      "emit": {
+                        "success": "PatientUpdated",
+                        "failure": "PatientUpdateFailed"
+                      }
+                    }
+                  ],
+                  [
+                    "render-ui",
+                    "main",
+                    {
+                      "children": [
+                        {
+                          "type": "spinner"
+                        },
+                        {
+                          "content": "Updating patient status…",
+                          "type": "typography",
+                          "color": "muted",
+                          "variant": "caption"
+                        }
+                      ],
+                      "type": "stack",
+                      "gap": "md",
+                      "direction": "vertical",
+                      "align": "center",
+                      "className": "py-12"
+                    }
+                  ]
+                ]
+              },
+              {
+                "from": "viewing_single",
+                "to": "loading",
+                "event": "CLOSE_VIEW",
+                "effects": [
+                  [
+                    "fetch",
+                    "Patient",
+                    {
+                      "emit": {
+                        "success": "PatientLoaded",
+                        "failure": "PatientLoadFailed"
+                      }
+                    }
+                  ],
+                  [
+                    "render-ui",
+                    "main",
+                    {
+                      "type": "stack",
+                      "direction": "vertical",
+                      "align": "center",
+                      "className": "py-12",
+                      "gap": "md",
+                      "children": [
+                        {
+                          "type": "spinner"
+                        },
+                        {
+                          "variant": "caption",
+                          "content": "Loading patients…",
+                          "color": "muted",
+                          "type": "typography"
+                        }
+                      ]
+                    }
+                  ]
+                ]
+              },
+              {
+                "from": "viewing_single",
+                "to": "loading",
+                "event": "DEACTIVATE",
+                "effects": [
+                  [
+                    "set",
+                    "@entity.id",
+                    "@payload.id"
+                  ],
+                  [
+                    "set",
+                    "@entity.status",
+                    "inactive"
+                  ],
+                  [
+                    "persist",
+                    "update",
+                    "Patient",
+                    "@entity",
+                    {
+                      "emit": {
+                        "success": "PatientUpdated",
+                        "failure": "PatientUpdateFailed"
+                      }
+                    }
+                  ],
+                  [
+                    "render-ui",
+                    "main",
+                    {
+                      "children": [
+                        {
+                          "type": "spinner"
+                        },
+                        {
+                          "type": "typography",
+                          "variant": "caption",
+                          "color": "muted",
+                          "content": "Deactivating patient…"
+                        }
+                      ],
+                      "direction": "vertical",
+                      "align": "center",
+                      "gap": "md",
+                      "type": "stack",
+                      "className": "py-12"
+                    }
+                  ]
+                ]
+              },
+              {
+                "from": "error",
+                "to": "loading",
+                "event": "INIT",
+                "effects": [
+                  [
+                    "fetch",
+                    "Patient",
+                    {
+                      "emit": {
+                        "failure": "PatientLoadFailed",
+                        "success": "PatientLoaded"
+                      }
+                    }
+                  ],
+                  [
+                    "render-ui",
+                    "main",
+                    {
+                      "size": "sm",
+                      "type": "spinner"
+                    }
+                  ]
+                ]
+              }
+            ]
+          },
+          "config": {
+            "defaultRecordRetentionYears": {
+              "type": "number",
+              "default": 7.0,
+              "label": "Record retention (years)",
+              "description": "Years to retain a closed patient record before deletion (compose std-lifecycle + std-data-erasure).",
+              "tier": "domain"
+            },
+            "itemActions": {
+              "type": "[ItemAction]",
+              "default": [
+                {
+                  "label": "Open",
+                  "icon": "arrow-right",
+                  "variant": "primary",
+                  "event": "OPEN_PATIENT"
+                },
+                {
+                  "event": "DEACTIVATE",
+                  "icon": "x",
+                  "variant": "danger",
+                  "label": "Deactivate"
+                }
+              ],
+              "label": "Row actions",
+              "description": "Buttons users can click on each patient row",
+              "tier": "presentation",
+              "items": {
+                "type": "object",
+                "properties": {
+                  "label": {
+                    "name": "label",
+                    "type": "string",
+                    "required": true
+                  },
+                  "icon": {
+                    "name": "icon",
+                    "type": "string",
+                    "required": false
+                  },
+                  "variant": {
+                    "name": "variant",
+                    "type": "string",
+                    "required": false
+                  },
+                  "event": {
+                    "name": "event",
+                    "type": "string",
+                    "required": true
+                  }
+                }
+              }
+            },
+            "dependentLinkagePolicy": {
+              "type": "string",
+              "default": "household",
+              "label": "Dependent linkage",
+              "description": "How dependent patients (children, wards) link to a primary contact.",
+              "tier": "domain",
+              "values": [
+                "none",
+                "household",
+                "guardian"
+              ]
+            },
+            "breakGlassRolesAllowed": {
+              "type": "[string]",
+              "default": [
+                "emergency-physician",
+                "oncall-attending"
+              ],
+              "label": "Break-glass roles",
+              "description": "Roles permitted to override consent in emergencies; always audited.",
+              "synonyms": "emergency override, BTG access",
+              "tier": "domain",
+              "items": {
+                "type": "string"
+              }
+            },
+            "pseudonymizeOnExport": {
+              "type": "boolean",
+              "default": true,
+              "label": "Pseudonymize on export",
+              "description": "Replace identifiers with stable hashes when exporting for research or analytics.",
+              "tier": "domain"
+            },
+            "fields": {
+              "type": "[FieldSpec]",
+              "default": [
+                {
+                  "variant": "caption",
+                  "name": "firstName",
+                  "label": "First name"
+                },
+                {
+                  "name": "lastName",
+                  "label": "Last name",
+                  "variant": "caption"
+                },
+                {
+                  "name": "mrn",
+                  "variant": "caption",
+                  "label": "MRN"
+                },
+                {
+                  "name": "primaryProvider",
+                  "variant": "caption",
+                  "label": "Provider"
+                },
+                {
+                  "variant": "badge",
+                  "name": "consentType",
+                  "label": "Consent"
+                },
+                {
+                  "variant": "badge",
+                  "name": "status",
+                  "label": "Status"
+                }
+              ],
+              "label": "Columns to show",
+              "description": "Each column maps to one field on the Patient entity",
+              "tier": "presentation",
+              "items": {
+                "type": "object",
+                "properties": {
+                  "name": {
+                    "name": "name",
+                    "type": "string",
+                    "required": true
+                  },
+                  "icon": {
+                    "name": "icon",
+                    "type": "string",
+                    "required": false
+                  },
+                  "variant": {
+                    "name": "variant",
+                    "type": "string",
+                    "required": false
+                  },
+                  "label": {
+                    "name": "label",
+                    "type": "string",
+                    "required": false
+                  },
+                  "format": {
+                    "name": "format",
+                    "type": "string",
+                    "required": false
+                  },
+                  "key": {
+                    "name": "key",
+                    "type": "string",
+                    "required": false
+                  },
+                  "header": {
+                    "name": "header",
+                    "type": "string",
+                    "required": false
+                  }
+                }
+              }
+            },
+            "mrnFormat": {
+              "type": "string",
+              "default": "MRN-####-####",
+              "label": "MRN format pattern",
+              "description": "Display format for the medical record number; # = digit.",
+              "tier": "domain"
+            },
+            "consentTypesRequired": {
+              "type": "[string]",
+              "default": [
+                "hipaa",
+                "treatment"
+              ],
+              "label": "Consent types required",
+              "description": "Required consent forms before patient enters active status. Compose std-audit-capture for logging.",
+              "synonyms": "consent forms, authorization, signed agreements",
+              "tier": "domain",
+              "items": {
+                "type": "string"
+              }
+            },
+            "phiDisclosureLogRequired": {
+              "type": "boolean",
+              "default": true,
+              "label": "Log PHI disclosures",
+              "description": "Record every disclosure of protected health information for HIPAA audit.",
+              "synonyms": "audit log, HIPAA log",
+              "tier": "domain"
+            },
+            "title": {
+              "type": "string",
+              "default": "Patients",
+              "label": "Section title",
+              "description": "Heading shown above the patient list",
+              "tier": "presentation"
+            },
+            "parentalConsentMinorThresholdYears": {
+              "type": "number",
+              "default": 18.0,
+              "label": "Parental consent age (years)",
+              "description": "Below this age, parental consent is required in addition to the patient's own.",
+              "synonyms": "minor age, adult of majority",
+              "tier": "domain"
+            }
+          },
+          "scope": "collection"
+        }
+      ],
+      "pages": [
+        {
+          "name": "PatientManagePage",
+          "path": "/patients",
+          "traits": [
+            {
+              "ref": "PatientManage"
+            }
+          ]
+        }
+      ]
+    }
+  ]
+}

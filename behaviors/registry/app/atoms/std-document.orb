@@ -1,0 +1,1457 @@
+{
+  "name": "std-document",
+  "version": "1.0.0",
+  "description": "std-document — document lifecycle with classification, retention, and lock. Listens for SET_STATUS so siblings can drive automated transitions. Composes naturally with std-file-store / std-version-history / std-esign-request at the organism level.",
+  "orbitals": [
+    {
+      "name": "DocumentOrbital",
+      "entity": {
+        "name": "Document",
+        "collection": "documents",
+        "persistence": "persistent",
+        "fields": [
+          {
+            "name": "id",
+            "type": "string",
+            "required": true
+          },
+          {
+            "name": "title",
+            "type": "string",
+            "required": true
+          },
+          {
+            "name": "description",
+            "type": "string"
+          },
+          {
+            "name": "mimeType",
+            "type": "string"
+          },
+          {
+            "name": "classification",
+            "type": "string"
+          },
+          {
+            "name": "lockedBy",
+            "type": "string"
+          },
+          {
+            "name": "lockedAt",
+            "type": "string"
+          },
+          {
+            "name": "retentionUntil",
+            "type": "string"
+          },
+          {
+            "name": "legalHold",
+            "type": "boolean"
+          },
+          {
+            "name": "createdAt",
+            "type": "string"
+          },
+          {
+            "name": "updatedAt",
+            "type": "string"
+          }
+        ]
+      },
+      "traits": [
+        {
+          "name": "DocumentManage",
+          "category": "interaction",
+          "linkedEntity": "Document",
+          "emits": [
+            {
+              "event": "OPEN_DOCUMENT",
+              "payloadSchema": [
+                {
+                  "name": "id",
+                  "type": "string",
+                  "required": true
+                },
+                {
+                  "name": "row.id",
+                  "type": "string",
+                  "required": true
+                },
+                {
+                  "name": "row.title",
+                  "type": "string",
+                  "required": true
+                },
+                {
+                  "name": "row.description",
+                  "type": "string"
+                },
+                {
+                  "name": "row.mimeType",
+                  "type": "string"
+                },
+                {
+                  "name": "row.classification",
+                  "type": "string"
+                },
+                {
+                  "name": "row.lockedBy",
+                  "type": "string"
+                },
+                {
+                  "name": "row.lockedAt",
+                  "type": "string"
+                },
+                {
+                  "name": "row.retentionUntil",
+                  "type": "string"
+                },
+                {
+                  "name": "row.legalHold",
+                  "type": "boolean"
+                },
+                {
+                  "name": "row.createdAt",
+                  "type": "string"
+                },
+                {
+                  "name": "row.updatedAt",
+                  "type": "string"
+                }
+              ]
+            },
+            {
+              "event": "CLOSE_VIEW"
+            },
+            {
+              "event": "LOCK",
+              "payloadSchema": [
+                {
+                  "name": "id",
+                  "type": "string",
+                  "required": true
+                },
+                {
+                  "name": "row.id",
+                  "type": "string",
+                  "required": true
+                },
+                {
+                  "name": "row.title",
+                  "type": "string",
+                  "required": true
+                },
+                {
+                  "name": "row.description",
+                  "type": "string"
+                },
+                {
+                  "name": "row.mimeType",
+                  "type": "string"
+                },
+                {
+                  "name": "row.classification",
+                  "type": "string"
+                },
+                {
+                  "name": "row.lockedBy",
+                  "type": "string"
+                },
+                {
+                  "name": "row.lockedAt",
+                  "type": "string"
+                },
+                {
+                  "name": "row.retentionUntil",
+                  "type": "string"
+                },
+                {
+                  "name": "row.legalHold",
+                  "type": "boolean"
+                },
+                {
+                  "name": "row.createdAt",
+                  "type": "string"
+                },
+                {
+                  "name": "row.updatedAt",
+                  "type": "string"
+                }
+              ]
+            },
+            {
+              "event": "UNLOCK",
+              "payloadSchema": [
+                {
+                  "name": "id",
+                  "type": "string",
+                  "required": true
+                },
+                {
+                  "name": "row.id",
+                  "type": "string",
+                  "required": true
+                },
+                {
+                  "name": "row.title",
+                  "type": "string",
+                  "required": true
+                },
+                {
+                  "name": "row.description",
+                  "type": "string"
+                },
+                {
+                  "name": "row.mimeType",
+                  "type": "string"
+                },
+                {
+                  "name": "row.classification",
+                  "type": "string"
+                },
+                {
+                  "name": "row.lockedBy",
+                  "type": "string"
+                },
+                {
+                  "name": "row.lockedAt",
+                  "type": "string"
+                },
+                {
+                  "name": "row.retentionUntil",
+                  "type": "string"
+                },
+                {
+                  "name": "row.legalHold",
+                  "type": "boolean"
+                },
+                {
+                  "name": "row.createdAt",
+                  "type": "string"
+                },
+                {
+                  "name": "row.updatedAt",
+                  "type": "string"
+                }
+              ]
+            },
+            {
+              "event": "DOWNLOAD",
+              "payloadSchema": [
+                {
+                  "name": "id",
+                  "type": "string",
+                  "required": true
+                },
+                {
+                  "name": "row.id",
+                  "type": "string",
+                  "required": true
+                },
+                {
+                  "name": "row.title",
+                  "type": "string",
+                  "required": true
+                },
+                {
+                  "name": "row.description",
+                  "type": "string"
+                },
+                {
+                  "name": "row.mimeType",
+                  "type": "string"
+                },
+                {
+                  "name": "row.classification",
+                  "type": "string"
+                },
+                {
+                  "name": "row.lockedBy",
+                  "type": "string"
+                },
+                {
+                  "name": "row.lockedAt",
+                  "type": "string"
+                },
+                {
+                  "name": "row.retentionUntil",
+                  "type": "string"
+                },
+                {
+                  "name": "row.legalHold",
+                  "type": "boolean"
+                },
+                {
+                  "name": "row.createdAt",
+                  "type": "string"
+                },
+                {
+                  "name": "row.updatedAt",
+                  "type": "string"
+                }
+              ]
+            },
+            {
+              "event": "REVOKE",
+              "payloadSchema": [
+                {
+                  "name": "id",
+                  "type": "string",
+                  "required": true
+                },
+                {
+                  "name": "row.id",
+                  "type": "string",
+                  "required": true
+                },
+                {
+                  "name": "row.title",
+                  "type": "string",
+                  "required": true
+                },
+                {
+                  "name": "row.description",
+                  "type": "string"
+                },
+                {
+                  "name": "row.mimeType",
+                  "type": "string"
+                },
+                {
+                  "name": "row.classification",
+                  "type": "string"
+                },
+                {
+                  "name": "row.lockedBy",
+                  "type": "string"
+                },
+                {
+                  "name": "row.lockedAt",
+                  "type": "string"
+                },
+                {
+                  "name": "row.retentionUntil",
+                  "type": "string"
+                },
+                {
+                  "name": "row.legalHold",
+                  "type": "boolean"
+                },
+                {
+                  "name": "row.createdAt",
+                  "type": "string"
+                },
+                {
+                  "name": "row.updatedAt",
+                  "type": "string"
+                }
+              ]
+            },
+            {
+              "event": "DocumentLoaded",
+              "payloadSchema": [
+                {
+                  "name": "data",
+                  "type": "[Document]"
+                }
+              ]
+            },
+            {
+              "event": "DocumentLoadFailed",
+              "payloadSchema": [
+                {
+                  "name": "error",
+                  "type": "string"
+                },
+                {
+                  "name": "code",
+                  "type": "string"
+                }
+              ]
+            }
+          ],
+          "stateMachine": {
+            "states": [
+              {
+                "name": "loading",
+                "isInitial": true
+              },
+              {
+                "name": "browsing"
+              },
+              {
+                "name": "viewing_single"
+              },
+              {
+                "name": "error"
+              }
+            ],
+            "events": [
+              {
+                "key": "INIT",
+                "name": "Initialize"
+              },
+              {
+                "key": "DocumentLoaded",
+                "name": "Document loaded",
+                "payloadSchema": [
+                  {
+                    "name": "data",
+                    "type": "[Document]"
+                  }
+                ]
+              },
+              {
+                "key": "DocumentLoadFailed",
+                "name": "Document load failed",
+                "payloadSchema": [
+                  {
+                    "name": "error",
+                    "type": "string"
+                  },
+                  {
+                    "name": "code",
+                    "type": "string"
+                  }
+                ]
+              },
+              {
+                "key": "OPEN_DOCUMENT",
+                "name": "Open Document",
+                "payloadSchema": [
+                  {
+                    "name": "id",
+                    "type": "string",
+                    "required": true
+                  },
+                  {
+                    "name": "row",
+                    "type": "Document"
+                  }
+                ]
+              },
+              {
+                "key": "DOWNLOAD",
+                "name": "Download",
+                "payloadSchema": [
+                  {
+                    "name": "id",
+                    "type": "string",
+                    "required": true
+                  },
+                  {
+                    "name": "row",
+                    "type": "Document"
+                  }
+                ]
+              },
+              {
+                "key": "SET_STATUS",
+                "name": "Set Status",
+                "payloadSchema": [
+                  {
+                    "name": "entityId",
+                    "type": "string",
+                    "required": true
+                  },
+                  {
+                    "name": "newStatus",
+                    "type": "string",
+                    "required": true
+                  }
+                ]
+              },
+              {
+                "key": "CLOSE_VIEW",
+                "name": "Close View"
+              },
+              {
+                "key": "LOCK",
+                "name": "Lock",
+                "payloadSchema": [
+                  {
+                    "name": "id",
+                    "type": "string",
+                    "required": true
+                  },
+                  {
+                    "name": "row",
+                    "type": "Document"
+                  }
+                ]
+              },
+              {
+                "key": "UNLOCK",
+                "name": "Unlock",
+                "payloadSchema": [
+                  {
+                    "name": "id",
+                    "type": "string",
+                    "required": true
+                  },
+                  {
+                    "name": "row",
+                    "type": "Document"
+                  }
+                ]
+              },
+              {
+                "key": "REVOKE",
+                "name": "Revoke",
+                "payloadSchema": [
+                  {
+                    "name": "id",
+                    "type": "string",
+                    "required": true
+                  },
+                  {
+                    "name": "row",
+                    "type": "Document"
+                  }
+                ]
+              }
+            ],
+            "transitions": [
+              {
+                "from": "loading",
+                "to": "loading",
+                "event": "INIT",
+                "effects": [
+                  [
+                    "fetch",
+                    "Document",
+                    {
+                      "emit": {
+                        "success": "DocumentLoaded",
+                        "failure": "DocumentLoadFailed"
+                      }
+                    }
+                  ],
+                  [
+                    "render-ui",
+                    "main",
+                    {
+                      "type": "stack",
+                      "children": [
+                        {
+                          "type": "spinner"
+                        },
+                        {
+                          "variant": "caption",
+                          "color": "muted",
+                          "content": "Loading documents…",
+                          "type": "typography"
+                        }
+                      ],
+                      "direction": "vertical",
+                      "align": "center",
+                      "gap": "md",
+                      "className": "py-12"
+                    }
+                  ]
+                ]
+              },
+              {
+                "from": "loading",
+                "to": "browsing",
+                "event": "DocumentLoaded",
+                "effects": [
+                  [
+                    "render-ui",
+                    "main",
+                    {
+                      "type": "stack",
+                      "direction": "vertical",
+                      "gap": "md",
+                      "children": [
+                        {
+                          "type": "stack",
+                          "direction": "horizontal",
+                          "children": [
+                            {
+                              "type": "icon",
+                              "name": "file-text"
+                            },
+                            {
+                              "variant": "h3",
+                              "type": "typography",
+                              "content": "@config.title"
+                            }
+                          ],
+                          "gap": "sm",
+                          "align": "center"
+                        },
+                        {
+                          "type": "simple-grid",
+                          "cols": 4.0,
+                          "children": [
+                            {
+                              "icon": "file-text",
+                              "label": "Total docs",
+                              "value": "@payload.data.length",
+                              "type": "stat-display"
+                            },
+                            {
+                              "value": "12",
+                              "label": "Restricted",
+                              "type": "stat-display",
+                              "icon": "shield"
+                            },
+                            {
+                              "icon": "lock",
+                              "type": "stat-display",
+                              "label": "Locked",
+                              "value": "5"
+                            },
+                            {
+                              "type": "stat-display",
+                              "value": "3",
+                              "label": "Legal hold",
+                              "icon": "alert-triangle"
+                            }
+                          ]
+                        },
+                        {
+                          "type": "divider"
+                        },
+                        {
+                          "entity": "@payload.data",
+                          "fields": "@config.fields",
+                          "type": "data-grid",
+                          "cols": 1.0,
+                          "gap": "sm",
+                          "itemActions": "@config.itemActions"
+                        }
+                      ]
+                    }
+                  ]
+                ]
+              },
+              {
+                "from": "loading",
+                "to": "error",
+                "event": "DocumentLoadFailed",
+                "effects": [
+                  [
+                    "render-ui",
+                    "main",
+                    {
+                      "variant": "error",
+                      "message": "@payload.error",
+                      "type": "alert"
+                    }
+                  ]
+                ]
+              },
+              {
+                "from": "browsing",
+                "to": "viewing_single",
+                "event": "OPEN_DOCUMENT",
+                "effects": [
+                  [
+                    "set",
+                    "@entity.id",
+                    "@payload.row.id"
+                  ],
+                  [
+                    "set",
+                    "@entity.title",
+                    "@payload.row.title"
+                  ],
+                  [
+                    "set",
+                    "@entity.description",
+                    "@payload.row.description"
+                  ],
+                  [
+                    "set",
+                    "@entity.mimeType",
+                    "@payload.row.mimeType"
+                  ],
+                  [
+                    "set",
+                    "@entity.classification",
+                    "@payload.row.classification"
+                  ],
+                  [
+                    "set",
+                    "@entity.lockedBy",
+                    "@payload.row.lockedBy"
+                  ],
+                  [
+                    "set",
+                    "@entity.lockedAt",
+                    "@payload.row.lockedAt"
+                  ],
+                  [
+                    "set",
+                    "@entity.retentionUntil",
+                    "@payload.row.retentionUntil"
+                  ],
+                  [
+                    "set",
+                    "@entity.legalHold",
+                    "@payload.row.legalHold"
+                  ],
+                  [
+                    "set",
+                    "@entity.createdAt",
+                    "@payload.row.createdAt"
+                  ],
+                  [
+                    "set",
+                    "@entity.updatedAt",
+                    "@payload.row.updatedAt"
+                  ],
+                  [
+                    "render-ui",
+                    "main",
+                    {
+                      "direction": "vertical",
+                      "children": [
+                        {
+                          "align": "center",
+                          "type": "stack",
+                          "children": [
+                            {
+                              "type": "button",
+                              "label": "Back",
+                              "variant": "ghost",
+                              "action": "CLOSE_VIEW"
+                            },
+                            {
+                              "name": "file-text",
+                              "type": "icon"
+                            },
+                            {
+                              "type": "typography",
+                              "content": "@entity.title",
+                              "variant": "h3"
+                            },
+                            {
+                              "label": "@entity.classification",
+                              "type": "badge",
+                              "variant": "primary"
+                            },
+                            {
+                              "label": "@entity.mimeType",
+                              "type": "badge",
+                              "variant": "default"
+                            }
+                          ],
+                          "gap": "sm",
+                          "direction": "horizontal"
+                        },
+                        {
+                          "type": "divider"
+                        },
+                        {
+                          "gap": "sm",
+                          "direction": "vertical",
+                          "type": "stack",
+                          "children": [
+                            {
+                              "direction": "horizontal",
+                              "type": "stack",
+                              "gap": "md",
+                              "children": [
+                                {
+                                  "content": "Description",
+                                  "type": "typography",
+                                  "variant": "caption",
+                                  "color": "muted"
+                                },
+                                {
+                                  "content": "@entity.description",
+                                  "type": "typography",
+                                  "variant": "body"
+                                }
+                              ]
+                            },
+                            {
+                              "children": [
+                                {
+                                  "color": "muted",
+                                  "variant": "caption",
+                                  "content": "Locked by",
+                                  "type": "typography"
+                                },
+                                {
+                                  "variant": "body",
+                                  "content": "@entity.lockedBy",
+                                  "type": "typography"
+                                }
+                              ],
+                              "type": "stack",
+                              "gap": "md",
+                              "direction": "horizontal"
+                            },
+                            {
+                              "type": "stack",
+                              "direction": "horizontal",
+                              "children": [
+                                {
+                                  "content": "Retention until",
+                                  "color": "muted",
+                                  "type": "typography",
+                                  "variant": "caption"
+                                },
+                                {
+                                  "content": "@entity.retentionUntil",
+                                  "type": "typography",
+                                  "variant": "body"
+                                }
+                              ],
+                              "gap": "md"
+                            }
+                          ]
+                        },
+                        {
+                          "type": "divider"
+                        },
+                        {
+                          "type": "simple-grid",
+                          "cols": 3.0,
+                          "children": [
+                            {
+                              "type": "stat-display",
+                              "icon": "lock",
+                              "value": "@entity.lockedAt",
+                              "label": "Locked at"
+                            },
+                            {
+                              "type": "stat-display",
+                              "label": "Created",
+                              "value": "@entity.createdAt",
+                              "icon": "calendar-plus"
+                            },
+                            {
+                              "icon": "calendar",
+                              "type": "stat-display",
+                              "label": "Updated",
+                              "value": "@entity.updatedAt"
+                            }
+                          ]
+                        },
+                        {
+                          "children": [
+                            {
+                              "type": "button",
+                              "actionPayload": {
+                                "id": "@entity.id",
+                                "row": "@entity"
+                              },
+                              "variant": "primary",
+                              "label": "Lock",
+                              "action": "LOCK"
+                            },
+                            {
+                              "actionPayload": {
+                                "id": "@entity.id",
+                                "row": "@entity"
+                              },
+                              "label": "Unlock",
+                              "action": "UNLOCK",
+                              "variant": "secondary",
+                              "type": "button"
+                            },
+                            {
+                              "actionPayload": {
+                                "row": "@entity",
+                                "id": "@entity.id"
+                              },
+                              "label": "Download",
+                              "action": "DOWNLOAD",
+                              "variant": "secondary",
+                              "type": "button"
+                            },
+                            {
+                              "actionPayload": {
+                                "row": "@entity",
+                                "id": "@entity.id"
+                              },
+                              "label": "Revoke",
+                              "action": "REVOKE",
+                              "type": "button",
+                              "variant": "danger"
+                            }
+                          ],
+                          "direction": "horizontal",
+                          "type": "stack",
+                          "align": "center",
+                          "gap": "sm"
+                        }
+                      ],
+                      "gap": "md",
+                      "type": "stack"
+                    }
+                  ]
+                ]
+              },
+              {
+                "from": "browsing",
+                "to": "loading",
+                "event": "DOWNLOAD",
+                "effects": [
+                  [
+                    "set",
+                    "@entity.id",
+                    "@payload.id"
+                  ],
+                  [
+                    "fetch",
+                    "Document",
+                    {
+                      "emit": {
+                        "failure": "DocumentLoadFailed",
+                        "success": "DocumentLoaded"
+                      }
+                    }
+                  ],
+                  [
+                    "render-ui",
+                    "main",
+                    {
+                      "align": "center",
+                      "children": [
+                        {
+                          "type": "spinner"
+                        },
+                        {
+                          "content": "Preparing download…",
+                          "color": "muted",
+                          "variant": "caption",
+                          "type": "typography"
+                        }
+                      ],
+                      "className": "py-12",
+                      "direction": "vertical",
+                      "type": "stack",
+                      "gap": "md"
+                    }
+                  ]
+                ]
+              },
+              {
+                "from": "browsing",
+                "to": "loading",
+                "event": "SET_STATUS",
+                "effects": [
+                  [
+                    "set",
+                    "@entity.id",
+                    "@payload.entityId"
+                  ],
+                  [
+                    "set",
+                    "@entity.classification",
+                    "@payload.newStatus"
+                  ],
+                  [
+                    "persist",
+                    "update",
+                    "Document",
+                    "@entity",
+                    {
+                      "emit": {
+                        "success": "DocumentLoaded",
+                        "failure": "DocumentLoadFailed"
+                      }
+                    }
+                  ],
+                  [
+                    "render-ui",
+                    "main",
+                    {
+                      "className": "py-12",
+                      "children": [
+                        {
+                          "type": "spinner"
+                        },
+                        {
+                          "variant": "caption",
+                          "color": "muted",
+                          "type": "typography",
+                          "content": "Updating document classification…"
+                        }
+                      ],
+                      "gap": "md",
+                      "align": "center",
+                      "type": "stack",
+                      "direction": "vertical"
+                    }
+                  ]
+                ]
+              },
+              {
+                "from": "viewing_single",
+                "to": "loading",
+                "event": "CLOSE_VIEW",
+                "effects": [
+                  [
+                    "fetch",
+                    "Document",
+                    {
+                      "emit": {
+                        "success": "DocumentLoaded",
+                        "failure": "DocumentLoadFailed"
+                      }
+                    }
+                  ],
+                  [
+                    "render-ui",
+                    "main",
+                    {
+                      "type": "stack",
+                      "gap": "md",
+                      "direction": "vertical",
+                      "align": "center",
+                      "className": "py-12",
+                      "children": [
+                        {
+                          "type": "spinner"
+                        },
+                        {
+                          "color": "muted",
+                          "content": "Loading documents…",
+                          "type": "typography",
+                          "variant": "caption"
+                        }
+                      ]
+                    }
+                  ]
+                ]
+              },
+              {
+                "from": "viewing_single",
+                "to": "loading",
+                "event": "LOCK",
+                "effects": [
+                  [
+                    "set",
+                    "@entity.id",
+                    "@payload.id"
+                  ],
+                  [
+                    "fetch",
+                    "Document",
+                    {
+                      "emit": {
+                        "success": "DocumentLoaded",
+                        "failure": "DocumentLoadFailed"
+                      }
+                    }
+                  ],
+                  [
+                    "render-ui",
+                    "main",
+                    {
+                      "className": "py-12",
+                      "align": "center",
+                      "direction": "vertical",
+                      "children": [
+                        {
+                          "type": "spinner"
+                        },
+                        {
+                          "color": "muted",
+                          "type": "typography",
+                          "variant": "caption",
+                          "content": "Locking document…"
+                        }
+                      ],
+                      "type": "stack",
+                      "gap": "md"
+                    }
+                  ]
+                ]
+              },
+              {
+                "from": "viewing_single",
+                "to": "loading",
+                "event": "UNLOCK",
+                "effects": [
+                  [
+                    "set",
+                    "@entity.id",
+                    "@payload.id"
+                  ],
+                  [
+                    "fetch",
+                    "Document",
+                    {
+                      "emit": {
+                        "failure": "DocumentLoadFailed",
+                        "success": "DocumentLoaded"
+                      }
+                    }
+                  ],
+                  [
+                    "render-ui",
+                    "main",
+                    {
+                      "direction": "vertical",
+                      "align": "center",
+                      "gap": "md",
+                      "children": [
+                        {
+                          "type": "spinner"
+                        },
+                        {
+                          "type": "typography",
+                          "color": "muted",
+                          "content": "Unlocking document…",
+                          "variant": "caption"
+                        }
+                      ],
+                      "className": "py-12",
+                      "type": "stack"
+                    }
+                  ]
+                ]
+              },
+              {
+                "from": "viewing_single",
+                "to": "loading",
+                "event": "DOWNLOAD",
+                "effects": [
+                  [
+                    "set",
+                    "@entity.id",
+                    "@payload.id"
+                  ],
+                  [
+                    "fetch",
+                    "Document",
+                    {
+                      "emit": {
+                        "failure": "DocumentLoadFailed",
+                        "success": "DocumentLoaded"
+                      }
+                    }
+                  ],
+                  [
+                    "render-ui",
+                    "main",
+                    {
+                      "className": "py-12",
+                      "direction": "vertical",
+                      "type": "stack",
+                      "children": [
+                        {
+                          "type": "spinner"
+                        },
+                        {
+                          "color": "muted",
+                          "type": "typography",
+                          "content": "Preparing download…",
+                          "variant": "caption"
+                        }
+                      ],
+                      "gap": "md",
+                      "align": "center"
+                    }
+                  ]
+                ]
+              },
+              {
+                "from": "viewing_single",
+                "to": "loading",
+                "event": "REVOKE",
+                "effects": [
+                  [
+                    "set",
+                    "@entity.id",
+                    "@payload.id"
+                  ],
+                  [
+                    "fetch",
+                    "Document",
+                    {
+                      "emit": {
+                        "failure": "DocumentLoadFailed",
+                        "success": "DocumentLoaded"
+                      }
+                    }
+                  ],
+                  [
+                    "render-ui",
+                    "main",
+                    {
+                      "align": "center",
+                      "type": "stack",
+                      "children": [
+                        {
+                          "type": "spinner"
+                        },
+                        {
+                          "type": "typography",
+                          "color": "muted",
+                          "content": "Revoking access…",
+                          "variant": "caption"
+                        }
+                      ],
+                      "gap": "md",
+                      "direction": "vertical",
+                      "className": "py-12"
+                    }
+                  ]
+                ]
+              },
+              {
+                "from": "error",
+                "to": "loading",
+                "event": "INIT",
+                "effects": [
+                  [
+                    "fetch",
+                    "Document",
+                    {
+                      "emit": {
+                        "success": "DocumentLoaded",
+                        "failure": "DocumentLoadFailed"
+                      }
+                    }
+                  ],
+                  [
+                    "render-ui",
+                    "main",
+                    {
+                      "size": "sm",
+                      "type": "spinner"
+                    }
+                  ]
+                ]
+              }
+            ]
+          },
+          "config": {
+            "fields": {
+              "type": "[FieldSpec]",
+              "default": [
+                {
+                  "name": "title",
+                  "label": "Title",
+                  "variant": "caption"
+                },
+                {
+                  "label": "Type",
+                  "name": "mimeType",
+                  "variant": "caption"
+                },
+                {
+                  "variant": "badge",
+                  "label": "Classification",
+                  "name": "classification"
+                },
+                {
+                  "variant": "caption",
+                  "label": "Locked by",
+                  "name": "lockedBy"
+                },
+                {
+                  "label": "Retention",
+                  "name": "retentionUntil",
+                  "variant": "caption"
+                }
+              ],
+              "label": "Columns to show",
+              "description": "Each column maps to one field on the Document entity",
+              "tier": "presentation",
+              "items": {
+                "type": "object",
+                "properties": {
+                  "label": {
+                    "name": "label",
+                    "type": "string",
+                    "required": false
+                  },
+                  "variant": {
+                    "name": "variant",
+                    "type": "string",
+                    "required": false
+                  },
+                  "icon": {
+                    "name": "icon",
+                    "type": "string",
+                    "required": false
+                  },
+                  "format": {
+                    "name": "format",
+                    "type": "string",
+                    "required": false
+                  },
+                  "key": {
+                    "name": "key",
+                    "type": "string",
+                    "required": false
+                  },
+                  "header": {
+                    "name": "header",
+                    "type": "string",
+                    "required": false
+                  },
+                  "name": {
+                    "name": "name",
+                    "type": "string",
+                    "required": true
+                  }
+                }
+              }
+            },
+            "defaultRetentionYears": {
+              "type": "number",
+              "default": 7.0,
+              "label": "Default retention (years)",
+              "description": "Years to keep a document before lifecycle-based deletion. Compose std-lifecycle to enforce.",
+              "synonyms": "keep for, archive after",
+              "tier": "domain"
+            },
+            "classificationLevels": {
+              "type": "[string]",
+              "default": [
+                "public",
+                "internal",
+                "confidential",
+                "restricted"
+              ],
+              "label": "Classification levels",
+              "description": "Allowed enum for the classification field.",
+              "synonyms": "sensitivity, security levels",
+              "tier": "domain",
+              "items": {
+                "type": "string"
+              }
+            },
+            "title": {
+              "type": "string",
+              "default": "Documents",
+              "label": "Section title",
+              "description": "Heading shown above the documents list",
+              "tier": "presentation"
+            },
+            "allowedMimeTypes": {
+              "type": "[string]",
+              "default": [
+                "application/pdf",
+                "application/msword",
+                "image/png",
+                "image/jpeg"
+              ],
+              "label": "Allowed MIME types",
+              "description": "Upload accepts only these content types. Empty = any.",
+              "synonyms": "file types",
+              "tier": "domain",
+              "items": {
+                "type": "string"
+              }
+            },
+            "lockedStatus": {
+              "type": "string",
+              "default": "soft",
+              "label": "Lock behavior",
+              "description": "soft = block edits w/ override; hard = block edits absolutely; none = informational only.",
+              "tier": "domain",
+              "values": [
+                "none",
+                "soft",
+                "hard"
+              ]
+            },
+            "requireReasonOnDownload": {
+              "type": "boolean",
+              "default": false,
+              "label": "Require reason on download",
+              "description": "Prompt the user to enter a justification when downloading restricted docs.",
+              "tier": "domain"
+            },
+            "itemActions": {
+              "type": "[ItemAction]",
+              "default": [
+                {
+                  "label": "Open",
+                  "variant": "primary",
+                  "icon": "arrow-right",
+                  "event": "OPEN_DOCUMENT"
+                },
+                {
+                  "event": "DOWNLOAD",
+                  "variant": "secondary",
+                  "icon": "download",
+                  "label": "Download"
+                }
+              ],
+              "label": "Row actions",
+              "description": "Buttons users can click on each document row",
+              "tier": "presentation",
+              "items": {
+                "type": "object",
+                "properties": {
+                  "event": {
+                    "name": "event",
+                    "type": "string",
+                    "required": true
+                  },
+                  "variant": {
+                    "name": "variant",
+                    "type": "string",
+                    "required": false
+                  },
+                  "icon": {
+                    "name": "icon",
+                    "type": "string",
+                    "required": false
+                  },
+                  "label": {
+                    "name": "label",
+                    "type": "string",
+                    "required": true
+                  }
+                }
+              }
+            },
+            "versionRetentionCount": {
+              "type": "number",
+              "default": 10.0,
+              "label": "Version retention count",
+              "description": "Max prior versions kept per document. 0 = all.",
+              "tier": "domain"
+            },
+            "watermarkPolicy": {
+              "type": "string",
+              "default": "none",
+              "label": "Watermark policy",
+              "description": "Image overlay when rendering classified docs.",
+              "tier": "domain",
+              "values": [
+                "none",
+                "viewer-id",
+                "viewer-id-timestamp"
+              ]
+            },
+            "legalHoldEnabled": {
+              "type": "boolean",
+              "default": true,
+              "label": "Honor legal hold",
+              "description": "When true, retention policies skip docs marked legalHold=true.",
+              "synonyms": "litigation hold",
+              "tier": "domain"
+            }
+          },
+          "scope": "collection"
+        }
+      ],
+      "pages": [
+        {
+          "name": "DocumentManagePage",
+          "path": "/documents",
+          "traits": [
+            {
+              "ref": "DocumentManage"
+            }
+          ]
+        }
+      ]
+    }
+  ]
+}

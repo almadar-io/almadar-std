@@ -1,0 +1,147 @@
+app std-appointment-policy "1.0.0"
+"std-appointment-policy — shared reschedule/cancellation/no-show policy referenced by std-interview-slot, std-class-session, std-event, std-court-deadline via a policyId knob. Author one policy + reuse across appointment types. Exposes Scheduling-pattern knobs."
+
+type FieldSpec = { name : string!, label : string, variant : string, icon : string, format : string, key : string, header : string }
+type ItemAction = { label : string!, event : string!, variant : string, icon : string }
+
+orbital AppointmentPolicyOrbital {
+  entity AppointmentPolicy [persistent: appointment_policies] {
+    id                         : string!
+    name                       : string!
+    description                : string = ""
+    rescheduleWindowHours      : number = 24
+    maxReschedules             : number = 2
+    cancellationPolicy         : "free" | "partial-refund" | "no-refund" = "free"
+    noShowGracePeriodMinutes   : number = 15
+    noShowFeeAmount            : number = 0
+    lateArrivalGraceMinutes    : number = 10
+    status                     : "active" | "archived" = "active"
+    createdAt                  : string
+  }
+
+  type AppointmentPolicyLoaded     = Event { data : [AppointmentPolicy] }   "Fired when the policy collection finishes loading"
+  type AppointmentPolicyLoadFailed = Event { error : string, code : string } "Fired when the policy collection fails to load"
+
+  trait AppointmentPolicyManage -> AppointmentPolicy [interaction, collection] {
+    config {
+      title       : string = "Appointment Policies"
+        @label "Section title"
+        @description "Heading shown above the policy list"
+        @tier "presentation"
+      fields      : [FieldSpec] = [
+        { name: "name",                     label: "Name",            variant: "caption" },
+        { name: "rescheduleWindowHours",    label: "Reschedule (h)",  variant: "caption" },
+        { name: "maxReschedules",           label: "Max reschedules", variant: "caption" },
+        { name: "cancellationPolicy",       label: "Cancellation",    variant: "badge"   },
+        { name: "noShowGracePeriodMinutes", label: "No-show grace",   variant: "caption" },
+        { name: "noShowFeeAmount",          label: "No-show fee",     variant: "caption" },
+        { name: "status",                   label: "Status",          variant: "badge"   }
+      ]
+        @label "Columns to show"
+        @description "Each column maps to one field on the AppointmentPolicy entity"
+        @tier "presentation"
+      itemActions : [ItemAction] = [
+        { label: "Open",    event: "OPEN_POLICY",    variant: "primary", icon: "arrow-right" },
+        { label: "Archive", event: "ARCHIVE_POLICY", variant: "danger" }
+      ]
+        @label "Row actions"
+        @description "Buttons users can click on each policy row"
+        @tier "presentation"
+      rescheduleWindowHours : number = 24
+        @label "Reschedule window (hours)"
+        @description "Default hours before appointment during which the customer can self-reschedule. Atoms that reference a policy inherit this."
+        @tier "domain"
+        @synonyms "reschedule cutoff, change window"
+      maxReschedules : number = 2
+        @label "Max reschedules"
+        @description "Default hard cap on reschedules per appointment when this policy is referenced."
+        @tier "domain"
+        @synonyms "reschedule limit"
+      cancellationPolicy : "free" | "partial-refund" | "no-refund" = "free"
+        @label "Cancellation policy"
+        @description "Refund treatment when an appointment is cancelled inside the reschedule window."
+        @tier "domain"
+        @synonyms "refund policy, cancellation rule"
+      noShowGracePeriodMinutes : number = 15
+        @label "No-show grace (minutes)"
+        @description "Minutes after scheduled start before the appointment auto-marks no_show."
+        @tier "domain"
+        @synonyms "no-show window, late grace"
+      noShowFeeAmount : number = 0
+        @label "No-show fee amount"
+        @description "Cash fee charged for a confirmed no-show. 0 = no fee."
+        @tier "domain"
+        @synonyms "missed-appointment fee, no-show charge"
+      lateArrivalGraceMinutes : number = 10
+        @label "Late arrival grace (minutes)"
+        @description "Minutes a customer can arrive late before the slot is forfeit."
+        @tier "domain"
+        @synonyms "tardy window"
+    }
+    initial: loading
+    state loading {
+      INIT -> loading
+        (fetch AppointmentPolicy { emit: { success: "AppointmentPolicyLoaded", failure: "AppointmentPolicyLoadFailed" } })
+        (render-ui main { type: "stack", direction: "vertical", gap: "md", align: "center", className: "py-12", children: [{ type: "spinner" }, { type: "typography", variant: "caption", color: "muted", content: "Loading policies…" }] })
+      AppointmentPolicyLoaded -> browsing
+        (render-ui main { type: "stack", direction: "vertical", gap: "md", children: [{ type: "stack", direction: "horizontal", gap: "sm", align: "center", children: [{ type: "icon", name: "calendar-check" }, { type: "typography", content: "@config.title", variant: "h3" }] }, { type: "divider" }, { type: "data-grid", entity: "@payload.data", fields: "@config.fields", cols: 1, gap: "sm", itemActions: "@config.itemActions" }] })
+      AppointmentPolicyLoadFailed -> error
+        (render-ui main { type: "alert", variant: "error", message: "@payload.error" })
+    }
+    state browsing {
+      OPEN_POLICY -> viewing_single
+        (set @entity.id @payload.row.id)
+        (set @entity.name @payload.row.name)
+        (set @entity.description @payload.row.description)
+        (set @entity.rescheduleWindowHours @payload.row.rescheduleWindowHours)
+        (set @entity.maxReschedules @payload.row.maxReschedules)
+        (set @entity.cancellationPolicy @payload.row.cancellationPolicy)
+        (set @entity.noShowGracePeriodMinutes @payload.row.noShowGracePeriodMinutes)
+        (set @entity.noShowFeeAmount @payload.row.noShowFeeAmount)
+        (set @entity.lateArrivalGraceMinutes @payload.row.lateArrivalGraceMinutes)
+        (set @entity.status @payload.row.status)
+        (set @entity.createdAt @payload.row.createdAt)
+        (render-ui main { type: "stack", direction: "vertical", gap: "md", children: [{ type: "stack", direction: "horizontal", gap: "sm", align: "center", children: [{ type: "button", label: "Back", variant: "ghost", action: "CLOSE_VIEW" }, { type: "icon", name: "calendar-check" }, { type: "typography", content: "@entity.name", variant: "h3" }] }, { type: "divider" }, { type: "stack", direction: "vertical", gap: "sm", children: [{ type: "stack", direction: "horizontal", gap: "md", children: [{ type: "typography", variant: "caption", color: "muted", content: "Reschedule window (h)" }, { type: "typography", variant: "body", content: "@entity.rescheduleWindowHours" }] }, { type: "stack", direction: "horizontal", gap: "md", children: [{ type: "typography", variant: "caption", color: "muted", content: "Max reschedules" }, { type: "typography", variant: "body", content: "@entity.maxReschedules" }] }, { type: "stack", direction: "horizontal", gap: "md", children: [{ type: "typography", variant: "caption", color: "muted", content: "Cancellation" }, { type: "typography", variant: "body", content: "@entity.cancellationPolicy" }] }, { type: "stack", direction: "horizontal", gap: "md", children: [{ type: "typography", variant: "caption", color: "muted", content: "No-show grace (min)" }, { type: "typography", variant: "body", content: "@entity.noShowGracePeriodMinutes" }] }, { type: "stack", direction: "horizontal", gap: "md", children: [{ type: "typography", variant: "caption", color: "muted", content: "No-show fee" }, { type: "typography", variant: "body", content: "@entity.noShowFeeAmount" }] }] }, { type: "stack", direction: "horizontal", gap: "sm", align: "center", children: [{ type: "button", label: "Archive", variant: "danger", action: "ARCHIVE_POLICY", actionPayload: { id: "@entity.id", row: "@entity" } }] }] })
+      ARCHIVE_POLICY -> loading
+        (set @entity.id @payload.id)
+        (set @entity.status "archived")
+        (persist update AppointmentPolicy @entity { emit: { success: "AppointmentPolicyLoaded", failure: "AppointmentPolicyLoadFailed" } })
+        (render-ui main { type: "stack", direction: "vertical", gap: "md", align: "center", className: "py-12", children: [{ type: "spinner" }, { type: "typography", variant: "caption", color: "muted", content: "Archiving policy…" }] })
+      SET_STATUS -> loading
+        (set @entity.id @payload.entityId)
+        (set @entity.status @payload.newStatus)
+        (persist update AppointmentPolicy @entity { emit: { success: "AppointmentPolicyLoaded", failure: "AppointmentPolicyLoadFailed" } })
+        (render-ui main { type: "stack", direction: "vertical", gap: "md", align: "center", className: "py-12", children: [{ type: "spinner" }, { type: "typography", variant: "caption", color: "muted", content: "Updating policy status…" }] })
+    }
+    state viewing_single {
+      CLOSE_VIEW -> loading
+        (fetch AppointmentPolicy { emit: { success: "AppointmentPolicyLoaded", failure: "AppointmentPolicyLoadFailed" } })
+        (render-ui main { type: "stack", direction: "vertical", gap: "md", align: "center", className: "py-12", children: [{ type: "spinner" }, { type: "typography", variant: "caption", color: "muted", content: "Loading policies…" }] })
+      ARCHIVE_POLICY -> loading
+        (set @entity.id @payload.id)
+        (fetch AppointmentPolicy { emit: { success: "AppointmentPolicyLoaded", failure: "AppointmentPolicyLoadFailed" } })
+        (render-ui main { type: "stack", direction: "vertical", gap: "md", align: "center", className: "py-12", children: [{ type: "spinner" }, { type: "typography", variant: "caption", color: "muted", content: "Archiving policy…" }] })
+    }
+    state error {
+      INIT -> loading
+        (fetch AppointmentPolicy { emit: { success: "AppointmentPolicyLoaded", failure: "AppointmentPolicyLoadFailed" } })
+        (render-ui main { type: "spinner", size: "sm" })
+    }
+    emits {
+      OPEN_POLICY    { id : string!, row : AppointmentPolicy }
+      CLOSE_VIEW     { }
+      ARCHIVE_POLICY { id : string!, row : AppointmentPolicy }
+      AppointmentPolicyLoaded     { data : [AppointmentPolicy] }
+      AppointmentPolicyLoadFailed { error : string, code : string }
+    }
+    listens {
+      OPEN_POLICY    { id : string!, row : AppointmentPolicy }
+      CLOSE_VIEW     { }
+      ARCHIVE_POLICY { id : string!, row : AppointmentPolicy }
+      SET_STATUS     { entityId : string!, newStatus : string! }
+      AppointmentPolicyLoaded     { data : [AppointmentPolicy] }
+      AppointmentPolicyLoadFailed { error : string, code : string }
+    }
+  }
+  page "/appointment-policies" as AppointmentPolicyPage -> AppointmentPolicyManage
+}

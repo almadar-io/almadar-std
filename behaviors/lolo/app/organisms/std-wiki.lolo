@@ -15,6 +15,9 @@ orbital DocumentOrbital {
   uses Browse      from "std/behaviors/std-browse"
   uses Related     from "std/behaviors/std-related"
   uses Tags        from "std/behaviors/std-tag-taxonomy"
+  uses Audit       from "std/behaviors/std-audit-capture"
+  uses Lifecycle   from "std/behaviors/std-lifecycle"
+  uses Erasure     from "std/behaviors/std-data-erasure"
 
   entity WikiPage [persistent: wikipages] {
     id         : string!
@@ -282,7 +285,40 @@ orbital DocumentOrbital {
     }
   }
 
-  page "/wiki" as WikiPagesPage -> WikiAppLayout, WikiWorkspace, WikiSearch, WikiFilter, WikiPageTree, WikiBrowseList, WikiBacklinks, WikiCreate, WikiEdit, WikiView, WikiDelete, WikiPersistor
+  trait WikiAuditCapture = Audit.traits.AuditCaptureListener {
+    config: {
+      captureEntity: "WikiPage",
+      captureEventTypes: [],
+      excludeFields: [],
+      captureBeforeAfter: true,
+      retentionDays: 2555
+    }
+    events {
+      EntityMutated: WIKI_UPDATED
+    }
+  }
+
+  trait WikiLifecycleScan = Lifecycle.traits.LifecycleScheduler {
+    config: {
+      targetEntity: "WikiPage",
+      rules: [
+        { fromStatus: "published", toStatus: "archived", condition: { kind: "ageDays", value: 365, dateField: "updatedAt" } },
+        { fromStatus: "archived",  toStatus: "deleted",  condition: { kind: "ageDays", value: 730, dateField: "updatedAt" } }
+      ],
+      dryRun: false
+    }
+  }
+
+  trait WikiErasure = Erasure.traits.ErasureWorkflow {
+    config: {
+      targetEntity: "WikiPage",
+      gracePeriodDays: 30,
+      anonymizeVsDelete: "anonymize",
+      piiFields: ["authorId"]
+    }
+  }
+
+  page "/wiki" as WikiPagesPage -> WikiAppLayout, WikiWorkspace, WikiSearch, WikiFilter, WikiPageTree, WikiBrowseList, WikiBacklinks, WikiCreate, WikiEdit, WikiView, WikiDelete, WikiPersistor, WikiAuditCapture, WikiLifecycleScan, WikiErasure
   page "/wiki/history" as WikiHistoryPage -> WikiAppLayout, WikiWorkspace, WikiVersionHistory
   page "/wiki/tags" as WikiTagsPage -> WikiAppLayout, WikiWorkspace, WikiTagBrowse
 }

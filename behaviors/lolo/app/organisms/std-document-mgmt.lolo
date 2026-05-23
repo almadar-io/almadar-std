@@ -14,6 +14,11 @@ orbital DocumentOrbital {
   uses FileStore       from "std/behaviors/std-file-store"
   uses ESignRequest    from "std/behaviors/std-esign-request"
   uses VersionHistory  from "std/behaviors/std-version-history"
+  uses Lifecycle       from "std/behaviors/std-lifecycle"
+  uses Notify          from "std/behaviors/std-notify-on-event"
+  uses Audit           from "std/behaviors/std-audit-capture"
+  uses Approval        from "std/behaviors/std-approval-gate"
+  uses Erasure         from "std/behaviors/std-data-erasure"
 
   entity Document [persistent: documents] {
     id : string!
@@ -315,9 +320,116 @@ orbital DocumentOrbital {
     }
   }
 
-  page "/documents" as DocumentsPage -> DocumentAppLayout, DocumentCatalog, DocumentSearch, DocumentFilter, DocumentStats, DocumentGraphs, DocumentBrowseList, DocumentCreate, DocumentEdit, DocumentView, DocumentDelete, DocumentPersistor
+  trait DocumentLifecycleScan = Lifecycle.traits.LifecycleScheduler {
+    config: {
+      targetEntity: "Document",
+      rules: [
+        { fromStatus: "active",         toStatus: "pending-review", condition: { kind: "ageDays", value: 365, dateField: "lastModified" } },
+        { fromStatus: "pending-review", toStatus: "archived",       condition: { kind: "ageDays", value: 730, dateField: "lastModified" } }
+      ],
+      dryRun: false
+    }
+  }
+
+  trait DocumentNotifier = Notify.traits.NotifyOnEventListener {
+    config: {
+      listensFor: ["DOCUMENT_UPDATED"],
+      notifyChannel: "in-app",
+      template: "Document shared or updated",
+      severity: "info",
+      recipients: [],
+      suppressionList: []
+    }
+    events {
+      EventOccurred: DOCUMENT_UPDATED
+    }
+  }
+
+  trait DocumentAuditCapture = Audit.traits.AuditCaptureListener {
+    config: {
+      captureEntity: "Document",
+      captureEventTypes: [],
+      excludeFields: [],
+      captureBeforeAfter: true,
+      retentionDays: 2555
+    }
+    events {
+      EntityMutated: DOCUMENT_UPDATED
+    }
+  }
+
+  trait DocumentApprovalGate = Approval.traits.ApprovalGateReview {
+    config: {
+      approverRoles: ["records-officer"],
+      threshold: 0,
+      autoApproveBelowThreshold: false,
+      valueField: "",
+      escalationHours: 48,
+      escalationRoles: ["compliance-lead"]
+    }
+  }
+
+  trait DocumentErasureWorkflow = Erasure.traits.ErasureWorkflow {
+    config: {
+      targetEntity: "Document",
+      gracePeriodDays: 30,
+      anonymizeVsDelete: "delete",
+      piiFields: []
+    }
+  }
+
+  page "/documents" as DocumentsPage -> DocumentAppLayout, DocumentCatalog, DocumentSearch, DocumentFilter, DocumentStats, DocumentGraphs, DocumentBrowseList, DocumentCreate, DocumentEdit, DocumentView, DocumentDelete, DocumentPersistor, DocumentLifecycleScan, DocumentNotifier, DocumentAuditCapture, DocumentApprovalGate, DocumentErasureWorkflow
   page "/esign-flow" as DocumentsESignFlowPage -> DocumentAppLayout, DocumentESignFlow, DocumentESignCreate, DocumentESignDelete, DocumentESignPersistor
   page "/files" as DocumentsFilesPage -> DocumentAppLayout, DocumentFileStore
   page "/esign" as DocumentsSignaturesPage -> DocumentAppLayout, DocumentESignRequest
   page "/revisions/manage" as DocumentsVersionsPage -> DocumentAppLayout, DocumentVersionHistory
+}
+
+orbital ClassifiedDocumentFromStdOrbital {
+  uses AppShell  from "std/behaviors/std-app-layout"
+  uses Documents from "std/behaviors/std-document"
+
+  entity ClassifiedDocument [persistent: classifieddocuments] {
+    id              : string!
+    title           : string!
+    description     : string
+    mimeType        : string
+    classification  : string
+    lockedBy        : string
+    lockedAt        : string
+    retentionUntil  : string
+    legalHold       : boolean
+    createdAt       : string
+    updatedAt       : string
+  }
+
+  trait ClassifiedDocumentFromStdAppLayout = AppShell.traits.AppLayout -> ClassifiedDocument {
+    config: {
+      contentTrait: "@trait.ClassifiedDocumentFromStdManageBlock",
+      appName: "Documents",
+      navItems: [
+        { label: "Documents", href: "/documents",       icon: "file-text" },
+        { label: "E-Sign Flow", href: "/esign-flow",    icon: "file-signature" },
+        { label: "Files",     href: "/files",           icon: "folder" },
+        { label: "Signatures", href: "/esign",          icon: "pen-tool" },
+        { label: "Versions",  href: "/revisions/manage", icon: "history" },
+        { label: "Classified", href: "/documents-classified", icon: "shield" }
+      ],
+      searchEvent: "CLASSIFIED_DOC_SEARCH",
+      notifications: [],
+      notificationClickEvent: "CLASSIFIED_DOC_NOTIFICATIONS_OPEN"
+    }
+    events {
+      SEARCH: CLASSIFIED_DOC_SEARCH
+      NOTIFY_CLICK: CLASSIFIED_DOC_NOTIFICATIONS_OPEN
+    }
+  }
+
+  trait ClassifiedDocumentFromStdManageBlock = Documents.traits.DocumentManage -> ClassifiedDocument {
+    config: {
+      title: "Classified Documents"
+    }
+  }
+
+  page "/documents-classified" as ClassifiedDocumentFromStdPage -> ClassifiedDocumentFromStdAppLayout, ClassifiedDocumentFromStdManageBlock
 }

@@ -13,6 +13,28 @@ orbital RateBucketOrbital {
     limiterStatus : string = "open"
   }
   trait RateBucketRateLimiter -> RateBucket [interaction, collection] {
+    config {
+      requestsPerMinute : number = 60
+        @label "Requests per minute"
+        @description "Maximum number of requests allowed per minute before throttling begins."
+        @tier "domain"
+        @synonyms "rate limit, request cap, RPS, throttle threshold"
+      burstSize : number = 10
+        @label "Burst size"
+        @description "Number of requests allowed to burst above the per-minute rate before steady-state throttling kicks in."
+        @tier "domain"
+        @synonyms "burst capacity, allowance"
+      keyStrategy : "ip" | "user" | "api-key" | "global" = "user"
+        @label "Rate-limit key strategy"
+        @description "What identifier the per-bucket counter is keyed on: source IP, authenticated user, API key, or one global bucket."
+        @tier "domain"
+        @synonyms "limiter key, bucket key"
+      overrideRoles : [string] = []
+        @label "Override roles"
+        @description "Roles exempt from rate limiting (e.g. internal services, admin override). Empty = no exemptions."
+        @tier "domain"
+        @synonyms "exempt roles, bypass list"
+    }
     initial: open
     state open {
       INIT -> open

@@ -1,0 +1,1466 @@
+{
+  "name": "std-insurance-claim",
+  "version": "1.0.0",
+  "description": "std-insurance-claim — insurance claim lifecycle (draft → eligible → submitted → accepted → denied → paid) with EDI submission knobs.",
+  "orbitals": [
+    {
+      "name": "InsuranceClaimOrbital",
+      "entity": {
+        "name": "InsuranceClaim",
+        "collection": "insurance_claims",
+        "persistence": "persistent",
+        "fields": [
+          {
+            "name": "id",
+            "type": "string",
+            "required": true
+          },
+          {
+            "name": "patientId",
+            "type": "string",
+            "required": true
+          },
+          {
+            "name": "payerId",
+            "type": "string",
+            "required": true
+          },
+          {
+            "name": "serviceDate",
+            "type": "string"
+          },
+          {
+            "name": "submittedAt",
+            "type": "string"
+          },
+          {
+            "name": "status",
+            "type": "string",
+            "default": "draft",
+            "values": [
+              "draft",
+              "eligible",
+              "submitted",
+              "accepted",
+              "denied",
+              "paid"
+            ]
+          },
+          {
+            "name": "claimAmount",
+            "type": "number"
+          },
+          {
+            "name": "paidAmount",
+            "type": "number",
+            "default": 0.0
+          },
+          {
+            "name": "denialReason",
+            "type": "string"
+          },
+          {
+            "name": "priorAuthNumber",
+            "type": "string"
+          },
+          {
+            "name": "createdAt",
+            "type": "string"
+          }
+        ]
+      },
+      "traits": [
+        {
+          "name": "InsuranceClaimManage",
+          "category": "interaction",
+          "linkedEntity": "InsuranceClaim",
+          "emits": [
+            {
+              "event": "OPEN_CLAIM",
+              "payloadSchema": [
+                {
+                  "name": "id",
+                  "type": "string",
+                  "required": true
+                },
+                {
+                  "name": "row.id",
+                  "type": "string",
+                  "required": true
+                },
+                {
+                  "name": "row.patientId",
+                  "type": "string",
+                  "required": true
+                },
+                {
+                  "name": "row.payerId",
+                  "type": "string",
+                  "required": true
+                },
+                {
+                  "name": "row.serviceDate",
+                  "type": "string"
+                },
+                {
+                  "name": "row.submittedAt",
+                  "type": "string"
+                },
+                {
+                  "name": "row.status",
+                  "type": "string"
+                },
+                {
+                  "name": "row.claimAmount",
+                  "type": "number"
+                },
+                {
+                  "name": "row.paidAmount",
+                  "type": "number"
+                },
+                {
+                  "name": "row.denialReason",
+                  "type": "string"
+                },
+                {
+                  "name": "row.priorAuthNumber",
+                  "type": "string"
+                },
+                {
+                  "name": "row.createdAt",
+                  "type": "string"
+                }
+              ]
+            },
+            {
+              "event": "CLOSE_VIEW"
+            },
+            {
+              "event": "SUBMIT",
+              "payloadSchema": [
+                {
+                  "name": "id",
+                  "type": "string",
+                  "required": true
+                },
+                {
+                  "name": "row.id",
+                  "type": "string",
+                  "required": true
+                },
+                {
+                  "name": "row.patientId",
+                  "type": "string",
+                  "required": true
+                },
+                {
+                  "name": "row.payerId",
+                  "type": "string",
+                  "required": true
+                },
+                {
+                  "name": "row.serviceDate",
+                  "type": "string"
+                },
+                {
+                  "name": "row.submittedAt",
+                  "type": "string"
+                },
+                {
+                  "name": "row.status",
+                  "type": "string"
+                },
+                {
+                  "name": "row.claimAmount",
+                  "type": "number"
+                },
+                {
+                  "name": "row.paidAmount",
+                  "type": "number"
+                },
+                {
+                  "name": "row.denialReason",
+                  "type": "string"
+                },
+                {
+                  "name": "row.priorAuthNumber",
+                  "type": "string"
+                },
+                {
+                  "name": "row.createdAt",
+                  "type": "string"
+                }
+              ]
+            },
+            {
+              "event": "MARK_PAID",
+              "payloadSchema": [
+                {
+                  "name": "id",
+                  "type": "string",
+                  "required": true
+                },
+                {
+                  "name": "row.id",
+                  "type": "string",
+                  "required": true
+                },
+                {
+                  "name": "row.patientId",
+                  "type": "string",
+                  "required": true
+                },
+                {
+                  "name": "row.payerId",
+                  "type": "string",
+                  "required": true
+                },
+                {
+                  "name": "row.serviceDate",
+                  "type": "string"
+                },
+                {
+                  "name": "row.submittedAt",
+                  "type": "string"
+                },
+                {
+                  "name": "row.status",
+                  "type": "string"
+                },
+                {
+                  "name": "row.claimAmount",
+                  "type": "number"
+                },
+                {
+                  "name": "row.paidAmount",
+                  "type": "number"
+                },
+                {
+                  "name": "row.denialReason",
+                  "type": "string"
+                },
+                {
+                  "name": "row.priorAuthNumber",
+                  "type": "string"
+                },
+                {
+                  "name": "row.createdAt",
+                  "type": "string"
+                }
+              ]
+            },
+            {
+              "event": "APPEAL",
+              "payloadSchema": [
+                {
+                  "name": "id",
+                  "type": "string",
+                  "required": true
+                },
+                {
+                  "name": "row.id",
+                  "type": "string",
+                  "required": true
+                },
+                {
+                  "name": "row.patientId",
+                  "type": "string",
+                  "required": true
+                },
+                {
+                  "name": "row.payerId",
+                  "type": "string",
+                  "required": true
+                },
+                {
+                  "name": "row.serviceDate",
+                  "type": "string"
+                },
+                {
+                  "name": "row.submittedAt",
+                  "type": "string"
+                },
+                {
+                  "name": "row.status",
+                  "type": "string"
+                },
+                {
+                  "name": "row.claimAmount",
+                  "type": "number"
+                },
+                {
+                  "name": "row.paidAmount",
+                  "type": "number"
+                },
+                {
+                  "name": "row.denialReason",
+                  "type": "string"
+                },
+                {
+                  "name": "row.priorAuthNumber",
+                  "type": "string"
+                },
+                {
+                  "name": "row.createdAt",
+                  "type": "string"
+                }
+              ]
+            },
+            {
+              "event": "InsuranceClaimLoaded",
+              "payloadSchema": [
+                {
+                  "name": "data",
+                  "type": "[InsuranceClaim]"
+                }
+              ]
+            },
+            {
+              "event": "InsuranceClaimLoadFailed",
+              "payloadSchema": [
+                {
+                  "name": "error",
+                  "type": "string"
+                },
+                {
+                  "name": "code",
+                  "type": "string"
+                }
+              ]
+            },
+            {
+              "event": "InsuranceClaimUpdated",
+              "payloadSchema": [
+                {
+                  "name": "row.id",
+                  "type": "string",
+                  "required": true
+                },
+                {
+                  "name": "row.patientId",
+                  "type": "string",
+                  "required": true
+                },
+                {
+                  "name": "row.payerId",
+                  "type": "string",
+                  "required": true
+                },
+                {
+                  "name": "row.serviceDate",
+                  "type": "string"
+                },
+                {
+                  "name": "row.submittedAt",
+                  "type": "string"
+                },
+                {
+                  "name": "row.status",
+                  "type": "string"
+                },
+                {
+                  "name": "row.claimAmount",
+                  "type": "number"
+                },
+                {
+                  "name": "row.paidAmount",
+                  "type": "number"
+                },
+                {
+                  "name": "row.denialReason",
+                  "type": "string"
+                },
+                {
+                  "name": "row.priorAuthNumber",
+                  "type": "string"
+                },
+                {
+                  "name": "row.createdAt",
+                  "type": "string"
+                }
+              ]
+            },
+            {
+              "event": "InsuranceClaimUpdateFailed",
+              "payloadSchema": [
+                {
+                  "name": "error",
+                  "type": "string"
+                },
+                {
+                  "name": "code",
+                  "type": "string"
+                }
+              ]
+            }
+          ],
+          "stateMachine": {
+            "states": [
+              {
+                "name": "loading",
+                "isInitial": true
+              },
+              {
+                "name": "browsing"
+              },
+              {
+                "name": "viewing_single"
+              },
+              {
+                "name": "error"
+              }
+            ],
+            "events": [
+              {
+                "key": "INIT",
+                "name": "Initialize"
+              },
+              {
+                "key": "InsuranceClaimLoaded",
+                "name": "InsuranceClaim loaded",
+                "payloadSchema": [
+                  {
+                    "name": "data",
+                    "type": "[InsuranceClaim]"
+                  }
+                ]
+              },
+              {
+                "key": "InsuranceClaimLoadFailed",
+                "name": "InsuranceClaim load failed",
+                "payloadSchema": [
+                  {
+                    "name": "error",
+                    "type": "string"
+                  },
+                  {
+                    "name": "code",
+                    "type": "string"
+                  }
+                ]
+              },
+              {
+                "key": "OPEN_CLAIM",
+                "name": "Open Claim",
+                "payloadSchema": [
+                  {
+                    "name": "id",
+                    "type": "string",
+                    "required": true
+                  },
+                  {
+                    "name": "row",
+                    "type": "InsuranceClaim"
+                  }
+                ]
+              },
+              {
+                "key": "SUBMIT",
+                "name": "Submit",
+                "payloadSchema": [
+                  {
+                    "name": "id",
+                    "type": "string",
+                    "required": true
+                  },
+                  {
+                    "name": "row",
+                    "type": "InsuranceClaim"
+                  }
+                ]
+              },
+              {
+                "key": "SET_STATUS",
+                "name": "Set Status",
+                "payloadSchema": [
+                  {
+                    "name": "entityId",
+                    "type": "string",
+                    "required": true
+                  },
+                  {
+                    "name": "newStatus",
+                    "type": "string",
+                    "required": true
+                  }
+                ]
+              },
+              {
+                "key": "InsuranceClaimUpdated",
+                "name": "InsuranceClaim updated",
+                "payloadSchema": [
+                  {
+                    "name": "row",
+                    "type": "InsuranceClaim"
+                  }
+                ]
+              },
+              {
+                "key": "InsuranceClaimUpdateFailed",
+                "name": "InsuranceClaim update failed",
+                "payloadSchema": [
+                  {
+                    "name": "error",
+                    "type": "string"
+                  },
+                  {
+                    "name": "code",
+                    "type": "string"
+                  }
+                ]
+              },
+              {
+                "key": "CLOSE_VIEW",
+                "name": "Close View"
+              },
+              {
+                "key": "MARK_PAID",
+                "name": "Mark Paid",
+                "payloadSchema": [
+                  {
+                    "name": "id",
+                    "type": "string",
+                    "required": true
+                  },
+                  {
+                    "name": "row",
+                    "type": "InsuranceClaim"
+                  }
+                ]
+              },
+              {
+                "key": "APPEAL",
+                "name": "Appeal",
+                "payloadSchema": [
+                  {
+                    "name": "id",
+                    "type": "string",
+                    "required": true
+                  },
+                  {
+                    "name": "row",
+                    "type": "InsuranceClaim"
+                  }
+                ]
+              }
+            ],
+            "transitions": [
+              {
+                "from": "loading",
+                "to": "loading",
+                "event": "INIT",
+                "effects": [
+                  [
+                    "fetch",
+                    "InsuranceClaim",
+                    {
+                      "emit": {
+                        "failure": "InsuranceClaimLoadFailed",
+                        "success": "InsuranceClaimLoaded"
+                      }
+                    }
+                  ],
+                  [
+                    "render-ui",
+                    "main",
+                    {
+                      "direction": "vertical",
+                      "children": [
+                        {
+                          "type": "spinner"
+                        },
+                        {
+                          "color": "muted",
+                          "variant": "caption",
+                          "content": "Loading claims…",
+                          "type": "typography"
+                        }
+                      ],
+                      "type": "stack",
+                      "gap": "md",
+                      "align": "center",
+                      "className": "py-12"
+                    }
+                  ]
+                ]
+              },
+              {
+                "from": "loading",
+                "to": "browsing",
+                "event": "InsuranceClaimLoaded",
+                "effects": [
+                  [
+                    "render-ui",
+                    "main",
+                    {
+                      "gap": "md",
+                      "direction": "vertical",
+                      "children": [
+                        {
+                          "children": [
+                            {
+                              "name": "shield",
+                              "type": "icon"
+                            },
+                            {
+                              "type": "typography",
+                              "content": "@config.title",
+                              "variant": "h3"
+                            }
+                          ],
+                          "gap": "sm",
+                          "direction": "horizontal",
+                          "align": "center",
+                          "type": "stack"
+                        },
+                        {
+                          "children": [
+                            {
+                              "type": "stat-display",
+                              "icon": "shield",
+                              "value": "@payload.data.length",
+                              "label": "Total claims"
+                            },
+                            {
+                              "icon": "send",
+                              "label": "Submitted",
+                              "value": "42",
+                              "type": "stat-display"
+                            },
+                            {
+                              "label": "Denied",
+                              "value": "7",
+                              "type": "stat-display",
+                              "icon": "alert-triangle"
+                            },
+                            {
+                              "label": "Paid this month",
+                              "value": "$84,200",
+                              "icon": "dollar-sign",
+                              "type": "stat-display"
+                            }
+                          ],
+                          "cols": 4.0,
+                          "type": "simple-grid"
+                        },
+                        {
+                          "type": "divider"
+                        },
+                        {
+                          "type": "data-grid",
+                          "entity": "@payload.data",
+                          "cols": 1.0,
+                          "gap": "sm",
+                          "itemActions": "@config.itemActions",
+                          "fields": "@config.fields"
+                        }
+                      ],
+                      "type": "stack"
+                    }
+                  ]
+                ]
+              },
+              {
+                "from": "loading",
+                "to": "error",
+                "event": "InsuranceClaimLoadFailed",
+                "effects": [
+                  [
+                    "render-ui",
+                    "main",
+                    {
+                      "variant": "error",
+                      "type": "alert",
+                      "message": "@payload.error"
+                    }
+                  ]
+                ]
+              },
+              {
+                "from": "browsing",
+                "to": "viewing_single",
+                "event": "OPEN_CLAIM",
+                "effects": [
+                  [
+                    "set",
+                    "@entity.id",
+                    "@payload.row.id"
+                  ],
+                  [
+                    "set",
+                    "@entity.patientId",
+                    "@payload.row.patientId"
+                  ],
+                  [
+                    "set",
+                    "@entity.payerId",
+                    "@payload.row.payerId"
+                  ],
+                  [
+                    "set",
+                    "@entity.serviceDate",
+                    "@payload.row.serviceDate"
+                  ],
+                  [
+                    "set",
+                    "@entity.submittedAt",
+                    "@payload.row.submittedAt"
+                  ],
+                  [
+                    "set",
+                    "@entity.status",
+                    "@payload.row.status"
+                  ],
+                  [
+                    "set",
+                    "@entity.claimAmount",
+                    "@payload.row.claimAmount"
+                  ],
+                  [
+                    "set",
+                    "@entity.paidAmount",
+                    "@payload.row.paidAmount"
+                  ],
+                  [
+                    "set",
+                    "@entity.denialReason",
+                    "@payload.row.denialReason"
+                  ],
+                  [
+                    "set",
+                    "@entity.priorAuthNumber",
+                    "@payload.row.priorAuthNumber"
+                  ],
+                  [
+                    "set",
+                    "@entity.createdAt",
+                    "@payload.row.createdAt"
+                  ],
+                  [
+                    "render-ui",
+                    "main",
+                    {
+                      "type": "stack",
+                      "direction": "vertical",
+                      "gap": "md",
+                      "children": [
+                        {
+                          "type": "stack",
+                          "gap": "sm",
+                          "direction": "horizontal",
+                          "children": [
+                            {
+                              "variant": "ghost",
+                              "action": "CLOSE_VIEW",
+                              "type": "button",
+                              "label": "Back"
+                            },
+                            {
+                              "type": "icon",
+                              "name": "shield"
+                            },
+                            {
+                              "content": "@entity.patientId",
+                              "variant": "h3",
+                              "type": "typography"
+                            },
+                            {
+                              "type": "badge",
+                              "label": "@entity.status",
+                              "variant": "default"
+                            }
+                          ],
+                          "align": "center"
+                        },
+                        {
+                          "type": "divider"
+                        },
+                        {
+                          "direction": "vertical",
+                          "gap": "sm",
+                          "children": [
+                            {
+                              "type": "stack",
+                              "children": [
+                                {
+                                  "color": "muted",
+                                  "variant": "caption",
+                                  "type": "typography",
+                                  "content": "Payer"
+                                },
+                                {
+                                  "variant": "body",
+                                  "type": "typography",
+                                  "content": "@entity.payerId"
+                                }
+                              ],
+                              "gap": "md",
+                              "direction": "horizontal"
+                            },
+                            {
+                              "direction": "horizontal",
+                              "type": "stack",
+                              "gap": "md",
+                              "children": [
+                                {
+                                  "type": "typography",
+                                  "variant": "caption",
+                                  "content": "Service Date",
+                                  "color": "muted"
+                                },
+                                {
+                                  "type": "typography",
+                                  "content": "@entity.serviceDate",
+                                  "variant": "body"
+                                }
+                              ]
+                            },
+                            {
+                              "direction": "horizontal",
+                              "gap": "md",
+                              "children": [
+                                {
+                                  "content": "Prior Auth",
+                                  "color": "muted",
+                                  "variant": "caption",
+                                  "type": "typography"
+                                },
+                                {
+                                  "content": "@entity.priorAuthNumber",
+                                  "type": "typography",
+                                  "variant": "body"
+                                }
+                              ],
+                              "type": "stack"
+                            },
+                            {
+                              "gap": "md",
+                              "children": [
+                                {
+                                  "variant": "caption",
+                                  "color": "muted",
+                                  "content": "Denial Reason",
+                                  "type": "typography"
+                                },
+                                {
+                                  "type": "typography",
+                                  "content": "@entity.denialReason",
+                                  "variant": "body"
+                                }
+                              ],
+                              "type": "stack",
+                              "direction": "horizontal"
+                            }
+                          ],
+                          "type": "stack"
+                        },
+                        {
+                          "type": "divider"
+                        },
+                        {
+                          "cols": 3.0,
+                          "type": "simple-grid",
+                          "children": [
+                            {
+                              "type": "stat-display",
+                              "label": "Claim Amount",
+                              "icon": "dollar-sign",
+                              "value": "@entity.claimAmount"
+                            },
+                            {
+                              "label": "Paid Amount",
+                              "icon": "dollar-sign",
+                              "value": "@entity.paidAmount",
+                              "type": "stat-display"
+                            },
+                            {
+                              "label": "Submitted",
+                              "type": "stat-display",
+                              "value": "@entity.submittedAt",
+                              "icon": "calendar"
+                            }
+                          ]
+                        },
+                        {
+                          "type": "stack",
+                          "align": "center",
+                          "gap": "sm",
+                          "direction": "horizontal",
+                          "children": [
+                            {
+                              "label": "Submit",
+                              "variant": "primary",
+                              "actionPayload": {
+                                "id": "@entity.id",
+                                "row": "@entity"
+                              },
+                              "action": "SUBMIT",
+                              "type": "button"
+                            },
+                            {
+                              "actionPayload": {
+                                "id": "@entity.id",
+                                "row": "@entity"
+                              },
+                              "variant": "primary",
+                              "action": "MARK_PAID",
+                              "type": "button",
+                              "label": "Mark Paid"
+                            },
+                            {
+                              "label": "Appeal",
+                              "type": "button",
+                              "action": "APPEAL",
+                              "actionPayload": {
+                                "id": "@entity.id",
+                                "row": "@entity"
+                              },
+                              "variant": "secondary"
+                            }
+                          ]
+                        }
+                      ]
+                    }
+                  ]
+                ]
+              },
+              {
+                "from": "browsing",
+                "to": "loading",
+                "event": "SUBMIT",
+                "effects": [
+                  [
+                    "set",
+                    "@entity.id",
+                    "@payload.id"
+                  ],
+                  [
+                    "fetch",
+                    "InsuranceClaim",
+                    {
+                      "emit": {
+                        "success": "InsuranceClaimLoaded",
+                        "failure": "InsuranceClaimLoadFailed"
+                      }
+                    }
+                  ],
+                  [
+                    "render-ui",
+                    "main",
+                    {
+                      "className": "py-12",
+                      "align": "center",
+                      "children": [
+                        {
+                          "type": "spinner"
+                        },
+                        {
+                          "color": "muted",
+                          "type": "typography",
+                          "content": "Submitting claim…",
+                          "variant": "caption"
+                        }
+                      ],
+                      "type": "stack",
+                      "direction": "vertical",
+                      "gap": "md"
+                    }
+                  ]
+                ]
+              },
+              {
+                "from": "browsing",
+                "to": "loading",
+                "event": "SET_STATUS",
+                "effects": [
+                  [
+                    "set",
+                    "@entity.id",
+                    "@payload.entityId"
+                  ],
+                  [
+                    "set",
+                    "@entity.status",
+                    "@payload.newStatus"
+                  ],
+                  [
+                    "persist",
+                    "update",
+                    "InsuranceClaim",
+                    "@entity",
+                    {
+                      "emit": {
+                        "success": "InsuranceClaimUpdated",
+                        "failure": "InsuranceClaimUpdateFailed"
+                      }
+                    }
+                  ],
+                  [
+                    "render-ui",
+                    "main",
+                    {
+                      "align": "center",
+                      "children": [
+                        {
+                          "type": "spinner"
+                        },
+                        {
+                          "type": "typography",
+                          "variant": "caption",
+                          "content": "Updating claim status…",
+                          "color": "muted"
+                        }
+                      ],
+                      "type": "stack",
+                      "direction": "vertical",
+                      "gap": "md",
+                      "className": "py-12"
+                    }
+                  ]
+                ]
+              },
+              {
+                "from": "browsing",
+                "to": "loading",
+                "event": "InsuranceClaimUpdated",
+                "effects": [
+                  [
+                    "fetch",
+                    "InsuranceClaim",
+                    {
+                      "emit": {
+                        "success": "InsuranceClaimLoaded",
+                        "failure": "InsuranceClaimLoadFailed"
+                      }
+                    }
+                  ]
+                ]
+              },
+              {
+                "from": "browsing",
+                "to": "browsing",
+                "event": "InsuranceClaimUpdateFailed",
+                "effects": [
+                  [
+                    "render-ui",
+                    "main",
+                    {
+                      "message": "@payload.error",
+                      "type": "alert",
+                      "variant": "error"
+                    }
+                  ]
+                ]
+              },
+              {
+                "from": "viewing_single",
+                "to": "loading",
+                "event": "CLOSE_VIEW",
+                "effects": [
+                  [
+                    "fetch",
+                    "InsuranceClaim",
+                    {
+                      "emit": {
+                        "success": "InsuranceClaimLoaded",
+                        "failure": "InsuranceClaimLoadFailed"
+                      }
+                    }
+                  ],
+                  [
+                    "render-ui",
+                    "main",
+                    {
+                      "className": "py-12",
+                      "direction": "vertical",
+                      "gap": "md",
+                      "align": "center",
+                      "type": "stack",
+                      "children": [
+                        {
+                          "type": "spinner"
+                        },
+                        {
+                          "content": "Loading claims…",
+                          "type": "typography",
+                          "variant": "caption",
+                          "color": "muted"
+                        }
+                      ]
+                    }
+                  ]
+                ]
+              },
+              {
+                "from": "viewing_single",
+                "to": "loading",
+                "event": "SUBMIT",
+                "effects": [
+                  [
+                    "set",
+                    "@entity.id",
+                    "@payload.id"
+                  ],
+                  [
+                    "set",
+                    "@entity.status",
+                    "submitted"
+                  ],
+                  [
+                    "set",
+                    "@entity.submittedAt",
+                    "now"
+                  ],
+                  [
+                    "persist",
+                    "update",
+                    "InsuranceClaim",
+                    "@entity",
+                    {
+                      "emit": {
+                        "failure": "InsuranceClaimUpdateFailed",
+                        "success": "InsuranceClaimUpdated"
+                      }
+                    }
+                  ],
+                  [
+                    "render-ui",
+                    "main",
+                    {
+                      "type": "stack",
+                      "children": [
+                        {
+                          "type": "spinner"
+                        },
+                        {
+                          "color": "muted",
+                          "variant": "caption",
+                          "content": "Submitting claim…",
+                          "type": "typography"
+                        }
+                      ],
+                      "direction": "vertical",
+                      "gap": "md",
+                      "align": "center",
+                      "className": "py-12"
+                    }
+                  ]
+                ]
+              },
+              {
+                "from": "viewing_single",
+                "to": "loading",
+                "event": "MARK_PAID",
+                "effects": [
+                  [
+                    "set",
+                    "@entity.id",
+                    "@payload.id"
+                  ],
+                  [
+                    "set",
+                    "@entity.status",
+                    "paid"
+                  ],
+                  [
+                    "persist",
+                    "update",
+                    "InsuranceClaim",
+                    "@entity",
+                    {
+                      "emit": {
+                        "failure": "InsuranceClaimUpdateFailed",
+                        "success": "InsuranceClaimUpdated"
+                      }
+                    }
+                  ],
+                  [
+                    "render-ui",
+                    "main",
+                    {
+                      "align": "center",
+                      "className": "py-12",
+                      "type": "stack",
+                      "direction": "vertical",
+                      "children": [
+                        {
+                          "type": "spinner"
+                        },
+                        {
+                          "type": "typography",
+                          "color": "muted",
+                          "variant": "caption",
+                          "content": "Marking claim paid…"
+                        }
+                      ],
+                      "gap": "md"
+                    }
+                  ]
+                ]
+              },
+              {
+                "from": "viewing_single",
+                "to": "loading",
+                "event": "APPEAL",
+                "effects": [
+                  [
+                    "set",
+                    "@entity.id",
+                    "@payload.id"
+                  ],
+                  [
+                    "fetch",
+                    "InsuranceClaim",
+                    {
+                      "emit": {
+                        "failure": "InsuranceClaimLoadFailed",
+                        "success": "InsuranceClaimLoaded"
+                      }
+                    }
+                  ],
+                  [
+                    "render-ui",
+                    "main",
+                    {
+                      "className": "py-12",
+                      "gap": "md",
+                      "direction": "vertical",
+                      "type": "stack",
+                      "children": [
+                        {
+                          "type": "spinner"
+                        },
+                        {
+                          "variant": "caption",
+                          "color": "muted",
+                          "type": "typography",
+                          "content": "Filing appeal…"
+                        }
+                      ],
+                      "align": "center"
+                    }
+                  ]
+                ]
+              },
+              {
+                "from": "error",
+                "to": "loading",
+                "event": "INIT",
+                "effects": [
+                  [
+                    "fetch",
+                    "InsuranceClaim",
+                    {
+                      "emit": {
+                        "failure": "InsuranceClaimLoadFailed",
+                        "success": "InsuranceClaimLoaded"
+                      }
+                    }
+                  ],
+                  [
+                    "render-ui",
+                    "main",
+                    {
+                      "type": "spinner",
+                      "size": "sm"
+                    }
+                  ]
+                ]
+              }
+            ]
+          },
+          "config": {
+            "payerId": {
+              "type": "string",
+              "default": "",
+              "label": "Default payer ID",
+              "description": "Insurance payer identifier (CMS plan ID, BCBS group, etc.).",
+              "synonyms": "insurance carrier, plan ID",
+              "tier": "domain"
+            },
+            "title": {
+              "type": "string",
+              "default": "Insurance Claims",
+              "label": "Section title",
+              "description": "Heading shown above the insurance claim list",
+              "tier": "presentation"
+            },
+            "itemActions": {
+              "type": "[ItemAction]",
+              "default": [
+                {
+                  "icon": "arrow-right",
+                  "label": "Open",
+                  "event": "OPEN_CLAIM",
+                  "variant": "primary"
+                },
+                {
+                  "variant": "primary",
+                  "event": "SUBMIT",
+                  "icon": "send",
+                  "label": "Submit"
+                }
+              ],
+              "label": "Row actions",
+              "description": "Buttons users can click on each claim row",
+              "tier": "presentation",
+              "items": {
+                "type": "object",
+                "properties": {
+                  "icon": {
+                    "name": "icon",
+                    "type": "string",
+                    "required": false
+                  },
+                  "variant": {
+                    "name": "variant",
+                    "type": "string",
+                    "required": false
+                  },
+                  "label": {
+                    "name": "label",
+                    "type": "string",
+                    "required": true
+                  },
+                  "event": {
+                    "name": "event",
+                    "type": "string",
+                    "required": true
+                  }
+                }
+              }
+            },
+            "eligibilityCheckCadenceHours": {
+              "type": "number",
+              "default": 24.0,
+              "label": "Eligibility check cadence (hours)",
+              "description": "How often to re-verify patient eligibility with the payer.",
+              "synonyms": "eligibility refresh, verification frequency",
+              "tier": "domain"
+            },
+            "priorAuthLeadTimeDays": {
+              "type": "number",
+              "default": 5.0,
+              "label": "Prior-auth lead time (days)",
+              "description": "Business days needed to obtain prior authorization before the service date.",
+              "synonyms": "PA lead time",
+              "tier": "domain"
+            },
+            "denialAppealWindowDays": {
+              "type": "number",
+              "default": 30.0,
+              "label": "Appeal window (days)",
+              "description": "Days from denial date to submit an appeal before forfeit.",
+              "tier": "domain"
+            },
+            "claimSubmissionFormat": {
+              "type": "string",
+              "default": "EDI-837P",
+              "label": "Submission format",
+              "description": "Claim form/EDI format expected by the payer.",
+              "tier": "domain",
+              "values": [
+                "CMS-1500",
+                "UB-04",
+                "EDI-837P",
+                "EDI-837I"
+              ]
+            },
+            "fields": {
+              "type": "[FieldSpec]",
+              "default": [
+                {
+                  "variant": "caption",
+                  "name": "patientId",
+                  "label": "Patient"
+                },
+                {
+                  "name": "payerId",
+                  "variant": "caption",
+                  "label": "Payer"
+                },
+                {
+                  "variant": "badge",
+                  "name": "status",
+                  "label": "Status"
+                },
+                {
+                  "label": "Amount",
+                  "name": "claimAmount",
+                  "variant": "caption"
+                },
+                {
+                  "variant": "caption",
+                  "label": "Service",
+                  "name": "serviceDate"
+                }
+              ],
+              "label": "Columns to show",
+              "description": "Each column maps to one field on the InsuranceClaim entity",
+              "tier": "presentation",
+              "items": {
+                "type": "object",
+                "properties": {
+                  "format": {
+                    "name": "format",
+                    "type": "string",
+                    "required": false
+                  },
+                  "variant": {
+                    "name": "variant",
+                    "type": "string",
+                    "required": false
+                  },
+                  "key": {
+                    "name": "key",
+                    "type": "string",
+                    "required": false
+                  },
+                  "label": {
+                    "name": "label",
+                    "type": "string",
+                    "required": false
+                  },
+                  "header": {
+                    "name": "header",
+                    "type": "string",
+                    "required": false
+                  },
+                  "name": {
+                    "name": "name",
+                    "type": "string",
+                    "required": true
+                  },
+                  "icon": {
+                    "name": "icon",
+                    "type": "string",
+                    "required": false
+                  }
+                }
+              }
+            },
+            "autoResubmitOnDenial": {
+              "type": "boolean",
+              "default": false,
+              "label": "Auto-resubmit on denial",
+              "description": "When true, automatically re-queue denied claims for resubmission after corrections.",
+              "tier": "domain"
+            }
+          },
+          "scope": "collection"
+        }
+      ],
+      "pages": [
+        {
+          "name": "InsuranceClaimManagePage",
+          "path": "/insurance-claims/manage",
+          "traits": [
+            {
+              "ref": "InsuranceClaimManage"
+            }
+          ]
+        }
+      ]
+    }
+  ]
+}

@@ -1,0 +1,288 @@
+[
+  {
+    "organism": "std-appointment-policy",
+    "orbital": "AppointmentPolicyOrbital",
+    "tier": "atoms",
+    "factoryPath": "behaviors/functions/app/atoms/std-appointment-policy.ts",
+    "entities": [
+      {
+        "name": "AppointmentPolicy",
+        "fields": [
+          {
+            "name": "name",
+            "type": "string",
+            "required": true
+          },
+          {
+            "name": "description",
+            "type": "string",
+            "required": false
+          },
+          {
+            "name": "rescheduleWindowHours",
+            "type": "number",
+            "required": false
+          },
+          {
+            "name": "maxReschedules",
+            "type": "number",
+            "required": false
+          },
+          {
+            "name": "cancellationPolicy",
+            "type": "string",
+            "required": false
+          },
+          {
+            "name": "noShowGracePeriodMinutes",
+            "type": "number",
+            "required": false
+          },
+          {
+            "name": "noShowFeeAmount",
+            "type": "number",
+            "required": false
+          },
+          {
+            "name": "lateArrivalGraceMinutes",
+            "type": "number",
+            "required": false
+          },
+          {
+            "name": "status",
+            "type": "string",
+            "required": false
+          }
+        ],
+        "persistence": "persistent"
+      }
+    ],
+    "traits": [
+      {
+        "name": "AppointmentPolicyManage",
+        "emittedEvents": [
+          "OPEN_POLICY",
+          "CLOSE_VIEW",
+          "ARCHIVE_POLICY",
+          "AppointmentPolicyLoaded",
+          "AppointmentPolicyLoadFailed"
+        ],
+        "listenedEvents": [],
+        "overridableConfigKeys": [
+          {
+            "key": "cancellationPolicy",
+            "type": "string",
+            "default": "free",
+            "label": "Cancellation policy",
+            "description": "Refund treatment when an appointment is cancelled inside the reschedule window.",
+            "synonyms": "refund policy, cancellation rule",
+            "tier": "domain",
+            "enumValues": [
+              "free",
+              "partial-refund",
+              "no-refund"
+            ]
+          },
+          {
+            "key": "fields",
+            "type": "[FieldSpec]",
+            "default": [
+              {
+                "label": "Name",
+                "variant": "caption",
+                "name": "name"
+              },
+              {
+                "name": "rescheduleWindowHours",
+                "label": "Reschedule (h)",
+                "variant": "caption"
+              },
+              {
+                "label": "Max reschedules",
+                "variant": "caption",
+                "name": "maxReschedules"
+              },
+              {
+                "variant": "badge",
+                "name": "cancellationPolicy",
+                "label": "Cancellation"
+              },
+              {
+                "name": "noShowGracePeriodMinutes",
+                "label": "No-show grace",
+                "variant": "caption"
+              },
+              {
+                "variant": "caption",
+                "label": "No-show fee",
+                "name": "noShowFeeAmount"
+              },
+              {
+                "name": "status",
+                "label": "Status",
+                "variant": "badge"
+              }
+            ],
+            "label": "Columns to show",
+            "description": "Each column maps to one field on the AppointmentPolicy entity",
+            "tier": "presentation",
+            "items": {
+              "properties": {
+                "icon": {
+                  "name": "icon",
+                  "required": false,
+                  "type": "string"
+                },
+                "name": {
+                  "name": "name",
+                  "required": true,
+                  "type": "string"
+                },
+                "format": {
+                  "name": "format",
+                  "required": false,
+                  "type": "string"
+                },
+                "label": {
+                  "name": "label",
+                  "required": false,
+                  "type": "string"
+                },
+                "key": {
+                  "name": "key",
+                  "required": false,
+                  "type": "string"
+                },
+                "header": {
+                  "name": "header",
+                  "required": false,
+                  "type": "string"
+                },
+                "variant": {
+                  "name": "variant",
+                  "required": false,
+                  "type": "string"
+                }
+              },
+              "type": "object"
+            }
+          },
+          {
+            "key": "itemActions",
+            "type": "[ItemAction]",
+            "default": [
+              {
+                "variant": "primary",
+                "icon": "arrow-right",
+                "label": "Open",
+                "event": "OPEN_POLICY"
+              },
+              {
+                "event": "ARCHIVE_POLICY",
+                "label": "Archive",
+                "variant": "danger"
+              }
+            ],
+            "label": "Row actions",
+            "description": "Buttons users can click on each policy row",
+            "tier": "presentation",
+            "items": {
+              "properties": {
+                "icon": {
+                  "name": "icon",
+                  "required": false,
+                  "type": "string"
+                },
+                "event": {
+                  "name": "event",
+                  "required": true,
+                  "type": "string"
+                },
+                "variant": {
+                  "name": "variant",
+                  "required": false,
+                  "type": "string"
+                },
+                "label": {
+                  "name": "label",
+                  "required": true,
+                  "type": "string"
+                }
+              },
+              "type": "object"
+            }
+          },
+          {
+            "key": "lateArrivalGraceMinutes",
+            "type": "number",
+            "default": 10,
+            "label": "Late arrival grace (minutes)",
+            "description": "Minutes a customer can arrive late before the slot is forfeit.",
+            "synonyms": "tardy window",
+            "tier": "domain"
+          },
+          {
+            "key": "maxReschedules",
+            "type": "number",
+            "default": 2,
+            "label": "Max reschedules",
+            "description": "Default hard cap on reschedules per appointment when this policy is referenced.",
+            "synonyms": "reschedule limit",
+            "tier": "domain"
+          },
+          {
+            "key": "noShowFeeAmount",
+            "type": "number",
+            "default": 0,
+            "label": "No-show fee amount",
+            "description": "Cash fee charged for a confirmed no-show. 0 = no fee.",
+            "synonyms": "missed-appointment fee, no-show charge",
+            "tier": "domain"
+          },
+          {
+            "key": "noShowGracePeriodMinutes",
+            "type": "number",
+            "default": 15,
+            "label": "No-show grace (minutes)",
+            "description": "Minutes after scheduled start before the appointment auto-marks no_show.",
+            "synonyms": "no-show window, late grace",
+            "tier": "domain"
+          },
+          {
+            "key": "rescheduleWindowHours",
+            "type": "number",
+            "default": 24,
+            "label": "Reschedule window (hours)",
+            "description": "Default hours before appointment during which the customer can self-reschedule. Atoms that reference a policy inherit this.",
+            "synonyms": "reschedule cutoff, change window",
+            "tier": "domain"
+          },
+          {
+            "key": "title",
+            "type": "string",
+            "default": "Appointment Policies",
+            "label": "Section title",
+            "description": "Heading shown above the policy list",
+            "tier": "presentation"
+          }
+        ],
+        "capabilities": []
+      }
+    ],
+    "pages": [
+      {
+        "name": "AppointmentPolicyPage",
+        "defaultPath": "/appointment-policies",
+        "primaryEntity": "AppointmentPolicy"
+      }
+    ],
+    "emittedEvents": [
+      "ARCHIVE_POLICY",
+      "AppointmentPolicyLoadFailed",
+      "AppointmentPolicyLoaded",
+      "CLOSE_VIEW",
+      "OPEN_POLICY"
+    ],
+    "listenedEvents": []
+  }
+]

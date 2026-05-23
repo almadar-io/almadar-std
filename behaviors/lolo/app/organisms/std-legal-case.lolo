@@ -430,3 +430,85 @@ orbital MatterPanelOrbital {
 
   page "/cases" as CasesPage -> MatterCaseAppLayout, MatterCasePanel, MatterCaseDocketView
 }
+
+orbital LegalHoldFromStdOrbital {
+  uses AppShell from "std/behaviors/std-app-layout"
+  uses Holds    from "std/behaviors/std-legal-hold"
+
+  entity ComplianceLegalHold [persistent: compliance_legal_holds] {
+    id                 : string!
+    matterId           : string = ""
+    triggeredBy        : string = ""
+    triggeredAt        : string = ""
+    expectedReleaseAt  : string = ""
+    status             : "active" | "expiring" | "released" | "extended" = "active"
+    affectedEntities   : [string] = []
+    description        : string = ""
+    createdAt          : string = ""
+  }
+
+  trait ComplianceLegalHoldFromStdAppLayout = AppShell.traits.AppLayout -> ComplianceLegalHold {
+    config: {
+      contentTrait: "@trait.ComplianceLegalHoldFromStdManageBlock",
+      appName: "Legal Case",
+      navItems: [{ label: "Matters", href: "/matters", icon: "scale" }, { label: "Cases", href: "/cases", icon: "folder" }, { label: "Time", href: "/timesheet", icon: "clock" }, { label: "Deadlines", href: "/deadlines", icon: "calendar" }, { label: "Legal Holds", href: "/legal-holds", icon: "shield" }],
+      searchEvent: "LEGAL_HOLD_SEARCH",
+      notifications: [],
+      notificationClickEvent: "LEGAL_HOLD_NOTIFICATIONS_OPEN"
+    }
+    events {
+      SEARCH: LEGAL_HOLD_SEARCH
+      NOTIFY_CLICK: LEGAL_HOLD_NOTIFICATIONS_OPEN
+    }
+  }
+
+  trait ComplianceLegalHoldFromStdManageBlock = Holds.traits.LegalHoldPipeline -> ComplianceLegalHold {
+    config: {
+      title: "Legal Holds"
+    }
+  }
+
+  page "/legal-holds" as ComplianceLegalHoldFromStdPage -> ComplianceLegalHoldFromStdAppLayout, ComplianceLegalHoldFromStdManageBlock
+}
+
+orbital AppointmentPolicyFromStdOrbital {
+  uses AppShell from "std/behaviors/std-app-layout"
+  uses Policies from "std/behaviors/std-appointment-policy"
+
+  entity AppointmentPolicy [persistent: appointment_policies] {
+    id                         : string!
+    name                       : string!
+    description                : string = ""
+    rescheduleWindowHours      : number = 24
+    maxReschedules             : number = 2
+    cancellationPolicy         : "free" | "partial-refund" | "no-refund" = "free"
+    noShowGracePeriodMinutes   : number = 15
+    noShowFeeAmount            : number = 0
+    lateArrivalGraceMinutes    : number = 10
+    status                     : "active" | "archived" = "active"
+    createdAt                  : string
+  }
+
+  trait AppointmentPolicyFromStdAppLayout = AppShell.traits.AppLayout -> AppointmentPolicy {
+    config: {
+      contentTrait: "@trait.AppointmentPolicyFromStdManageBlock",
+      appName: "Legal Case",
+      navItems: [{ label: "Matters", href: "/matters", icon: "scale" }, { label: "Cases", href: "/cases", icon: "folder" }, { label: "Time", href: "/timesheet", icon: "clock" }, { label: "Deadlines", href: "/deadlines", icon: "calendar" }, { label: "Appointment Policies", href: "/appointment-policies-from-std", icon: "calendar-check" }],
+      searchEvent: "APPOINTMENT_POLICY_SEARCH",
+      notifications: [],
+      notificationClickEvent: "APPOINTMENT_POLICY_NOTIFICATIONS_OPEN"
+    }
+    events {
+      SEARCH: APPOINTMENT_POLICY_SEARCH
+      NOTIFY_CLICK: APPOINTMENT_POLICY_NOTIFICATIONS_OPEN
+    }
+  }
+
+  trait AppointmentPolicyFromStdManageBlock = Policies.traits.AppointmentPolicyManage -> AppointmentPolicy {
+    config: {
+      title: "Appointment Policies"
+    }
+  }
+
+  page "/appointment-policies-from-std" as AppointmentPolicyFromStdPage -> AppointmentPolicyFromStdAppLayout, AppointmentPolicyFromStdManageBlock
+}

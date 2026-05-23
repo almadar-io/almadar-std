@@ -144,33 +144,33 @@
             "type": "[FieldSpec]",
             "default": [
               {
-                "label": "Title",
+                "name": "title",
                 "variant": "caption",
-                "name": "title"
+                "label": "Title"
               },
               {
-                "variant": "badge",
+                "label": "Type",
                 "name": "deadlineType",
-                "label": "Type"
+                "variant": "badge"
               },
               {
-                "variant": "caption",
                 "name": "dueAt",
+                "variant": "caption",
                 "label": "Due"
               },
               {
+                "variant": "caption",
                 "name": "jurisdiction",
-                "label": "Jurisdiction",
-                "variant": "caption"
+                "label": "Jurisdiction"
               },
               {
+                "variant": "caption",
                 "name": "assignedTo",
-                "label": "Assigned",
-                "variant": "caption"
+                "label": "Assigned"
               },
               {
-                "label": "Status",
                 "variant": "badge",
+                "label": "Status",
                 "name": "status"
               }
             ],
@@ -184,23 +184,8 @@
                   "required": true,
                   "type": "string"
                 },
-                "variant": {
-                  "name": "variant",
-                  "required": false,
-                  "type": "string"
-                },
-                "icon": {
-                  "name": "icon",
-                  "required": false,
-                  "type": "string"
-                },
                 "format": {
                   "name": "format",
-                  "required": false,
-                  "type": "string"
-                },
-                "key": {
-                  "name": "key",
                   "required": false,
                   "type": "string"
                 },
@@ -213,36 +198,6 @@
                   "name": "label",
                   "required": false,
                   "type": "string"
-                }
-              },
-              "type": "object"
-            }
-          },
-          {
-            "key": "itemActions",
-            "type": "[ItemAction]",
-            "default": [
-              {
-                "variant": "primary",
-                "icon": "arrow-right",
-                "event": "OPEN_DEADLINE",
-                "label": "Open"
-              },
-              {
-                "event": "MARK_COMPLETED",
-                "variant": "danger",
-                "label": "Complete"
-              }
-            ],
-            "label": "Row actions",
-            "description": "Buttons users can click on each deadline row",
-            "tier": "presentation",
-            "items": {
-              "properties": {
-                "event": {
-                  "name": "event",
-                  "required": true,
-                  "type": "string"
                 },
                 "variant": {
                   "name": "variant",
@@ -254,9 +209,54 @@
                   "required": false,
                   "type": "string"
                 },
+                "key": {
+                  "name": "key",
+                  "required": false,
+                  "type": "string"
+                }
+              },
+              "type": "object"
+            }
+          },
+          {
+            "key": "itemActions",
+            "type": "[ItemAction]",
+            "default": [
+              {
+                "event": "OPEN_DEADLINE",
+                "label": "Open",
+                "icon": "arrow-right",
+                "variant": "primary"
+              },
+              {
+                "label": "Complete",
+                "event": "MARK_COMPLETED",
+                "variant": "danger"
+              }
+            ],
+            "label": "Row actions",
+            "description": "Buttons users can click on each deadline row",
+            "tier": "presentation",
+            "items": {
+              "properties": {
                 "label": {
                   "name": "label",
                   "required": true,
+                  "type": "string"
+                },
+                "variant": {
+                  "name": "variant",
+                  "required": false,
+                  "type": "string"
+                },
+                "event": {
+                  "name": "event",
+                  "required": true,
+                  "type": "string"
+                },
+                "icon": {
+                  "name": "icon",
+                  "required": false,
                   "type": "string"
                 }
               },
@@ -285,6 +285,15 @@
             "default": 0,
             "label": "No-show grace (minutes)",
             "description": "Minutes after dueAt before the deadline auto-marks missed. Wire via std-lifecycle.",
+            "tier": "domain"
+          },
+          {
+            "key": "policyId",
+            "type": "string",
+            "default": "",
+            "label": "Appointment policy reference",
+            "description": "Optional reference to a shared std-appointment-policy entity. When set, the policy's reschedule/cancellation/no-show values supersede the local knobs. Declarative — runtime resolution lands separately.",
+            "synonyms": "policy ref, shared policy, policy id",
             "tier": "domain"
           },
           {

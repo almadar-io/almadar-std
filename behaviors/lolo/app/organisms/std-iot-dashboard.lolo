@@ -113,6 +113,10 @@ orbital DeviceOrbital {
   uses Search       from "std/behaviors/std-search"
   uses Filter       from "std/behaviors/std-filter"
   uses Browse       from "std/behaviors/std-browse"
+  uses Notify       from "std/behaviors/std-notify-on-event"
+  uses Audit        from "std/behaviors/std-audit-capture"
+  uses Approval     from "std/behaviors/std-approval-gate"
+  uses Reminder     from "std/behaviors/std-reminder-scheduler"
 
   entity Device [persistent: devices] {
     id : string!
@@ -325,7 +329,56 @@ orbital DeviceOrbital {
     }
   }
 
-  page "/devices" -> DeviceAppLayout, DeviceCatalog, DeviceSearch, DeviceFilter, DeviceBrowseList, DeviceCreate, DeviceEdit, DeviceView, DeviceDelete, DevicePersistor
+  trait DeviceNotifier = Notify.traits.NotifyOnEventListener {
+    config: {
+      listensFor: ["DEVICE_UPDATED"],
+      notifyChannel: "in-app",
+      template: "Sensor or device alert",
+      severity: "warning",
+      recipients: [],
+      suppressionList: []
+    }
+    events {
+      EventOccurred: DEVICE_UPDATED
+    }
+  }
+
+  trait DeviceAuditCapture = Audit.traits.AuditCaptureListener {
+    config: {
+      captureEntity: "Device",
+      captureEventTypes: [],
+      excludeFields: [],
+      captureBeforeAfter: false,
+      retentionDays: 2555
+    }
+    events {
+      EntityMutated: DEVICE_UPDATED
+    }
+  }
+
+  trait DeviceApprovalGate = Approval.traits.ApprovalGateReview {
+    config: {
+      approverRoles: ["fleet-operator"],
+      threshold: 0,
+      autoApproveBelowThreshold: false,
+      valueField: "",
+      escalationHours: 12,
+      escalationRoles: ["device-security-lead"]
+    }
+  }
+
+  trait DeviceReminderScheduler = Reminder.traits.ReminderScheduler {
+    config: {
+      targetEntity: "Device",
+      dateField: "lastSeen",
+      offsetsHours: [720, 168, 24],
+      severity: "info",
+      template: "Device calibration window approaching",
+      windowToleranceMinutes: 60
+    }
+  }
+
+  page "/devices" -> DeviceAppLayout, DeviceCatalog, DeviceSearch, DeviceFilter, DeviceBrowseList, DeviceCreate, DeviceEdit, DeviceView, DeviceDelete, DevicePersistor, DeviceNotifier, DeviceAuditCapture, DeviceApprovalGate, DeviceReminderScheduler
 }
 
 orbital DeviceAlertOrbital {
@@ -584,4 +637,124 @@ orbital DeviceAlertOrbital {
   }
 
   page "/alerts" -> DeviceAlertAppLayout, AlertCatalog, AlertBrowseList, AlertCreate, AlertEdit, AlertView, AlertDelete, AlertPersistor, AlertEmail, AlertEmailNotice, DeviceAlertCircuitBreaker
+}
+
+orbital FleetDeviceFromStdOrbital {
+  uses AppShell from "std/behaviors/std-app-layout"
+  uses Fleet    from "std/behaviors/std-device-fleet"
+
+  entity FleetDevice [persistent: fleetdevices] {
+    id              : string!
+    name            : string!
+    deviceType      : string!
+    firmwareVersion : string = ""
+    lastSeenAt      : string = ""
+    certExpiresAt   : string = ""
+    status          : "provisioning" | "active" | "degraded" | "offline" | "retired" = "provisioning"
+    provisionedBy   : string = ""
+    createdAt       : string = ""
+  }
+
+  trait FleetDeviceFromStdAppLayout = AppShell.traits.AppLayout -> FleetDevice {
+    config: {
+      contentTrait: "@trait.FleetDeviceFromStdManageBlock",
+      appName: "IoT Dashboard",
+      navItems: [{ label: "Sensors", href: "/sensors", icon: "layout-list" }, { label: "Devices", href: "/devices", icon: "cpu" }, { label: "Alerts", href: "/alerts", icon: "bell" }, { label: "Fleet", href: "/devices-fleet", icon: "shield" }],
+      searchEvent: "FLEET_DEVICE_SEARCH",
+      notifications: [],
+      notificationClickEvent: "FLEET_DEVICE_NOTIFICATIONS_OPEN"
+    }
+    events {
+      SEARCH: FLEET_DEVICE_SEARCH
+      NOTIFY_CLICK: FLEET_DEVICE_NOTIFICATIONS_OPEN
+    }
+  }
+
+  trait FleetDeviceFromStdManageBlock = Fleet.traits.DeviceFleetManage -> FleetDevice {
+    config: {
+      title: "Fleet Devices"
+    }
+  }
+
+  page "/devices-fleet" as FleetDeviceFromStdPage -> FleetDeviceFromStdAppLayout, FleetDeviceFromStdManageBlock
+}
+
+orbital SensorThresholdFromStdOrbital {
+  uses AppShell   from "std/behaviors/std-app-layout"
+  uses Thresholds from "std/behaviors/std-sensor-threshold"
+
+  entity SensorThreshold [persistent: sensor_thresholds] {
+    id            : string!
+    sensorId      : string!
+    metric        : string = ""
+    warningLow    : number = 0
+    warningHigh   : number = 0
+    criticalLow   : number = 0
+    criticalHigh  : number = 0
+    status        : "active" | "muted" | "archived" = "active"
+    createdAt     : string = ""
+  }
+
+  trait SensorThresholdFromStdAppLayout = AppShell.traits.AppLayout -> SensorThreshold {
+    config: {
+      contentTrait: "@trait.SensorThresholdFromStdManageBlock",
+      appName: "IoT Dashboard",
+      navItems: [{ label: "Sensors", href: "/sensors", icon: "layout-list" }, { label: "Devices", href: "/devices", icon: "cpu" }, { label: "Alerts", href: "/alerts", icon: "bell" }, { label: "Thresholds", href: "/sensor-thresholds", icon: "sliders" }],
+      searchEvent: "SENSOR_THRESHOLD_SEARCH",
+      notifications: [],
+      notificationClickEvent: "SENSOR_THRESHOLD_NOTIFICATIONS_OPEN"
+    }
+    events {
+      SEARCH: SENSOR_THRESHOLD_SEARCH
+      NOTIFY_CLICK: SENSOR_THRESHOLD_NOTIFICATIONS_OPEN
+    }
+  }
+
+  trait SensorThresholdFromStdManageBlock = Thresholds.traits.SensorThresholdManage -> SensorThreshold {
+    config: {
+      title: "Sensor Thresholds"
+    }
+  }
+
+  page "/sensor-thresholds" as SensorThresholdFromStdPage -> SensorThresholdFromStdAppLayout, SensorThresholdFromStdManageBlock
+}
+
+orbital RunbookFromStdOrbital {
+  uses AppShell from "std/behaviors/std-app-layout"
+  uses Books    from "std/behaviors/std-runbook"
+
+  entity Runbook [persistent: runbooks] {
+    id              : string!
+    title           : string!
+    description     : string = ""
+    triggerEvent    : string = ""
+    status          : "draft" | "active" | "deprecated" = "draft"
+    stepsJson       : string = "[]"
+    lastExecutedAt  : string = ""
+    executionCount  : number = 0
+    createdAt       : string = ""
+  }
+
+  trait RunbookFromStdAppLayout = AppShell.traits.AppLayout -> Runbook {
+    config: {
+      contentTrait: "@trait.RunbookFromStdManageBlock",
+      appName: "IoT Dashboard",
+      navItems: [{ label: "Sensors", href: "/sensors", icon: "layout-list" }, { label: "Devices", href: "/devices", icon: "cpu" }, { label: "Alerts", href: "/alerts", icon: "bell" }, { label: "Runbooks", href: "/runbooks", icon: "book-open" }],
+      searchEvent: "RUNBOOK_SEARCH",
+      notifications: [],
+      notificationClickEvent: "RUNBOOK_NOTIFICATIONS_OPEN"
+    }
+    events {
+      SEARCH: RUNBOOK_SEARCH
+      NOTIFY_CLICK: RUNBOOK_NOTIFICATIONS_OPEN
+    }
+  }
+
+  trait RunbookFromStdManageBlock = Books.traits.RunbookManage -> Runbook {
+    config: {
+      title: "Runbooks"
+    }
+  }
+
+  page "/runbooks" as RunbookFromStdPage -> RunbookFromStdAppLayout, RunbookFromStdManageBlock
 }

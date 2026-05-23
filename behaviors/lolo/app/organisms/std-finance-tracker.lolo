@@ -10,6 +10,10 @@ orbital TransactionOrbital {
   uses Stats        from "std/behaviors/std-stats"
   uses Graphs       from "std/behaviors/std-graphs"
   uses Browse       from "std/behaviors/std-browse"
+  uses Audit        from "std/behaviors/std-audit-capture"
+  uses Recurring    from "std/behaviors/std-recurring-charge"
+  uses Receipt      from "std/behaviors/std-receipt"
+  uses Ledger       from "std/behaviors/std-ledger-entry"
 
   entity Transaction [persistent: transactions] {
     id : string!
@@ -253,7 +257,29 @@ orbital TransactionOrbital {
     }
   }
 
-  page "/transactions" as TransactionsPage -> TransactionAppLayout, TransactionCatalog, TransactionSearch, TransactionFilter, TransactionStats, TransactionGraphs, TransactionBrowseList, TransactionCreate, TransactionEdit, TransactionView, TransactionDelete, TransactionPersistor
+  trait TransactionAuditCapture = Audit.traits.AuditCaptureListener {
+    config: {
+      captureEntity: "Transaction",
+      captureEventTypes: [],
+      excludeFields: [],
+      captureBeforeAfter: true,
+      retentionDays: 2555
+    }
+    events {
+      EntityMutated: TRANSACTION_UPDATED
+    }
+  }
+
+  trait TransactionRecurringCharge = Recurring.traits.SubscriptionManage {
+  }
+
+  trait TransactionReceiptIssuer = Receipt.traits.ReceiptIssuer {
+  }
+
+  trait TransactionLedgerJournal = Ledger.traits.LedgerEntryJournal {
+  }
+
+  page "/transactions" as TransactionsPage -> TransactionAppLayout, TransactionCatalog, TransactionSearch, TransactionFilter, TransactionStats, TransactionGraphs, TransactionBrowseList, TransactionCreate, TransactionEdit, TransactionView, TransactionDelete, TransactionPersistor, TransactionAuditCapture, TransactionRecurringCharge, TransactionReceiptIssuer, TransactionLedgerJournal
 }
 
 orbital FinanceSummaryOrbital {

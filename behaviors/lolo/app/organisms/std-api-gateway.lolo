@@ -10,6 +10,8 @@ orbital RouteOrbital {
   uses Stats         from "std/behaviors/std-stats"
   uses Graphs        from "std/behaviors/std-graphs"
   uses Browse        from "std/behaviors/std-browse"
+  uses Audit         from "std/behaviors/std-audit-capture"
+  uses Notify        from "std/behaviors/std-notify-on-event"
 
   entity Route [persistent: routes] {
     id : string!
@@ -255,7 +257,34 @@ orbital RouteOrbital {
     }
   }
 
-  page "/routes" as RoutesPage -> RouteAppLayout, RouteCatalog, RouteSearch, RouteFilter, RouteStats, RouteGraphs, RouteBrowseList, RouteCreate, RouteEdit, RouteView, RouteDelete, RoutePersistor
+  trait RouteAuditCapture = Audit.traits.AuditCaptureListener {
+    config: {
+      captureEntity: "Route",
+      captureEventTypes: [],
+      excludeFields: [],
+      captureBeforeAfter: true,
+      retentionDays: 2555
+    }
+    events {
+      EntityMutated: ROUTE_UPDATED
+    }
+  }
+
+  trait RouteUptimeNotifier = Notify.traits.NotifyOnEventListener {
+    config: {
+      listensFor: ["ROUTE_UPDATED"],
+      notifyChannel: "email",
+      template: "Route uptime alert",
+      severity: "warning",
+      recipients: [],
+      suppressionList: []
+    }
+    events {
+      EventOccurred: ROUTE_UPDATED
+    }
+  }
+
+  page "/routes" as RoutesPage -> RouteAppLayout, RouteCatalog, RouteSearch, RouteFilter, RouteStats, RouteGraphs, RouteBrowseList, RouteCreate, RouteEdit, RouteView, RouteDelete, RoutePersistor, RouteAuditCapture, RouteUptimeNotifier
 }
 
 orbital BackendOrbital {

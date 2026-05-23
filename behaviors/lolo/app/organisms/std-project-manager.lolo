@@ -12,6 +12,9 @@ orbital TaskOrbital {
   uses Calendar     from "std/behaviors/std-calendar"
   uses Selection    from "std/behaviors/std-selection"
   uses Browse       from "std/behaviors/std-browse"
+  uses Notify       from "std/behaviors/std-notify-on-event"
+  uses Lifecycle    from "std/behaviors/std-lifecycle"
+  uses Reminder     from "std/behaviors/std-reminder-scheduler"
 
   entity Task [persistent: tasks] {
     id : string!
@@ -268,7 +271,44 @@ orbital TaskOrbital {
     }
   }
 
-  page "/tasks" as TasksPage -> TaskAppLayout, TaskCatalog, TaskSearch, TaskFilter, TaskStats, TaskGraphs, TaskCalendar, TaskBrowseList, TaskCreate, TaskEdit, TaskView, TaskDelete, TaskPersistor
+  trait TaskNotifier = Notify.traits.NotifyOnEventListener {
+    config: {
+      listensFor: ["TASK_UPDATED"],
+      notifyChannel: "in-app",
+      template: "Task updated",
+      severity: "info",
+      recipients: [],
+      suppressionList: []
+    }
+    events {
+      EventOccurred: TASK_UPDATED
+    }
+  }
+
+  trait TaskLifecycleScan = Lifecycle.traits.LifecycleScheduler {
+    config: {
+      targetEntity: "Task",
+      rules: [
+        { fromStatus: "todo",        toStatus: "stale",    condition: { kind: "ageDays", value: 30, dateField: "dueDate" } },
+        { fromStatus: "in-progress", toStatus: "stale",    condition: { kind: "ageDays", value: 30, dateField: "dueDate" } },
+        { fromStatus: "stale",       toStatus: "archived", condition: { kind: "ageDays", value: 90, dateField: "dueDate" } }
+      ],
+      dryRun: false
+    }
+  }
+
+  trait TaskReminder = Reminder.traits.ReminderScheduler {
+    config: {
+      targetEntity: "Task",
+      dateField: "dueDate",
+      offsetsHours: [24, 1],
+      severity: "warning",
+      template: "Task due soon",
+      windowToleranceMinutes: 60
+    }
+  }
+
+  page "/tasks" as TasksPage -> TaskAppLayout, TaskCatalog, TaskSearch, TaskFilter, TaskStats, TaskGraphs, TaskCalendar, TaskBrowseList, TaskCreate, TaskEdit, TaskView, TaskDelete, TaskPersistor, TaskNotifier, TaskLifecycleScan, TaskReminder
 }
 
 orbital SprintOrbital {
@@ -276,6 +316,8 @@ orbital SprintOrbital {
   uses Modal        from "std/behaviors/std-modal"
   uses Confirmation from "std/behaviors/std-confirmation"
   uses Browse       from "std/behaviors/std-browse"
+  uses Approval     from "std/behaviors/std-approval-gate"
+  uses Cascade      from "std/behaviors/std-cascade-on-delete"
 
   entity Sprint [persistent: sprints] {
     id : string!
@@ -449,7 +491,29 @@ orbital SprintOrbital {
     }
   }
 
-  page "/sprints" -> SprintAppLayout, SprintCatalog, SprintBrowseList, SprintCreate, SprintEdit, SprintView, SprintDelete, SprintPersistor
+  trait SprintApproval = Approval.traits.ApprovalGateReview {
+    config: {
+      approverRoles: ["product-owner"],
+      threshold: 100,
+      autoApproveBelowThreshold: true,
+      valueField: "taskCount",
+      escalationHours: 48,
+      escalationRoles: ["engineering-manager"]
+    }
+  }
+
+  trait SprintCascade = Cascade.traits.CascadeOnDeleteGate {
+    config: {
+      parentEntity: "Sprint",
+      dependentEntities: ["Task"],
+      foreignKeyField: "sprint"
+    }
+    events {
+      ParentDeleted: SPRINT_DELETED
+    }
+  }
+
+  page "/sprints" -> SprintAppLayout, SprintCatalog, SprintBrowseList, SprintCreate, SprintEdit, SprintView, SprintDelete, SprintPersistor, SprintApproval, SprintCascade
 }
 
 orbital BurndownOrbital {

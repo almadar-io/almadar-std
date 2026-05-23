@@ -1,0 +1,1350 @@
+{
+  "name": "std-trade-order",
+  "version": "1.0.0",
+  "description": "std-trade-order — trade-order lifecycle (pending → working → filled) with position limits, VaR ceilings, and pre-trade risk-check knobs.",
+  "orbitals": [
+    {
+      "name": "TradeOrderOrbital",
+      "entity": {
+        "name": "TradeOrder",
+        "collection": "trade_orders",
+        "persistence": "persistent",
+        "fields": [
+          {
+            "name": "id",
+            "type": "string",
+            "required": true
+          },
+          {
+            "name": "instrument",
+            "type": "string",
+            "required": true
+          },
+          {
+            "name": "side",
+            "type": "string",
+            "default": "buy",
+            "values": [
+              "buy",
+              "sell"
+            ]
+          },
+          {
+            "name": "orderType",
+            "type": "string",
+            "default": "market",
+            "values": [
+              "market",
+              "limit",
+              "stop",
+              "stop-limit",
+              "trailing"
+            ]
+          },
+          {
+            "name": "quantity",
+            "type": "number",
+            "default": 0.0
+          },
+          {
+            "name": "price",
+            "type": "number",
+            "default": 0.0
+          },
+          {
+            "name": "limitPrice",
+            "type": "number",
+            "default": 0.0
+          },
+          {
+            "name": "stopPrice",
+            "type": "number",
+            "default": 0.0
+          },
+          {
+            "name": "status",
+            "type": "string",
+            "default": "pending",
+            "values": [
+              "pending",
+              "working",
+              "filled",
+              "partially-filled",
+              "cancelled",
+              "rejected"
+            ]
+          },
+          {
+            "name": "venue",
+            "type": "string",
+            "default": ""
+          },
+          {
+            "name": "filledAt",
+            "type": "string",
+            "default": ""
+          },
+          {
+            "name": "createdAt",
+            "type": "string",
+            "default": ""
+          }
+        ]
+      },
+      "traits": [
+        {
+          "name": "TradeOrderManage",
+          "category": "interaction",
+          "linkedEntity": "TradeOrder",
+          "emits": [
+            {
+              "event": "OPEN_ORDER",
+              "payloadSchema": [
+                {
+                  "name": "id",
+                  "type": "string",
+                  "required": true
+                },
+                {
+                  "name": "row.id",
+                  "type": "string",
+                  "required": true
+                },
+                {
+                  "name": "row.instrument",
+                  "type": "string",
+                  "required": true
+                },
+                {
+                  "name": "row.side",
+                  "type": "string"
+                },
+                {
+                  "name": "row.orderType",
+                  "type": "string"
+                },
+                {
+                  "name": "row.quantity",
+                  "type": "number"
+                },
+                {
+                  "name": "row.price",
+                  "type": "number"
+                },
+                {
+                  "name": "row.limitPrice",
+                  "type": "number"
+                },
+                {
+                  "name": "row.stopPrice",
+                  "type": "number"
+                },
+                {
+                  "name": "row.status",
+                  "type": "string"
+                },
+                {
+                  "name": "row.venue",
+                  "type": "string"
+                },
+                {
+                  "name": "row.filledAt",
+                  "type": "string"
+                },
+                {
+                  "name": "row.createdAt",
+                  "type": "string"
+                }
+              ]
+            },
+            {
+              "event": "CLOSE_VIEW"
+            },
+            {
+              "event": "FILL",
+              "payloadSchema": [
+                {
+                  "name": "id",
+                  "type": "string",
+                  "required": true
+                }
+              ]
+            },
+            {
+              "event": "CANCEL",
+              "payloadSchema": [
+                {
+                  "name": "id",
+                  "type": "string",
+                  "required": true
+                }
+              ]
+            },
+            {
+              "event": "TradeOrderLoaded",
+              "payloadSchema": [
+                {
+                  "name": "data",
+                  "type": "[TradeOrder]"
+                }
+              ]
+            },
+            {
+              "event": "TradeOrderLoadFailed",
+              "payloadSchema": [
+                {
+                  "name": "error",
+                  "type": "string"
+                },
+                {
+                  "name": "code",
+                  "type": "string"
+                }
+              ]
+            },
+            {
+              "event": "TradeOrderUpdated",
+              "payloadSchema": [
+                {
+                  "name": "row.id",
+                  "type": "string",
+                  "required": true
+                },
+                {
+                  "name": "row.instrument",
+                  "type": "string",
+                  "required": true
+                },
+                {
+                  "name": "row.side",
+                  "type": "string"
+                },
+                {
+                  "name": "row.orderType",
+                  "type": "string"
+                },
+                {
+                  "name": "row.quantity",
+                  "type": "number"
+                },
+                {
+                  "name": "row.price",
+                  "type": "number"
+                },
+                {
+                  "name": "row.limitPrice",
+                  "type": "number"
+                },
+                {
+                  "name": "row.stopPrice",
+                  "type": "number"
+                },
+                {
+                  "name": "row.status",
+                  "type": "string"
+                },
+                {
+                  "name": "row.venue",
+                  "type": "string"
+                },
+                {
+                  "name": "row.filledAt",
+                  "type": "string"
+                },
+                {
+                  "name": "row.createdAt",
+                  "type": "string"
+                }
+              ]
+            },
+            {
+              "event": "TradeOrderUpdateFailed",
+              "payloadSchema": [
+                {
+                  "name": "error",
+                  "type": "string"
+                },
+                {
+                  "name": "code",
+                  "type": "string"
+                }
+              ]
+            }
+          ],
+          "stateMachine": {
+            "states": [
+              {
+                "name": "loading",
+                "isInitial": true
+              },
+              {
+                "name": "browsing"
+              },
+              {
+                "name": "viewing_single"
+              },
+              {
+                "name": "error"
+              }
+            ],
+            "events": [
+              {
+                "key": "INIT",
+                "name": "Initialize"
+              },
+              {
+                "key": "TradeOrderLoaded",
+                "name": "TradeOrder loaded",
+                "payloadSchema": [
+                  {
+                    "name": "data",
+                    "type": "[TradeOrder]"
+                  }
+                ]
+              },
+              {
+                "key": "TradeOrderLoadFailed",
+                "name": "TradeOrder load failed",
+                "payloadSchema": [
+                  {
+                    "name": "error",
+                    "type": "string"
+                  },
+                  {
+                    "name": "code",
+                    "type": "string"
+                  }
+                ]
+              },
+              {
+                "key": "OPEN_ORDER",
+                "name": "Open Order",
+                "payloadSchema": [
+                  {
+                    "name": "id",
+                    "type": "string",
+                    "required": true
+                  },
+                  {
+                    "name": "row",
+                    "type": "TradeOrder"
+                  }
+                ]
+              },
+              {
+                "key": "CANCEL",
+                "name": "Cancel",
+                "payloadSchema": [
+                  {
+                    "name": "id",
+                    "type": "string",
+                    "required": true
+                  }
+                ]
+              },
+              {
+                "key": "TradeOrderUpdated",
+                "name": "TradeOrder updated",
+                "payloadSchema": [
+                  {
+                    "name": "row",
+                    "type": "TradeOrder"
+                  }
+                ]
+              },
+              {
+                "key": "TradeOrderUpdateFailed",
+                "name": "TradeOrder update failed",
+                "payloadSchema": [
+                  {
+                    "name": "error",
+                    "type": "string"
+                  },
+                  {
+                    "name": "code",
+                    "type": "string"
+                  }
+                ]
+              },
+              {
+                "key": "SET_STATUS",
+                "name": "Set Status",
+                "payloadSchema": [
+                  {
+                    "name": "entityId",
+                    "type": "string",
+                    "required": true
+                  },
+                  {
+                    "name": "newStatus",
+                    "type": "string",
+                    "required": true
+                  }
+                ]
+              },
+              {
+                "key": "CLOSE_VIEW",
+                "name": "Close View"
+              },
+              {
+                "key": "FILL",
+                "name": "Fill",
+                "payloadSchema": [
+                  {
+                    "name": "id",
+                    "type": "string",
+                    "required": true
+                  }
+                ]
+              }
+            ],
+            "transitions": [
+              {
+                "from": "loading",
+                "to": "loading",
+                "event": "INIT",
+                "effects": [
+                  [
+                    "fetch",
+                    "TradeOrder",
+                    {
+                      "emit": {
+                        "success": "TradeOrderLoaded",
+                        "failure": "TradeOrderLoadFailed"
+                      }
+                    }
+                  ],
+                  [
+                    "render-ui",
+                    "main",
+                    {
+                      "className": "py-12",
+                      "children": [
+                        {
+                          "type": "spinner"
+                        },
+                        {
+                          "content": "Loading orders…",
+                          "color": "muted",
+                          "variant": "caption",
+                          "type": "typography"
+                        }
+                      ],
+                      "type": "stack",
+                      "direction": "vertical",
+                      "gap": "md",
+                      "align": "center"
+                    }
+                  ]
+                ]
+              },
+              {
+                "from": "loading",
+                "to": "browsing",
+                "event": "TradeOrderLoaded",
+                "effects": [
+                  [
+                    "render-ui",
+                    "main",
+                    {
+                      "type": "stack",
+                      "children": [
+                        {
+                          "direction": "horizontal",
+                          "type": "stack",
+                          "gap": "sm",
+                          "align": "center",
+                          "children": [
+                            {
+                              "name": "trending-up",
+                              "type": "icon"
+                            },
+                            {
+                              "content": "@config.title",
+                              "variant": "h3",
+                              "type": "typography"
+                            }
+                          ]
+                        },
+                        {
+                          "children": [
+                            {
+                              "icon": "list",
+                              "value": "@payload.data.length",
+                              "type": "stat-display",
+                              "label": "Total orders"
+                            },
+                            {
+                              "label": "Working",
+                              "type": "stat-display",
+                              "value": "0",
+                              "icon": "clock"
+                            },
+                            {
+                              "label": "Filled today",
+                              "value": "0",
+                              "type": "stat-display",
+                              "icon": "check-circle"
+                            },
+                            {
+                              "value": "0",
+                              "type": "stat-display",
+                              "label": "Rejected",
+                              "icon": "alert-triangle"
+                            }
+                          ],
+                          "type": "simple-grid",
+                          "cols": 4.0
+                        },
+                        {
+                          "type": "divider"
+                        },
+                        {
+                          "cols": 1.0,
+                          "entity": "@payload.data",
+                          "fields": "@config.fields",
+                          "gap": "sm",
+                          "itemActions": "@config.itemActions",
+                          "type": "data-grid"
+                        }
+                      ],
+                      "direction": "vertical",
+                      "gap": "md"
+                    }
+                  ]
+                ]
+              },
+              {
+                "from": "loading",
+                "to": "error",
+                "event": "TradeOrderLoadFailed",
+                "effects": [
+                  [
+                    "render-ui",
+                    "main",
+                    {
+                      "variant": "error",
+                      "message": "@payload.error",
+                      "type": "alert"
+                    }
+                  ]
+                ]
+              },
+              {
+                "from": "browsing",
+                "to": "viewing_single",
+                "event": "OPEN_ORDER",
+                "effects": [
+                  [
+                    "set",
+                    "@entity.id",
+                    "@payload.row.id"
+                  ],
+                  [
+                    "set",
+                    "@entity.instrument",
+                    "@payload.row.instrument"
+                  ],
+                  [
+                    "set",
+                    "@entity.side",
+                    "@payload.row.side"
+                  ],
+                  [
+                    "set",
+                    "@entity.orderType",
+                    "@payload.row.orderType"
+                  ],
+                  [
+                    "set",
+                    "@entity.quantity",
+                    "@payload.row.quantity"
+                  ],
+                  [
+                    "set",
+                    "@entity.price",
+                    "@payload.row.price"
+                  ],
+                  [
+                    "set",
+                    "@entity.limitPrice",
+                    "@payload.row.limitPrice"
+                  ],
+                  [
+                    "set",
+                    "@entity.stopPrice",
+                    "@payload.row.stopPrice"
+                  ],
+                  [
+                    "set",
+                    "@entity.status",
+                    "@payload.row.status"
+                  ],
+                  [
+                    "set",
+                    "@entity.venue",
+                    "@payload.row.venue"
+                  ],
+                  [
+                    "set",
+                    "@entity.filledAt",
+                    "@payload.row.filledAt"
+                  ],
+                  [
+                    "set",
+                    "@entity.createdAt",
+                    "@payload.row.createdAt"
+                  ],
+                  [
+                    "render-ui",
+                    "main",
+                    {
+                      "type": "stack",
+                      "direction": "vertical",
+                      "gap": "md",
+                      "children": [
+                        {
+                          "type": "stack",
+                          "direction": "horizontal",
+                          "children": [
+                            {
+                              "action": "CLOSE_VIEW",
+                              "type": "button",
+                              "label": "Back",
+                              "variant": "ghost"
+                            },
+                            {
+                              "type": "icon",
+                              "name": "trending-up"
+                            },
+                            {
+                              "content": "@entity.instrument",
+                              "variant": "h3",
+                              "type": "typography"
+                            },
+                            {
+                              "type": "badge",
+                              "label": "@entity.side",
+                              "variant": "primary"
+                            },
+                            {
+                              "type": "badge",
+                              "label": "@entity.status",
+                              "variant": "default"
+                            }
+                          ],
+                          "align": "center",
+                          "gap": "sm"
+                        },
+                        {
+                          "type": "divider"
+                        },
+                        {
+                          "direction": "vertical",
+                          "gap": "sm",
+                          "type": "stack",
+                          "children": [
+                            {
+                              "gap": "md",
+                              "type": "stack",
+                              "direction": "horizontal",
+                              "children": [
+                                {
+                                  "variant": "caption",
+                                  "type": "typography",
+                                  "content": "Order type",
+                                  "color": "muted"
+                                },
+                                {
+                                  "type": "typography",
+                                  "variant": "body",
+                                  "content": "@entity.orderType"
+                                }
+                              ]
+                            },
+                            {
+                              "gap": "md",
+                              "type": "stack",
+                              "direction": "horizontal",
+                              "children": [
+                                {
+                                  "content": "Venue",
+                                  "variant": "caption",
+                                  "color": "muted",
+                                  "type": "typography"
+                                },
+                                {
+                                  "variant": "body",
+                                  "content": "@entity.venue",
+                                  "type": "typography"
+                                }
+                              ]
+                            }
+                          ]
+                        },
+                        {
+                          "type": "divider"
+                        },
+                        {
+                          "cols": 4.0,
+                          "children": [
+                            {
+                              "value": "@entity.quantity",
+                              "type": "stat-display",
+                              "label": "Quantity",
+                              "icon": "hash"
+                            },
+                            {
+                              "value": "@entity.price",
+                              "type": "stat-display",
+                              "label": "Price",
+                              "icon": "dollar-sign"
+                            },
+                            {
+                              "value": "@entity.limitPrice",
+                              "type": "stat-display",
+                              "label": "Limit",
+                              "icon": "dollar-sign"
+                            },
+                            {
+                              "label": "Stop",
+                              "icon": "dollar-sign",
+                              "type": "stat-display",
+                              "value": "@entity.stopPrice"
+                            }
+                          ],
+                          "type": "simple-grid"
+                        },
+                        {
+                          "type": "stack",
+                          "direction": "horizontal",
+                          "align": "center",
+                          "children": [
+                            {
+                              "variant": "primary",
+                              "type": "button",
+                              "label": "Submit",
+                              "action": "OPEN_ORDER",
+                              "actionPayload": {
+                                "id": "@entity.id",
+                                "row": "@entity"
+                              }
+                            },
+                            {
+                              "actionPayload": {
+                                "id": "@entity.id"
+                              },
+                              "variant": "primary",
+                              "type": "button",
+                              "label": "Fill",
+                              "action": "FILL"
+                            },
+                            {
+                              "actionPayload": {
+                                "id": "@entity.id"
+                              },
+                              "label": "Cancel",
+                              "variant": "danger",
+                              "action": "CANCEL",
+                              "type": "button"
+                            }
+                          ],
+                          "gap": "sm"
+                        }
+                      ]
+                    }
+                  ]
+                ]
+              },
+              {
+                "from": "browsing",
+                "to": "loading",
+                "event": "CANCEL",
+                "effects": [
+                  [
+                    "set",
+                    "@entity.id",
+                    "@payload.id"
+                  ],
+                  [
+                    "set",
+                    "@entity.status",
+                    "cancelled"
+                  ],
+                  [
+                    "persist",
+                    "update",
+                    "TradeOrder",
+                    "@entity",
+                    {
+                      "emit": {
+                        "success": "TradeOrderUpdated",
+                        "failure": "TradeOrderUpdateFailed"
+                      }
+                    }
+                  ],
+                  [
+                    "render-ui",
+                    "main",
+                    {
+                      "children": [
+                        {
+                          "type": "spinner"
+                        },
+                        {
+                          "content": "Cancelling order…",
+                          "variant": "caption",
+                          "color": "muted",
+                          "type": "typography"
+                        }
+                      ],
+                      "align": "center",
+                      "gap": "md",
+                      "type": "stack",
+                      "className": "py-12",
+                      "direction": "vertical"
+                    }
+                  ]
+                ]
+              },
+              {
+                "from": "browsing",
+                "to": "loading",
+                "event": "TradeOrderUpdated",
+                "effects": [
+                  [
+                    "fetch",
+                    "TradeOrder",
+                    {
+                      "emit": {
+                        "failure": "TradeOrderLoadFailed",
+                        "success": "TradeOrderLoaded"
+                      }
+                    }
+                  ]
+                ]
+              },
+              {
+                "from": "browsing",
+                "to": "browsing",
+                "event": "TradeOrderUpdateFailed",
+                "effects": [
+                  [
+                    "render-ui",
+                    "main",
+                    {
+                      "message": "@payload.error",
+                      "variant": "error",
+                      "type": "alert"
+                    }
+                  ]
+                ]
+              },
+              {
+                "from": "browsing",
+                "to": "loading",
+                "event": "SET_STATUS",
+                "effects": [
+                  [
+                    "set",
+                    "@entity.id",
+                    "@payload.entityId"
+                  ],
+                  [
+                    "set",
+                    "@entity.status",
+                    "@payload.newStatus"
+                  ],
+                  [
+                    "persist",
+                    "update",
+                    "TradeOrder",
+                    "@entity",
+                    {
+                      "emit": {
+                        "failure": "TradeOrderUpdateFailed",
+                        "success": "TradeOrderUpdated"
+                      }
+                    }
+                  ],
+                  [
+                    "render-ui",
+                    "main",
+                    {
+                      "direction": "vertical",
+                      "className": "py-12",
+                      "align": "center",
+                      "children": [
+                        {
+                          "type": "spinner"
+                        },
+                        {
+                          "content": "Updating order status…",
+                          "variant": "caption",
+                          "color": "muted",
+                          "type": "typography"
+                        }
+                      ],
+                      "gap": "md",
+                      "type": "stack"
+                    }
+                  ]
+                ]
+              },
+              {
+                "from": "viewing_single",
+                "to": "loading",
+                "event": "CLOSE_VIEW",
+                "effects": [
+                  [
+                    "fetch",
+                    "TradeOrder",
+                    {
+                      "emit": {
+                        "success": "TradeOrderLoaded",
+                        "failure": "TradeOrderLoadFailed"
+                      }
+                    }
+                  ],
+                  [
+                    "render-ui",
+                    "main",
+                    {
+                      "children": [
+                        {
+                          "type": "spinner"
+                        },
+                        {
+                          "variant": "caption",
+                          "color": "muted",
+                          "type": "typography",
+                          "content": "Loading orders…"
+                        }
+                      ],
+                      "align": "center",
+                      "className": "py-12",
+                      "direction": "vertical",
+                      "gap": "md",
+                      "type": "stack"
+                    }
+                  ]
+                ]
+              },
+              {
+                "from": "viewing_single",
+                "to": "loading",
+                "event": "OPEN_ORDER",
+                "effects": [
+                  [
+                    "set",
+                    "@entity.id",
+                    "@payload.id"
+                  ],
+                  [
+                    "set",
+                    "@entity.status",
+                    "working"
+                  ],
+                  [
+                    "persist",
+                    "update",
+                    "TradeOrder",
+                    "@entity",
+                    {
+                      "emit": {
+                        "failure": "TradeOrderUpdateFailed",
+                        "success": "TradeOrderUpdated"
+                      }
+                    }
+                  ],
+                  [
+                    "render-ui",
+                    "main",
+                    {
+                      "type": "stack",
+                      "direction": "vertical",
+                      "className": "py-12",
+                      "children": [
+                        {
+                          "type": "spinner"
+                        },
+                        {
+                          "type": "typography",
+                          "color": "muted",
+                          "content": "Submitting order…",
+                          "variant": "caption"
+                        }
+                      ],
+                      "gap": "md",
+                      "align": "center"
+                    }
+                  ]
+                ]
+              },
+              {
+                "from": "viewing_single",
+                "to": "loading",
+                "event": "FILL",
+                "effects": [
+                  [
+                    "set",
+                    "@entity.id",
+                    "@payload.id"
+                  ],
+                  [
+                    "set",
+                    "@entity.status",
+                    "filled"
+                  ],
+                  [
+                    "set",
+                    "@entity.filledAt",
+                    "now"
+                  ],
+                  [
+                    "persist",
+                    "update",
+                    "TradeOrder",
+                    "@entity",
+                    {
+                      "emit": {
+                        "success": "TradeOrderUpdated",
+                        "failure": "TradeOrderUpdateFailed"
+                      }
+                    }
+                  ],
+                  [
+                    "render-ui",
+                    "main",
+                    {
+                      "className": "py-12",
+                      "children": [
+                        {
+                          "type": "spinner"
+                        },
+                        {
+                          "color": "muted",
+                          "content": "Filling order…",
+                          "type": "typography",
+                          "variant": "caption"
+                        }
+                      ],
+                      "type": "stack",
+                      "direction": "vertical",
+                      "gap": "md",
+                      "align": "center"
+                    }
+                  ]
+                ]
+              },
+              {
+                "from": "viewing_single",
+                "to": "loading",
+                "event": "CANCEL",
+                "effects": [
+                  [
+                    "set",
+                    "@entity.id",
+                    "@payload.id"
+                  ],
+                  [
+                    "set",
+                    "@entity.status",
+                    "cancelled"
+                  ],
+                  [
+                    "persist",
+                    "update",
+                    "TradeOrder",
+                    "@entity",
+                    {
+                      "emit": {
+                        "success": "TradeOrderUpdated",
+                        "failure": "TradeOrderUpdateFailed"
+                      }
+                    }
+                  ],
+                  [
+                    "render-ui",
+                    "main",
+                    {
+                      "children": [
+                        {
+                          "type": "spinner"
+                        },
+                        {
+                          "type": "typography",
+                          "content": "Cancelling order…",
+                          "variant": "caption",
+                          "color": "muted"
+                        }
+                      ],
+                      "align": "center",
+                      "type": "stack",
+                      "direction": "vertical",
+                      "className": "py-12",
+                      "gap": "md"
+                    }
+                  ]
+                ]
+              },
+              {
+                "from": "error",
+                "to": "loading",
+                "event": "INIT",
+                "effects": [
+                  [
+                    "fetch",
+                    "TradeOrder",
+                    {
+                      "emit": {
+                        "success": "TradeOrderLoaded",
+                        "failure": "TradeOrderLoadFailed"
+                      }
+                    }
+                  ],
+                  [
+                    "render-ui",
+                    "main",
+                    {
+                      "type": "spinner",
+                      "size": "sm"
+                    }
+                  ]
+                ]
+              }
+            ]
+          },
+          "config": {
+            "executionVenuePolicy": {
+              "type": "string",
+              "default": "best-execution",
+              "label": "Execution venue policy",
+              "description": "Routing strategy across listed venues + dark pools.",
+              "synonyms": "smart order routing, SOR",
+              "tier": "domain",
+              "values": [
+                "best-execution",
+                "primary-only",
+                "dark-pool-preferred",
+                "lit-only"
+              ]
+            },
+            "partialFillsAllowed": {
+              "type": "boolean",
+              "default": true,
+              "label": "Allow partial fills",
+              "description": "When false, only fill-or-kill is accepted.",
+              "tier": "domain"
+            },
+            "dailyVarLimitUSD": {
+              "type": "number",
+              "default": 250000.0,
+              "label": "Daily VaR limit (USD)",
+              "description": "Maximum daily value-at-risk before new orders block.",
+              "synonyms": "risk limit, daily loss limit",
+              "tier": "domain"
+            },
+            "itemActions": {
+              "type": "[ItemAction]",
+              "default": [
+                {
+                  "label": "Open",
+                  "variant": "primary",
+                  "event": "OPEN_ORDER",
+                  "icon": "arrow-right"
+                },
+                {
+                  "variant": "danger",
+                  "label": "Cancel",
+                  "event": "CANCEL",
+                  "icon": "x"
+                }
+              ],
+              "label": "Row actions",
+              "description": "Buttons users can click on each trade order row",
+              "tier": "presentation",
+              "items": {
+                "type": "object",
+                "properties": {
+                  "icon": {
+                    "name": "icon",
+                    "type": "string",
+                    "required": false
+                  },
+                  "label": {
+                    "name": "label",
+                    "type": "string",
+                    "required": true
+                  },
+                  "event": {
+                    "name": "event",
+                    "type": "string",
+                    "required": true
+                  },
+                  "variant": {
+                    "name": "variant",
+                    "type": "string",
+                    "required": false
+                  }
+                }
+              }
+            },
+            "title": {
+              "type": "string",
+              "default": "Trade Orders",
+              "label": "Section title",
+              "description": "Heading shown above the trade order blotter",
+              "tier": "presentation"
+            },
+            "orderType": {
+              "type": "string",
+              "default": "market",
+              "label": "Default order type",
+              "synonyms": "order kind",
+              "tier": "domain",
+              "values": [
+                "market",
+                "limit",
+                "stop",
+                "stop-limit",
+                "trailing"
+              ]
+            },
+            "washTradePreventionMinutes": {
+              "type": "number",
+              "default": 30.0,
+              "label": "Wash-trade prevention (min)",
+              "description": "Minimum minutes between offsetting trades on the same instrument.",
+              "synonyms": "self-cross prevention",
+              "tier": "domain"
+            },
+            "priceCollarsBps": {
+              "type": "number",
+              "default": 500.0,
+              "label": "Price collars (bps)",
+              "description": "Maximum bps deviation from reference price before order rejected.",
+              "synonyms": "price band, fat-finger guard",
+              "tier": "domain"
+            },
+            "fields": {
+              "type": "[FieldSpec]",
+              "default": [
+                {
+                  "variant": "caption",
+                  "label": "Instrument",
+                  "name": "instrument"
+                },
+                {
+                  "name": "side",
+                  "label": "Side",
+                  "variant": "badge"
+                },
+                {
+                  "variant": "badge",
+                  "name": "orderType",
+                  "label": "Type"
+                },
+                {
+                  "variant": "caption",
+                  "name": "quantity",
+                  "label": "Qty"
+                },
+                {
+                  "label": "Price",
+                  "variant": "caption",
+                  "name": "price"
+                },
+                {
+                  "variant": "badge",
+                  "name": "status",
+                  "label": "Status"
+                },
+                {
+                  "variant": "caption",
+                  "name": "venue",
+                  "label": "Venue"
+                }
+              ],
+              "label": "Columns to show",
+              "description": "Each column maps to one field on the Trade Order entity",
+              "tier": "presentation",
+              "items": {
+                "type": "object",
+                "properties": {
+                  "variant": {
+                    "name": "variant",
+                    "type": "string",
+                    "required": false
+                  },
+                  "format": {
+                    "name": "format",
+                    "type": "string",
+                    "required": false
+                  },
+                  "key": {
+                    "name": "key",
+                    "type": "string",
+                    "required": false
+                  },
+                  "header": {
+                    "name": "header",
+                    "type": "string",
+                    "required": false
+                  },
+                  "name": {
+                    "name": "name",
+                    "type": "string",
+                    "required": true
+                  },
+                  "label": {
+                    "name": "label",
+                    "type": "string",
+                    "required": false
+                  },
+                  "icon": {
+                    "name": "icon",
+                    "type": "string",
+                    "required": false
+                  }
+                }
+              }
+            },
+            "positionLimitUSD": {
+              "type": "number",
+              "default": 1000000.0,
+              "label": "Position limit (USD)",
+              "description": "Maximum notional position per instrument before block.",
+              "synonyms": "size limit, max position",
+              "tier": "domain"
+            },
+            "clientSideRiskCheck": {
+              "type": "string",
+              "default": "hard",
+              "label": "Pre-trade risk check",
+              "description": "soft = warn-and-allow; hard = block; off = skip.",
+              "tier": "domain",
+              "values": [
+                "soft",
+                "hard",
+                "off"
+              ]
+            }
+          },
+          "scope": "collection"
+        }
+      ],
+      "pages": [
+        {
+          "name": "TradeOrderManagePage",
+          "path": "/orders",
+          "traits": [
+            {
+              "ref": "TradeOrderManage"
+            }
+          ]
+        }
+      ]
+    }
+  ]
+}

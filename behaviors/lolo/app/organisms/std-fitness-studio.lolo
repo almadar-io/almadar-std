@@ -397,3 +397,45 @@ orbital ClassRosterOrbital {
 
   page "/rosters" as ClassRostersPage -> ClassRosterAppLayout, ClassRosterDisplay, ClassRosterEntries
 }
+
+orbital AppointmentPolicyFromStdOrbital {
+  uses AppShell from "std/behaviors/std-app-layout"
+  uses Policies from "std/behaviors/std-appointment-policy"
+
+  entity AppointmentPolicy [persistent: appointment_policies] {
+    id                         : string!
+    name                       : string!
+    description                : string = ""
+    rescheduleWindowHours      : number = 24
+    maxReschedules             : number = 2
+    cancellationPolicy         : "free" | "partial-refund" | "no-refund" = "free"
+    noShowGracePeriodMinutes   : number = 15
+    noShowFeeAmount            : number = 0
+    lateArrivalGraceMinutes    : number = 10
+    status                     : "active" | "archived" = "active"
+    createdAt                  : string
+  }
+
+  trait AppointmentPolicyFromStdAppLayout = AppShell.traits.AppLayout -> AppointmentPolicy {
+    config: {
+      contentTrait: "@trait.AppointmentPolicyFromStdManageBlock",
+      appName: "Fitness Studio",
+      navItems: [{ label: "Members", href: "/members", icon: "users" }, { label: "Classes", href: "/classes", icon: "calendar" }, { label: "Memberships", href: "/memberships", icon: "credit-card" }, { label: "Rosters", href: "/rosters", icon: "clipboard-list" }, { label: "Appointment Policies", href: "/appointment-policies-from-std", icon: "calendar-check" }],
+      searchEvent: "APPOINTMENT_POLICY_SEARCH",
+      notifications: [],
+      notificationClickEvent: "APPOINTMENT_POLICY_NOTIFICATIONS_OPEN"
+    }
+    events {
+      SEARCH: APPOINTMENT_POLICY_SEARCH
+      NOTIFY_CLICK: APPOINTMENT_POLICY_NOTIFICATIONS_OPEN
+    }
+  }
+
+  trait AppointmentPolicyFromStdManageBlock = Policies.traits.AppointmentPolicyManage -> AppointmentPolicy {
+    config: {
+      title: "Appointment Policies"
+    }
+  }
+
+  page "/appointment-policies-from-std" as AppointmentPolicyFromStdPage -> AppointmentPolicyFromStdAppLayout, AppointmentPolicyFromStdManageBlock
+}

@@ -1,0 +1,1052 @@
+{
+  "name": "std-sensor-threshold",
+  "version": "1.0.0",
+  "description": "std-sensor-threshold — sensor alert bands with dwell/hysteresis; sibling to std-telematics-event for IoT monitoring.",
+  "orbitals": [
+    {
+      "name": "SensorThresholdOrbital",
+      "entity": {
+        "name": "SensorThreshold",
+        "collection": "sensor_thresholds",
+        "persistence": "persistent",
+        "fields": [
+          {
+            "name": "id",
+            "type": "string",
+            "required": true
+          },
+          {
+            "name": "sensorId",
+            "type": "string",
+            "required": true
+          },
+          {
+            "name": "metric",
+            "type": "string",
+            "default": ""
+          },
+          {
+            "name": "warningLow",
+            "type": "number",
+            "default": 0.0
+          },
+          {
+            "name": "warningHigh",
+            "type": "number",
+            "default": 0.0
+          },
+          {
+            "name": "criticalLow",
+            "type": "number",
+            "default": 0.0
+          },
+          {
+            "name": "criticalHigh",
+            "type": "number",
+            "default": 0.0
+          },
+          {
+            "name": "status",
+            "type": "string",
+            "default": "active",
+            "values": [
+              "active",
+              "muted",
+              "archived"
+            ]
+          },
+          {
+            "name": "createdAt",
+            "type": "string",
+            "default": ""
+          }
+        ]
+      },
+      "traits": [
+        {
+          "name": "SensorThresholdManage",
+          "category": "interaction",
+          "linkedEntity": "SensorThreshold",
+          "emits": [
+            {
+              "event": "OPEN_THRESHOLD",
+              "payloadSchema": [
+                {
+                  "name": "id",
+                  "type": "string",
+                  "required": true
+                },
+                {
+                  "name": "row.id",
+                  "type": "string",
+                  "required": true
+                },
+                {
+                  "name": "row.sensorId",
+                  "type": "string",
+                  "required": true
+                },
+                {
+                  "name": "row.metric",
+                  "type": "string"
+                },
+                {
+                  "name": "row.warningLow",
+                  "type": "number"
+                },
+                {
+                  "name": "row.warningHigh",
+                  "type": "number"
+                },
+                {
+                  "name": "row.criticalLow",
+                  "type": "number"
+                },
+                {
+                  "name": "row.criticalHigh",
+                  "type": "number"
+                },
+                {
+                  "name": "row.status",
+                  "type": "string"
+                },
+                {
+                  "name": "row.createdAt",
+                  "type": "string"
+                }
+              ]
+            },
+            {
+              "event": "CLOSE_VIEW"
+            },
+            {
+              "event": "MUTE_THRESHOLD",
+              "payloadSchema": [
+                {
+                  "name": "id",
+                  "type": "string",
+                  "required": true
+                },
+                {
+                  "name": "row.id",
+                  "type": "string",
+                  "required": true
+                },
+                {
+                  "name": "row.sensorId",
+                  "type": "string",
+                  "required": true
+                },
+                {
+                  "name": "row.metric",
+                  "type": "string"
+                },
+                {
+                  "name": "row.warningLow",
+                  "type": "number"
+                },
+                {
+                  "name": "row.warningHigh",
+                  "type": "number"
+                },
+                {
+                  "name": "row.criticalLow",
+                  "type": "number"
+                },
+                {
+                  "name": "row.criticalHigh",
+                  "type": "number"
+                },
+                {
+                  "name": "row.status",
+                  "type": "string"
+                },
+                {
+                  "name": "row.createdAt",
+                  "type": "string"
+                }
+              ]
+            },
+            {
+              "event": "ARCHIVE_THRESHOLD",
+              "payloadSchema": [
+                {
+                  "name": "id",
+                  "type": "string",
+                  "required": true
+                },
+                {
+                  "name": "row.id",
+                  "type": "string",
+                  "required": true
+                },
+                {
+                  "name": "row.sensorId",
+                  "type": "string",
+                  "required": true
+                },
+                {
+                  "name": "row.metric",
+                  "type": "string"
+                },
+                {
+                  "name": "row.warningLow",
+                  "type": "number"
+                },
+                {
+                  "name": "row.warningHigh",
+                  "type": "number"
+                },
+                {
+                  "name": "row.criticalLow",
+                  "type": "number"
+                },
+                {
+                  "name": "row.criticalHigh",
+                  "type": "number"
+                },
+                {
+                  "name": "row.status",
+                  "type": "string"
+                },
+                {
+                  "name": "row.createdAt",
+                  "type": "string"
+                }
+              ]
+            },
+            {
+              "event": "SensorThresholdLoaded",
+              "payloadSchema": [
+                {
+                  "name": "data",
+                  "type": "[SensorThreshold]"
+                }
+              ]
+            },
+            {
+              "event": "SensorThresholdLoadFailed",
+              "payloadSchema": [
+                {
+                  "name": "error",
+                  "type": "string"
+                },
+                {
+                  "name": "code",
+                  "type": "string"
+                }
+              ]
+            }
+          ],
+          "stateMachine": {
+            "states": [
+              {
+                "name": "loading",
+                "isInitial": true
+              },
+              {
+                "name": "browsing"
+              },
+              {
+                "name": "viewing_single"
+              },
+              {
+                "name": "error"
+              }
+            ],
+            "events": [
+              {
+                "key": "INIT",
+                "name": "Initialize"
+              },
+              {
+                "key": "SensorThresholdLoaded",
+                "name": "SensorThreshold loaded",
+                "payloadSchema": [
+                  {
+                    "name": "data",
+                    "type": "[SensorThreshold]"
+                  }
+                ]
+              },
+              {
+                "key": "SensorThresholdLoadFailed",
+                "name": "SensorThreshold load failed",
+                "payloadSchema": [
+                  {
+                    "name": "error",
+                    "type": "string"
+                  },
+                  {
+                    "name": "code",
+                    "type": "string"
+                  }
+                ]
+              },
+              {
+                "key": "OPEN_THRESHOLD",
+                "name": "Open Threshold",
+                "payloadSchema": [
+                  {
+                    "name": "id",
+                    "type": "string",
+                    "required": true
+                  },
+                  {
+                    "name": "row",
+                    "type": "SensorThreshold"
+                  }
+                ]
+              },
+              {
+                "key": "MUTE_THRESHOLD",
+                "name": "Mute Threshold",
+                "payloadSchema": [
+                  {
+                    "name": "id",
+                    "type": "string",
+                    "required": true
+                  }
+                ]
+              },
+              {
+                "key": "CLOSE_VIEW",
+                "name": "Close View"
+              },
+              {
+                "key": "ARCHIVE_THRESHOLD",
+                "name": "Archive Threshold",
+                "payloadSchema": [
+                  {
+                    "name": "id",
+                    "type": "string",
+                    "required": true
+                  }
+                ]
+              }
+            ],
+            "transitions": [
+              {
+                "from": "loading",
+                "to": "loading",
+                "event": "INIT",
+                "effects": [
+                  [
+                    "fetch",
+                    "SensorThreshold",
+                    {
+                      "emit": {
+                        "success": "SensorThresholdLoaded",
+                        "failure": "SensorThresholdLoadFailed"
+                      }
+                    }
+                  ],
+                  [
+                    "render-ui",
+                    "main",
+                    {
+                      "type": "stack",
+                      "direction": "vertical",
+                      "gap": "md",
+                      "align": "center",
+                      "className": "py-12",
+                      "children": [
+                        {
+                          "type": "spinner"
+                        },
+                        {
+                          "type": "typography",
+                          "variant": "caption",
+                          "color": "muted",
+                          "content": "Loading thresholds…"
+                        }
+                      ]
+                    }
+                  ]
+                ]
+              },
+              {
+                "from": "loading",
+                "to": "browsing",
+                "event": "SensorThresholdLoaded",
+                "effects": [
+                  [
+                    "render-ui",
+                    "main",
+                    {
+                      "children": [
+                        {
+                          "align": "center",
+                          "type": "stack",
+                          "children": [
+                            {
+                              "type": "icon",
+                              "name": "activity"
+                            },
+                            {
+                              "variant": "h3",
+                              "content": "@config.title",
+                              "type": "typography"
+                            }
+                          ],
+                          "gap": "sm",
+                          "direction": "horizontal"
+                        },
+                        {
+                          "children": [
+                            {
+                              "type": "stat-display",
+                              "label": "Total thresholds",
+                              "icon": "activity",
+                              "value": "@payload.data.length"
+                            },
+                            {
+                              "value": "42",
+                              "icon": "check-circle",
+                              "label": "Active",
+                              "type": "stat-display"
+                            },
+                            {
+                              "type": "stat-display",
+                              "label": "Muted",
+                              "icon": "bell-off",
+                              "value": "3"
+                            },
+                            {
+                              "label": "Firing now",
+                              "type": "stat-display",
+                              "value": "1",
+                              "icon": "alert-triangle"
+                            }
+                          ],
+                          "type": "simple-grid",
+                          "cols": 4.0
+                        },
+                        {
+                          "type": "divider"
+                        },
+                        {
+                          "gap": "sm",
+                          "fields": "@config.fields",
+                          "type": "data-grid",
+                          "cols": 1.0,
+                          "itemActions": "@config.itemActions",
+                          "entity": "@payload.data"
+                        }
+                      ],
+                      "gap": "md",
+                      "type": "stack",
+                      "direction": "vertical"
+                    }
+                  ]
+                ]
+              },
+              {
+                "from": "loading",
+                "to": "error",
+                "event": "SensorThresholdLoadFailed",
+                "effects": [
+                  [
+                    "render-ui",
+                    "main",
+                    {
+                      "message": "@payload.error",
+                      "type": "alert",
+                      "variant": "error"
+                    }
+                  ]
+                ]
+              },
+              {
+                "from": "browsing",
+                "to": "viewing_single",
+                "event": "OPEN_THRESHOLD",
+                "effects": [
+                  [
+                    "set",
+                    "@entity.id",
+                    "@payload.row.id"
+                  ],
+                  [
+                    "set",
+                    "@entity.sensorId",
+                    "@payload.row.sensorId"
+                  ],
+                  [
+                    "set",
+                    "@entity.metric",
+                    "@payload.row.metric"
+                  ],
+                  [
+                    "set",
+                    "@entity.warningLow",
+                    "@payload.row.warningLow"
+                  ],
+                  [
+                    "set",
+                    "@entity.warningHigh",
+                    "@payload.row.warningHigh"
+                  ],
+                  [
+                    "set",
+                    "@entity.criticalLow",
+                    "@payload.row.criticalLow"
+                  ],
+                  [
+                    "set",
+                    "@entity.criticalHigh",
+                    "@payload.row.criticalHigh"
+                  ],
+                  [
+                    "set",
+                    "@entity.status",
+                    "@payload.row.status"
+                  ],
+                  [
+                    "set",
+                    "@entity.createdAt",
+                    "@payload.row.createdAt"
+                  ],
+                  [
+                    "render-ui",
+                    "main",
+                    {
+                      "direction": "vertical",
+                      "children": [
+                        {
+                          "type": "stack",
+                          "align": "center",
+                          "children": [
+                            {
+                              "variant": "ghost",
+                              "label": "Back",
+                              "action": "CLOSE_VIEW",
+                              "type": "button"
+                            },
+                            {
+                              "name": "activity",
+                              "type": "icon"
+                            },
+                            {
+                              "type": "typography",
+                              "variant": "h3",
+                              "content": "@entity.sensorId"
+                            },
+                            {
+                              "type": "badge",
+                              "label": "@entity.status",
+                              "variant": "primary"
+                            }
+                          ],
+                          "direction": "horizontal",
+                          "gap": "sm"
+                        },
+                        {
+                          "type": "divider"
+                        },
+                        {
+                          "children": [
+                            {
+                              "direction": "horizontal",
+                              "gap": "md",
+                              "type": "stack",
+                              "children": [
+                                {
+                                  "color": "muted",
+                                  "content": "Metric",
+                                  "type": "typography",
+                                  "variant": "caption"
+                                },
+                                {
+                                  "type": "typography",
+                                  "variant": "body",
+                                  "content": "@entity.metric"
+                                }
+                              ]
+                            },
+                            {
+                              "children": [
+                                {
+                                  "content": "Warn high",
+                                  "type": "typography",
+                                  "color": "muted",
+                                  "variant": "caption"
+                                },
+                                {
+                                  "variant": "body",
+                                  "type": "typography",
+                                  "content": "@entity.warningHigh"
+                                }
+                              ],
+                              "type": "stack",
+                              "gap": "md",
+                              "direction": "horizontal"
+                            },
+                            {
+                              "type": "stack",
+                              "children": [
+                                {
+                                  "color": "muted",
+                                  "type": "typography",
+                                  "variant": "caption",
+                                  "content": "Crit high"
+                                },
+                                {
+                                  "type": "typography",
+                                  "variant": "body",
+                                  "content": "@entity.criticalHigh"
+                                }
+                              ],
+                              "gap": "md",
+                              "direction": "horizontal"
+                            }
+                          ],
+                          "gap": "sm",
+                          "type": "stack",
+                          "direction": "vertical"
+                        },
+                        {
+                          "type": "divider"
+                        },
+                        {
+                          "children": [
+                            {
+                              "variant": "secondary",
+                              "actionPayload": {
+                                "id": "@entity.id"
+                              },
+                              "action": "MUTE_THRESHOLD",
+                              "type": "button",
+                              "label": "Mute"
+                            },
+                            {
+                              "actionPayload": {
+                                "id": "@entity.id"
+                              },
+                              "type": "button",
+                              "variant": "danger",
+                              "label": "Archive",
+                              "action": "ARCHIVE_THRESHOLD"
+                            }
+                          ],
+                          "align": "center",
+                          "direction": "horizontal",
+                          "type": "stack",
+                          "gap": "sm"
+                        }
+                      ],
+                      "type": "stack",
+                      "gap": "md"
+                    }
+                  ]
+                ]
+              },
+              {
+                "from": "browsing",
+                "to": "loading",
+                "event": "MUTE_THRESHOLD",
+                "effects": [
+                  [
+                    "set",
+                    "@entity.id",
+                    "@payload.id"
+                  ],
+                  [
+                    "fetch",
+                    "SensorThreshold",
+                    {
+                      "emit": {
+                        "failure": "SensorThresholdLoadFailed",
+                        "success": "SensorThresholdLoaded"
+                      }
+                    }
+                  ],
+                  [
+                    "render-ui",
+                    "main",
+                    {
+                      "className": "py-12",
+                      "children": [
+                        {
+                          "type": "spinner"
+                        },
+                        {
+                          "color": "muted",
+                          "variant": "caption",
+                          "type": "typography",
+                          "content": "Muting threshold…"
+                        }
+                      ],
+                      "type": "stack",
+                      "direction": "vertical",
+                      "gap": "md",
+                      "align": "center"
+                    }
+                  ]
+                ]
+              },
+              {
+                "from": "viewing_single",
+                "to": "loading",
+                "event": "CLOSE_VIEW",
+                "effects": [
+                  [
+                    "fetch",
+                    "SensorThreshold",
+                    {
+                      "emit": {
+                        "success": "SensorThresholdLoaded",
+                        "failure": "SensorThresholdLoadFailed"
+                      }
+                    }
+                  ],
+                  [
+                    "render-ui",
+                    "main",
+                    {
+                      "type": "stack",
+                      "align": "center",
+                      "gap": "md",
+                      "className": "py-12",
+                      "children": [
+                        {
+                          "type": "spinner"
+                        },
+                        {
+                          "color": "muted",
+                          "type": "typography",
+                          "variant": "caption",
+                          "content": "Loading thresholds…"
+                        }
+                      ],
+                      "direction": "vertical"
+                    }
+                  ]
+                ]
+              },
+              {
+                "from": "viewing_single",
+                "to": "loading",
+                "event": "MUTE_THRESHOLD",
+                "effects": [
+                  [
+                    "set",
+                    "@entity.id",
+                    "@payload.id"
+                  ],
+                  [
+                    "fetch",
+                    "SensorThreshold",
+                    {
+                      "emit": {
+                        "failure": "SensorThresholdLoadFailed",
+                        "success": "SensorThresholdLoaded"
+                      }
+                    }
+                  ],
+                  [
+                    "render-ui",
+                    "main",
+                    {
+                      "type": "stack",
+                      "align": "center",
+                      "direction": "vertical",
+                      "gap": "md",
+                      "className": "py-12",
+                      "children": [
+                        {
+                          "type": "spinner"
+                        },
+                        {
+                          "color": "muted",
+                          "type": "typography",
+                          "variant": "caption",
+                          "content": "Muting threshold…"
+                        }
+                      ]
+                    }
+                  ]
+                ]
+              },
+              {
+                "from": "viewing_single",
+                "to": "loading",
+                "event": "ARCHIVE_THRESHOLD",
+                "effects": [
+                  [
+                    "set",
+                    "@entity.id",
+                    "@payload.id"
+                  ],
+                  [
+                    "fetch",
+                    "SensorThreshold",
+                    {
+                      "emit": {
+                        "failure": "SensorThresholdLoadFailed",
+                        "success": "SensorThresholdLoaded"
+                      }
+                    }
+                  ],
+                  [
+                    "render-ui",
+                    "main",
+                    {
+                      "type": "stack",
+                      "direction": "vertical",
+                      "gap": "md",
+                      "className": "py-12",
+                      "align": "center",
+                      "children": [
+                        {
+                          "type": "spinner"
+                        },
+                        {
+                          "type": "typography",
+                          "color": "muted",
+                          "content": "Archiving threshold…",
+                          "variant": "caption"
+                        }
+                      ]
+                    }
+                  ]
+                ]
+              },
+              {
+                "from": "error",
+                "to": "loading",
+                "event": "INIT",
+                "effects": [
+                  [
+                    "fetch",
+                    "SensorThreshold",
+                    {
+                      "emit": {
+                        "success": "SensorThresholdLoaded",
+                        "failure": "SensorThresholdLoadFailed"
+                      }
+                    }
+                  ],
+                  [
+                    "render-ui",
+                    "main",
+                    {
+                      "size": "sm",
+                      "type": "spinner"
+                    }
+                  ]
+                ]
+              }
+            ]
+          },
+          "config": {
+            "dwellTimeSeconds": {
+              "type": "number",
+              "default": 30.0,
+              "label": "Dwell time (seconds)",
+              "description": "Seconds the metric must remain outside the band before an alert fires (debounce).",
+              "synonyms": "debounce window, sustain time",
+              "tier": "domain"
+            },
+            "hysteresisPct": {
+              "type": "number",
+              "default": 5.0,
+              "label": "Hysteresis (%)",
+              "description": "Percentage the value must drop below the band before reset (prevents flapping).",
+              "synonyms": "deadband, recovery margin",
+              "tier": "domain"
+            },
+            "escalationRoles": {
+              "type": "[string]",
+              "default": [
+                "oncall-l1",
+                "oncall-l2"
+              ],
+              "label": "Escalation roles",
+              "description": "Roles paged on critical-band alerts. Compose std-notify-on-event for delivery.",
+              "tier": "domain",
+              "items": {
+                "type": "string"
+              }
+            },
+            "title": {
+              "type": "string",
+              "default": "Sensor Thresholds",
+              "label": "Section title",
+              "description": "Heading shown above the sensor thresholds list",
+              "tier": "presentation"
+            },
+            "fields": {
+              "type": "[FieldSpec]",
+              "default": [
+                {
+                  "variant": "caption",
+                  "name": "sensorId",
+                  "label": "Sensor"
+                },
+                {
+                  "label": "Metric",
+                  "name": "metric",
+                  "variant": "caption"
+                },
+                {
+                  "variant": "caption",
+                  "label": "Warn",
+                  "name": "warningHigh"
+                },
+                {
+                  "label": "Crit",
+                  "name": "criticalHigh",
+                  "variant": "caption"
+                },
+                {
+                  "variant": "badge",
+                  "name": "status",
+                  "label": "Status"
+                }
+              ],
+              "label": "Columns to show",
+              "description": "Each column maps to one field on the Sensor Threshold entity",
+              "tier": "presentation",
+              "items": {
+                "type": "object",
+                "properties": {
+                  "key": {
+                    "name": "key",
+                    "type": "string",
+                    "required": false
+                  },
+                  "format": {
+                    "name": "format",
+                    "type": "string",
+                    "required": false
+                  },
+                  "header": {
+                    "name": "header",
+                    "type": "string",
+                    "required": false
+                  },
+                  "name": {
+                    "name": "name",
+                    "type": "string",
+                    "required": true
+                  },
+                  "label": {
+                    "name": "label",
+                    "type": "string",
+                    "required": false
+                  },
+                  "variant": {
+                    "name": "variant",
+                    "type": "string",
+                    "required": false
+                  },
+                  "icon": {
+                    "name": "icon",
+                    "type": "string",
+                    "required": false
+                  }
+                }
+              }
+            },
+            "itemActions": {
+              "type": "[ItemAction]",
+              "default": [
+                {
+                  "event": "OPEN_THRESHOLD",
+                  "label": "Open",
+                  "icon": "arrow-right",
+                  "variant": "primary"
+                },
+                {
+                  "label": "Mute",
+                  "variant": "secondary",
+                  "event": "MUTE_THRESHOLD"
+                }
+              ],
+              "label": "Row actions",
+              "description": "Buttons users can click on each threshold row",
+              "tier": "presentation",
+              "items": {
+                "type": "object",
+                "properties": {
+                  "event": {
+                    "name": "event",
+                    "type": "string",
+                    "required": true
+                  },
+                  "label": {
+                    "name": "label",
+                    "type": "string",
+                    "required": true
+                  },
+                  "variant": {
+                    "name": "variant",
+                    "type": "string",
+                    "required": false
+                  },
+                  "icon": {
+                    "name": "icon",
+                    "type": "string",
+                    "required": false
+                  }
+                }
+              }
+            },
+            "thresholdBands": {
+              "type": "[ThresholdBand]",
+              "default": [
+                {
+                  "low": 0.0,
+                  "band": "warning",
+                  "high": 70.0
+                },
+                {
+                  "low": 70.0,
+                  "high": 100.0,
+                  "band": "critical"
+                }
+              ],
+              "label": "Threshold bands",
+              "description": "Alert bands per metric; values outside [low, high] for each band fire alerts of that severity.",
+              "synonyms": "alert bands, alarm zones",
+              "tier": "domain",
+              "items": {
+                "type": "object",
+                "properties": {
+                  "band": {
+                    "name": "band",
+                    "type": "string",
+                    "required": true
+                  },
+                  "low": {
+                    "name": "low",
+                    "type": "number",
+                    "required": true
+                  },
+                  "high": {
+                    "name": "high",
+                    "type": "number",
+                    "required": true
+                  }
+                }
+              }
+            }
+          },
+          "scope": "collection"
+        }
+      ],
+      "pages": [
+        {
+          "name": "SensorThresholdPage",
+          "path": "/sensor-thresholds",
+          "traits": [
+            {
+              "ref": "SensorThresholdManage"
+            }
+          ]
+        }
+      ]
+    }
+  ]
+}

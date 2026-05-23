@@ -1,0 +1,330 @@
+[
+  {
+    "organism": "std-prescription",
+    "orbital": "PrescriptionOrbital",
+    "tier": "atoms",
+    "factoryPath": "behaviors/functions/app/atoms/std-prescription.ts",
+    "entities": [
+      {
+        "name": "Prescription",
+        "fields": [
+          {
+            "name": "patientId",
+            "type": "string",
+            "required": true
+          },
+          {
+            "name": "medication",
+            "type": "string",
+            "required": true
+          },
+          {
+            "name": "dosage",
+            "type": "string",
+            "required": false
+          },
+          {
+            "name": "quantity",
+            "type": "number",
+            "required": false
+          },
+          {
+            "name": "refillsRemaining",
+            "type": "number",
+            "required": false
+          },
+          {
+            "name": "controlled",
+            "type": "boolean",
+            "required": false
+          },
+          {
+            "name": "status",
+            "type": "string",
+            "required": false
+          },
+          {
+            "name": "prescribedBy",
+            "type": "string",
+            "required": false
+          },
+          {
+            "name": "pharmacy",
+            "type": "string",
+            "required": false
+          },
+          {
+            "name": "signedAt",
+            "type": "string",
+            "required": false
+          }
+        ],
+        "persistence": "persistent"
+      }
+    ],
+    "traits": [
+      {
+        "name": "PrescriptionManage",
+        "emittedEvents": [
+          "OPEN_RX",
+          "CLOSE_VIEW",
+          "SIGN_RX",
+          "SEND_RX",
+          "DISPENSE",
+          "VOID_RX",
+          "PrescriptionLoaded",
+          "PrescriptionLoadFailed",
+          "PrescriptionUpdated",
+          "PrescriptionUpdateFailed"
+        ],
+        "listenedEvents": [],
+        "overridableConfigKeys": [
+          {
+            "key": "controlledSubstanceSchedule",
+            "type": "string",
+            "default": "none",
+            "label": "Controlled-substance schedule",
+            "description": "DEA schedule. Drives e-prescribing + paper-trail requirements.",
+            "synonyms": "DEA schedule, narcotic class",
+            "tier": "domain",
+            "enumValues": [
+              "none",
+              "II",
+              "III",
+              "IV",
+              "V"
+            ]
+          },
+          {
+            "key": "dawCodeRequired",
+            "type": "boolean",
+            "default": false,
+            "label": "DAW code required",
+            "description": "When true, prescriber must include a Dispense-As-Written code on every Rx.",
+            "tier": "domain"
+          },
+          {
+            "key": "dispenseQuantityLimit",
+            "type": "number",
+            "default": 90,
+            "label": "Dispense quantity limit",
+            "description": "Maximum days-supply dispensed per fill.",
+            "synonyms": "days supply, fill limit",
+            "tier": "domain"
+          },
+          {
+            "key": "epaRequired",
+            "type": "boolean",
+            "default": false,
+            "label": "EPA required",
+            "description": "When true, controlled-substance prescriptions require electronic-prescribing-of-controlled-substances signing.",
+            "synonyms": "EPCS",
+            "tier": "domain"
+          },
+          {
+            "key": "fields",
+            "type": "[FieldSpec]",
+            "default": [
+              {
+                "name": "medication",
+                "label": "Medication",
+                "variant": "caption"
+              },
+              {
+                "label": "Patient",
+                "variant": "caption",
+                "name": "patientId"
+              },
+              {
+                "label": "Dosage",
+                "variant": "caption",
+                "name": "dosage"
+              },
+              {
+                "name": "status",
+                "label": "Status",
+                "variant": "badge"
+              },
+              {
+                "label": "Pharmacy",
+                "name": "pharmacy",
+                "variant": "caption"
+              },
+              {
+                "variant": "caption",
+                "name": "prescribedBy",
+                "label": "Prescriber"
+              }
+            ],
+            "label": "Columns to show",
+            "description": "Each column maps to one field on the Prescription entity",
+            "tier": "presentation",
+            "items": {
+              "properties": {
+                "name": {
+                  "name": "name",
+                  "required": true,
+                  "type": "string"
+                },
+                "icon": {
+                  "name": "icon",
+                  "required": false,
+                  "type": "string"
+                },
+                "format": {
+                  "name": "format",
+                  "required": false,
+                  "type": "string"
+                },
+                "label": {
+                  "name": "label",
+                  "required": false,
+                  "type": "string"
+                },
+                "key": {
+                  "name": "key",
+                  "required": false,
+                  "type": "string"
+                },
+                "header": {
+                  "name": "header",
+                  "required": false,
+                  "type": "string"
+                },
+                "variant": {
+                  "name": "variant",
+                  "required": false,
+                  "type": "string"
+                }
+              },
+              "type": "object"
+            }
+          },
+          {
+            "key": "genericSubstitutionAllowed",
+            "type": "string",
+            "default": "patient-consent",
+            "label": "Generic substitution",
+            "description": "Policy for substituting brand→generic at the pharmacy.",
+            "tier": "domain",
+            "enumValues": [
+              "always",
+              "patient-consent",
+              "prescriber-only",
+              "never"
+            ]
+          },
+          {
+            "key": "itemActions",
+            "type": "[ItemAction]",
+            "default": [
+              {
+                "icon": "arrow-right",
+                "event": "OPEN_RX",
+                "variant": "primary",
+                "label": "Open"
+              },
+              {
+                "event": "VOID_RX",
+                "label": "Void",
+                "icon": "x",
+                "variant": "danger"
+              }
+            ],
+            "label": "Row actions",
+            "description": "Buttons users can click on each prescription row",
+            "tier": "presentation",
+            "items": {
+              "properties": {
+                "label": {
+                  "name": "label",
+                  "required": true,
+                  "type": "string"
+                },
+                "variant": {
+                  "name": "variant",
+                  "required": false,
+                  "type": "string"
+                },
+                "event": {
+                  "name": "event",
+                  "required": true,
+                  "type": "string"
+                },
+                "icon": {
+                  "name": "icon",
+                  "required": false,
+                  "type": "string"
+                }
+              },
+              "type": "object"
+            }
+          },
+          {
+            "key": "pharmacistConsultationRequired",
+            "type": "string",
+            "default": "controlled-only",
+            "label": "Pharmacist consultation",
+            "description": "When the pharmacist must counsel the patient at pickup.",
+            "tier": "domain",
+            "enumValues": [
+              "always",
+              "controlled-only",
+              "high-risk",
+              "never"
+            ]
+          },
+          {
+            "key": "priorAuthRequiredFor",
+            "type": "[string]",
+            "default": [],
+            "label": "Prior-auth required for",
+            "description": "Medications requiring insurance prior-authorization before dispensing.",
+            "synonyms": "PA required, insurance pre-approval",
+            "tier": "domain",
+            "items": {
+              "type": "string"
+            }
+          },
+          {
+            "key": "refillsAllowedPerYear",
+            "type": "number",
+            "default": 5,
+            "label": "Max refills per year",
+            "description": "Annual cap on refills for the same prescription.",
+            "tier": "domain"
+          },
+          {
+            "key": "title",
+            "type": "string",
+            "default": "Prescriptions",
+            "label": "Section title",
+            "description": "Heading shown above the prescription list",
+            "tier": "presentation"
+          }
+        ],
+        "capabilities": []
+      }
+    ],
+    "pages": [
+      {
+        "name": "PrescriptionManagePage",
+        "defaultPath": "/prescriptions",
+        "primaryEntity": "Prescription"
+      }
+    ],
+    "emittedEvents": [
+      "CLOSE_VIEW",
+      "DISPENSE",
+      "OPEN_RX",
+      "PrescriptionLoadFailed",
+      "PrescriptionLoaded",
+      "PrescriptionUpdateFailed",
+      "PrescriptionUpdated",
+      "SEND_RX",
+      "SIGN_RX",
+      "VOID_RX"
+    ],
+    "listenedEvents": []
+  }
+]

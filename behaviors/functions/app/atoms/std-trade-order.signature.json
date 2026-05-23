@@ -1,0 +1,328 @@
+[
+  {
+    "organism": "std-trade-order",
+    "orbital": "TradeOrderOrbital",
+    "tier": "atoms",
+    "factoryPath": "behaviors/functions/app/atoms/std-trade-order.ts",
+    "entities": [
+      {
+        "name": "TradeOrder",
+        "fields": [
+          {
+            "name": "instrument",
+            "type": "string",
+            "required": true
+          },
+          {
+            "name": "side",
+            "type": "string",
+            "required": false
+          },
+          {
+            "name": "orderType",
+            "type": "string",
+            "required": false
+          },
+          {
+            "name": "quantity",
+            "type": "number",
+            "required": false
+          },
+          {
+            "name": "price",
+            "type": "number",
+            "required": false
+          },
+          {
+            "name": "limitPrice",
+            "type": "number",
+            "required": false
+          },
+          {
+            "name": "stopPrice",
+            "type": "number",
+            "required": false
+          },
+          {
+            "name": "status",
+            "type": "string",
+            "required": false
+          },
+          {
+            "name": "venue",
+            "type": "string",
+            "required": false
+          },
+          {
+            "name": "filledAt",
+            "type": "string",
+            "required": false
+          }
+        ],
+        "persistence": "persistent"
+      }
+    ],
+    "traits": [
+      {
+        "name": "TradeOrderManage",
+        "emittedEvents": [
+          "OPEN_ORDER",
+          "CLOSE_VIEW",
+          "FILL",
+          "CANCEL",
+          "TradeOrderLoaded",
+          "TradeOrderLoadFailed",
+          "TradeOrderUpdated",
+          "TradeOrderUpdateFailed"
+        ],
+        "listenedEvents": [],
+        "overridableConfigKeys": [
+          {
+            "key": "clientSideRiskCheck",
+            "type": "string",
+            "default": "hard",
+            "label": "Pre-trade risk check",
+            "description": "soft = warn-and-allow; hard = block; off = skip.",
+            "tier": "domain",
+            "enumValues": [
+              "soft",
+              "hard",
+              "off"
+            ]
+          },
+          {
+            "key": "dailyVarLimitUSD",
+            "type": "number",
+            "default": 250000,
+            "label": "Daily VaR limit (USD)",
+            "description": "Maximum daily value-at-risk before new orders block.",
+            "synonyms": "risk limit, daily loss limit",
+            "tier": "domain"
+          },
+          {
+            "key": "executionVenuePolicy",
+            "type": "string",
+            "default": "best-execution",
+            "label": "Execution venue policy",
+            "description": "Routing strategy across listed venues + dark pools.",
+            "synonyms": "smart order routing, SOR",
+            "tier": "domain",
+            "enumValues": [
+              "best-execution",
+              "primary-only",
+              "dark-pool-preferred",
+              "lit-only"
+            ]
+          },
+          {
+            "key": "fields",
+            "type": "[FieldSpec]",
+            "default": [
+              {
+                "variant": "caption",
+                "label": "Instrument",
+                "name": "instrument"
+              },
+              {
+                "name": "side",
+                "label": "Side",
+                "variant": "badge"
+              },
+              {
+                "variant": "badge",
+                "name": "orderType",
+                "label": "Type"
+              },
+              {
+                "variant": "caption",
+                "name": "quantity",
+                "label": "Qty"
+              },
+              {
+                "label": "Price",
+                "variant": "caption",
+                "name": "price"
+              },
+              {
+                "variant": "badge",
+                "name": "status",
+                "label": "Status"
+              },
+              {
+                "variant": "caption",
+                "name": "venue",
+                "label": "Venue"
+              }
+            ],
+            "label": "Columns to show",
+            "description": "Each column maps to one field on the Trade Order entity",
+            "tier": "presentation",
+            "items": {
+              "properties": {
+                "variant": {
+                  "name": "variant",
+                  "required": false,
+                  "type": "string"
+                },
+                "format": {
+                  "name": "format",
+                  "required": false,
+                  "type": "string"
+                },
+                "key": {
+                  "name": "key",
+                  "required": false,
+                  "type": "string"
+                },
+                "header": {
+                  "name": "header",
+                  "required": false,
+                  "type": "string"
+                },
+                "name": {
+                  "name": "name",
+                  "required": true,
+                  "type": "string"
+                },
+                "label": {
+                  "name": "label",
+                  "required": false,
+                  "type": "string"
+                },
+                "icon": {
+                  "name": "icon",
+                  "required": false,
+                  "type": "string"
+                }
+              },
+              "type": "object"
+            }
+          },
+          {
+            "key": "itemActions",
+            "type": "[ItemAction]",
+            "default": [
+              {
+                "label": "Open",
+                "variant": "primary",
+                "event": "OPEN_ORDER",
+                "icon": "arrow-right"
+              },
+              {
+                "variant": "danger",
+                "label": "Cancel",
+                "event": "CANCEL",
+                "icon": "x"
+              }
+            ],
+            "label": "Row actions",
+            "description": "Buttons users can click on each trade order row",
+            "tier": "presentation",
+            "items": {
+              "properties": {
+                "icon": {
+                  "name": "icon",
+                  "required": false,
+                  "type": "string"
+                },
+                "label": {
+                  "name": "label",
+                  "required": true,
+                  "type": "string"
+                },
+                "event": {
+                  "name": "event",
+                  "required": true,
+                  "type": "string"
+                },
+                "variant": {
+                  "name": "variant",
+                  "required": false,
+                  "type": "string"
+                }
+              },
+              "type": "object"
+            }
+          },
+          {
+            "key": "orderType",
+            "type": "string",
+            "default": "market",
+            "label": "Default order type",
+            "synonyms": "order kind",
+            "tier": "domain",
+            "enumValues": [
+              "market",
+              "limit",
+              "stop",
+              "stop-limit",
+              "trailing"
+            ]
+          },
+          {
+            "key": "partialFillsAllowed",
+            "type": "boolean",
+            "default": true,
+            "label": "Allow partial fills",
+            "description": "When false, only fill-or-kill is accepted.",
+            "tier": "domain"
+          },
+          {
+            "key": "positionLimitUSD",
+            "type": "number",
+            "default": 1000000,
+            "label": "Position limit (USD)",
+            "description": "Maximum notional position per instrument before block.",
+            "synonyms": "size limit, max position",
+            "tier": "domain"
+          },
+          {
+            "key": "priceCollarsBps",
+            "type": "number",
+            "default": 500,
+            "label": "Price collars (bps)",
+            "description": "Maximum bps deviation from reference price before order rejected.",
+            "synonyms": "price band, fat-finger guard",
+            "tier": "domain"
+          },
+          {
+            "key": "title",
+            "type": "string",
+            "default": "Trade Orders",
+            "label": "Section title",
+            "description": "Heading shown above the trade order blotter",
+            "tier": "presentation"
+          },
+          {
+            "key": "washTradePreventionMinutes",
+            "type": "number",
+            "default": 30,
+            "label": "Wash-trade prevention (min)",
+            "description": "Minimum minutes between offsetting trades on the same instrument.",
+            "synonyms": "self-cross prevention",
+            "tier": "domain"
+          }
+        ],
+        "capabilities": []
+      }
+    ],
+    "pages": [
+      {
+        "name": "TradeOrderManagePage",
+        "defaultPath": "/orders",
+        "primaryEntity": "TradeOrder"
+      }
+    ],
+    "emittedEvents": [
+      "CANCEL",
+      "CLOSE_VIEW",
+      "FILL",
+      "OPEN_ORDER",
+      "TradeOrderLoadFailed",
+      "TradeOrderLoaded",
+      "TradeOrderUpdateFailed",
+      "TradeOrderUpdated"
+    ],
+    "listenedEvents": []
+  }
+]

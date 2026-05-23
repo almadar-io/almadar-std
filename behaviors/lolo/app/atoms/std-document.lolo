@@ -1,0 +1,159 @@
+app std-document "1.0.0"
+"std-document — document lifecycle with classification, retention, and lock. Listens for SET_STATUS so siblings can drive automated transitions. Composes naturally with std-file-store / std-version-history / std-esign-request at the organism level."
+
+type FieldSpec = { name : string!, label : string, variant : string, icon : string, format : string, key : string, header : string }
+type ItemAction = { label : string!, event : string!, variant : string, icon : string }
+
+orbital DocumentOrbital {
+  entity Document [persistent: documents] {
+    id              : string!
+    title           : string!
+    description     : string
+    mimeType        : string
+    classification  : string
+    lockedBy        : string
+    lockedAt        : string
+    retentionUntil  : string
+    legalHold       : boolean
+    createdAt       : string
+    updatedAt       : string
+  }
+
+  type DocumentLoaded        = Event { data : [Document] }              "Fired when the document collection finishes loading"
+  type DocumentLoadFailed    = Event { error : string, code : string }  "Fired when the document collection fails to load"
+
+  trait DocumentManage -> Document [interaction, collection] {
+    config {
+      title : string = "Documents"
+        @label "Section title"
+        @description "Heading shown above the documents list"
+        @tier "presentation"
+      fields      : [FieldSpec] = [{ name: "title", label: "Title", variant: "caption" }, { name: "mimeType", label: "Type", variant: "caption" }, { name: "classification", label: "Classification", variant: "badge" }, { name: "lockedBy", label: "Locked by", variant: "caption" }, { name: "retentionUntil", label: "Retention", variant: "caption" }]
+        @label "Columns to show"
+        @description "Each column maps to one field on the Document entity"
+        @tier "presentation"
+      itemActions : [ItemAction] = [{ label: "Open", event: "OPEN_DOCUMENT", variant: "primary", icon: "arrow-right" }, { label: "Download", event: "DOWNLOAD", variant: "secondary", icon: "download" }]
+        @label "Row actions"
+        @description "Buttons users can click on each document row"
+        @tier "presentation"
+      classificationLevels : [string] = ["public", "internal", "confidential", "restricted"]
+        @label "Classification levels"
+        @description "Allowed enum for the classification field."
+        @tier "domain"
+        @synonyms "sensitivity, security levels"
+      defaultRetentionYears : number = 7
+        @label "Default retention (years)"
+        @description "Years to keep a document before lifecycle-based deletion. Compose std-lifecycle to enforce."
+        @tier "domain"
+        @synonyms "keep for, archive after"
+      allowedMimeTypes : [string] = ["application/pdf", "application/msword", "image/png", "image/jpeg"]
+        @label "Allowed MIME types"
+        @description "Upload accepts only these content types. Empty = any."
+        @tier "domain"
+        @synonyms "file types"
+      lockedStatus : "none" | "soft" | "hard" = "soft"
+        @label "Lock behavior"
+        @description "soft = block edits w/ override; hard = block edits absolutely; none = informational only."
+        @tier "domain"
+      versionRetentionCount : number = 10
+        @label "Version retention count"
+        @description "Max prior versions kept per document. 0 = all."
+        @tier "domain"
+      requireReasonOnDownload : boolean = false
+        @label "Require reason on download"
+        @description "Prompt the user to enter a justification when downloading restricted docs."
+        @tier "domain"
+      watermarkPolicy : "none" | "viewer-id" | "viewer-id-timestamp" = "none"
+        @label "Watermark policy"
+        @description "Image overlay when rendering classified docs."
+        @tier "domain"
+      legalHoldEnabled : boolean = true
+        @label "Honor legal hold"
+        @description "When true, retention policies skip docs marked legalHold=true."
+        @tier "domain"
+        @synonyms "litigation hold"
+    }
+    initial: loading
+    state loading {
+      INIT -> loading
+        (fetch Document { emit: { success: "DocumentLoaded", failure: "DocumentLoadFailed" } })
+        (render-ui main { type: "stack", direction: "vertical", gap: "md", align: "center", className: "py-12", children: [{ type: "spinner" }, { type: "typography", variant: "caption", color: "muted", content: "Loading documents…" }] })
+      DocumentLoaded -> browsing
+        (render-ui main { type: "stack", direction: "vertical", gap: "md", children: [{ type: "stack", direction: "horizontal", gap: "sm", align: "center", children: [{ type: "icon", name: "file-text" }, { type: "typography", content: "@config.title", variant: "h3" }] }, { type: "simple-grid", cols: 4, children: [{ type: "stat-display", label: "Total docs", value: "@payload.data.length", icon: "file-text" }, { type: "stat-display", label: "Restricted", value: "12", icon: "shield" }, { type: "stat-display", label: "Locked", value: "5", icon: "lock" }, { type: "stat-display", label: "Legal hold", value: "3", icon: "alert-triangle" }] }, { type: "divider" }, { type: "data-grid", entity: "@payload.data", fields: "@config.fields", cols: 1, gap: "sm", itemActions: "@config.itemActions" }] })
+      DocumentLoadFailed -> error
+        (render-ui main { type: "alert", variant: "error", message: "@payload.error" })
+    }
+    state browsing {
+      OPEN_DOCUMENT -> viewing_single
+        (set @entity.id @payload.row.id)
+        (set @entity.title @payload.row.title)
+        (set @entity.description @payload.row.description)
+        (set @entity.mimeType @payload.row.mimeType)
+        (set @entity.classification @payload.row.classification)
+        (set @entity.lockedBy @payload.row.lockedBy)
+        (set @entity.lockedAt @payload.row.lockedAt)
+        (set @entity.retentionUntil @payload.row.retentionUntil)
+        (set @entity.legalHold @payload.row.legalHold)
+        (set @entity.createdAt @payload.row.createdAt)
+        (set @entity.updatedAt @payload.row.updatedAt)
+        (render-ui main { type: "stack", direction: "vertical", gap: "md", children: [{ type: "stack", direction: "horizontal", gap: "sm", align: "center", children: [{ type: "button", label: "Back", variant: "ghost", action: "CLOSE_VIEW" }, { type: "icon", name: "file-text" }, { type: "typography", content: "@entity.title", variant: "h3" }, { type: "badge", label: "@entity.classification", variant: "primary" }, { type: "badge", label: "@entity.mimeType", variant: "default" }] }, { type: "divider" }, { type: "stack", direction: "vertical", gap: "sm", children: [{ type: "stack", direction: "horizontal", gap: "md", children: [{ type: "typography", variant: "caption", color: "muted", content: "Description" }, { type: "typography", variant: "body", content: "@entity.description" }] }, { type: "stack", direction: "horizontal", gap: "md", children: [{ type: "typography", variant: "caption", color: "muted", content: "Locked by" }, { type: "typography", variant: "body", content: "@entity.lockedBy" }] }, { type: "stack", direction: "horizontal", gap: "md", children: [{ type: "typography", variant: "caption", color: "muted", content: "Retention until" }, { type: "typography", variant: "body", content: "@entity.retentionUntil" }] }] }, { type: "divider" }, { type: "simple-grid", cols: 3, children: [{ type: "stat-display", label: "Locked at", value: "@entity.lockedAt", icon: "lock" }, { type: "stat-display", label: "Created", value: "@entity.createdAt", icon: "calendar-plus" }, { type: "stat-display", label: "Updated", value: "@entity.updatedAt", icon: "calendar" }] }, { type: "stack", direction: "horizontal", gap: "sm", align: "center", children: [{ type: "button", label: "Lock", variant: "primary", action: "LOCK", actionPayload: { id: "@entity.id", row: "@entity" } }, { type: "button", label: "Unlock", variant: "secondary", action: "UNLOCK", actionPayload: { id: "@entity.id", row: "@entity" } }, { type: "button", label: "Download", variant: "secondary", action: "DOWNLOAD", actionPayload: { id: "@entity.id", row: "@entity" } }, { type: "button", label: "Revoke", variant: "danger", action: "REVOKE", actionPayload: { id: "@entity.id", row: "@entity" } }] }] })
+      DOWNLOAD -> loading
+        (set @entity.id @payload.id)
+        (fetch Document { emit: { success: "DocumentLoaded", failure: "DocumentLoadFailed" } })
+        (render-ui main { type: "stack", direction: "vertical", gap: "md", align: "center", className: "py-12", children: [{ type: "spinner" }, { type: "typography", variant: "caption", color: "muted", content: "Preparing download…" }] })
+      SET_STATUS -> loading
+        (set @entity.id @payload.entityId)
+        (set @entity.classification @payload.newStatus)
+        (persist update Document @entity { emit: { success: "DocumentLoaded", failure: "DocumentLoadFailed" } })
+        (render-ui main { type: "stack", direction: "vertical", gap: "md", align: "center", className: "py-12", children: [{ type: "spinner" }, { type: "typography", variant: "caption", color: "muted", content: "Updating document classification…" }] })
+    }
+    state viewing_single {
+      CLOSE_VIEW -> loading
+        (fetch Document { emit: { success: "DocumentLoaded", failure: "DocumentLoadFailed" } })
+        (render-ui main { type: "stack", direction: "vertical", gap: "md", align: "center", className: "py-12", children: [{ type: "spinner" }, { type: "typography", variant: "caption", color: "muted", content: "Loading documents…" }] })
+      LOCK -> loading
+        (set @entity.id @payload.id)
+        (fetch Document { emit: { success: "DocumentLoaded", failure: "DocumentLoadFailed" } })
+        (render-ui main { type: "stack", direction: "vertical", gap: "md", align: "center", className: "py-12", children: [{ type: "spinner" }, { type: "typography", variant: "caption", color: "muted", content: "Locking document…" }] })
+      UNLOCK -> loading
+        (set @entity.id @payload.id)
+        (fetch Document { emit: { success: "DocumentLoaded", failure: "DocumentLoadFailed" } })
+        (render-ui main { type: "stack", direction: "vertical", gap: "md", align: "center", className: "py-12", children: [{ type: "spinner" }, { type: "typography", variant: "caption", color: "muted", content: "Unlocking document…" }] })
+      DOWNLOAD -> loading
+        (set @entity.id @payload.id)
+        (fetch Document { emit: { success: "DocumentLoaded", failure: "DocumentLoadFailed" } })
+        (render-ui main { type: "stack", direction: "vertical", gap: "md", align: "center", className: "py-12", children: [{ type: "spinner" }, { type: "typography", variant: "caption", color: "muted", content: "Preparing download…" }] })
+      REVOKE -> loading
+        (set @entity.id @payload.id)
+        (fetch Document { emit: { success: "DocumentLoaded", failure: "DocumentLoadFailed" } })
+        (render-ui main { type: "stack", direction: "vertical", gap: "md", align: "center", className: "py-12", children: [{ type: "spinner" }, { type: "typography", variant: "caption", color: "muted", content: "Revoking access…" }] })
+    }
+    state error {
+      INIT -> loading
+        (fetch Document { emit: { success: "DocumentLoaded", failure: "DocumentLoadFailed" } })
+        (render-ui main { type: "spinner", size: "sm" })
+    }
+    emits {
+      OPEN_DOCUMENT { id : string!, row : Document }
+      CLOSE_VIEW    { }
+      LOCK          { id : string!, row : Document }
+      UNLOCK        { id : string!, row : Document }
+      DOWNLOAD      { id : string!, row : Document }
+      REVOKE        { id : string!, row : Document }
+      DocumentLoaded       { data : [Document] }
+      DocumentLoadFailed   { error : string, code : string }
+    }
+    listens {
+      OPEN_DOCUMENT { id : string!, row : Document }
+      CLOSE_VIEW    { }
+      LOCK          { id : string!, row : Document }
+      UNLOCK        { id : string!, row : Document }
+      DOWNLOAD      { id : string!, row : Document }
+      REVOKE        { id : string!, row : Document }
+      SET_STATUS    { entityId : string!, newStatus : string! }
+      DocumentLoaded       { data : [Document] }
+      DocumentLoadFailed   { error : string, code : string }
+    }
+  }
+  page "/documents" as DocumentManagePage -> DocumentManage
+}

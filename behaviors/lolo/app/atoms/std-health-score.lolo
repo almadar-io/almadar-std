@@ -64,6 +64,21 @@ orbital HealthScoreOrbital {
         @label "Track consent"
         @description "Whether composite score includes only consented signals. Declarative."
         @tier "domain"
+      churnRiskThreshold : number = 30
+        @label "Churn risk threshold"
+        @description "Score below which a customer is classified as at-risk for churn. Drives the retention playbook trigger."
+        @tier "domain"
+        @synonyms "at-risk threshold, churn signal"
+      alertEscalationRoles : [string] = ["csm-lead","customer-success-director"]
+        @label "Alert escalation roles"
+        @description "Roles paged when a previously-healthy account drops below churnRiskThreshold. Compose std-notify-on-event."
+        @tier "domain"
+        @synonyms "escalation list, escalation chain"
+      recomputeIntervalHours : number = 24
+        @label "Recompute interval (hours)"
+        @description "How often the composite score is recalculated from underlying signals."
+        @tier "domain"
+        @synonyms "refresh cadence, calc interval"
     }
     initial: loading
     state loading {

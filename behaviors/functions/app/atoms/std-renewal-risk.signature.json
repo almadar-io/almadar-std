@@ -103,34 +103,34 @@
             "type": "[FieldSpec]",
             "default": [
               {
+                "name": "customerName",
                 "label": "Customer",
-                "variant": "caption",
-                "name": "customerName"
-              },
-              {
-                "label": "Renewal",
-                "variant": "caption",
-                "name": "renewalDate"
-              },
-              {
-                "name": "arrAmount",
-                "label": "ARR",
                 "variant": "caption"
               },
               {
-                "label": "Risk",
+                "variant": "caption",
+                "name": "renewalDate",
+                "label": "Renewal"
+              },
+              {
+                "label": "ARR",
+                "variant": "caption",
+                "name": "arrAmount"
+              },
+              {
                 "name": "riskLevel",
+                "variant": "badge",
+                "label": "Risk"
+              },
+              {
+                "name": "status",
+                "label": "Status",
                 "variant": "badge"
               },
               {
-                "variant": "badge",
-                "name": "status",
-                "label": "Status"
-              },
-              {
-                "variant": "caption",
+                "label": "CSM",
                 "name": "assignedCsm",
-                "label": "CSM"
+                "variant": "caption"
               }
             ],
             "label": "Columns to show",
@@ -138,14 +138,14 @@
             "tier": "presentation",
             "items": {
               "properties": {
-                "label": {
-                  "name": "label",
+                "key": {
+                  "name": "key",
                   "required": false,
                   "type": "string"
                 },
-                "variant": {
-                  "name": "variant",
-                  "required": false,
+                "name": {
+                  "name": "name",
+                  "required": true,
                   "type": "string"
                 },
                 "icon": {
@@ -158,13 +158,13 @@
                   "required": false,
                   "type": "string"
                 },
-                "name": {
-                  "name": "name",
-                  "required": true,
+                "label": {
+                  "name": "label",
+                  "required": false,
                   "type": "string"
                 },
-                "key": {
-                  "name": "key",
+                "variant": {
+                  "name": "variant",
                   "required": false,
                   "type": "string"
                 },
@@ -186,18 +186,27 @@
             "tier": "domain"
           },
           {
+            "key": "interventionPlaybookId",
+            "type": "string",
+            "default": "",
+            "label": "Default intervention playbook ID",
+            "description": "Reference to the playbook auto-suggested when an account enters high-risk. Empty = no auto-suggest.",
+            "synonyms": "retention playbook, save-the-account workflow",
+            "tier": "domain"
+          },
+          {
             "key": "itemActions",
             "type": "[ItemAction]",
             "default": [
               {
-                "label": "Open",
-                "variant": "primary",
                 "icon": "arrow-right",
-                "event": "OPEN_RISK"
+                "event": "OPEN_RISK",
+                "variant": "primary",
+                "label": "Open"
               },
               {
-                "label": "Mark Churned",
                 "variant": "danger",
+                "label": "Mark Churned",
                 "event": "MARK_CHURNED"
               }
             ],
@@ -206,16 +215,6 @@
             "tier": "presentation",
             "items": {
               "properties": {
-                "event": {
-                  "name": "event",
-                  "required": true,
-                  "type": "string"
-                },
-                "variant": {
-                  "name": "variant",
-                  "required": false,
-                  "type": "string"
-                },
                 "label": {
                   "name": "label",
                   "required": true,
@@ -223,6 +222,16 @@
                 },
                 "icon": {
                   "name": "icon",
+                  "required": false,
+                  "type": "string"
+                },
+                "event": {
+                  "name": "event",
+                  "required": true,
+                  "type": "string"
+                },
+                "variant": {
+                  "name": "variant",
                   "required": false,
                   "type": "string"
                 }
@@ -244,6 +253,67 @@
             "tier": "domain",
             "items": {
               "type": "number"
+            }
+          },
+          {
+            "key": "renewalReminderDaysBefore_csm",
+            "type": "[number]",
+            "default": [
+              60,
+              30,
+              14
+            ],
+            "label": "CSM intervention reminder days-before",
+            "description": "Days before renewalDate to nudge the assigned CSM. Separate from customer-facing reminders. Compose std-reminder-scheduler.",
+            "synonyms": "CSM nudge cadence",
+            "tier": "domain",
+            "items": {
+              "type": "number"
+            }
+          },
+          {
+            "key": "riskTierThresholds",
+            "type": "[RiskTierBand]",
+            "default": [
+              {
+                "scoreLow": 70,
+                "scoreHigh": 100,
+                "tier": "low"
+              },
+              {
+                "tier": "medium",
+                "scoreLow": 40,
+                "scoreHigh": 70
+              },
+              {
+                "tier": "high",
+                "scoreLow": 0,
+                "scoreHigh": 40
+              }
+            ],
+            "label": "Risk tier thresholds",
+            "description": "Health-score bands that map to risk tiers. low = healthy; medium = monitor; high = active intervention.",
+            "synonyms": "risk bands, tier mapping",
+            "tier": "domain",
+            "items": {
+              "properties": {
+                "scoreLow": {
+                  "name": "scoreLow",
+                  "required": true,
+                  "type": "number"
+                },
+                "tier": {
+                  "name": "tier",
+                  "required": true,
+                  "type": "string"
+                },
+                "scoreHigh": {
+                  "name": "scoreHigh",
+                  "required": true,
+                  "type": "number"
+                }
+              },
+              "type": "object"
             }
           },
           {

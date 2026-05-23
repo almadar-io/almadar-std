@@ -1,0 +1,832 @@
+{
+  "name": "std-conversation-policy",
+  "version": "1.0.0",
+  "description": "std-conversation-policy — chat/realtime governance: retention, e2ee, moderation mode, edit/delete windows.",
+  "orbitals": [
+    {
+      "name": "ConversationPolicyOrbital",
+      "entity": {
+        "name": "ConversationPolicy",
+        "collection": "conversation_policies",
+        "persistence": "persistent",
+        "fields": [
+          {
+            "name": "id",
+            "type": "string",
+            "required": true
+          },
+          {
+            "name": "name",
+            "type": "string",
+            "required": true
+          },
+          {
+            "name": "description",
+            "type": "string",
+            "default": ""
+          },
+          {
+            "name": "appliesTo",
+            "type": "string",
+            "default": ""
+          },
+          {
+            "name": "status",
+            "type": "string",
+            "default": "active",
+            "values": [
+              "active",
+              "archived"
+            ]
+          },
+          {
+            "name": "createdAt",
+            "type": "string",
+            "default": ""
+          }
+        ]
+      },
+      "traits": [
+        {
+          "name": "ConversationPolicyManage",
+          "category": "interaction",
+          "linkedEntity": "ConversationPolicy",
+          "emits": [
+            {
+              "event": "OPEN_POLICY",
+              "payloadSchema": [
+                {
+                  "name": "id",
+                  "type": "string",
+                  "required": true
+                },
+                {
+                  "name": "row.id",
+                  "type": "string",
+                  "required": true
+                },
+                {
+                  "name": "row.name",
+                  "type": "string",
+                  "required": true
+                },
+                {
+                  "name": "row.description",
+                  "type": "string"
+                },
+                {
+                  "name": "row.appliesTo",
+                  "type": "string"
+                },
+                {
+                  "name": "row.status",
+                  "type": "string"
+                },
+                {
+                  "name": "row.createdAt",
+                  "type": "string"
+                }
+              ]
+            },
+            {
+              "event": "CLOSE_VIEW"
+            },
+            {
+              "event": "ARCHIVE_POLICY",
+              "payloadSchema": [
+                {
+                  "name": "id",
+                  "type": "string",
+                  "required": true
+                },
+                {
+                  "name": "row.id",
+                  "type": "string",
+                  "required": true
+                },
+                {
+                  "name": "row.name",
+                  "type": "string",
+                  "required": true
+                },
+                {
+                  "name": "row.description",
+                  "type": "string"
+                },
+                {
+                  "name": "row.appliesTo",
+                  "type": "string"
+                },
+                {
+                  "name": "row.status",
+                  "type": "string"
+                },
+                {
+                  "name": "row.createdAt",
+                  "type": "string"
+                }
+              ]
+            },
+            {
+              "event": "ConversationPolicyLoaded",
+              "payloadSchema": [
+                {
+                  "name": "data",
+                  "type": "[ConversationPolicy]"
+                }
+              ]
+            },
+            {
+              "event": "ConversationPolicyLoadFailed",
+              "payloadSchema": [
+                {
+                  "name": "error",
+                  "type": "string"
+                },
+                {
+                  "name": "code",
+                  "type": "string"
+                }
+              ]
+            }
+          ],
+          "stateMachine": {
+            "states": [
+              {
+                "name": "loading",
+                "isInitial": true
+              },
+              {
+                "name": "browsing"
+              },
+              {
+                "name": "viewing_single"
+              },
+              {
+                "name": "error"
+              }
+            ],
+            "events": [
+              {
+                "key": "INIT",
+                "name": "Initialize"
+              },
+              {
+                "key": "ConversationPolicyLoaded",
+                "name": "ConversationPolicy loaded",
+                "payloadSchema": [
+                  {
+                    "name": "data",
+                    "type": "[ConversationPolicy]"
+                  }
+                ]
+              },
+              {
+                "key": "ConversationPolicyLoadFailed",
+                "name": "ConversationPolicy load failed",
+                "payloadSchema": [
+                  {
+                    "name": "error",
+                    "type": "string"
+                  },
+                  {
+                    "name": "code",
+                    "type": "string"
+                  }
+                ]
+              },
+              {
+                "key": "OPEN_POLICY",
+                "name": "Open Policy",
+                "payloadSchema": [
+                  {
+                    "name": "id",
+                    "type": "string",
+                    "required": true
+                  },
+                  {
+                    "name": "row",
+                    "type": "ConversationPolicy"
+                  }
+                ]
+              },
+              {
+                "key": "ARCHIVE_POLICY",
+                "name": "Archive Policy",
+                "payloadSchema": [
+                  {
+                    "name": "id",
+                    "type": "string",
+                    "required": true
+                  }
+                ]
+              },
+              {
+                "key": "CLOSE_VIEW",
+                "name": "Close View"
+              }
+            ],
+            "transitions": [
+              {
+                "from": "loading",
+                "to": "loading",
+                "event": "INIT",
+                "effects": [
+                  [
+                    "fetch",
+                    "ConversationPolicy",
+                    {
+                      "emit": {
+                        "failure": "ConversationPolicyLoadFailed",
+                        "success": "ConversationPolicyLoaded"
+                      }
+                    }
+                  ],
+                  [
+                    "render-ui",
+                    "main",
+                    {
+                      "direction": "vertical",
+                      "align": "center",
+                      "className": "py-12",
+                      "children": [
+                        {
+                          "type": "spinner"
+                        },
+                        {
+                          "type": "typography",
+                          "content": "Loading conversation policies…",
+                          "color": "muted",
+                          "variant": "caption"
+                        }
+                      ],
+                      "gap": "md",
+                      "type": "stack"
+                    }
+                  ]
+                ]
+              },
+              {
+                "from": "loading",
+                "to": "browsing",
+                "event": "ConversationPolicyLoaded",
+                "effects": [
+                  [
+                    "render-ui",
+                    "main",
+                    {
+                      "type": "stack",
+                      "direction": "vertical",
+                      "children": [
+                        {
+                          "type": "stack",
+                          "direction": "horizontal",
+                          "align": "center",
+                          "children": [
+                            {
+                              "name": "message-square",
+                              "type": "icon"
+                            },
+                            {
+                              "content": "@config.title",
+                              "type": "typography",
+                              "variant": "h3"
+                            }
+                          ],
+                          "gap": "sm"
+                        },
+                        {
+                          "type": "simple-grid",
+                          "cols": 4.0,
+                          "children": [
+                            {
+                              "type": "stat-display",
+                              "icon": "message-square",
+                              "label": "Total policies",
+                              "value": "@payload.data.length"
+                            },
+                            {
+                              "value": "8",
+                              "label": "Active",
+                              "type": "stat-display",
+                              "icon": "check-circle"
+                            },
+                            {
+                              "label": "E2EE channels",
+                              "icon": "lock",
+                              "type": "stat-display",
+                              "value": "3"
+                            },
+                            {
+                              "type": "stat-display",
+                              "icon": "archive",
+                              "label": "Archived",
+                              "value": "2"
+                            }
+                          ]
+                        },
+                        {
+                          "type": "divider"
+                        },
+                        {
+                          "fields": "@config.fields",
+                          "entity": "@payload.data",
+                          "type": "data-grid",
+                          "itemActions": "@config.itemActions",
+                          "gap": "sm",
+                          "cols": 1.0
+                        }
+                      ],
+                      "gap": "md"
+                    }
+                  ]
+                ]
+              },
+              {
+                "from": "loading",
+                "to": "error",
+                "event": "ConversationPolicyLoadFailed",
+                "effects": [
+                  [
+                    "render-ui",
+                    "main",
+                    {
+                      "type": "alert",
+                      "variant": "error",
+                      "message": "@payload.error"
+                    }
+                  ]
+                ]
+              },
+              {
+                "from": "browsing",
+                "to": "viewing_single",
+                "event": "OPEN_POLICY",
+                "effects": [
+                  [
+                    "set",
+                    "@entity.id",
+                    "@payload.row.id"
+                  ],
+                  [
+                    "set",
+                    "@entity.name",
+                    "@payload.row.name"
+                  ],
+                  [
+                    "set",
+                    "@entity.description",
+                    "@payload.row.description"
+                  ],
+                  [
+                    "set",
+                    "@entity.appliesTo",
+                    "@payload.row.appliesTo"
+                  ],
+                  [
+                    "set",
+                    "@entity.status",
+                    "@payload.row.status"
+                  ],
+                  [
+                    "set",
+                    "@entity.createdAt",
+                    "@payload.row.createdAt"
+                  ],
+                  [
+                    "render-ui",
+                    "main",
+                    {
+                      "direction": "vertical",
+                      "gap": "md",
+                      "type": "stack",
+                      "children": [
+                        {
+                          "gap": "sm",
+                          "type": "stack",
+                          "children": [
+                            {
+                              "variant": "ghost",
+                              "type": "button",
+                              "action": "CLOSE_VIEW",
+                              "label": "Back"
+                            },
+                            {
+                              "type": "icon",
+                              "name": "message-square"
+                            },
+                            {
+                              "content": "@entity.name",
+                              "variant": "h3",
+                              "type": "typography"
+                            },
+                            {
+                              "type": "badge",
+                              "label": "@entity.status",
+                              "variant": "primary"
+                            }
+                          ],
+                          "direction": "horizontal",
+                          "align": "center"
+                        },
+                        {
+                          "type": "divider"
+                        },
+                        {
+                          "children": [
+                            {
+                              "direction": "horizontal",
+                              "type": "stack",
+                              "children": [
+                                {
+                                  "variant": "caption",
+                                  "content": "Applies to",
+                                  "color": "muted",
+                                  "type": "typography"
+                                },
+                                {
+                                  "variant": "body",
+                                  "type": "typography",
+                                  "content": "@entity.appliesTo"
+                                }
+                              ],
+                              "gap": "md"
+                            },
+                            {
+                              "type": "stack",
+                              "gap": "md",
+                              "direction": "horizontal",
+                              "children": [
+                                {
+                                  "content": "Description",
+                                  "type": "typography",
+                                  "variant": "caption",
+                                  "color": "muted"
+                                },
+                                {
+                                  "type": "typography",
+                                  "content": "@entity.description",
+                                  "variant": "body"
+                                }
+                              ]
+                            }
+                          ],
+                          "direction": "vertical",
+                          "type": "stack",
+                          "gap": "sm"
+                        },
+                        {
+                          "type": "divider"
+                        },
+                        {
+                          "gap": "sm",
+                          "type": "stack",
+                          "align": "center",
+                          "direction": "horizontal",
+                          "children": [
+                            {
+                              "type": "button",
+                              "label": "Archive",
+                              "variant": "danger",
+                              "actionPayload": {
+                                "id": "@entity.id"
+                              },
+                              "action": "ARCHIVE_POLICY"
+                            }
+                          ]
+                        }
+                      ]
+                    }
+                  ]
+                ]
+              },
+              {
+                "from": "browsing",
+                "to": "loading",
+                "event": "ARCHIVE_POLICY",
+                "effects": [
+                  [
+                    "set",
+                    "@entity.id",
+                    "@payload.id"
+                  ],
+                  [
+                    "fetch",
+                    "ConversationPolicy",
+                    {
+                      "emit": {
+                        "success": "ConversationPolicyLoaded",
+                        "failure": "ConversationPolicyLoadFailed"
+                      }
+                    }
+                  ],
+                  [
+                    "render-ui",
+                    "main",
+                    {
+                      "children": [
+                        {
+                          "type": "spinner"
+                        },
+                        {
+                          "variant": "caption",
+                          "content": "Archiving policy…",
+                          "type": "typography",
+                          "color": "muted"
+                        }
+                      ],
+                      "type": "stack",
+                      "gap": "md",
+                      "align": "center",
+                      "direction": "vertical",
+                      "className": "py-12"
+                    }
+                  ]
+                ]
+              },
+              {
+                "from": "viewing_single",
+                "to": "loading",
+                "event": "CLOSE_VIEW",
+                "effects": [
+                  [
+                    "fetch",
+                    "ConversationPolicy",
+                    {
+                      "emit": {
+                        "success": "ConversationPolicyLoaded",
+                        "failure": "ConversationPolicyLoadFailed"
+                      }
+                    }
+                  ],
+                  [
+                    "render-ui",
+                    "main",
+                    {
+                      "className": "py-12",
+                      "gap": "md",
+                      "type": "stack",
+                      "align": "center",
+                      "children": [
+                        {
+                          "type": "spinner"
+                        },
+                        {
+                          "content": "Loading conversation policies…",
+                          "variant": "caption",
+                          "type": "typography",
+                          "color": "muted"
+                        }
+                      ],
+                      "direction": "vertical"
+                    }
+                  ]
+                ]
+              },
+              {
+                "from": "viewing_single",
+                "to": "loading",
+                "event": "ARCHIVE_POLICY",
+                "effects": [
+                  [
+                    "set",
+                    "@entity.id",
+                    "@payload.id"
+                  ],
+                  [
+                    "fetch",
+                    "ConversationPolicy",
+                    {
+                      "emit": {
+                        "failure": "ConversationPolicyLoadFailed",
+                        "success": "ConversationPolicyLoaded"
+                      }
+                    }
+                  ],
+                  [
+                    "render-ui",
+                    "main",
+                    {
+                      "children": [
+                        {
+                          "type": "spinner"
+                        },
+                        {
+                          "variant": "caption",
+                          "type": "typography",
+                          "color": "muted",
+                          "content": "Archiving policy…"
+                        }
+                      ],
+                      "direction": "vertical",
+                      "type": "stack",
+                      "gap": "md",
+                      "align": "center",
+                      "className": "py-12"
+                    }
+                  ]
+                ]
+              },
+              {
+                "from": "error",
+                "to": "loading",
+                "event": "INIT",
+                "effects": [
+                  [
+                    "fetch",
+                    "ConversationPolicy",
+                    {
+                      "emit": {
+                        "success": "ConversationPolicyLoaded",
+                        "failure": "ConversationPolicyLoadFailed"
+                      }
+                    }
+                  ],
+                  [
+                    "render-ui",
+                    "main",
+                    {
+                      "size": "sm",
+                      "type": "spinner"
+                    }
+                  ]
+                ]
+              }
+            ]
+          },
+          "config": {
+            "title": {
+              "type": "string",
+              "default": "Conversation Policies",
+              "label": "Section title",
+              "description": "Heading shown above the conversation policies list",
+              "tier": "presentation"
+            },
+            "moderationMode": {
+              "type": "string",
+              "default": "post-hoc",
+              "label": "Moderation mode",
+              "description": "post-hoc = scan after send; pre-publish = scan before send (delay); human-only = no AI scan.",
+              "tier": "domain",
+              "values": [
+                "off",
+                "post-hoc",
+                "pre-publish",
+                "human-only"
+              ]
+            },
+            "editWindowMinutes": {
+              "type": "number",
+              "default": 15.0,
+              "label": "Edit window (minutes)",
+              "description": "Minutes after send a user can edit a message. 0 = no editing.",
+              "tier": "domain"
+            },
+            "fields": {
+              "type": "[FieldSpec]",
+              "default": [
+                {
+                  "variant": "caption",
+                  "label": "Policy",
+                  "name": "name"
+                },
+                {
+                  "variant": "caption",
+                  "name": "appliesTo",
+                  "label": "Applies to"
+                },
+                {
+                  "name": "status",
+                  "label": "Status",
+                  "variant": "badge"
+                }
+              ],
+              "label": "Columns to show",
+              "description": "Each column maps to one field on the Conversation Policy entity",
+              "tier": "presentation",
+              "items": {
+                "type": "object",
+                "properties": {
+                  "header": {
+                    "name": "header",
+                    "type": "string",
+                    "required": false
+                  },
+                  "variant": {
+                    "name": "variant",
+                    "type": "string",
+                    "required": false
+                  },
+                  "key": {
+                    "name": "key",
+                    "type": "string",
+                    "required": false
+                  },
+                  "icon": {
+                    "name": "icon",
+                    "type": "string",
+                    "required": false
+                  },
+                  "label": {
+                    "name": "label",
+                    "type": "string",
+                    "required": false
+                  },
+                  "format": {
+                    "name": "format",
+                    "type": "string",
+                    "required": false
+                  },
+                  "name": {
+                    "name": "name",
+                    "type": "string",
+                    "required": true
+                  }
+                }
+              }
+            },
+            "itemActions": {
+              "type": "[ItemAction]",
+              "default": [
+                {
+                  "label": "Open",
+                  "variant": "primary",
+                  "event": "OPEN_POLICY",
+                  "icon": "arrow-right"
+                },
+                {
+                  "label": "Archive",
+                  "event": "ARCHIVE_POLICY",
+                  "variant": "danger"
+                }
+              ],
+              "label": "Row actions",
+              "description": "Buttons users can click on each policy row",
+              "tier": "presentation",
+              "items": {
+                "type": "object",
+                "properties": {
+                  "label": {
+                    "name": "label",
+                    "type": "string",
+                    "required": true
+                  },
+                  "event": {
+                    "name": "event",
+                    "type": "string",
+                    "required": true
+                  },
+                  "variant": {
+                    "name": "variant",
+                    "type": "string",
+                    "required": false
+                  },
+                  "icon": {
+                    "name": "icon",
+                    "type": "string",
+                    "required": false
+                  }
+                }
+              }
+            },
+            "e2eeRequired": {
+              "type": "boolean",
+              "default": false,
+              "label": "E2EE required",
+              "description": "When true, conversations must be end-to-end encrypted.",
+              "synonyms": "end-to-end encryption, encrypted chat",
+              "tier": "domain"
+            },
+            "deleteWindowMinutes": {
+              "type": "number",
+              "default": 1440.0,
+              "label": "Delete window (minutes)",
+              "description": "Minutes after send a user can delete a message. 0 = no deletion. 1440 = 24 hours.",
+              "tier": "domain"
+            },
+            "retentionDays": {
+              "type": "number",
+              "default": 365.0,
+              "label": "Message retention (days)",
+              "description": "Days to keep messages before lifecycle deletion. Compose std-data-erasure for cleanup.",
+              "synonyms": "history retention",
+              "tier": "domain"
+            }
+          },
+          "scope": "collection"
+        }
+      ],
+      "pages": [
+        {
+          "name": "ConversationPolicyPage",
+          "path": "/conversation-policies",
+          "traits": [
+            {
+              "ref": "ConversationPolicyManage"
+            }
+          ]
+        }
+      ]
+    }
+  ]
+}

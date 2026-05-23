@@ -14,6 +14,9 @@ orbital NoteOrbital {
   uses Browse       from "std/behaviors/std-browse"
   uses PageTree     from "std/behaviors/std-page-tree"
   uses RichEditor   from "std/behaviors/std-rich-editor"
+  uses Audit        from "std/behaviors/std-audit-capture"
+  uses Lifecycle    from "std/behaviors/std-lifecycle"
+  uses Erasure      from "std/behaviors/std-data-erasure"
 
   entity Note [persistent: notes] {
     id           : string!
@@ -267,10 +270,43 @@ orbital NoteOrbital {
     }
   }
 
-  page "/notes"           as NotesPage          -> NoteAppLayout, NoteCatalog, NoteSearch, NoteFilter, NoteStats, NoteGraphs, NoteBrowseList, NoteCreate, NoteEdit, NoteView, NoteDelete, NotePersistor
+  trait NoteAuditCapture = Audit.traits.AuditCaptureListener {
+    config: {
+      captureEntity: "Note",
+      captureEventTypes: [],
+      excludeFields: [],
+      captureBeforeAfter: false,
+      retentionDays: 2555
+    }
+    events {
+      EntityMutated: NOTE_UPDATED
+    }
+  }
+
+  trait NoteLifecycleScan = Lifecycle.traits.LifecycleScheduler {
+    config: {
+      targetEntity: "Note",
+      rules: [
+        { fromStatus: "active",   toStatus: "archived", condition: { kind: "ageDays", value: 180, dateField: "lastEditedAt" } },
+        { fromStatus: "archived", toStatus: "deleted",  condition: { kind: "ageDays", value: 365, dateField: "lastEditedAt" } }
+      ],
+      dryRun: false
+    }
+  }
+
+  trait NoteErasure = Erasure.traits.ErasureWorkflow {
+    config: {
+      targetEntity: "Note",
+      gracePeriodDays: 30,
+      anonymizeVsDelete: "anonymize",
+      piiFields: ["content", "blocksJson"]
+    }
+  }
+
+  page "/notes"           as NotesPage          -> NoteAppLayout, NoteCatalog, NoteSearch, NoteFilter, NoteStats, NoteGraphs, NoteBrowseList, NoteCreate, NoteEdit, NoteView, NoteDelete, NotePersistor, NoteAuditCapture, NoteLifecycleScan, NoteErasure
   page "/notes/tree"      as NotesTreePage      -> NoteAppLayout, NotePageTree
-  page "/notes/editor"    as NotesEditorPage    -> NoteAppLayout, NoteCatalog, NoteSearch, NoteFilter, NoteStats, NoteGraphs, NoteBrowseList, NoteCreate, NoteEdit, NoteView, NoteDelete, NotePersistor
-  page "/notes/favorites" as NotesFavoritesPage -> NoteAppLayout, NoteCatalog, NoteSearch, NoteFilter, NoteStats, NoteGraphs, NoteBrowseList, NoteCreate, NoteEdit, NoteView, NoteDelete, NotePersistor
+  page "/notes/editor"    as NotesEditorPage    -> NoteAppLayout, NoteCatalog, NoteSearch, NoteFilter, NoteStats, NoteGraphs, NoteBrowseList, NoteCreate, NoteEdit, NoteView, NoteDelete, NotePersistor, NoteAuditCapture, NoteLifecycleScan, NoteErasure
+  page "/notes/favorites" as NotesFavoritesPage -> NoteAppLayout, NoteCatalog, NoteSearch, NoteFilter, NoteStats, NoteGraphs, NoteBrowseList, NoteCreate, NoteEdit, NoteView, NoteDelete, NotePersistor, NoteAuditCapture, NoteLifecycleScan, NoteErasure
 }
 
 orbital RichEditorPanelOrbital {

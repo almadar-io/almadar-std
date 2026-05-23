@@ -1,0 +1,153 @@
+app std-incident "1.0.0"
+"std-incident — devops/oncall incident lifecycle (open → acknowledged → investigating → mitigated → resolved). Listens for SET_STATUS so siblings can drive automated transitions. Exposes Incident-pattern knobs (severity, runbookId, pagedRoles, escalation, postmortem threshold, …)."
+
+type FieldSpec = { name : string!, label : string, variant : string, icon : string, format : string, key : string, header : string }
+type ItemAction = { label : string!, event : string!, variant : string, icon : string }
+
+orbital IncidentOrbital {
+  entity Incident [persistent: incidents] {
+    id              : string!
+    title           : string!
+    description     : string!
+    severity        : "sev1" | "sev2" | "sev3" | "sev4" | "sev5" = "sev3"
+    status          : "open" | "acknowledged" | "investigating" | "mitigated" | "resolved" = "open"
+    pagedTo         : string
+    runbookId       : string
+    acknowledgedAt  : string
+    mitigatedAt     : string
+    resolvedAt      : string
+    createdAt       : string
+  }
+
+  type IncidentLoaded        = Event { data : [Incident] }              "Fired when the incident collection finishes loading"
+  type IncidentLoadFailed    = Event { error : string, code : string }  "Fired when the incident collection fails to load"
+
+  trait IncidentManage -> Incident [interaction, collection] {
+    config {
+      title : string = "Incidents"
+        @label "Section title"
+        @description "Heading shown above the incidents list"
+        @tier "presentation"
+      fields      : [FieldSpec] = [{ name: "title", label: "Title", variant: "caption" }, { name: "severity", label: "Severity", variant: "badge" }, { name: "status", label: "Status", variant: "badge" }, { name: "pagedTo", label: "Paged", variant: "caption" }, { name: "runbookId", label: "Runbook", variant: "caption" }]
+        @label "Columns to show"
+        @description "Each column maps to one field on the Incident entity"
+        @tier "presentation"
+      itemActions : [ItemAction] = [{ label: "Open", event: "INCIDENT_OPEN", variant: "primary", icon: "arrow-right" }, { label: "Resolve", event: "RESOLVE", variant: "primary", icon: "check" }]
+        @label "Row actions"
+        @description "Buttons users can click on each incident row"
+        @tier "presentation"
+      severity : "sev1" | "sev2" | "sev3" | "sev4" | "sev5" = "sev3"
+        @label "Default severity"
+        @description "Default severity classification for new incidents."
+        @tier "domain"
+        @synonyms "impact level, sev"
+      runbookId : string = ""
+        @label "Default runbook ID"
+        @description "ID of a sibling std-runbook (when composed) to consult on alert. Empty = no auto-suggested runbook."
+        @tier "domain"
+      pagedRoles : [string] = ["oncall-primary"]
+        @label "Paged roles"
+        @description "Roles auto-paged when an incident opens. Compose std-notify-on-event for delivery."
+        @tier "domain"
+        @synonyms "on-call roles, paging list"
+      pageEscalationMinutes : number = 15
+        @label "Page escalation (min)"
+        @description "Minutes after open before paging the next role in the escalation chain."
+        @tier "domain"
+      postmortemRequiredAbove : "sev1" | "sev2" | "sev3" | "sev4" | "sev5" = "sev2"
+        @label "Postmortem required above"
+        @description "Severity threshold at-or-above which a postmortem doc is mandatory."
+        @tier "domain"
+        @synonyms "RCA required"
+      acknowledgementDeadlineMinutes : number = 5
+        @label "Acknowledgement deadline (min)"
+        @description "Minutes from page to acknowledgement before re-paging."
+        @tier "domain"
+      autoCloseAfterResolution : boolean = true
+        @label "Auto-close after resolution"
+        @description "When true, an incident moves to 'closed' automatically after the resolved-mitigated window."
+        @tier "domain"
+      customerCommsRequired : "always" | "sev1-only" | "sev1-2" | "never" = "sev1-2"
+        @label "Customer comms required"
+        @description "When to require a customer-facing status page update."
+        @tier "domain"
+        @synonyms "status page, customer notification"
+    }
+    initial: loading
+    state loading {
+      INIT -> loading
+        (fetch Incident { emit: { success: "IncidentLoaded", failure: "IncidentLoadFailed" } })
+        (render-ui main { type: "stack", direction: "vertical", gap: "md", align: "center", className: "py-12", children: [{ type: "spinner" }, { type: "typography", variant: "caption", color: "muted", content: "Loading incidents…" }] })
+      IncidentLoaded -> browsing
+        (render-ui main { type: "stack", direction: "vertical", gap: "md", children: [{ type: "stack", direction: "horizontal", gap: "sm", align: "center", children: [{ type: "icon", name: "alert-octagon" }, { type: "typography", content: "@config.title", variant: "h3" }] }, { type: "simple-grid", cols: 4, children: [{ type: "stat-display", label: "Total incidents", value: "@payload.data.length", icon: "alert-octagon" }, { type: "stat-display", label: "Sev1 open", value: "2", icon: "alert-triangle" }, { type: "stat-display", label: "Acknowledged", value: "8", icon: "bell" }, { type: "stat-display", label: "Resolved today", value: "12", icon: "check-circle" }] }, { type: "divider" }, { type: "data-grid", entity: "@payload.data", fields: "@config.fields", cols: 1, gap: "sm", itemActions: "@config.itemActions" }] })
+      IncidentLoadFailed -> error
+        (render-ui main { type: "alert", variant: "error", message: "@payload.error" })
+    }
+    state browsing {
+      INCIDENT_OPEN -> viewing_single
+        (set @entity.id @payload.row.id)
+        (set @entity.title @payload.row.title)
+        (set @entity.description @payload.row.description)
+        (set @entity.severity @payload.row.severity)
+        (set @entity.status @payload.row.status)
+        (set @entity.pagedTo @payload.row.pagedTo)
+        (set @entity.runbookId @payload.row.runbookId)
+        (set @entity.acknowledgedAt @payload.row.acknowledgedAt)
+        (set @entity.mitigatedAt @payload.row.mitigatedAt)
+        (set @entity.resolvedAt @payload.row.resolvedAt)
+        (set @entity.createdAt @payload.row.createdAt)
+        (render-ui main { type: "stack", direction: "vertical", gap: "md", children: [{ type: "stack", direction: "horizontal", gap: "sm", align: "center", children: [{ type: "button", label: "Back", variant: "ghost", action: "CLOSE_VIEW" }, { type: "icon", name: "alert-octagon" }, { type: "typography", content: "@entity.title", variant: "h3" }, { type: "badge", label: "@entity.severity", variant: "primary" }, { type: "badge", label: "@entity.status", variant: "default" }] }, { type: "divider" }, { type: "stack", direction: "vertical", gap: "sm", children: [{ type: "stack", direction: "horizontal", gap: "md", children: [{ type: "typography", variant: "caption", color: "muted", content: "Description" }, { type: "typography", variant: "body", content: "@entity.description" }] }, { type: "stack", direction: "horizontal", gap: "md", children: [{ type: "typography", variant: "caption", color: "muted", content: "Paged to" }, { type: "typography", variant: "body", content: "@entity.pagedTo" }] }, { type: "stack", direction: "horizontal", gap: "md", children: [{ type: "typography", variant: "caption", color: "muted", content: "Runbook" }, { type: "typography", variant: "body", content: "@entity.runbookId" }] }] }, { type: "divider" }, { type: "simple-grid", cols: 3, children: [{ type: "stat-display", label: "Acknowledged", value: "@entity.acknowledgedAt", icon: "bell" }, { type: "stat-display", label: "Mitigated", value: "@entity.mitigatedAt", icon: "shield" }, { type: "stat-display", label: "Resolved", value: "@entity.resolvedAt", icon: "check" }] }, { type: "stack", direction: "horizontal", gap: "sm", align: "center", children: [{ type: "button", label: "Acknowledge", variant: "primary", action: "ACK", actionPayload: { id: "@entity.id", row: "@entity" } }, { type: "button", label: "Mitigate", variant: "secondary", action: "MITIGATE", actionPayload: { id: "@entity.id", row: "@entity" } }, { type: "button", label: "Resolve", variant: "primary", action: "RESOLVE", actionPayload: { id: "@entity.id", row: "@entity" } }] }] })
+      RESOLVE -> loading
+        (set @entity.id @payload.id)
+        (fetch Incident { emit: { success: "IncidentLoaded", failure: "IncidentLoadFailed" } })
+        (render-ui main { type: "stack", direction: "vertical", gap: "md", align: "center", className: "py-12", children: [{ type: "spinner" }, { type: "typography", variant: "caption", color: "muted", content: "Resolving incident…" }] })
+      SET_STATUS -> loading
+        (set @entity.id @payload.entityId)
+        (set @entity.status @payload.newStatus)
+        (persist update Incident @entity { emit: { success: "IncidentLoaded", failure: "IncidentLoadFailed" } })
+        (render-ui main { type: "stack", direction: "vertical", gap: "md", align: "center", className: "py-12", children: [{ type: "spinner" }, { type: "typography", variant: "caption", color: "muted", content: "Updating incident status…" }] })
+    }
+    state viewing_single {
+      CLOSE_VIEW -> loading
+        (fetch Incident { emit: { success: "IncidentLoaded", failure: "IncidentLoadFailed" } })
+        (render-ui main { type: "stack", direction: "vertical", gap: "md", align: "center", className: "py-12", children: [{ type: "spinner" }, { type: "typography", variant: "caption", color: "muted", content: "Loading incidents…" }] })
+      ACK -> loading
+        (set @entity.id @payload.id)
+        (fetch Incident { emit: { success: "IncidentLoaded", failure: "IncidentLoadFailed" } })
+        (render-ui main { type: "stack", direction: "vertical", gap: "md", align: "center", className: "py-12", children: [{ type: "spinner" }, { type: "typography", variant: "caption", color: "muted", content: "Acknowledging incident…" }] })
+      MITIGATE -> loading
+        (set @entity.id @payload.id)
+        (fetch Incident { emit: { success: "IncidentLoaded", failure: "IncidentLoadFailed" } })
+        (render-ui main { type: "stack", direction: "vertical", gap: "md", align: "center", className: "py-12", children: [{ type: "spinner" }, { type: "typography", variant: "caption", color: "muted", content: "Mitigating incident…" }] })
+      RESOLVE -> loading
+        (set @entity.id @payload.id)
+        (fetch Incident { emit: { success: "IncidentLoaded", failure: "IncidentLoadFailed" } })
+        (render-ui main { type: "stack", direction: "vertical", gap: "md", align: "center", className: "py-12", children: [{ type: "spinner" }, { type: "typography", variant: "caption", color: "muted", content: "Resolving incident…" }] })
+    }
+    state error {
+      INIT -> loading
+        (fetch Incident { emit: { success: "IncidentLoaded", failure: "IncidentLoadFailed" } })
+        (render-ui main { type: "spinner", size: "sm" })
+    }
+    emits {
+      INCIDENT_OPEN { id : string!, row : Incident }
+      CLOSE_VIEW    { }
+      ACK           { id : string!, row : Incident }
+      MITIGATE      { id : string!, row : Incident }
+      RESOLVE       { id : string!, row : Incident }
+      IncidentLoaded       { data : [Incident] }
+      IncidentLoadFailed   { error : string, code : string }
+    }
+    listens {
+      INCIDENT_OPEN { id : string!, row : Incident }
+      CLOSE_VIEW    { }
+      ACK           { id : string!, row : Incident }
+      MITIGATE      { id : string!, row : Incident }
+      RESOLVE       { id : string!, row : Incident }
+      SET_STATUS    { entityId : string!, newStatus : string! }
+      IncidentLoaded       { data : [Incident] }
+      IncidentLoadFailed   { error : string, code : string }
+    }
+  }
+  page "/incidents" as IncidentManagePage -> IncidentManage
+}

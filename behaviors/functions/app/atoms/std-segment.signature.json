@@ -58,6 +58,19 @@
             "tier": "domain"
           },
           {
+            "key": "autoArchivePolicy",
+            "type": "string",
+            "default": "stale-and-empty",
+            "label": "Auto-archive policy",
+            "description": "When segments auto-archive: never, when membership is empty, or when both stale and empty.",
+            "tier": "domain",
+            "enumValues": [
+              "never",
+              "empty-segment",
+              "stale-and-empty"
+            ]
+          },
+          {
             "key": "consentTrackingEnabled",
             "type": "boolean",
             "default": true,
@@ -66,18 +79,41 @@
             "tier": "domain"
           },
           {
+            "key": "crossSellThreshold",
+            "type": "number",
+            "default": 100,
+            "label": "Cross-sell threshold (USD)",
+            "description": "Minimum customer spend in this segment before cross-sell offers are eligible to fire.",
+            "synonyms": "upsell trigger, value gate",
+            "tier": "domain"
+          },
+          {
+            "key": "dealAdvancementCriteria",
+            "type": "string",
+            "default": "score-based",
+            "label": "Deal advancement criteria",
+            "description": "How members advance through deal stages: scoring model, explicit rules, or manual triage.",
+            "synonyms": "stage progression, qualification rules",
+            "tier": "domain",
+            "enumValues": [
+              "score-based",
+              "rule-based",
+              "manual"
+            ]
+          },
+          {
             "key": "fields",
             "type": "[FieldSpec]",
             "default": [
               {
                 "label": "Name",
-                "variant": "caption",
-                "name": "name"
+                "name": "name",
+                "variant": "caption"
               },
               {
+                "label": "Description",
                 "name": "description",
-                "variant": "caption",
-                "label": "Description"
+                "variant": "caption"
               },
               {
                 "name": "memberCount",
@@ -85,9 +121,9 @@
                 "variant": "badge"
               },
               {
-                "label": "Updated",
                 "name": "lastUpdated",
-                "variant": "caption"
+                "variant": "caption",
+                "label": "Updated"
               }
             ],
             "label": "Columns to show",
@@ -97,21 +133,6 @@
               "properties": {
                 "label": {
                   "name": "label",
-                  "required": false,
-                  "type": "string"
-                },
-                "icon": {
-                  "name": "icon",
-                  "required": false,
-                  "type": "string"
-                },
-                "key": {
-                  "name": "key",
-                  "required": false,
-                  "type": "string"
-                },
-                "header": {
-                  "name": "header",
                   "required": false,
                   "type": "string"
                 },
@@ -127,6 +148,21 @@
                 },
                 "variant": {
                   "name": "variant",
+                  "required": false,
+                  "type": "string"
+                },
+                "key": {
+                  "name": "key",
+                  "required": false,
+                  "type": "string"
+                },
+                "header": {
+                  "name": "header",
+                  "required": false,
+                  "type": "string"
+                },
+                "icon": {
+                  "name": "icon",
                   "required": false,
                   "type": "string"
                 }
@@ -147,15 +183,15 @@
             "type": "[ItemAction]",
             "default": [
               {
+                "event": "OPEN_SEGMENT",
                 "label": "Open",
-                "icon": "arrow-right",
                 "variant": "primary",
-                "event": "OPEN_SEGMENT"
+                "icon": "arrow-right"
               },
               {
-                "event": "RECALCULATE",
                 "variant": "danger",
-                "label": "Recalculate"
+                "label": "Recalculate",
+                "event": "RECALCULATE"
               }
             ],
             "label": "Row actions",
@@ -168,14 +204,14 @@
                   "required": false,
                   "type": "string"
                 },
-                "label": {
-                  "name": "label",
-                  "required": true,
-                  "type": "string"
-                },
                 "variant": {
                   "name": "variant",
                   "required": false,
+                  "type": "string"
+                },
+                "label": {
+                  "name": "label",
+                  "required": true,
                   "type": "string"
                 },
                 "event": {
@@ -200,6 +236,15 @@
             "items": {
               "type": "number"
             }
+          },
+          {
+            "key": "staleAfterDays",
+            "type": "number",
+            "default": 90,
+            "label": "Stale after (days)",
+            "description": "Days without member changes before a segment is marked stale (eligible for recalculation).",
+            "synonyms": "freshness window",
+            "tier": "domain"
           },
           {
             "key": "title",

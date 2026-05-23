@@ -10,6 +10,11 @@ orbital TicketOrbital {
   uses Stats        from "std/behaviors/std-stats"
   uses Graphs       from "std/behaviors/std-graphs"
   uses Browse       from "std/behaviors/std-browse"
+  uses Lifecycle    from "std/behaviors/std-lifecycle"
+  uses Notify       from "std/behaviors/std-notify-on-event"
+  uses Audit        from "std/behaviors/std-audit-capture"
+  uses Approval     from "std/behaviors/std-approval-gate"
+  uses Reminder     from "std/behaviors/std-reminder-scheduler"
 
   entity Ticket [persistent: tickets] {
     id : string!
@@ -267,7 +272,68 @@ orbital TicketOrbital {
     }
   }
 
-  page "/tickets" as TicketsPage -> TicketAppLayout, TicketCatalog, TicketSearch, TicketFilter, TicketStats, TicketGraphs, TicketBrowseList, TicketCreate, TicketEdit, TicketView, TicketDelete, TicketPersistor
+  trait HelpdeskLifecycleScan = Lifecycle.traits.LifecycleScheduler {
+    config: {
+      targetEntity: "Ticket",
+      rules: [
+        { fromStatus: "open",        toStatus: "in-progress", condition: { kind: "ageDays", value: 1, dateField: "pendingId" } },
+        { fromStatus: "in-progress", toStatus: "resolved",    condition: { kind: "ageDays", value: 3, dateField: "pendingId" } },
+        { fromStatus: "resolved",    toStatus: "closed",      condition: { kind: "ageDays", value: 7, dateField: "pendingId" } }
+      ],
+      dryRun: false
+    }
+  }
+
+  trait HelpdeskNotifier = Notify.traits.NotifyOnEventListener {
+    config: {
+      listensFor: ["TICKET_UPDATED"],
+      notifyChannel: "in-app",
+      template: "Ticket updated",
+      severity: "info",
+      recipients: [],
+      suppressionList: []
+    }
+    events {
+      EventOccurred: TICKET_UPDATED
+    }
+  }
+
+  trait HelpdeskAuditCapture = Audit.traits.AuditCaptureListener {
+    config: {
+      captureEntity: "Ticket",
+      captureEventTypes: [],
+      excludeFields: [],
+      captureBeforeAfter: false,
+      retentionDays: 2555
+    }
+    events {
+      EntityMutated: TICKET_UPDATED
+    }
+  }
+
+  trait HelpdeskApprovalGate = Approval.traits.ApprovalGateReview {
+    config: {
+      approverRoles: ["support-manager"],
+      threshold: 100,
+      autoApproveBelowThreshold: true,
+      valueField: "refundAmount",
+      escalationHours: 24,
+      escalationRoles: ["support-lead"]
+    }
+  }
+
+  trait HelpdeskReminderScheduler = Reminder.traits.ReminderScheduler {
+    config: {
+      targetEntity: "Ticket",
+      dateField: "pendingId",
+      offsetsHours: [1, 4, 24],
+      severity: "warning",
+      template: "SLA deadline approaching for ticket",
+      windowToleranceMinutes: 60
+    }
+  }
+
+  page "/tickets" as TicketsPage -> TicketAppLayout, TicketCatalog, TicketSearch, TicketFilter, TicketStats, TicketGraphs, TicketBrowseList, TicketCreate, TicketEdit, TicketView, TicketDelete, TicketPersistor, HelpdeskLifecycleScan, HelpdeskNotifier, HelpdeskAuditCapture, HelpdeskApprovalGate, HelpdeskReminderScheduler
 }
 
 orbital TicketReplyOrbital {
@@ -492,4 +558,46 @@ orbital SupportMetricsOrbital {
   }
 
   page "/metrics" -> SupportMetricsAppLayout, SupportMetricsDisplay, SupportMetricsBrowse
+}
+
+orbital TicketFromStdOrbital {
+  uses AppShell from "std/behaviors/std-app-layout"
+  uses Tickets  from "std/behaviors/std-helpdesk-ticket"
+
+  entity SlaTicket [persistent: slatickets] {
+    id           : string!
+    subject      : string!
+    description  : string!
+    requester    : string!
+    assignedTo   : string
+    priority     : "low" | "normal" | "high" | "urgent" = "normal"
+    status       : "new" | "open" | "pending" | "resolved" | "closed" = "new"
+    category     : string
+    firstReplyAt : string
+    resolvedAt   : string
+    createdAt    : string
+  }
+
+  trait SlaTicketFromStdAppLayout = AppShell.traits.AppLayout -> SlaTicket {
+    config: {
+      contentTrait: "@trait.SlaTicketFromStdManageBlock",
+      appName: "Helpdesk",
+      navItems: [{ label: "Tickets", href: "/tickets", icon: "inbox" }, { label: "Replies", href: "/replies", icon: "message-circle" }, { label: "Metrics", href: "/metrics", icon: "layout-list" }, { label: "SLA Tickets", href: "/tickets-std", icon: "life-buoy" }],
+      searchEvent: "SLA_TICKET_SEARCH",
+      notifications: [],
+      notificationClickEvent: "SLA_TICKET_NOTIFICATIONS_OPEN"
+    }
+    events {
+      SEARCH: SLA_TICKET_SEARCH
+      NOTIFY_CLICK: SLA_TICKET_NOTIFICATIONS_OPEN
+    }
+  }
+
+  trait SlaTicketFromStdManageBlock = Tickets.traits.TicketManage -> SlaTicket {
+    config: {
+      title: "SLA Tickets"
+    }
+  }
+
+  page "/tickets-std" as SlaTicketFromStdPage -> SlaTicketFromStdAppLayout, SlaTicketFromStdManageBlock
 }

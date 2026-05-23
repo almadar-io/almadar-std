@@ -1,0 +1,160 @@
+app std-device-fleet "1.0.0"
+"std-device-fleet — IoT device fleet provisioning + OTA firmware + certificate rotation. Listens for SET_STATUS so std-lifecycle can drive transitions."
+
+type FieldSpec = { name : string!, label : string, variant : string, icon : string, format : string, key : string, header : string }
+type ItemAction = { label : string!, event : string!, variant : string, icon : string }
+
+orbital DeviceFleetOrbital {
+  entity Device [persistent: devices] {
+    id              : string!
+    name            : string!
+    deviceType      : string!
+    firmwareVersion : string = ""
+    lastSeenAt      : string = ""
+    certExpiresAt   : string = ""
+    status          : "provisioning" | "active" | "degraded" | "offline" | "retired" = "provisioning"
+    provisionedBy   : string = ""
+    createdAt       : string = ""
+  }
+
+  type DeviceLoaded        = Event { data : [Device] }                "Fired when the device collection finishes loading"
+  type DeviceLoadFailed    = Event { error : string, code : string }  "Fired when the device collection fails to load"
+  type DeviceUpdated       = Event { row : Device }                   "Fired after a device row's status persists"
+  type DeviceUpdateFailed  = Event { error : string, code : string }  "Fired when a device row's status update fails to persist"
+
+  trait DeviceFleetManage -> Device [interaction, collection] {
+    config {
+      title : string = "Devices"
+        @label "Section title"
+        @description "Heading shown above the device fleet"
+        @tier "presentation"
+      fields : [FieldSpec] = [
+        { name: "name",            label: "Name",     variant: "caption" },
+        { name: "deviceType",      label: "Type",     variant: "caption" },
+        { name: "firmwareVersion", label: "Firmware", variant: "caption" },
+        { name: "status",          label: "Status",   variant: "badge"   },
+        { name: "lastSeenAt",      label: "Last seen", variant: "caption" },
+        { name: "certExpiresAt",   label: "Cert expires", variant: "caption" }
+      ]
+        @label "Columns to show"
+        @description "Each column maps to one field on the Device entity"
+        @tier "presentation"
+      itemActions : [ItemAction] = [
+        { label: "Open",   event: "OPEN_DEVICE", variant: "primary", icon: "arrow-right" },
+        { label: "Retire", event: "RETIRE",      variant: "danger",  icon: "x" }
+      ]
+        @label "Row actions"
+        @description "Buttons users can click on each device row"
+        @tier "presentation"
+      provisioningModel : "zero-touch" | "claim-then-bind" | "manual" = "zero-touch"
+        @label "Provisioning model"
+        @description "How a new device joins the fleet."
+        @tier "domain"
+        @synonyms "onboarding mode, bootstrap"
+      otaUpdateCadenceDays : number = 30
+        @label "OTA update cadence (days)"
+        @description "Default cadence for over-the-air firmware push."
+        @tier "domain"
+        @synonyms "firmware refresh, update interval"
+      certificateRotationDays : number = 90
+        @label "Certificate rotation (days)"
+        @description "Days before cert expiry to trigger renewal."
+        @tier "domain"
+        @synonyms "cert renewal window"
+      dataRetentionDays : number = 90
+        @label "Device data retention (days)"
+        @description "Days to keep device telemetry. Compose std-lifecycle for cleanup."
+        @tier "domain"
+      offlineActionPolicy : "queue" | "drop" | "fail-fast" = "queue"
+        @label "Offline action policy"
+        @description "How commands behave when the device is offline."
+        @tier "domain"
+        @synonyms "disconnect handling"
+    }
+    initial: loading
+    state loading {
+      INIT -> loading
+        (fetch Device { emit: { success: "DeviceLoaded", failure: "DeviceLoadFailed" } })
+        (render-ui main { type: "stack", direction: "vertical", gap: "md", align: "center", className: "py-12", children: [{ type: "spinner" }, { type: "typography", variant: "caption", color: "muted", content: "Loading devices…" }] })
+      DeviceLoaded -> browsing
+        (render-ui main { type: "stack", direction: "vertical", gap: "md", children: [{ type: "stack", direction: "horizontal", gap: "sm", align: "center", children: [{ type: "icon", name: "cpu" }, { type: "typography", content: "@config.title", variant: "h3" }] }, { type: "simple-grid", cols: 4, children: [{ type: "stat-display", label: "Total devices", value: "@payload.data.length", icon: "cpu" }, { type: "stat-display", label: "Active", value: "0", icon: "check-circle" }, { type: "stat-display", label: "Offline", value: "0", icon: "wifi-off" }, { type: "stat-display", label: "Cert expiring", value: "0", icon: "alert-triangle" }] }, { type: "divider" }, { type: "data-grid", entity: "@payload.data", fields: "@config.fields", cols: 1, gap: "sm", itemActions: "@config.itemActions" }] })
+      DeviceLoadFailed -> error
+        (render-ui main { type: "alert", variant: "error", message: "@payload.error" })
+    }
+    state browsing {
+      OPEN_DEVICE -> viewing_single
+        (set @entity.id @payload.row.id)
+        (set @entity.name @payload.row.name)
+        (set @entity.deviceType @payload.row.deviceType)
+        (set @entity.firmwareVersion @payload.row.firmwareVersion)
+        (set @entity.lastSeenAt @payload.row.lastSeenAt)
+        (set @entity.certExpiresAt @payload.row.certExpiresAt)
+        (set @entity.status @payload.row.status)
+        (set @entity.provisionedBy @payload.row.provisionedBy)
+        (set @entity.createdAt @payload.row.createdAt)
+        (render-ui main { type: "stack", direction: "vertical", gap: "md", children: [{ type: "stack", direction: "horizontal", gap: "sm", align: "center", children: [{ type: "button", label: "Back", variant: "ghost", action: "CLOSE_VIEW" }, { type: "icon", name: "cpu" }, { type: "typography", content: "@entity.name", variant: "h3" }, { type: "badge", label: "@entity.status", variant: "primary" }] }, { type: "divider" }, { type: "stack", direction: "vertical", gap: "sm", children: [{ type: "stack", direction: "horizontal", gap: "md", children: [{ type: "typography", variant: "caption", color: "muted", content: "Type" }, { type: "typography", variant: "body", content: "@entity.deviceType" }] }, { type: "stack", direction: "horizontal", gap: "md", children: [{ type: "typography", variant: "caption", color: "muted", content: "Firmware" }, { type: "typography", variant: "body", content: "@entity.firmwareVersion" }] }, { type: "stack", direction: "horizontal", gap: "md", children: [{ type: "typography", variant: "caption", color: "muted", content: "Provisioned by" }, { type: "typography", variant: "body", content: "@entity.provisionedBy" }] }] }, { type: "divider" }, { type: "simple-grid", cols: 3, children: [{ type: "stat-display", label: "Last seen", value: "@entity.lastSeenAt", icon: "clock" }, { type: "stat-display", label: "Cert expires", value: "@entity.certExpiresAt", icon: "shield" }, { type: "stat-display", label: "Created", value: "@entity.createdAt", icon: "calendar-plus" }] }, { type: "stack", direction: "horizontal", gap: "sm", align: "center", children: [{ type: "button", label: "Reprovision", variant: "secondary", action: "REPROVISION", actionPayload: { id: "@entity.id" } }, { type: "button", label: "Push Firmware", variant: "primary", action: "PUSH_FIRMWARE", actionPayload: { id: "@entity.id" } }, { type: "button", label: "Retire", variant: "danger", action: "RETIRE", actionPayload: { id: "@entity.id" } }] }] })
+      RETIRE -> loading
+        (set @entity.id @payload.id)
+        (set @entity.status "retired")
+        (persist update Device @entity { emit: { success: "DeviceUpdated", failure: "DeviceUpdateFailed" } })
+        (render-ui main { type: "stack", direction: "vertical", gap: "md", align: "center", className: "py-12", children: [{ type: "spinner" }, { type: "typography", variant: "caption", color: "muted", content: "Retiring device…" }] })
+      DeviceUpdated -> loading
+        (fetch Device { emit: { success: "DeviceLoaded", failure: "DeviceLoadFailed" } })
+      DeviceUpdateFailed -> browsing
+        (render-ui main { type: "alert", variant: "error", message: "@payload.error" })
+      SET_STATUS -> loading
+        (set @entity.id @payload.entityId)
+        (set @entity.status @payload.newStatus)
+        (persist update Device @entity { emit: { success: "DeviceUpdated", failure: "DeviceUpdateFailed" } })
+        (render-ui main { type: "stack", direction: "vertical", gap: "md", align: "center", className: "py-12", children: [{ type: "spinner" }, { type: "typography", variant: "caption", color: "muted", content: "Updating device status…" }] })
+    }
+    state viewing_single {
+      CLOSE_VIEW -> loading
+        (fetch Device { emit: { success: "DeviceLoaded", failure: "DeviceLoadFailed" } })
+        (render-ui main { type: "stack", direction: "vertical", gap: "md", align: "center", className: "py-12", children: [{ type: "spinner" }, { type: "typography", variant: "caption", color: "muted", content: "Loading devices…" }] })
+      REPROVISION -> loading
+        (set @entity.id @payload.id)
+        (set @entity.status "provisioning")
+        (persist update Device @entity { emit: { success: "DeviceUpdated", failure: "DeviceUpdateFailed" } })
+        (render-ui main { type: "stack", direction: "vertical", gap: "md", align: "center", className: "py-12", children: [{ type: "spinner" }, { type: "typography", variant: "caption", color: "muted", content: "Reprovisioning device…" }] })
+      PUSH_FIRMWARE -> loading
+        (set @entity.id @payload.id)
+        (persist update Device @entity { emit: { success: "DeviceUpdated", failure: "DeviceUpdateFailed" } })
+        (render-ui main { type: "stack", direction: "vertical", gap: "md", align: "center", className: "py-12", children: [{ type: "spinner" }, { type: "typography", variant: "caption", color: "muted", content: "Pushing firmware…" }] })
+      RETIRE -> loading
+        (set @entity.id @payload.id)
+        (set @entity.status "retired")
+        (persist update Device @entity { emit: { success: "DeviceUpdated", failure: "DeviceUpdateFailed" } })
+        (render-ui main { type: "stack", direction: "vertical", gap: "md", align: "center", className: "py-12", children: [{ type: "spinner" }, { type: "typography", variant: "caption", color: "muted", content: "Retiring device…" }] })
+    }
+    state error {
+      INIT -> loading
+        (fetch Device { emit: { success: "DeviceLoaded", failure: "DeviceLoadFailed" } })
+        (render-ui main { type: "spinner", size: "sm" })
+    }
+    emits {
+      OPEN_DEVICE   { id : string!, row : Device }
+      CLOSE_VIEW    { }
+      REPROVISION   { id : string! }
+      PUSH_FIRMWARE { id : string! }
+      RETIRE        { id : string! }
+      DeviceLoaded       { data : [Device] }
+      DeviceLoadFailed   { error : string, code : string }
+      DeviceUpdated      { row : Device }
+      DeviceUpdateFailed { error : string, code : string }
+    }
+    listens {
+      OPEN_DEVICE   { id : string!, row : Device }
+      CLOSE_VIEW    { }
+      REPROVISION   { id : string! }
+      PUSH_FIRMWARE { id : string! }
+      RETIRE        { id : string! }
+      SET_STATUS    { entityId : string!, newStatus : string! }
+      DeviceLoaded       { data : [Device] }
+      DeviceLoadFailed   { error : string, code : string }
+      DeviceUpdated      { row : Device }
+      DeviceUpdateFailed { error : string, code : string }
+    }
+  }
+  page "/devices" as DeviceFleetManagePage -> DeviceFleetManage
+}

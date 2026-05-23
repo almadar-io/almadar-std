@@ -1,0 +1,166 @@
+app std-insurance-claim "1.0.0"
+"std-insurance-claim — insurance claim lifecycle (draft → eligible → submitted → accepted → denied → paid) with EDI submission knobs."
+
+type FieldSpec = { name : string!, label : string, variant : string, icon : string, format : string, key : string, header : string }
+type ItemAction = { label : string!, event : string!, variant : string, icon : string }
+
+orbital InsuranceClaimOrbital {
+  entity InsuranceClaim [persistent: insurance_claims] {
+    id               : string!
+    patientId        : string!
+    payerId          : string!
+    serviceDate      : string
+    submittedAt      : string
+    status           : "draft" | "eligible" | "submitted" | "accepted" | "denied" | "paid" = "draft"
+    claimAmount      : number
+    paidAmount       : number = 0
+    denialReason     : string
+    priorAuthNumber  : string
+    createdAt        : string
+  }
+
+  type InsuranceClaimLoaded        = Event { data : [InsuranceClaim] }          "Fired when the claim collection finishes loading"
+  type InsuranceClaimLoadFailed    = Event { error : string, code : string }    "Fired when the claim collection fails to load"
+  type InsuranceClaimUpdated       = Event { row : InsuranceClaim }             "Fired after a claim row's status persists"
+  type InsuranceClaimUpdateFailed  = Event { error : string, code : string }    "Fired when a claim row's status update fails"
+
+  trait InsuranceClaimManage -> InsuranceClaim [interaction, collection] {
+    config {
+      title           : string   = "Insurance Claims"
+        @label "Section title"
+        @description "Heading shown above the insurance claim list"
+        @tier "presentation"
+      fields          : [FieldSpec] = [
+        { name: "patientId",   label: "Patient",  variant: "caption" },
+        { name: "payerId",     label: "Payer",    variant: "caption" },
+        { name: "status",      label: "Status",   variant: "badge"   },
+        { name: "claimAmount", label: "Amount",   variant: "caption" },
+        { name: "serviceDate", label: "Service",  variant: "caption" }
+      ]
+        @label "Columns to show"
+        @description "Each column maps to one field on the InsuranceClaim entity"
+        @tier "presentation"
+      itemActions     : [ItemAction] = [
+        { label: "Open",   event: "OPEN_CLAIM", variant: "primary", icon: "arrow-right" },
+        { label: "Submit", event: "SUBMIT",     variant: "primary", icon: "send" }
+      ]
+        @label "Row actions"
+        @description "Buttons users can click on each claim row"
+        @tier "presentation"
+      payerId : string = ""
+        @label "Default payer ID"
+        @description "Insurance payer identifier (CMS plan ID, BCBS group, etc.)."
+        @tier "domain"
+        @synonyms "insurance carrier, plan ID"
+      eligibilityCheckCadenceHours : number = 24
+        @label "Eligibility check cadence (hours)"
+        @description "How often to re-verify patient eligibility with the payer."
+        @tier "domain"
+        @synonyms "eligibility refresh, verification frequency"
+      priorAuthLeadTimeDays : number = 5
+        @label "Prior-auth lead time (days)"
+        @description "Business days needed to obtain prior authorization before the service date."
+        @tier "domain"
+        @synonyms "PA lead time"
+      claimSubmissionFormat : "CMS-1500" | "UB-04" | "EDI-837P" | "EDI-837I" = "EDI-837P"
+        @label "Submission format"
+        @description "Claim form/EDI format expected by the payer."
+        @tier "domain"
+      denialAppealWindowDays : number = 30
+        @label "Appeal window (days)"
+        @description "Days from denial date to submit an appeal before forfeit."
+        @tier "domain"
+      autoResubmitOnDenial : boolean = false
+        @label "Auto-resubmit on denial"
+        @description "When true, automatically re-queue denied claims for resubmission after corrections."
+        @tier "domain"
+    }
+    initial: loading
+    state loading {
+      INIT -> loading
+        (fetch InsuranceClaim { emit: { success: "InsuranceClaimLoaded", failure: "InsuranceClaimLoadFailed" } })
+        (render-ui main { type: "stack", direction: "vertical", gap: "md", align: "center", className: "py-12", children: [{ type: "spinner" }, { type: "typography", variant: "caption", color: "muted", content: "Loading claims…" }] })
+      InsuranceClaimLoaded -> browsing
+        (render-ui main { type: "stack", direction: "vertical", gap: "md", children: [{ type: "stack", direction: "horizontal", gap: "sm", align: "center", children: [{ type: "icon", name: "shield" }, { type: "typography", content: "@config.title", variant: "h3" }] }, { type: "simple-grid", cols: 4, children: [{ type: "stat-display", label: "Total claims", value: "@payload.data.length", icon: "shield" }, { type: "stat-display", label: "Submitted", value: "42", icon: "send" }, { type: "stat-display", label: "Denied", value: "7", icon: "alert-triangle" }, { type: "stat-display", label: "Paid this month", value: "$84,200", icon: "dollar-sign" }] }, { type: "divider" }, { type: "data-grid", entity: "@payload.data", fields: "@config.fields", cols: 1, gap: "sm", itemActions: "@config.itemActions" }] })
+      InsuranceClaimLoadFailed -> error
+        (render-ui main { type: "alert", variant: "error", message: "@payload.error" })
+    }
+    state browsing {
+      OPEN_CLAIM -> viewing_single
+        (set @entity.id @payload.row.id)
+        (set @entity.patientId @payload.row.patientId)
+        (set @entity.payerId @payload.row.payerId)
+        (set @entity.serviceDate @payload.row.serviceDate)
+        (set @entity.submittedAt @payload.row.submittedAt)
+        (set @entity.status @payload.row.status)
+        (set @entity.claimAmount @payload.row.claimAmount)
+        (set @entity.paidAmount @payload.row.paidAmount)
+        (set @entity.denialReason @payload.row.denialReason)
+        (set @entity.priorAuthNumber @payload.row.priorAuthNumber)
+        (set @entity.createdAt @payload.row.createdAt)
+        (render-ui main { type: "stack", direction: "vertical", gap: "md", children: [{ type: "stack", direction: "horizontal", gap: "sm", align: "center", children: [{ type: "button", label: "Back", variant: "ghost", action: "CLOSE_VIEW" }, { type: "icon", name: "shield" }, { type: "typography", content: "@entity.patientId", variant: "h3" }, { type: "badge", label: "@entity.status", variant: "default" }] }, { type: "divider" }, { type: "stack", direction: "vertical", gap: "sm", children: [{ type: "stack", direction: "horizontal", gap: "md", children: [{ type: "typography", variant: "caption", color: "muted", content: "Payer" }, { type: "typography", variant: "body", content: "@entity.payerId" }] }, { type: "stack", direction: "horizontal", gap: "md", children: [{ type: "typography", variant: "caption", color: "muted", content: "Service Date" }, { type: "typography", variant: "body", content: "@entity.serviceDate" }] }, { type: "stack", direction: "horizontal", gap: "md", children: [{ type: "typography", variant: "caption", color: "muted", content: "Prior Auth" }, { type: "typography", variant: "body", content: "@entity.priorAuthNumber" }] }, { type: "stack", direction: "horizontal", gap: "md", children: [{ type: "typography", variant: "caption", color: "muted", content: "Denial Reason" }, { type: "typography", variant: "body", content: "@entity.denialReason" }] }] }, { type: "divider" }, { type: "simple-grid", cols: 3, children: [{ type: "stat-display", label: "Claim Amount", value: "@entity.claimAmount", icon: "dollar-sign" }, { type: "stat-display", label: "Paid Amount", value: "@entity.paidAmount", icon: "dollar-sign" }, { type: "stat-display", label: "Submitted", value: "@entity.submittedAt", icon: "calendar" }] }, { type: "stack", direction: "horizontal", gap: "sm", align: "center", children: [{ type: "button", label: "Submit", variant: "primary", action: "SUBMIT", actionPayload: { id: "@entity.id", row: "@entity" } }, { type: "button", label: "Mark Paid", variant: "primary", action: "MARK_PAID", actionPayload: { id: "@entity.id", row: "@entity" } }, { type: "button", label: "Appeal", variant: "secondary", action: "APPEAL", actionPayload: { id: "@entity.id", row: "@entity" } }] }] })
+      SUBMIT -> loading
+        (set @entity.id @payload.id)
+        (fetch InsuranceClaim { emit: { success: "InsuranceClaimLoaded", failure: "InsuranceClaimLoadFailed" } })
+        (render-ui main { type: "stack", direction: "vertical", gap: "md", align: "center", className: "py-12", children: [{ type: "spinner" }, { type: "typography", variant: "caption", color: "muted", content: "Submitting claim…" }] })
+      SET_STATUS -> loading
+        (set @entity.id @payload.entityId)
+        (set @entity.status @payload.newStatus)
+        (persist update InsuranceClaim @entity { emit: { success: "InsuranceClaimUpdated", failure: "InsuranceClaimUpdateFailed" } })
+        (render-ui main { type: "stack", direction: "vertical", gap: "md", align: "center", className: "py-12", children: [{ type: "spinner" }, { type: "typography", variant: "caption", color: "muted", content: "Updating claim status…" }] })
+      InsuranceClaimUpdated -> loading
+        (fetch InsuranceClaim { emit: { success: "InsuranceClaimLoaded", failure: "InsuranceClaimLoadFailed" } })
+      InsuranceClaimUpdateFailed -> browsing
+        (render-ui main { type: "alert", variant: "error", message: "@payload.error" })
+    }
+    state viewing_single {
+      CLOSE_VIEW -> loading
+        (fetch InsuranceClaim { emit: { success: "InsuranceClaimLoaded", failure: "InsuranceClaimLoadFailed" } })
+        (render-ui main { type: "stack", direction: "vertical", gap: "md", align: "center", className: "py-12", children: [{ type: "spinner" }, { type: "typography", variant: "caption", color: "muted", content: "Loading claims…" }] })
+      SUBMIT -> loading
+        (set @entity.id @payload.id)
+        (set @entity.status "submitted")
+        (set @entity.submittedAt "now")
+        (persist update InsuranceClaim @entity { emit: { success: "InsuranceClaimUpdated", failure: "InsuranceClaimUpdateFailed" } })
+        (render-ui main { type: "stack", direction: "vertical", gap: "md", align: "center", className: "py-12", children: [{ type: "spinner" }, { type: "typography", variant: "caption", color: "muted", content: "Submitting claim…" }] })
+      MARK_PAID -> loading
+        (set @entity.id @payload.id)
+        (set @entity.status "paid")
+        (persist update InsuranceClaim @entity { emit: { success: "InsuranceClaimUpdated", failure: "InsuranceClaimUpdateFailed" } })
+        (render-ui main { type: "stack", direction: "vertical", gap: "md", align: "center", className: "py-12", children: [{ type: "spinner" }, { type: "typography", variant: "caption", color: "muted", content: "Marking claim paid…" }] })
+      APPEAL -> loading
+        (set @entity.id @payload.id)
+        (fetch InsuranceClaim { emit: { success: "InsuranceClaimLoaded", failure: "InsuranceClaimLoadFailed" } })
+        (render-ui main { type: "stack", direction: "vertical", gap: "md", align: "center", className: "py-12", children: [{ type: "spinner" }, { type: "typography", variant: "caption", color: "muted", content: "Filing appeal…" }] })
+    }
+    state error {
+      INIT -> loading
+        (fetch InsuranceClaim { emit: { success: "InsuranceClaimLoaded", failure: "InsuranceClaimLoadFailed" } })
+        (render-ui main { type: "spinner", size: "sm" })
+    }
+    emits {
+      OPEN_CLAIM   { id : string!, row : InsuranceClaim }
+      CLOSE_VIEW   { }
+      SUBMIT       { id : string!, row : InsuranceClaim }
+      MARK_PAID    { id : string!, row : InsuranceClaim }
+      APPEAL       { id : string!, row : InsuranceClaim }
+      InsuranceClaimLoaded       { data : [InsuranceClaim] }
+      InsuranceClaimLoadFailed   { error : string, code : string }
+      InsuranceClaimUpdated      { row : InsuranceClaim }
+      InsuranceClaimUpdateFailed { error : string, code : string }
+    }
+    listens {
+      OPEN_CLAIM   { id : string!, row : InsuranceClaim }
+      CLOSE_VIEW   { }
+      SUBMIT       { id : string!, row : InsuranceClaim }
+      MARK_PAID    { id : string!, row : InsuranceClaim }
+      APPEAL       { id : string!, row : InsuranceClaim }
+      SET_STATUS   { entityId : string!, newStatus : string! }
+      InsuranceClaimLoaded       { data : [InsuranceClaim] }
+      InsuranceClaimLoadFailed   { error : string, code : string }
+      InsuranceClaimUpdated      { row : InsuranceClaim }
+      InsuranceClaimUpdateFailed { error : string, code : string }
+    }
+  }
+  page "/insurance-claims/manage" as InsuranceClaimManagePage -> InsuranceClaimManage
+}

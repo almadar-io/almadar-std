@@ -117,20 +117,26 @@ export interface StdRenewalRiskRenewalRiskUpdateFailedPayload {
  * without modifying its state-machine topology.
  */
 export interface StdRenewalRiskConfig {
-  /** Default: `[90,60,30,14]` */
-  renewalReminderDaysBefore?: number[];
-  /** Default: `40` */
-  healthScoreThresholdAlert?: number;
-  /** Default: `false` */
-  consentTrackingEnabled?: boolean;
-  /** Default: `"Renewal Risk"` */
-  title?: string;
-  /** Default: `[{"label":"Customer","variant":"caption","name":"customerName"},{"label":"Renewal","variant":"caption","name":"renewalDate"},{"name":"arrAmount","label":"ARR","variant":"caption"},{"label":"Risk","name":"riskLevel","variant":"badge"},{"variant":"badge","name":"status","label":"Status"},{"variant":"caption","name":"assignedCsm","label":"CSM"}]` */
+  /** Default: `[{"name":"customerName","label":"Customer","variant":"caption"},{"variant":"caption","name":"renewalDate","label":"Renewal"},{"label":"ARR","variant":"caption","name":"arrAmount"},{"name":"riskLevel","variant":"badge","label":"Risk"},{"name":"status","label":"Status","variant":"badge"},{"label":"CSM","name":"assignedCsm","variant":"caption"}]` */
   fields?: EntityRow[];
-  /** Default: `[{"label":"Open","variant":"primary","icon":"arrow-right","event":"OPEN_RISK"},{"label":"Mark Churned","variant":"danger","event":"MARK_CHURNED"}]` */
-  itemActions?: EntityRow[];
+  /** Default: `[{"scoreLow":70,"scoreHigh":100,"tier":"low"},{"tier":"medium","scoreLow":40,"scoreHigh":70},{"tier":"high","scoreLow":0,"scoreHigh":40}]` */
+  riskTierThresholds?: EntityRow[];
   /** Default: `540` */
   archiveInactiveAfterDays?: number;
+  /** Default: `[{"icon":"arrow-right","event":"OPEN_RISK","variant":"primary","label":"Open"},{"variant":"danger","label":"Mark Churned","event":"MARK_CHURNED"}]` */
+  itemActions?: EntityRow[];
+  /** Default: `[60,30,14]` */
+  renewalReminderDaysBefore_csm?: number[];
+  /** Default: `""` */
+  interventionPlaybookId?: string;
+  /** Default: `"Renewal Risk"` */
+  title?: string;
+  /** Default: `[90,60,30,14]` */
+  renewalReminderDaysBefore?: number[];
+  /** Default: `false` */
+  consentTrackingEnabled?: boolean;
+  /** Default: `40` */
+  healthScoreThresholdAlert?: number;
 }
 
 /**
