@@ -1,5 +1,5 @@
-app std-notify-on-event "1.1.0"
-"std-notify-on-event — event-driven notification dispatcher. Listens for the generic `EventOccurred` sentinel (rename via traitOverrides.events to the real event, e.g. ContactSaved). Resolves recipient from `recipients` (first entry; fan-out is a future extension) or falls back to `@user.id`. Skips dispatch when the recipient is in `suppressionList`. Emits in-app `notify` when `notifyChannel` is `\"in-app\"`, or persists a `NotificationRecord` row for out-of-band delivery when channel is `\"email\"` or `\"sms\"`."
+app std-notify-on-event "1.2.0"
+"std-notify-on-event — cross-orbital wiring atom. Subscribes to events from another orbital (e.g. CheckoutOrbital emits OrderPlaced, OrderRecordOrbital reacts via this atom) and dispatches a notification. Use when one orbital needs to react to or be notified about events that happen in another orbital — the wiring goes through this atom's `EventOccurred` listener which the molecule renames via traitOverrides.events to the upstream event name. Resolves recipient from `recipients` (first entry; multi-recipient fan-out is a future extension) or falls back to `@user.id`. Skips dispatch when the recipient is in `suppressionList`. Emits in-app `notify` when `notifyChannel` is `\"in-app\"`, or persists a `NotificationRecord` row for out-of-band delivery when channel is `\"email\"` or `\"sms\"`."
 
 type QuietHoursSpec = { start : string, end : string }
 
@@ -21,28 +21,34 @@ orbital NotifyOnEventOrbital {
     config {
       listensFor    : [string] = []
         @label "Trigger events"
-        @description "Event names that should fire a notification"
+        @description "Event names that should fire a notification. Set this to the upstream event name (e.g. OrderPlaced, CheckoutCompleted) so this atom listens for events from the orbital that emits them. The orbital owning this trait reacts whenever the named event fires anywhere in the schema."
         @tier "domain"
+        @synonyms "subscribe to event, listen for event, react to event, watch for, wire upstream event, observe event from another orbital, cross-orbital subscription, on-event trigger"
       notifyChannel : string   = "in-app"
         @label "Channel"
         @description "Delivery channel: in-app, email, or sms"
         @tier "domain"
+        @synonyms "delivery method, notification channel, send via, dispatch through"
       template      : string   = ""
         @label "Message template"
         @description "Text shown to the recipient; supports payload interpolation"
         @tier "presentation"
+        @synonyms "notification text, message body, alert text"
       severity      : string   = "info"
         @label "Severity"
         @description "info, success, warning, or error — controls styling"
         @tier "domain"
+        @synonyms "alert level, priority, urgency"
       recipients    : [string] = []
         @label "Recipients"
         @description "Recipient ids/addresses. v1.1 uses the first entry; multi-recipient fan-out lands in v1.2 (gap). When empty, falls back to the authenticated user."
         @tier "domain"
+        @synonyms "targets, addressees, notify to"
       suppressionList : [string] = []
         @label "Suppression list"
         @description "Recipient ids/addresses to skip (e.g. unsubscribed users). Suppression check runs before dispatch."
         @tier "domain"
+        @synonyms "block list, unsubscribed, opt-out list"
       quietHours    : QuietHoursSpec = { start: "", end: "" }
         @label "Quiet hours"
         @description "Local-time window during which dispatch is suppressed. Both start and end required to activate. WIRING DEFERRED: needs @now-aware time comparison primitive (gap — docs/Almadar_Std_Factories.md)."
