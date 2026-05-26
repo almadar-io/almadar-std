@@ -6,7 +6,7 @@
  * machines live in behaviors/registry/.
  *
  * Layout: <topic>/<tier>/std-X.ts (topic is any direct subdir of functions/).
- * Topics in this package: core, agent.
+ * Topics in this package: core, agent, core-variations.
  *
  * @packageDocumentation
  */
@@ -30,10 +30,20 @@ export * from './core/atoms/std-approval-gate.js';
 export * from './core/atoms/std-audit-capture.js';
 export * from './core/atoms/std-billable-hour.js';
 export * from './core/atoms/std-board.js';
+export * from './core-variations/atoms/std-board-kanban-classic.js';
+export * from './core-variations/atoms/std-board-swim-lanes.js';
+export * from './core-variations/atoms/std-board-timeline-roadmap.js';
 export * from './core/atoms/std-branching-logic.js';
 export * from './core/atoms/std-browse.js';
+export * from './core-variations/atoms/std-browse-command-palette.js';
+export * from './core-variations/atoms/std-browse-dense.js';
+export * from './core-variations/atoms/std-browse-feed.js';
+export * from './core-variations/atoms/std-browse-gallery.js';
+export * from './core-variations/atoms/std-browse-triage.js';
 export * from './core/atoms/std-cache-aside.js';
 export * from './core/atoms/std-calendar.js';
+export * from './core-variations/atoms/std-calendar-agenda-list.js';
+export * from './core-variations/atoms/std-calendar-week-timeline.js';
 export * from './core/atoms/std-cascade-on-delete.js';
 export * from './core/atoms/std-circuit-breaker.js';
 export * from './core/atoms/std-confirmation.js';
@@ -43,6 +53,9 @@ export * from './core/atoms/std-dashboard-grid-layout.js';
 export * from './core/atoms/std-data-erasure.js';
 export * from './core/atoms/std-date-range.js';
 export * from './core/atoms/std-display.js';
+export * from './core-variations/atoms/std-display-dashboard-summary.js';
+export * from './core-variations/atoms/std-display-hero-banner.js';
+export * from './core-variations/atoms/std-display-sidebar-meta.js';
 export * from './core/atoms/std-drawer.js';
 export * from './core/atoms/std-esign-request.js';
 export * from './core/atoms/std-event-log.js';
@@ -77,10 +90,21 @@ export * from './core/atoms/std-selection.js';
 export * from './core/atoms/std-signature-capture.js';
 export * from './core/atoms/std-stack-layout.js';
 export * from './core/atoms/std-stats.js';
+export * from './core-variations/atoms/std-stats-hero-metric.js';
+export * from './core-variations/atoms/std-stats-kpi-tiles.js';
+export * from './core-variations/atoms/std-stats-sparkline-row.js';
 export * from './core/atoms/std-step-flow.js';
+export * from './core-variations/atoms/std-step-flow-cards-deck.js';
+export * from './core-variations/atoms/std-step-flow-progress-vertical.js';
+export * from './core-variations/atoms/std-step-flow-stepper-horizontal.js';
 export * from './core/atoms/std-tabs.js';
+export * from './core-variations/atoms/std-tabs-segmented-pills.js';
+export * from './core-variations/atoms/std-tabs-sidebar-rail.js';
 export * from './core/atoms/std-tag-taxonomy.js';
 export * from './core/atoms/std-thread.js';
+export * from './core-variations/atoms/std-thread-chat-bubbles.js';
+export * from './core-variations/atoms/std-thread-comments-linear.js';
+export * from './core-variations/atoms/std-thread-email-threaded.js';
 export * from './core/atoms/std-version-history.js';
 export * from './core/atoms/std-vote.js';
 export * from './core/atoms/std-wizard.js';

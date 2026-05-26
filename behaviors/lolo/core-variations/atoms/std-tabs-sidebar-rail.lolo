@@ -1,0 +1,56 @@
+app std-tabs-sidebar-rail "1.0.0"
+"Sidebar-rail tabs — vertical nav rail on the left listing tab items as a Stack with the active one highlighted; the matching @trait.X content trait renders to the right. Ideal for app-shell side nav, settings pages with many sections, and profile pages. Same TabsItemTabs trait, state machine, emits/listens as std-tabs — only the bodyContent tree differs."
+
+type TabSpec = { id : string, label : string!, value : string, icon : string }
+
+orbital SidebarRailTabsOrbital {
+  uses Tabs from "std/behaviors/std-tabs"
+
+  entity SidebarRailTabsItem [runtime] {
+    id         : string!
+    activeTab  : string = ""
+    items      : [TabSpec] = []
+  }
+
+  trait SidebarRailTabs = Tabs.traits.TabsItemTabs -> SidebarRailTabsItem {
+    config: {
+      bodyContent: {
+        type: "stack",
+        direction: "horizontal",
+        gap: "none",
+        align: "stretch",
+        className: "min-h-[24rem] border rounded-md overflow-hidden",
+        children: [
+          { type: "stack",
+            direction: "vertical",
+            gap: "none",
+            align: "stretch",
+            className: "w-56 shrink-0 border-r bg-muted/30 py-3",
+            children: [
+              { type: "tabs",
+                items: [
+                  { id: "tab1", label: "Tab 1", icon: "home" },
+                  { id: "tab2", label: "Tab 2", icon: "settings" },
+                  { id: "tab3", label: "Tab 3", icon: "user" }
+                ],
+                activeTab: "@entity.activeTab",
+                variant: "pills",
+                orientation: "vertical",
+                tabChangeEvent: "TAB_CHANGED",
+                className: "px-2 gap-1"
+              }
+            ]
+          },
+          { type: "stack",
+            direction: "vertical",
+            gap: "md",
+            className: "flex-1 min-w-0 p-card-md",
+            children: []
+          }
+        ]
+      }
+    }
+  }
+
+  page "/sidebar-tabs" as SidebarRailTabsPage -> SidebarRailTabs
+}

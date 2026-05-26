@@ -1,0 +1,185 @@
+{
+  "name": "std-browse-gallery",
+  "version": "1.0.0",
+  "description": "Gallery browse — image-first Pinterest/Dribbble grid where each item is a visually-dominant card with a large square thumbnail area, title, one-line description, and an overlay price/status badge. Responsive 3–4 column grid with generous gap. Same BrowseItemBrowse trait, state machine, emits, and listens as std-browse — only the bodyContent tree differs.",
+  "orbitals": [
+    {
+      "name": "GalleryBrowseOrbital",
+      "uses": [
+        {
+          "from": "std/behaviors/std-browse",
+          "as": "Browse"
+        }
+      ],
+      "entity": {
+        "name": "GalleryItem",
+        "persistence": "runtime",
+        "fields": [
+          {
+            "name": "id",
+            "type": "string",
+            "required": true
+          },
+          {
+            "name": "name",
+            "type": "string",
+            "required": true
+          },
+          {
+            "name": "description",
+            "type": "string"
+          },
+          {
+            "name": "status",
+            "type": "string",
+            "default": "active",
+            "values": [
+              "active",
+              "draft",
+              "archived"
+            ]
+          },
+          {
+            "name": "price",
+            "type": "string"
+          },
+          {
+            "name": "thumbnailLabel",
+            "type": "string"
+          },
+          {
+            "name": "createdAt",
+            "type": "string"
+          }
+        ]
+      },
+      "traits": [
+        {
+          "ref": "Browse.traits.BrowseItemBrowse",
+          "name": "GalleryBrowse",
+          "linkedEntity": "GalleryItem",
+          "config": {
+            "bodyContent": {
+              "type": "stack",
+              "className": "max-w-6xl mx-auto px-card-md py-section",
+              "direction": "vertical",
+              "children": [
+                {
+                  "type": "input",
+                  "placeholder": "Search the gallery…",
+                  "inputType": "search",
+                  "action": "REFETCH_QUERY",
+                  "className": "w-full text-base"
+                },
+                {
+                  "type": "data-list",
+                  "cols": 3.0,
+                  "fields": [],
+                  "renderItem": [
+                    "fn",
+                    "item",
+                    {
+                      "children": [
+                        {
+                          "gap": "xs",
+                          "children": [
+                            {
+                              "name": "image",
+                              "className": "text-muted-foreground opacity-60",
+                              "type": "icon",
+                              "size": "lg"
+                            },
+                            {
+                              "content": "@item.thumbnailLabel",
+                              "className": "px-2 text-center truncate max-w-full",
+                              "color": "muted",
+                              "type": "typography",
+                              "variant": "caption"
+                            },
+                            {
+                              "type": "stack",
+                              "gap": "xs",
+                              "direction": "horizontal",
+                              "align": "center",
+                              "className": "absolute top-2 right-2",
+                              "children": [
+                                {
+                                  "type": "badge",
+                                  "label": "@item.price",
+                                  "variant": "default"
+                                }
+                              ]
+                            },
+                            {
+                              "type": "stack",
+                              "direction": "horizontal",
+                              "className": "absolute top-2 left-2",
+                              "children": [
+                                {
+                                  "type": "badge",
+                                  "variant": "default",
+                                  "label": "@item.status"
+                                }
+                              ],
+                              "align": "center",
+                              "gap": "xs"
+                            }
+                          ],
+                          "align": "center",
+                          "direction": "vertical",
+                          "className": "relative aspect-square w-full bg-muted rounded-md border border-[var(--color-border)] overflow-hidden",
+                          "type": "stack",
+                          "justify": "center"
+                        },
+                        {
+                          "gap": "xs",
+                          "direction": "vertical",
+                          "children": [
+                            {
+                              "type": "typography",
+                              "content": "@item.name",
+                              "className": "truncate",
+                              "variant": "body",
+                              "weight": "medium"
+                            },
+                            {
+                              "className": "line-clamp-1",
+                              "variant": "caption",
+                              "content": "@item.description",
+                              "color": "muted",
+                              "type": "typography"
+                            }
+                          ],
+                          "className": "px-1",
+                          "type": "stack"
+                        }
+                      ],
+                      "gap": "sm",
+                      "direction": "vertical",
+                      "type": "stack",
+                      "className": "group rounded-lg overflow-hidden cursor-pointer"
+                    }
+                  ],
+                  "gap": "lg",
+                  "entity": "@payload.data"
+                }
+              ],
+              "gap": "lg"
+            }
+          }
+        }
+      ],
+      "pages": [
+        {
+          "name": "GalleryBrowsePage",
+          "path": "/gallery-browse",
+          "traits": [
+            {
+              "ref": "GalleryBrowse"
+            }
+          ]
+        }
+      ]
+    }
+  ]
+}

@@ -53,7 +53,24 @@ orbital BrowseItemOrbital {
         @tier "presentation"
       viewPattern : pattern = "data-grid"
         @label "Render pattern"
-        @description "UI pattern used to render the collection"
+        @description "UI pattern used to render the collection. Used by the default bodyContent tree; Layer 3 variants override bodyContent directly instead and may ignore this knob."
+        @tier "internal"
+      bodyContent : render-ui = {
+        type: "stack",
+        direction: "vertical",
+        children: [{
+          type: "data-grid",
+          entity: "@payload.data",
+          fields: "@config.fields",
+          imageField: "@config.imageField",
+          itemActions: "@config.itemActions",
+          cols: "@config.cols",
+          gap: "@config.gap",
+          pageSize: "@config.displayPageSize"
+        }]
+      }
+        @label "Body content tree"
+        @description "Render-ui SExpr rendered after rows load. Default is the canonical data-grid call wrapped in a stack. Layer 3 variants override this with their own tree (composing data-list/data-grid/entity-table + custom renderItem lambdas + filter-group, kbd, card, etc.) to deliver entirely different browse UX while inheriting the same trait, state machine, emits, and listens."
         @tier "internal"
     }
     state loading {
@@ -61,7 +78,7 @@ orbital BrowseItemOrbital {
         (fetch BrowseItem { offset: 0, limit: @config.pageSize, emit: { success: "BrowseItemLoaded", failure: "BrowseItemLoadFailed" } })
         (render-ui main { type: "spinner", size: "sm" })
       BrowseItemLoaded -> browsing
-        (render-ui main { type: "stack", direction: "vertical", children: [{ type: "@config.viewPattern", entity: "@payload.data", fields: "@config.fields", imageField: "@config.imageField", itemActions: "@config.itemActions", cols: "@config.cols", gap: "@config.gap", pageSize: "@config.displayPageSize" }] })
+        (render-ui main @config.bodyContent)
       BrowseItemLoadFailed -> error
         (render-ui main { type: "typography", variant: "caption", color: "error", content: "@payload.error" })
     }
@@ -82,7 +99,7 @@ orbital BrowseItemOrbital {
       REFETCH_PAGE -> browsing
         (fetch BrowseItem { offset: (* (- @payload.page 1) @config.pageSize), limit: @config.pageSize, emit: { success: "BrowseItemLoaded", failure: "BrowseItemLoadFailed" } })
       BrowseItemLoaded -> browsing
-        (render-ui main { type: "stack", direction: "vertical", children: [{ type: "@config.viewPattern", entity: "@payload.data", fields: "@config.fields", imageField: "@config.imageField", itemActions: "@config.itemActions", cols: "@config.cols", gap: "@config.gap", pageSize: "@config.displayPageSize" }] })
+        (render-ui main @config.bodyContent)
     }
     state error {
       INIT -> loading

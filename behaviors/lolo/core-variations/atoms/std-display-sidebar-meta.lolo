@@ -1,0 +1,78 @@
+app std-display-sidebar-meta "1.0.0"
+"Sidebar-meta display — Linear-issue / GitHub-issue style record detail. Main content (title + description body) occupies the left two-thirds; a right rail stacks meta panels (status, assignee, dates, labels) in compact label/value rows. Best for helpdesk tickets, ats-recruiting candidates, project tasks, and bug reports. Same DisplayItemDisplay trait, same state machine, same emits/listens as std-display — only bodyContent differs."
+
+orbital SidebarMetaDisplayOrbital {
+  uses Display from "std/behaviors/std-display"
+
+  entity SidebarRecord [runtime] {
+    id          : string!
+    title       : string!
+    description : string
+    status      : "open" | "in_progress" | "closed" = "open"
+    assignee    : string
+    reporter    : string
+    createdAt   : string
+    updatedAt   : string
+    priority    : "low" | "medium" | "high" = "medium"
+    labels      : string
+  }
+
+  trait SidebarMetaDisplay = Display.traits.DisplayItemDisplay -> SidebarRecord {
+    config: {
+      bodyContent: {
+        type: "stack",
+        direction: "horizontal",
+        gap: "lg",
+        align: "start",
+        className: "max-w-6xl mx-auto px-card-md py-card-md",
+        children: [
+          { type: "stack", direction: "vertical", gap: "md", className: "flex-1 min-w-0", children: [
+            { type: "stack", direction: "horizontal", gap: "sm", align: "center", className: "pb-2 border-b border-[var(--color-border)]", children: [
+              { type: "typography", variant: "caption", color: "muted", content: "@payload.id", className: "font-mono" },
+              { type: "typography", variant: "h2", weight: "semibold", content: "@payload.title", className: "flex-1 min-w-0" }
+            ]},
+            { type: "typography", variant: "body", content: "@payload.description", className: "whitespace-pre-wrap break-words leading-relaxed" }
+          ]},
+          { type: "stack", direction: "vertical", gap: "md", className: "w-72 flex-shrink-0 border-l border-[var(--color-border)] pl-card-md", children: [
+            { type: "stack", direction: "vertical", gap: "xs", children: [
+              { type: "typography", variant: "caption", color: "muted", content: "Status", className: "uppercase tracking-wide" },
+              { type: "badge", label: "@payload.status", variant: "default" }
+            ]},
+            { type: "stack", direction: "vertical", gap: "xs", children: [
+              { type: "typography", variant: "caption", color: "muted", content: "Priority", className: "uppercase tracking-wide" },
+              { type: "badge", label: "@payload.priority", variant: "neutral" }
+            ]},
+            { type: "stack", direction: "vertical", gap: "xs", children: [
+              { type: "typography", variant: "caption", color: "muted", content: "Assignee", className: "uppercase tracking-wide" },
+              { type: "stack", direction: "horizontal", gap: "xs", align: "center", children: [
+                { type: "icon", name: "user" },
+                { type: "typography", variant: "body", content: "@payload.assignee" }
+              ]}
+            ]},
+            { type: "stack", direction: "vertical", gap: "xs", children: [
+              { type: "typography", variant: "caption", color: "muted", content: "Reporter", className: "uppercase tracking-wide" },
+              { type: "stack", direction: "horizontal", gap: "xs", align: "center", children: [
+                { type: "icon", name: "user" },
+                { type: "typography", variant: "body", content: "@payload.reporter" }
+              ]}
+            ]},
+            { type: "stack", direction: "vertical", gap: "xs", children: [
+              { type: "typography", variant: "caption", color: "muted", content: "Created", className: "uppercase tracking-wide" },
+              { type: "typography", variant: "body", content: "@payload.createdAt" }
+            ]},
+            { type: "stack", direction: "vertical", gap: "xs", children: [
+              { type: "typography", variant: "caption", color: "muted", content: "Updated", className: "uppercase tracking-wide" },
+              { type: "typography", variant: "body", content: "@payload.updatedAt" }
+            ]},
+            { type: "stack", direction: "vertical", gap: "xs", children: [
+              { type: "typography", variant: "caption", color: "muted", content: "Labels", className: "uppercase tracking-wide" },
+              { type: "badge", label: "@payload.labels", variant: "neutral" }
+            ]}
+          ]}
+        ]
+      }
+    }
+  }
+
+  page "/sidebar-display" as SidebarMetaDisplayPage -> SidebarMetaDisplay
+}

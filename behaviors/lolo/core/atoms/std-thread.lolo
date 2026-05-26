@@ -1,5 +1,5 @@
-app std-thread "1.0.0"
-"std-thread — forum-style nested replies with collapse + flat-mode toggle. Owns ThreadPost (persistent). flat:true covers 1:1 linear inquiry threads; flat:false renders forum-style nested. INIT fetches; REPLY persists a child post under @payload.parentId."
+app std-thread "1.1.0"
+"std-thread — forum-style nested replies with collapse + flat-mode toggle. Owns ThreadPost (persistent). flat:true covers 1:1 linear inquiry threads; flat:false renders forum-style nested. INIT fetches; REPLY persists a child post under @payload.parentId. Layer 3 variants override `bodyContent` to deliver chat-bubble, email-threaded, or linear-comments UX while inheriting the same trait, state machine, emits, and listens."
 
 orbital ThreadPostOrbital {
   entity ThreadPost [persistent: threadposts] {
@@ -33,6 +33,27 @@ orbital ThreadPostOrbital {
         @label "Table look"
         @description "Layer 2 visual treatment for the data table rendered by this atom."
         @tier "presentation"
+      bodyContent : render-ui = {
+        type: "stack",
+        direction: "vertical",
+        gap: "md",
+        children: [{
+          type: "data-list",
+          look: "@config.tableLook",
+          entity: "@payload.data",
+          variant: "card",
+          gap: "sm",
+          fields: [
+            { name: "authorName", label: "Author", variant: "h4" },
+            { name: "content", label: "", variant: "body" },
+            { name: "voteCount", label: "Votes", variant: "caption" }
+          ],
+          itemActions: [{ label: "Reply", event: "REPLY", icon: "message-square" }]
+        }]
+      }
+        @label "Body content tree"
+        @description "Render-ui SExpr rendered after thread posts load. Default is the canonical forum-style data-list. Layer 3 variants override this with their own tree (chat bubbles, email-threaded cards, linear comment stacks, etc.) to deliver entirely different thread UX while inheriting the same trait, state machine, emits, and listens."
+        @tier "internal"
     }
     initial: loading
     state loading {
@@ -40,7 +61,7 @@ orbital ThreadPostOrbital {
         (fetch ThreadPost { emit: { success: "ThreadPostLoaded", failure: "ThreadPostLoadFailed" } })
         (render-ui main { type: "spinner", size: "sm" })
       ThreadPostLoaded -> browsing
-        (render-ui main { type: "stack", direction: "vertical", gap: "md", children: [{ type: "data-list", look: "@config.tableLook", entity: "@payload.data", variant: "card", gap: "sm", fields: [{ name: "authorName", label: "Author", variant: "h4" }, { name: "content", label: "", variant: "body" }, { name: "voteCount", label: "Votes", variant: "caption" }], itemActions: [{ label: "Reply", event: "REPLY", icon: "message-square" }] }] })
+        (render-ui main @config.bodyContent)
       ThreadPostLoadFailed -> error
         (render-ui main { type: "alert", variant: "error", message: "@payload.error" })
     }
@@ -49,7 +70,7 @@ orbital ThreadPostOrbital {
         (fetch ThreadPost { emit: { success: "ThreadPostLoaded", failure: "ThreadPostLoadFailed" } })
         (render-ui main { type: "spinner", size: "sm" })
       ThreadPostLoaded -> browsing
-        (render-ui main { type: "stack", direction: "vertical", gap: "md", children: [{ type: "data-list", look: "@config.tableLook", entity: "@payload.data", variant: "card", gap: "sm", fields: [{ name: "authorName", label: "Author", variant: "h4" }, { name: "content", label: "", variant: "body" }, { name: "voteCount", label: "Votes", variant: "caption" }], itemActions: [{ label: "Reply", event: "REPLY", icon: "message-square" }] }] })
+        (render-ui main @config.bodyContent)
       REPLY -> replying
         (set @entity.parentId @payload.parentId)
         (render-ui main { type: "stack", direction: "vertical", gap: "md", children: [{ type: "typography", variant: "h4", content: "Write a reply" }, { type: "textarea", placeholder: "Your reply…", action: "EDIT_REPLY" }, { type: "stack", direction: "horizontal", gap: "sm", children: [{ type: "button", label: "Submit", action: "SUBMIT_REPLY", variant: "primary", icon: "send" }, { type: "button", label: "Cancel", action: "CANCEL_REPLY", variant: "secondary" }] }] })

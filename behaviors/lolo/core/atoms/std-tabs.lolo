@@ -1,4 +1,4 @@
-app std-tabs "2.0.0"
+app std-tabs "2.1.0"
 "std-tabs — embeddable tab-navigation atom. Renders a tabs strip from @config.tabs ([{id, label, icon?, badge?, content?}]); clicking a tab updates @entity.activeTab so only the matching @trait.X content shows. Events remap at the call site for routing, persistence, analytics."
 
 type TabSpec = { id : string, label : string!, value : string, icon : string }
@@ -41,16 +41,27 @@ orbital TabsItemOrbital {
         @label "Orientation"
         @description "Horizontal strip or vertical rail layout"
         @tier "presentation"
+      bodyContent : render-ui = {
+        type: "tabs",
+        items: "@entity.items",
+        activeTab: "@entity.activeTab",
+        variant: "@config.variant",
+        orientation: "@config.orientation",
+        tabChangeEvent: "TAB_CHANGED"
+      }
+        @label "Body content tree"
+        @description "Render-ui SExpr rendered for the tabs surface. Default is the canonical tabs pattern bound to @entity.items / @entity.activeTab. Layer 3 variants override this with their own tree (segmented-pill bar, vertical sidebar rail, etc.) while inheriting the same trait, state machine, emits, and listens."
+        @tier "internal"
     }
     state idle {
       INIT -> idle
         (set @entity.items @config.tabs)
         (set @entity.activeTab @config.defaultTab)
-        (render-ui main { type: "tabs", items: "@entity.items", activeTab: "@entity.activeTab", variant: "@config.variant", orientation: "@config.orientation", tabChangeEvent: "TAB_CHANGED" })
+        (render-ui main @config.bodyContent)
       TAB_CHANGED -> idle
         (set @entity.items @config.tabs)
         (set @entity.activeTab @payload.tabId)
-        (render-ui main { type: "tabs", items: "@entity.items", activeTab: "@entity.activeTab", variant: "@config.variant", orientation: "@config.orientation", tabChangeEvent: "TAB_CHANGED" })
+        (render-ui main @config.bodyContent)
     }
     emits {
       TAB_CHANGED -> external { tabId : string! }

@@ -39,14 +39,16 @@ export type StdStatsEventKey = 'INIT' | 'ITEMS_LOADED';
  * without modifying its state-machine topology.
  */
 export interface StdStatsConfig {
-  /** Default: `[{"variant":"primary","label":"Total Items","aggregation":"count","icon":"list","format":"number"},{"format":"number","label":"Active","icon":"check-circle","variant":"success","aggregation":"count"},{"field":"value","icon":"trending-up","label":"Avg Value","variant":"info","format":"number","aggregation":"avg"}]` */
-  metrics?: EntityRow[];
-  /** Default: `"Summary"` */
-  title?: string;
   /** Default: `"data-grid"` */
   viewPattern?: unknown;
   /** Default: `"elevated"` */
   statLook?: 'elevated' | 'flat' | 'progress-backed' | 'gauge' | 'sparkline';
+  /** Default: `{"type":"@config.viewPattern","renderItem":["fn","card",{"prefix":"@card.prefix","value":"@card.value","format":"@card.format","trendFormat":"@card.trendFormat","max":"@card.max","type":"stat-display","icon":"@card.icon","variant":"@card.variant","sparklineData":"@card.sparklineData","suffix":"@card.suffix","look":"@config.statLook","label":"@card.label","clickEvent":"@card.clickEvent","trendPolarity":"@card.trendPolarity","target":"@card.target","trend":"@card.trend"}],"entity":"@entity.cards","fields":[]}` */
+  bodyContent?: unknown;
+  /** Default: `[{"format":"number","icon":"list","aggregation":"count","label":"Total Items","variant":"primary"},{"aggregation":"count","format":"number","label":"Active","variant":"success","icon":"check-circle"},{"icon":"trending-up","format":"number","field":"value","label":"Avg Value","aggregation":"avg","variant":"info"}]` */
+  metrics?: EntityRow[];
+  /** Default: `"Summary"` */
+  title?: string;
 }
 
 /**

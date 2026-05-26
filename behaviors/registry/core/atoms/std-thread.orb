@@ -1,7 +1,7 @@
 {
   "name": "std-thread",
-  "version": "1.0.0",
-  "description": "std-thread — forum-style nested replies with collapse + flat-mode toggle. Owns ThreadPost (persistent). flat:true covers 1:1 linear inquiry threads; flat:false renders forum-style nested. INIT fetches; REPLY persists a child post under @payload.parentId.",
+  "version": "1.1.0",
+  "description": "std-thread — forum-style nested replies with collapse + flat-mode toggle. Owns ThreadPost (persistent). flat:true covers 1:1 linear inquiry threads; flat:false renders forum-style nested. INIT fetches; REPLY persists a child post under @payload.parentId. Layer 3 variants override `bodyContent` to deliver chat-bubble, email-threaded, or linear-comments UX while inheriting the same trait, state machine, emits, and listens.",
   "orbitals": [
     {
       "name": "ThreadPostOrbital",
@@ -325,44 +325,7 @@
                   [
                     "render-ui",
                     "main",
-                    {
-                      "direction": "vertical",
-                      "gap": "md",
-                      "children": [
-                        {
-                          "itemActions": [
-                            {
-                              "label": "Reply",
-                              "event": "REPLY",
-                              "icon": "message-square"
-                            }
-                          ],
-                          "type": "data-list",
-                          "look": "@config.tableLook",
-                          "entity": "@payload.data",
-                          "gap": "sm",
-                          "variant": "card",
-                          "fields": [
-                            {
-                              "name": "authorName",
-                              "variant": "h4",
-                              "label": "Author"
-                            },
-                            {
-                              "label": "",
-                              "name": "content",
-                              "variant": "body"
-                            },
-                            {
-                              "variant": "caption",
-                              "name": "voteCount",
-                              "label": "Votes"
-                            }
-                          ]
-                        }
-                      ],
-                      "type": "stack"
-                    }
+                    "@config.bodyContent"
                   ]
                 ]
               },
@@ -401,8 +364,8 @@
                     "render-ui",
                     "main",
                     {
-                      "size": "sm",
-                      "type": "spinner"
+                      "type": "spinner",
+                      "size": "sm"
                     }
                   ]
                 ]
@@ -415,44 +378,7 @@
                   [
                     "render-ui",
                     "main",
-                    {
-                      "type": "stack",
-                      "children": [
-                        {
-                          "gap": "sm",
-                          "itemActions": [
-                            {
-                              "label": "Reply",
-                              "event": "REPLY",
-                              "icon": "message-square"
-                            }
-                          ],
-                          "look": "@config.tableLook",
-                          "variant": "card",
-                          "fields": [
-                            {
-                              "label": "Author",
-                              "variant": "h4",
-                              "name": "authorName"
-                            },
-                            {
-                              "name": "content",
-                              "label": "",
-                              "variant": "body"
-                            },
-                            {
-                              "variant": "caption",
-                              "name": "voteCount",
-                              "label": "Votes"
-                            }
-                          ],
-                          "type": "data-list",
-                          "entity": "@payload.data"
-                        }
-                      ],
-                      "direction": "vertical",
-                      "gap": "md"
-                    }
+                    "@config.bodyContent"
                   ]
                 ]
               },
@@ -470,41 +396,41 @@
                     "render-ui",
                     "main",
                     {
+                      "direction": "vertical",
                       "type": "stack",
+                      "gap": "md",
                       "children": [
                         {
-                          "variant": "h4",
                           "content": "Write a reply",
+                          "variant": "h4",
                           "type": "typography"
                         },
                         {
-                          "type": "textarea",
                           "placeholder": "Your reply…",
-                          "action": "EDIT_REPLY"
+                          "action": "EDIT_REPLY",
+                          "type": "textarea"
                         },
                         {
-                          "gap": "sm",
                           "type": "stack",
+                          "direction": "horizontal",
+                          "gap": "sm",
                           "children": [
                             {
                               "icon": "send",
-                              "type": "button",
-                              "label": "Submit",
                               "variant": "primary",
-                              "action": "SUBMIT_REPLY"
+                              "label": "Submit",
+                              "action": "SUBMIT_REPLY",
+                              "type": "button"
                             },
                             {
-                              "action": "CANCEL_REPLY",
                               "type": "button",
                               "label": "Cancel",
-                              "variant": "secondary"
+                              "variant": "secondary",
+                              "action": "CANCEL_REPLY"
                             }
-                          ],
-                          "direction": "horizontal"
+                          ]
                         }
-                      ],
-                      "gap": "md",
-                      "direction": "vertical"
+                      ]
                     }
                   ]
                 ]
@@ -593,9 +519,9 @@
                     "render-ui",
                     "main",
                     {
-                      "message": "@payload.error",
                       "type": "alert",
-                      "variant": "error"
+                      "variant": "error",
+                      "message": "@payload.error"
                     }
                   ]
                 ]
@@ -655,6 +581,50 @@
               "label": "Flat thread",
               "description": "Render replies as a linear list instead of nested tree",
               "tier": "presentation"
+            },
+            "bodyContent": {
+              "type": "render-ui",
+              "default": {
+                "type": "stack",
+                "children": [
+                  {
+                    "variant": "card",
+                    "type": "data-list",
+                    "look": "@config.tableLook",
+                    "fields": [
+                      {
+                        "label": "Author",
+                        "variant": "h4",
+                        "name": "authorName"
+                      },
+                      {
+                        "label": "",
+                        "variant": "body",
+                        "name": "content"
+                      },
+                      {
+                        "label": "Votes",
+                        "name": "voteCount",
+                        "variant": "caption"
+                      }
+                    ],
+                    "itemActions": [
+                      {
+                        "icon": "message-square",
+                        "event": "REPLY",
+                        "label": "Reply"
+                      }
+                    ],
+                    "entity": "@payload.data",
+                    "gap": "sm"
+                  }
+                ],
+                "gap": "md",
+                "direction": "vertical"
+              },
+              "label": "Body content tree",
+              "description": "Render-ui SExpr rendered after thread posts load. Default is the canonical forum-style data-list. Layer 3 variants override this with their own tree (chat bubbles, email-threaded cards, linear comment stacks, etc.) to deliver entirely different thread UX while inheriting the same trait, state machine, emits, and listens.",
+              "tier": "internal"
             }
           },
           "scope": "collection"

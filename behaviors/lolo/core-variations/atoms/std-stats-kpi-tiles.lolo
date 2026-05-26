@@ -1,0 +1,69 @@
+app std-stats-kpi-tiles "1.0.0"
+"KPI tiles — Stripe-dashboard style. 3–4 large numeric tiles arranged in a horizontal grid: huge typography number, label below, optional change indicator and sparkline hint. For trading dashboards, finance trackers, ecommerce metrics, payment volume. Same StatsItemStats trait, same aggregation pipeline, same listens as std-stats — only the bodyContent tree differs."
+
+orbital KpiTilesStatsOrbital {
+  uses Stats from "std/behaviors/std-stats"
+
+  type StatCard = {
+    label          : string!
+    value          : number
+    icon           : string
+    format         : "number" | "currency" | "percent"
+    variant        : "default" | "primary" | "success" | "warning" | "error" | "info"
+    prefix         : string
+    suffix         : string
+    max            : number
+    target         : number
+    trend          : number
+    trendPolarity  : "higher-is-better" | "lower-is-better"
+    trendFormat    : "absolute" | "percent"
+    sparklineData  : [number]
+    clickEvent     : string
+  }
+
+  entity KpiTileStats [runtime] {
+    id    : string!
+    cards : [StatCard] = []
+  }
+
+  trait KpiTileStatsItemStats = Stats.traits.StatsItemStats -> KpiTileStats {
+    config: {
+      bodyContent: {
+        type: "simple-grid",
+        cols: 4,
+        gap: "lg",
+        className: "w-full",
+        children: [{
+          type: "data-list",
+          entity: "@entity.cards",
+          gap: "lg",
+          cols: 4,
+          fields: [],
+          renderItem: ["fn", "card", {
+            type: "stack",
+            direction: "vertical",
+            gap: "sm",
+            className: "rounded-lg border border-[var(--color-border)] bg-[var(--color-surface)] p-card-lg shadow-elevation-sm hover:shadow-elevation-md transition-shadow",
+            children: [
+              { type: "stack", direction: "horizontal", gap: "xs", align: "center", justify: "between", children: [
+                { type: "typography", variant: "caption", color: "muted", weight: "medium", content: "@card.label", className: "uppercase tracking-wide" },
+                { type: "icon", name: "@card.icon", size: "sm", color: "muted" }
+              ]},
+              { type: "stack", direction: "horizontal", gap: "xs", align: "baseline", children: [
+                { type: "typography", variant: "caption", color: "muted", content: "@card.prefix" },
+                { type: "animated-counter", value: "@card.value", className: "text-4xl font-bold tracking-tight" },
+                { type: "typography", variant: "caption", color: "muted", content: "@card.suffix" }
+              ]},
+              { type: "stack", direction: "horizontal", gap: "sm", align: "center", children: [
+                { type: "trend-indicator", value: "@card.trend", size: "sm", showValue: true },
+                { type: "sparkline", data: [1, 2, 3, 4, 5, 6, 7], color: "auto", height: 24, fill: true, className: "flex-1" }
+              ]}
+            ]
+          }]
+        }]
+      }
+    }
+  }
+
+  page "/kpi-tiles" as KpiTilesStatsPage -> KpiTileStatsItemStats
+}

@@ -1,6 +1,6 @@
 {
   "name": "std-board",
-  "version": "1.0.1",
+  "version": "1.1.0",
   "description": "std-board — generic N-column board primitive. `config.columns` is an array of column definitions ({ key, label, icon, variant }); the trait `array/map`s them on `BoardItemsLoaded` into `@entity.boards` where each board carries its filtered items + a count. The render is a `data-grid` over `@entity.boards` (one card per column) whose `renderItem` lambda nests a `data-list` over `@col.items` (the cards in that stage). N is config-driven — pass any number of columns; the outer `data-grid`'s `cols` is bound to `@config.gridCols` so the grid wraps if you exceed it. Topology = loading / viewing_board / viewing_card / adding / error — distinct from the cookie-cutter `loading/browsing/viewing_single/error` CRUD shape. App-level atoms (e.g. std-pipeline) compose std-board via `uses` and add a sibling persistor + extended source entity.",
   "orbitals": [
     {
@@ -52,14 +52,9 @@
             "items": {
               "type": "object",
               "properties": {
-                "label": {
-                  "name": "label",
-                  "type": "string",
-                  "required": true
-                },
-                "icon": {
-                  "name": "icon",
-                  "type": "string",
+                "count": {
+                  "name": "count",
+                  "type": "number",
                   "required": false
                 },
                 "items": {
@@ -74,13 +69,13 @@
                         "type": "string",
                         "required": false
                       },
-                      "description": {
-                        "name": "description",
-                        "type": "string",
+                      "position": {
+                        "name": "position",
+                        "type": "number",
                         "required": false
                       },
-                      "title": {
-                        "name": "title",
+                      "description": {
+                        "name": "description",
                         "type": "string",
                         "required": false
                       },
@@ -94,13 +89,28 @@
                         "type": "string",
                         "required": false
                       },
-                      "position": {
-                        "name": "position",
-                        "type": "number",
+                      "title": {
+                        "name": "title",
+                        "type": "string",
                         "required": false
                       }
                     }
                   }
+                },
+                "icon": {
+                  "name": "icon",
+                  "type": "string",
+                  "required": false
+                },
+                "key": {
+                  "name": "key",
+                  "type": "string",
+                  "required": true
+                },
+                "label": {
+                  "name": "label",
+                  "type": "string",
+                  "required": true
                 },
                 "variant": {
                   "name": "variant",
@@ -114,16 +124,6 @@
                     "error",
                     "info"
                   ]
-                },
-                "count": {
-                  "name": "count",
-                  "type": "number",
-                  "required": false
-                },
-                "key": {
-                  "name": "key",
-                  "type": "string",
-                  "required": true
                 }
               }
             }
@@ -489,8 +489,8 @@
                     "BoardView",
                     {
                       "emit": {
-                        "failure": "BoardItemsLoadFailed",
-                        "success": "BoardItemsLoaded"
+                        "success": "BoardItemsLoaded",
+                        "failure": "BoardItemsLoadFailed"
                       }
                     }
                   ],
@@ -498,8 +498,8 @@
                     "render-ui",
                     "main",
                     {
-                      "title": "Loading board…",
-                      "type": "loading-state"
+                      "type": "loading-state",
+                      "title": "Loading board…"
                     }
                   ]
                 ]
@@ -519,42 +519,6 @@
                         "fn",
                         "col",
                         {
-                          "icon": [
-                            "object/get",
-                            "@col",
-                            "icon",
-                            "circle"
-                          ],
-                          "count": [
-                            "array/len",
-                            [
-                              "array/filter",
-                              "@payload.data",
-                              [
-                                "fn",
-                                "item",
-                                [
-                                  "=",
-                                  [
-                                    "object/get",
-                                    "@item",
-                                    "stage"
-                                  ],
-                                  [
-                                    "object/get",
-                                    "@col",
-                                    "key"
-                                  ]
-                                ]
-                              ]
-                            ]
-                          ],
-                          "variant": [
-                            "object/get",
-                            "@col",
-                            "variant",
-                            "default"
-                          ],
                           "items": [
                             "array/sort",
                             [
@@ -580,15 +544,51 @@
                             ],
                             "position"
                           ],
-                          "key": [
+                          "variant": [
                             "object/get",
                             "@col",
-                            "key"
+                            "variant",
+                            "default"
                           ],
                           "label": [
                             "object/get",
                             "@col",
                             "label"
+                          ],
+                          "icon": [
+                            "object/get",
+                            "@col",
+                            "icon",
+                            "circle"
+                          ],
+                          "key": [
+                            "object/get",
+                            "@col",
+                            "key"
+                          ],
+                          "count": [
+                            "array/len",
+                            [
+                              "array/filter",
+                              "@payload.data",
+                              [
+                                "fn",
+                                "item",
+                                [
+                                  "=",
+                                  [
+                                    "object/get",
+                                    "@item",
+                                    "stage"
+                                  ],
+                                  [
+                                    "object/get",
+                                    "@col",
+                                    "key"
+                                  ]
+                                ]
+                              ]
+                            ]
                           ]
                         }
                       ]
@@ -597,146 +597,7 @@
                   [
                     "render-ui",
                     "main",
-                    {
-                      "children": [
-                        {
-                          "gap": "sm",
-                          "direction": "horizontal",
-                          "align": "center",
-                          "type": "stack",
-                          "children": [
-                            {
-                              "name": "kanban-square",
-                              "type": "icon"
-                            },
-                            {
-                              "variant": "h3",
-                              "content": "@config.title",
-                              "type": "typography"
-                            }
-                          ]
-                        },
-                        {
-                          "type": "divider"
-                        },
-                        {
-                          "dndRoot": true,
-                          "gap": "md",
-                          "type": "data-grid",
-                          "renderItem": [
-                            "fn",
-                            "col",
-                            {
-                              "children": [
-                                {
-                                  "gap": "sm",
-                                  "children": [
-                                    {
-                                      "gap": "xs",
-                                      "align": "center",
-                                      "type": "stack",
-                                      "direction": "horizontal",
-                                      "children": [
-                                        {
-                                          "type": "icon",
-                                          "name": "@col.icon"
-                                        },
-                                        {
-                                          "content": "@col.label",
-                                          "type": "typography",
-                                          "variant": "h4"
-                                        },
-                                        {
-                                          "variant": "@col.variant",
-                                          "type": "badge",
-                                          "label": "@col.count"
-                                        }
-                                      ]
-                                    },
-                                    {
-                                      "type": "data-list",
-                                      "positionEvent": "REORDER_POSITION",
-                                      "gap": "sm",
-                                      "reorderEvent": "REORDER_CARD",
-                                      "renderItem": [
-                                        "fn",
-                                        "item",
-                                        {
-                                          "children": [
-                                            {
-                                              "type": "stack",
-                                              "children": [
-                                                {
-                                                  "variant": "h4",
-                                                  "type": "typography",
-                                                  "content": "@item.title"
-                                                },
-                                                {
-                                                  "type": "typography",
-                                                  "variant": "caption",
-                                                  "content": "@item.description",
-                                                  "color": "muted"
-                                                },
-                                                {
-                                                  "type": "stack",
-                                                  "align": "center",
-                                                  "direction": "horizontal",
-                                                  "children": [
-                                                    {
-                                                      "type": "button",
-                                                      "icon": "arrow-right",
-                                                      "variant": "ghost",
-                                                      "actionPayload": {
-                                                        "id": "@item.id",
-                                                        "row": "@item"
-                                                      },
-                                                      "label": "Open",
-                                                      "action": "OPEN_CARD"
-                                                    }
-                                                  ],
-                                                  "gap": "xs"
-                                                }
-                                              ],
-                                              "direction": "vertical",
-                                              "gap": "xs"
-                                            }
-                                          ],
-                                          "type": "card",
-                                          "look": "@config.cardLook"
-                                        }
-                                      ],
-                                      "entity": "@col.items",
-                                      "dragGroup": "@col.key",
-                                      "fields": [],
-                                      "sortable": true,
-                                      "dropEvent": "MOVE_CARD",
-                                      "accepts": "*"
-                                    }
-                                  ],
-                                  "direction": "vertical",
-                                  "type": "stack"
-                                }
-                              ],
-                              "type": "card",
-                              "look": "@config.cardLook"
-                            }
-                          ],
-                          "entity": "@entity.boards",
-                          "cols": "@config.gridCols",
-                          "fields": []
-                        },
-                        {
-                          "type": "floating-action-button",
-                          "label": "Add item",
-                          "icon": "plus",
-                          "variant": "primary",
-                          "action": "ADD_CARD"
-                        }
-                      ],
-                      "type": "stack",
-                      "gap": "md",
-                      "direction": "vertical"
-                    }
+                    "@config.bodyContent"
                   ]
                 ]
               },
@@ -754,8 +615,8 @@
                     "render-ui",
                     "main",
                     {
-                      "message": "@entity.errorMessage",
                       "type": "error-state",
+                      "message": "@entity.errorMessage",
                       "title": "Failed to load board"
                     }
                   ]
@@ -775,8 +636,8 @@
                     "render-ui",
                     "main",
                     {
-                      "type": "error-state",
                       "message": "@entity.errorMessage",
+                      "type": "error-state",
                       "title": "Save failed"
                     }
                   ]
@@ -816,85 +677,84 @@
                     "render-ui",
                     "main",
                     {
-                      "type": "stack",
                       "children": [
                         {
-                          "align": "center",
+                          "type": "stack",
                           "children": [
                             {
                               "action": "CLOSE_CARD",
                               "type": "button",
-                              "icon": "arrow-left",
+                              "label": "Back",
                               "variant": "ghost",
-                              "label": "Back"
+                              "icon": "arrow-left"
                             },
                             {
-                              "type": "icon",
-                              "name": "credit-card"
+                              "name": "credit-card",
+                              "type": "icon"
                             },
                             {
                               "content": "@entity.currentTitle",
-                              "type": "typography",
-                              "variant": "h3"
+                              "variant": "h3",
+                              "type": "typography"
                             },
                             {
-                              "label": "@entity.currentStage",
                               "variant": "primary",
+                              "label": "@entity.currentStage",
                               "type": "badge"
                             }
                           ],
-                          "type": "stack",
+                          "direction": "horizontal",
                           "gap": "sm",
-                          "direction": "horizontal"
+                          "align": "center"
                         },
                         {
                           "type": "divider"
                         },
                         {
-                          "type": "card",
                           "look": "@config.cardLook",
                           "children": [
                             {
-                              "type": "stack",
                               "direction": "vertical",
                               "gap": "sm",
+                              "type": "stack",
                               "children": [
                                 {
                                   "color": "muted",
-                                  "variant": "caption",
                                   "type": "typography",
+                                  "variant": "caption",
                                   "content": "Description"
                                 },
                                 {
+                                  "content": "@entity.currentDescription",
                                   "type": "typography",
-                                  "variant": "body",
-                                  "content": "@entity.currentDescription"
+                                  "variant": "body"
                                 },
                                 {
                                   "type": "divider"
                                 },
                                 {
-                                  "color": "muted",
-                                  "type": "typography",
                                   "variant": "caption",
-                                  "content": "Notes"
+                                  "type": "typography",
+                                  "content": "Notes",
+                                  "color": "muted"
                                 },
                                 {
-                                  "variant": "body",
                                   "type": "typography",
+                                  "variant": "body",
                                   "content": "@entity.currentNotes"
                                 }
                               ]
                             }
-                          ]
+                          ],
+                          "type": "card"
                         },
                         {
                           "type": "divider"
                         },
                         {
-                          "content": "Move to stage:",
                           "color": "muted",
                           "variant": "caption",
+                          "content": "Move to stage:",
                           "type": "typography"
                         },
                         {
@@ -902,44 +762,45 @@
                             "fn",
                             "col",
                             {
-                              "icon": "@col.icon",
+                              "action": "MOVE_CARD",
                               "actionPayload": {
-                                "id": "@entity.currentId",
-                                "targetGroup": "@col.key"
+                                "targetGroup": "@col.key",
+                                "id": "@entity.currentId"
                               },
+                              "icon": "@col.icon",
                               "label": "@col.label",
-                              "type": "button",
                               "variant": "secondary",
-                              "action": "MOVE_CARD"
+                              "type": "button"
                             }
                           ],
-                          "fields": [],
-                          "gap": "sm",
+                          "entity": "@entity.boards",
                           "type": "data-list",
+                          "gap": "sm",
                           "variant": "default",
-                          "entity": "@entity.boards"
+                          "fields": []
                         },
                         {
-                          "direction": "horizontal",
                           "gap": "sm",
                           "type": "stack",
                           "children": [
                             {
                               "label": "Delete",
-                              "type": "button",
-                              "variant": "danger",
                               "actionPayload": {
                                 "id": "@entity.currentId"
                               },
-                              "action": "DELETE_CARD",
-                              "icon": "trash-2"
+                              "icon": "trash-2",
+                              "type": "button",
+                              "variant": "danger",
+                              "action": "DELETE_CARD"
                             }
                           ],
-                          "align": "center"
+                          "align": "center",
+                          "direction": "horizontal"
                         }
                       ],
-                      "gap": "md",
-                      "direction": "vertical"
+                      "type": "stack",
+                      "direction": "vertical",
+                      "gap": "md"
                     }
                   ]
                 ]
@@ -978,17 +839,18 @@
                     "render-ui",
                     "main",
                     {
-                      "gap": "md",
-                      "direction": "vertical",
                       "children": [
                         {
+                          "type": "stack",
+                          "direction": "horizontal",
+                          "align": "center",
                           "children": [
                             {
-                              "label": "Cancel",
-                              "type": "button",
                               "action": "CANCEL_ADD",
                               "variant": "ghost",
-                              "icon": "x"
+                              "type": "button",
+                              "icon": "x",
+                              "label": "Cancel"
                             },
                             {
                               "type": "icon",
@@ -996,27 +858,26 @@
                             },
                             {
                               "type": "typography",
-                              "content": "New board item",
-                              "variant": "h3"
+                              "variant": "h3",
+                              "content": "New board item"
                             }
                           ],
-                          "align": "center",
-                          "direction": "horizontal",
-                          "gap": "sm",
-                          "type": "stack"
+                          "gap": "sm"
                         },
                         {
                           "type": "divider"
                         },
                         {
-                          "submitEvent": "SAVE_CARD",
+                          "entity": "@entity",
                           "cancelEvent": "CANCEL_ADD",
                           "fields": "@config.formFields",
-                          "type": "form-section",
-                          "entity": "@entity",
-                          "mode": "create"
+                          "mode": "create",
+                          "submitEvent": "SAVE_CARD",
+                          "type": "form-section"
                         }
                       ],
+                      "gap": "md",
+                      "direction": "vertical",
                       "type": "stack"
                     }
                   ]
@@ -1059,13 +920,13 @@
                     "update",
                     "BoardView",
                     {
-                      "position": "@payload.position",
-                      "id": "@payload.id"
+                      "id": "@payload.id",
+                      "position": "@payload.position"
                     },
                     {
                       "emit": {
-                        "success": "BoardItemsSaved",
-                        "failure": "BoardItemsSaveFailed"
+                        "failure": "BoardItemsSaveFailed",
+                        "success": "BoardItemsSaved"
                       }
                     }
                   ]
@@ -1103,6 +964,23 @@
                         "fn",
                         "col",
                         {
+                          "icon": [
+                            "object/get",
+                            "@col",
+                            "icon",
+                            "circle"
+                          ],
+                          "key": [
+                            "object/get",
+                            "@col",
+                            "key"
+                          ],
+                          "variant": [
+                            "object/get",
+                            "@col",
+                            "variant",
+                            "default"
+                          ],
                           "count": [
                             "array/len",
                             [
@@ -1126,23 +1004,6 @@
                                 ]
                               ]
                             ]
-                          ],
-                          "key": [
-                            "object/get",
-                            "@col",
-                            "key"
-                          ],
-                          "icon": [
-                            "object/get",
-                            "@col",
-                            "icon",
-                            "circle"
-                          ],
-                          "variant": [
-                            "object/get",
-                            "@col",
-                            "variant",
-                            "default"
                           ],
                           "items": [
                             "array/sort",
@@ -1199,8 +1060,8 @@
                     "render-ui",
                     "main",
                     {
-                      "title": "Refreshing board…",
-                      "type": "loading-state"
+                      "type": "loading-state",
+                      "title": "Refreshing board…"
                     }
                   ]
                 ]
@@ -1215,8 +1076,8 @@
                     "update",
                     "BoardView",
                     {
-                      "stage": "@payload.targetGroup",
-                      "id": "@payload.id"
+                      "id": "@payload.id",
+                      "stage": "@payload.targetGroup"
                     },
                     {
                       "emit": {
@@ -1229,8 +1090,8 @@
                     "render-ui",
                     "main",
                     {
-                      "title": "Moving item…",
-                      "type": "loading-state"
+                      "type": "loading-state",
+                      "title": "Moving item…"
                     }
                   ]
                 ]
@@ -1256,8 +1117,8 @@
                     "render-ui",
                     "main",
                     {
-                      "type": "loading-state",
-                      "title": "Deleting item…"
+                      "title": "Deleting item…",
+                      "type": "loading-state"
                     }
                   ]
                 ]
@@ -1274,8 +1135,8 @@
                     "@payload.data",
                     {
                       "emit": {
-                        "success": "BoardItemsSaved",
-                        "failure": "BoardItemsSaveFailed"
+                        "failure": "BoardItemsSaveFailed",
+                        "success": "BoardItemsSaved"
                       }
                     }
                   ],
@@ -1283,8 +1144,8 @@
                     "render-ui",
                     "main",
                     {
-                      "type": "loading-state",
-                      "title": "Saving…"
+                      "title": "Saving…",
+                      "type": "loading-state"
                     }
                   ]
                 ]
@@ -1298,8 +1159,8 @@
                     "render-ui",
                     "main",
                     {
-                      "type": "loading-state",
-                      "title": "Cancelling…"
+                      "title": "Cancelling…",
+                      "type": "loading-state"
                     }
                   ]
                 ]
@@ -1322,27 +1183,36 @@
             ]
           },
           "config": {
-            "title": {
+            "cardLook": {
               "type": "string",
-              "default": "Board",
-              "label": "Board title",
-              "description": "Heading shown above the column board",
-              "tier": "presentation"
+              "default": "elevated",
+              "label": "Card look",
+              "description": "Layer 2 visual treatment for cards rendered by this board.",
+              "tier": "presentation",
+              "values": [
+                "elevated",
+                "flat-bordered",
+                "borderless-divider",
+                "ticket",
+                "invoice",
+                "chip",
+                "tile-image-first"
+              ]
             },
             "columns": {
               "type": "[ColumnSpec]",
               "default": [
                 {
-                  "icon": "circle",
-                  "key": "todo",
                   "label": "To Do",
-                  "variant": "default"
+                  "variant": "default",
+                  "key": "todo",
+                  "icon": "circle"
                 },
                 {
                   "icon": "circle-dot",
-                  "variant": "primary",
                   "label": "In Progress",
-                  "key": "doing"
+                  "key": "doing",
+                  "variant": "primary"
                 },
                 {
                   "variant": "success",
@@ -1357,11 +1227,6 @@
               "items": {
                 "type": "object",
                 "properties": {
-                  "key": {
-                    "name": "key",
-                    "type": "string",
-                    "required": true
-                  },
                   "label": {
                     "name": "label",
                     "type": "string",
@@ -1376,6 +1241,11 @@
                     "name": "variant",
                     "type": "string",
                     "required": false
+                  },
+                  "key": {
+                    "name": "key",
+                    "type": "string",
+                    "required": true
                   }
                 }
               }
@@ -1395,27 +1265,164 @@
                 "type": "string"
               }
             },
-            "cardLook": {
-              "type": "string",
-              "default": "elevated",
-              "label": "Card look",
-              "description": "Layer 2 visual treatment for cards rendered by this board.",
-              "tier": "presentation",
-              "values": [
-                "elevated",
-                "flat-bordered",
-                "borderless-divider",
-                "ticket",
-                "invoice",
-                "chip",
-                "tile-image-first"
-              ]
+            "bodyContent": {
+              "type": "render-ui",
+              "default": {
+                "children": [
+                  {
+                    "align": "center",
+                    "direction": "horizontal",
+                    "type": "stack",
+                    "gap": "sm",
+                    "children": [
+                      {
+                        "type": "icon",
+                        "name": "kanban-square"
+                      },
+                      {
+                        "variant": "h3",
+                        "type": "typography",
+                        "content": "@config.title"
+                      }
+                    ]
+                  },
+                  {
+                    "type": "divider"
+                  },
+                  {
+                    "entity": "@entity.boards",
+                    "gap": "md",
+                    "dndRoot": true,
+                    "cols": "@config.gridCols",
+                    "fields": [],
+                    "type": "data-grid",
+                    "renderItem": [
+                      "fn",
+                      "col",
+                      {
+                        "children": [
+                          {
+                            "children": [
+                              {
+                                "align": "center",
+                                "children": [
+                                  {
+                                    "type": "icon",
+                                    "name": "@col.icon"
+                                  },
+                                  {
+                                    "variant": "h4",
+                                    "type": "typography",
+                                    "content": "@col.label"
+                                  },
+                                  {
+                                    "variant": "@col.variant",
+                                    "type": "badge",
+                                    "label": "@col.count"
+                                  }
+                                ],
+                                "gap": "xs",
+                                "direction": "horizontal",
+                                "type": "stack"
+                              },
+                              {
+                                "fields": [],
+                                "dragGroup": "@col.key",
+                                "sortable": true,
+                                "type": "data-list",
+                                "reorderEvent": "REORDER_CARD",
+                                "accepts": "*",
+                                "dropEvent": "MOVE_CARD",
+                                "entity": "@col.items",
+                                "gap": "sm",
+                                "renderItem": [
+                                  "fn",
+                                  "item",
+                                  {
+                                    "type": "card",
+                                    "look": "@config.cardLook",
+                                    "children": [
+                                      {
+                                        "children": [
+                                          {
+                                            "content": "@item.title",
+                                            "variant": "h4",
+                                            "type": "typography"
+                                          },
+                                          {
+                                            "color": "muted",
+                                            "type": "typography",
+                                            "content": "@item.description",
+                                            "variant": "caption"
+                                          },
+                                          {
+                                            "align": "center",
+                                            "gap": "xs",
+                                            "direction": "horizontal",
+                                            "type": "stack",
+                                            "children": [
+                                              {
+                                                "action": "OPEN_CARD",
+                                                "variant": "ghost",
+                                                "label": "Open",
+                                                "actionPayload": {
+                                                  "row": "@item",
+                                                  "id": "@item.id"
+                                                },
+                                                "icon": "arrow-right",
+                                                "type": "button"
+                                              }
+                                            ]
+                                          }
+                                        ],
+                                        "type": "stack",
+                                        "gap": "xs",
+                                        "direction": "vertical"
+                                      }
+                                    ]
+                                  }
+                                ],
+                                "positionEvent": "REORDER_POSITION"
+                              }
+                            ],
+                            "type": "stack",
+                            "gap": "sm",
+                            "direction": "vertical"
+                          }
+                        ],
+                        "type": "card",
+                        "look": "@config.cardLook"
+                      }
+                    ]
+                  },
+                  {
+                    "label": "Add item",
+                    "action": "ADD_CARD",
+                    "type": "floating-action-button",
+                    "icon": "plus",
+                    "variant": "primary"
+                  }
+                ],
+                "gap": "md",
+                "type": "stack",
+                "direction": "vertical"
+              },
+              "label": "Body content tree",
+              "description": "Render-ui SExpr rendered after the board loads. Default is the canonical column data-grid with nested per-column data-lists. Layer 3 variants override this with their own tree (swim-lanes, timeline-roadmap, etc.) while inheriting the same trait, state machine, emits, and listens.",
+              "tier": "internal"
             },
             "gridCols": {
               "type": "number",
               "default": 3.0,
               "label": "Grid columns",
               "description": "Outer grid column count before the board wraps",
+              "tier": "presentation"
+            },
+            "title": {
+              "type": "string",
+              "default": "Board",
+              "label": "Board title",
+              "description": "Heading shown above the column board",
               "tier": "presentation"
             }
           },

@@ -1,0 +1,277 @@
+{
+  "name": "std-board-kanban-classic",
+  "version": "1.0.0",
+  "description": "Trello-style kanban — wide elevated columns side-by-side, sticky column headers with icon + label + count chip, dense cards with title, description, and a status badge. Same BoardItemBoard trait, same state machine, same emits/listens as std-board — only the bodyContent tree differs.",
+  "orbitals": [
+    {
+      "name": "KanbanClassicBoardOrbital",
+      "uses": [
+        {
+          "from": "std/behaviors/std-board",
+          "as": "Board"
+        }
+      ],
+      "entity": {
+        "name": "KanbanClassicItem",
+        "collection": "kanban_classic_items",
+        "persistence": "persistent",
+        "fields": [
+          {
+            "name": "id",
+            "type": "string",
+            "required": true
+          },
+          {
+            "name": "title",
+            "type": "string",
+            "required": true
+          },
+          {
+            "name": "description",
+            "type": "string",
+            "default": ""
+          },
+          {
+            "name": "stage",
+            "type": "string",
+            "default": "todo",
+            "values": [
+              "todo",
+              "doing",
+              "done"
+            ]
+          },
+          {
+            "name": "notes",
+            "type": "string",
+            "default": ""
+          },
+          {
+            "name": "position",
+            "type": "number",
+            "default": 0.0
+          },
+          {
+            "name": "boards",
+            "type": "array",
+            "default": [],
+            "items": {
+              "type": "object"
+            }
+          },
+          {
+            "name": "currentId",
+            "type": "string",
+            "default": ""
+          },
+          {
+            "name": "currentTitle",
+            "type": "string",
+            "default": ""
+          },
+          {
+            "name": "currentDescription",
+            "type": "string",
+            "default": ""
+          },
+          {
+            "name": "currentStage",
+            "type": "string",
+            "default": ""
+          },
+          {
+            "name": "currentNotes",
+            "type": "string",
+            "default": ""
+          },
+          {
+            "name": "errorMessage",
+            "type": "string",
+            "default": ""
+          }
+        ]
+      },
+      "traits": [
+        {
+          "ref": "Board.traits.BoardItemBoard",
+          "name": "KanbanClassicBoard",
+          "linkedEntity": "KanbanClassicItem",
+          "config": {
+            "bodyContent": {
+              "direction": "vertical",
+              "gap": "md",
+              "type": "stack",
+              "className": "h-full",
+              "children": [
+                {
+                  "className": "px-card-md",
+                  "direction": "horizontal",
+                  "gap": "sm",
+                  "children": [
+                    {
+                      "type": "icon",
+                      "name": "kanban-square"
+                    },
+                    {
+                      "type": "typography",
+                      "variant": "h2",
+                      "content": "@config.title"
+                    }
+                  ],
+                  "type": "stack",
+                  "align": "center"
+                },
+                {
+                  "type": "divider"
+                },
+                {
+                  "dndRoot": true,
+                  "entity": "@entity.boards",
+                  "cols": "@config.gridCols",
+                  "fields": [],
+                  "type": "data-grid",
+                  "gap": "lg",
+                  "renderItem": [
+                    "fn",
+                    "col",
+                    {
+                      "className": "min-w-[280px] bg-[var(--color-surface-subtle)] rounded-lg overflow-hidden",
+                      "children": [
+                        {
+                          "direction": "vertical",
+                          "children": [
+                            {
+                              "gap": "sm",
+                              "direction": "horizontal",
+                              "className": "px-card-md py-3 border-b border-[var(--color-border)] sticky top-0 bg-[var(--color-surface)]",
+                              "align": "center",
+                              "children": [
+                                {
+                                  "type": "icon",
+                                  "name": "@col.icon"
+                                },
+                                {
+                                  "className": "flex-1",
+                                  "type": "typography",
+                                  "content": "@col.label",
+                                  "variant": "h4"
+                                },
+                                {
+                                  "type": "badge",
+                                  "size": "sm",
+                                  "variant": "primary",
+                                  "label": "@col.count"
+                                }
+                              ],
+                              "type": "stack"
+                            },
+                            {
+                              "type": "data-list",
+                              "entity": "@col.items",
+                              "className": "p-card-md min-h-[120px]",
+                              "gap": "sm",
+                              "positionEvent": "REORDER_POSITION",
+                              "renderItem": [
+                                "fn",
+                                "item",
+                                {
+                                  "padding": "sm",
+                                  "look": "elevated",
+                                  "type": "card",
+                                  "children": [
+                                    {
+                                      "gap": "xs",
+                                      "direction": "vertical",
+                                      "children": [
+                                        {
+                                          "content": "@item.title",
+                                          "weight": "medium",
+                                          "variant": "body",
+                                          "type": "typography"
+                                        },
+                                        {
+                                          "type": "typography",
+                                          "color": "muted",
+                                          "variant": "caption",
+                                          "content": "@item.description",
+                                          "className": "line-clamp-2"
+                                        },
+                                        {
+                                          "gap": "xs",
+                                          "type": "stack",
+                                          "direction": "horizontal",
+                                          "align": "center",
+                                          "className": "pt-1",
+                                          "children": [
+                                            {
+                                              "variant": "primary",
+                                              "label": "@item.stage",
+                                              "size": "sm",
+                                              "type": "badge"
+                                            },
+                                            {
+                                              "variant": "ghost",
+                                              "type": "button",
+                                              "actionPayload": {
+                                                "id": "@item.id",
+                                                "row": "@item"
+                                              },
+                                              "className": "ml-auto",
+                                              "label": "Open",
+                                              "size": "sm",
+                                              "action": "OPEN_CARD",
+                                              "icon": "arrow-right"
+                                            }
+                                          ]
+                                        }
+                                      ],
+                                      "type": "stack"
+                                    }
+                                  ],
+                                  "className": "cursor-grab hover:shadow-lg transition-shadow"
+                                }
+                              ],
+                              "fields": [],
+                              "dropEvent": "MOVE_CARD",
+                              "reorderEvent": "REORDER_CARD",
+                              "sortable": true,
+                              "dragGroup": "@col.key",
+                              "accepts": "*"
+                            }
+                          ],
+                          "type": "stack",
+                          "gap": "none"
+                        }
+                      ],
+                      "look": "elevated",
+                      "padding": "none",
+                      "type": "card"
+                    }
+                  ]
+                },
+                {
+                  "label": "Add card",
+                  "type": "floating-action-button",
+                  "icon": "plus",
+                  "action": "ADD_CARD",
+                  "variant": "primary"
+                }
+              ]
+            }
+          }
+        }
+      ],
+      "pages": [
+        {
+          "name": "KanbanClassicPage",
+          "path": "/kanban-classic",
+          "traits": [
+            {
+              "ref": "KanbanClassicBoard"
+            }
+          ]
+        }
+      ]
+    }
+  ]
+}

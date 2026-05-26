@@ -1,0 +1,234 @@
+{
+  "name": "std-thread-email-threaded",
+  "version": "1.0.0",
+  "description": "Email-threaded — Gmail/Outlook style: collapsed message cards with sender + snippet, expandable to full body. Subject header at the top, attachments row, and action bar (reply, forward, archive). For helpdesk email threads, document discussions, support tickets that read like email.",
+  "orbitals": [
+    {
+      "name": "EmailThreadedOrbital",
+      "uses": [
+        {
+          "from": "std/behaviors/std-thread",
+          "as": "Thread"
+        }
+      ],
+      "entity": {
+        "name": "EmailThreadedPost",
+        "collection": "emailthreadedposts",
+        "persistence": "persistent",
+        "fields": [
+          {
+            "name": "id",
+            "type": "string",
+            "required": true
+          },
+          {
+            "name": "parentId",
+            "type": "string"
+          },
+          {
+            "name": "threadRootId",
+            "type": "string",
+            "required": true
+          },
+          {
+            "name": "authorId",
+            "type": "string",
+            "required": true
+          },
+          {
+            "name": "authorName",
+            "type": "string",
+            "required": true
+          },
+          {
+            "name": "content",
+            "type": "string",
+            "required": true
+          },
+          {
+            "name": "createdAt",
+            "type": "string"
+          },
+          {
+            "name": "voteCount",
+            "type": "number",
+            "default": 0.0
+          },
+          {
+            "name": "replyCount",
+            "type": "number",
+            "default": 0.0
+          }
+        ]
+      },
+      "traits": [
+        {
+          "ref": "Thread.traits.ThreadPostBrowse",
+          "name": "EmailThreaded",
+          "linkedEntity": "EmailThreadedPost",
+          "config": {
+            "bodyContent": {
+              "className": "max-w-4xl mx-auto px-card-md py-section",
+              "gap": "none",
+              "direction": "vertical",
+              "children": [
+                {
+                  "align": "center",
+                  "direction": "horizontal",
+                  "className": "pb-md border-b border-[var(--color-border)]",
+                  "children": [
+                    {
+                      "type": "icon",
+                      "name": "mail"
+                    },
+                    {
+                      "direction": "vertical",
+                      "gap": "xs",
+                      "children": [
+                        {
+                          "content": "Conversation",
+                          "variant": "h3",
+                          "type": "typography"
+                        },
+                        {
+                          "color": "muted",
+                          "content": "Email thread",
+                          "variant": "caption",
+                          "type": "typography"
+                        }
+                      ],
+                      "className": "flex-1",
+                      "type": "stack"
+                    },
+                    {
+                      "type": "button",
+                      "label": "Archive",
+                      "action": "ARCHIVE",
+                      "icon": "archive",
+                      "variant": "ghost"
+                    },
+                    {
+                      "type": "button",
+                      "icon": "corner-up-left",
+                      "label": "Reply all",
+                      "variant": "secondary",
+                      "action": "REPLY"
+                    }
+                  ],
+                  "type": "stack",
+                  "gap": "md"
+                },
+                {
+                  "type": "data-list",
+                  "renderItem": [
+                    "fn",
+                    "item",
+                    {
+                      "padding": "md",
+                      "className": "hover:shadow-elevation-1 transition-shadow",
+                      "type": "card",
+                      "children": [
+                        {
+                          "gap": "sm",
+                          "direction": "vertical",
+                          "type": "stack",
+                          "children": [
+                            {
+                              "className": "w-full",
+                              "children": [
+                                {
+                                  "name": "@item.authorName",
+                                  "type": "avatar",
+                                  "size": "sm"
+                                },
+                                {
+                                  "direction": "vertical",
+                                  "gap": "xs",
+                                  "children": [
+                                    {
+                                      "weight": "medium",
+                                      "type": "typography",
+                                      "variant": "body",
+                                      "content": "@item.authorName"
+                                    },
+                                    {
+                                      "content": "@item.content",
+                                      "type": "typography",
+                                      "className": "truncate",
+                                      "variant": "caption",
+                                      "color": "muted"
+                                    }
+                                  ],
+                                  "className": "flex-1 min-w-0",
+                                  "type": "stack"
+                                },
+                                {
+                                  "color": "muted",
+                                  "content": "@item.createdAt",
+                                  "type": "typography",
+                                  "variant": "caption"
+                                }
+                              ],
+                              "type": "stack",
+                              "direction": "horizontal",
+                              "gap": "md",
+                              "align": "center"
+                            },
+                            {
+                              "type": "divider"
+                            },
+                            {
+                              "children": [
+                                {
+                                  "variant": "secondary",
+                                  "label": "Reply",
+                                  "action": "REPLY",
+                                  "type": "button",
+                                  "actionPayload": {
+                                    "parentId": "@item.id"
+                                  },
+                                  "icon": "corner-up-left"
+                                },
+                                {
+                                  "action": "FORWARD",
+                                  "icon": "corner-up-right",
+                                  "label": "Forward",
+                                  "variant": "ghost",
+                                  "type": "button"
+                                }
+                              ],
+                              "direction": "horizontal",
+                              "type": "stack",
+                              "gap": "sm"
+                            }
+                          ]
+                        }
+                      ],
+                      "look": "flat-bordered"
+                    }
+                  ],
+                  "entity": "@payload.data",
+                  "gap": "sm",
+                  "variant": "default",
+                  "fields": []
+                }
+              ],
+              "type": "stack"
+            }
+          }
+        }
+      ],
+      "pages": [
+        {
+          "name": "EmailThreadedPage",
+          "path": "/email-thread",
+          "traits": [
+            {
+              "ref": "EmailThreaded"
+            }
+          ]
+        }
+      ]
+    }
+  ]
+}

@@ -1,0 +1,52 @@
+app std-browse-command-palette "1.0.0"
+"Command-palette browse — keyboard-first search-driven UX inspired by Linear Cmd+K and Raycast. Full-width search input at the top of the viewport; typing emits REFETCH_QUERY on every keystroke; results render as a tight data-list of compact rows with kbd hints. Same BrowseItemBrowse trait, same state machine, same emits/listens as std-browse — only the bodyContent tree differs."
+
+orbital CommandPaletteBrowseOrbital {
+  uses Browse from "std/behaviors/std-browse"
+
+  entity CommandPaletteItem [runtime] {
+    id          : string!
+    name        : string!
+    description : string
+    status      : "active" | "inactive" | "pending" = "active"
+    createdAt   : string
+  }
+
+  trait CommandPaletteBrowse = Browse.traits.BrowseItemBrowse -> CommandPaletteItem {
+    config: {
+      bodyContent: {
+        type: "stack",
+        direction: "vertical",
+        gap: "none",
+        className: "max-w-2xl mx-auto pt-section",
+        children: [
+          { type: "input", inputType: "search", placeholder: "Type to search…", action: "REFETCH_QUERY", className: "text-lg" },
+          { type: "stack", direction: "horizontal", gap: "sm", align: "center", className: "px-card-md py-2 border-b border-[var(--color-border)]", children: [
+            { type: "typography", variant: "caption", content: "↑↓", className: "px-1.5 py-0.5 border rounded font-mono" },
+            { type: "typography", variant: "caption", color: "muted", content: "Navigate" },
+            { type: "typography", variant: "caption", content: "↵", className: "px-1.5 py-0.5 border rounded font-mono" },
+            { type: "typography", variant: "caption", color: "muted", content: "Select" },
+            { type: "typography", variant: "caption", content: "esc", className: "px-1.5 py-0.5 border rounded font-mono" },
+            { type: "typography", variant: "caption", color: "muted", content: "Close" }
+          ]},
+          { type: "data-list", entity: "@payload.data", gap: "none", selectable: true, fields: [],
+            renderItem: ["fn", "item", {
+              type: "stack", direction: "horizontal", gap: "md", align: "center", className: "px-card-md py-3 hover:bg-muted cursor-pointer",
+              children: [
+                { type: "icon", name: "file" },
+                { type: "stack", direction: "vertical", gap: "xs", className: "flex-1 min-w-0", children: [
+                  { type: "typography", variant: "body", weight: "medium", content: "@item.name", className: "truncate" },
+                  { type: "typography", variant: "caption", color: "muted", content: "@item.description", className: "truncate" }
+                ]},
+                { type: "badge", label: "@item.status", variant: "default" },
+                { type: "typography", variant: "caption", content: "↵", className: "px-1.5 py-0.5 border rounded font-mono" }
+              ]
+            }]
+          }
+        ]
+      }
+    }
+  }
+
+  page "/cmd-browse" as CommandPalettePage -> CommandPaletteBrowse
+}

@@ -1,0 +1,42 @@
+app std-tabs-segmented-pills "1.0.0"
+"Segmented-pills tabs — iOS-style segmented control: pill-shaped tabs sit in a single rounded background bar, no underline, active tab carries a filled background. Compact and modern; ideal for settings UIs and mode-switchers. Same TabsItemTabs trait, state machine, emits/listens as std-tabs — only the bodyContent tree differs."
+
+type TabSpec = { id : string, label : string!, value : string, icon : string }
+
+orbital SegmentedPillsTabsOrbital {
+  uses Tabs from "std/behaviors/std-tabs"
+
+  entity SegmentedPillsTabsItem [runtime] {
+    id         : string!
+    activeTab  : string = ""
+    items      : [TabSpec] = []
+  }
+
+  trait SegmentedPillsTabs = Tabs.traits.TabsItemTabs -> SegmentedPillsTabsItem {
+    config: {
+      bodyContent: {
+        type: "stack",
+        direction: "horizontal",
+        gap: "none",
+        align: "center",
+        className: "inline-flex p-1 rounded-pill bg-muted",
+        children: [
+          { type: "tabs",
+            items: [
+              { id: "tab1", label: "Tab 1" },
+              { id: "tab2", label: "Tab 2" },
+              { id: "tab3", label: "Tab 3" }
+            ],
+            activeTab: "@entity.activeTab",
+            variant: "pills",
+            orientation: "horizontal",
+            tabChangeEvent: "TAB_CHANGED",
+            className: "gap-1"
+          }
+        ]
+      }
+    }
+  }
+
+  page "/segmented-tabs" as SegmentedPillsTabsPage -> SegmentedPillsTabs
+}

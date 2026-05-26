@@ -1,0 +1,256 @@
+{
+  "name": "std-stats-kpi-tiles",
+  "version": "1.0.0",
+  "description": "KPI tiles — Stripe-dashboard style. 3–4 large numeric tiles arranged in a horizontal grid: huge typography number, label below, optional change indicator and sparkline hint. For trading dashboards, finance trackers, ecommerce metrics, payment volume. Same StatsItemStats trait, same aggregation pipeline, same listens as std-stats — only the bodyContent tree differs.",
+  "orbitals": [
+    {
+      "name": "KpiTilesStatsOrbital",
+      "uses": [
+        {
+          "from": "std/behaviors/std-stats",
+          "as": "Stats"
+        }
+      ],
+      "entity": {
+        "name": "KpiTileStats",
+        "persistence": "runtime",
+        "fields": [
+          {
+            "name": "id",
+            "type": "string",
+            "required": true
+          },
+          {
+            "name": "cards",
+            "type": "array",
+            "default": [],
+            "items": {
+              "type": "object",
+              "properties": {
+                "variant": {
+                  "name": "variant",
+                  "type": "string",
+                  "required": false,
+                  "values": [
+                    "default",
+                    "primary",
+                    "success",
+                    "warning",
+                    "error",
+                    "info"
+                  ]
+                },
+                "trendPolarity": {
+                  "name": "trendPolarity",
+                  "type": "string",
+                  "required": false,
+                  "values": [
+                    "higher-is-better",
+                    "lower-is-better"
+                  ]
+                },
+                "trendFormat": {
+                  "name": "trendFormat",
+                  "type": "string",
+                  "required": false,
+                  "values": [
+                    "absolute",
+                    "percent"
+                  ]
+                },
+                "value": {
+                  "name": "value",
+                  "type": "number",
+                  "required": false
+                },
+                "prefix": {
+                  "name": "prefix",
+                  "type": "string",
+                  "required": false
+                },
+                "sparklineData": {
+                  "name": "sparklineData",
+                  "type": "array",
+                  "required": false,
+                  "items": {
+                    "type": "number"
+                  }
+                },
+                "clickEvent": {
+                  "name": "clickEvent",
+                  "type": "string",
+                  "required": false
+                },
+                "suffix": {
+                  "name": "suffix",
+                  "type": "string",
+                  "required": false
+                },
+                "max": {
+                  "name": "max",
+                  "type": "number",
+                  "required": false
+                },
+                "icon": {
+                  "name": "icon",
+                  "type": "string",
+                  "required": false
+                },
+                "label": {
+                  "name": "label",
+                  "type": "string",
+                  "required": true
+                },
+                "format": {
+                  "name": "format",
+                  "type": "string",
+                  "required": false,
+                  "values": [
+                    "number",
+                    "currency",
+                    "percent"
+                  ]
+                },
+                "target": {
+                  "name": "target",
+                  "type": "number",
+                  "required": false
+                },
+                "trend": {
+                  "name": "trend",
+                  "type": "number",
+                  "required": false
+                }
+              }
+            }
+          }
+        ]
+      },
+      "traits": [
+        {
+          "ref": "Stats.traits.StatsItemStats",
+          "name": "KpiTileStatsItemStats",
+          "linkedEntity": "KpiTileStats",
+          "config": {
+            "bodyContent": {
+              "gap": "lg",
+              "className": "w-full",
+              "type": "simple-grid",
+              "children": [
+                {
+                  "renderItem": [
+                    "fn",
+                    "card",
+                    {
+                      "gap": "sm",
+                      "className": "rounded-lg border border-[var(--color-border)] bg-[var(--color-surface)] p-card-lg shadow-elevation-sm hover:shadow-elevation-md transition-shadow",
+                      "children": [
+                        {
+                          "type": "stack",
+                          "gap": "xs",
+                          "direction": "horizontal",
+                          "align": "center",
+                          "justify": "between",
+                          "children": [
+                            {
+                              "variant": "caption",
+                              "weight": "medium",
+                              "content": "@card.label",
+                              "color": "muted",
+                              "className": "uppercase tracking-wide",
+                              "type": "typography"
+                            },
+                            {
+                              "name": "@card.icon",
+                              "type": "icon",
+                              "size": "sm",
+                              "color": "muted"
+                            }
+                          ]
+                        },
+                        {
+                          "children": [
+                            {
+                              "type": "typography",
+                              "color": "muted",
+                              "variant": "caption",
+                              "content": "@card.prefix"
+                            },
+                            {
+                              "type": "animated-counter",
+                              "value": "@card.value",
+                              "className": "text-4xl font-bold tracking-tight"
+                            },
+                            {
+                              "color": "muted",
+                              "content": "@card.suffix",
+                              "type": "typography",
+                              "variant": "caption"
+                            }
+                          ],
+                          "gap": "xs",
+                          "direction": "horizontal",
+                          "align": "baseline",
+                          "type": "stack"
+                        },
+                        {
+                          "children": [
+                            {
+                              "size": "sm",
+                              "type": "trend-indicator",
+                              "showValue": true,
+                              "value": "@card.trend"
+                            },
+                            {
+                              "height": 24.0,
+                              "color": "auto",
+                              "data": [
+                                1.0,
+                                2.0,
+                                3.0,
+                                4.0,
+                                5.0,
+                                6.0,
+                                7.0
+                              ],
+                              "type": "sparkline",
+                              "fill": true,
+                              "className": "flex-1"
+                            }
+                          ],
+                          "gap": "sm",
+                          "type": "stack",
+                          "direction": "horizontal",
+                          "align": "center"
+                        }
+                      ],
+                      "type": "stack",
+                      "direction": "vertical"
+                    }
+                  ],
+                  "entity": "@entity.cards",
+                  "gap": "lg",
+                  "cols": 4.0,
+                  "fields": [],
+                  "type": "data-list"
+                }
+              ],
+              "cols": 4.0
+            }
+          }
+        }
+      ],
+      "pages": [
+        {
+          "name": "KpiTilesStatsPage",
+          "path": "/kpi-tiles",
+          "traits": [
+            {
+              "ref": "KpiTileStatsItemStats"
+            }
+          ]
+        }
+      ]
+    }
+  ]
+}

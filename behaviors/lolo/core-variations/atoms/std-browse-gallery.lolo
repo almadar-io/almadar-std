@@ -1,0 +1,64 @@
+app std-browse-gallery "1.0.0"
+"Gallery browse — image-first Pinterest/Dribbble grid where each item is a visually-dominant card with a large square thumbnail area, title, one-line description, and an overlay price/status badge. Responsive 3–4 column grid with generous gap. Same BrowseItemBrowse trait, state machine, emits, and listens as std-browse — only the bodyContent tree differs."
+
+orbital GalleryBrowseOrbital {
+  uses Browse from "std/behaviors/std-browse"
+
+  entity GalleryItem [runtime] {
+    id             : string!
+    name           : string!
+    description    : string
+    status         : "active" | "draft" | "archived" = "active"
+    price          : string
+    thumbnailLabel : string
+    createdAt      : string
+  }
+
+  trait GalleryBrowse = Browse.traits.BrowseItemBrowse -> GalleryItem {
+    config: {
+      bodyContent: {
+        type: "stack",
+        direction: "vertical",
+        gap: "lg",
+        className: "max-w-6xl mx-auto px-card-md py-section",
+        children: [
+          { type: "input", inputType: "search", placeholder: "Search the gallery…", action: "REFETCH_QUERY", className: "w-full text-base" },
+          { type: "data-list", entity: "@payload.data", gap: "lg", cols: 3, fields: [],
+            renderItem: ["fn", "item", {
+              type: "stack", direction: "vertical", gap: "sm", className: "group rounded-lg overflow-hidden cursor-pointer",
+              children: [
+                { type: "stack", direction: "vertical", align: "center", justify: "center", gap: "xs",
+                  className: "relative aspect-square w-full bg-muted rounded-md border border-[var(--color-border)] overflow-hidden",
+                  children: [
+                    { type: "icon", name: "image", size: "lg", className: "text-muted-foreground opacity-60" },
+                    { type: "typography", variant: "caption", color: "muted", content: "@item.thumbnailLabel", className: "px-2 text-center truncate max-w-full" },
+                    { type: "stack", direction: "horizontal", gap: "xs", align: "center",
+                      className: "absolute top-2 right-2",
+                      children: [
+                        { type: "badge", label: "@item.price", variant: "default" }
+                      ]
+                    },
+                    { type: "stack", direction: "horizontal", gap: "xs", align: "center",
+                      className: "absolute top-2 left-2",
+                      children: [
+                        { type: "badge", label: "@item.status", variant: "default" }
+                      ]
+                    }
+                  ]
+                },
+                { type: "stack", direction: "vertical", gap: "xs", className: "px-1",
+                  children: [
+                    { type: "typography", variant: "body", weight: "medium", content: "@item.name", className: "truncate" },
+                    { type: "typography", variant: "caption", color: "muted", content: "@item.description", className: "line-clamp-1" }
+                  ]
+                }
+              ]
+            }]
+          }
+        ]
+      }
+    }
+  }
+
+  page "/gallery-browse" as GalleryBrowsePage -> GalleryBrowse
+}

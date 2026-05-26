@@ -46,13 +46,15 @@ export interface StdTabsTabChangedPayload {
  * without modifying its state-machine topology.
  */
 export interface StdTabsConfig {
-  /** Default: `"overview"` */
-  defaultTab?: string;
-  /** Default: `"default"` */
-  variant?: 'default' | 'pills' | 'underline';
+  /** Default: `{"orientation":"@config.orientation","tabChangeEvent":"TAB_CHANGED","activeTab":"@entity.activeTab","items":"@entity.items","variant":"@config.variant","type":"tabs"}` */
+  bodyContent?: unknown;
   /** Default: `"horizontal"` */
   orientation?: 'horizontal' | 'vertical';
-  /** Default: `[{"id":"overview","label":"Overview","icon":"info"},{"id":"details","label":"Details","icon":"list"},{"icon":"settings","id":"settings","label":"Settings"}]` */
+  /** Default: `"default"` */
+  variant?: 'default' | 'pills' | 'underline';
+  /** Default: `"overview"` */
+  defaultTab?: string;
+  /** Default: `[{"icon":"info","label":"Overview","id":"overview"},{"icon":"list","id":"details","label":"Details"},{"id":"settings","icon":"settings","label":"Settings"}]` */
   tabs?: EntityRow[];
 }
 

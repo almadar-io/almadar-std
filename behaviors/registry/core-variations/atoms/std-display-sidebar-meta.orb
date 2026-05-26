@@ -1,0 +1,307 @@
+{
+  "name": "std-display-sidebar-meta",
+  "version": "1.0.0",
+  "description": "Sidebar-meta display — Linear-issue / GitHub-issue style record detail. Main content (title + description body) occupies the left two-thirds; a right rail stacks meta panels (status, assignee, dates, labels) in compact label/value rows. Best for helpdesk tickets, ats-recruiting candidates, project tasks, and bug reports. Same DisplayItemDisplay trait, same state machine, same emits/listens as std-display — only bodyContent differs.",
+  "orbitals": [
+    {
+      "name": "SidebarMetaDisplayOrbital",
+      "uses": [
+        {
+          "from": "std/behaviors/std-display",
+          "as": "Display"
+        }
+      ],
+      "entity": {
+        "name": "SidebarRecord",
+        "persistence": "runtime",
+        "fields": [
+          {
+            "name": "id",
+            "type": "string",
+            "required": true
+          },
+          {
+            "name": "title",
+            "type": "string",
+            "required": true
+          },
+          {
+            "name": "description",
+            "type": "string"
+          },
+          {
+            "name": "status",
+            "type": "string",
+            "default": "open",
+            "values": [
+              "open",
+              "in_progress",
+              "closed"
+            ]
+          },
+          {
+            "name": "assignee",
+            "type": "string"
+          },
+          {
+            "name": "reporter",
+            "type": "string"
+          },
+          {
+            "name": "createdAt",
+            "type": "string"
+          },
+          {
+            "name": "updatedAt",
+            "type": "string"
+          },
+          {
+            "name": "priority",
+            "type": "string",
+            "default": "medium",
+            "values": [
+              "low",
+              "medium",
+              "high"
+            ]
+          },
+          {
+            "name": "labels",
+            "type": "string"
+          }
+        ]
+      },
+      "traits": [
+        {
+          "ref": "Display.traits.DisplayItemDisplay",
+          "name": "SidebarMetaDisplay",
+          "linkedEntity": "SidebarRecord",
+          "config": {
+            "bodyContent": {
+              "type": "stack",
+              "children": [
+                {
+                  "gap": "md",
+                  "children": [
+                    {
+                      "type": "stack",
+                      "align": "center",
+                      "direction": "horizontal",
+                      "className": "pb-2 border-b border-[var(--color-border)]",
+                      "gap": "sm",
+                      "children": [
+                        {
+                          "type": "typography",
+                          "className": "font-mono",
+                          "content": "@payload.id",
+                          "color": "muted",
+                          "variant": "caption"
+                        },
+                        {
+                          "type": "typography",
+                          "className": "flex-1 min-w-0",
+                          "content": "@payload.title",
+                          "weight": "semibold",
+                          "variant": "h2"
+                        }
+                      ]
+                    },
+                    {
+                      "variant": "body",
+                      "className": "whitespace-pre-wrap break-words leading-relaxed",
+                      "type": "typography",
+                      "content": "@payload.description"
+                    }
+                  ],
+                  "type": "stack",
+                  "direction": "vertical",
+                  "className": "flex-1 min-w-0"
+                },
+                {
+                  "direction": "vertical",
+                  "gap": "md",
+                  "type": "stack",
+                  "className": "w-72 flex-shrink-0 border-l border-[var(--color-border)] pl-card-md",
+                  "children": [
+                    {
+                      "type": "stack",
+                      "children": [
+                        {
+                          "content": "Status",
+                          "className": "uppercase tracking-wide",
+                          "type": "typography",
+                          "variant": "caption",
+                          "color": "muted"
+                        },
+                        {
+                          "type": "badge",
+                          "variant": "default",
+                          "label": "@payload.status"
+                        }
+                      ],
+                      "gap": "xs",
+                      "direction": "vertical"
+                    },
+                    {
+                      "children": [
+                        {
+                          "className": "uppercase tracking-wide",
+                          "variant": "caption",
+                          "color": "muted",
+                          "type": "typography",
+                          "content": "Priority"
+                        },
+                        {
+                          "type": "badge",
+                          "label": "@payload.priority",
+                          "variant": "neutral"
+                        }
+                      ],
+                      "gap": "xs",
+                      "type": "stack",
+                      "direction": "vertical"
+                    },
+                    {
+                      "children": [
+                        {
+                          "content": "Assignee",
+                          "type": "typography",
+                          "color": "muted",
+                          "className": "uppercase tracking-wide",
+                          "variant": "caption"
+                        },
+                        {
+                          "type": "stack",
+                          "gap": "xs",
+                          "direction": "horizontal",
+                          "align": "center",
+                          "children": [
+                            {
+                              "name": "user",
+                              "type": "icon"
+                            },
+                            {
+                              "variant": "body",
+                              "type": "typography",
+                              "content": "@payload.assignee"
+                            }
+                          ]
+                        }
+                      ],
+                      "type": "stack",
+                      "direction": "vertical",
+                      "gap": "xs"
+                    },
+                    {
+                      "type": "stack",
+                      "gap": "xs",
+                      "children": [
+                        {
+                          "variant": "caption",
+                          "color": "muted",
+                          "content": "Reporter",
+                          "className": "uppercase tracking-wide",
+                          "type": "typography"
+                        },
+                        {
+                          "type": "stack",
+                          "children": [
+                            {
+                              "type": "icon",
+                              "name": "user"
+                            },
+                            {
+                              "type": "typography",
+                              "variant": "body",
+                              "content": "@payload.reporter"
+                            }
+                          ],
+                          "align": "center",
+                          "direction": "horizontal",
+                          "gap": "xs"
+                        }
+                      ],
+                      "direction": "vertical"
+                    },
+                    {
+                      "gap": "xs",
+                      "direction": "vertical",
+                      "type": "stack",
+                      "children": [
+                        {
+                          "className": "uppercase tracking-wide",
+                          "type": "typography",
+                          "color": "muted",
+                          "content": "Created",
+                          "variant": "caption"
+                        },
+                        {
+                          "type": "typography",
+                          "content": "@payload.createdAt",
+                          "variant": "body"
+                        }
+                      ]
+                    },
+                    {
+                      "gap": "xs",
+                      "children": [
+                        {
+                          "type": "typography",
+                          "variant": "caption",
+                          "className": "uppercase tracking-wide",
+                          "color": "muted",
+                          "content": "Updated"
+                        },
+                        {
+                          "variant": "body",
+                          "content": "@payload.updatedAt",
+                          "type": "typography"
+                        }
+                      ],
+                      "direction": "vertical",
+                      "type": "stack"
+                    },
+                    {
+                      "gap": "xs",
+                      "children": [
+                        {
+                          "type": "typography",
+                          "className": "uppercase tracking-wide",
+                          "color": "muted",
+                          "content": "Labels",
+                          "variant": "caption"
+                        },
+                        {
+                          "type": "badge",
+                          "variant": "neutral",
+                          "label": "@payload.labels"
+                        }
+                      ],
+                      "direction": "vertical",
+                      "type": "stack"
+                    }
+                  ]
+                }
+              ],
+              "align": "start",
+              "className": "max-w-6xl mx-auto px-card-md py-card-md",
+              "direction": "horizontal",
+              "gap": "lg"
+            }
+          }
+        }
+      ],
+      "pages": [
+        {
+          "name": "SidebarMetaDisplayPage",
+          "path": "/sidebar-display",
+          "traits": [
+            {
+              "ref": "SidebarMetaDisplay"
+            }
+          ]
+        }
+      ]
+    }
+  ]
+}

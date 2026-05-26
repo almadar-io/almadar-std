@@ -1,0 +1,260 @@
+{
+  "name": "std-stats-sparkline-row",
+  "version": "1.0.0",
+  "description": "Sparkline row — Datadog/Grafana-style horizontal strip of compact KPIs with inline trend chips and tiny sparklines. Each cell: metric label, current value, change indicator, micro sparkline. For devops dashboards, IoT telemetry, health scores, observability overviews. Same StatsItemStats trait, same aggregation pipeline, same listens as std-stats — only the bodyContent tree differs.",
+  "orbitals": [
+    {
+      "name": "SparklineRowStatsOrbital",
+      "uses": [
+        {
+          "from": "std/behaviors/std-stats",
+          "as": "Stats"
+        }
+      ],
+      "entity": {
+        "name": "SparklineRowStats",
+        "persistence": "runtime",
+        "fields": [
+          {
+            "name": "id",
+            "type": "string",
+            "required": true
+          },
+          {
+            "name": "cards",
+            "type": "array",
+            "default": [],
+            "items": {
+              "type": "object",
+              "properties": {
+                "max": {
+                  "name": "max",
+                  "type": "number",
+                  "required": false
+                },
+                "trendFormat": {
+                  "name": "trendFormat",
+                  "type": "string",
+                  "required": false,
+                  "values": [
+                    "absolute",
+                    "percent"
+                  ]
+                },
+                "value": {
+                  "name": "value",
+                  "type": "number",
+                  "required": false
+                },
+                "clickEvent": {
+                  "name": "clickEvent",
+                  "type": "string",
+                  "required": false
+                },
+                "suffix": {
+                  "name": "suffix",
+                  "type": "string",
+                  "required": false
+                },
+                "trend": {
+                  "name": "trend",
+                  "type": "number",
+                  "required": false
+                },
+                "sparklineData": {
+                  "name": "sparklineData",
+                  "type": "array",
+                  "required": false,
+                  "items": {
+                    "type": "number"
+                  }
+                },
+                "target": {
+                  "name": "target",
+                  "type": "number",
+                  "required": false
+                },
+                "label": {
+                  "name": "label",
+                  "type": "string",
+                  "required": true
+                },
+                "format": {
+                  "name": "format",
+                  "type": "string",
+                  "required": false,
+                  "values": [
+                    "number",
+                    "currency",
+                    "percent"
+                  ]
+                },
+                "variant": {
+                  "name": "variant",
+                  "type": "string",
+                  "required": false,
+                  "values": [
+                    "default",
+                    "primary",
+                    "success",
+                    "warning",
+                    "error",
+                    "info"
+                  ]
+                },
+                "prefix": {
+                  "name": "prefix",
+                  "type": "string",
+                  "required": false
+                },
+                "trendPolarity": {
+                  "name": "trendPolarity",
+                  "type": "string",
+                  "required": false,
+                  "values": [
+                    "higher-is-better",
+                    "lower-is-better"
+                  ]
+                },
+                "icon": {
+                  "name": "icon",
+                  "type": "string",
+                  "required": false
+                }
+              }
+            }
+          }
+        ]
+      },
+      "traits": [
+        {
+          "ref": "Stats.traits.StatsItemStats",
+          "name": "SparklineRowStatsItemStats",
+          "linkedEntity": "SparklineRowStats",
+          "config": {
+            "bodyContent": {
+              "gap": "none",
+              "align": "stretch",
+              "wrap": true,
+              "direction": "horizontal",
+              "type": "stack",
+              "className": "w-full rounded-md border border-[var(--color-border)] bg-[var(--color-surface)] divide-x divide-[var(--color-border)] overflow-hidden",
+              "children": [
+                {
+                  "type": "data-list",
+                  "entity": "@entity.cards",
+                  "fields": [],
+                  "gap": "none",
+                  "renderItem": [
+                    "fn",
+                    "card",
+                    {
+                      "direction": "vertical",
+                      "className": "flex-1 min-w-[180px] px-card-md py-card-sm",
+                      "gap": "xs",
+                      "type": "stack",
+                      "children": [
+                        {
+                          "children": [
+                            {
+                              "name": "@card.icon",
+                              "size": "xs",
+                              "type": "icon",
+                              "color": "muted"
+                            },
+                            {
+                              "color": "muted",
+                              "variant": "caption",
+                              "type": "typography",
+                              "weight": "medium",
+                              "content": "@card.label",
+                              "className": "uppercase tracking-wide truncate"
+                            }
+                          ],
+                          "direction": "horizontal",
+                          "align": "center",
+                          "type": "stack",
+                          "gap": "xs"
+                        },
+                        {
+                          "align": "center",
+                          "type": "stack",
+                          "gap": "sm",
+                          "direction": "horizontal",
+                          "justify": "between",
+                          "children": [
+                            {
+                              "gap": "xs",
+                              "type": "stack",
+                              "direction": "horizontal",
+                              "children": [
+                                {
+                                  "content": "@card.prefix",
+                                  "variant": "caption",
+                                  "type": "typography",
+                                  "color": "muted"
+                                },
+                                {
+                                  "type": "typography",
+                                  "className": "tabular-nums",
+                                  "weight": "semibold",
+                                  "content": "@card.value",
+                                  "variant": "h4"
+                                },
+                                {
+                                  "color": "muted",
+                                  "type": "typography",
+                                  "content": "@card.suffix",
+                                  "variant": "caption"
+                                }
+                              ],
+                              "align": "baseline"
+                            },
+                            {
+                              "label": "@card.trend",
+                              "variant": "@card.variant",
+                              "type": "badge",
+                              "size": "sm"
+                            }
+                          ]
+                        },
+                        {
+                          "color": "auto",
+                          "type": "sparkline",
+                          "height": 20.0,
+                          "data": [
+                            1.0,
+                            2.0,
+                            3.0,
+                            4.0,
+                            5.0,
+                            6.0,
+                            7.0
+                          ],
+                          "className": "w-full",
+                          "strokeWidth": 1.0,
+                          "fill": false
+                        }
+                      ]
+                    }
+                  ]
+                }
+              ]
+            }
+          }
+        }
+      ],
+      "pages": [
+        {
+          "name": "SparklineRowStatsPage",
+          "path": "/sparkline-row",
+          "traits": [
+            {
+              "ref": "SparklineRowStatsItemStats"
+            }
+          ]
+        }
+      ]
+    }
+  ]
+}

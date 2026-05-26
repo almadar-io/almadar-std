@@ -1,0 +1,239 @@
+{
+  "name": "std-browse-dense",
+  "version": "1.0.0",
+  "description": "Terminal-style dense browse — Bloomberg/Datadog row density with monospace columns, tabular-nums, color-coded change, and status badges. Sticky column header strip + 30-50 rows on screen. Same BrowseItemBrowse trait, state machine, emits, and listens as std-browse — only bodyContent differs.",
+  "orbitals": [
+    {
+      "name": "DenseBrowseOrbital",
+      "uses": [
+        {
+          "from": "std/behaviors/std-browse",
+          "as": "Browse"
+        }
+      ],
+      "entity": {
+        "name": "DenseRow",
+        "persistence": "runtime",
+        "fields": [
+          {
+            "name": "id",
+            "type": "string",
+            "required": true
+          },
+          {
+            "name": "name",
+            "type": "string",
+            "required": true
+          },
+          {
+            "name": "description",
+            "type": "string"
+          },
+          {
+            "name": "value",
+            "type": "string"
+          },
+          {
+            "name": "change",
+            "type": "string"
+          },
+          {
+            "name": "volume",
+            "type": "string"
+          },
+          {
+            "name": "status",
+            "type": "string",
+            "default": "ok",
+            "values": [
+              "ok",
+              "warn",
+              "error"
+            ]
+          },
+          {
+            "name": "createdAt",
+            "type": "string"
+          }
+        ]
+      },
+      "traits": [
+        {
+          "ref": "Browse.traits.BrowseItemBrowse",
+          "name": "DenseBrowse",
+          "linkedEntity": "DenseRow",
+          "config": {
+            "bodyContent": {
+              "className": "font-mono text-sm",
+              "type": "stack",
+              "gap": "none",
+              "direction": "vertical",
+              "children": [
+                {
+                  "type": "stack",
+                  "children": [
+                    {
+                      "type": "input",
+                      "inputType": "search",
+                      "placeholder": "filter…",
+                      "action": "REFETCH_QUERY",
+                      "className": "flex-1 font-mono text-sm h-8"
+                    }
+                  ],
+                  "direction": "horizontal",
+                  "className": "px-card-md py-2 border-b border-[var(--color-border)] bg-[var(--color-surface-muted)]",
+                  "align": "center",
+                  "gap": "sm"
+                },
+                {
+                  "gap": "md",
+                  "align": "center",
+                  "type": "stack",
+                  "className": "px-card-md py-1.5 border-b border-[var(--color-border)] sticky top-0 bg-[var(--color-surface)] uppercase",
+                  "direction": "horizontal",
+                  "children": [
+                    {
+                      "content": "ID",
+                      "color": "muted",
+                      "variant": "caption",
+                      "className": "w-24 truncate",
+                      "type": "typography"
+                    },
+                    {
+                      "className": "w-24 truncate",
+                      "type": "typography",
+                      "color": "muted",
+                      "content": "SYMBOL",
+                      "variant": "caption"
+                    },
+                    {
+                      "variant": "caption",
+                      "color": "muted",
+                      "content": "VALUE",
+                      "type": "typography",
+                      "className": "w-24 text-right tabular-nums"
+                    },
+                    {
+                      "content": "CHANGE",
+                      "className": "w-20 text-right tabular-nums",
+                      "type": "typography",
+                      "color": "muted",
+                      "variant": "caption"
+                    },
+                    {
+                      "type": "typography",
+                      "content": "VOLUME",
+                      "color": "muted",
+                      "variant": "caption",
+                      "className": "w-20 text-right tabular-nums"
+                    },
+                    {
+                      "variant": "caption",
+                      "className": "flex-1 min-w-0 truncate",
+                      "content": "DESC",
+                      "type": "typography",
+                      "color": "muted"
+                    },
+                    {
+                      "type": "typography",
+                      "color": "muted",
+                      "content": "STATUS",
+                      "className": "w-16 text-right",
+                      "variant": "caption"
+                    }
+                  ]
+                },
+                {
+                  "renderItem": [
+                    "fn",
+                    "item",
+                    {
+                      "children": [
+                        {
+                          "color": "muted",
+                          "variant": "caption",
+                          "className": "w-24 truncate",
+                          "type": "typography",
+                          "content": "@item.id"
+                        },
+                        {
+                          "weight": "medium",
+                          "variant": "caption",
+                          "className": "w-24 truncate",
+                          "content": "@item.name",
+                          "type": "typography"
+                        },
+                        {
+                          "className": "w-24 text-right tabular-nums",
+                          "type": "typography",
+                          "variant": "caption",
+                          "content": "@item.value"
+                        },
+                        {
+                          "content": "@item.change",
+                          "type": "typography",
+                          "className": "w-20 text-right tabular-nums",
+                          "variant": "caption"
+                        },
+                        {
+                          "type": "typography",
+                          "content": "@item.volume",
+                          "className": "w-20 text-right tabular-nums",
+                          "color": "muted",
+                          "variant": "caption"
+                        },
+                        {
+                          "type": "typography",
+                          "color": "muted",
+                          "className": "flex-1 min-w-0 truncate",
+                          "variant": "caption",
+                          "content": "@item.description"
+                        },
+                        {
+                          "gap": "none",
+                          "type": "stack",
+                          "align": "center",
+                          "className": "w-16 justify-end",
+                          "children": [
+                            {
+                              "size": "sm",
+                              "type": "badge",
+                              "variant": "default",
+                              "label": "@item.status"
+                            }
+                          ],
+                          "direction": "horizontal"
+                        }
+                      ],
+                      "className": "px-card-md py-1 border-b border-[var(--color-border)] hover:bg-[var(--color-surface-muted)] cursor-pointer",
+                      "type": "stack",
+                      "direction": "horizontal",
+                      "align": "center",
+                      "gap": "md"
+                    }
+                  ],
+                  "gap": "none",
+                  "type": "data-list",
+                  "fields": [],
+                  "entity": "@payload.data",
+                  "selectable": true
+                }
+              ]
+            }
+          }
+        }
+      ],
+      "pages": [
+        {
+          "name": "DenseBrowsePage",
+          "path": "/dense-browse",
+          "traits": [
+            {
+              "ref": "DenseBrowse"
+            }
+          ]
+        }
+      ]
+    }
+  ]
+}

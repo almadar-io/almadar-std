@@ -1,4 +1,4 @@
-app std-stats "3.0.0"
+app std-stats "3.1.0"
 "std-stats — embeddable analytics-card atom. ITEMS_LOADED aggregates @payload.data per @config.metrics (count|sum|avg|min|max|variance with optional filter, baselineFilter, format, icon, max, target, trend, trendPolarity, sparkline) and renders one stat-display per entry. Variance metrics compute actual - baseline using `filter` + `baselineFilter` lambdas and report the signed delta as trend. clickEvent emits UI:{clickEvent} { metricLabel } when a card is clicked. Drop into a dashboard alongside std-browse / std-search / std-filter."
 
 type ObjectSpec = { id : string, label : string, value : string }
@@ -78,6 +78,32 @@ orbital StatsItemOrbital {
         @label "Stat display look"
         @description "Layer 2 visual treatment for stat / KPI cards."
         @tier "presentation"
+      bodyContent : render-ui = {
+        type: "@config.viewPattern",
+        entity: "@entity.cards",
+        fields: [],
+        renderItem: ["fn", "card", {
+          type: "stat-display",
+          look: "@config.statLook",
+          label: "@card.label",
+          value: "@card.value",
+          icon: "@card.icon",
+          format: "@card.format",
+          variant: "@card.variant",
+          prefix: "@card.prefix",
+          suffix: "@card.suffix",
+          max: "@card.max",
+          target: "@card.target",
+          trend: "@card.trend",
+          trendPolarity: "@card.trendPolarity",
+          trendFormat: "@card.trendFormat",
+          sparklineData: "@card.sparklineData",
+          clickEvent: "@card.clickEvent"
+        }]
+      }
+        @label "Body content tree"
+        @description "Render-ui SExpr rendered after metrics aggregate. Default is the canonical data-grid call mapping @entity.cards through stat-display. Layer 3 variants override this with their own tree (hero numbers, sparkline rows, tile splashes) to deliver entirely different KPI UX while inheriting the same trait, state machine, aggregation pipeline, and listens."
+        @tier "internal"
     }
     state idle {
       INIT -> idle
@@ -102,7 +128,7 @@ orbital StatsItemOrbital {
           clickEvent:    (object/get @metric "clickEvent" ""),
           value:         (object/get @metric "value" 0)
         }]))
-        (render-ui main { type: "@config.viewPattern", entity: "@entity.cards", fields: [], renderItem: ["fn", "card", { type: "stat-display", look: "@config.statLook", label: "@card.label", value: "@card.value", icon: "@card.icon", format: "@card.format", variant: "@card.variant", max: "@card.max", trendPolarity: "@card.trendPolarity", trendFormat: "@card.trendFormat", sparklineData: "@card.sparklineData", clickEvent: "@card.clickEvent" }] })
+        (render-ui main @config.bodyContent)
       ITEMS_LOADED -> idle
         (set @entity.cards (array/map @config.metrics ["fn", "metric", {
           label:         (object/get @metric "label"),
@@ -137,7 +163,7 @@ orbital StatsItemOrbital {
                                      (array/sum (array/filter @payload.data (object/get @metric "filter" true)) (object/get @metric "field" ""))
                                      (array/len (array/filter @payload.data (object/get @metric "filter" true))))))))
         }]))
-        (render-ui main { type: "@config.viewPattern", entity: "@entity.cards", fields: [], renderItem: ["fn", "card", { type: "stat-display", look: "@config.statLook", label: "@card.label", value: "@card.value", icon: "@card.icon", format: "@card.format", variant: "@card.variant", prefix: "@card.prefix", suffix: "@card.suffix", max: "@card.max", target: "@card.target", trend: "@card.trend", trendPolarity: "@card.trendPolarity", trendFormat: "@card.trendFormat", sparklineData: "@card.sparklineData", clickEvent: "@card.clickEvent" }] })
+        (render-ui main @config.bodyContent)
     }
     listens {
       ITEMS_LOADED { data : [ObjectSpec], totalCount : number }

@@ -1,0 +1,356 @@
+{
+  "name": "std-display-dashboard-summary",
+  "version": "1.0.0",
+  "description": "Dashboard-summary display — Datadog widget / dashboard-card style record detail. Title strip across the top with a status chip; below it a compact key/value grid arranges metrics in 2-3 columns of label-over-value rows. Best for iot-dashboard device-detail, healthcare patient summaries, devops service detail, and infra ops cards. Same DisplayItemDisplay trait, same state machine, same emits/listens as std-display — only bodyContent differs.",
+  "orbitals": [
+    {
+      "name": "DashboardSummaryDisplayOrbital",
+      "uses": [
+        {
+          "from": "std/behaviors/std-display",
+          "as": "Display"
+        }
+      ],
+      "entity": {
+        "name": "SummaryRecord",
+        "persistence": "runtime",
+        "fields": [
+          {
+            "name": "id",
+            "type": "string",
+            "required": true
+          },
+          {
+            "name": "name",
+            "type": "string",
+            "required": true
+          },
+          {
+            "name": "status",
+            "type": "string",
+            "default": "healthy",
+            "values": [
+              "healthy",
+              "degraded",
+              "down"
+            ]
+          },
+          {
+            "name": "uptime",
+            "type": "string"
+          },
+          {
+            "name": "region",
+            "type": "string"
+          },
+          {
+            "name": "version",
+            "type": "string"
+          },
+          {
+            "name": "cpu",
+            "type": "string"
+          },
+          {
+            "name": "memory",
+            "type": "string"
+          },
+          {
+            "name": "requests",
+            "type": "string"
+          },
+          {
+            "name": "errorRate",
+            "type": "string"
+          },
+          {
+            "name": "lastSeen",
+            "type": "string"
+          },
+          {
+            "name": "owner",
+            "type": "string"
+          }
+        ]
+      },
+      "traits": [
+        {
+          "ref": "Display.traits.DisplayItemDisplay",
+          "name": "DashboardSummaryDisplay",
+          "linkedEntity": "SummaryRecord",
+          "config": {
+            "bodyContent": {
+              "children": [
+                {
+                  "align": "center",
+                  "justify": "between",
+                  "children": [
+                    {
+                      "align": "center",
+                      "type": "stack",
+                      "gap": "sm",
+                      "direction": "horizontal",
+                      "children": [
+                        {
+                          "type": "icon",
+                          "name": "activity"
+                        },
+                        {
+                          "variant": "h3",
+                          "weight": "semibold",
+                          "type": "typography",
+                          "content": "@payload.name"
+                        },
+                        {
+                          "variant": "caption",
+                          "content": "@payload.id",
+                          "className": "font-mono",
+                          "type": "typography",
+                          "color": "muted"
+                        }
+                      ]
+                    },
+                    {
+                      "variant": "default",
+                      "label": "@payload.status",
+                      "type": "badge"
+                    }
+                  ],
+                  "direction": "horizontal",
+                  "type": "stack",
+                  "className": "pb-card-md border-b border-[var(--color-border)]",
+                  "gap": "md"
+                },
+                {
+                  "children": [
+                    {
+                      "gap": "xs",
+                      "children": [
+                        {
+                          "content": "Uptime",
+                          "className": "uppercase tracking-wide",
+                          "variant": "caption",
+                          "type": "typography",
+                          "color": "muted"
+                        },
+                        {
+                          "weight": "semibold",
+                          "content": "@payload.uptime",
+                          "className": "tabular-nums",
+                          "variant": "h4",
+                          "type": "typography"
+                        }
+                      ],
+                      "direction": "vertical",
+                      "type": "stack",
+                      "className": "min-w-[140px]"
+                    },
+                    {
+                      "direction": "vertical",
+                      "type": "stack",
+                      "className": "min-w-[140px]",
+                      "children": [
+                        {
+                          "className": "uppercase tracking-wide",
+                          "variant": "caption",
+                          "color": "muted",
+                          "type": "typography",
+                          "content": "Region"
+                        },
+                        {
+                          "type": "typography",
+                          "content": "@payload.region",
+                          "variant": "h4",
+                          "weight": "semibold"
+                        }
+                      ],
+                      "gap": "xs"
+                    },
+                    {
+                      "className": "min-w-[140px]",
+                      "direction": "vertical",
+                      "gap": "xs",
+                      "children": [
+                        {
+                          "color": "muted",
+                          "type": "typography",
+                          "className": "uppercase tracking-wide",
+                          "content": "Version",
+                          "variant": "caption"
+                        },
+                        {
+                          "variant": "h4",
+                          "content": "@payload.version",
+                          "weight": "semibold",
+                          "className": "font-mono",
+                          "type": "typography"
+                        }
+                      ],
+                      "type": "stack"
+                    },
+                    {
+                      "type": "stack",
+                      "direction": "vertical",
+                      "className": "min-w-[140px]",
+                      "children": [
+                        {
+                          "type": "typography",
+                          "color": "muted",
+                          "variant": "caption",
+                          "content": "Owner",
+                          "className": "uppercase tracking-wide"
+                        },
+                        {
+                          "type": "typography",
+                          "weight": "semibold",
+                          "variant": "h4",
+                          "content": "@payload.owner"
+                        }
+                      ],
+                      "gap": "xs"
+                    }
+                  ],
+                  "type": "stack",
+                  "direction": "horizontal",
+                  "className": "flex-wrap",
+                  "gap": "lg"
+                },
+                {
+                  "type": "stack",
+                  "className": "flex-wrap pt-card-md border-t border-[var(--color-border)]",
+                  "gap": "lg",
+                  "direction": "horizontal",
+                  "children": [
+                    {
+                      "children": [
+                        {
+                          "variant": "caption",
+                          "color": "muted",
+                          "className": "uppercase tracking-wide",
+                          "type": "typography",
+                          "content": "CPU"
+                        },
+                        {
+                          "type": "typography",
+                          "weight": "semibold",
+                          "variant": "h4",
+                          "className": "tabular-nums",
+                          "content": "@payload.cpu"
+                        }
+                      ],
+                      "type": "stack",
+                      "className": "min-w-[140px]",
+                      "direction": "vertical",
+                      "gap": "xs"
+                    },
+                    {
+                      "gap": "xs",
+                      "children": [
+                        {
+                          "content": "Memory",
+                          "color": "muted",
+                          "variant": "caption",
+                          "className": "uppercase tracking-wide",
+                          "type": "typography"
+                        },
+                        {
+                          "weight": "semibold",
+                          "content": "@payload.memory",
+                          "type": "typography",
+                          "variant": "h4",
+                          "className": "tabular-nums"
+                        }
+                      ],
+                      "type": "stack",
+                      "direction": "vertical",
+                      "className": "min-w-[140px]"
+                    },
+                    {
+                      "gap": "xs",
+                      "children": [
+                        {
+                          "type": "typography",
+                          "color": "muted",
+                          "variant": "caption",
+                          "content": "Requests/s",
+                          "className": "uppercase tracking-wide"
+                        },
+                        {
+                          "type": "typography",
+                          "content": "@payload.requests",
+                          "weight": "semibold",
+                          "className": "tabular-nums",
+                          "variant": "h4"
+                        }
+                      ],
+                      "type": "stack",
+                      "direction": "vertical",
+                      "className": "min-w-[140px]"
+                    },
+                    {
+                      "type": "stack",
+                      "className": "min-w-[140px]",
+                      "gap": "xs",
+                      "direction": "vertical",
+                      "children": [
+                        {
+                          "className": "uppercase tracking-wide",
+                          "color": "muted",
+                          "type": "typography",
+                          "variant": "caption",
+                          "content": "Error rate"
+                        },
+                        {
+                          "className": "tabular-nums",
+                          "variant": "h4",
+                          "weight": "semibold",
+                          "content": "@payload.errorRate",
+                          "type": "typography"
+                        }
+                      ]
+                    },
+                    {
+                      "children": [
+                        {
+                          "content": "Last seen",
+                          "className": "uppercase tracking-wide",
+                          "color": "muted",
+                          "type": "typography",
+                          "variant": "caption"
+                        },
+                        {
+                          "type": "typography",
+                          "content": "@payload.lastSeen",
+                          "variant": "body"
+                        }
+                      ],
+                      "type": "stack",
+                      "gap": "xs",
+                      "direction": "vertical",
+                      "className": "min-w-[140px]"
+                    }
+                  ]
+                }
+              ],
+              "type": "stack",
+              "direction": "vertical",
+              "className": "max-w-5xl mx-auto px-card-md py-card-md",
+              "gap": "md"
+            }
+          }
+        }
+      ],
+      "pages": [
+        {
+          "name": "DashboardSummaryDisplayPage",
+          "path": "/dashboard-summary-display",
+          "traits": [
+            {
+              "ref": "DashboardSummaryDisplay"
+            }
+          ]
+        }
+      ]
+    }
+  ]
+}

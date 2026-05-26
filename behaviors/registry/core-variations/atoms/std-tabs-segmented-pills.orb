@@ -1,0 +1,113 @@
+{
+  "name": "std-tabs-segmented-pills",
+  "version": "1.0.0",
+  "description": "Segmented-pills tabs — iOS-style segmented control: pill-shaped tabs sit in a single rounded background bar, no underline, active tab carries a filled background. Compact and modern; ideal for settings UIs and mode-switchers. Same TabsItemTabs trait, state machine, emits/listens as std-tabs — only the bodyContent tree differs.",
+  "orbitals": [
+    {
+      "name": "SegmentedPillsTabsOrbital",
+      "uses": [
+        {
+          "from": "std/behaviors/std-tabs",
+          "as": "Tabs"
+        }
+      ],
+      "entity": {
+        "name": "SegmentedPillsTabsItem",
+        "persistence": "runtime",
+        "fields": [
+          {
+            "name": "id",
+            "type": "string",
+            "required": true
+          },
+          {
+            "name": "activeTab",
+            "type": "string",
+            "default": ""
+          },
+          {
+            "name": "items",
+            "type": "array",
+            "default": [],
+            "items": {
+              "type": "object",
+              "properties": {
+                "icon": {
+                  "name": "icon",
+                  "type": "string",
+                  "required": false
+                },
+                "value": {
+                  "name": "value",
+                  "type": "string",
+                  "required": false
+                },
+                "label": {
+                  "name": "label",
+                  "type": "string",
+                  "required": true
+                },
+                "id": {
+                  "name": "id",
+                  "type": "string",
+                  "required": false
+                }
+              }
+            }
+          }
+        ]
+      },
+      "traits": [
+        {
+          "ref": "Tabs.traits.TabsItemTabs",
+          "name": "SegmentedPillsTabs",
+          "linkedEntity": "SegmentedPillsTabsItem",
+          "config": {
+            "bodyContent": {
+              "direction": "horizontal",
+              "children": [
+                {
+                  "items": [
+                    {
+                      "id": "tab1",
+                      "label": "Tab 1"
+                    },
+                    {
+                      "id": "tab2",
+                      "label": "Tab 2"
+                    },
+                    {
+                      "id": "tab3",
+                      "label": "Tab 3"
+                    }
+                  ],
+                  "variant": "pills",
+                  "className": "gap-1",
+                  "type": "tabs",
+                  "activeTab": "@entity.activeTab",
+                  "orientation": "horizontal",
+                  "tabChangeEvent": "TAB_CHANGED"
+                }
+              ],
+              "align": "center",
+              "type": "stack",
+              "className": "inline-flex p-1 rounded-pill bg-muted",
+              "gap": "none"
+            }
+          }
+        }
+      ],
+      "pages": [
+        {
+          "name": "SegmentedPillsTabsPage",
+          "path": "/segmented-tabs",
+          "traits": [
+            {
+              "ref": "SegmentedPillsTabs"
+            }
+          ]
+        }
+      ]
+    }
+  ]
+}

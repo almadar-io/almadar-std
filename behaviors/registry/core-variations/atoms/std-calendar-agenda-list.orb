@@ -1,0 +1,193 @@
+{
+  "name": "std-calendar-agenda-list",
+  "version": "1.0.0",
+  "description": "Agenda-list calendar — Linear/Notion vertical chronological list grouped by day. Each entry shows time, title, description, and a status badge. Same CalendarEventCalendar trait, same state machine, same emits/listens as std-calendar — only the bodyContent tree differs. For appointment-policy queues, class-roster session schedules, court-deadline lists.",
+  "orbitals": [
+    {
+      "name": "AgendaListCalendarOrbital",
+      "uses": [
+        {
+          "from": "std/behaviors/std-calendar",
+          "as": "Calendar"
+        }
+      ],
+      "entity": {
+        "name": "AgendaListEvent",
+        "persistence": "runtime",
+        "fields": [
+          {
+            "name": "id",
+            "type": "string",
+            "required": true
+          },
+          {
+            "name": "name",
+            "type": "string",
+            "required": true
+          },
+          {
+            "name": "description",
+            "type": "string"
+          },
+          {
+            "name": "status",
+            "type": "string",
+            "default": "active",
+            "values": [
+              "active",
+              "inactive",
+              "pending"
+            ]
+          },
+          {
+            "name": "createdAt",
+            "type": "string"
+          },
+          {
+            "name": "date",
+            "type": "string",
+            "default": ""
+          },
+          {
+            "name": "time",
+            "type": "string",
+            "default": ""
+          },
+          {
+            "name": "duration",
+            "type": "number",
+            "default": 60.0
+          }
+        ]
+      },
+      "traits": [
+        {
+          "ref": "Calendar.traits.CalendarEventCalendar",
+          "name": "AgendaListCalendar",
+          "linkedEntity": "AgendaListEvent",
+          "config": {
+            "bodyContent": {
+              "children": [
+                {
+                  "type": "stack",
+                  "align": "center",
+                  "direction": "horizontal",
+                  "children": [
+                    {
+                      "children": [
+                        {
+                          "type": "icon",
+                          "name": "list"
+                        },
+                        {
+                          "variant": "h2",
+                          "type": "typography",
+                          "content": "Agenda"
+                        }
+                      ],
+                      "direction": "horizontal",
+                      "gap": "sm",
+                      "type": "stack",
+                      "align": "center"
+                    },
+                    {
+                      "type": "date-range-selector",
+                      "onSelect": "SELECT_DAY"
+                    }
+                  ],
+                  "justify": "between",
+                  "gap": "md"
+                },
+                {
+                  "type": "divider"
+                },
+                {
+                  "gap": "none",
+                  "renderItem": [
+                    "fn",
+                    "item",
+                    {
+                      "direction": "horizontal",
+                      "type": "stack",
+                      "gap": "md",
+                      "align": "start",
+                      "className": "py-3 border-b border-[var(--color-border)] hover:bg-muted cursor-pointer",
+                      "children": [
+                        {
+                          "type": "stack",
+                          "align": "center",
+                          "children": [
+                            {
+                              "variant": "caption",
+                              "content": "@item.date",
+                              "format": "date",
+                              "type": "typography",
+                              "color": "muted"
+                            },
+                            {
+                              "type": "typography",
+                              "content": "@item.time",
+                              "variant": "h4"
+                            }
+                          ],
+                          "direction": "vertical",
+                          "className": "w-20 shrink-0",
+                          "gap": "xs"
+                        },
+                        {
+                          "children": [
+                            {
+                              "type": "typography",
+                              "className": "truncate",
+                              "weight": "medium",
+                              "content": "@item.name",
+                              "variant": "h4"
+                            },
+                            {
+                              "variant": "caption",
+                              "className": "truncate",
+                              "content": "@item.description",
+                              "type": "typography",
+                              "color": "muted"
+                            }
+                          ],
+                          "direction": "vertical",
+                          "gap": "xs",
+                          "type": "stack",
+                          "className": "flex-1 min-w-0"
+                        },
+                        {
+                          "type": "badge",
+                          "label": "@item.status",
+                          "variant": "default"
+                        }
+                      ]
+                    }
+                  ],
+                  "entity": "@payload.data",
+                  "type": "data-list",
+                  "fields": []
+                }
+              ],
+              "className": "max-w-3xl mx-auto",
+              "gap": "lg",
+              "type": "stack",
+              "direction": "vertical"
+            }
+          }
+        }
+      ],
+      "pages": [
+        {
+          "name": "AgendaListCalendarPage",
+          "path": "/calendarevents/agenda",
+          "traits": [
+            {
+              "ref": "AgendaListCalendar"
+            }
+          ]
+        }
+      ]
+    }
+  ]
+}

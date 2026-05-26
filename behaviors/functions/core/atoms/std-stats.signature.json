@@ -24,30 +24,64 @@
         "listenedEvents": [],
         "overridableConfigKeys": [
           {
+            "key": "bodyContent",
+            "type": "render-ui",
+            "default": {
+              "type": "@config.viewPattern",
+              "renderItem": [
+                "fn",
+                "card",
+                {
+                  "prefix": "@card.prefix",
+                  "value": "@card.value",
+                  "format": "@card.format",
+                  "trendFormat": "@card.trendFormat",
+                  "max": "@card.max",
+                  "type": "stat-display",
+                  "icon": "@card.icon",
+                  "variant": "@card.variant",
+                  "sparklineData": "@card.sparklineData",
+                  "suffix": "@card.suffix",
+                  "look": "@config.statLook",
+                  "label": "@card.label",
+                  "clickEvent": "@card.clickEvent",
+                  "trendPolarity": "@card.trendPolarity",
+                  "target": "@card.target",
+                  "trend": "@card.trend"
+                }
+              ],
+              "entity": "@entity.cards",
+              "fields": []
+            },
+            "label": "Body content tree",
+            "description": "Render-ui SExpr rendered after metrics aggregate. Default is the canonical data-grid call mapping @entity.cards through stat-display. Layer 3 variants override this with their own tree (hero numbers, sparkline rows, tile splashes) to deliver entirely different KPI UX while inheriting the same trait, state machine, aggregation pipeline, and listens.",
+            "tier": "internal"
+          },
+          {
             "key": "metrics",
             "type": "[MetricSpec]",
             "default": [
               {
-                "variant": "primary",
-                "label": "Total Items",
-                "aggregation": "count",
+                "format": "number",
                 "icon": "list",
-                "format": "number"
+                "aggregation": "count",
+                "label": "Total Items",
+                "variant": "primary"
               },
               {
+                "aggregation": "count",
                 "format": "number",
                 "label": "Active",
-                "icon": "check-circle",
                 "variant": "success",
-                "aggregation": "count"
+                "icon": "check-circle"
               },
               {
-                "field": "value",
                 "icon": "trending-up",
-                "label": "Avg Value",
-                "variant": "info",
                 "format": "number",
-                "aggregation": "avg"
+                "field": "value",
+                "label": "Avg Value",
+                "aggregation": "avg",
+                "variant": "info"
               }
             ],
             "label": "Metrics",
@@ -56,8 +90,27 @@
             "tier": "presentation",
             "items": {
               "properties": {
-                "target": {
-                  "name": "target",
+                "field": {
+                  "name": "field",
+                  "required": false,
+                  "type": "string"
+                },
+                "trendFormat": {
+                  "name": "trendFormat",
+                  "required": false,
+                  "type": "string",
+                  "values": [
+                    "absolute",
+                    "percent"
+                  ]
+                },
+                "value": {
+                  "name": "value",
+                  "required": false,
+                  "type": "number"
+                },
+                "max": {
+                  "name": "max",
                   "required": false,
                   "type": "number"
                 },
@@ -69,41 +122,13 @@
                     "type": "number"
                   }
                 },
+                "clickEvent": {
+                  "name": "clickEvent",
+                  "required": false,
+                  "type": "string"
+                },
                 "trend": {
                   "name": "trend",
-                  "required": false,
-                  "type": "number"
-                },
-                "icon": {
-                  "name": "icon",
-                  "required": false,
-                  "type": "string"
-                },
-                "label": {
-                  "name": "label",
-                  "required": true,
-                  "type": "string"
-                },
-                "variant": {
-                  "name": "variant",
-                  "required": false,
-                  "type": "string",
-                  "values": [
-                    "default",
-                    "primary",
-                    "success",
-                    "warning",
-                    "error",
-                    "info"
-                  ]
-                },
-                "field": {
-                  "name": "field",
-                  "required": false,
-                  "type": "string"
-                },
-                "value": {
-                  "name": "value",
                   "required": false,
                   "type": "number"
                 },
@@ -116,11 +141,6 @@
                     "currency",
                     "percent"
                   ]
-                },
-                "suffix": {
-                  "name": "suffix",
-                  "required": false,
-                  "type": "string"
                 },
                 "aggregation": {
                   "name": "aggregation",
@@ -135,17 +155,36 @@
                     "variance"
                   ]
                 },
-                "trendFormat": {
-                  "name": "trendFormat",
+                "label": {
+                  "name": "label",
+                  "required": true,
+                  "type": "string"
+                },
+                "target": {
+                  "name": "target",
+                  "required": false,
+                  "type": "number"
+                },
+                "variant": {
+                  "name": "variant",
                   "required": false,
                   "type": "string",
                   "values": [
-                    "absolute",
-                    "percent"
+                    "default",
+                    "primary",
+                    "success",
+                    "warning",
+                    "error",
+                    "info"
                   ]
                 },
-                "clickEvent": {
-                  "name": "clickEvent",
+                "icon": {
+                  "name": "icon",
+                  "required": false,
+                  "type": "string"
+                },
+                "suffix": {
+                  "name": "suffix",
                   "required": false,
                   "type": "string"
                 },
@@ -162,11 +201,6 @@
                     "higher-is-better",
                     "lower-is-better"
                   ]
-                },
-                "max": {
-                  "name": "max",
-                  "required": false,
-                  "type": "number"
                 }
               },
               "type": "object"

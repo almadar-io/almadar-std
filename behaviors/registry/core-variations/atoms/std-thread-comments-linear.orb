@@ -1,0 +1,232 @@
+{
+  "name": "std-thread-comments-linear",
+  "version": "1.0.0",
+  "description": "Linear comments — GitHub/Linear-issue style: linear top-to-bottom stack of full-content comment cards. Each card shows author header (avatar + name + timestamp), the full body, and a reactions row below. For forum discussions, project-manager issue comments, wiki page discussions, document review threads.",
+  "orbitals": [
+    {
+      "name": "CommentsLinearOrbital",
+      "uses": [
+        {
+          "from": "std/behaviors/std-thread",
+          "as": "Thread"
+        }
+      ],
+      "entity": {
+        "name": "CommentsLinearPost",
+        "collection": "commentslinearposts",
+        "persistence": "persistent",
+        "fields": [
+          {
+            "name": "id",
+            "type": "string",
+            "required": true
+          },
+          {
+            "name": "parentId",
+            "type": "string"
+          },
+          {
+            "name": "threadRootId",
+            "type": "string",
+            "required": true
+          },
+          {
+            "name": "authorId",
+            "type": "string",
+            "required": true
+          },
+          {
+            "name": "authorName",
+            "type": "string",
+            "required": true
+          },
+          {
+            "name": "content",
+            "type": "string",
+            "required": true
+          },
+          {
+            "name": "createdAt",
+            "type": "string"
+          },
+          {
+            "name": "voteCount",
+            "type": "number",
+            "default": 0.0
+          },
+          {
+            "name": "replyCount",
+            "type": "number",
+            "default": 0.0
+          }
+        ]
+      },
+      "traits": [
+        {
+          "ref": "Thread.traits.ThreadPostBrowse",
+          "name": "CommentsLinear",
+          "linkedEntity": "CommentsLinearPost",
+          "config": {
+            "bodyContent": {
+              "gap": "md",
+              "type": "stack",
+              "className": "max-w-3xl mx-auto px-card-md py-section",
+              "children": [
+                {
+                  "type": "data-list",
+                  "entity": "@payload.data",
+                  "gap": "md",
+                  "fields": [],
+                  "variant": "default",
+                  "renderItem": [
+                    "fn",
+                    "item",
+                    {
+                      "type": "card",
+                      "padding": "md",
+                      "look": "flat-bordered",
+                      "children": {
+                        "type": "stack",
+                        "children": [
+                          {
+                            "align": "center",
+                            "gap": "sm",
+                            "children": [
+                              {
+                                "size": "sm",
+                                "name": "@item.authorName",
+                                "type": "avatar"
+                              },
+                              {
+                                "content": "@item.authorName",
+                                "weight": "medium",
+                                "type": "typography",
+                                "variant": "body"
+                              },
+                              {
+                                "content": "·",
+                                "variant": "caption",
+                                "type": "typography",
+                                "color": "muted"
+                              },
+                              {
+                                "content": "@item.createdAt",
+                                "variant": "caption",
+                                "type": "typography",
+                                "color": "muted"
+                              }
+                            ],
+                            "direction": "horizontal",
+                            "type": "stack"
+                          },
+                          {
+                            "type": "divider"
+                          },
+                          {
+                            "variant": "body",
+                            "content": "@item.content",
+                            "type": "typography"
+                          },
+                          {
+                            "gap": "xs",
+                            "type": "stack",
+                            "align": "center",
+                            "className": "pt-sm",
+                            "children": [
+                              {
+                                "variant": "ghost",
+                                "action": "UPVOTE",
+                                "type": "button",
+                                "actionPayload": {
+                                  "id": "@item.id"
+                                },
+                                "label": "Upvote",
+                                "icon": "arrow-up"
+                              },
+                              {
+                                "variant": "default",
+                                "type": "badge",
+                                "label": "@item.voteCount"
+                              },
+                              {
+                                "icon": "message-square",
+                                "label": "Reply",
+                                "type": "button",
+                                "action": "REPLY",
+                                "variant": "ghost",
+                                "actionPayload": {
+                                  "parentId": "@item.id"
+                                }
+                              }
+                            ],
+                            "direction": "horizontal"
+                          }
+                        ],
+                        "gap": "sm",
+                        "direction": "vertical"
+                      }
+                    }
+                  ]
+                },
+                {
+                  "type": "card",
+                  "look": "flat-bordered",
+                  "children": {
+                    "children": [
+                      {
+                        "content": "Add a comment",
+                        "type": "typography",
+                        "variant": "h4"
+                      },
+                      {
+                        "placeholder": "Write your comment…",
+                        "action": "EDIT_REPLY",
+                        "type": "textarea"
+                      },
+                      {
+                        "children": [
+                          {
+                            "action": "SUBMIT_REPLY",
+                            "variant": "primary",
+                            "label": "Comment",
+                            "type": "button",
+                            "icon": "send"
+                          },
+                          {
+                            "action": "CANCEL_REPLY",
+                            "label": "Cancel",
+                            "type": "button",
+                            "variant": "ghost"
+                          }
+                        ],
+                        "type": "stack",
+                        "gap": "sm",
+                        "direction": "horizontal"
+                      }
+                    ],
+                    "direction": "vertical",
+                    "gap": "sm",
+                    "type": "stack"
+                  },
+                  "padding": "md"
+                }
+              ],
+              "direction": "vertical"
+            }
+          }
+        }
+      ],
+      "pages": [
+        {
+          "name": "CommentsLinearPage",
+          "path": "/comments-thread",
+          "traits": [
+            {
+              "ref": "CommentsLinear"
+            }
+          ]
+        }
+      ]
+    }
+  ]
+}

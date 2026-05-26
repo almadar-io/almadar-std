@@ -1,5 +1,5 @@
-app std-display "1.1.0"
-"std-display — DEPRECATED. Use std-stats (stat-cards) + std-graphs (charts) composed in a molecule (see std-dashboard); the original violated the explicit-binding rule. Preserved so existing imports keep loading."
+app std-display "1.2.0"
+"std-display — record-detail display atom. Owns the idle state-machine; consumers configure bodyContent to render any single-record detail view (the default is a deprecation alert, retained for backward compatibility). Layer 3 variants override bodyContent to deliver hero-banner / sidebar-meta / dashboard-summary detail layouts while inheriting the same trait shape, state, and page binding."
 
 orbital DisplayItemOrbital {
   entity DisplayItem [runtime] {
@@ -11,12 +11,21 @@ orbital DisplayItemOrbital {
     config {
       message : string = "std-display is deprecated — use std-stats and std-graphs instead. See docs/Almadar_Std_Verification.md gap #25."
         @label "Deprecation message"
-        @description "Warning text shown in the deprecated std-display alert banner"
+        @description "Warning text shown in the default std-display alert banner"
+        @tier "internal"
+      bodyContent : render-ui = {
+        type: "alert",
+        variant: "warning",
+        title: "std-display is deprecated",
+        message: "@config.message"
+      }
+        @label "Body content tree"
+        @description "Render-ui SExpr rendered in the idle state. Default is the deprecation alert. Layer 3 variants override this with their own record-detail tree (hero-banner / sidebar-meta / dashboard-summary) to deliver different detail UX while inheriting the same trait, state machine, and page binding."
         @tier "internal"
     }
     state idle {
       INIT -> idle
-        (render-ui main { type: "alert", variant: "warning", title: "std-display is deprecated", message: "@config.message" })
+        (render-ui main @config.bodyContent)
     }
   }
   page "/displayitems" as DisplayItemDisplayPage -> DisplayItemDisplay
