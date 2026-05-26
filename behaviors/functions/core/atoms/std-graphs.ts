@@ -39,46 +39,46 @@ export type StdGraphsEventKey = 'INIT' | 'ITEMS_LOADED';
  * without modifying its state-machine topology.
  */
 export interface StdGraphsConfig {
-  /** Default: `"chart"` */
-  viewPattern?: unknown;
-  /** Default: `"date"` */
-  timeField?: string;
-  /** Default: `[]` */
-  series?: EntityRow[];
-  /** Default: `false` */
-  timeAxis?: boolean;
-  /** Default: `"Distribution"` */
-  title?: string;
-  /** Default: `280` */
-  height?: number;
-  /** Default: `"month"` */
-  period?: 'day' | 'week' | 'month' | 'quarter' | 'year';
-  /** Default: `false` */
-  showValues?: boolean;
-  /** Default: `"bar"` */
-  chartType?: 'bar' | 'line' | 'pie' | 'area' | 'donut' | 'histogram' | 'scatter';
-  /** Default: `"desc"` */
-  sortDir?: 'asc' | 'desc';
-  /** Default: `"status"` */
-  categoryField?: string;
-  /** Default: `0` */
-  limit?: number;
-  /** Default: `"Counts per category"` */
-  subtitle?: string;
-  /** Default: `"none"` */
-  sortField?: 'value' | 'label' | 'none';
   /** Default: `""` */
   valueField?: string;
+  /** Default: `"month"` */
+  period?: 'day' | 'week' | 'month' | 'quarter' | 'year';
+  /** Default: `"desc"` */
+  sortDir?: 'asc' | 'desc';
   /** Default: `""` */
   drillEvent?: string;
+  /** Default: `"bar"` */
+  chartType?: 'bar' | 'line' | 'pie' | 'area' | 'donut' | 'histogram' | 'scatter';
+  /** Default: `false` */
+  timeAxis?: boolean;
+  /** Default: `"none"` */
+  sortField?: 'value' | 'label' | 'none';
+  /** Default: `false` */
+  showValues?: boolean;
   /** Default: `true` */
   showLegend?: boolean;
-  /** Default: `"count"` */
-  aggregation?: 'count' | 'sum' | 'avg' | 'min' | 'max';
-  /** Default: `"none"` */
-  stack?: 'none' | 'stack' | 'normalize';
+  /** Default: `280` */
+  height?: number;
+  /** Default: `"date"` */
+  timeField?: string;
   /** Default: `"bar-vertical"` */
   chartLook?: 'bar-vertical' | 'bar-horizontal' | 'line' | 'area' | 'pie' | 'donut' | 'scatter' | 'histogram';
+  /** Default: `"Distribution"` */
+  title?: string;
+  /** Default: `"count"` */
+  aggregation?: 'count' | 'sum' | 'avg' | 'min' | 'max';
+  /** Default: `"Counts per category"` */
+  subtitle?: string;
+  /** Default: `0` */
+  limit?: number;
+  /** Default: `"status"` */
+  categoryField?: string;
+  /** Default: `"none"` */
+  stack?: 'none' | 'stack' | 'normalize';
+  /** Default: `"chart"` */
+  viewPattern?: unknown;
+  /** Default: `[]` */
+  series?: EntityRow[];
 }
 
 /**
