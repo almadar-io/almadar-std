@@ -264,8 +264,8 @@
                     "StoredFile",
                     {
                       "emit": {
-                        "success": "StoredFileLoaded",
-                        "failure": "StoredFileLoadFailed"
+                        "failure": "StoredFileLoadFailed",
+                        "success": "StoredFileLoaded"
                       }
                     }
                   ],
@@ -273,22 +273,22 @@
                     "render-ui",
                     "main",
                     {
+                      "align": "center",
                       "direction": "vertical",
                       "children": [
                         {
                           "type": "spinner"
                         },
                         {
-                          "type": "typography",
+                          "color": "muted",
                           "content": "Loading files…",
                           "variant": "caption",
-                          "color": "muted"
+                          "type": "typography"
                         }
                       ],
-                      "align": "center",
                       "className": "py-12",
-                      "type": "stack",
-                      "gap": "md"
+                      "gap": "md",
+                      "type": "stack"
                     }
                   ]
                 ]
@@ -302,61 +302,65 @@
                     "render-ui",
                     "main",
                     {
+                      "type": "stack",
                       "direction": "vertical",
                       "gap": "md",
                       "children": [
                         {
                           "type": "stack",
-                          "children": [
-                            {
-                              "name": "folder",
-                              "type": "icon"
-                            },
-                            {
-                              "variant": "h3",
-                              "content": "@config.title",
-                              "type": "typography"
-                            }
-                          ],
                           "gap": "sm",
                           "align": "center",
-                          "direction": "horizontal"
-                        },
-                        {
-                          "type": "simple-grid",
-                          "cols": 4.0,
+                          "direction": "horizontal",
                           "children": [
                             {
-                              "label": "Total files",
-                              "icon": "file",
-                              "value": "@payload.data.length",
-                              "type": "stat-display"
+                              "type": "icon",
+                              "name": "folder"
                             },
                             {
-                              "type": "stat-display",
-                              "value": "12",
-                              "icon": "folder",
-                              "label": "Folders"
-                            },
-                            {
-                              "value": "18",
-                              "label": "Uploaded this week",
-                              "icon": "upload",
-                              "type": "stat-display"
-                            },
-                            {
-                              "label": "Archived",
-                              "type": "stat-display",
-                              "value": "4",
-                              "icon": "archive"
+                              "content": "@config.title",
+                              "variant": "h3",
+                              "type": "typography"
                             }
                           ]
+                        },
+                        {
+                          "children": [
+                            {
+                              "value": "@payload.data.length",
+                              "type": "stat-display",
+                              "label": "Total files",
+                              "look": "@config.statLook",
+                              "icon": "file"
+                            },
+                            {
+                              "value": "12",
+                              "look": "@config.statLook",
+                              "icon": "folder",
+                              "label": "Folders",
+                              "type": "stat-display"
+                            },
+                            {
+                              "label": "Uploaded this week",
+                              "look": "@config.statLook",
+                              "icon": "upload",
+                              "value": "18",
+                              "type": "stat-display"
+                            },
+                            {
+                              "value": "4",
+                              "icon": "archive",
+                              "type": "stat-display",
+                              "look": "@config.statLook",
+                              "label": "Archived"
+                            }
+                          ],
+                          "type": "simple-grid",
+                          "cols": 4.0
                         },
                         {
                           "type": "divider"
                         },
                         {
-                          "type": "file-tree",
                           "tree": [
                             {
                               "name": "Contracts",
@@ -364,9 +368,9 @@
                               "type": "dir",
                               "children": [
                                 {
-                                  "name": "Active.pdf",
                                   "path": "Active.pdf",
-                                  "type": "file"
+                                  "type": "file",
+                                  "name": "Active.pdf"
                                 },
                                 {
                                   "type": "file",
@@ -377,25 +381,24 @@
                             },
                             {
                               "name": "Policies",
+                              "type": "dir",
                               "children": [
                                 {
                                   "type": "file",
-                                  "name": "HR.docx",
-                                  "path": "Policies/HR.docx"
+                                  "path": "Policies/HR.docx",
+                                  "name": "HR.docx"
                                 },
                                 {
+                                  "path": "Policies/Security.md",
                                   "type": "file",
-                                  "name": "Security.md",
-                                  "path": "Policies/Security.md"
+                                  "name": "Security.md"
                                 }
                               ],
-                              "path": "Policies",
-                              "type": "dir"
+                              "path": "Policies"
                             },
                             {
-                              "name": "Templates",
-                              "path": "Templates",
                               "type": "dir",
+                              "path": "Templates",
                               "children": [
                                 {
                                   "type": "file",
@@ -407,9 +410,11 @@
                                   "type": "file",
                                   "path": "Templates/NDA.pdf"
                                 }
-                              ]
+                              ],
+                              "name": "Templates"
                             }
-                          ]
+                          ],
+                          "type": "file-tree"
                         },
                         {
                           "type": "divider"
@@ -417,9 +422,9 @@
                         {
                           "itemActions": [
                             {
-                              "label": "Open",
                               "icon": "arrow-right",
                               "event": "OPEN_FILE",
+                              "label": "Open",
                               "variant": "primary"
                             },
                             {
@@ -428,40 +433,40 @@
                               "label": "Archive"
                             }
                           ],
-                          "type": "data-grid",
+                          "look": "@config.tableLook",
                           "entity": "@payload.data",
-                          "cols": 1.0,
-                          "gap": "sm",
                           "fields": [
                             {
-                              "variant": "caption",
                               "name": "name",
-                              "label": "Name"
-                            },
-                            {
-                              "variant": "caption",
-                              "name": "folder",
-                              "label": "Folder"
-                            },
-                            {
-                              "variant": "badge",
-                              "name": "mimeType",
-                              "label": "Type"
-                            },
-                            {
-                              "label": "Size",
-                              "name": "sizeBytes",
+                              "label": "Name",
                               "variant": "caption"
                             },
                             {
+                              "name": "folder",
+                              "label": "Folder",
+                              "variant": "caption"
+                            },
+                            {
+                              "name": "mimeType",
+                              "variant": "badge",
+                              "label": "Type"
+                            },
+                            {
                               "variant": "caption",
+                              "name": "sizeBytes",
+                              "label": "Size"
+                            },
+                            {
+                              "name": "uploadedAt",
                               "label": "Uploaded",
-                              "name": "uploadedAt"
+                              "variant": "caption"
                             }
-                          ]
+                          ],
+                          "type": "data-grid",
+                          "gap": "sm",
+                          "cols": 1.0
                         }
-                      ],
-                      "type": "stack"
+                      ]
                     }
                   ]
                 ]
@@ -476,8 +481,8 @@
                     "main",
                     {
                       "type": "alert",
-                      "variant": "error",
-                      "message": "@payload.error"
+                      "message": "@payload.error",
+                      "variant": "error"
                     }
                   ]
                 ]
@@ -541,27 +546,26 @@
                     "render-ui",
                     "main",
                     {
-                      "direction": "vertical",
-                      "gap": "md",
-                      "type": "stack",
                       "children": [
                         {
-                          "align": "center",
                           "direction": "horizontal",
+                          "type": "stack",
+                          "gap": "sm",
+                          "align": "center",
                           "children": [
                             {
+                              "label": "Back",
                               "action": "CLOSE_VIEW",
                               "type": "button",
-                              "variant": "ghost",
-                              "label": "Back"
+                              "variant": "ghost"
                             },
                             {
                               "type": "icon",
                               "name": "file"
                             },
                             {
-                              "type": "typography",
                               "content": "@entity.name",
+                              "type": "typography",
                               "variant": "h3"
                             },
                             {
@@ -569,128 +573,132 @@
                               "label": "@entity.mimeType",
                               "variant": "default"
                             }
-                          ],
-                          "gap": "sm",
-                          "type": "stack"
+                          ]
                         },
                         {
                           "type": "divider"
                         },
                         {
+                          "gap": "sm",
+                          "direction": "vertical",
                           "type": "stack",
                           "children": [
                             {
-                              "type": "stack",
-                              "gap": "md",
                               "children": [
                                 {
-                                  "content": "Folder",
                                   "type": "typography",
                                   "variant": "caption",
-                                  "color": "muted"
+                                  "color": "muted",
+                                  "content": "Folder"
                                 },
                                 {
-                                  "variant": "body",
                                   "content": "@entity.folder",
-                                  "type": "typography"
+                                  "type": "typography",
+                                  "variant": "body"
                                 }
                               ],
-                              "direction": "horizontal"
+                              "direction": "horizontal",
+                              "gap": "md",
+                              "type": "stack"
                             },
                             {
                               "type": "stack",
+                              "direction": "horizontal",
                               "gap": "md",
                               "children": [
                                 {
                                   "content": "Path",
-                                  "color": "muted",
-                                  "type": "typography",
-                                  "variant": "caption"
-                                },
-                                {
-                                  "type": "typography",
-                                  "content": "@entity.path",
-                                  "variant": "body"
-                                }
-                              ],
-                              "direction": "horizontal"
-                            },
-                            {
-                              "type": "stack",
-                              "gap": "md",
-                              "direction": "horizontal",
-                              "children": [
-                                {
                                   "variant": "caption",
-                                  "content": "Uploader",
                                   "color": "muted",
                                   "type": "typography"
                                 },
                                 {
                                   "variant": "body",
-                                  "type": "typography",
-                                  "content": "@entity.uploaderName"
+                                  "content": "@entity.path",
+                                  "type": "typography"
                                 }
                               ]
+                            },
+                            {
+                              "children": [
+                                {
+                                  "variant": "caption",
+                                  "type": "typography",
+                                  "content": "Uploader",
+                                  "color": "muted"
+                                },
+                                {
+                                  "type": "typography",
+                                  "content": "@entity.uploaderName",
+                                  "variant": "body"
+                                }
+                              ],
+                              "gap": "md",
+                              "type": "stack",
+                              "direction": "horizontal"
                             }
-                          ],
-                          "gap": "sm",
-                          "direction": "vertical"
+                          ]
                         },
                         {
                           "type": "divider"
                         },
                         {
-                          "type": "simple-grid",
                           "children": [
                             {
-                              "type": "stat-display",
                               "value": "@entity.sizeBytes",
+                              "label": "Size",
                               "icon": "hard-drive",
-                              "label": "Size"
+                              "look": "@config.statLook",
+                              "type": "stat-display"
                             },
                             {
                               "value": "@entity.mimeType",
+                              "label": "Type",
                               "icon": "file",
-                              "type": "stat-display",
-                              "label": "Type"
+                              "look": "@config.statLook",
+                              "type": "stat-display"
                             },
                             {
-                              "label": "Uploaded",
                               "type": "stat-display",
+                              "label": "Uploaded",
                               "value": "@entity.uploadedAt",
-                              "icon": "calendar"
+                              "icon": "calendar",
+                              "look": "@config.statLook"
                             }
                           ],
+                          "type": "simple-grid",
                           "cols": 3.0
                         },
                         {
+                          "type": "stack",
                           "gap": "sm",
                           "align": "center",
                           "children": [
                             {
-                              "label": "Download",
+                              "type": "button",
                               "action": "DOWNLOAD_FILE",
                               "actionPayload": {
                                 "id": "@entity.id"
                               },
                               "variant": "primary",
-                              "type": "button"
+                              "label": "Download"
                             },
                             {
+                              "type": "button",
                               "action": "ARCHIVE_FILE",
                               "variant": "danger",
+                              "label": "Archive",
                               "actionPayload": {
                                 "id": "@entity.id"
-                              },
-                              "type": "button",
-                              "label": "Archive"
+                              }
                             }
                           ],
-                          "type": "stack",
                           "direction": "horizontal"
                         }
-                      ]
+                      ],
+                      "gap": "md",
+                      "direction": "vertical",
+                      "type": "stack"
                     }
                   ]
                 ]
@@ -710,8 +718,8 @@
                     "StoredFile",
                     {
                       "emit": {
-                        "failure": "StoredFileLoadFailed",
-                        "success": "StoredFileLoaded"
+                        "success": "StoredFileLoaded",
+                        "failure": "StoredFileLoadFailed"
                       }
                     }
                   ],
@@ -720,6 +728,8 @@
                     "main",
                     {
                       "type": "stack",
+                      "direction": "vertical",
+                      "gap": "md",
                       "align": "center",
                       "className": "py-12",
                       "children": [
@@ -727,14 +737,12 @@
                           "type": "spinner"
                         },
                         {
-                          "content": "Archiving file…",
-                          "color": "muted",
+                          "type": "typography",
                           "variant": "caption",
-                          "type": "typography"
+                          "content": "Archiving file…",
+                          "color": "muted"
                         }
-                      ],
-                      "gap": "md",
-                      "direction": "vertical"
+                      ]
                     }
                   ]
                 ]
@@ -749,8 +757,8 @@
                     "StoredFile",
                     {
                       "emit": {
-                        "success": "StoredFileLoaded",
-                        "failure": "StoredFileLoadFailed"
+                        "failure": "StoredFileLoadFailed",
+                        "success": "StoredFileLoaded"
                       }
                     }
                   ],
@@ -758,22 +766,22 @@
                     "render-ui",
                     "main",
                     {
+                      "gap": "md",
+                      "className": "py-12",
                       "children": [
                         {
                           "type": "spinner"
                         },
                         {
-                          "type": "typography",
                           "variant": "caption",
                           "color": "muted",
-                          "content": "Loading files…"
+                          "content": "Loading files…",
+                          "type": "typography"
                         }
                       ],
                       "type": "stack",
-                      "gap": "md",
-                      "direction": "vertical",
                       "align": "center",
-                      "className": "py-12"
+                      "direction": "vertical"
                     }
                   ]
                 ]
@@ -793,8 +801,8 @@
                     "StoredFile",
                     {
                       "emit": {
-                        "failure": "StoredFileLoadFailed",
-                        "success": "StoredFileLoaded"
+                        "success": "StoredFileLoaded",
+                        "failure": "StoredFileLoadFailed"
                       }
                     }
                   ],
@@ -802,22 +810,22 @@
                     "render-ui",
                     "main",
                     {
-                      "align": "center",
-                      "gap": "md",
                       "children": [
                         {
                           "type": "spinner"
                         },
                         {
                           "variant": "caption",
-                          "content": "Preparing download…",
                           "type": "typography",
+                          "content": "Preparing download…",
                           "color": "muted"
                         }
                       ],
-                      "className": "py-12",
+                      "gap": "md",
+                      "type": "stack",
                       "direction": "vertical",
-                      "type": "stack"
+                      "className": "py-12",
+                      "align": "center"
                     }
                   ]
                 ]
@@ -846,10 +854,8 @@
                     "render-ui",
                     "main",
                     {
-                      "gap": "md",
-                      "align": "center",
                       "type": "stack",
-                      "direction": "vertical",
+                      "align": "center",
                       "className": "py-12",
                       "children": [
                         {
@@ -857,11 +863,13 @@
                         },
                         {
                           "type": "typography",
+                          "variant": "caption",
                           "content": "Archiving file…",
-                          "color": "muted",
-                          "variant": "caption"
+                          "color": "muted"
                         }
-                      ]
+                      ],
+                      "gap": "md",
+                      "direction": "vertical"
                     }
                   ]
                 ]
@@ -876,8 +884,8 @@
                     "StoredFile",
                     {
                       "emit": {
-                        "success": "StoredFileLoaded",
-                        "failure": "StoredFileLoadFailed"
+                        "failure": "StoredFileLoadFailed",
+                        "success": "StoredFileLoaded"
                       }
                     }
                   ],
@@ -894,6 +902,34 @@
             ]
           },
           "config": {
+            "tableLook": {
+              "type": "string",
+              "default": "dense",
+              "label": "Table look",
+              "description": "Layer 2 visual treatment for the data table rendered by this atom.",
+              "tier": "presentation",
+              "values": [
+                "dense",
+                "spacious",
+                "striped",
+                "borderless",
+                "card-rows"
+              ]
+            },
+            "statLook": {
+              "type": "string",
+              "default": "elevated",
+              "label": "Stat display look",
+              "description": "Layer 2 visual treatment for stat / KPI cards.",
+              "tier": "presentation",
+              "values": [
+                "elevated",
+                "flat",
+                "progress-backed",
+                "gauge",
+                "sparkline"
+              ]
+            },
             "title": {
               "type": "string",
               "default": "Files",

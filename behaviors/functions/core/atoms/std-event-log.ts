@@ -83,14 +83,16 @@ export interface StdEventLogEventLogSaveFailedPayload {
  * without modifying its state-machine topology.
  */
 export interface StdEventLogConfig {
+  /** Default: `[{"status":"active","key":"created","icon":"plus-circle","label":"Created"},{"icon":"edit-3","label":"Updated","key":"updated","status":"pending"},{"status":"complete","key":"approved","label":"Approved","icon":"check-circle"},{"icon":"x-circle","key":"rejected","status":"error","label":"Rejected"}]` */
+  kindOptions?: EntityRow[];
+  /** Default: `"vertical-spacious"` */
+  timelineLook?: 'vertical-compact' | 'vertical-spacious' | 'horizontal' | 'swimlane';
+  /** Default: `"Activity"` */
+  title?: string;
   /** Default: `["backfillTitle","backfillDescription","backfillKind","backfillDate"]` */
   formFields?: string[];
   /** Default: `"elevated"` */
   cardLook?: 'elevated' | 'flat-bordered' | 'borderless-divider' | 'ticket' | 'invoice' | 'chip' | 'tile-image-first';
-  /** Default: `[{"label":"Created","icon":"plus-circle","key":"created","status":"active"},{"icon":"edit-3","key":"updated","status":"pending","label":"Updated"},{"label":"Approved","key":"approved","icon":"check-circle","status":"complete"},{"label":"Rejected","icon":"x-circle","key":"rejected","status":"error"}]` */
-  kindOptions?: EntityRow[];
-  /** Default: `"Activity"` */
-  title?: string;
 }
 
 /**

@@ -116,6 +116,8 @@ export interface StdSavedSearchSavedSearchDeletedPayload {
 export interface StdSavedSearchConfig {
   /** Default: `"Saved Searches"` */
   title?: string;
+  /** Default: `"dense"` */
+  tableLook?: 'dense' | 'spacious' | 'striped' | 'borderless' | 'card-rows';
 }
 
 /**

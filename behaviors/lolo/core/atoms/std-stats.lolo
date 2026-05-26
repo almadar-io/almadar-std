@@ -74,6 +74,10 @@ orbital StatsItemOrbital {
         @description "UI pattern used to arrange the stat cards"
         @synonyms "internal pattern selector. user prompts rarely target this directly"
         @tier "internal"
+      statLook : "elevated" | "flat" | "progress-backed" | "gauge" | "sparkline" = "elevated"
+        @label "Stat display look"
+        @description "Layer 2 visual treatment for stat / KPI cards."
+        @tier "presentation"
     }
     state idle {
       INIT -> idle
@@ -98,7 +102,7 @@ orbital StatsItemOrbital {
           clickEvent:    (object/get @metric "clickEvent" ""),
           value:         (object/get @metric "value" 0)
         }]))
-        (render-ui main { type: "@config.viewPattern", entity: "@entity.cards", fields: [], renderItem: ["fn", "card", { type: "stat-display", label: "@card.label", value: "@card.value", icon: "@card.icon", format: "@card.format", variant: "@card.variant", max: "@card.max", trendPolarity: "@card.trendPolarity", trendFormat: "@card.trendFormat", sparklineData: "@card.sparklineData", clickEvent: "@card.clickEvent" }] })
+        (render-ui main { type: "@config.viewPattern", entity: "@entity.cards", fields: [], renderItem: ["fn", "card", { type: "stat-display", look: "@config.statLook", label: "@card.label", value: "@card.value", icon: "@card.icon", format: "@card.format", variant: "@card.variant", max: "@card.max", trendPolarity: "@card.trendPolarity", trendFormat: "@card.trendFormat", sparklineData: "@card.sparklineData", clickEvent: "@card.clickEvent" }] })
       ITEMS_LOADED -> idle
         (set @entity.cards (array/map @config.metrics ["fn", "metric", {
           label:         (object/get @metric "label"),
@@ -133,7 +137,7 @@ orbital StatsItemOrbital {
                                      (array/sum (array/filter @payload.data (object/get @metric "filter" true)) (object/get @metric "field" ""))
                                      (array/len (array/filter @payload.data (object/get @metric "filter" true))))))))
         }]))
-        (render-ui main { type: "@config.viewPattern", entity: "@entity.cards", fields: [], renderItem: ["fn", "card", { type: "stat-display", label: "@card.label", value: "@card.value", icon: "@card.icon", format: "@card.format", variant: "@card.variant", prefix: "@card.prefix", suffix: "@card.suffix", max: "@card.max", target: "@card.target", trend: "@card.trend", trendPolarity: "@card.trendPolarity", trendFormat: "@card.trendFormat", sparklineData: "@card.sparklineData", clickEvent: "@card.clickEvent" }] })
+        (render-ui main { type: "@config.viewPattern", entity: "@entity.cards", fields: [], renderItem: ["fn", "card", { type: "stat-display", look: "@config.statLook", label: "@card.label", value: "@card.value", icon: "@card.icon", format: "@card.format", variant: "@card.variant", prefix: "@card.prefix", suffix: "@card.suffix", max: "@card.max", target: "@card.target", trend: "@card.trend", trendPolarity: "@card.trendPolarity", trendFormat: "@card.trendFormat", sparklineData: "@card.sparklineData", clickEvent: "@card.clickEvent" }] })
     }
     listens {
       ITEMS_LOADED { data : [ObjectSpec], totalCount : number }

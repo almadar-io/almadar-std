@@ -195,8 +195,8 @@
                     "ESignRequest",
                     {
                       "emit": {
-                        "failure": "ESignRequestLoadFailed",
-                        "success": "ESignRequestLoaded"
+                        "success": "ESignRequestLoaded",
+                        "failure": "ESignRequestLoadFailed"
                       }
                     }
                   ],
@@ -219,41 +219,47 @@
                     "render-ui",
                     "main",
                     {
+                      "type": "stack",
+                      "direction": "vertical",
+                      "gap": "md",
                       "children": [
                         {
-                          "content": "@config.title",
+                          "type": "typography",
                           "variant": "h3",
-                          "type": "typography"
+                          "content": "@config.title"
                         },
                         {
-                          "label": "Recipient signature preview",
-                          "height": 160.0,
                           "helperText": "Read-only preview of the captured signature",
-                          "readOnly": true,
-                          "type": "signature-pad"
+                          "label": "Recipient signature preview",
+                          "type": "signature-pad",
+                          "height": 160.0,
+                          "readOnly": true
                         },
                         {
+                          "type": "data-grid",
+                          "entity": "@payload.data",
                           "itemActions": [
                             {
                               "label": "Send",
-                              "event": "SEND_REQUEST",
-                              "variant": "primary"
+                              "variant": "primary",
+                              "event": "SEND_REQUEST"
                             },
                             {
+                              "variant": "danger",
                               "label": "Revoke",
-                              "event": "REVOKE_REQUEST",
-                              "variant": "danger"
+                              "event": "REVOKE_REQUEST"
                             }
                           ],
+                          "look": "@config.tableLook",
                           "fields": [
                             {
+                              "label": "Document",
                               "name": "documentName",
-                              "variant": "h4",
-                              "label": "Document"
+                              "variant": "h4"
                             },
                             {
-                              "label": "Recipient",
                               "name": "recipientName",
+                              "label": "Recipient",
                               "variant": "body"
                             },
                             {
@@ -268,17 +274,12 @@
                             },
                             {
                               "variant": "caption",
-                              "label": "Sent",
-                              "name": "sentAt"
+                              "name": "sentAt",
+                              "label": "Sent"
                             }
-                          ],
-                          "entity": "@payload.data",
-                          "type": "data-grid"
+                          ]
                         }
-                      ],
-                      "direction": "vertical",
-                      "type": "stack",
-                      "gap": "md"
+                      ]
                     }
                   ]
                 ]
@@ -292,10 +293,10 @@
                     "render-ui",
                     "main",
                     {
-                      "message": "@payload.error",
-                      "type": "alert",
                       "variant": "error",
-                      "title": "Failed to load signature requests"
+                      "title": "Failed to load signature requests",
+                      "type": "alert",
+                      "message": "@payload.error"
                     }
                   ]
                 ]
@@ -368,6 +369,20 @@
               "label": "Section title",
               "description": "Heading shown above the signature-request list",
               "tier": "presentation"
+            },
+            "tableLook": {
+              "type": "string",
+              "default": "dense",
+              "label": "Table look",
+              "description": "Layer 2 visual treatment for the data table rendered by this atom.",
+              "tier": "presentation",
+              "values": [
+                "dense",
+                "spacious",
+                "striped",
+                "borderless",
+                "card-rows"
+              ]
             }
           },
           "scope": "collection"

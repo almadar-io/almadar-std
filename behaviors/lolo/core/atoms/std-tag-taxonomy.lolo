@@ -26,6 +26,10 @@ orbital TagTaxonomyOrbital {
         @label "Allow editing"
         @description "Show inline controls to create or rename tags"
         @tier "domain"
+      tableLook : "dense" | "spacious" | "striped" | "borderless" | "card-rows" = "dense"
+        @label "Table look"
+        @description "Layer 2 visual treatment for the data table rendered by this atom."
+        @tier "presentation"
     }
     initial: loading
     state loading {
@@ -33,7 +37,7 @@ orbital TagTaxonomyOrbital {
         (fetch Tag { emit: { success: "TagLoaded", failure: "TagLoadFailed" } })
         (render-ui main { type: "stack", direction: "vertical", gap: "md", align: "center", className: "py-12", children: [{ type: "spinner" }, { type: "typography", variant: "caption", color: "muted", content: "Loading categories…" }] })
       TagLoaded -> browsing
-        (render-ui main { type: "stack", direction: "vertical", gap: "md", children: [{ type: "typography", content: "@config.title", variant: "h3" }, { type: "data-grid", entity: @payload.data, fields: [{ name: "name", label: "Name" }, { name: "count", label: "Items" }], itemActions: [{ label: "Open", event: "SELECT_TAG", icon: "chevron-right" }] }] })
+        (render-ui main { type: "stack", direction: "vertical", gap: "md", children: [{ type: "typography", content: "@config.title", variant: "h3" }, { type: "data-grid", look: "@config.tableLook", entity: @payload.data, fields: [{ name: "name", label: "Name" }, { name: "count", label: "Items" }], itemActions: [{ label: "Open", event: "SELECT_TAG", icon: "chevron-right" }] }] })
       TagLoadFailed -> error
         (render-ui main { type: "alert", variant: "error", message: "@payload.error" })
     }
@@ -44,7 +48,7 @@ orbital TagTaxonomyOrbital {
         (fetch Tag { emit: { success: "TagLoaded", failure: "TagLoadFailed" } })
         (render-ui main { type: "stack", direction: "vertical", gap: "md", align: "center", className: "py-12", children: [{ type: "spinner" }, { type: "typography", variant: "caption", color: "muted", content: "Loading children…" }] })
       TagLoaded -> browsing
-        (render-ui main { type: "stack", direction: "vertical", gap: "md", children: [{ type: "typography", content: "@config.title", variant: "h3" }, { type: "data-grid", entity: @payload.data, fields: [{ name: "name", label: "Name" }, { name: "count", label: "Items" }], itemActions: [{ label: "Open", event: "SELECT_TAG", icon: "chevron-right" }] }] })
+        (render-ui main { type: "stack", direction: "vertical", gap: "md", children: [{ type: "typography", content: "@config.title", variant: "h3" }, { type: "data-grid", look: "@config.tableLook", entity: @payload.data, fields: [{ name: "name", label: "Name" }, { name: "count", label: "Items" }], itemActions: [{ label: "Open", event: "SELECT_TAG", icon: "chevron-right" }] }] })
       TagLoadFailed -> error
         (render-ui main { type: "alert", variant: "error", message: "@payload.error" })
     }
@@ -58,7 +62,7 @@ orbital TagTaxonomyOrbital {
       TagSelected -> editing
         (set @entity.id @payload.tagId)
       TagLoaded -> browsing
-        (render-ui main { type: "stack", direction: "vertical", gap: "md", children: [{ type: "typography", content: "@config.title", variant: "h3" }, { type: "data-grid", entity: @payload.data, fields: [{ name: "name", label: "Name" }, { name: "count", label: "Items" }], itemActions: [{ label: "Open", event: "SELECT_TAG", icon: "chevron-right" }] }] })
+        (render-ui main { type: "stack", direction: "vertical", gap: "md", children: [{ type: "typography", content: "@config.title", variant: "h3" }, { type: "data-grid", look: "@config.tableLook", entity: @payload.data, fields: [{ name: "name", label: "Name" }, { name: "count", label: "Items" }], itemActions: [{ label: "Open", event: "SELECT_TAG", icon: "chevron-right" }] }] })
       TagLoadFailed -> error
         (render-ui main { type: "alert", variant: "error", message: "@payload.error" })
     }

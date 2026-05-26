@@ -355,22 +355,22 @@
                     "render-ui",
                     "main",
                     {
-                      "type": "stack",
                       "direction": "vertical",
-                      "align": "center",
-                      "className": "py-12",
                       "children": [
                         {
                           "type": "spinner"
                         },
                         {
+                          "content": "Loading saved searches…",
                           "type": "typography",
-                          "variant": "caption",
                           "color": "muted",
-                          "content": "Loading saved searches…"
+                          "variant": "caption"
                         }
                       ],
-                      "gap": "md"
+                      "gap": "md",
+                      "className": "py-12",
+                      "type": "stack",
+                      "align": "center"
                     }
                   ]
                 ]
@@ -388,57 +388,33 @@
                         {
                           "type": "stack",
                           "direction": "horizontal",
-                          "gap": "sm",
                           "children": [
                             {
-                              "name": "bookmark",
-                              "type": "icon"
+                              "type": "icon",
+                              "name": "bookmark"
                             },
                             {
-                              "variant": "h3",
+                              "content": "@config.title",
                               "type": "typography",
-                              "content": "@config.title"
+                              "variant": "h3"
                             }
-                          ]
+                          ],
+                          "gap": "sm"
                         },
                         {
                           "type": "divider"
                         },
                         {
-                          "type": "data-grid",
-                          "cols": 1.0,
-                          "gap": "sm",
-                          "itemActions": [
-                            {
-                              "event": "TOGGLE_ALERT",
-                              "icon": "bell",
-                              "variant": "secondary",
-                              "label": "Toggle alert"
-                            },
-                            {
-                              "variant": "secondary",
-                              "icon": "pencil",
-                              "event": "EDIT",
-                              "label": "Edit"
-                            },
-                            {
-                              "event": "DELETE",
-                              "icon": "trash-2",
-                              "label": "Delete",
-                              "variant": "danger"
-                            }
-                          ],
-                          "entity": "@payload.data",
                           "fields": [
                             {
-                              "variant": "h4",
                               "name": "name",
-                              "label": "Name"
+                              "label": "Name",
+                              "variant": "h4"
                             },
                             {
-                              "label": "Query",
                               "variant": "caption",
-                              "name": "query"
+                              "name": "query",
+                              "label": "Query"
                             },
                             {
                               "name": "alertFrequency",
@@ -446,15 +422,40 @@
                               "label": "Frequency"
                             },
                             {
-                              "label": "Alerts",
                               "name": "alertEnabled",
-                              "variant": "badge"
+                              "variant": "badge",
+                              "label": "Alerts"
+                            }
+                          ],
+                          "cols": 1.0,
+                          "type": "data-grid",
+                          "entity": "@payload.data",
+                          "look": "@config.tableLook",
+                          "gap": "sm",
+                          "itemActions": [
+                            {
+                              "icon": "bell",
+                              "event": "TOGGLE_ALERT",
+                              "variant": "secondary",
+                              "label": "Toggle alert"
+                            },
+                            {
+                              "variant": "secondary",
+                              "label": "Edit",
+                              "event": "EDIT",
+                              "icon": "pencil"
+                            },
+                            {
+                              "label": "Delete",
+                              "event": "DELETE",
+                              "icon": "trash-2",
+                              "variant": "danger"
                             }
                           ]
                         }
                       ],
-                      "type": "stack",
                       "direction": "vertical",
+                      "type": "stack",
                       "gap": "md"
                     }
                   ]
@@ -470,8 +471,8 @@
                     "main",
                     {
                       "type": "alert",
-                      "message": "@payload.error",
-                      "variant": "error"
+                      "variant": "error",
+                      "message": "@payload.error"
                     }
                   ]
                 ]
@@ -543,12 +544,10 @@
                     "render-ui",
                     "main",
                     {
-                      "direction": "vertical",
-                      "type": "stack",
-                      "gap": "md",
                       "children": [
                         {
-                          "gap": "sm",
+                          "direction": "horizontal",
+                          "type": "stack",
                           "children": [
                             {
                               "type": "icon",
@@ -556,31 +555,29 @@
                             },
                             {
                               "content": "Edit saved search",
-                              "type": "typography",
-                              "variant": "h3"
+                              "variant": "h3",
+                              "type": "typography"
                             }
                           ],
-                          "type": "stack",
-                          "direction": "horizontal"
+                          "gap": "sm"
                         },
                         {
                           "type": "divider"
                         },
                         {
-                          "action": "RENAME",
                           "type": "input",
+                          "value": "@entity.name",
                           "placeholder": "Name",
-                          "value": "@entity.name"
+                          "action": "RENAME"
                         },
                         {
-                          "action": "CHANGE_FREQUENCY",
-                          "placeholder": "Alert frequency",
-                          "value": "@entity.alertFrequency",
                           "type": "select",
+                          "value": "@entity.alertFrequency",
+                          "action": "CHANGE_FREQUENCY",
                           "options": [
                             {
-                              "value": "instant",
-                              "label": "Instant"
+                              "label": "Instant",
+                              "value": "instant"
                             },
                             {
                               "value": "daily",
@@ -590,35 +587,39 @@
                               "value": "weekly",
                               "label": "Weekly"
                             }
-                          ]
+                          ],
+                          "placeholder": "Alert frequency"
                         },
                         {
-                          "checked": "@entity.alertEnabled",
                           "type": "switch",
+                          "checked": "@entity.alertEnabled",
                           "label": "Alerts enabled"
                         },
                         {
-                          "direction": "horizontal",
-                          "gap": "sm",
-                          "type": "stack",
                           "children": [
                             {
-                              "variant": "primary",
                               "icon": "check",
                               "label": "Save",
+                              "type": "button",
                               "action": "SAVE",
-                              "type": "button"
+                              "variant": "primary"
                             },
                             {
                               "type": "button",
-                              "variant": "secondary",
-                              "icon": "x",
                               "label": "Cancel",
-                              "action": "CANCEL"
+                              "variant": "secondary",
+                              "action": "CANCEL",
+                              "icon": "x"
                             }
-                          ]
+                          ],
+                          "direction": "horizontal",
+                          "type": "stack",
+                          "gap": "sm"
                         }
-                      ]
+                      ],
+                      "type": "stack",
+                      "gap": "md",
+                      "direction": "vertical"
                     }
                   ]
                 ]
@@ -633,8 +634,8 @@
                     "SavedSearch",
                     {
                       "emit": {
-                        "success": "SavedSearchLoaded",
-                        "failure": "SavedSearchLoadFailed"
+                        "failure": "SavedSearchLoadFailed",
+                        "success": "SavedSearchLoaded"
                       }
                     }
                   ]
@@ -650,8 +651,8 @@
                     "SavedSearch",
                     {
                       "emit": {
-                        "success": "SavedSearchLoaded",
-                        "failure": "SavedSearchLoadFailed"
+                        "failure": "SavedSearchLoadFailed",
+                        "success": "SavedSearchLoaded"
                       }
                     }
                   ]
@@ -693,8 +694,8 @@
                     "@entity",
                     {
                       "emit": {
-                        "failure": "SavedSearchLoadFailed",
-                        "success": "SavedSearchUpdated"
+                        "success": "SavedSearchUpdated",
+                        "failure": "SavedSearchLoadFailed"
                       }
                     }
                   ]
@@ -727,8 +728,8 @@
                     "SavedSearch",
                     {
                       "emit": {
-                        "success": "SavedSearchLoaded",
-                        "failure": "SavedSearchLoadFailed"
+                        "failure": "SavedSearchLoadFailed",
+                        "success": "SavedSearchLoaded"
                       }
                     }
                   ],
@@ -736,8 +737,8 @@
                     "render-ui",
                     "main",
                     {
-                      "type": "spinner",
-                      "size": "sm"
+                      "size": "sm",
+                      "type": "spinner"
                     }
                   ]
                 ]
@@ -751,6 +752,20 @@
               "label": "Section title",
               "description": "Heading shown above the saved-search list",
               "tier": "presentation"
+            },
+            "tableLook": {
+              "type": "string",
+              "default": "dense",
+              "label": "Table look",
+              "description": "Layer 2 visual treatment for the data table rendered by this atom.",
+              "tier": "presentation",
+              "values": [
+                "dense",
+                "spacious",
+                "striped",
+                "borderless",
+                "card-rows"
+              ]
             }
           },
           "scope": "collection"

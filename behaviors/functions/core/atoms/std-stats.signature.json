@@ -28,26 +28,26 @@
             "type": "[MetricSpec]",
             "default": [
               {
+                "variant": "primary",
                 "label": "Total Items",
                 "aggregation": "count",
                 "icon": "list",
-                "variant": "primary",
                 "format": "number"
               },
               {
-                "variant": "success",
-                "icon": "check-circle",
-                "aggregation": "count",
                 "format": "number",
-                "label": "Active"
+                "label": "Active",
+                "icon": "check-circle",
+                "variant": "success",
+                "aggregation": "count"
               },
               {
+                "field": "value",
                 "icon": "trending-up",
-                "aggregation": "avg",
+                "label": "Avg Value",
                 "variant": "info",
                 "format": "number",
-                "label": "Avg Value",
-                "field": "value"
+                "aggregation": "avg"
               }
             ],
             "label": "Metrics",
@@ -56,13 +56,21 @@
             "tier": "presentation",
             "items": {
               "properties": {
-                "suffix": {
-                  "name": "suffix",
+                "target": {
+                  "name": "target",
                   "required": false,
-                  "type": "string"
+                  "type": "number"
                 },
-                "value": {
-                  "name": "value",
+                "sparklineData": {
+                  "name": "sparklineData",
+                  "required": false,
+                  "type": "array",
+                  "items": {
+                    "type": "number"
+                  }
+                },
+                "trend": {
+                  "name": "trend",
                   "required": false,
                   "type": "number"
                 },
@@ -71,10 +79,10 @@
                   "required": false,
                   "type": "string"
                 },
-                "trend": {
-                  "name": "trend",
-                  "required": false,
-                  "type": "number"
+                "label": {
+                  "name": "label",
+                  "required": true,
+                  "type": "string"
                 },
                 "variant": {
                   "name": "variant",
@@ -89,33 +97,15 @@
                     "info"
                   ]
                 },
-                "label": {
-                  "name": "label",
-                  "required": true,
-                  "type": "string"
-                },
-                "max": {
-                  "name": "max",
-                  "required": false,
-                  "type": "number"
-                },
-                "sparklineData": {
-                  "name": "sparklineData",
-                  "required": false,
-                  "type": "array",
-                  "items": {
-                    "type": "number"
-                  }
-                },
-                "target": {
-                  "name": "target",
-                  "required": false,
-                  "type": "number"
-                },
-                "clickEvent": {
-                  "name": "clickEvent",
+                "field": {
+                  "name": "field",
                   "required": false,
                   "type": "string"
+                },
+                "value": {
+                  "name": "value",
+                  "required": false,
+                  "type": "number"
                 },
                 "format": {
                   "name": "format",
@@ -126,6 +116,11 @@
                     "currency",
                     "percent"
                   ]
+                },
+                "suffix": {
+                  "name": "suffix",
+                  "required": false,
+                  "type": "string"
                 },
                 "aggregation": {
                   "name": "aggregation",
@@ -140,16 +135,6 @@
                     "variance"
                   ]
                 },
-                "prefix": {
-                  "name": "prefix",
-                  "required": false,
-                  "type": "string"
-                },
-                "field": {
-                  "name": "field",
-                  "required": false,
-                  "type": "string"
-                },
                 "trendFormat": {
                   "name": "trendFormat",
                   "required": false,
@@ -159,6 +144,16 @@
                     "percent"
                   ]
                 },
+                "clickEvent": {
+                  "name": "clickEvent",
+                  "required": false,
+                  "type": "string"
+                },
+                "prefix": {
+                  "name": "prefix",
+                  "required": false,
+                  "type": "string"
+                },
                 "trendPolarity": {
                   "name": "trendPolarity",
                   "required": false,
@@ -167,10 +162,30 @@
                     "higher-is-better",
                     "lower-is-better"
                   ]
+                },
+                "max": {
+                  "name": "max",
+                  "required": false,
+                  "type": "number"
                 }
               },
               "type": "object"
             }
+          },
+          {
+            "key": "statLook",
+            "type": "string",
+            "default": "elevated",
+            "label": "Stat display look",
+            "description": "Layer 2 visual treatment for stat / KPI cards.",
+            "tier": "presentation",
+            "enumValues": [
+              "elevated",
+              "flat",
+              "progress-backed",
+              "gauge",
+              "sparkline"
+            ]
           },
           {
             "key": "title",

@@ -384,22 +384,22 @@
                     "render-ui",
                     "main",
                     {
+                      "align": "center",
+                      "className": "py-12",
                       "children": [
                         {
                           "type": "spinner"
                         },
                         {
-                          "color": "muted",
                           "variant": "caption",
+                          "color": "muted",
                           "type": "typography",
                           "content": "Loading approval queue…"
                         }
                       ],
-                      "className": "py-12",
                       "type": "stack",
-                      "direction": "vertical",
-                      "align": "center",
-                      "gap": "md"
+                      "gap": "md",
+                      "direction": "vertical"
                     }
                   ]
                 ]
@@ -415,29 +415,29 @@
                     {
                       "type": "stack",
                       "direction": "vertical",
+                      "gap": "md",
                       "children": [
                         {
                           "children": [
                             {
-                              "name": "shield-check",
-                              "type": "icon"
+                              "type": "icon",
+                              "name": "shield-check"
                             },
                             {
-                              "variant": "h3",
+                              "type": "typography",
                               "content": "Approval queue",
-                              "type": "typography"
+                              "variant": "h3"
                             }
                           ],
                           "gap": "sm",
-                          "align": "center",
+                          "type": "stack",
                           "direction": "horizontal",
-                          "type": "stack"
+                          "align": "center"
                         },
                         {
                           "type": "divider"
                         },
                         {
-                          "gap": "sm",
                           "fields": [
                             {
                               "variant": "badge",
@@ -446,8 +446,8 @@
                             },
                             {
                               "label": "Requested",
-                              "variant": "caption",
-                              "name": "requestedAt"
+                              "name": "requestedAt",
+                              "variant": "caption"
                             },
                             {
                               "name": "status",
@@ -455,26 +455,27 @@
                               "variant": "badge"
                             }
                           ],
-                          "entity": "@payload.data",
-                          "cols": 1.0,
-                          "type": "data-grid",
+                          "gap": "sm",
                           "itemActions": [
                             {
-                              "icon": "check",
-                              "event": "APPROVE",
                               "label": "Approve",
-                              "variant": "primary"
+                              "variant": "primary",
+                              "event": "APPROVE",
+                              "icon": "check"
                             },
                             {
-                              "label": "Deny",
                               "variant": "danger",
+                              "label": "Deny",
                               "event": "DENY",
                               "icon": "x"
                             }
-                          ]
+                          ],
+                          "cols": 1.0,
+                          "entity": "@payload.data",
+                          "type": "data-grid",
+                          "look": "@config.tableLook"
                         }
-                      ],
-                      "gap": "md"
+                      ]
                     }
                   ]
                 ]
@@ -488,9 +489,9 @@
                     "render-ui",
                     "main",
                     {
-                      "message": "@payload.error",
+                      "type": "alert",
                       "variant": "error",
-                      "type": "alert"
+                      "message": "@payload.error"
                     }
                   ]
                 ]
@@ -522,8 +523,8 @@
                     "@entity",
                     {
                       "emit": {
-                        "success": "ApprovalRequestReviewed",
-                        "failure": "ApprovalRequestReviewFailed"
+                        "failure": "ApprovalRequestReviewFailed",
+                        "success": "ApprovalRequestReviewed"
                       }
                     }
                   ],
@@ -563,8 +564,8 @@
                     "@entity",
                     {
                       "emit": {
-                        "failure": "ApprovalRequestReviewFailed",
-                        "success": "ApprovalRequestReviewed"
+                        "success": "ApprovalRequestReviewed",
+                        "failure": "ApprovalRequestReviewFailed"
                       }
                     }
                   ],
@@ -587,8 +588,8 @@
                     "ApprovalRequest",
                     {
                       "emit": {
-                        "success": "ApprovalRequestLoaded",
-                        "failure": "ApprovalRequestLoadFailed"
+                        "failure": "ApprovalRequestLoadFailed",
+                        "success": "ApprovalRequestLoaded"
                       }
                     }
                   ]
@@ -603,9 +604,9 @@
                     "render-ui",
                     "main",
                     {
-                      "variant": "error",
                       "message": "@payload.error",
-                      "type": "alert"
+                      "type": "alert",
+                      "variant": "error"
                     }
                   ]
                 ]
@@ -638,20 +639,6 @@
             ]
           },
           "config": {
-            "threshold": {
-              "type": "number",
-              "default": 0.0,
-              "label": "Auto-approve threshold",
-              "description": "Below this value, requests should be auto-approved. v1.0 declarative only; wiring lands in v1.1 (gap).",
-              "tier": "domain"
-            },
-            "escalationHours": {
-              "type": "number",
-              "default": 0.0,
-              "label": "Escalation hours",
-              "description": "Hours a request can sit pending before escalating. v1.0 declarative only; per-row escalation needs loop-with-emit primitive (gap).",
-              "tier": "domain"
-            },
             "escalationRoles": {
               "type": "[string]",
               "default": [],
@@ -662,18 +649,25 @@
                 "type": "string"
               }
             },
-            "valueField": {
+            "tableLook": {
               "type": "string",
-              "default": "",
-              "label": "Value field",
-              "description": "Payload field name to compare against threshold (e.g. 'amount' on a RefundRequested event). v1.0 declarative only.",
-              "tier": "domain"
+              "default": "dense",
+              "label": "Table look",
+              "description": "Layer 2 visual treatment for the data table rendered by this atom.",
+              "tier": "presentation",
+              "values": [
+                "dense",
+                "spacious",
+                "striped",
+                "borderless",
+                "card-rows"
+              ]
             },
-            "autoApproveBelowThreshold": {
-              "type": "boolean",
-              "default": true,
-              "label": "Auto-approve below threshold",
-              "description": "Skip the review queue when the gated event's value is below the threshold. v1.0 declarative only.",
+            "threshold": {
+              "type": "number",
+              "default": 0.0,
+              "label": "Auto-approve threshold",
+              "description": "Below this value, requests should be auto-approved. v1.0 declarative only; wiring lands in v1.1 (gap).",
               "tier": "domain"
             },
             "approverRoles": {
@@ -685,6 +679,27 @@
               "items": {
                 "type": "string"
               }
+            },
+            "autoApproveBelowThreshold": {
+              "type": "boolean",
+              "default": true,
+              "label": "Auto-approve below threshold",
+              "description": "Skip the review queue when the gated event's value is below the threshold. v1.0 declarative only.",
+              "tier": "domain"
+            },
+            "valueField": {
+              "type": "string",
+              "default": "",
+              "label": "Value field",
+              "description": "Payload field name to compare against threshold (e.g. 'amount' on a RefundRequested event). v1.0 declarative only.",
+              "tier": "domain"
+            },
+            "escalationHours": {
+              "type": "number",
+              "default": 0.0,
+              "label": "Escalation hours",
+              "description": "Hours a request can sit pending before escalating. v1.0 declarative only; per-row escalation needs loop-with-emit primitive (gap).",
+              "tier": "domain"
             }
           },
           "scope": "collection"

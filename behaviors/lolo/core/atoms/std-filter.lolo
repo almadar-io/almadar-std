@@ -23,20 +23,24 @@ orbital FilterTargetOrbital {
         @label "Filter event"
         @description "Event emitted when the user changes a filter selection"
         @tier "internal"
+      filterBarLook : "toolbar" | "chips" | "pills" | "popover-trigger" | "inline-column-header" = "toolbar"
+        @label "Filter bar look"
+        @description "Layer 2 visual treatment for the filter bar."
+        @tier "presentation"
     }
     state idle {
       INIT -> idle
         (fetch FilterTarget {})
-        (render-ui main { type: "filter-group", entity: FilterTarget, filters: "@config.filters" })
+        (render-ui main { type: "filter-group", look: "@config.filterBarLook", entity: FilterTarget, filters: "@config.filters" })
       FILTER -> idle
         (set @entity.field @payload.field)
         (set @entity.value @payload.value)
-        (render-ui main { type: "filter-group", entity: FilterTarget, filters: "@config.filters" })
+        (render-ui main { type: "filter-group", look: "@config.filterBarLook", entity: FilterTarget, filters: "@config.filters" })
       CLEAR_FILTERS -> idle
         (set @entity.field "")
         (set @entity.value "")
         (emit FILTER { field: "", value: "" })
-        (render-ui main { type: "filter-group", entity: FilterTarget, filters: "@config.filters" })
+        (render-ui main { type: "filter-group", look: "@config.filterBarLook", entity: FilterTarget, filters: "@config.filters" })
     }
     emits {
       FILTER { field : string!, value : string! }

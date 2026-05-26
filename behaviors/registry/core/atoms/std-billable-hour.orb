@@ -294,15 +294,15 @@
                           "type": "spinner"
                         },
                         {
-                          "type": "typography",
+                          "variant": "caption",
                           "content": "Loading time entries…",
                           "color": "muted",
-                          "variant": "caption"
+                          "type": "typography"
                         }
                       ],
-                      "gap": "md",
-                      "align": "center",
                       "direction": "vertical",
+                      "align": "center",
+                      "gap": "md",
                       "className": "py-12",
                       "type": "stack"
                     }
@@ -318,112 +318,117 @@
                     "render-ui",
                     "main",
                     {
-                      "gap": "md",
+                      "type": "stack",
+                      "direction": "vertical",
                       "children": [
                         {
-                          "type": "stack",
-                          "align": "center",
+                          "gap": "sm",
                           "children": [
                             {
                               "name": "clock",
                               "type": "icon"
                             },
                             {
+                              "variant": "h3",
                               "type": "typography",
-                              "content": "@config.title",
-                              "variant": "h3"
+                              "content": "@config.title"
                             }
                           ],
-                          "direction": "horizontal",
-                          "gap": "sm"
+                          "type": "stack",
+                          "align": "center",
+                          "direction": "horizontal"
                         },
                         {
+                          "type": "simple-grid",
                           "children": [
                             {
-                              "type": "stat-display",
-                              "value": "@payload.data.length",
                               "icon": "clock",
-                              "label": "Total entries"
+                              "type": "stat-display",
+                              "label": "Total entries",
+                              "value": "@payload.data.length",
+                              "look": "@config.statLook"
                             },
                             {
-                              "label": "Unbilled hours",
+                              "value": "248",
                               "icon": "hourglass",
                               "type": "stat-display",
-                              "value": "248"
+                              "look": "@config.statLook",
+                              "label": "Unbilled hours"
                             },
                             {
-                              "label": "Invoiced this month",
+                              "icon": "file-text",
                               "type": "stat-display",
                               "value": "32",
-                              "icon": "file-text"
+                              "look": "@config.statLook",
+                              "label": "Invoiced this month"
                             },
                             {
-                              "icon": "x-circle",
                               "type": "stat-display",
+                              "icon": "x-circle",
                               "value": "4",
-                              "label": "Written off"
+                              "label": "Written off",
+                              "look": "@config.statLook"
                             }
                           ],
-                          "type": "simple-grid",
                           "cols": 4.0
                         },
                         {
                           "type": "divider"
                         },
                         {
-                          "type": "data-grid",
-                          "itemActions": [
-                            {
-                              "event": "OPEN_HOURS",
-                              "label": "Open",
-                              "variant": "primary",
-                              "icon": "arrow-right"
-                            },
-                            {
-                              "label": "Write Off",
-                              "event": "WRITE_OFF_HOURS",
-                              "variant": "danger"
-                            }
-                          ],
-                          "cols": 1.0,
                           "entity": "@payload.data",
+                          "cols": 1.0,
                           "gap": "sm",
+                          "type": "data-grid",
+                          "look": "@config.tableLook",
                           "fields": [
                             {
-                              "name": "workerName",
+                              "variant": "caption",
                               "label": "Worker",
-                              "variant": "caption"
+                              "name": "workerName"
                             },
                             {
-                              "variant": "caption",
                               "name": "matterId",
-                              "label": "Matter"
-                            },
-                            {
-                              "name": "workDate",
-                              "label": "Date",
+                              "label": "Matter",
                               "variant": "caption"
                             },
                             {
-                              "label": "Hours",
-                              "variant": "caption",
-                              "name": "hours"
+                              "label": "Date",
+                              "name": "workDate",
+                              "variant": "caption"
                             },
                             {
                               "variant": "caption",
+                              "name": "hours",
+                              "label": "Hours"
+                            },
+                            {
                               "name": "rate",
-                              "label": "Rate"
+                              "label": "Rate",
+                              "variant": "caption"
                             },
                             {
-                              "name": "invoiceStatus",
                               "label": "Status",
+                              "name": "invoiceStatus",
                               "variant": "badge"
+                            }
+                          ],
+                          "itemActions": [
+                            {
+                              "variant": "primary",
+                              "icon": "arrow-right",
+                              "label": "Open",
+                              "event": "OPEN_HOURS"
+                            },
+                            {
+                              "variant": "danger",
+                              "event": "WRITE_OFF_HOURS",
+                              "label": "Write Off"
                             }
                           ]
                         }
                       ],
-                      "direction": "vertical",
-                      "type": "stack"
+                      "gap": "md"
                     }
                   ]
                 ]
@@ -437,8 +442,8 @@
                     "render-ui",
                     "main",
                     {
-                      "message": "@payload.error",
                       "type": "alert",
+                      "message": "@payload.error",
                       "variant": "error"
                     }
                   ]
@@ -508,35 +513,34 @@
                     "render-ui",
                     "main",
                     {
-                      "direction": "vertical",
                       "children": [
                         {
-                          "type": "stack",
-                          "align": "center",
+                          "gap": "sm",
                           "direction": "horizontal",
+                          "align": "center",
                           "children": [
                             {
-                              "label": "Back",
-                              "type": "button",
                               "variant": "ghost",
-                              "action": "CLOSE_VIEW"
+                              "type": "button",
+                              "action": "CLOSE_VIEW",
+                              "label": "Back"
                             },
                             {
                               "name": "clock",
                               "type": "icon"
                             },
                             {
+                              "type": "typography",
                               "content": "@entity.workerName",
-                              "variant": "h3",
-                              "type": "typography"
+                              "variant": "h3"
                             },
                             {
                               "variant": "default",
-                              "label": "@entity.invoiceStatus",
-                              "type": "badge"
+                              "type": "badge",
+                              "label": "@entity.invoiceStatus"
                             }
                           ],
-                          "gap": "sm"
+                          "type": "stack"
                         },
                         {
                           "type": "divider"
@@ -547,58 +551,58 @@
                           "direction": "vertical",
                           "children": [
                             {
-                              "children": [
-                                {
-                                  "content": "Matter",
-                                  "type": "typography",
-                                  "color": "muted",
-                                  "variant": "caption"
-                                },
-                                {
-                                  "content": "@entity.matterId",
-                                  "type": "typography",
-                                  "variant": "body"
-                                }
-                              ],
-                              "direction": "horizontal",
-                              "gap": "md",
-                              "type": "stack"
-                            },
-                            {
                               "gap": "md",
                               "type": "stack",
+                              "direction": "horizontal",
                               "children": [
                                 {
-                                  "content": "Project",
-                                  "variant": "caption",
-                                  "type": "typography",
-                                  "color": "muted"
-                                },
-                                {
-                                  "type": "typography",
-                                  "content": "@entity.projectId",
-                                  "variant": "body"
-                                }
-                              ],
-                              "direction": "horizontal"
-                            },
-                            {
-                              "children": [
-                                {
-                                  "content": "Description",
                                   "color": "muted",
+                                  "content": "Matter",
                                   "type": "typography",
                                   "variant": "caption"
                                 },
                                 {
                                   "type": "typography",
                                   "variant": "body",
-                                  "content": "@entity.description"
+                                  "content": "@entity.matterId"
+                                }
+                              ]
+                            },
+                            {
+                              "type": "stack",
+                              "direction": "horizontal",
+                              "gap": "md",
+                              "children": [
+                                {
+                                  "type": "typography",
+                                  "variant": "caption",
+                                  "color": "muted",
+                                  "content": "Project"
+                                },
+                                {
+                                  "type": "typography",
+                                  "content": "@entity.projectId",
+                                  "variant": "body"
+                                }
+                              ]
+                            },
+                            {
+                              "direction": "horizontal",
+                              "children": [
+                                {
+                                  "variant": "caption",
+                                  "color": "muted",
+                                  "content": "Description",
+                                  "type": "typography"
+                                },
+                                {
+                                  "variant": "body",
+                                  "content": "@entity.description",
+                                  "type": "typography"
                                 }
                               ],
-                              "gap": "md",
-                              "direction": "horizontal",
-                              "type": "stack"
+                              "type": "stack",
+                              "gap": "md"
                             }
                           ]
                         },
@@ -606,28 +610,31 @@
                           "type": "divider"
                         },
                         {
+                          "type": "simple-grid",
+                          "cols": 3.0,
                           "children": [
                             {
-                              "value": "@entity.hours",
+                              "look": "@config.statLook",
                               "type": "stat-display",
                               "label": "Hours",
+                              "value": "@entity.hours",
                               "icon": "clock"
                             },
                             {
-                              "label": "Rate",
-                              "icon": "dollar-sign",
                               "type": "stat-display",
-                              "value": "@entity.rate"
+                              "look": "@config.statLook",
+                              "label": "Rate",
+                              "value": "@entity.rate",
+                              "icon": "dollar-sign"
                             },
                             {
-                              "type": "stat-display",
-                              "value": "@entity.workDate",
                               "icon": "calendar",
+                              "look": "@config.statLook",
+                              "value": "@entity.workDate",
+                              "type": "stat-display",
                               "label": "Date"
                             }
-                          ],
-                          "type": "simple-grid",
-                          "cols": 3.0
+                          ]
                         },
                         {
                           "type": "stack",
@@ -636,28 +643,29 @@
                           "children": [
                             {
                               "action": "INVOICE_HOURS",
-                              "type": "button",
-                              "label": "Invoice",
                               "actionPayload": {
                                 "id": "@entity.id"
                               },
-                              "variant": "primary"
+                              "type": "button",
+                              "variant": "primary",
+                              "label": "Invoice"
                             },
                             {
+                              "type": "button",
+                              "action": "WRITE_OFF_HOURS",
+                              "label": "Write Off",
+                              "variant": "danger",
                               "actionPayload": {
                                 "id": "@entity.id"
-                              },
-                              "variant": "danger",
-                              "label": "Write Off",
-                              "type": "button",
-                              "action": "WRITE_OFF_HOURS"
+                              }
                             }
                           ],
                           "align": "center"
                         }
                       ],
-                      "gap": "md",
-                      "type": "stack"
+                      "type": "stack",
+                      "direction": "vertical",
+                      "gap": "md"
                     }
                   ]
                 ]
@@ -677,8 +685,8 @@
                     "BillableHour",
                     {
                       "emit": {
-                        "failure": "BillableHourLoadFailed",
-                        "success": "BillableHourLoaded"
+                        "success": "BillableHourLoaded",
+                        "failure": "BillableHourLoadFailed"
                       }
                     }
                   ],
@@ -686,22 +694,22 @@
                     "render-ui",
                     "main",
                     {
+                      "type": "stack",
                       "className": "py-12",
-                      "align": "center",
+                      "direction": "vertical",
                       "gap": "md",
                       "children": [
                         {
                           "type": "spinner"
                         },
                         {
-                          "variant": "caption",
                           "color": "muted",
                           "type": "typography",
+                          "variant": "caption",
                           "content": "Writing off hours…"
                         }
                       ],
-                      "direction": "vertical",
-                      "type": "stack"
+                      "align": "center"
                     }
                   ]
                 ]
@@ -726,21 +734,21 @@
                     "main",
                     {
                       "gap": "md",
-                      "direction": "vertical",
+                      "type": "stack",
+                      "className": "py-12",
                       "children": [
                         {
                           "type": "spinner"
                         },
                         {
                           "color": "muted",
-                          "type": "typography",
                           "content": "Loading time entries…",
-                          "variant": "caption"
+                          "variant": "caption",
+                          "type": "typography"
                         }
                       ],
-                      "className": "py-12",
-                      "type": "stack",
-                      "align": "center"
+                      "align": "center",
+                      "direction": "vertical"
                     }
                   ]
                 ]
@@ -769,22 +777,22 @@
                     "render-ui",
                     "main",
                     {
-                      "direction": "vertical",
-                      "className": "py-12",
-                      "align": "center",
-                      "type": "stack",
                       "gap": "md",
+                      "className": "py-12",
                       "children": [
                         {
                           "type": "spinner"
                         },
                         {
-                          "type": "typography",
                           "color": "muted",
-                          "content": "Invoicing hours…",
-                          "variant": "caption"
+                          "type": "typography",
+                          "variant": "caption",
+                          "content": "Invoicing hours…"
                         }
-                      ]
+                      ],
+                      "type": "stack",
+                      "direction": "vertical",
+                      "align": "center"
                     }
                   ]
                 ]
@@ -813,22 +821,22 @@
                     "render-ui",
                     "main",
                     {
-                      "type": "stack",
                       "className": "py-12",
-                      "align": "center",
+                      "type": "stack",
+                      "gap": "md",
                       "children": [
                         {
                           "type": "spinner"
                         },
                         {
-                          "content": "Writing off hours…",
-                          "color": "muted",
                           "type": "typography",
+                          "color": "muted",
+                          "content": "Writing off hours…",
                           "variant": "caption"
                         }
                       ],
-                      "gap": "md",
-                      "direction": "vertical"
+                      "direction": "vertical",
+                      "align": "center"
                     }
                   ]
                 ]
@@ -861,6 +869,34 @@
             ]
           },
           "config": {
+            "statLook": {
+              "type": "string",
+              "default": "elevated",
+              "label": "Stat display look",
+              "description": "Layer 2 visual treatment for stat / KPI cards.",
+              "tier": "presentation",
+              "values": [
+                "elevated",
+                "flat",
+                "progress-backed",
+                "gauge",
+                "sparkline"
+              ]
+            },
+            "tableLook": {
+              "type": "string",
+              "default": "dense",
+              "label": "Table look",
+              "description": "Layer 2 visual treatment for the data table rendered by this atom.",
+              "tier": "presentation",
+              "values": [
+                "dense",
+                "spacious",
+                "striped",
+                "borderless",
+                "card-rows"
+              ]
+            },
             "title": {
               "type": "string",
               "default": "Time Entries",

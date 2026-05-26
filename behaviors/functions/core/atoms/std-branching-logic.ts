@@ -77,8 +77,12 @@ export interface StdBranchingLogicBranchingRuleLoadFailedPayload {
  * without modifying its state-machine topology.
  */
 export interface StdBranchingLogicConfig {
+  /** Default: `"elevated"` */
+  statLook?: 'elevated' | 'flat' | 'progress-backed' | 'gauge' | 'sparkline';
   /** Default: `"Branching Rules"` */
   title?: string;
+  /** Default: `"dense"` */
+  tableLook?: 'dense' | 'spacious' | 'striped' | 'borderless' | 'card-rows';
 }
 
 /**

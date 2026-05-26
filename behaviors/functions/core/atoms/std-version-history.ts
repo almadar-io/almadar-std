@@ -116,6 +116,10 @@ export interface StdVersionHistoryRevisionRollbackFailedPayload {
 export interface StdVersionHistoryConfig {
   /** Default: `"Version History"` */
   title?: string;
+  /** Default: `"dense"` */
+  tableLook?: 'dense' | 'spacious' | 'striped' | 'borderless' | 'card-rows';
+  /** Default: `"elevated"` */
+  statLook?: 'elevated' | 'flat' | 'progress-backed' | 'gauge' | 'sparkline';
 }
 
 /**

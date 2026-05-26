@@ -70,6 +70,8 @@ export interface StdEsignRequestEsignrequestloadfailedPayload {
 export interface StdEsignRequestConfig {
   /** Default: `"Signature Requests"` */
   title?: string;
+  /** Default: `"dense"` */
+  tableLook?: 'dense' | 'spacious' | 'striped' | 'borderless' | 'card-rows';
 }
 
 /**

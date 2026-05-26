@@ -100,10 +100,12 @@ export interface StdRecurrenceRecurrenceSaveFailedPayload {
 export interface StdRecurrenceConfig {
   /** Default: `"Schedule"` */
   title?: string;
-  /** Default: `["frequency","interval","startDate","endDate","endAfterCount"]` */
-  formFields?: string[];
   /** Default: `"elevated"` */
   cardLook?: 'elevated' | 'flat-bordered' | 'borderless-divider' | 'ticket' | 'invoice' | 'chip' | 'tile-image-first';
+  /** Default: `"vertical-spacious"` */
+  timelineLook?: 'vertical-compact' | 'vertical-spacious' | 'horizontal' | 'swimlane';
+  /** Default: `["frequency","interval","startDate","endDate","endAfterCount"]` */
+  formFields?: string[];
 }
 
 /**

@@ -135,6 +135,8 @@ export interface StdModQueueModQueueItemReviewFailedPayload {
 export interface StdModQueueConfig {
   /** Default: `"Moderation Queue"` */
   title?: string;
+  /** Default: `"dense"` */
+  tableLook?: 'dense' | 'spacious' | 'striped' | 'borderless' | 'card-rows';
   /** Default: `5` */
   autoEscalateThreshold?: number;
 }

@@ -422,8 +422,8 @@
                     "ModQueueItem",
                     {
                       "emit": {
-                        "failure": "ModQueueItemLoadFailed",
-                        "success": "ModQueueItemLoaded"
+                        "success": "ModQueueItemLoaded",
+                        "failure": "ModQueueItemLoadFailed"
                       }
                     }
                   ],
@@ -431,22 +431,22 @@
                     "render-ui",
                     "main",
                     {
+                      "align": "center",
+                      "className": "py-12",
+                      "direction": "vertical",
+                      "gap": "md",
                       "type": "stack",
                       "children": [
                         {
                           "type": "spinner"
                         },
                         {
-                          "color": "muted",
                           "type": "typography",
-                          "variant": "caption",
-                          "content": "Loading moderation queue…"
+                          "content": "Loading moderation queue…",
+                          "color": "muted",
+                          "variant": "caption"
                         }
-                      ],
-                      "gap": "md",
-                      "className": "py-12",
-                      "direction": "vertical",
-                      "align": "center"
+                      ]
                     }
                   ]
                 ]
@@ -460,11 +460,10 @@
                     "render-ui",
                     "main",
                     {
+                      "direction": "vertical",
                       "type": "stack",
                       "children": [
                         {
-                          "direction": "horizontal",
-                          "type": "stack",
                           "children": [
                             {
                               "type": "icon",
@@ -472,66 +471,68 @@
                             },
                             {
                               "type": "typography",
-                              "variant": "h3",
-                              "content": "@config.title"
+                              "content": "@config.title",
+                              "variant": "h3"
                             }
                           ],
-                          "gap": "sm"
+                          "direction": "horizontal",
+                          "gap": "sm",
+                          "type": "stack"
                         },
                         {
                           "type": "divider"
                         },
                         {
-                          "gap": "sm",
                           "entity": "@payload.data",
+                          "look": "@config.tableLook",
                           "fields": [
                             {
-                              "variant": "badge",
                               "label": "Type",
-                              "name": "targetType"
+                              "name": "targetType",
+                              "variant": "badge"
                             },
                             {
-                              "name": "reason",
                               "label": "Reason",
+                              "variant": "caption",
+                              "name": "reason"
+                            },
+                            {
+                              "label": "Flags",
+                              "name": "flagCount",
                               "variant": "caption"
                             },
                             {
-                              "variant": "caption",
-                              "name": "flagCount",
-                              "label": "Flags"
-                            },
-                            {
                               "label": "Status",
-                              "name": "status",
-                              "variant": "badge"
+                              "variant": "badge",
+                              "name": "status"
                             }
                           ],
-                          "cols": 1.0,
                           "itemActions": [
                             {
-                              "icon": "check",
-                              "event": "APPROVE",
                               "variant": "primary",
+                              "event": "APPROVE",
+                              "icon": "check",
                               "label": "Approve"
                             },
                             {
                               "icon": "x",
+                              "variant": "danger",
                               "event": "REJECT",
-                              "label": "Reject",
-                              "variant": "danger"
+                              "label": "Reject"
                             },
                             {
-                              "variant": "secondary",
                               "event": "ESCALATE",
                               "label": "Escalate",
-                              "icon": "alert-triangle"
+                              "icon": "alert-triangle",
+                              "variant": "secondary"
                             }
                           ],
-                          "type": "data-grid"
+                          "type": "data-grid",
+                          "cols": 1.0,
+                          "gap": "sm"
                         }
                       ],
-                      "gap": "md",
-                      "direction": "vertical"
+                      "gap": "md"
                     }
                   ]
                 ]
@@ -545,9 +546,9 @@
                     "render-ui",
                     "main",
                     {
-                      "type": "alert",
                       "variant": "error",
-                      "message": "@payload.error"
+                      "message": "@payload.error",
+                      "type": "alert"
                     }
                   ]
                 ]
@@ -574,8 +575,8 @@
                     "@entity",
                     {
                       "emit": {
-                        "failure": "ModQueueItemReviewFailed",
-                        "success": "ModQueueItemReviewed"
+                        "success": "ModQueueItemReviewed",
+                        "failure": "ModQueueItemReviewFailed"
                       }
                     }
                   ]
@@ -603,8 +604,8 @@
                     "@entity",
                     {
                       "emit": {
-                        "success": "ModQueueItemReviewed",
-                        "failure": "ModQueueItemReviewFailed"
+                        "failure": "ModQueueItemReviewFailed",
+                        "success": "ModQueueItemReviewed"
                       }
                     }
                   ]
@@ -649,8 +650,8 @@
                     "ModQueueItem",
                     {
                       "emit": {
-                        "success": "ModQueueItemLoaded",
-                        "failure": "ModQueueItemLoadFailed"
+                        "failure": "ModQueueItemLoadFailed",
+                        "success": "ModQueueItemLoaded"
                       }
                     }
                   ]
@@ -691,8 +692,8 @@
                     "render-ui",
                     "main",
                     {
-                      "size": "sm",
-                      "type": "spinner"
+                      "type": "spinner",
+                      "size": "sm"
                     }
                   ]
                 ]
@@ -706,6 +707,20 @@
               "label": "Section title",
               "description": "Heading shown above the moderation queue",
               "tier": "presentation"
+            },
+            "tableLook": {
+              "type": "string",
+              "default": "dense",
+              "label": "Table look",
+              "description": "Layer 2 visual treatment for the data table rendered by this atom.",
+              "tier": "presentation",
+              "values": [
+                "dense",
+                "spacious",
+                "striped",
+                "borderless",
+                "card-rows"
+              ]
             },
             "autoEscalateThreshold": {
               "type": "number",
