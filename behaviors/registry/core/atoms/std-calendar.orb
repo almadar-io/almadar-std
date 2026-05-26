@@ -163,8 +163,8 @@
                     "CalendarEvent",
                     {
                       "emit": {
-                        "success": "CalendarEventLoaded",
-                        "failure": "CalendarEventLoadFailed"
+                        "failure": "CalendarEventLoadFailed",
+                        "success": "CalendarEventLoaded"
                       }
                     }
                   ],
@@ -172,22 +172,22 @@
                     "render-ui",
                     "main",
                     {
-                      "className": "py-12",
+                      "direction": "vertical",
+                      "gap": "md",
+                      "align": "center",
                       "children": [
                         {
                           "type": "spinner"
                         },
                         {
                           "content": "Loading calendar…",
-                          "variant": "caption",
                           "color": "muted",
+                          "variant": "caption",
                           "type": "typography"
                         }
                       ],
-                      "gap": "md",
-                      "direction": "vertical",
                       "type": "stack",
-                      "align": "center"
+                      "className": "py-12"
                     }
                   ]
                 ]
@@ -201,38 +201,38 @@
                     "render-ui",
                     "main",
                     {
-                      "gap": "lg",
                       "type": "stack",
+                      "gap": "lg",
                       "children": [
                         {
+                          "type": "stack",
                           "direction": "horizontal",
-                          "align": "center",
+                          "gap": "md",
                           "justify": "between",
+                          "align": "center",
                           "children": [
                             {
-                              "align": "center",
-                              "children": [
-                                {
-                                  "name": "calendar",
-                                  "type": "icon"
-                                },
-                                {
-                                  "variant": "h2",
-                                  "type": "typography",
-                                  "content": "CalendarEvents Calendar"
-                                }
-                              ],
                               "direction": "horizontal",
                               "type": "stack",
-                              "gap": "sm"
+                              "align": "center",
+                              "gap": "sm",
+                              "children": [
+                                {
+                                  "type": "icon",
+                                  "name": "calendar"
+                                },
+                                {
+                                  "type": "typography",
+                                  "content": "CalendarEvents Calendar",
+                                  "variant": "h2"
+                                }
+                              ]
                             },
                             {
-                              "onSelect": "SELECT_DAY",
-                              "type": "date-range-selector"
+                              "type": "date-range-selector",
+                              "onSelect": "SELECT_DAY"
                             }
-                          ],
-                          "type": "stack",
-                          "gap": "md"
+                          ]
                         },
                         {
                           "type": "divider"
@@ -244,44 +244,45 @@
                           "type": "divider"
                         },
                         {
-                          "type": "typography",
                           "variant": "h4",
+                          "type": "typography",
                           "content": "Upcoming Events"
                         },
                         {
-                          "entity": "@payload.data",
-                          "type": "data-list",
                           "fields": [
                             {
-                              "label": "Event",
-                              "name": "name",
                               "icon": "calendar",
+                              "name": "name",
+                              "label": "Event",
                               "variant": "h4"
                             },
                             {
                               "variant": "badge",
-                              "name": "time",
-                              "label": "Time"
+                              "label": "Time",
+                              "name": "time"
                             },
                             {
                               "label": "Date",
-                              "variant": "caption",
                               "format": "date",
+                              "variant": "caption",
                               "name": "date"
                             },
                             {
+                              "label": "Status",
                               "variant": "badge",
-                              "name": "status",
-                              "label": "Status"
+                              "name": "status"
                             }
                           ],
                           "itemActions": [
                             {
-                              "label": "View",
+                              "icon": "eye",
                               "event": "SELECT_DAY",
-                              "icon": "eye"
+                              "label": "View"
                             }
-                          ]
+                          ],
+                          "type": "data-list",
+                          "entity": "@payload.data",
+                          "look": "@config.tableLook"
                         }
                       ],
                       "direction": "vertical"
@@ -298,35 +299,35 @@
                     "render-ui",
                     "main",
                     {
-                      "direction": "vertical",
                       "align": "center",
                       "children": [
                         {
-                          "color": "destructive",
                           "name": "alert-triangle",
+                          "color": "destructive",
                           "type": "icon"
                         },
                         {
-                          "type": "typography",
                           "content": "Failed to load",
-                          "variant": "h3"
+                          "variant": "h3",
+                          "type": "typography"
                         },
                         {
                           "type": "typography",
-                          "color": "muted",
+                          "content": "@payload.error",
                           "variant": "body",
-                          "content": "@payload.error"
+                          "color": "muted"
                         },
                         {
-                          "label": "Retry",
                           "action": "INIT",
-                          "icon": "rotate-ccw",
+                          "type": "button",
+                          "label": "Retry",
                           "variant": "primary",
-                          "type": "button"
+                          "icon": "rotate-ccw"
                         }
                       ],
                       "className": "py-12",
                       "type": "stack",
+                      "direction": "vertical",
                       "gap": "md"
                     }
                   ]
@@ -346,15 +347,15 @@
                     "fetch",
                     "CalendarEvent",
                     {
-                      "emit": {
-                        "failure": "CalendarEventLoadFailed",
-                        "success": "CalendarEventLoaded"
-                      },
                       "filter": [
                         "=",
                         "@entity.date",
                         "@payload.value"
-                      ]
+                      ],
+                      "emit": {
+                        "success": "CalendarEventLoaded",
+                        "failure": "CalendarEventLoadFailed"
+                      }
                     }
                   ],
                   [
@@ -391,6 +392,22 @@
                 ]
               }
             ]
+          },
+          "config": {
+            "tableLook": {
+              "type": "string",
+              "default": "dense",
+              "label": "Table look",
+              "description": "Layer 2 visual treatment for the data table rendered by this atom.",
+              "tier": "presentation",
+              "values": [
+                "dense",
+                "spacious",
+                "striped",
+                "borderless",
+                "card-rows"
+              ]
+            }
           },
           "scope": "collection"
         }

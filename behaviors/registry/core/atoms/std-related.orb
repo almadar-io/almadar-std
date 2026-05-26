@@ -117,22 +117,22 @@
                     "render-ui",
                     "main",
                     {
-                      "type": "stack",
                       "align": "center",
+                      "gap": "sm",
+                      "type": "stack",
+                      "direction": "vertical",
+                      "className": "py-8",
                       "children": [
                         {
                           "type": "spinner"
                         },
                         {
-                          "color": "muted",
-                          "type": "typography",
+                          "variant": "caption",
                           "content": "Loading related…",
-                          "variant": "caption"
+                          "color": "muted",
+                          "type": "typography"
                         }
-                      ],
-                      "gap": "sm",
-                      "direction": "vertical",
-                      "className": "py-8"
+                      ]
                     }
                   ]
                 ]
@@ -147,10 +147,11 @@
                     "main",
                     {
                       "direction": "vertical",
-                      "gap": "md",
                       "children": [
                         {
-                          "align": "center",
+                          "direction": "horizontal",
+                          "type": "stack",
+                          "gap": "sm",
                           "children": [
                             {
                               "type": "icon",
@@ -158,13 +159,11 @@
                             },
                             {
                               "variant": "h3",
-                              "type": "typography",
-                              "content": "Related"
+                              "content": "Related",
+                              "type": "typography"
                             }
                           ],
-                          "gap": "sm",
-                          "type": "stack",
-                          "direction": "horizontal"
+                          "align": "center"
                         },
                         {
                           "type": "divider"
@@ -172,25 +171,27 @@
                         {
                           "fields": [],
                           "type": "data-list",
-                          "entity": "@payload.data",
                           "renderItem": [
                             "fn",
                             "item",
                             {
-                              "direction": "vertical",
+                              "gap": "xs",
                               "type": "stack",
+                              "direction": "vertical",
                               "children": [
                                 {
                                   "type": "typography",
                                   "variant": "body",
                                   "content": "@item.name"
                                 }
-                              ],
-                              "gap": "xs"
+                              ]
                             }
-                          ]
+                          ],
+                          "look": "@config.tableLook",
+                          "entity": "@payload.data"
                         }
                       ],
+                      "gap": "md",
                       "type": "stack"
                     }
                   ]
@@ -205,35 +206,35 @@
                     "render-ui",
                     "main",
                     {
+                      "direction": "vertical",
                       "className": "py-8",
-                      "type": "stack",
+                      "gap": "sm",
                       "children": [
                         {
-                          "type": "icon",
                           "color": "destructive",
+                          "type": "icon",
                           "name": "alert-triangle"
                         },
                         {
                           "type": "typography",
-                          "variant": "body",
-                          "content": "Failed to load related"
+                          "content": "Failed to load related",
+                          "variant": "body"
                         },
                         {
-                          "variant": "caption",
                           "type": "typography",
                           "content": "@payload.error",
-                          "color": "muted"
+                          "color": "muted",
+                          "variant": "caption"
                         },
                         {
                           "type": "button",
+                          "label": "Retry",
                           "variant": "ghost",
                           "action": "INIT",
-                          "icon": "rotate-ccw",
-                          "label": "Retry"
+                          "icon": "rotate-ccw"
                         }
                       ],
-                      "direction": "vertical",
-                      "gap": "sm",
+                      "type": "stack",
                       "align": "center"
                     }
                   ]
@@ -273,8 +274,8 @@
                     "RelatedItem",
                     {
                       "emit": {
-                        "success": "RelatedItemLoaded",
-                        "failure": "RelatedItemLoadFailed"
+                        "failure": "RelatedItemLoadFailed",
+                        "success": "RelatedItemLoaded"
                       }
                     }
                   ],
@@ -288,6 +289,22 @@
                 ]
               }
             ]
+          },
+          "config": {
+            "tableLook": {
+              "type": "string",
+              "default": "dense",
+              "label": "Table look",
+              "description": "Layer 2 visual treatment for the data table rendered by this atom.",
+              "tier": "presentation",
+              "values": [
+                "dense",
+                "spacious",
+                "striped",
+                "borderless",
+                "card-rows"
+              ]
+            }
           },
           "scope": "collection"
         }

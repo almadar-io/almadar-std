@@ -48,6 +48,17 @@ export interface StdRelatedRelatedItemLoadFailedPayload {
 }
 
 /**
+ * Typed call-site config block for this trait — every
+ * field maps to a `config { ... }` entry in the source
+ * .lolo. The agent fills these to specialise the trait
+ * without modifying its state-machine topology.
+ */
+export interface StdRelatedConfig {
+  /** Default: `"dense"` */
+  tableLook?: 'dense' | 'spacious' | 'striped' | 'borderless' | 'card-rows';
+}
+
+/**
  * Params for the std-related descriptor helpers.
  *
  * `entityName` binds every trait/page reference's `linkedEntity`.
@@ -71,8 +82,8 @@ export interface StdRelatedParams {
   listens?: TraitEventListener[];
   /** Set every emit's scope. */
   emitsScope?: 'internal' | 'external';
-  /** Nested config override (outer key = config field name). */
-  config?: TraitConfig;
+  /** Typed call-site config block — see the per-field interface. */
+  config?: StdRelatedConfig;
   /** URL path override for the (first) page. */
   pagePath?: string;
 }

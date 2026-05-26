@@ -56,6 +56,10 @@ orbital ScatterItemOrbital {
         @label "Drill event"
         @description "Event emitted when the user clicks a data point"
         @tier "internal"
+      chartLook  : "bar-vertical" | "bar-horizontal" | "line" | "area" | "pie" | "donut" | "scatter" | "histogram" = "scatter"
+        @label "Chart look"
+        @description "Layer 2 visual treatment — selects the chart kind (bar / line / pie / etc.)."
+        @tier "presentation"
     }
     state idle {
       INIT -> idle
@@ -68,7 +72,7 @@ orbital ScatterItemOrbital {
           { x: 60, y: 55, label: "D", size: 7, color: "" },
           { x: 78, y: 38, label: "E", size: 9, color: "" }
         ])
-        (render-ui main { type: "chart", chartType: "scatter", title: "@config.title", subtitle: "@config.subtitle", scatterData: "@entity.points", height: "@config.height", drillEvent: "@config.drillEvent" })
+        (render-ui main { type: "chart", look: "@config.chartLook", chartType: "scatter", title: "@config.title", subtitle: "@config.subtitle", scatterData: "@entity.points", height: "@config.height", drillEvent: "@config.drillEvent" })
       ITEMS_LOADED -> idle
         (set @entity.points (array/map @payload.data ["fn", "row", {
           x:     (object/get @row @config.xField     0),
@@ -77,7 +81,7 @@ orbital ScatterItemOrbital {
           size:  (object/get @row @config.sizeField  5),
           color: (object/get @row @config.colorField "")
         }]))
-        (render-ui main { type: "chart", chartType: "scatter", title: "@config.title", subtitle: "@config.subtitle", scatterData: "@entity.points", height: "@config.height", drillEvent: "@config.drillEvent" })
+        (render-ui main { type: "chart", look: "@config.chartLook", chartType: "scatter", title: "@config.title", subtitle: "@config.subtitle", scatterData: "@entity.points", height: "@config.height", drillEvent: "@config.drillEvent" })
     }
     listens {
       ITEMS_LOADED { data : [ObjectSpec], totalCount : number }

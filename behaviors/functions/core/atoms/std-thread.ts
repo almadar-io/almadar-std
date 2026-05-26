@@ -101,10 +101,12 @@ export interface StdThreadThreadPostCreateFailedPayload {
  * without modifying its state-machine topology.
  */
 export interface StdThreadConfig {
-  /** Default: `false` */
-  flat?: boolean;
   /** Default: `""` */
   threadRootId?: string;
+  /** Default: `"dense"` */
+  tableLook?: 'dense' | 'spacious' | 'striped' | 'borderless' | 'card-rows';
+  /** Default: `false` */
+  flat?: boolean;
 }
 
 /**

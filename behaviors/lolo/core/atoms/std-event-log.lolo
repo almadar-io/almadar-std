@@ -72,6 +72,10 @@ orbital EventLogOrbital {
         @label "Card look"
         @description "Layer 2 visual treatment for cards rendered by this atom."
         @tier "presentation"
+      timelineLook : "vertical-compact" | "vertical-spacious" | "horizontal" | "swimlane" = "vertical-spacious"
+        @label "Timeline look"
+        @description "Layer 2 visual treatment for the timeline."
+        @tier "presentation"
     }
     initial: loading
     state loading {
@@ -96,7 +100,7 @@ orbital EventLogOrbital {
           status:      (object/get (or (array/find @config.kindOptions ["fn", "k", (= (object/get @k "key") (object/get @row "kind" ""))]) {}) "status" "pending"),
           kind:        (object/get @row "kind" "")
         }]) "date" "desc"))
-        (render-ui main { type: "stack", direction: "vertical", gap: "md", children: [{ type: "stack", direction: "horizontal", gap: "sm", align: "center", children: [{ type: "icon", name: "history" }, { type: "typography", content: "@config.title", variant: "h3" }, { type: "button", label: "Log event", variant: "primary", action: "OPEN_BACKFILL", icon: "plus" }] }, { type: "tabs", tabs: "@entity.filterChips", activeTab: "@entity.filterKind", tabChangeEvent: "APPLY_FILTER" }, { type: "timeline", entity: "@entity.entries", fields: ["title", "description", "date", "status"] }] })
+        (render-ui main { type: "stack", direction: "vertical", gap: "md", children: [{ type: "stack", direction: "horizontal", gap: "sm", align: "center", children: [{ type: "icon", name: "history" }, { type: "typography", content: "@config.title", variant: "h3" }, { type: "button", label: "Log event", variant: "primary", action: "OPEN_BACKFILL", icon: "plus" }] }, { type: "tabs", tabs: "@entity.filterChips", activeTab: "@entity.filterKind", tabChangeEvent: "APPLY_FILTER" }, { type: "timeline", look: "@config.timelineLook", entity: "@entity.entries", fields: ["title", "description", "date", "status"] }] })
       EventLogLoadFailed -> error
         (set @entity.errorMessage @payload.error)
         (render-ui main { type: "error-state", title: "Failed to load", message: "@entity.errorMessage" })
@@ -111,7 +115,7 @@ orbital EventLogOrbital {
       APPLY_FILTER -> viewing
         (set @entity.filterKind @payload.tabId)
         (set @entity.entries (array/filter @entity.allEntries ["fn", "e", (or (= @payload.tabId "") (= (object/get @e "kind") @payload.tabId))]))
-        (render-ui main { type: "stack", direction: "vertical", gap: "md", children: [{ type: "stack", direction: "horizontal", gap: "sm", align: "center", children: [{ type: "icon", name: "history" }, { type: "typography", content: "@config.title", variant: "h3" }, { type: "button", label: "Log event", variant: "primary", action: "OPEN_BACKFILL", icon: "plus" }] }, { type: "tabs", tabs: "@entity.filterChips", activeTab: "@entity.filterKind", tabChangeEvent: "APPLY_FILTER" }, { type: "timeline", entity: "@entity.entries", fields: ["title", "description", "date", "status"] }] })
+        (render-ui main { type: "stack", direction: "vertical", gap: "md", children: [{ type: "stack", direction: "horizontal", gap: "sm", align: "center", children: [{ type: "icon", name: "history" }, { type: "typography", content: "@config.title", variant: "h3" }, { type: "button", label: "Log event", variant: "primary", action: "OPEN_BACKFILL", icon: "plus" }] }, { type: "tabs", tabs: "@entity.filterChips", activeTab: "@entity.filterKind", tabChangeEvent: "APPLY_FILTER" }, { type: "timeline", look: "@config.timelineLook", entity: "@entity.entries", fields: ["title", "description", "date", "status"] }] })
       OPEN_BACKFILL -> backfilling
         (set @entity.backfillTitle "")
         (set @entity.backfillDescription "")
@@ -124,7 +128,7 @@ orbital EventLogOrbital {
         (persist create EventLogView @payload.data { emit: { success: "EventLogSaved", failure: "EventLogSaveFailed" } })
         (render-ui main { type: "loading-state", title: "Saving entry…" })
       CANCEL_BACKFILL -> viewing
-        (render-ui main { type: "stack", direction: "vertical", gap: "md", children: [{ type: "stack", direction: "horizontal", gap: "sm", align: "center", children: [{ type: "icon", name: "history" }, { type: "typography", content: "@config.title", variant: "h3" }, { type: "button", label: "Log event", variant: "primary", action: "OPEN_BACKFILL", icon: "plus" }] }, { type: "tabs", tabs: "@entity.filterChips", activeTab: "@entity.filterKind", tabChangeEvent: "APPLY_FILTER" }, { type: "timeline", entity: "@entity.entries", fields: ["title", "description", "date", "status"] }] })
+        (render-ui main { type: "stack", direction: "vertical", gap: "md", children: [{ type: "stack", direction: "horizontal", gap: "sm", align: "center", children: [{ type: "icon", name: "history" }, { type: "typography", content: "@config.title", variant: "h3" }, { type: "button", label: "Log event", variant: "primary", action: "OPEN_BACKFILL", icon: "plus" }] }, { type: "tabs", tabs: "@entity.filterChips", activeTab: "@entity.filterKind", tabChangeEvent: "APPLY_FILTER" }, { type: "timeline", look: "@config.timelineLook", entity: "@entity.entries", fields: ["title", "description", "date", "status"] }] })
     }
     state error {
       INIT -> loading

@@ -87,6 +87,10 @@ export interface StdFileStoreStoredFileLoadFailedPayload {
  * without modifying its state-machine topology.
  */
 export interface StdFileStoreConfig {
+  /** Default: `"dense"` */
+  tableLook?: 'dense' | 'spacious' | 'striped' | 'borderless' | 'card-rows';
+  /** Default: `"elevated"` */
+  statLook?: 'elevated' | 'flat' | 'progress-backed' | 'gauge' | 'sparkline';
   /** Default: `"Files"` */
   title?: string;
 }

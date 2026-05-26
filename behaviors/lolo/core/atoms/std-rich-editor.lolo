@@ -30,6 +30,14 @@ orbital DocumentOrbital {
         @label "Section title"
         @description "Heading shown above the document list"
         @tier "presentation"
+      tableLook : "dense" | "spacious" | "striped" | "borderless" | "card-rows" = "dense"
+        @label "Table look"
+        @description "Layer 2 visual treatment for the data table rendered by this atom."
+        @tier "presentation"
+      statLook : "elevated" | "flat" | "progress-backed" | "gauge" | "sparkline" = "elevated"
+        @label "Stat display look"
+        @description "Layer 2 visual treatment for stat / KPI cards."
+        @tier "presentation"
     }
     initial: loading
     state loading {
@@ -37,7 +45,7 @@ orbital DocumentOrbital {
         (fetch Document { emit: { success: "DocumentLoaded", failure: "DocumentLoadFailed" } })
         (render-ui main { type: "stack", direction: "vertical", gap: "md", align: "center", className: "py-12", children: [{ type: "spinner" }, { type: "typography", variant: "caption", color: "muted", content: "Loading documents…" }] })
       DocumentLoaded -> browsing
-        (render-ui main { type: "stack", direction: "vertical", gap: "md", children: [{ type: "stack", direction: "horizontal", gap: "sm", align: "center", children: [{ type: "icon", name: "file-text" }, { type: "typography", content: "@config.title", variant: "h3" }] }, { type: "simple-grid", cols: 4, children: [{ type: "stat-display", label: "Total docs", value: "@payload.data.length", icon: "file-text" }, { type: "stat-display", label: "Drafts", value: "12", icon: "edit-3" }, { type: "stat-display", label: "Published", value: "84", icon: "check-circle" }, { type: "stat-display", label: "Archived", value: "9", icon: "archive" }] }, { type: "divider" }, { type: "data-grid", entity: "@payload.data", fields: [{ name: "title", label: "Title", variant: "caption" }, { name: "kind", label: "Kind", variant: "badge" }, { name: "status", label: "Status", variant: "badge" }, { name: "version", label: "v", variant: "caption" }, { name: "updatedAt", label: "Updated", variant: "caption" }], cols: 1, gap: "sm", itemActions: [{ label: "Open", event: "OPEN", variant: "primary", icon: "edit" }, { label: "Publish", event: "PUBLISH", variant: "secondary", icon: "send" }] }] })
+        (render-ui main { type: "stack", direction: "vertical", gap: "md", children: [{ type: "stack", direction: "horizontal", gap: "sm", align: "center", children: [{ type: "icon", name: "file-text" }, { type: "typography", content: "@config.title", variant: "h3" }] }, { type: "simple-grid", cols: 4, children: [{ type: "stat-display", look: "@config.statLook", label: "Total docs", value: "@payload.data.length", icon: "file-text" }, { type: "stat-display", look: "@config.statLook", label: "Drafts", value: "12", icon: "edit-3" }, { type: "stat-display", look: "@config.statLook", label: "Published", value: "84", icon: "check-circle" }, { type: "stat-display", look: "@config.statLook", label: "Archived", value: "9", icon: "archive" }] }, { type: "divider" }, { type: "data-grid", look: "@config.tableLook", entity: "@payload.data", fields: [{ name: "title", label: "Title", variant: "caption" }, { name: "kind", label: "Kind", variant: "badge" }, { name: "status", label: "Status", variant: "badge" }, { name: "version", label: "v", variant: "caption" }, { name: "updatedAt", label: "Updated", variant: "caption" }], cols: 1, gap: "sm", itemActions: [{ label: "Open", event: "OPEN", variant: "primary", icon: "edit" }, { label: "Publish", event: "PUBLISH", variant: "secondary", icon: "send" }] }] })
       DocumentSaved -> loading
         (fetch Document { emit: { success: "DocumentLoaded", failure: "DocumentLoadFailed" } })
       DocumentPublished -> loading

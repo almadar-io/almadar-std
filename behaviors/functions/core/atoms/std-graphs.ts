@@ -39,44 +39,46 @@ export type StdGraphsEventKey = 'INIT' | 'ITEMS_LOADED';
  * without modifying its state-machine topology.
  */
 export interface StdGraphsConfig {
-  /** Default: `false` */
-  timeAxis?: boolean;
-  /** Default: `"Counts per category"` */
-  subtitle?: string;
   /** Default: `"chart"` */
   viewPattern?: unknown;
-  /** Default: `"desc"` */
-  sortDir?: 'asc' | 'desc';
-  /** Default: `""` */
-  valueField?: string;
+  /** Default: `"date"` */
+  timeField?: string;
+  /** Default: `[]` */
+  series?: EntityRow[];
+  /** Default: `false` */
+  timeAxis?: boolean;
+  /** Default: `"Distribution"` */
+  title?: string;
   /** Default: `280` */
   height?: number;
+  /** Default: `"month"` */
+  period?: 'day' | 'week' | 'month' | 'quarter' | 'year';
+  /** Default: `false` */
+  showValues?: boolean;
+  /** Default: `"bar"` */
+  chartType?: 'bar' | 'line' | 'pie' | 'area' | 'donut' | 'histogram' | 'scatter';
+  /** Default: `"desc"` */
+  sortDir?: 'asc' | 'desc';
+  /** Default: `"status"` */
+  categoryField?: string;
+  /** Default: `0` */
+  limit?: number;
+  /** Default: `"Counts per category"` */
+  subtitle?: string;
+  /** Default: `"none"` */
+  sortField?: 'value' | 'label' | 'none';
+  /** Default: `""` */
+  valueField?: string;
+  /** Default: `""` */
+  drillEvent?: string;
   /** Default: `true` */
   showLegend?: boolean;
   /** Default: `"count"` */
   aggregation?: 'count' | 'sum' | 'avg' | 'min' | 'max';
-  /** Default: `false` */
-  showValues?: boolean;
-  /** Default: `[]` */
-  series?: EntityRow[];
-  /** Default: `"date"` */
-  timeField?: string;
-  /** Default: `"month"` */
-  period?: 'day' | 'week' | 'month' | 'quarter' | 'year';
-  /** Default: `0` */
-  limit?: number;
-  /** Default: `""` */
-  drillEvent?: string;
-  /** Default: `"none"` */
-  sortField?: 'value' | 'label' | 'none';
   /** Default: `"none"` */
   stack?: 'none' | 'stack' | 'normalize';
-  /** Default: `"bar"` */
-  chartType?: 'bar' | 'line' | 'pie' | 'area' | 'donut' | 'histogram' | 'scatter';
-  /** Default: `"Distribution"` */
-  title?: string;
-  /** Default: `"status"` */
-  categoryField?: string;
+  /** Default: `"bar-vertical"` */
+  chartLook?: 'bar-vertical' | 'bar-horizontal' | 'line' | 'area' | 'pie' | 'donut' | 'scatter' | 'histogram';
 }
 
 /**

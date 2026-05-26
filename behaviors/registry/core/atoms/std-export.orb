@@ -21,11 +21,6 @@
             "items": {
               "type": "object",
               "properties": {
-                "label": {
-                  "name": "label",
-                  "type": "string",
-                  "required": true
-                },
                 "id": {
                   "name": "id",
                   "type": "string",
@@ -33,6 +28,11 @@
                 },
                 "format": {
                   "name": "format",
+                  "type": "string",
+                  "required": true
+                },
+                "label": {
+                  "name": "label",
                   "type": "string",
                   "required": true
                 }
@@ -110,36 +110,37 @@
                     "render-ui",
                     "main",
                     {
-                      "children": {
-                        "label": "@config.buttonLabel",
-                        "icon": "download",
-                        "variant": "ghost",
-                        "type": "button",
-                        "size": "sm",
-                        "action": "OPEN_EXPORT"
-                      },
-                      "type": "popover",
                       "position": "bottom",
+                      "type": "popover",
+                      "children": {
+                        "size": "sm",
+                        "variant": "ghost",
+                        "action": "OPEN_EXPORT",
+                        "type": "button",
+                        "label": "@config.buttonLabel",
+                        "icon": "download"
+                      },
                       "content": {
+                        "type": "data-list",
                         "renderItem": [
                           "fn",
                           "fmt",
                           {
+                            "size": "sm",
                             "actionPayload": {
                               "tileId": "@config.tileId",
                               "format": "@fmt.format"
                             },
-                            "icon": "file-down",
-                            "label": "@fmt.label",
                             "variant": "ghost",
                             "type": "button",
-                            "size": "sm",
+                            "label": "@fmt.label",
+                            "icon": "file-down",
                             "action": "@config.event"
                           }
                         ],
-                        "fields": [],
-                        "type": "data-list",
-                        "entity": "@entity.options"
+                        "look": "@config.tableLook",
+                        "entity": "@entity.options",
+                        "fields": []
                       }
                     }
                   ]
@@ -172,49 +173,13 @@
             ]
           },
           "config": {
-            "formats": {
-              "type": "[FormatOption]",
-              "default": [
-                {
-                  "id": "csv",
-                  "format": "csv",
-                  "label": "CSV"
-                },
-                {
-                  "format": "xlsx",
-                  "label": "XLSX",
-                  "id": "xlsx"
-                },
-                {
-                  "format": "pdf",
-                  "id": "pdf",
-                  "label": "PDF"
-                }
-              ],
-              "label": "Available formats",
-              "description": "Export formats shown to the user in the popover",
-              "synonyms": "list of export format entries (csv / xlsx / pdf / png / json). user phrases: 'only CSV' -> keep only csv entry; 'add JSON' -> append json entry; 'no PNG' -> remove png; 'allow X and Y' -> set the array to those two",
-              "tier": "presentation",
-              "items": {
-                "type": "object",
-                "properties": {
-                  "format": {
-                    "name": "format",
-                    "type": "string",
-                    "required": true
-                  },
-                  "id": {
-                    "name": "id",
-                    "type": "string",
-                    "required": true
-                  },
-                  "label": {
-                    "name": "label",
-                    "type": "string",
-                    "required": true
-                  }
-                }
-              }
+            "event": {
+              "type": "string",
+              "default": "EXPORT_REQUESTED",
+              "label": "Export event",
+              "description": "Event emitted when the user picks a format",
+              "synonyms": "bus event name. internal wiring; users rarely target directly",
+              "tier": "internal"
             },
             "buttonLabel": {
               "type": "string",
@@ -232,13 +197,63 @@
               "synonyms": "internal identifier — host orbital wires this; users rarely set it directly",
               "tier": "internal"
             },
-            "event": {
+            "tableLook": {
               "type": "string",
-              "default": "EXPORT_REQUESTED",
-              "label": "Export event",
-              "description": "Event emitted when the user picks a format",
-              "synonyms": "bus event name. internal wiring; users rarely target directly",
-              "tier": "internal"
+              "default": "dense",
+              "label": "Table look",
+              "description": "Layer 2 visual treatment for the data table rendered by this atom.",
+              "tier": "presentation",
+              "values": [
+                "dense",
+                "spacious",
+                "striped",
+                "borderless",
+                "card-rows"
+              ]
+            },
+            "formats": {
+              "type": "[FormatOption]",
+              "default": [
+                {
+                  "id": "csv",
+                  "label": "CSV",
+                  "format": "csv"
+                },
+                {
+                  "label": "XLSX",
+                  "id": "xlsx",
+                  "format": "xlsx"
+                },
+                {
+                  "id": "pdf",
+                  "format": "pdf",
+                  "label": "PDF"
+                }
+              ],
+              "label": "Available formats",
+              "description": "Export formats shown to the user in the popover",
+              "synonyms": "list of export format entries (csv / xlsx / pdf / png / json). user phrases: 'only CSV' -> keep only csv entry; 'add JSON' -> append json entry; 'no PNG' -> remove png; 'allow X and Y' -> set the array to those two",
+              "tier": "presentation",
+              "items": {
+                "type": "object",
+                "properties": {
+                  "label": {
+                    "name": "label",
+                    "type": "string",
+                    "required": true
+                  },
+                  "id": {
+                    "name": "id",
+                    "type": "string",
+                    "required": true
+                  },
+                  "format": {
+                    "name": "format",
+                    "type": "string",
+                    "required": true
+                  }
+                }
+              }
             }
           },
           "scope": "instance"

@@ -29,6 +29,10 @@ orbital ThreadPostOrbital {
         @label "Root post id"
         @description "Top-level post whose descendants are loaded (blank = all roots)"
         @tier "domain"
+      tableLook : "dense" | "spacious" | "striped" | "borderless" | "card-rows" = "dense"
+        @label "Table look"
+        @description "Layer 2 visual treatment for the data table rendered by this atom."
+        @tier "presentation"
     }
     initial: loading
     state loading {
@@ -36,7 +40,7 @@ orbital ThreadPostOrbital {
         (fetch ThreadPost { emit: { success: "ThreadPostLoaded", failure: "ThreadPostLoadFailed" } })
         (render-ui main { type: "spinner", size: "sm" })
       ThreadPostLoaded -> browsing
-        (render-ui main { type: "stack", direction: "vertical", gap: "md", children: [{ type: "data-list", entity: "@payload.data", variant: "card", gap: "sm", fields: [{ name: "authorName", label: "Author", variant: "h4" }, { name: "content", label: "", variant: "body" }, { name: "voteCount", label: "Votes", variant: "caption" }], itemActions: [{ label: "Reply", event: "REPLY", icon: "message-square" }] }] })
+        (render-ui main { type: "stack", direction: "vertical", gap: "md", children: [{ type: "data-list", look: "@config.tableLook", entity: "@payload.data", variant: "card", gap: "sm", fields: [{ name: "authorName", label: "Author", variant: "h4" }, { name: "content", label: "", variant: "body" }, { name: "voteCount", label: "Votes", variant: "caption" }], itemActions: [{ label: "Reply", event: "REPLY", icon: "message-square" }] }] })
       ThreadPostLoadFailed -> error
         (render-ui main { type: "alert", variant: "error", message: "@payload.error" })
     }
@@ -45,7 +49,7 @@ orbital ThreadPostOrbital {
         (fetch ThreadPost { emit: { success: "ThreadPostLoaded", failure: "ThreadPostLoadFailed" } })
         (render-ui main { type: "spinner", size: "sm" })
       ThreadPostLoaded -> browsing
-        (render-ui main { type: "stack", direction: "vertical", gap: "md", children: [{ type: "data-list", entity: "@payload.data", variant: "card", gap: "sm", fields: [{ name: "authorName", label: "Author", variant: "h4" }, { name: "content", label: "", variant: "body" }, { name: "voteCount", label: "Votes", variant: "caption" }], itemActions: [{ label: "Reply", event: "REPLY", icon: "message-square" }] }] })
+        (render-ui main { type: "stack", direction: "vertical", gap: "md", children: [{ type: "data-list", look: "@config.tableLook", entity: "@payload.data", variant: "card", gap: "sm", fields: [{ name: "authorName", label: "Author", variant: "h4" }, { name: "content", label: "", variant: "body" }, { name: "voteCount", label: "Votes", variant: "caption" }], itemActions: [{ label: "Reply", event: "REPLY", icon: "message-square" }] }] })
       REPLY -> replying
         (set @entity.parentId @payload.parentId)
         (render-ui main { type: "stack", direction: "vertical", gap: "md", children: [{ type: "typography", variant: "h4", content: "Write a reply" }, { type: "textarea", placeholder: "Your reply…", action: "EDIT_REPLY" }, { type: "stack", direction: "horizontal", gap: "sm", children: [{ type: "button", label: "Submit", action: "SUBMIT_REPLY", variant: "primary", icon: "send" }, { type: "button", label: "Cancel", action: "CANCEL_REPLY", variant: "secondary" }] }] })

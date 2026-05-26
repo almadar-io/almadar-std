@@ -23,6 +23,10 @@ orbital ESignRequestOrbital {
         @label "Section title"
         @description "Heading shown above the signature-request list"
         @tier "presentation"
+      tableLook : "dense" | "spacious" | "striped" | "borderless" | "card-rows" = "dense"
+        @label "Table look"
+        @description "Layer 2 visual treatment for the data table rendered by this atom."
+        @tier "presentation"
     }
     initial: loading
     state loading {
@@ -30,7 +34,7 @@ orbital ESignRequestOrbital {
         (fetch ESignRequest { emit: { success: "ESignRequestLoaded", failure: "ESignRequestLoadFailed" } })
         (render-ui main { type: "spinner", size: "md" })
       ESignRequestLoaded -> browsing
-        (render-ui main { type: "stack", direction: "vertical", gap: "md", children: [{ type: "typography", content: "@config.title", variant: "h3" }, { type: "signature-pad", label: "Recipient signature preview", helperText: "Read-only preview of the captured signature", height: 160, readOnly: true }, { type: "data-grid", entity: @payload.data, fields: [{ name: "documentName", label: "Document", variant: "h4" }, { name: "recipientName", label: "Recipient", variant: "body" }, { name: "recipientEmail", label: "Email", variant: "caption" }, { name: "status", label: "Status", variant: "badge" }, { name: "sentAt", label: "Sent", variant: "caption" }], itemActions: [{ label: "Send", event: "SEND_REQUEST", variant: "primary" }, { label: "Revoke", event: "REVOKE_REQUEST", variant: "danger" }] }] })
+        (render-ui main { type: "stack", direction: "vertical", gap: "md", children: [{ type: "typography", content: "@config.title", variant: "h3" }, { type: "signature-pad", label: "Recipient signature preview", helperText: "Read-only preview of the captured signature", height: 160, readOnly: true }, { type: "data-grid", look: "@config.tableLook", entity: @payload.data, fields: [{ name: "documentName", label: "Document", variant: "h4" }, { name: "recipientName", label: "Recipient", variant: "body" }, { name: "recipientEmail", label: "Email", variant: "caption" }, { name: "status", label: "Status", variant: "badge" }, { name: "sentAt", label: "Sent", variant: "caption" }], itemActions: [{ label: "Send", event: "SEND_REQUEST", variant: "primary" }, { label: "Revoke", event: "REVOKE_REQUEST", variant: "danger" }] }] })
       ESignRequestLoadFailed -> error
         (render-ui main { type: "alert", variant: "error", title: "Failed to load signature requests", message: "@payload.error" })
     }

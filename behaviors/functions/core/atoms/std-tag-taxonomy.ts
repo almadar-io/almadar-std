@@ -68,10 +68,12 @@ export interface StdTagTaxonomyTagSelectedPayload {
  * without modifying its state-machine topology.
  */
 export interface StdTagTaxonomyConfig {
-  /** Default: `false` */
-  allowEdit?: boolean;
   /** Default: `"Categories"` */
   title?: string;
+  /** Default: `false` */
+  allowEdit?: boolean;
+  /** Default: `"dense"` */
+  tableLook?: 'dense' | 'spacious' | 'striped' | 'borderless' | 'card-rows';
 }
 
 /**

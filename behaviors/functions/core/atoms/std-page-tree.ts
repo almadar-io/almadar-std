@@ -93,8 +93,12 @@ export interface StdPageTreePageNodeLoadFailedPayload {
  * without modifying its state-machine topology.
  */
 export interface StdPageTreeConfig {
+  /** Default: `"elevated"` */
+  statLook?: 'elevated' | 'flat' | 'progress-backed' | 'gauge' | 'sparkline';
   /** Default: `"Pages"` */
   title?: string;
+  /** Default: `"dense"` */
+  tableLook?: 'dense' | 'spacious' | 'striped' | 'borderless' | 'card-rows';
 }
 
 /**
