@@ -1,6 +1,6 @@
 {
   "name": "std-tabs",
-  "version": "2.0.0",
+  "version": "2.1.0",
   "description": "std-tabs — embeddable tab-navigation atom. Renders a tabs strip from @config.tabs ([{id, label, icon?, badge?, content?}]); clicking a tab updates @entity.activeTab so only the matching @trait.X content shows. Events remap at the call site for routing, persistence, analytics.",
   "orbitals": [
     {
@@ -26,13 +26,8 @@
             "items": {
               "type": "object",
               "properties": {
-                "icon": {
-                  "name": "icon",
-                  "type": "string",
-                  "required": false
-                },
-                "id": {
-                  "name": "id",
+                "label": {
+                  "name": "label",
                   "type": "string",
                   "required": true
                 },
@@ -41,10 +36,15 @@
                   "type": "string",
                   "required": false
                 },
-                "label": {
-                  "name": "label",
+                "id": {
+                  "name": "id",
                   "type": "string",
                   "required": true
+                },
+                "icon": {
+                  "name": "icon",
+                  "type": "string",
+                  "required": false
                 },
                 "content": {
                   "name": "content",
@@ -117,14 +117,7 @@
                   [
                     "render-ui",
                     "main",
-                    {
-                      "type": "tabs",
-                      "variant": "@config.variant",
-                      "tabChangeEvent": "TAB_CHANGED",
-                      "items": "@entity.items",
-                      "orientation": "@config.orientation",
-                      "activeTab": "@entity.activeTab"
-                    }
+                    "@config.bodyContent"
                   ]
                 ]
               },
@@ -146,26 +139,37 @@
                   [
                     "render-ui",
                     "main",
-                    {
-                      "orientation": "@config.orientation",
-                      "type": "tabs",
-                      "tabChangeEvent": "TAB_CHANGED",
-                      "activeTab": "@entity.activeTab",
-                      "variant": "@config.variant",
-                      "items": "@entity.items"
-                    }
+                    "@config.bodyContent"
                   ]
                 ]
               }
             ]
           },
           "config": {
-            "defaultTab": {
+            "bodyContent": {
+              "type": "render-ui",
+              "default": {
+                "orientation": "@config.orientation",
+                "tabChangeEvent": "TAB_CHANGED",
+                "activeTab": "@entity.activeTab",
+                "items": "@entity.items",
+                "variant": "@config.variant",
+                "type": "tabs"
+              },
+              "label": "Body content tree",
+              "description": "Render-ui SExpr rendered for the tabs surface. Default is the canonical tabs pattern bound to @entity.items / @entity.activeTab. Layer 3 variants override this with their own tree (segmented-pill bar, vertical sidebar rail, etc.) while inheriting the same trait, state machine, emits, and listens.",
+              "tier": "internal"
+            },
+            "orientation": {
               "type": "string",
-              "default": "overview",
-              "label": "Default tab",
-              "description": "Tab id selected on first render",
-              "tier": "presentation"
+              "default": "horizontal",
+              "label": "Orientation",
+              "description": "Horizontal strip or vertical rail layout",
+              "tier": "presentation",
+              "values": [
+                "horizontal",
+                "vertical"
+              ]
             },
             "variant": {
               "type": "string",
@@ -179,33 +183,29 @@
                 "underline"
               ]
             },
-            "orientation": {
+            "defaultTab": {
               "type": "string",
-              "default": "horizontal",
-              "label": "Orientation",
-              "description": "Horizontal strip or vertical rail layout",
-              "tier": "presentation",
-              "values": [
-                "horizontal",
-                "vertical"
-              ]
+              "default": "overview",
+              "label": "Default tab",
+              "description": "Tab id selected on first render",
+              "tier": "presentation"
             },
             "tabs": {
               "type": "[TabSpec]",
               "default": [
                 {
-                  "id": "overview",
+                  "icon": "info",
                   "label": "Overview",
-                  "icon": "info"
+                  "id": "overview"
                 },
                 {
+                  "icon": "list",
                   "id": "details",
-                  "label": "Details",
-                  "icon": "list"
+                  "label": "Details"
                 },
                 {
-                  "icon": "settings",
                   "id": "settings",
+                  "icon": "settings",
                   "label": "Settings"
                 }
               ],
@@ -215,16 +215,6 @@
               "items": {
                 "type": "object",
                 "properties": {
-                  "badge": {
-                    "name": "badge",
-                    "type": "string",
-                    "required": false
-                  },
-                  "content": {
-                    "name": "content",
-                    "type": "trait",
-                    "required": false
-                  },
                   "id": {
                     "name": "id",
                     "type": "string",
@@ -234,6 +224,16 @@
                     "name": "label",
                     "type": "string",
                     "required": true
+                  },
+                  "badge": {
+                    "name": "badge",
+                    "type": "string",
+                    "required": false
+                  },
+                  "content": {
+                    "name": "content",
+                    "type": "trait",
+                    "required": false
                   },
                   "icon": {
                     "name": "icon",

@@ -1,0 +1,74 @@
+app std-calendar-week-timeline "1.0.0"
+"Week-timeline calendar — week-strip view with 7 day columns across the top, each day a vertical Stack of event cards ordered by time. Same CalendarEventCalendar trait, same state machine, same emits/listens as std-calendar — only the bodyContent tree differs. For weekly schedule views (fitness-studio class week, healthcare appointment week)."
+
+orbital WeekTimelineCalendarOrbital {
+  uses Calendar from "std/behaviors/std-calendar"
+
+  entity WeekTimelineEvent [runtime] {
+    id          : string!
+    name        : string!
+    description : string
+    status      : "active" | "inactive" | "pending" = "active"
+    createdAt   : string
+    date        : string = ""
+    time        : string = ""
+    duration    : number = 60
+  }
+
+  trait WeekTimelineCalendar = Calendar.traits.CalendarEventCalendar -> WeekTimelineEvent {
+    config: {
+      bodyContent: {
+        type: "stack",
+        direction: "vertical",
+        gap: "md",
+        children: [
+          { type: "stack", direction: "horizontal", gap: "md", justify: "between", align: "center", children: [
+            { type: "stack", direction: "horizontal", gap: "sm", align: "center", children: [
+              { type: "icon", name: "calendar" },
+              { type: "typography", content: "Week", variant: "h2" }
+            ]},
+            { type: "date-range-selector", onSelect: "SELECT_DAY" }
+          ]},
+          { type: "divider" },
+          { type: "grid", cols: 7, gap: "sm", className: "min-h-[28rem]", children: [
+            { type: "stack", direction: "vertical", gap: "sm", className: "border-r border-[var(--color-border)] pr-2", children: [
+              { type: "typography", variant: "caption", color: "muted", content: "Mon", className: "text-center pb-2 border-b border-[var(--color-border)]" },
+              { type: "data-list", entity: "@payload.data", gap: "sm", fields: [],
+                renderItem: ["fn", "item", {
+                  type: "card", className: "p-2 cursor-pointer hover:shadow-elevation-1",
+                  children: [
+                    { type: "stack", direction: "vertical", gap: "sm", children: [
+                      { type: "typography", variant: "caption", weight: "medium", content: "@item.time" },
+                      { type: "typography", variant: "caption", content: "@item.name", className: "truncate" },
+                      { type: "badge", label: "@item.status", variant: "default" }
+                    ]}
+                  ]
+                }]
+              }
+            ]},
+            { type: "stack", direction: "vertical", gap: "sm", className: "border-r border-[var(--color-border)] pr-2", children: [
+              { type: "typography", variant: "caption", color: "muted", content: "Tue", className: "text-center pb-2 border-b border-[var(--color-border)]" }
+            ]},
+            { type: "stack", direction: "vertical", gap: "sm", className: "border-r border-[var(--color-border)] pr-2", children: [
+              { type: "typography", variant: "caption", color: "muted", content: "Wed", className: "text-center pb-2 border-b border-[var(--color-border)]" }
+            ]},
+            { type: "stack", direction: "vertical", gap: "sm", className: "border-r border-[var(--color-border)] pr-2", children: [
+              { type: "typography", variant: "caption", color: "muted", content: "Thu", className: "text-center pb-2 border-b border-[var(--color-border)]" }
+            ]},
+            { type: "stack", direction: "vertical", gap: "sm", className: "border-r border-[var(--color-border)] pr-2", children: [
+              { type: "typography", variant: "caption", color: "muted", content: "Fri", className: "text-center pb-2 border-b border-[var(--color-border)]" }
+            ]},
+            { type: "stack", direction: "vertical", gap: "sm", className: "border-r border-[var(--color-border)] pr-2", children: [
+              { type: "typography", variant: "caption", color: "muted", content: "Sat", className: "text-center pb-2 border-b border-[var(--color-border)]" }
+            ]},
+            { type: "stack", direction: "vertical", gap: "sm", className: "pr-2", children: [
+              { type: "typography", variant: "caption", color: "muted", content: "Sun", className: "text-center pb-2 border-b border-[var(--color-border)]" }
+            ]}
+          ]}
+        ]
+      }
+    }
+  }
+
+  page "/calendarevents/week" as WeekTimelineCalendarPage -> WeekTimelineCalendar
+}

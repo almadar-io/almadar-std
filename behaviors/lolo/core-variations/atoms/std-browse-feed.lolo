@@ -1,0 +1,56 @@
+app std-browse-feed "1.0.0"
+"Feed browse — chronological top-down stream inspired by Twitter timelines and Linear comment threads. Each post is a row with an avatar icon, author + timestamp header, body content, and an inline tag/action row separated by thin dividers. Same BrowseItemBrowse trait, same state machine, same emits/listens as std-browse — only the bodyContent tree differs."
+
+orbital FeedBrowseOrbital {
+  uses Browse from "std/behaviors/std-browse"
+
+  entity FeedPost [runtime] {
+    id          : string!
+    name        : string!
+    description : string
+    status      : "published" | "draft" | "hidden" = "published"
+    category    : string
+    createdAt   : string
+  }
+
+  trait FeedBrowse = Browse.traits.BrowseItemBrowse -> FeedPost {
+    config: {
+      bodyContent: {
+        type: "stack",
+        direction: "vertical",
+        gap: "none",
+        className: "max-w-2xl mx-auto",
+        children: [
+          { type: "stack", direction: "horizontal", gap: "sm", align: "center", className: "px-card-md py-3 border-b border-[var(--color-border)]", children: [
+            { type: "icon", name: "search" },
+            { type: "input", inputType: "search", placeholder: "Filter the feed…", action: "REFETCH_QUERY", className: "flex-1" }
+          ]},
+          { type: "data-list", entity: "@payload.data", gap: "none", selectable: false, fields: [],
+            renderItem: ["fn", "item", {
+              type: "stack", direction: "horizontal", gap: "md", align: "start", className: "px-card-md py-card-md border-b border-[var(--color-border)]",
+              children: [
+                { type: "stack", direction: "vertical", gap: "none", align: "center", justify: "center", className: "w-10 h-10 rounded-full bg-muted flex-shrink-0", children: [
+                  { type: "icon", name: "user" }
+                ]},
+                { type: "stack", direction: "vertical", gap: "xs", className: "flex-1 min-w-0", children: [
+                  { type: "stack", direction: "horizontal", gap: "xs", align: "center", children: [
+                    { type: "typography", variant: "body", weight: "medium", content: "@item.name" },
+                    { type: "typography", variant: "caption", color: "muted", content: "·" },
+                    { type: "typography", variant: "caption", color: "muted", content: "@item.createdAt" }
+                  ]},
+                  { type: "typography", variant: "body", content: "@item.description", className: "whitespace-pre-wrap break-words" },
+                  { type: "stack", direction: "horizontal", gap: "sm", align: "center", className: "pt-1", children: [
+                    { type: "badge", label: "@item.category", variant: "default" },
+                    { type: "badge", label: "@item.status", variant: "neutral" }
+                  ]}
+                ]}
+              ]
+            }]
+          }
+        ]
+      }
+    }
+  }
+
+  page "/feed" as FeedPage -> FeedBrowse
+}

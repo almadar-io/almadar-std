@@ -1,0 +1,80 @@
+app std-thread-email-threaded "1.0.0"
+"Email-threaded — Gmail/Outlook style: collapsed message cards with sender + snippet, expandable to full body. Subject header at the top, attachments row, and action bar (reply, forward, archive). For helpdesk email threads, document discussions, support tickets that read like email."
+
+orbital EmailThreadedOrbital {
+  uses Thread from "std/behaviors/std-thread"
+
+  entity EmailThreadedPost [persistent: emailthreadedposts] {
+    id            : string!
+    parentId      : string
+    threadRootId  : string!
+    authorId      : string!
+    authorName    : string!
+    content       : string!
+    createdAt     : string
+    voteCount     : number = 0
+    replyCount    : number = 0
+  }
+
+  trait EmailThreaded = Thread.traits.ThreadPostBrowse -> EmailThreadedPost {
+    config: {
+      bodyContent: {
+        type: "stack",
+        direction: "vertical",
+        gap: "none",
+        className: "max-w-4xl mx-auto px-card-md py-section",
+        children: [
+          { type: "stack", direction: "horizontal", gap: "md", align: "center",
+            className: "pb-md border-b border-[var(--color-border)]",
+            children: [
+              { type: "icon", name: "mail" },
+              { type: "stack", direction: "vertical", gap: "xs", className: "flex-1",
+                children: [
+                  { type: "typography", variant: "h3", content: "Conversation" },
+                  { type: "typography", variant: "caption", color: "muted", content: "Email thread" }
+                ]
+              },
+              { type: "button", label: "Archive", icon: "archive", action: "ARCHIVE", variant: "ghost" },
+              { type: "button", label: "Reply all", icon: "corner-up-left", action: "REPLY", variant: "secondary" }
+            ]
+          },
+          { type: "data-list", entity: "@payload.data", gap: "sm", variant: "default",
+            fields: [],
+            renderItem: ["fn", "item", {
+              type: "card", look: "flat-bordered", padding: "md",
+              className: "hover:shadow-elevation-1 transition-shadow",
+              children: [
+                { type: "stack", direction: "vertical", gap: "sm",
+                  children: [
+                    { type: "stack", direction: "horizontal", gap: "md", align: "center",
+                      className: "w-full",
+                      children: [
+                        { type: "avatar", name: "@item.authorName", size: "sm" },
+                        { type: "stack", direction: "vertical", gap: "xs", className: "flex-1 min-w-0",
+                          children: [
+                            { type: "typography", variant: "body", weight: "medium", content: "@item.authorName" },
+                            { type: "typography", variant: "caption", color: "muted", content: "@item.content", className: "truncate" }
+                          ]
+                        },
+                        { type: "typography", variant: "caption", color: "muted", content: "@item.createdAt" }
+                      ]
+                    },
+                    { type: "divider" },
+                    { type: "stack", direction: "horizontal", gap: "sm",
+                      children: [
+                        { type: "button", label: "Reply", icon: "corner-up-left", action: "REPLY", actionPayload: { parentId: "@item.id" }, variant: "secondary" },
+                        { type: "button", label: "Forward", icon: "corner-up-right", action: "FORWARD", variant: "ghost" }
+                      ]
+                    }
+                  ]
+                }
+              ]
+            }]
+          }
+        ]
+      }
+    }
+  }
+
+  page "/email-thread" as EmailThreadedPage -> EmailThreaded
+}

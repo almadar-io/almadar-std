@@ -1,7 +1,7 @@
 {
   "name": "std-calendar",
-  "version": "1.0.0",
-  "description": "std-calendar as a Function",
+  "version": "1.1.0",
+  "description": "std-calendar as a Function — owns the fetch + SELECT_DAY state machine; default bodyContent renders the month-grid + upcoming-events tree. Layer 3 variants override bodyContent to deliver agenda, week-timeline, etc. while inheriting the same trait, state machine, emits, and listens.",
   "orbitals": [
     {
       "name": "CalendarEventOrbital",
@@ -172,7 +172,6 @@
                     "render-ui",
                     "main",
                     {
-                      "direction": "vertical",
                       "gap": "md",
                       "align": "center",
                       "children": [
@@ -181,13 +180,14 @@
                         },
                         {
                           "content": "Loading calendar…",
-                          "color": "muted",
                           "variant": "caption",
+                          "color": "muted",
                           "type": "typography"
                         }
                       ],
+                      "className": "py-12",
                       "type": "stack",
-                      "className": "py-12"
+                      "direction": "vertical"
                     }
                   ]
                 ]
@@ -200,93 +200,7 @@
                   [
                     "render-ui",
                     "main",
-                    {
-                      "type": "stack",
-                      "gap": "lg",
-                      "children": [
-                        {
-                          "type": "stack",
-                          "direction": "horizontal",
-                          "gap": "md",
-                          "justify": "between",
-                          "align": "center",
-                          "children": [
-                            {
-                              "direction": "horizontal",
-                              "type": "stack",
-                              "align": "center",
-                              "gap": "sm",
-                              "children": [
-                                {
-                                  "type": "icon",
-                                  "name": "calendar"
-                                },
-                                {
-                                  "type": "typography",
-                                  "content": "CalendarEvents Calendar",
-                                  "variant": "h2"
-                                }
-                              ]
-                            },
-                            {
-                              "type": "date-range-selector",
-                              "onSelect": "SELECT_DAY"
-                            }
-                          ]
-                        },
-                        {
-                          "type": "divider"
-                        },
-                        {
-                          "type": "calendar-grid"
-                        },
-                        {
-                          "type": "divider"
-                        },
-                        {
-                          "variant": "h4",
-                          "type": "typography",
-                          "content": "Upcoming Events"
-                        },
-                        {
-                          "fields": [
-                            {
-                              "icon": "calendar",
-                              "name": "name",
-                              "label": "Event",
-                              "variant": "h4"
-                            },
-                            {
-                              "variant": "badge",
-                              "label": "Time",
-                              "name": "time"
-                            },
-                            {
-                              "label": "Date",
-                              "format": "date",
-                              "variant": "caption",
-                              "name": "date"
-                            },
-                            {
-                              "label": "Status",
-                              "variant": "badge",
-                              "name": "status"
-                            }
-                          ],
-                          "itemActions": [
-                            {
-                              "icon": "eye",
-                              "event": "SELECT_DAY",
-                              "label": "View"
-                            }
-                          ],
-                          "type": "data-list",
-                          "entity": "@payload.data",
-                          "look": "@config.tableLook"
-                        }
-                      ],
-                      "direction": "vertical"
-                    }
+                    "@config.bodyContent"
                   ]
                 ]
               },
@@ -299,7 +213,7 @@
                     "render-ui",
                     "main",
                     {
-                      "align": "center",
+                      "className": "py-12",
                       "children": [
                         {
                           "name": "alert-triangle",
@@ -307,28 +221,28 @@
                           "type": "icon"
                         },
                         {
-                          "content": "Failed to load",
+                          "type": "typography",
                           "variant": "h3",
-                          "type": "typography"
+                          "content": "Failed to load"
                         },
                         {
                           "type": "typography",
-                          "content": "@payload.error",
                           "variant": "body",
+                          "content": "@payload.error",
                           "color": "muted"
                         },
                         {
-                          "action": "INIT",
-                          "type": "button",
                           "label": "Retry",
                           "variant": "primary",
-                          "icon": "rotate-ccw"
+                          "icon": "rotate-ccw",
+                          "action": "INIT",
+                          "type": "button"
                         }
                       ],
-                      "className": "py-12",
                       "type": "stack",
                       "direction": "vertical",
-                      "gap": "md"
+                      "gap": "md",
+                      "align": "center"
                     }
                   ]
                 ]
@@ -407,6 +321,99 @@
                 "borderless",
                 "card-rows"
               ]
+            },
+            "bodyContent": {
+              "type": "render-ui",
+              "default": {
+                "children": [
+                  {
+                    "align": "center",
+                    "type": "stack",
+                    "direction": "horizontal",
+                    "children": [
+                      {
+                        "direction": "horizontal",
+                        "gap": "sm",
+                        "align": "center",
+                        "children": [
+                          {
+                            "name": "calendar",
+                            "type": "icon"
+                          },
+                          {
+                            "type": "typography",
+                            "variant": "h2",
+                            "content": "CalendarEvents Calendar"
+                          }
+                        ],
+                        "type": "stack"
+                      },
+                      {
+                        "onSelect": "SELECT_DAY",
+                        "type": "date-range-selector"
+                      }
+                    ],
+                    "gap": "md",
+                    "justify": "between"
+                  },
+                  {
+                    "type": "divider"
+                  },
+                  {
+                    "type": "calendar-grid"
+                  },
+                  {
+                    "type": "divider"
+                  },
+                  {
+                    "variant": "h4",
+                    "type": "typography",
+                    "content": "Upcoming Events"
+                  },
+                  {
+                    "entity": "@payload.data",
+                    "type": "data-list",
+                    "look": "@config.tableLook",
+                    "fields": [
+                      {
+                        "variant": "h4",
+                        "icon": "calendar",
+                        "name": "name",
+                        "label": "Event"
+                      },
+                      {
+                        "variant": "badge",
+                        "name": "time",
+                        "label": "Time"
+                      },
+                      {
+                        "variant": "caption",
+                        "label": "Date",
+                        "format": "date",
+                        "name": "date"
+                      },
+                      {
+                        "label": "Status",
+                        "variant": "badge",
+                        "name": "status"
+                      }
+                    ],
+                    "itemActions": [
+                      {
+                        "label": "View",
+                        "icon": "eye",
+                        "event": "SELECT_DAY"
+                      }
+                    ]
+                  }
+                ],
+                "type": "stack",
+                "direction": "vertical",
+                "gap": "lg"
+              },
+              "label": "Body content tree",
+              "description": "Render-ui SExpr rendered after events load. Default is the month-grid + upcoming-events list. Layer 3 variants override this with their own tree (agenda list, week timeline, etc.) to deliver entirely different calendar UX while inheriting the same trait, state machine, emits, and listens.",
+              "tier": "internal"
             }
           },
           "scope": "collection"

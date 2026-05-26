@@ -1,0 +1,154 @@
+{
+  "name": "std-step-flow-cards-deck",
+  "version": "1.0.0",
+  "description": "Full-page card deck step flow — each step is rendered as one large centered card occupying the viewport with the step icon, title, and description prominent; progress-dots at the bottom indicate position in the sequence; primary advance + back controls flank the dots. Same StepFlowReview trait, same state machine, same emits/listens as std-step-flow — only the bodyContent tree differs. Suited for mobile-flavored onboarding, marketing-campaign creation flows, and any single-focus sequential UX.",
+  "orbitals": [
+    {
+      "name": "CardsDeckOrbital",
+      "uses": [
+        {
+          "from": "std/behaviors/std-step-flow",
+          "as": "StepFlow"
+        }
+      ],
+      "entity": {
+        "name": "CardsDeckView",
+        "persistence": "runtime",
+        "fields": [
+          {
+            "name": "id",
+            "type": "string",
+            "required": true
+          }
+        ]
+      },
+      "traits": [
+        {
+          "ref": "StepFlow.traits.StepFlowReview",
+          "name": "CardsDeckReview",
+          "linkedEntity": "CardsDeckView",
+          "config": {
+            "bodyContent": {
+              "type": "stack",
+              "align": "center",
+              "className": "max-w-2xl mx-auto pt-section",
+              "children": [
+                {
+                  "children": [
+                    {
+                      "align": "center",
+                      "children": [
+                        {
+                          "name": "@entity.currentStepIcon",
+                          "type": "icon",
+                          "size": "lg"
+                        },
+                        {
+                          "align": "center",
+                          "type": "typography",
+                          "variant": "h1",
+                          "content": "@entity.currentStepLabel"
+                        },
+                        {
+                          "color": "muted",
+                          "type": "typography",
+                          "variant": "body",
+                          "align": "center",
+                          "content": "@entity.currentStepDescription"
+                        },
+                        {
+                          "align": "center",
+                          "className": "pt-md",
+                          "children": [
+                            {
+                              "variant": "ghost",
+                              "icon": "x",
+                              "label": "Reject",
+                              "type": "button",
+                              "actionPayload": {
+                                "id": "@entity.id"
+                              },
+                              "action": "REJECT"
+                            },
+                            {
+                              "icon": "alert-triangle",
+                              "actionPayload": {
+                                "id": "@entity.id"
+                              },
+                              "label": "Escalate",
+                              "action": "ESCALATE",
+                              "type": "button",
+                              "variant": "ghost"
+                            }
+                          ],
+                          "direction": "horizontal",
+                          "gap": "sm",
+                          "type": "stack"
+                        }
+                      ],
+                      "className": "p-card-xl text-center",
+                      "gap": "lg",
+                      "type": "stack",
+                      "direction": "vertical"
+                    }
+                  ],
+                  "look": "@config.cardLook",
+                  "type": "card"
+                },
+                {
+                  "direction": "horizontal",
+                  "gap": "lg",
+                  "type": "stack",
+                  "align": "center",
+                  "children": [
+                    {
+                      "disabled": "@entity.isFirstStep",
+                      "variant": "ghost",
+                      "label": "Back",
+                      "action": "BACK",
+                      "icon": "chevron-left",
+                      "actionPayload": {
+                        "id": "@entity.id"
+                      },
+                      "type": "button"
+                    },
+                    {
+                      "count": "@entity.totalSteps",
+                      "currentIndex": "@entity.currentStepIndex",
+                      "size": "md",
+                      "type": "progress-dots"
+                    },
+                    {
+                      "label": "@entity.primaryActionLabel",
+                      "type": "button",
+                      "variant": "primary",
+                      "action": "ADVANCE",
+                      "icon": "@entity.primaryActionIcon",
+                      "actionPayload": {
+                        "id": "@entity.id"
+                      }
+                    }
+                  ],
+                  "className": "justify-between w-full"
+                }
+              ],
+              "direction": "vertical",
+              "gap": "xl"
+            }
+          }
+        }
+      ],
+      "pages": [
+        {
+          "name": "CardsDeckPage",
+          "path": "/cards-deck",
+          "traits": [
+            {
+              "ref": "CardsDeckReview"
+            }
+          ]
+        }
+      ]
+    }
+  ]
+}

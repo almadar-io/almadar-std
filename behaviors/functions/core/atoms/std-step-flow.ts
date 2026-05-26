@@ -92,12 +92,14 @@ export interface StdStepFlowStepItemsLoadFailedPayload {
  * without modifying its state-machine topology.
  */
 export interface StdStepFlowConfig {
-  /** Default: `[{"key":"manager","label":"Manager Review","icon":"user","description":"Initial review by direct manager"},{"icon":"users","description":"Department director sign-off","label":"Director Approval","key":"director"},{"label":"Executive Sign-off","icon":"shield","key":"executive","description":"Final executive approval"}]` */
+  /** Default: `"Review"` */
+  title?: string;
+  /** Default: `{"children":[{"children":[{"type":"icon","name":"shield-check"},{"type":"typography","content":"@config.title","variant":"h3"}],"gap":"sm","direction":"horizontal","type":"stack","align":"center"},{"steps":"@entity.wizardSteps","allowNavigation":false,"currentStep":"@entity.currentStepIndex","type":"wizard-progress"},{"look":"@config.cardLook","type":"card","children":[{"children":[{"gap":"sm","children":[{"name":"@entity.currentStepIcon","size":"lg","type":"icon"},{"type":"stack","children":[{"content":"@entity.currentStepLabel","type":"typography","variant":"h2"},{"variant":"body","type":"typography","color":"muted","content":"@entity.currentStepDescription"}],"direction":"vertical","gap":"xs"}],"align":"center","type":"stack","direction":"horizontal"}],"gap":"md","type":"stack","direction":"vertical"}]},{"gap":"sm","type":"stack","direction":"horizontal","align":"center","children":[{"action":"BACK","label":"Back","icon":"chevron-left","disabled":"@entity.isFirstStep","actionPayload":{"id":"@entity.id"},"type":"button","variant":"ghost"},{"variant":"ghost","icon":"x","actionPayload":{"id":"@entity.id"},"action":"REJECT","type":"button","label":"Reject"},{"action":"ESCALATE","actionPayload":{"id":"@entity.id"},"type":"button","variant":"ghost","label":"Escalate","icon":"alert-triangle"},{"action":"ADVANCE","icon":"@entity.primaryActionIcon","type":"button","variant":"primary","actionPayload":{"id":"@entity.id"},"label":"@entity.primaryActionLabel"}]}],"type":"stack","direction":"vertical","gap":"lg"}` */
+  bodyContent?: unknown;
+  /** Default: `[{"icon":"user","key":"manager","description":"Initial review by direct manager","label":"Manager Review"},{"label":"Director Approval","description":"Department director sign-off","icon":"users","key":"director"},{"key":"executive","label":"Executive Sign-off","description":"Final executive approval","icon":"shield"}]` */
   steps?: EntityRow[];
   /** Default: `"elevated"` */
   cardLook?: 'elevated' | 'flat-bordered' | 'borderless-divider' | 'ticket' | 'invoice' | 'chip' | 'tile-image-first';
-  /** Default: `"Review"` */
-  title?: string;
 }
 
 /**

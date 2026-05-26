@@ -1,0 +1,64 @@
+app std-thread-chat-bubbles "1.0.0"
+"Chat-bubbles thread — iMessage/Slack DM style: alternating-aligned message bubbles, author avatar outside the bubble, timestamps tucked under each message. For realtime-chat, customer-success conversations, support DMs. Same ThreadPostBrowse trait, same state machine, same emits/listens as std-thread — only the bodyContent tree differs."
+
+orbital ChatBubblesThreadOrbital {
+  uses Thread from "std/behaviors/std-thread"
+
+  entity ChatBubblesPost [persistent: chatbubblesposts] {
+    id            : string!
+    parentId      : string
+    threadRootId  : string!
+    authorId      : string!
+    authorName    : string!
+    content       : string!
+    createdAt     : string
+    voteCount     : number = 0
+    replyCount    : number = 0
+  }
+
+  trait ChatBubblesThread = Thread.traits.ThreadPostBrowse -> ChatBubblesPost {
+    config: {
+      bodyContent: {
+        type: "stack",
+        direction: "vertical",
+        gap: "none",
+        className: "max-w-3xl mx-auto px-card-md py-section",
+        children: [
+          { type: "data-list", entity: "@payload.data", gap: "md", variant: "default",
+            fields: [],
+            renderItem: ["fn", "item", {
+              type: "stack", direction: "horizontal", gap: "sm", align: "end",
+              className: "w-full",
+              children: [
+                { type: "avatar", name: "@item.authorName", size: "sm" },
+                { type: "stack", direction: "vertical", gap: "xs", className: "max-w-[70%]",
+                  children: [
+                    { type: "card", look: "chip", padding: "sm",
+                      children: { type: "typography", variant: "body", content: "@item.content" }
+                    },
+                    { type: "stack", direction: "horizontal", gap: "xs", align: "center",
+                      children: [
+                        { type: "typography", variant: "caption", color: "muted", content: "@item.authorName" },
+                        { type: "typography", variant: "caption", color: "muted", content: "·" },
+                        { type: "typography", variant: "caption", color: "muted", content: "@item.createdAt" }
+                      ]
+                    }
+                  ]
+                }
+              ]
+            }]
+          },
+          { type: "stack", direction: "horizontal", gap: "sm", align: "center",
+            className: "mt-md border-t border-[var(--color-border)] pt-md",
+            children: [
+              { type: "input", inputType: "text", placeholder: "Message…", action: "EDIT_REPLY", className: "flex-1" },
+              { type: "button", label: "Send", icon: "send", action: "SUBMIT_REPLY", variant: "primary" }
+            ]
+          }
+        ]
+      }
+    }
+  }
+
+  page "/chat-thread" as ChatBubblesThreadPage -> ChatBubblesThread
+}

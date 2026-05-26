@@ -1,0 +1,278 @@
+{
+  "name": "std-stats-hero-metric",
+  "version": "1.0.0",
+  "description": "Hero metric — single dominant splash with one massive centered number, descriptive label below, and contextual badges flanking it (target, change, period). For executive landing pages, accounting / finance hero KPI, headline revenue, single-number focus dashboards. Renders the first card from the metrics aggregation as the hero; remaining cards (if any) become small context chips below. Same StatsItemStats trait, same aggregation pipeline, same listens as std-stats — only the bodyContent tree differs.",
+  "orbitals": [
+    {
+      "name": "HeroMetricStatsOrbital",
+      "uses": [
+        {
+          "from": "std/behaviors/std-stats",
+          "as": "Stats"
+        }
+      ],
+      "entity": {
+        "name": "HeroMetricStats",
+        "persistence": "runtime",
+        "fields": [
+          {
+            "name": "id",
+            "type": "string",
+            "required": true
+          },
+          {
+            "name": "cards",
+            "type": "array",
+            "default": [],
+            "items": {
+              "type": "object",
+              "properties": {
+                "trendPolarity": {
+                  "name": "trendPolarity",
+                  "type": "string",
+                  "required": false,
+                  "values": [
+                    "higher-is-better",
+                    "lower-is-better"
+                  ]
+                },
+                "suffix": {
+                  "name": "suffix",
+                  "type": "string",
+                  "required": false
+                },
+                "icon": {
+                  "name": "icon",
+                  "type": "string",
+                  "required": false
+                },
+                "format": {
+                  "name": "format",
+                  "type": "string",
+                  "required": false,
+                  "values": [
+                    "number",
+                    "currency",
+                    "percent"
+                  ]
+                },
+                "variant": {
+                  "name": "variant",
+                  "type": "string",
+                  "required": false,
+                  "values": [
+                    "default",
+                    "primary",
+                    "success",
+                    "warning",
+                    "error",
+                    "info"
+                  ]
+                },
+                "value": {
+                  "name": "value",
+                  "type": "number",
+                  "required": false
+                },
+                "max": {
+                  "name": "max",
+                  "type": "number",
+                  "required": false
+                },
+                "prefix": {
+                  "name": "prefix",
+                  "type": "string",
+                  "required": false
+                },
+                "target": {
+                  "name": "target",
+                  "type": "number",
+                  "required": false
+                },
+                "label": {
+                  "name": "label",
+                  "type": "string",
+                  "required": true
+                },
+                "sparklineData": {
+                  "name": "sparklineData",
+                  "type": "array",
+                  "required": false,
+                  "items": {
+                    "type": "number"
+                  }
+                },
+                "trend": {
+                  "name": "trend",
+                  "type": "number",
+                  "required": false
+                },
+                "clickEvent": {
+                  "name": "clickEvent",
+                  "type": "string",
+                  "required": false
+                },
+                "trendFormat": {
+                  "name": "trendFormat",
+                  "type": "string",
+                  "required": false,
+                  "values": [
+                    "absolute",
+                    "percent"
+                  ]
+                }
+              }
+            }
+          }
+        ]
+      },
+      "traits": [
+        {
+          "ref": "Stats.traits.StatsItemStats",
+          "name": "HeroMetricStatsItemStats",
+          "linkedEntity": "HeroMetricStats",
+          "config": {
+            "bodyContent": {
+              "fullWidth": true,
+              "className": "py-section",
+              "vertical": true,
+              "children": [
+                {
+                  "gap": "lg",
+                  "className": "max-w-3xl mx-auto px-card-lg text-center",
+                  "children": [
+                    {
+                      "renderItem": [
+                        "fn",
+                        "card",
+                        {
+                          "direction": "vertical",
+                          "type": "stack",
+                          "children": [
+                            {
+                              "direction": "horizontal",
+                              "type": "stack",
+                              "gap": "sm",
+                              "align": "center",
+                              "justify": "center",
+                              "children": [
+                                {
+                                  "type": "icon",
+                                  "color": "muted",
+                                  "size": "md",
+                                  "name": "@card.icon"
+                                },
+                                {
+                                  "weight": "semibold",
+                                  "type": "typography",
+                                  "variant": "overline",
+                                  "content": "@card.label",
+                                  "className": "uppercase tracking-widest",
+                                  "color": "muted"
+                                }
+                              ]
+                            },
+                            {
+                              "children": [
+                                {
+                                  "variant": "h2",
+                                  "type": "typography",
+                                  "content": "@card.prefix",
+                                  "weight": "normal",
+                                  "color": "muted"
+                                },
+                                {
+                                  "value": "@card.value",
+                                  "type": "animated-counter",
+                                  "className": "text-7xl font-bold tracking-tight tabular-nums"
+                                },
+                                {
+                                  "content": "@card.suffix",
+                                  "type": "typography",
+                                  "variant": "h2",
+                                  "color": "muted",
+                                  "weight": "normal"
+                                }
+                              ],
+                              "gap": "sm",
+                              "align": "baseline",
+                              "direction": "horizontal",
+                              "type": "stack",
+                              "justify": "center"
+                            },
+                            {
+                              "direction": "horizontal",
+                              "wrap": true,
+                              "children": [
+                                {
+                                  "showValue": true,
+                                  "size": "md",
+                                  "value": "@card.trend",
+                                  "type": "trend-indicator"
+                                },
+                                {
+                                  "label": "@card.variant",
+                                  "type": "badge",
+                                  "size": "md",
+                                  "variant": "@card.variant"
+                                }
+                              ],
+                              "align": "center",
+                              "justify": "center",
+                              "gap": "sm",
+                              "type": "stack"
+                            },
+                            {
+                              "strokeWidth": 2.0,
+                              "type": "sparkline",
+                              "data": [
+                                1.0,
+                                2.0,
+                                3.0,
+                                4.0,
+                                5.0,
+                                6.0,
+                                7.0
+                              ],
+                              "fill": true,
+                              "className": "w-full max-w-md",
+                              "height": 48.0,
+                              "color": "auto"
+                            }
+                          ],
+                          "align": "center",
+                          "className": "w-full",
+                          "gap": "md"
+                        }
+                      ],
+                      "type": "data-list",
+                      "gap": "lg",
+                      "fields": [],
+                      "entity": "@entity.cards"
+                    }
+                  ],
+                  "direction": "vertical",
+                  "type": "stack",
+                  "align": "center"
+                }
+              ],
+              "type": "center",
+              "horizontal": true
+            }
+          }
+        }
+      ],
+      "pages": [
+        {
+          "name": "HeroMetricStatsPage",
+          "path": "/hero-metric",
+          "traits": [
+            {
+              "ref": "HeroMetricStatsItemStats"
+            }
+          ]
+        }
+      ]
+    }
+  ]
+}

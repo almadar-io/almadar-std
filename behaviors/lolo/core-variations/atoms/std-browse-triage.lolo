@@ -1,0 +1,58 @@
+app std-browse-triage "1.0.0"
+"Triage browse — Linear/Gmail inbox-style prioritized list. Compact horizontal rows scan status → title → context fast: small status badge, primary title (truncate), one-line muted description (truncate), assignee badge, due-date chip. Top filter-group narrows by status. Same BrowseItemBrowse trait, state machine, emits, and listens as std-browse — only the bodyContent tree differs."
+
+orbital TriageBrowseOrbital {
+  uses Browse from "std/behaviors/std-browse"
+
+  entity TriageItem [runtime] {
+    id          : string!
+    name        : string!
+    description : string
+    status      : "new" | "in_progress" | "done" | "blocked" = "new"
+    priority    : "low" | "medium" | "high" = "medium"
+    assignee    : string
+    dueAt       : string
+    createdAt   : string
+  }
+
+  trait TriageBrowse = Browse.traits.BrowseItemBrowse -> TriageItem {
+    config: {
+      bodyContent: {
+        type: "stack",
+        direction: "vertical",
+        gap: "none",
+        className: "max-w-4xl mx-auto",
+        children: [
+          { type: "stack", direction: "horizontal", gap: "sm", align: "center", className: "px-card-md py-2 border-b border-[var(--color-border)] sticky top-0 bg-[var(--color-surface)] z-10", children: [
+            { type: "filter-group", entity: "TriageItem", filters: [
+              { field: "status", label: "Status", type: "select", options: ["new", "in_progress", "done", "blocked"] },
+              { field: "priority", label: "Priority", type: "select", options: ["low", "medium", "high"] }
+            ]}
+          ]},
+          { type: "data-list", entity: "@payload.data", gap: "none", selectable: true, fields: [],
+            renderItem: ["fn", "item", {
+              type: "stack", direction: "horizontal", gap: "md", align: "center", className: "px-card-md py-2 border-b border-[var(--color-border)] hover:bg-muted cursor-pointer",
+              children: [
+                { type: "badge", label: "@item.status", variant: "info", size: "sm" },
+                { type: "stack", direction: "vertical", gap: "none", className: "flex-1 min-w-0", children: [
+                  { type: "typography", variant: "body", weight: "medium", content: "@item.name", className: "truncate" },
+                  { type: "typography", variant: "caption", color: "muted", content: "@item.description", className: "truncate" }
+                ]},
+                { type: "stack", direction: "horizontal", gap: "xs", align: "center", className: "shrink-0", children: [
+                  { type: "icon", name: "user" },
+                  { type: "typography", variant: "caption", color: "muted", content: "@item.assignee" }
+                ]},
+                { type: "stack", direction: "horizontal", gap: "xs", align: "center", className: "shrink-0 px-2 py-0.5 border rounded", children: [
+                  { type: "icon", name: "calendar" },
+                  { type: "typography", variant: "caption", content: "@item.dueAt" }
+                ]}
+              ]
+            }]
+          }
+        ]
+      }
+    }
+  }
+
+  page "/triage" as TriagePage -> TriageBrowse
+}

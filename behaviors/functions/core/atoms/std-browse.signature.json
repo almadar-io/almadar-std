@@ -40,6 +40,29 @@
         "listenedEvents": [],
         "overridableConfigKeys": [
           {
+            "key": "bodyContent",
+            "type": "render-ui",
+            "default": {
+              "type": "stack",
+              "children": [
+                {
+                  "gap": "@config.gap",
+                  "pageSize": "@config.displayPageSize",
+                  "itemActions": "@config.itemActions",
+                  "fields": "@config.fields",
+                  "type": "data-grid",
+                  "entity": "@payload.data",
+                  "imageField": "@config.imageField",
+                  "cols": "@config.cols"
+                }
+              ],
+              "direction": "vertical"
+            },
+            "label": "Body content tree",
+            "description": "Render-ui SExpr rendered after rows load. Default is the canonical data-grid call wrapped in a stack. Layer 3 variants override this with their own tree (composing data-list/data-grid/entity-table + custom renderItem lambdas + filter-group, kbd, card, etc.) to deliver entirely different browse UX while inheriting the same trait, state machine, emits, and listens.",
+            "tier": "internal"
+          },
+          {
             "key": "cols",
             "type": "number",
             "default": 1,
@@ -60,14 +83,14 @@
             "type": "[FieldSpec]",
             "default": [
               {
-                "variant": "h4",
                 "name": "name",
-                "label": "Name"
+                "label": "Name",
+                "variant": "h4"
               },
               {
                 "name": "description",
-                "label": "Description",
-                "variant": "caption"
+                "variant": "caption",
+                "label": "Description"
               },
               {
                 "name": "status",
@@ -85,13 +108,8 @@
                   "required": false,
                   "type": "string"
                 },
-                "label": {
-                  "name": "label",
-                  "required": false,
-                  "type": "string"
-                },
-                "variant": {
-                  "name": "variant",
+                "key": {
+                  "name": "key",
                   "required": false,
                   "type": "string"
                 },
@@ -105,8 +123,13 @@
                   "required": true,
                   "type": "string"
                 },
-                "key": {
-                  "name": "key",
+                "label": {
+                  "name": "label",
+                  "required": false,
+                  "type": "string"
+                },
+                "variant": {
+                  "name": "variant",
                   "required": false,
                   "type": "string"
                 },
@@ -144,16 +167,6 @@
             "tier": "presentation",
             "items": {
               "properties": {
-                "label": {
-                  "name": "label",
-                  "required": true,
-                  "type": "string"
-                },
-                "icon": {
-                  "name": "icon",
-                  "required": false,
-                  "type": "string"
-                },
                 "variant": {
                   "name": "variant",
                   "required": false,
@@ -162,6 +175,16 @@
                 "event": {
                   "name": "event",
                   "required": true,
+                  "type": "string"
+                },
+                "label": {
+                  "name": "label",
+                  "required": true,
+                  "type": "string"
+                },
+                "icon": {
+                  "name": "icon",
+                  "required": false,
                   "type": "string"
                 }
               },
@@ -181,7 +204,7 @@
             "type": "pattern",
             "default": "data-grid",
             "label": "Render pattern",
-            "description": "UI pattern used to render the collection",
+            "description": "UI pattern used to render the collection. Used by the default bodyContent tree; Layer 3 variants override bodyContent directly instead and may ignore this knob.",
             "tier": "internal"
           }
         ],

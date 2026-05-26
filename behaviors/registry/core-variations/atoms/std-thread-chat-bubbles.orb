@@ -1,0 +1,186 @@
+{
+  "name": "std-thread-chat-bubbles",
+  "version": "1.0.0",
+  "description": "Chat-bubbles thread — iMessage/Slack DM style: alternating-aligned message bubbles, author avatar outside the bubble, timestamps tucked under each message. For realtime-chat, customer-success conversations, support DMs. Same ThreadPostBrowse trait, same state machine, same emits/listens as std-thread — only the bodyContent tree differs.",
+  "orbitals": [
+    {
+      "name": "ChatBubblesThreadOrbital",
+      "uses": [
+        {
+          "from": "std/behaviors/std-thread",
+          "as": "Thread"
+        }
+      ],
+      "entity": {
+        "name": "ChatBubblesPost",
+        "collection": "chatbubblesposts",
+        "persistence": "persistent",
+        "fields": [
+          {
+            "name": "id",
+            "type": "string",
+            "required": true
+          },
+          {
+            "name": "parentId",
+            "type": "string"
+          },
+          {
+            "name": "threadRootId",
+            "type": "string",
+            "required": true
+          },
+          {
+            "name": "authorId",
+            "type": "string",
+            "required": true
+          },
+          {
+            "name": "authorName",
+            "type": "string",
+            "required": true
+          },
+          {
+            "name": "content",
+            "type": "string",
+            "required": true
+          },
+          {
+            "name": "createdAt",
+            "type": "string"
+          },
+          {
+            "name": "voteCount",
+            "type": "number",
+            "default": 0.0
+          },
+          {
+            "name": "replyCount",
+            "type": "number",
+            "default": 0.0
+          }
+        ]
+      },
+      "traits": [
+        {
+          "ref": "Thread.traits.ThreadPostBrowse",
+          "name": "ChatBubblesThread",
+          "linkedEntity": "ChatBubblesPost",
+          "config": {
+            "bodyContent": {
+              "children": [
+                {
+                  "renderItem": [
+                    "fn",
+                    "item",
+                    {
+                      "className": "w-full",
+                      "children": [
+                        {
+                          "name": "@item.authorName",
+                          "size": "sm",
+                          "type": "avatar"
+                        },
+                        {
+                          "direction": "vertical",
+                          "gap": "xs",
+                          "type": "stack",
+                          "children": [
+                            {
+                              "look": "chip",
+                              "padding": "sm",
+                              "children": {
+                                "variant": "body",
+                                "content": "@item.content",
+                                "type": "typography"
+                              },
+                              "type": "card"
+                            },
+                            {
+                              "gap": "xs",
+                              "children": [
+                                {
+                                  "variant": "caption",
+                                  "color": "muted",
+                                  "content": "@item.authorName",
+                                  "type": "typography"
+                                },
+                                {
+                                  "variant": "caption",
+                                  "type": "typography",
+                                  "content": "·",
+                                  "color": "muted"
+                                },
+                                {
+                                  "color": "muted",
+                                  "type": "typography",
+                                  "variant": "caption",
+                                  "content": "@item.createdAt"
+                                }
+                              ],
+                              "type": "stack",
+                              "align": "center",
+                              "direction": "horizontal"
+                            }
+                          ],
+                          "className": "max-w-[70%]"
+                        }
+                      ],
+                      "direction": "horizontal",
+                      "type": "stack",
+                      "gap": "sm",
+                      "align": "end"
+                    }
+                  ],
+                  "entity": "@payload.data",
+                  "fields": [],
+                  "variant": "default",
+                  "type": "data-list",
+                  "gap": "md"
+                },
+                {
+                  "align": "center",
+                  "children": [
+                    {
+                      "type": "input",
+                      "placeholder": "Message…",
+                      "inputType": "text",
+                      "action": "EDIT_REPLY",
+                      "className": "flex-1"
+                    },
+                    {
+                      "label": "Send",
+                      "variant": "primary",
+                      "type": "button",
+                      "icon": "send",
+                      "action": "SUBMIT_REPLY"
+                    }
+                  ],
+                  "type": "stack",
+                  "className": "mt-md border-t border-[var(--color-border)] pt-md",
+                  "gap": "sm",
+                  "direction": "horizontal"
+                }
+              ],
+              "className": "max-w-3xl mx-auto px-card-md py-section",
+              "type": "stack",
+              "gap": "none",
+              "direction": "vertical"
+            }
+          }
+        }
+      ],
+      "pages": [
+        {
+          "name": "ChatBubblesThreadPage",
+          "path": "/chat-thread",
+          "traits": [
+            {
+              "ref": "ChatBubblesThread"
+            }
+          ]
+        }
+      ]
+    }
+  ]
+}

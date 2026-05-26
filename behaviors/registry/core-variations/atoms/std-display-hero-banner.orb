@@ -1,0 +1,166 @@
+{
+  "name": "std-display-hero-banner",
+  "version": "1.0.0",
+  "description": "Hero-banner display — Notion / Medium-style record detail. Oversized title typography centered above a muted subtitle and a horizontal meta strip (author, date, tags); the content body renders below in a comfortable reading column. Best for notes, articles, blog posts, legal-case headers, and listing detail pages. Same DisplayItemDisplay trait, same state machine, same emits/listens as std-display — only bodyContent differs.",
+  "orbitals": [
+    {
+      "name": "HeroBannerDisplayOrbital",
+      "uses": [
+        {
+          "from": "std/behaviors/std-display",
+          "as": "Display"
+        }
+      ],
+      "entity": {
+        "name": "HeroDocument",
+        "persistence": "runtime",
+        "fields": [
+          {
+            "name": "id",
+            "type": "string",
+            "required": true
+          },
+          {
+            "name": "title",
+            "type": "string",
+            "required": true
+          },
+          {
+            "name": "subtitle",
+            "type": "string"
+          },
+          {
+            "name": "author",
+            "type": "string"
+          },
+          {
+            "name": "publishedAt",
+            "type": "string"
+          },
+          {
+            "name": "category",
+            "type": "string"
+          },
+          {
+            "name": "body",
+            "type": "string"
+          }
+        ]
+      },
+      "traits": [
+        {
+          "ref": "Display.traits.DisplayItemDisplay",
+          "name": "HeroBannerDisplay",
+          "linkedEntity": "HeroDocument",
+          "config": {
+            "bodyContent": {
+              "children": [
+                {
+                  "type": "stack",
+                  "className": "text-center",
+                  "gap": "md",
+                  "children": [
+                    {
+                      "type": "badge",
+                      "label": "@payload.category",
+                      "variant": "neutral"
+                    },
+                    {
+                      "weight": "bold",
+                      "content": "@payload.title",
+                      "variant": "h1",
+                      "type": "typography",
+                      "className": "text-5xl tracking-tight"
+                    },
+                    {
+                      "className": "text-xl max-w-2xl",
+                      "color": "muted",
+                      "content": "@payload.subtitle",
+                      "type": "typography",
+                      "variant": "body"
+                    }
+                  ],
+                  "direction": "vertical",
+                  "align": "center"
+                },
+                {
+                  "direction": "horizontal",
+                  "gap": "md",
+                  "type": "stack",
+                  "align": "center",
+                  "justify": "center",
+                  "children": [
+                    {
+                      "type": "stack",
+                      "gap": "xs",
+                      "children": [
+                        {
+                          "name": "user",
+                          "type": "icon"
+                        },
+                        {
+                          "color": "muted",
+                          "content": "@payload.author",
+                          "variant": "caption",
+                          "type": "typography"
+                        }
+                      ],
+                      "align": "center",
+                      "direction": "horizontal"
+                    },
+                    {
+                      "content": "·",
+                      "variant": "caption",
+                      "type": "typography",
+                      "color": "muted"
+                    },
+                    {
+                      "type": "stack",
+                      "direction": "horizontal",
+                      "children": [
+                        {
+                          "type": "icon",
+                          "name": "calendar"
+                        },
+                        {
+                          "content": "@payload.publishedAt",
+                          "variant": "caption",
+                          "type": "typography",
+                          "color": "muted"
+                        }
+                      ],
+                      "gap": "xs",
+                      "align": "center"
+                    }
+                  ],
+                  "className": "pt-2 pb-card-md border-b border-[var(--color-border)]"
+                },
+                {
+                  "type": "typography",
+                  "variant": "body",
+                  "content": "@payload.body",
+                  "className": "whitespace-pre-wrap break-words leading-relaxed text-lg"
+                }
+              ],
+              "className": "max-w-3xl mx-auto px-card-md py-section",
+              "direction": "vertical",
+              "type": "stack",
+              "gap": "lg"
+            }
+          }
+        }
+      ],
+      "pages": [
+        {
+          "name": "HeroBannerDisplayPage",
+          "path": "/hero-display",
+          "traits": [
+            {
+              "ref": "HeroBannerDisplay"
+            }
+          ]
+        }
+      ]
+    }
+  ]
+}

@@ -1,0 +1,195 @@
+{
+  "name": "std-browse-feed",
+  "version": "1.0.0",
+  "description": "Feed browse — chronological top-down stream inspired by Twitter timelines and Linear comment threads. Each post is a row with an avatar icon, author + timestamp header, body content, and an inline tag/action row separated by thin dividers. Same BrowseItemBrowse trait, same state machine, same emits/listens as std-browse — only the bodyContent tree differs.",
+  "orbitals": [
+    {
+      "name": "FeedBrowseOrbital",
+      "uses": [
+        {
+          "from": "std/behaviors/std-browse",
+          "as": "Browse"
+        }
+      ],
+      "entity": {
+        "name": "FeedPost",
+        "persistence": "runtime",
+        "fields": [
+          {
+            "name": "id",
+            "type": "string",
+            "required": true
+          },
+          {
+            "name": "name",
+            "type": "string",
+            "required": true
+          },
+          {
+            "name": "description",
+            "type": "string"
+          },
+          {
+            "name": "status",
+            "type": "string",
+            "default": "published",
+            "values": [
+              "published",
+              "draft",
+              "hidden"
+            ]
+          },
+          {
+            "name": "category",
+            "type": "string"
+          },
+          {
+            "name": "createdAt",
+            "type": "string"
+          }
+        ]
+      },
+      "traits": [
+        {
+          "ref": "Browse.traits.BrowseItemBrowse",
+          "name": "FeedBrowse",
+          "linkedEntity": "FeedPost",
+          "config": {
+            "bodyContent": {
+              "className": "max-w-2xl mx-auto",
+              "children": [
+                {
+                  "gap": "sm",
+                  "children": [
+                    {
+                      "name": "search",
+                      "type": "icon"
+                    },
+                    {
+                      "className": "flex-1",
+                      "type": "input",
+                      "placeholder": "Filter the feed…",
+                      "inputType": "search",
+                      "action": "REFETCH_QUERY"
+                    }
+                  ],
+                  "type": "stack",
+                  "direction": "horizontal",
+                  "className": "px-card-md py-3 border-b border-[var(--color-border)]",
+                  "align": "center"
+                },
+                {
+                  "type": "data-list",
+                  "entity": "@payload.data",
+                  "gap": "none",
+                  "selectable": false,
+                  "renderItem": [
+                    "fn",
+                    "item",
+                    {
+                      "className": "px-card-md py-card-md border-b border-[var(--color-border)]",
+                      "align": "start",
+                      "children": [
+                        {
+                          "gap": "none",
+                          "align": "center",
+                          "className": "w-10 h-10 rounded-full bg-muted flex-shrink-0",
+                          "direction": "vertical",
+                          "children": [
+                            {
+                              "name": "user",
+                              "type": "icon"
+                            }
+                          ],
+                          "justify": "center",
+                          "type": "stack"
+                        },
+                        {
+                          "type": "stack",
+                          "direction": "vertical",
+                          "className": "flex-1 min-w-0",
+                          "gap": "xs",
+                          "children": [
+                            {
+                              "gap": "xs",
+                              "type": "stack",
+                              "children": [
+                                {
+                                  "variant": "body",
+                                  "type": "typography",
+                                  "content": "@item.name",
+                                  "weight": "medium"
+                                },
+                                {
+                                  "type": "typography",
+                                  "color": "muted",
+                                  "variant": "caption",
+                                  "content": "·"
+                                },
+                                {
+                                  "variant": "caption",
+                                  "color": "muted",
+                                  "content": "@item.createdAt",
+                                  "type": "typography"
+                                }
+                              ],
+                              "direction": "horizontal",
+                              "align": "center"
+                            },
+                            {
+                              "variant": "body",
+                              "type": "typography",
+                              "content": "@item.description",
+                              "className": "whitespace-pre-wrap break-words"
+                            },
+                            {
+                              "children": [
+                                {
+                                  "type": "badge",
+                                  "label": "@item.category",
+                                  "variant": "default"
+                                },
+                                {
+                                  "type": "badge",
+                                  "label": "@item.status",
+                                  "variant": "neutral"
+                                }
+                              ],
+                              "className": "pt-1",
+                              "align": "center",
+                              "gap": "sm",
+                              "type": "stack",
+                              "direction": "horizontal"
+                            }
+                          ]
+                        }
+                      ],
+                      "type": "stack",
+                      "gap": "md",
+                      "direction": "horizontal"
+                    }
+                  ],
+                  "fields": []
+                }
+              ],
+              "type": "stack",
+              "direction": "vertical",
+              "gap": "none"
+            }
+          }
+        }
+      ],
+      "pages": [
+        {
+          "name": "FeedPage",
+          "path": "/feed",
+          "traits": [
+            {
+              "ref": "FeedBrowse"
+            }
+          ]
+        }
+      ]
+    }
+  ]
+}

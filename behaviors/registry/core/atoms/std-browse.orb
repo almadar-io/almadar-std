@@ -286,16 +286,16 @@
                         "success": "BrowseItemLoaded",
                         "failure": "BrowseItemLoadFailed"
                       },
-                      "offset": 0.0,
-                      "limit": "@config.pageSize"
+                      "limit": "@config.pageSize",
+                      "offset": 0.0
                     }
                   ],
                   [
                     "render-ui",
                     "main",
                     {
-                      "size": "sm",
-                      "type": "spinner"
+                      "type": "spinner",
+                      "size": "sm"
                     }
                   ]
                 ]
@@ -308,22 +308,7 @@
                   [
                     "render-ui",
                     "main",
-                    {
-                      "direction": "vertical",
-                      "children": [
-                        {
-                          "imageField": "@config.imageField",
-                          "cols": "@config.cols",
-                          "gap": "@config.gap",
-                          "entity": "@payload.data",
-                          "itemActions": "@config.itemActions",
-                          "type": "@config.viewPattern",
-                          "fields": "@config.fields",
-                          "pageSize": "@config.displayPageSize"
-                        }
-                      ],
-                      "type": "stack"
-                    }
+                    "@config.bodyContent"
                   ]
                 ]
               },
@@ -336,10 +321,10 @@
                     "render-ui",
                     "main",
                     {
-                      "variant": "caption",
                       "content": "@payload.error",
-                      "color": "error",
-                      "type": "typography"
+                      "type": "typography",
+                      "variant": "caption",
+                      "color": "error"
                     }
                   ]
                 ]
@@ -353,20 +338,20 @@
                     "fetch",
                     "BrowseItem",
                     {
+                      "offset": 0.0,
                       "limit": "@config.pageSize",
                       "emit": {
                         "success": "BrowseItemLoaded",
                         "failure": "BrowseItemLoadFailed"
-                      },
-                      "offset": 0.0
+                      }
                     }
                   ],
                   [
                     "render-ui",
                     "main",
                     {
-                      "size": "sm",
-                      "type": "spinner"
+                      "type": "spinner",
+                      "size": "sm"
                     }
                   ]
                 ]
@@ -380,6 +365,12 @@
                     "fetch",
                     "BrowseItem",
                     {
+                      "emit": {
+                        "success": "BrowseItemLoaded",
+                        "failure": "BrowseItemLoadFailed"
+                      },
+                      "offset": 0.0,
+                      "limit": "@config.pageSize",
                       "filter": [
                         "or",
                         [
@@ -396,13 +387,7 @@
                           ],
                           "@payload.searchTerm"
                         ]
-                      ],
-                      "offset": 0.0,
-                      "limit": "@config.pageSize",
-                      "emit": {
-                        "success": "BrowseItemLoaded",
-                        "failure": "BrowseItemLoadFailed"
-                      }
+                      ]
                     }
                   ]
                 ]
@@ -416,6 +401,8 @@
                     "fetch",
                     "BrowseItem",
                     {
+                      "offset": 0.0,
+                      "limit": "@config.pageSize",
                       "filter": [
                         "or",
                         [
@@ -433,11 +420,9 @@
                           "@payload.value"
                         ]
                       ],
-                      "offset": 0.0,
-                      "limit": "@config.pageSize",
                       "emit": {
-                        "success": "BrowseItemLoaded",
-                        "failure": "BrowseItemLoadFailed"
+                        "failure": "BrowseItemLoadFailed",
+                        "success": "BrowseItemLoaded"
                       }
                     }
                   ]
@@ -453,6 +438,10 @@
                     "BrowseItem",
                     {
                       "limit": "@config.pageSize",
+                      "emit": {
+                        "success": "BrowseItemLoaded",
+                        "failure": "BrowseItemLoadFailed"
+                      },
                       "offset": [
                         "*",
                         [
@@ -461,11 +450,7 @@
                           1.0
                         ],
                         "@config.pageSize"
-                      ],
-                      "emit": {
-                        "success": "BrowseItemLoaded",
-                        "failure": "BrowseItemLoadFailed"
-                      }
+                      ]
                     }
                   ]
                 ]
@@ -478,22 +463,7 @@
                   [
                     "render-ui",
                     "main",
-                    {
-                      "direction": "vertical",
-                      "children": [
-                        {
-                          "pageSize": "@config.displayPageSize",
-                          "fields": "@config.fields",
-                          "gap": "@config.gap",
-                          "imageField": "@config.imageField",
-                          "itemActions": "@config.itemActions",
-                          "entity": "@payload.data",
-                          "cols": "@config.cols",
-                          "type": "@config.viewPattern"
-                        }
-                      ],
-                      "type": "stack"
-                    }
+                    "@config.bodyContent"
                   ]
                 ]
               },
@@ -506,11 +476,11 @@
                     "fetch",
                     "BrowseItem",
                     {
-                      "emit": {
-                        "success": "BrowseItemLoaded",
-                        "failure": "BrowseItemLoadFailed"
-                      },
                       "limit": "@config.pageSize",
+                      "emit": {
+                        "failure": "BrowseItemLoadFailed",
+                        "success": "BrowseItemLoaded"
+                      },
                       "offset": 0.0
                     }
                   ],
@@ -527,6 +497,41 @@
             ]
           },
           "config": {
+            "cols": {
+              "type": "number",
+              "default": 1.0,
+              "label": "Grid columns",
+              "description": "Number of columns in the responsive grid layout",
+              "tier": "presentation"
+            },
+            "gap": {
+              "type": "string",
+              "default": "md",
+              "label": "Cell spacing",
+              "description": "Gap size between rows (sm, md, lg)",
+              "tier": "presentation"
+            },
+            "displayPageSize": {
+              "type": "number",
+              "default": 10.0,
+              "label": "Page size (display)",
+              "description": "Rows shown per visible page before pagination",
+              "tier": "presentation"
+            },
+            "viewPattern": {
+              "type": "pattern",
+              "default": "data-grid",
+              "label": "Render pattern",
+              "description": "UI pattern used to render the collection. Used by the default bodyContent tree; Layer 3 variants override bodyContent directly instead and may ignore this knob.",
+              "tier": "internal"
+            },
+            "imageField": {
+              "type": "string",
+              "default": "",
+              "label": "Image field",
+              "description": "Entity field that holds the row thumbnail URL",
+              "tier": "presentation"
+            },
             "itemActions": {
               "type": "[ItemAction]",
               "default": [],
@@ -536,16 +541,6 @@
               "items": {
                 "type": "object",
                 "properties": {
-                  "label": {
-                    "name": "label",
-                    "type": "string",
-                    "required": true
-                  },
-                  "icon": {
-                    "name": "icon",
-                    "type": "string",
-                    "required": false
-                  },
                   "variant": {
                     "name": "variant",
                     "type": "string",
@@ -555,36 +550,61 @@
                     "name": "event",
                     "type": "string",
                     "required": true
+                  },
+                  "label": {
+                    "name": "label",
+                    "type": "string",
+                    "required": true
+                  },
+                  "icon": {
+                    "name": "icon",
+                    "type": "string",
+                    "required": false
                   }
                 }
               }
             },
-            "displayPageSize": {
+            "pageSize": {
               "type": "number",
               "default": 10.0,
-              "label": "Page size (display)",
-              "description": "Rows shown per visible page before pagination",
+              "label": "Page size (fetch)",
+              "description": "Rows fetched from the server per page",
               "tier": "presentation"
             },
-            "cols": {
-              "type": "number",
-              "default": 1.0,
-              "label": "Grid columns",
-              "description": "Number of columns in the responsive grid layout",
-              "tier": "presentation"
+            "bodyContent": {
+              "type": "render-ui",
+              "default": {
+                "type": "stack",
+                "children": [
+                  {
+                    "gap": "@config.gap",
+                    "pageSize": "@config.displayPageSize",
+                    "itemActions": "@config.itemActions",
+                    "fields": "@config.fields",
+                    "type": "data-grid",
+                    "entity": "@payload.data",
+                    "imageField": "@config.imageField",
+                    "cols": "@config.cols"
+                  }
+                ],
+                "direction": "vertical"
+              },
+              "label": "Body content tree",
+              "description": "Render-ui SExpr rendered after rows load. Default is the canonical data-grid call wrapped in a stack. Layer 3 variants override this with their own tree (composing data-list/data-grid/entity-table + custom renderItem lambdas + filter-group, kbd, card, etc.) to deliver entirely different browse UX while inheriting the same trait, state machine, emits, and listens.",
+              "tier": "internal"
             },
             "fields": {
               "type": "[FieldSpec]",
               "default": [
                 {
-                  "variant": "h4",
                   "name": "name",
-                  "label": "Name"
+                  "label": "Name",
+                  "variant": "h4"
                 },
                 {
                   "name": "description",
-                  "label": "Description",
-                  "variant": "caption"
+                  "variant": "caption",
+                  "label": "Description"
                 },
                 {
                   "name": "status",
@@ -603,13 +623,8 @@
                     "type": "string",
                     "required": false
                   },
-                  "label": {
-                    "name": "label",
-                    "type": "string",
-                    "required": false
-                  },
-                  "variant": {
-                    "name": "variant",
+                  "key": {
+                    "name": "key",
                     "type": "string",
                     "required": false
                   },
@@ -623,8 +638,13 @@
                     "type": "string",
                     "required": true
                   },
-                  "key": {
-                    "name": "key",
+                  "label": {
+                    "name": "label",
+                    "type": "string",
+                    "required": false
+                  },
+                  "variant": {
+                    "name": "variant",
                     "type": "string",
                     "required": false
                   },
@@ -635,34 +655,6 @@
                   }
                 }
               }
-            },
-            "gap": {
-              "type": "string",
-              "default": "md",
-              "label": "Cell spacing",
-              "description": "Gap size between rows (sm, md, lg)",
-              "tier": "presentation"
-            },
-            "viewPattern": {
-              "type": "pattern",
-              "default": "data-grid",
-              "label": "Render pattern",
-              "description": "UI pattern used to render the collection",
-              "tier": "internal"
-            },
-            "pageSize": {
-              "type": "number",
-              "default": 10.0,
-              "label": "Page size (fetch)",
-              "description": "Rows fetched from the server per page",
-              "tier": "presentation"
-            },
-            "imageField": {
-              "type": "string",
-              "default": "",
-              "label": "Image field",
-              "description": "Entity field that holds the row thumbnail URL",
-              "tier": "presentation"
             }
           },
           "scope": "collection"

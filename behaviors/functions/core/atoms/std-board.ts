@@ -110,16 +110,18 @@ export interface StdBoardBoardItemsSaveFailedPayload {
  * without modifying its state-machine topology.
  */
 export interface StdBoardConfig {
-  /** Default: `"Board"` */
-  title?: string;
-  /** Default: `[{"icon":"circle","key":"todo","label":"To Do","variant":"default"},{"icon":"circle-dot","variant":"primary","label":"In Progress","key":"doing"},{"variant":"success","key":"done","label":"Done","icon":"check-circle"}]` */
+  /** Default: `"elevated"` */
+  cardLook?: 'elevated' | 'flat-bordered' | 'borderless-divider' | 'ticket' | 'invoice' | 'chip' | 'tile-image-first';
+  /** Default: `[{"label":"To Do","variant":"default","key":"todo","icon":"circle"},{"icon":"circle-dot","label":"In Progress","key":"doing","variant":"primary"},{"variant":"success","key":"done","label":"Done","icon":"check-circle"}]` */
   columns?: EntityRow[];
   /** Default: `["title","description","stage","notes"]` */
   formFields?: string[];
-  /** Default: `"elevated"` */
-  cardLook?: 'elevated' | 'flat-bordered' | 'borderless-divider' | 'ticket' | 'invoice' | 'chip' | 'tile-image-first';
+  /** Default: `{"children":[{"align":"center","direction":"horizontal","type":"stack","gap":"sm","children":[{"type":"icon","name":"kanban-square"},{"variant":"h3","type":"typography","content":"@config.title"}]},{"type":"divider"},{"entity":"@entity.boards","gap":"md","dndRoot":true,"cols":"@config.gridCols","fields":[],"type":"data-grid","renderItem":["fn","col",{"children":[{"children":[{"align":"center","children":[{"type":"icon","name":"@col.icon"},{"variant":"h4","type":"typography","content":"@col.label"},{"variant":"@col.variant","type":"badge","label":"@col.count"}],"gap":"xs","direction":"horizontal","type":"stack"},{"fields":[],"dragGroup":"@col.key","sortable":true,"type":"data-list","reorderEvent":"REORDER_CARD","accepts":"*","dropEvent":"MOVE_CARD","entity":"@col.items","gap":"sm","renderItem":["fn","item",{"type":"card","look":"@config.cardLook","children":[{"children":[{"content":"@item.title","variant":"h4","type":"typography"},{"color":"muted","type":"typography","content":"@item.description","variant":"caption"},{"align":"center","gap":"xs","direction":"horizontal","type":"stack","children":[{"action":"OPEN_CARD","variant":"ghost","label":"Open","actionPayload":{"row":"@item","id":"@item.id"},"icon":"arrow-right","type":"button"}]}],"type":"stack","gap":"xs","direction":"vertical"}]}],"positionEvent":"REORDER_POSITION"}],"type":"stack","gap":"sm","direction":"vertical"}],"type":"card","look":"@config.cardLook"}]},{"label":"Add item","action":"ADD_CARD","type":"floating-action-button","icon":"plus","variant":"primary"}],"gap":"md","type":"stack","direction":"vertical"}` */
+  bodyContent?: unknown;
   /** Default: `3` */
   gridCols?: number;
+  /** Default: `"Board"` */
+  title?: string;
 }
 
 /**

@@ -1,0 +1,191 @@
+{
+  "name": "std-step-flow-progress-vertical",
+  "version": "1.0.0",
+  "description": "Vertical sidebar progress step flow — left rail lists every step with its number, label, and status indicator; the right pane holds the active step's content card and action row. Same StepFlowReview trait, same state machine, same emits/listens as std-step-flow — only the bodyContent tree differs. Suited for multi-page forms, wizard-form, esign-request, and any flow where users benefit from seeing every step's title at all times.",
+  "orbitals": [
+    {
+      "name": "ProgressVerticalOrbital",
+      "uses": [
+        {
+          "from": "std/behaviors/std-step-flow",
+          "as": "StepFlow"
+        }
+      ],
+      "entity": {
+        "name": "ProgressVerticalView",
+        "persistence": "runtime",
+        "fields": [
+          {
+            "name": "id",
+            "type": "string",
+            "required": true
+          }
+        ]
+      },
+      "traits": [
+        {
+          "ref": "StepFlow.traits.StepFlowReview",
+          "name": "ProgressVerticalReview",
+          "linkedEntity": "ProgressVerticalView",
+          "config": {
+            "bodyContent": {
+              "stackOnMobile": true,
+              "align": "start",
+              "ratio": "1:3",
+              "type": "split",
+              "children": [
+                {
+                  "children": [
+                    {
+                      "children": [
+                        {
+                          "content": "@config.title",
+                          "type": "typography",
+                          "variant": "h3"
+                        },
+                        {
+                          "allowNavigation": false,
+                          "currentStep": "@entity.currentStepIndex",
+                          "type": "wizard-progress",
+                          "steps": "@entity.wizardSteps"
+                        }
+                      ],
+                      "direction": "vertical",
+                      "gap": "md",
+                      "type": "stack",
+                      "className": "p-card-md"
+                    }
+                  ],
+                  "type": "card",
+                  "look": "@config.cardLook"
+                },
+                {
+                  "children": [
+                    {
+                      "children": [
+                        {
+                          "direction": "vertical",
+                          "type": "stack",
+                          "className": "p-card-lg",
+                          "gap": "lg",
+                          "children": [
+                            {
+                              "direction": "horizontal",
+                              "gap": "md",
+                              "align": "center",
+                              "children": [
+                                {
+                                  "type": "icon",
+                                  "name": "@entity.currentStepIcon",
+                                  "size": "lg"
+                                },
+                                {
+                                  "children": [
+                                    {
+                                      "variant": "h2",
+                                      "type": "typography",
+                                      "content": "@entity.currentStepLabel"
+                                    },
+                                    {
+                                      "color": "muted",
+                                      "type": "typography",
+                                      "content": "@entity.currentStepDescription",
+                                      "variant": "body"
+                                    }
+                                  ],
+                                  "gap": "xs",
+                                  "type": "stack",
+                                  "direction": "vertical"
+                                }
+                              ],
+                              "type": "stack"
+                            }
+                          ]
+                        }
+                      ],
+                      "type": "card",
+                      "look": "@config.cardLook"
+                    },
+                    {
+                      "direction": "horizontal",
+                      "align": "center",
+                      "className": "justify-between",
+                      "type": "stack",
+                      "gap": "sm",
+                      "children": [
+                        {
+                          "disabled": "@entity.isFirstStep",
+                          "actionPayload": {
+                            "id": "@entity.id"
+                          },
+                          "label": "Back",
+                          "variant": "ghost",
+                          "action": "BACK",
+                          "icon": "chevron-left",
+                          "type": "button"
+                        },
+                        {
+                          "gap": "sm",
+                          "children": [
+                            {
+                              "type": "button",
+                              "icon": "x",
+                              "variant": "ghost",
+                              "action": "REJECT",
+                              "actionPayload": {
+                                "id": "@entity.id"
+                              },
+                              "label": "Reject"
+                            },
+                            {
+                              "actionPayload": {
+                                "id": "@entity.id"
+                              },
+                              "variant": "ghost",
+                              "type": "button",
+                              "action": "ESCALATE",
+                              "label": "Escalate",
+                              "icon": "alert-triangle"
+                            },
+                            {
+                              "label": "@entity.primaryActionLabel",
+                              "variant": "primary",
+                              "action": "ADVANCE",
+                              "actionPayload": {
+                                "id": "@entity.id"
+                              },
+                              "type": "button",
+                              "icon": "@entity.primaryActionIcon"
+                            }
+                          ],
+                          "type": "stack",
+                          "direction": "horizontal",
+                          "align": "center"
+                        }
+                      ]
+                    }
+                  ],
+                  "direction": "vertical",
+                  "gap": "lg",
+                  "type": "stack"
+                }
+              ],
+              "gap": "xl"
+            }
+          }
+        }
+      ],
+      "pages": [
+        {
+          "name": "ProgressVerticalPage",
+          "path": "/progress-vertical",
+          "traits": [
+            {
+              "ref": "ProgressVerticalReview"
+            }
+          ]
+        }
+      ]
+    }
+  ]
+}

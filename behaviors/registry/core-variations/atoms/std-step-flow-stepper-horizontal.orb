@@ -1,0 +1,167 @@
+{
+  "name": "std-step-flow-stepper-horizontal",
+  "version": "1.0.0",
+  "description": "Horizontal stepper-bar step flow — Stripe-checkout-style numbered circles connected by lines at the top of the viewport, active step highlighted, completed steps marked done. Step content card sits below the bar centered in a constrained column. Same StepFlowReview trait, same state machine, same emits/listens as std-step-flow — only the bodyContent tree differs. Suited for checkout flows, onboarding wizards, ats-recruiting stage progression.",
+  "orbitals": [
+    {
+      "name": "StepperHorizontalOrbital",
+      "uses": [
+        {
+          "from": "std/behaviors/std-step-flow",
+          "as": "StepFlow"
+        }
+      ],
+      "entity": {
+        "name": "StepperHorizontalView",
+        "persistence": "runtime",
+        "fields": [
+          {
+            "name": "id",
+            "type": "string",
+            "required": true
+          }
+        ]
+      },
+      "traits": [
+        {
+          "ref": "StepFlow.traits.StepFlowReview",
+          "name": "StepperHorizontalReview",
+          "linkedEntity": "StepperHorizontalView",
+          "config": {
+            "bodyContent": {
+              "type": "stack",
+              "gap": "xl",
+              "className": "max-w-3xl mx-auto pt-section",
+              "children": [
+                {
+                  "allowNavigation": false,
+                  "currentStep": "@entity.currentStepIndex",
+                  "type": "wizard-progress",
+                  "steps": "@entity.wizardSteps"
+                },
+                {
+                  "type": "card",
+                  "children": [
+                    {
+                      "direction": "vertical",
+                      "type": "stack",
+                      "className": "p-card-lg",
+                      "children": [
+                        {
+                          "type": "stack",
+                          "children": [
+                            {
+                              "size": "lg",
+                              "name": "@entity.currentStepIcon",
+                              "type": "icon"
+                            },
+                            {
+                              "type": "stack",
+                              "direction": "vertical",
+                              "gap": "xs",
+                              "children": [
+                                {
+                                  "type": "typography",
+                                  "variant": "h2",
+                                  "content": "@entity.currentStepLabel"
+                                },
+                                {
+                                  "content": "@entity.currentStepDescription",
+                                  "variant": "body",
+                                  "type": "typography",
+                                  "color": "muted"
+                                }
+                              ]
+                            }
+                          ],
+                          "direction": "horizontal",
+                          "align": "center",
+                          "gap": "md"
+                        },
+                        {
+                          "type": "divider"
+                        },
+                        {
+                          "align": "center",
+                          "className": "justify-between",
+                          "children": [
+                            {
+                              "variant": "ghost",
+                              "label": "Back",
+                              "icon": "chevron-left",
+                              "disabled": "@entity.isFirstStep",
+                              "actionPayload": {
+                                "id": "@entity.id"
+                              },
+                              "type": "button",
+                              "action": "BACK"
+                            },
+                            {
+                              "gap": "sm",
+                              "direction": "horizontal",
+                              "children": [
+                                {
+                                  "variant": "ghost",
+                                  "type": "button",
+                                  "action": "REJECT",
+                                  "icon": "x",
+                                  "actionPayload": {
+                                    "id": "@entity.id"
+                                  },
+                                  "label": "Reject"
+                                },
+                                {
+                                  "icon": "alert-triangle",
+                                  "actionPayload": {
+                                    "id": "@entity.id"
+                                  },
+                                  "action": "ESCALATE",
+                                  "label": "Escalate",
+                                  "variant": "ghost",
+                                  "type": "button"
+                                },
+                                {
+                                  "label": "@entity.primaryActionLabel",
+                                  "action": "ADVANCE",
+                                  "type": "button",
+                                  "icon": "@entity.primaryActionIcon",
+                                  "actionPayload": {
+                                    "id": "@entity.id"
+                                  },
+                                  "variant": "primary"
+                                }
+                              ],
+                              "align": "center",
+                              "type": "stack"
+                            }
+                          ],
+                          "gap": "sm",
+                          "direction": "horizontal",
+                          "type": "stack"
+                        }
+                      ],
+                      "gap": "lg"
+                    }
+                  ],
+                  "look": "@config.cardLook"
+                }
+              ],
+              "direction": "vertical"
+            }
+          }
+        }
+      ],
+      "pages": [
+        {
+          "name": "StepperHorizontalPage",
+          "path": "/stepper-horizontal",
+          "traits": [
+            {
+              "ref": "StepperHorizontalReview"
+            }
+          ]
+        }
+      ]
+    }
+  ]
+}

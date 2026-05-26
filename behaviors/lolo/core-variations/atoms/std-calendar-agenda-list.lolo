@@ -1,0 +1,57 @@
+app std-calendar-agenda-list "1.0.0"
+"Agenda-list calendar — Linear/Notion vertical chronological list grouped by day. Each entry shows time, title, description, and a status badge. Same CalendarEventCalendar trait, same state machine, same emits/listens as std-calendar — only the bodyContent tree differs. For appointment-policy queues, class-roster session schedules, court-deadline lists."
+
+orbital AgendaListCalendarOrbital {
+  uses Calendar from "std/behaviors/std-calendar"
+
+  entity AgendaListEvent [runtime] {
+    id          : string!
+    name        : string!
+    description : string
+    status      : "active" | "inactive" | "pending" = "active"
+    createdAt   : string
+    date        : string = ""
+    time        : string = ""
+    duration    : number = 60
+  }
+
+  trait AgendaListCalendar = Calendar.traits.CalendarEventCalendar -> AgendaListEvent {
+    config: {
+      bodyContent: {
+        type: "stack",
+        direction: "vertical",
+        gap: "lg",
+        className: "max-w-3xl mx-auto",
+        children: [
+          { type: "stack", direction: "horizontal", gap: "md", justify: "between", align: "center", children: [
+            { type: "stack", direction: "horizontal", gap: "sm", align: "center", children: [
+              { type: "icon", name: "list" },
+              { type: "typography", content: "Agenda", variant: "h2" }
+            ]},
+            { type: "date-range-selector", onSelect: "SELECT_DAY" }
+          ]},
+          { type: "divider" },
+          { type: "data-list", entity: "@payload.data", gap: "none", fields: [],
+            renderItem: ["fn", "item", {
+              type: "stack", direction: "horizontal", gap: "md", align: "start",
+              className: "py-3 border-b border-[var(--color-border)] hover:bg-muted cursor-pointer",
+              children: [
+                { type: "stack", direction: "vertical", gap: "xs", align: "center", className: "w-20 shrink-0", children: [
+                  { type: "typography", variant: "caption", color: "muted", content: "@item.date", format: "date" },
+                  { type: "typography", variant: "h4", content: "@item.time" }
+                ]},
+                { type: "stack", direction: "vertical", gap: "xs", className: "flex-1 min-w-0", children: [
+                  { type: "typography", variant: "h4", weight: "medium", content: "@item.name", className: "truncate" },
+                  { type: "typography", variant: "caption", color: "muted", content: "@item.description", className: "truncate" }
+                ]},
+                { type: "badge", label: "@item.status", variant: "default" }
+              ]
+            }]
+          }
+        ]
+      }
+    }
+  }
+
+  page "/calendarevents/agenda" as AgendaListCalendarPage -> AgendaListCalendar
+}

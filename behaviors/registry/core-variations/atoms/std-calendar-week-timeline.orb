@@ -1,0 +1,278 @@
+{
+  "name": "std-calendar-week-timeline",
+  "version": "1.0.0",
+  "description": "Week-timeline calendar — week-strip view with 7 day columns across the top, each day a vertical Stack of event cards ordered by time. Same CalendarEventCalendar trait, same state machine, same emits/listens as std-calendar — only the bodyContent tree differs. For weekly schedule views (fitness-studio class week, healthcare appointment week).",
+  "orbitals": [
+    {
+      "name": "WeekTimelineCalendarOrbital",
+      "uses": [
+        {
+          "from": "std/behaviors/std-calendar",
+          "as": "Calendar"
+        }
+      ],
+      "entity": {
+        "name": "WeekTimelineEvent",
+        "persistence": "runtime",
+        "fields": [
+          {
+            "name": "id",
+            "type": "string",
+            "required": true
+          },
+          {
+            "name": "name",
+            "type": "string",
+            "required": true
+          },
+          {
+            "name": "description",
+            "type": "string"
+          },
+          {
+            "name": "status",
+            "type": "string",
+            "default": "active",
+            "values": [
+              "active",
+              "inactive",
+              "pending"
+            ]
+          },
+          {
+            "name": "createdAt",
+            "type": "string"
+          },
+          {
+            "name": "date",
+            "type": "string",
+            "default": ""
+          },
+          {
+            "name": "time",
+            "type": "string",
+            "default": ""
+          },
+          {
+            "name": "duration",
+            "type": "number",
+            "default": 60.0
+          }
+        ]
+      },
+      "traits": [
+        {
+          "ref": "Calendar.traits.CalendarEventCalendar",
+          "name": "WeekTimelineCalendar",
+          "linkedEntity": "WeekTimelineEvent",
+          "config": {
+            "bodyContent": {
+              "type": "stack",
+              "gap": "md",
+              "direction": "vertical",
+              "children": [
+                {
+                  "direction": "horizontal",
+                  "type": "stack",
+                  "justify": "between",
+                  "gap": "md",
+                  "children": [
+                    {
+                      "type": "stack",
+                      "align": "center",
+                      "direction": "horizontal",
+                      "children": [
+                        {
+                          "type": "icon",
+                          "name": "calendar"
+                        },
+                        {
+                          "type": "typography",
+                          "content": "Week",
+                          "variant": "h2"
+                        }
+                      ],
+                      "gap": "sm"
+                    },
+                    {
+                      "type": "date-range-selector",
+                      "onSelect": "SELECT_DAY"
+                    }
+                  ],
+                  "align": "center"
+                },
+                {
+                  "type": "divider"
+                },
+                {
+                  "className": "min-h-[28rem]",
+                  "type": "grid",
+                  "gap": "sm",
+                  "cols": 7.0,
+                  "children": [
+                    {
+                      "direction": "vertical",
+                      "children": [
+                        {
+                          "variant": "caption",
+                          "content": "Mon",
+                          "color": "muted",
+                          "className": "text-center pb-2 border-b border-[var(--color-border)]",
+                          "type": "typography"
+                        },
+                        {
+                          "fields": [],
+                          "gap": "sm",
+                          "renderItem": [
+                            "fn",
+                            "item",
+                            {
+                              "className": "p-2 cursor-pointer hover:shadow-elevation-1",
+                              "children": [
+                                {
+                                  "type": "stack",
+                                  "gap": "sm",
+                                  "direction": "vertical",
+                                  "children": [
+                                    {
+                                      "type": "typography",
+                                      "content": "@item.time",
+                                      "variant": "caption",
+                                      "weight": "medium"
+                                    },
+                                    {
+                                      "content": "@item.name",
+                                      "variant": "caption",
+                                      "className": "truncate",
+                                      "type": "typography"
+                                    },
+                                    {
+                                      "type": "badge",
+                                      "variant": "default",
+                                      "label": "@item.status"
+                                    }
+                                  ]
+                                }
+                              ],
+                              "type": "card"
+                            }
+                          ],
+                          "type": "data-list",
+                          "entity": "@payload.data"
+                        }
+                      ],
+                      "gap": "sm",
+                      "type": "stack",
+                      "className": "border-r border-[var(--color-border)] pr-2"
+                    },
+                    {
+                      "direction": "vertical",
+                      "type": "stack",
+                      "className": "border-r border-[var(--color-border)] pr-2",
+                      "children": [
+                        {
+                          "color": "muted",
+                          "content": "Tue",
+                          "className": "text-center pb-2 border-b border-[var(--color-border)]",
+                          "variant": "caption",
+                          "type": "typography"
+                        }
+                      ],
+                      "gap": "sm"
+                    },
+                    {
+                      "type": "stack",
+                      "className": "border-r border-[var(--color-border)] pr-2",
+                      "children": [
+                        {
+                          "type": "typography",
+                          "variant": "caption",
+                          "color": "muted",
+                          "className": "text-center pb-2 border-b border-[var(--color-border)]",
+                          "content": "Wed"
+                        }
+                      ],
+                      "direction": "vertical",
+                      "gap": "sm"
+                    },
+                    {
+                      "children": [
+                        {
+                          "variant": "caption",
+                          "content": "Thu",
+                          "color": "muted",
+                          "className": "text-center pb-2 border-b border-[var(--color-border)]",
+                          "type": "typography"
+                        }
+                      ],
+                      "className": "border-r border-[var(--color-border)] pr-2",
+                      "gap": "sm",
+                      "direction": "vertical",
+                      "type": "stack"
+                    },
+                    {
+                      "direction": "vertical",
+                      "children": [
+                        {
+                          "variant": "caption",
+                          "className": "text-center pb-2 border-b border-[var(--color-border)]",
+                          "content": "Fri",
+                          "type": "typography",
+                          "color": "muted"
+                        }
+                      ],
+                      "gap": "sm",
+                      "type": "stack",
+                      "className": "border-r border-[var(--color-border)] pr-2"
+                    },
+                    {
+                      "type": "stack",
+                      "direction": "vertical",
+                      "gap": "sm",
+                      "children": [
+                        {
+                          "variant": "caption",
+                          "type": "typography",
+                          "content": "Sat",
+                          "className": "text-center pb-2 border-b border-[var(--color-border)]",
+                          "color": "muted"
+                        }
+                      ],
+                      "className": "border-r border-[var(--color-border)] pr-2"
+                    },
+                    {
+                      "className": "pr-2",
+                      "direction": "vertical",
+                      "children": [
+                        {
+                          "type": "typography",
+                          "color": "muted",
+                          "variant": "caption",
+                          "content": "Sun",
+                          "className": "text-center pb-2 border-b border-[var(--color-border)]"
+                        }
+                      ],
+                      "type": "stack",
+                      "gap": "sm"
+                    }
+                  ]
+                }
+              ]
+            }
+          }
+        }
+      ],
+      "pages": [
+        {
+          "name": "WeekTimelineCalendarPage",
+          "path": "/calendarevents/week",
+          "traits": [
+            {
+              "ref": "WeekTimelineCalendar"
+            }
+          ]
+        }
+      ]
+    }
+  ]
+}

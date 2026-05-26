@@ -1,0 +1,77 @@
+app std-thread-comments-linear "1.0.0"
+"Linear comments — GitHub/Linear-issue style: linear top-to-bottom stack of full-content comment cards. Each card shows author header (avatar + name + timestamp), the full body, and a reactions row below. For forum discussions, project-manager issue comments, wiki page discussions, document review threads."
+
+orbital CommentsLinearOrbital {
+  uses Thread from "std/behaviors/std-thread"
+
+  entity CommentsLinearPost [persistent: commentslinearposts] {
+    id            : string!
+    parentId      : string
+    threadRootId  : string!
+    authorId      : string!
+    authorName    : string!
+    content       : string!
+    createdAt     : string
+    voteCount     : number = 0
+    replyCount    : number = 0
+  }
+
+  trait CommentsLinear = Thread.traits.ThreadPostBrowse -> CommentsLinearPost {
+    config: {
+      bodyContent: {
+        type: "stack",
+        direction: "vertical",
+        gap: "md",
+        className: "max-w-3xl mx-auto px-card-md py-section",
+        children: [
+          { type: "data-list", entity: "@payload.data", gap: "md", variant: "default",
+            fields: [],
+            renderItem: ["fn", "item", {
+              type: "card", look: "flat-bordered", padding: "md",
+              children: {
+                type: "stack", direction: "vertical", gap: "sm",
+                children: [
+                  { type: "stack", direction: "horizontal", gap: "sm", align: "center",
+                    children: [
+                      { type: "avatar", name: "@item.authorName", size: "sm" },
+                      { type: "typography", variant: "body", weight: "medium", content: "@item.authorName" },
+                      { type: "typography", variant: "caption", color: "muted", content: "·" },
+                      { type: "typography", variant: "caption", color: "muted", content: "@item.createdAt" }
+                    ]
+                  },
+                  { type: "divider" },
+                  { type: "typography", variant: "body", content: "@item.content" },
+                  { type: "stack", direction: "horizontal", gap: "xs", align: "center",
+                    className: "pt-sm",
+                    children: [
+                      { type: "button", label: "Upvote", icon: "arrow-up", action: "UPVOTE", actionPayload: { id: "@item.id" }, variant: "ghost" },
+                      { type: "badge", label: "@item.voteCount", variant: "default" },
+                      { type: "button", label: "Reply", icon: "message-square", action: "REPLY", actionPayload: { parentId: "@item.id" }, variant: "ghost" }
+                    ]
+                  }
+                ]
+              }
+            }]
+          },
+          { type: "card", look: "flat-bordered", padding: "md",
+            children: {
+              type: "stack", direction: "vertical", gap: "sm",
+              children: [
+                { type: "typography", variant: "h4", content: "Add a comment" },
+                { type: "textarea", placeholder: "Write your comment…", action: "EDIT_REPLY" },
+                { type: "stack", direction: "horizontal", gap: "sm",
+                  children: [
+                    { type: "button", label: "Comment", icon: "send", action: "SUBMIT_REPLY", variant: "primary" },
+                    { type: "button", label: "Cancel", action: "CANCEL_REPLY", variant: "ghost" }
+                  ]
+                }
+              ]
+            }
+          }
+        ]
+      }
+    }
+  }
+
+  page "/comments-thread" as CommentsLinearPage -> CommentsLinear
+}

@@ -1,0 +1,75 @@
+app std-board-swim-lanes "1.0.0"
+"Swim-lane board — horizontal lanes per status, cards flow left-to-right within each lane. Lane header sticks left with icon + label + count; cards render in a horizontal data-list per lane. Useful for HR-portal recruiting stages and project-manager team boards. Same BoardItemBoard trait, same state machine, same emits/listens as std-board — only the bodyContent tree differs."
+
+orbital SwimLanesBoardOrbital {
+  uses Board from "std/behaviors/std-board"
+
+  entity SwimLaneItem [persistent: swim_lane_items] {
+    id                  : string!
+    title               : string!
+    description         : string = ""
+    stage               : "todo" | "doing" | "done" = "todo"
+    notes               : string = ""
+    position            : number = 0
+    boards              : [object] = []
+    currentId           : string = ""
+    currentTitle        : string = ""
+    currentDescription  : string = ""
+    currentStage        : string = ""
+    currentNotes        : string = ""
+    errorMessage        : string = ""
+  }
+
+  trait SwimLanesBoard = Board.traits.BoardItemBoard -> SwimLaneItem {
+    config: {
+      bodyContent: {
+        type: "stack",
+        direction: "vertical",
+        gap: "md",
+        children: [
+          { type: "stack", direction: "horizontal", gap: "sm", align: "center", className: "px-card-md", children: [
+            { type: "icon", name: "layout-rows" },
+            { type: "typography", content: "@config.title", variant: "h2" }
+          ]},
+          { type: "divider" },
+          { type: "data-list", entity: "@entity.boards", gap: "md", fields: [], dndRoot: true,
+            renderItem: ["fn", "col", {
+              type: "card", look: "flat-bordered", padding: "none",
+              className: "overflow-hidden",
+              children: [
+                { type: "stack", direction: "horizontal", gap: "none", align: "stretch", children: [
+                  { type: "stack", direction: "vertical", gap: "xs", align: "center", className: "w-[180px] shrink-0 px-card-md py-card-md bg-[var(--color-surface-subtle)] border-r border-[var(--color-border)] sticky left-0", children: [
+                    { type: "icon", name: "@col.icon" },
+                    { type: "typography", content: "@col.label", variant: "h4" },
+                    { type: "badge", label: "@col.count", variant: "primary", size: "sm" }
+                  ]},
+                  { type: "data-list", entity: "@col.items", gap: "sm", fields: [], dragGroup: "@col.key", accepts: "*", sortable: true, dropEvent: "MOVE_CARD", reorderEvent: "REORDER_CARD", positionEvent: "REORDER_POSITION",
+                    direction: "horizontal",
+                    className: "flex-1 p-card-md overflow-x-auto min-h-[120px]",
+                    renderItem: ["fn", "item", {
+                      type: "card", look: "elevated", padding: "sm",
+                      className: "min-w-[220px] max-w-[260px] cursor-grab hover:shadow-md transition-shadow",
+                      children: [
+                        { type: "stack", direction: "vertical", gap: "xs", children: [
+                          { type: "typography", content: "@item.title", variant: "body", weight: "medium" },
+                          { type: "typography", content: "@item.description", variant: "caption", color: "muted", className: "line-clamp-2" },
+                          { type: "stack", direction: "horizontal", gap: "xs", align: "center", className: "pt-1", children: [
+                            { type: "badge", label: "@item.stage", variant: "primary", size: "sm" },
+                            { type: "button", label: "Open", variant: "ghost", size: "sm", action: "OPEN_CARD", actionPayload: { id: "@item.id", row: "@item" }, icon: "arrow-right", className: "ml-auto" }
+                          ]}
+                        ]}
+                      ]
+                    }]
+                  }
+                ]}
+              ]
+            }]
+          },
+          { type: "floating-action-button", label: "Add card", action: "ADD_CARD", icon: "plus", variant: "primary" }
+        ]
+      }
+    }
+  }
+
+  page "/swim-lanes" as SwimLanesPage -> SwimLanesBoard
+}

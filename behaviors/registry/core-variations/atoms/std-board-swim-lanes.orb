@@ -1,0 +1,276 @@
+{
+  "name": "std-board-swim-lanes",
+  "version": "1.0.0",
+  "description": "Swim-lane board — horizontal lanes per status, cards flow left-to-right within each lane. Lane header sticks left with icon + label + count; cards render in a horizontal data-list per lane. Useful for HR-portal recruiting stages and project-manager team boards. Same BoardItemBoard trait, same state machine, same emits/listens as std-board — only the bodyContent tree differs.",
+  "orbitals": [
+    {
+      "name": "SwimLanesBoardOrbital",
+      "uses": [
+        {
+          "from": "std/behaviors/std-board",
+          "as": "Board"
+        }
+      ],
+      "entity": {
+        "name": "SwimLaneItem",
+        "collection": "swim_lane_items",
+        "persistence": "persistent",
+        "fields": [
+          {
+            "name": "id",
+            "type": "string",
+            "required": true
+          },
+          {
+            "name": "title",
+            "type": "string",
+            "required": true
+          },
+          {
+            "name": "description",
+            "type": "string",
+            "default": ""
+          },
+          {
+            "name": "stage",
+            "type": "string",
+            "default": "todo",
+            "values": [
+              "todo",
+              "doing",
+              "done"
+            ]
+          },
+          {
+            "name": "notes",
+            "type": "string",
+            "default": ""
+          },
+          {
+            "name": "position",
+            "type": "number",
+            "default": 0.0
+          },
+          {
+            "name": "boards",
+            "type": "array",
+            "default": [],
+            "items": {
+              "type": "object"
+            }
+          },
+          {
+            "name": "currentId",
+            "type": "string",
+            "default": ""
+          },
+          {
+            "name": "currentTitle",
+            "type": "string",
+            "default": ""
+          },
+          {
+            "name": "currentDescription",
+            "type": "string",
+            "default": ""
+          },
+          {
+            "name": "currentStage",
+            "type": "string",
+            "default": ""
+          },
+          {
+            "name": "currentNotes",
+            "type": "string",
+            "default": ""
+          },
+          {
+            "name": "errorMessage",
+            "type": "string",
+            "default": ""
+          }
+        ]
+      },
+      "traits": [
+        {
+          "ref": "Board.traits.BoardItemBoard",
+          "name": "SwimLanesBoard",
+          "linkedEntity": "SwimLaneItem",
+          "config": {
+            "bodyContent": {
+              "type": "stack",
+              "direction": "vertical",
+              "children": [
+                {
+                  "direction": "horizontal",
+                  "className": "px-card-md",
+                  "children": [
+                    {
+                      "name": "layout-rows",
+                      "type": "icon"
+                    },
+                    {
+                      "variant": "h2",
+                      "content": "@config.title",
+                      "type": "typography"
+                    }
+                  ],
+                  "type": "stack",
+                  "align": "center",
+                  "gap": "sm"
+                },
+                {
+                  "type": "divider"
+                },
+                {
+                  "dndRoot": true,
+                  "fields": [],
+                  "renderItem": [
+                    "fn",
+                    "col",
+                    {
+                      "className": "overflow-hidden",
+                      "look": "flat-bordered",
+                      "children": [
+                        {
+                          "gap": "none",
+                          "align": "stretch",
+                          "children": [
+                            {
+                              "direction": "vertical",
+                              "type": "stack",
+                              "align": "center",
+                              "className": "w-[180px] shrink-0 px-card-md py-card-md bg-[var(--color-surface-subtle)] border-r border-[var(--color-border)] sticky left-0",
+                              "children": [
+                                {
+                                  "type": "icon",
+                                  "name": "@col.icon"
+                                },
+                                {
+                                  "type": "typography",
+                                  "content": "@col.label",
+                                  "variant": "h4"
+                                },
+                                {
+                                  "variant": "primary",
+                                  "type": "badge",
+                                  "label": "@col.count",
+                                  "size": "sm"
+                                }
+                              ],
+                              "gap": "xs"
+                            },
+                            {
+                              "gap": "sm",
+                              "dropEvent": "MOVE_CARD",
+                              "direction": "horizontal",
+                              "dragGroup": "@col.key",
+                              "renderItem": [
+                                "fn",
+                                "item",
+                                {
+                                  "type": "card",
+                                  "className": "min-w-[220px] max-w-[260px] cursor-grab hover:shadow-md transition-shadow",
+                                  "children": [
+                                    {
+                                      "gap": "xs",
+                                      "type": "stack",
+                                      "direction": "vertical",
+                                      "children": [
+                                        {
+                                          "type": "typography",
+                                          "weight": "medium",
+                                          "content": "@item.title",
+                                          "variant": "body"
+                                        },
+                                        {
+                                          "content": "@item.description",
+                                          "className": "line-clamp-2",
+                                          "type": "typography",
+                                          "variant": "caption",
+                                          "color": "muted"
+                                        },
+                                        {
+                                          "className": "pt-1",
+                                          "align": "center",
+                                          "direction": "horizontal",
+                                          "children": [
+                                            {
+                                              "type": "badge",
+                                              "label": "@item.stage",
+                                              "size": "sm",
+                                              "variant": "primary"
+                                            },
+                                            {
+                                              "icon": "arrow-right",
+                                              "className": "ml-auto",
+                                              "type": "button",
+                                              "actionPayload": {
+                                                "id": "@item.id",
+                                                "row": "@item"
+                                              },
+                                              "variant": "ghost",
+                                              "label": "Open",
+                                              "size": "sm",
+                                              "action": "OPEN_CARD"
+                                            }
+                                          ],
+                                          "gap": "xs",
+                                          "type": "stack"
+                                        }
+                                      ]
+                                    }
+                                  ],
+                                  "padding": "sm",
+                                  "look": "elevated"
+                                }
+                              ],
+                              "className": "flex-1 p-card-md overflow-x-auto min-h-[120px]",
+                              "entity": "@col.items",
+                              "type": "data-list",
+                              "accepts": "*",
+                              "sortable": true,
+                              "fields": [],
+                              "reorderEvent": "REORDER_CARD",
+                              "positionEvent": "REORDER_POSITION"
+                            }
+                          ],
+                          "type": "stack",
+                          "direction": "horizontal"
+                        }
+                      ],
+                      "type": "card",
+                      "padding": "none"
+                    }
+                  ],
+                  "type": "data-list",
+                  "entity": "@entity.boards",
+                  "gap": "md"
+                },
+                {
+                  "action": "ADD_CARD",
+                  "type": "floating-action-button",
+                  "label": "Add card",
+                  "variant": "primary",
+                  "icon": "plus"
+                }
+              ],
+              "gap": "md"
+            }
+          }
+        }
+      ],
+      "pages": [
+        {
+          "name": "SwimLanesPage",
+          "path": "/swim-lanes",
+          "traits": [
+            {
+              "ref": "SwimLanesBoard"
+            }
+          ]
+        }
+      ]
+    }
+  ]
+}

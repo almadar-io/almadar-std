@@ -1,0 +1,218 @@
+{
+  "name": "std-browse-triage",
+  "version": "1.0.0",
+  "description": "Triage browse — Linear/Gmail inbox-style prioritized list. Compact horizontal rows scan status → title → context fast: small status badge, primary title (truncate), one-line muted description (truncate), assignee badge, due-date chip. Top filter-group narrows by status. Same BrowseItemBrowse trait, state machine, emits, and listens as std-browse — only the bodyContent tree differs.",
+  "orbitals": [
+    {
+      "name": "TriageBrowseOrbital",
+      "uses": [
+        {
+          "from": "std/behaviors/std-browse",
+          "as": "Browse"
+        }
+      ],
+      "entity": {
+        "name": "TriageItem",
+        "persistence": "runtime",
+        "fields": [
+          {
+            "name": "id",
+            "type": "string",
+            "required": true
+          },
+          {
+            "name": "name",
+            "type": "string",
+            "required": true
+          },
+          {
+            "name": "description",
+            "type": "string"
+          },
+          {
+            "name": "status",
+            "type": "string",
+            "default": "new",
+            "values": [
+              "new",
+              "in_progress",
+              "done",
+              "blocked"
+            ]
+          },
+          {
+            "name": "priority",
+            "type": "string",
+            "default": "medium",
+            "values": [
+              "low",
+              "medium",
+              "high"
+            ]
+          },
+          {
+            "name": "assignee",
+            "type": "string"
+          },
+          {
+            "name": "dueAt",
+            "type": "string"
+          },
+          {
+            "name": "createdAt",
+            "type": "string"
+          }
+        ]
+      },
+      "traits": [
+        {
+          "ref": "Browse.traits.BrowseItemBrowse",
+          "name": "TriageBrowse",
+          "linkedEntity": "TriageItem",
+          "config": {
+            "bodyContent": {
+              "direction": "vertical",
+              "type": "stack",
+              "className": "max-w-4xl mx-auto",
+              "gap": "none",
+              "children": [
+                {
+                  "direction": "horizontal",
+                  "children": [
+                    {
+                      "filters": [
+                        {
+                          "type": "select",
+                          "label": "Status",
+                          "field": "status",
+                          "options": [
+                            "new",
+                            "in_progress",
+                            "done",
+                            "blocked"
+                          ]
+                        },
+                        {
+                          "type": "select",
+                          "label": "Priority",
+                          "options": [
+                            "low",
+                            "medium",
+                            "high"
+                          ],
+                          "field": "priority"
+                        }
+                      ],
+                      "type": "filter-group",
+                      "entity": "TriageItem"
+                    }
+                  ],
+                  "gap": "sm",
+                  "className": "px-card-md py-2 border-b border-[var(--color-border)] sticky top-0 bg-[var(--color-surface)] z-10",
+                  "align": "center",
+                  "type": "stack"
+                },
+                {
+                  "type": "data-list",
+                  "gap": "none",
+                  "entity": "@payload.data",
+                  "renderItem": [
+                    "fn",
+                    "item",
+                    {
+                      "className": "px-card-md py-2 border-b border-[var(--color-border)] hover:bg-muted cursor-pointer",
+                      "children": [
+                        {
+                          "label": "@item.status",
+                          "variant": "info",
+                          "type": "badge",
+                          "size": "sm"
+                        },
+                        {
+                          "type": "stack",
+                          "className": "flex-1 min-w-0",
+                          "direction": "vertical",
+                          "gap": "none",
+                          "children": [
+                            {
+                              "content": "@item.name",
+                              "type": "typography",
+                              "className": "truncate",
+                              "weight": "medium",
+                              "variant": "body"
+                            },
+                            {
+                              "variant": "caption",
+                              "className": "truncate",
+                              "color": "muted",
+                              "content": "@item.description",
+                              "type": "typography"
+                            }
+                          ]
+                        },
+                        {
+                          "align": "center",
+                          "direction": "horizontal",
+                          "className": "shrink-0",
+                          "gap": "xs",
+                          "type": "stack",
+                          "children": [
+                            {
+                              "type": "icon",
+                              "name": "user"
+                            },
+                            {
+                              "variant": "caption",
+                              "type": "typography",
+                              "content": "@item.assignee",
+                              "color": "muted"
+                            }
+                          ]
+                        },
+                        {
+                          "direction": "horizontal",
+                          "align": "center",
+                          "type": "stack",
+                          "gap": "xs",
+                          "className": "shrink-0 px-2 py-0.5 border rounded",
+                          "children": [
+                            {
+                              "type": "icon",
+                              "name": "calendar"
+                            },
+                            {
+                              "content": "@item.dueAt",
+                              "variant": "caption",
+                              "type": "typography"
+                            }
+                          ]
+                        }
+                      ],
+                      "type": "stack",
+                      "direction": "horizontal",
+                      "gap": "md",
+                      "align": "center"
+                    }
+                  ],
+                  "selectable": true,
+                  "fields": []
+                }
+              ]
+            }
+          }
+        }
+      ],
+      "pages": [
+        {
+          "name": "TriagePage",
+          "path": "/triage",
+          "traits": [
+            {
+              "ref": "TriageBrowse"
+            }
+          ]
+        }
+      ]
+    }
+  ]
+}

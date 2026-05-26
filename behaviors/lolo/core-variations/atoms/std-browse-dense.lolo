@@ -1,0 +1,60 @@
+app std-browse-dense "1.0.0"
+"Terminal-style dense browse — Bloomberg/Datadog row density with monospace columns, tabular-nums, color-coded change, and status badges. Sticky column header strip + 30-50 rows on screen. Same BrowseItemBrowse trait, state machine, emits, and listens as std-browse — only bodyContent differs."
+
+orbital DenseBrowseOrbital {
+  uses Browse from "std/behaviors/std-browse"
+
+  entity DenseRow [runtime] {
+    id          : string!
+    name        : string!
+    description : string
+    value       : string
+    change      : string
+    volume      : string
+    status      : "ok" | "warn" | "error" = "ok"
+    createdAt   : string
+  }
+
+  trait DenseBrowse = Browse.traits.BrowseItemBrowse -> DenseRow {
+    config: {
+      bodyContent: {
+        type: "stack",
+        direction: "vertical",
+        gap: "none",
+        className: "font-mono text-sm",
+        children: [
+          { type: "stack", direction: "horizontal", gap: "sm", align: "center", className: "px-card-md py-2 border-b border-[var(--color-border)] bg-[var(--color-surface-muted)]", children: [
+            { type: "input", inputType: "search", placeholder: "filter…", action: "REFETCH_QUERY", className: "flex-1 font-mono text-sm h-8" }
+          ]},
+          { type: "stack", direction: "horizontal", gap: "md", align: "center", className: "px-card-md py-1.5 border-b border-[var(--color-border)] sticky top-0 bg-[var(--color-surface)] uppercase", children: [
+            { type: "typography", variant: "caption", color: "muted", content: "ID",     className: "w-24 truncate" },
+            { type: "typography", variant: "caption", color: "muted", content: "SYMBOL", className: "w-24 truncate" },
+            { type: "typography", variant: "caption", color: "muted", content: "VALUE",  className: "w-24 text-right tabular-nums" },
+            { type: "typography", variant: "caption", color: "muted", content: "CHANGE", className: "w-20 text-right tabular-nums" },
+            { type: "typography", variant: "caption", color: "muted", content: "VOLUME", className: "w-20 text-right tabular-nums" },
+            { type: "typography", variant: "caption", color: "muted", content: "DESC",   className: "flex-1 min-w-0 truncate" },
+            { type: "typography", variant: "caption", color: "muted", content: "STATUS", className: "w-16 text-right" }
+          ]},
+          { type: "data-list", entity: "@payload.data", gap: "none", selectable: true, fields: [],
+            renderItem: ["fn", "item", {
+              type: "stack", direction: "horizontal", gap: "md", align: "center", className: "px-card-md py-1 border-b border-[var(--color-border)] hover:bg-[var(--color-surface-muted)] cursor-pointer",
+              children: [
+                { type: "typography", variant: "caption", color: "muted", content: "@item.id",     className: "w-24 truncate" },
+                { type: "typography", variant: "caption", weight: "medium", content: "@item.name", className: "w-24 truncate" },
+                { type: "typography", variant: "caption", content: "@item.value",                  className: "w-24 text-right tabular-nums" },
+                { type: "typography", variant: "caption", content: "@item.change",                 className: "w-20 text-right tabular-nums" },
+                { type: "typography", variant: "caption", color: "muted", content: "@item.volume", className: "w-20 text-right tabular-nums" },
+                { type: "typography", variant: "caption", color: "muted", content: "@item.description", className: "flex-1 min-w-0 truncate" },
+                { type: "stack", direction: "horizontal", gap: "none", align: "center", className: "w-16 justify-end", children: [
+                  { type: "badge", label: "@item.status", variant: "default", size: "sm" }
+                ]}
+              ]
+            }]
+          }
+        ]
+      }
+    }
+  }
+
+  page "/dense-browse" as DenseBrowsePage -> DenseBrowse
+}
