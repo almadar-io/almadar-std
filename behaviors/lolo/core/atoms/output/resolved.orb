@@ -1,0 +1,2034 @@
+{
+  "name": "std-wizard",
+  "version": "3.0.1",
+  "description": "std-wizard — generic N-step data-collection wizard (Vercel deploy / GitHub repo create / Stripe Connect onboarding style). Each step has its own form fields. Topology = loading / running / completed / cancelled / error. ADVANCE is guard-routed: not-last-step advances; last-step transitions to completed. Distinct from std-step-flow (approval-decision) — wizard collects data via form-section per step, step-flow collects yes/no decisions.",
+  "orbitals": [
+    {
+      "name": "WizardOrbital",
+      "entity": {
+        "name": "WizardView",
+        "persistence": "runtime",
+        "fields": [
+          {
+            "name": "id",
+            "type": "string",
+            "required": true
+          },
+          {
+            "name": "title",
+            "type": "string",
+            "required": true
+          },
+          {
+            "name": "description",
+            "type": "string",
+            "default": ""
+          },
+          {
+            "name": "category",
+            "type": "string",
+            "default": "",
+            "values": [
+              "marketing",
+              "engineering",
+              "design",
+              "operations",
+              ""
+            ]
+          },
+          {
+            "name": "priority",
+            "type": "string",
+            "default": "",
+            "values": [
+              "low",
+              "medium",
+              "high",
+              "urgent",
+              ""
+            ]
+          },
+          {
+            "name": "notes",
+            "type": "string",
+            "default": ""
+          },
+          {
+            "name": "wizardSteps",
+            "type": "array",
+            "default": [],
+            "items": {
+              "type": "object",
+              "properties": {
+                "id": {
+                  "name": "id",
+                  "type": "string",
+                  "required": true
+                },
+                "title": {
+                  "name": "title",
+                  "type": "string",
+                  "required": true
+                },
+                "description": {
+                  "name": "description",
+                  "type": "string",
+                  "required": false
+                }
+              }
+            }
+          },
+          {
+            "name": "currentStepIndex",
+            "type": "number",
+            "default": 0.0
+          },
+          {
+            "name": "totalSteps",
+            "type": "number",
+            "default": 0.0
+          },
+          {
+            "name": "currentStepLabel",
+            "type": "string",
+            "default": ""
+          },
+          {
+            "name": "currentStepDescription",
+            "type": "string",
+            "default": ""
+          },
+          {
+            "name": "currentStepIcon",
+            "type": "string",
+            "default": "circle"
+          },
+          {
+            "name": "currentFields",
+            "type": "array",
+            "default": [],
+            "items": {
+              "type": "string"
+            }
+          },
+          {
+            "name": "isFirstStep",
+            "type": "boolean",
+            "default": true
+          },
+          {
+            "name": "isLastStep",
+            "type": "boolean",
+            "default": false
+          },
+          {
+            "name": "primaryActionLabel",
+            "type": "string",
+            "default": "Next"
+          },
+          {
+            "name": "primaryActionIcon",
+            "type": "string",
+            "default": "chevron-right"
+          },
+          {
+            "name": "completionMessage",
+            "type": "string",
+            "default": ""
+          },
+          {
+            "name": "cancelReason",
+            "type": "string",
+            "default": ""
+          },
+          {
+            "name": "errorMessage",
+            "type": "string",
+            "default": ""
+          }
+        ]
+      },
+      "traits": [
+        {
+          "name": "WizardForm",
+          "category": "interaction",
+          "linkedEntity": "WizardView",
+          "emits": [
+            {
+              "event": "ADVANCE",
+              "payloadSchema": [
+                {
+                  "name": "data",
+                  "type": "object"
+                }
+              ]
+            },
+            {
+              "event": "RETREAT"
+            },
+            {
+              "event": "CANCEL",
+              "payloadSchema": [
+                {
+                  "name": "reason",
+                  "type": "string"
+                }
+              ]
+            },
+            {
+              "event": "RESTART"
+            },
+            {
+              "event": "WizardLoaded",
+              "payloadSchema": [
+                {
+                  "name": "data",
+                  "type": "[ObjectSpec]"
+                }
+              ]
+            },
+            {
+              "event": "WizardLoadFailed",
+              "payloadSchema": [
+                {
+                  "name": "error",
+                  "type": "string"
+                },
+                {
+                  "name": "code",
+                  "type": "string"
+                }
+              ]
+            },
+            {
+              "event": "WizardSaved",
+              "payloadSchema": [
+                {
+                  "name": "row",
+                  "type": "object"
+                }
+              ]
+            },
+            {
+              "event": "WizardSaveFailed",
+              "payloadSchema": [
+                {
+                  "name": "error",
+                  "type": "string"
+                },
+                {
+                  "name": "code",
+                  "type": "string"
+                }
+              ]
+            }
+          ],
+          "stateMachine": {
+            "states": [
+              {
+                "name": "loading",
+                "isInitial": true
+              },
+              {
+                "name": "running"
+              },
+              {
+                "name": "completed"
+              },
+              {
+                "name": "cancelled"
+              },
+              {
+                "name": "error"
+              }
+            ],
+            "events": [
+              {
+                "key": "INIT",
+                "name": "Initialize"
+              },
+              {
+                "key": "WizardLoaded",
+                "name": "Wizard loaded",
+                "payloadSchema": [
+                  {
+                    "name": "data",
+                    "type": "[ObjectSpec]"
+                  }
+                ]
+              },
+              {
+                "key": "WizardLoadFailed",
+                "name": "Wizard load failed",
+                "payloadSchema": [
+                  {
+                    "name": "error",
+                    "type": "string"
+                  },
+                  {
+                    "name": "code",
+                    "type": "string"
+                  }
+                ]
+              },
+              {
+                "key": "WizardSaved",
+                "name": "Wizard saved",
+                "payloadSchema": [
+                  {
+                    "name": "row",
+                    "type": "object"
+                  }
+                ]
+              },
+              {
+                "key": "WizardSaveFailed",
+                "name": "Wizard save failed",
+                "payloadSchema": [
+                  {
+                    "name": "error",
+                    "type": "string"
+                  },
+                  {
+                    "name": "code",
+                    "type": "string"
+                  }
+                ]
+              },
+              {
+                "key": "ADVANCE",
+                "name": "Advance",
+                "payloadSchema": [
+                  {
+                    "name": "data",
+                    "type": "object"
+                  }
+                ]
+              },
+              {
+                "key": "RETREAT",
+                "name": "Retreat"
+              },
+              {
+                "key": "CANCEL",
+                "name": "Cancel",
+                "payloadSchema": [
+                  {
+                    "name": "reason",
+                    "type": "string"
+                  }
+                ]
+              },
+              {
+                "key": "RESTART",
+                "name": "Restart"
+              }
+            ],
+            "transitions": [
+              {
+                "from": "loading",
+                "to": "loading",
+                "event": "INIT",
+                "effects": [
+                  [
+                    "fetch",
+                    "WizardView",
+                    {
+                      "emit": {
+                        "failure": "WizardLoadFailed",
+                        "success": "WizardLoaded"
+                      }
+                    }
+                  ],
+                  [
+                    "render-ui",
+                    "main",
+                    {
+                      "title": "Loading wizard…",
+                      "type": "loading-state"
+                    }
+                  ]
+                ]
+              },
+              {
+                "from": "loading",
+                "to": "running",
+                "event": "WizardLoaded",
+                "effects": [
+                  [
+                    "set",
+                    "@entity.currentStepIndex",
+                    0.0
+                  ],
+                  [
+                    "set",
+                    "@entity.totalSteps",
+                    [
+                      "array/len",
+                      [
+                        {
+                          "key": "details",
+                          "fields": [
+                            "title",
+                            "description"
+                          ],
+                          "label": "Details",
+                          "icon": "file-text",
+                          "description": "Basic information"
+                        },
+                        {
+                          "key": "options",
+                          "fields": [
+                            "category",
+                            "priority"
+                          ],
+                          "label": "Options",
+                          "description": "Configure preferences",
+                          "icon": "settings"
+                        },
+                        {
+                          "description": "Confirm and submit",
+                          "key": "review",
+                          "icon": "check-circle",
+                          "label": "Review",
+                          "fields": [
+                            "notes"
+                          ]
+                        }
+                      ]
+                    ]
+                  ],
+                  [
+                    "set",
+                    "@entity.wizardSteps",
+                    [
+                      "array/map",
+                      [
+                        {
+                          "key": "details",
+                          "fields": [
+                            "title",
+                            "description"
+                          ],
+                          "label": "Details",
+                          "icon": "file-text",
+                          "description": "Basic information"
+                        },
+                        {
+                          "key": "options",
+                          "fields": [
+                            "category",
+                            "priority"
+                          ],
+                          "label": "Options",
+                          "description": "Configure preferences",
+                          "icon": "settings"
+                        },
+                        {
+                          "description": "Confirm and submit",
+                          "key": "review",
+                          "icon": "check-circle",
+                          "label": "Review",
+                          "fields": [
+                            "notes"
+                          ]
+                        }
+                      ],
+                      [
+                        "fn",
+                        "step",
+                        {
+                          "title": [
+                            "object/get",
+                            "@step",
+                            "label"
+                          ],
+                          "id": [
+                            "object/get",
+                            "@step",
+                            "key"
+                          ],
+                          "description": [
+                            "object/get",
+                            "@step",
+                            "description",
+                            ""
+                          ]
+                        }
+                      ]
+                    ]
+                  ],
+                  [
+                    "set",
+                    "@entity.currentStepLabel",
+                    [
+                      "object/get",
+                      [
+                        "array/nth",
+                        [
+                          {
+                            "key": "details",
+                            "fields": [
+                              "title",
+                              "description"
+                            ],
+                            "label": "Details",
+                            "icon": "file-text",
+                            "description": "Basic information"
+                          },
+                          {
+                            "key": "options",
+                            "fields": [
+                              "category",
+                              "priority"
+                            ],
+                            "label": "Options",
+                            "description": "Configure preferences",
+                            "icon": "settings"
+                          },
+                          {
+                            "description": "Confirm and submit",
+                            "key": "review",
+                            "icon": "check-circle",
+                            "label": "Review",
+                            "fields": [
+                              "notes"
+                            ]
+                          }
+                        ],
+                        0.0
+                      ],
+                      "label"
+                    ]
+                  ],
+                  [
+                    "set",
+                    "@entity.currentStepDescription",
+                    [
+                      "object/get",
+                      [
+                        "array/nth",
+                        [
+                          {
+                            "key": "details",
+                            "fields": [
+                              "title",
+                              "description"
+                            ],
+                            "label": "Details",
+                            "icon": "file-text",
+                            "description": "Basic information"
+                          },
+                          {
+                            "key": "options",
+                            "fields": [
+                              "category",
+                              "priority"
+                            ],
+                            "label": "Options",
+                            "description": "Configure preferences",
+                            "icon": "settings"
+                          },
+                          {
+                            "description": "Confirm and submit",
+                            "key": "review",
+                            "icon": "check-circle",
+                            "label": "Review",
+                            "fields": [
+                              "notes"
+                            ]
+                          }
+                        ],
+                        0.0
+                      ],
+                      "description",
+                      ""
+                    ]
+                  ],
+                  [
+                    "set",
+                    "@entity.currentStepIcon",
+                    [
+                      "object/get",
+                      [
+                        "array/nth",
+                        [
+                          {
+                            "key": "details",
+                            "fields": [
+                              "title",
+                              "description"
+                            ],
+                            "label": "Details",
+                            "icon": "file-text",
+                            "description": "Basic information"
+                          },
+                          {
+                            "key": "options",
+                            "fields": [
+                              "category",
+                              "priority"
+                            ],
+                            "label": "Options",
+                            "description": "Configure preferences",
+                            "icon": "settings"
+                          },
+                          {
+                            "description": "Confirm and submit",
+                            "key": "review",
+                            "icon": "check-circle",
+                            "label": "Review",
+                            "fields": [
+                              "notes"
+                            ]
+                          }
+                        ],
+                        0.0
+                      ],
+                      "icon",
+                      "circle"
+                    ]
+                  ],
+                  [
+                    "set",
+                    "@entity.currentFields",
+                    [
+                      "object/get",
+                      [
+                        "array/nth",
+                        [
+                          {
+                            "key": "details",
+                            "fields": [
+                              "title",
+                              "description"
+                            ],
+                            "label": "Details",
+                            "icon": "file-text",
+                            "description": "Basic information"
+                          },
+                          {
+                            "key": "options",
+                            "fields": [
+                              "category",
+                              "priority"
+                            ],
+                            "label": "Options",
+                            "description": "Configure preferences",
+                            "icon": "settings"
+                          },
+                          {
+                            "description": "Confirm and submit",
+                            "key": "review",
+                            "icon": "check-circle",
+                            "label": "Review",
+                            "fields": [
+                              "notes"
+                            ]
+                          }
+                        ],
+                        0.0
+                      ],
+                      "fields",
+                      []
+                    ]
+                  ],
+                  [
+                    "set",
+                    "@entity.isFirstStep",
+                    true
+                  ],
+                  [
+                    "set",
+                    "@entity.isLastStep",
+                    [
+                      "=",
+                      [
+                        "array/len",
+                        [
+                          {
+                            "key": "details",
+                            "fields": [
+                              "title",
+                              "description"
+                            ],
+                            "label": "Details",
+                            "icon": "file-text",
+                            "description": "Basic information"
+                          },
+                          {
+                            "key": "options",
+                            "fields": [
+                              "category",
+                              "priority"
+                            ],
+                            "label": "Options",
+                            "description": "Configure preferences",
+                            "icon": "settings"
+                          },
+                          {
+                            "description": "Confirm and submit",
+                            "key": "review",
+                            "icon": "check-circle",
+                            "label": "Review",
+                            "fields": [
+                              "notes"
+                            ]
+                          }
+                        ]
+                      ],
+                      1.0
+                    ]
+                  ],
+                  [
+                    "set",
+                    "@entity.primaryActionLabel",
+                    [
+                      "if",
+                      [
+                        "=",
+                        [
+                          "array/len",
+                          [
+                            {
+                              "key": "details",
+                              "fields": [
+                                "title",
+                                "description"
+                              ],
+                              "label": "Details",
+                              "icon": "file-text",
+                              "description": "Basic information"
+                            },
+                            {
+                              "key": "options",
+                              "fields": [
+                                "category",
+                                "priority"
+                              ],
+                              "label": "Options",
+                              "description": "Configure preferences",
+                              "icon": "settings"
+                            },
+                            {
+                              "description": "Confirm and submit",
+                              "key": "review",
+                              "icon": "check-circle",
+                              "label": "Review",
+                              "fields": [
+                                "notes"
+                              ]
+                            }
+                          ]
+                        ],
+                        1.0
+                      ],
+                      "Submit",
+                      "Next"
+                    ]
+                  ],
+                  [
+                    "set",
+                    "@entity.primaryActionIcon",
+                    [
+                      "if",
+                      [
+                        "=",
+                        [
+                          "array/len",
+                          [
+                            {
+                              "key": "details",
+                              "fields": [
+                                "title",
+                                "description"
+                              ],
+                              "label": "Details",
+                              "icon": "file-text",
+                              "description": "Basic information"
+                            },
+                            {
+                              "key": "options",
+                              "fields": [
+                                "category",
+                                "priority"
+                              ],
+                              "label": "Options",
+                              "description": "Configure preferences",
+                              "icon": "settings"
+                            },
+                            {
+                              "description": "Confirm and submit",
+                              "key": "review",
+                              "icon": "check-circle",
+                              "label": "Review",
+                              "fields": [
+                                "notes"
+                              ]
+                            }
+                          ]
+                        ],
+                        1.0
+                      ],
+                      "check-circle",
+                      "chevron-right"
+                    ]
+                  ],
+                  [
+                    "render-ui",
+                    "main",
+                    {
+                      "type": "stack",
+                      "direction": "vertical",
+                      "gap": "lg",
+                      "children": [
+                        {
+                          "type": "stack",
+                          "gap": "sm",
+                          "children": [
+                            {
+                              "name": "list-checks",
+                              "type": "icon"
+                            },
+                            {
+                              "type": "typography",
+                              "content": "Wizard",
+                              "variant": "h3"
+                            }
+                          ],
+                          "align": "center",
+                          "direction": "horizontal"
+                        },
+                        {
+                          "allowNavigation": false,
+                          "type": "wizard-progress",
+                          "currentStep": "@entity.currentStepIndex",
+                          "steps": "@entity.wizardSteps"
+                        },
+                        {
+                          "look": "elevated",
+                          "children": [
+                            {
+                              "type": "stack",
+                              "gap": "md",
+                              "direction": "vertical",
+                              "children": [
+                                {
+                                  "gap": "sm",
+                                  "align": "center",
+                                  "children": [
+                                    {
+                                      "size": "lg",
+                                      "type": "icon",
+                                      "name": "@entity.currentStepIcon"
+                                    },
+                                    {
+                                      "type": "stack",
+                                      "gap": "xs",
+                                      "direction": "vertical",
+                                      "children": [
+                                        {
+                                          "type": "typography",
+                                          "content": "@entity.currentStepLabel",
+                                          "variant": "h2"
+                                        },
+                                        {
+                                          "type": "typography",
+                                          "variant": "body",
+                                          "color": "muted",
+                                          "content": "@entity.currentStepDescription"
+                                        }
+                                      ]
+                                    }
+                                  ],
+                                  "direction": "horizontal",
+                                  "type": "stack"
+                                },
+                                {
+                                  "type": "divider"
+                                },
+                                {
+                                  "cancelEvent": "CANCEL",
+                                  "showSubmit": false,
+                                  "mode": "edit",
+                                  "showCancel": false,
+                                  "fields": "@entity.currentFields",
+                                  "entity": "@entity",
+                                  "type": "form-section",
+                                  "submitEvent": "ADVANCE"
+                                }
+                              ]
+                            }
+                          ],
+                          "type": "card"
+                        },
+                        {
+                          "gap": "sm",
+                          "direction": "horizontal",
+                          "children": [
+                            {
+                              "label": "Back",
+                              "type": "button",
+                              "disabled": "@entity.isFirstStep",
+                              "action": "RETREAT",
+                              "variant": "ghost",
+                              "icon": "chevron-left"
+                            },
+                            {
+                              "type": "button",
+                              "variant": "ghost",
+                              "icon": "x",
+                              "label": "Cancel wizard",
+                              "action": "CANCEL"
+                            },
+                            {
+                              "variant": "primary",
+                              "type": "button",
+                              "action": "ADVANCE",
+                              "label": "@entity.primaryActionLabel",
+                              "icon": "@entity.primaryActionIcon"
+                            }
+                          ],
+                          "type": "stack",
+                          "align": "center"
+                        }
+                      ]
+                    }
+                  ]
+                ]
+              },
+              {
+                "from": "loading",
+                "to": "error",
+                "event": "WizardLoadFailed",
+                "effects": [
+                  [
+                    "set",
+                    "@entity.errorMessage",
+                    "@payload.error"
+                  ],
+                  [
+                    "render-ui",
+                    "main",
+                    {
+                      "message": "@entity.errorMessage",
+                      "type": "error-state",
+                      "title": "Failed to load"
+                    }
+                  ]
+                ]
+              },
+              {
+                "from": "loading",
+                "to": "loading",
+                "event": "WizardSaved",
+                "effects": [
+                  [
+                    "fetch",
+                    "WizardView",
+                    {
+                      "emit": {
+                        "success": "WizardLoaded",
+                        "failure": "WizardLoadFailed"
+                      }
+                    }
+                  ],
+                  [
+                    "render-ui",
+                    "main",
+                    {
+                      "title": "Refreshing…",
+                      "type": "loading-state"
+                    }
+                  ]
+                ]
+              },
+              {
+                "from": "loading",
+                "to": "error",
+                "event": "WizardSaveFailed",
+                "effects": [
+                  [
+                    "set",
+                    "@entity.errorMessage",
+                    "@payload.error"
+                  ],
+                  [
+                    "render-ui",
+                    "main",
+                    {
+                      "message": "@entity.errorMessage",
+                      "title": "Save failed",
+                      "type": "error-state"
+                    }
+                  ]
+                ]
+              },
+              {
+                "from": "running",
+                "to": "running",
+                "event": "ADVANCE",
+                "guard": [
+                  "not",
+                  "@entity.isLastStep"
+                ],
+                "effects": [
+                  [
+                    "set",
+                    "@entity.currentStepIndex",
+                    [
+                      "+",
+                      "@entity.currentStepIndex",
+                      1.0
+                    ]
+                  ],
+                  [
+                    "set",
+                    "@entity.currentStepLabel",
+                    [
+                      "object/get",
+                      [
+                        "array/nth",
+                        [
+                          {
+                            "key": "details",
+                            "fields": [
+                              "title",
+                              "description"
+                            ],
+                            "label": "Details",
+                            "icon": "file-text",
+                            "description": "Basic information"
+                          },
+                          {
+                            "key": "options",
+                            "fields": [
+                              "category",
+                              "priority"
+                            ],
+                            "label": "Options",
+                            "description": "Configure preferences",
+                            "icon": "settings"
+                          },
+                          {
+                            "description": "Confirm and submit",
+                            "key": "review",
+                            "icon": "check-circle",
+                            "label": "Review",
+                            "fields": [
+                              "notes"
+                            ]
+                          }
+                        ],
+                        "@entity.currentStepIndex"
+                      ],
+                      "label"
+                    ]
+                  ],
+                  [
+                    "set",
+                    "@entity.currentStepDescription",
+                    [
+                      "object/get",
+                      [
+                        "array/nth",
+                        [
+                          {
+                            "key": "details",
+                            "fields": [
+                              "title",
+                              "description"
+                            ],
+                            "label": "Details",
+                            "icon": "file-text",
+                            "description": "Basic information"
+                          },
+                          {
+                            "key": "options",
+                            "fields": [
+                              "category",
+                              "priority"
+                            ],
+                            "label": "Options",
+                            "description": "Configure preferences",
+                            "icon": "settings"
+                          },
+                          {
+                            "description": "Confirm and submit",
+                            "key": "review",
+                            "icon": "check-circle",
+                            "label": "Review",
+                            "fields": [
+                              "notes"
+                            ]
+                          }
+                        ],
+                        "@entity.currentStepIndex"
+                      ],
+                      "description",
+                      ""
+                    ]
+                  ],
+                  [
+                    "set",
+                    "@entity.currentStepIcon",
+                    [
+                      "object/get",
+                      [
+                        "array/nth",
+                        [
+                          {
+                            "key": "details",
+                            "fields": [
+                              "title",
+                              "description"
+                            ],
+                            "label": "Details",
+                            "icon": "file-text",
+                            "description": "Basic information"
+                          },
+                          {
+                            "key": "options",
+                            "fields": [
+                              "category",
+                              "priority"
+                            ],
+                            "label": "Options",
+                            "description": "Configure preferences",
+                            "icon": "settings"
+                          },
+                          {
+                            "description": "Confirm and submit",
+                            "key": "review",
+                            "icon": "check-circle",
+                            "label": "Review",
+                            "fields": [
+                              "notes"
+                            ]
+                          }
+                        ],
+                        "@entity.currentStepIndex"
+                      ],
+                      "icon",
+                      "circle"
+                    ]
+                  ],
+                  [
+                    "set",
+                    "@entity.currentFields",
+                    [
+                      "object/get",
+                      [
+                        "array/nth",
+                        [
+                          {
+                            "key": "details",
+                            "fields": [
+                              "title",
+                              "description"
+                            ],
+                            "label": "Details",
+                            "icon": "file-text",
+                            "description": "Basic information"
+                          },
+                          {
+                            "key": "options",
+                            "fields": [
+                              "category",
+                              "priority"
+                            ],
+                            "label": "Options",
+                            "description": "Configure preferences",
+                            "icon": "settings"
+                          },
+                          {
+                            "description": "Confirm and submit",
+                            "key": "review",
+                            "icon": "check-circle",
+                            "label": "Review",
+                            "fields": [
+                              "notes"
+                            ]
+                          }
+                        ],
+                        "@entity.currentStepIndex"
+                      ],
+                      "fields",
+                      []
+                    ]
+                  ],
+                  [
+                    "set",
+                    "@entity.isFirstStep",
+                    [
+                      "=",
+                      "@entity.currentStepIndex",
+                      0.0
+                    ]
+                  ],
+                  [
+                    "set",
+                    "@entity.isLastStep",
+                    [
+                      "=",
+                      "@entity.currentStepIndex",
+                      [
+                        "-",
+                        "@entity.totalSteps",
+                        1.0
+                      ]
+                    ]
+                  ],
+                  [
+                    "set",
+                    "@entity.primaryActionLabel",
+                    [
+                      "if",
+                      [
+                        "=",
+                        "@entity.currentStepIndex",
+                        [
+                          "-",
+                          "@entity.totalSteps",
+                          1.0
+                        ]
+                      ],
+                      "Submit",
+                      "Next"
+                    ]
+                  ],
+                  [
+                    "set",
+                    "@entity.primaryActionIcon",
+                    [
+                      "if",
+                      [
+                        "=",
+                        "@entity.currentStepIndex",
+                        [
+                          "-",
+                          "@entity.totalSteps",
+                          1.0
+                        ]
+                      ],
+                      "check-circle",
+                      "chevron-right"
+                    ]
+                  ],
+                  [
+                    "render-ui",
+                    "main",
+                    {
+                      "type": "stack",
+                      "children": [
+                        {
+                          "gap": "sm",
+                          "direction": "horizontal",
+                          "children": [
+                            {
+                              "name": "list-checks",
+                              "type": "icon"
+                            },
+                            {
+                              "type": "typography",
+                              "content": "Wizard",
+                              "variant": "h3"
+                            }
+                          ],
+                          "type": "stack",
+                          "align": "center"
+                        },
+                        {
+                          "currentStep": "@entity.currentStepIndex",
+                          "type": "wizard-progress",
+                          "allowNavigation": false,
+                          "steps": "@entity.wizardSteps"
+                        },
+                        {
+                          "look": "elevated",
+                          "children": [
+                            {
+                              "gap": "md",
+                              "direction": "vertical",
+                              "type": "stack",
+                              "children": [
+                                {
+                                  "children": [
+                                    {
+                                      "type": "icon",
+                                      "size": "lg",
+                                      "name": "@entity.currentStepIcon"
+                                    },
+                                    {
+                                      "direction": "vertical",
+                                      "type": "stack",
+                                      "gap": "xs",
+                                      "children": [
+                                        {
+                                          "type": "typography",
+                                          "content": "@entity.currentStepLabel",
+                                          "variant": "h2"
+                                        },
+                                        {
+                                          "variant": "body",
+                                          "color": "muted",
+                                          "type": "typography",
+                                          "content": "@entity.currentStepDescription"
+                                        }
+                                      ]
+                                    }
+                                  ],
+                                  "gap": "sm",
+                                  "direction": "horizontal",
+                                  "align": "center",
+                                  "type": "stack"
+                                },
+                                {
+                                  "type": "divider"
+                                },
+                                {
+                                  "showCancel": false,
+                                  "type": "form-section",
+                                  "entity": "@entity",
+                                  "showSubmit": false,
+                                  "submitEvent": "ADVANCE",
+                                  "mode": "edit",
+                                  "cancelEvent": "CANCEL",
+                                  "fields": "@entity.currentFields"
+                                }
+                              ]
+                            }
+                          ],
+                          "type": "card"
+                        },
+                        {
+                          "gap": "sm",
+                          "type": "stack",
+                          "children": [
+                            {
+                              "label": "Back",
+                              "type": "button",
+                              "action": "RETREAT",
+                              "variant": "ghost",
+                              "icon": "chevron-left",
+                              "disabled": "@entity.isFirstStep"
+                            },
+                            {
+                              "icon": "x",
+                              "variant": "ghost",
+                              "type": "button",
+                              "action": "CANCEL",
+                              "label": "Cancel wizard"
+                            },
+                            {
+                              "label": "@entity.primaryActionLabel",
+                              "action": "ADVANCE",
+                              "variant": "primary",
+                              "type": "button",
+                              "icon": "@entity.primaryActionIcon"
+                            }
+                          ],
+                          "direction": "horizontal",
+                          "align": "center"
+                        }
+                      ],
+                      "gap": "lg",
+                      "direction": "vertical"
+                    }
+                  ]
+                ]
+              },
+              {
+                "from": "running",
+                "to": "completed",
+                "event": "ADVANCE",
+                "guard": "@entity.isLastStep",
+                "effects": [
+                  [
+                    "set",
+                    "@entity.completionMessage",
+                    "All steps completed. Your submission has been recorded."
+                  ],
+                  [
+                    "persist",
+                    "update",
+                    "WizardView",
+                    "@payload.data",
+                    {
+                      "emit": {
+                        "failure": "WizardSaveFailed",
+                        "success": "WizardSaved"
+                      }
+                    }
+                  ],
+                  [
+                    "render-ui",
+                    "main",
+                    {
+                      "children": [
+                        {
+                          "type": "icon",
+                          "name": "check-circle",
+                          "size": "lg"
+                        },
+                        {
+                          "align": "center",
+                          "variant": "h2",
+                          "type": "typography",
+                          "content": "Complete"
+                        },
+                        {
+                          "type": "typography",
+                          "variant": "body",
+                          "align": "center",
+                          "color": "muted",
+                          "content": "@entity.completionMessage"
+                        },
+                        {
+                          "currentStep": "@entity.totalSteps",
+                          "steps": "@entity.wizardSteps",
+                          "allowNavigation": false,
+                          "type": "wizard-progress"
+                        },
+                        {
+                          "icon": "rotate-ccw",
+                          "type": "button",
+                          "action": "RESTART",
+                          "label": "Start a new wizard",
+                          "variant": "secondary"
+                        }
+                      ],
+                      "gap": "lg",
+                      "direction": "vertical",
+                      "type": "stack",
+                      "align": "center"
+                    }
+                  ]
+                ]
+              },
+              {
+                "from": "running",
+                "to": "running",
+                "event": "RETREAT",
+                "effects": [
+                  [
+                    "set",
+                    "@entity.currentStepIndex",
+                    [
+                      "-",
+                      "@entity.currentStepIndex",
+                      1.0
+                    ]
+                  ],
+                  [
+                    "set",
+                    "@entity.currentStepLabel",
+                    [
+                      "object/get",
+                      [
+                        "array/nth",
+                        [
+                          {
+                            "key": "details",
+                            "fields": [
+                              "title",
+                              "description"
+                            ],
+                            "label": "Details",
+                            "icon": "file-text",
+                            "description": "Basic information"
+                          },
+                          {
+                            "key": "options",
+                            "fields": [
+                              "category",
+                              "priority"
+                            ],
+                            "label": "Options",
+                            "description": "Configure preferences",
+                            "icon": "settings"
+                          },
+                          {
+                            "description": "Confirm and submit",
+                            "key": "review",
+                            "icon": "check-circle",
+                            "label": "Review",
+                            "fields": [
+                              "notes"
+                            ]
+                          }
+                        ],
+                        "@entity.currentStepIndex"
+                      ],
+                      "label"
+                    ]
+                  ],
+                  [
+                    "set",
+                    "@entity.currentStepDescription",
+                    [
+                      "object/get",
+                      [
+                        "array/nth",
+                        [
+                          {
+                            "key": "details",
+                            "fields": [
+                              "title",
+                              "description"
+                            ],
+                            "label": "Details",
+                            "icon": "file-text",
+                            "description": "Basic information"
+                          },
+                          {
+                            "key": "options",
+                            "fields": [
+                              "category",
+                              "priority"
+                            ],
+                            "label": "Options",
+                            "description": "Configure preferences",
+                            "icon": "settings"
+                          },
+                          {
+                            "description": "Confirm and submit",
+                            "key": "review",
+                            "icon": "check-circle",
+                            "label": "Review",
+                            "fields": [
+                              "notes"
+                            ]
+                          }
+                        ],
+                        "@entity.currentStepIndex"
+                      ],
+                      "description",
+                      ""
+                    ]
+                  ],
+                  [
+                    "set",
+                    "@entity.currentStepIcon",
+                    [
+                      "object/get",
+                      [
+                        "array/nth",
+                        [
+                          {
+                            "key": "details",
+                            "fields": [
+                              "title",
+                              "description"
+                            ],
+                            "label": "Details",
+                            "icon": "file-text",
+                            "description": "Basic information"
+                          },
+                          {
+                            "key": "options",
+                            "fields": [
+                              "category",
+                              "priority"
+                            ],
+                            "label": "Options",
+                            "description": "Configure preferences",
+                            "icon": "settings"
+                          },
+                          {
+                            "description": "Confirm and submit",
+                            "key": "review",
+                            "icon": "check-circle",
+                            "label": "Review",
+                            "fields": [
+                              "notes"
+                            ]
+                          }
+                        ],
+                        "@entity.currentStepIndex"
+                      ],
+                      "icon",
+                      "circle"
+                    ]
+                  ],
+                  [
+                    "set",
+                    "@entity.currentFields",
+                    [
+                      "object/get",
+                      [
+                        "array/nth",
+                        [
+                          {
+                            "key": "details",
+                            "fields": [
+                              "title",
+                              "description"
+                            ],
+                            "label": "Details",
+                            "icon": "file-text",
+                            "description": "Basic information"
+                          },
+                          {
+                            "key": "options",
+                            "fields": [
+                              "category",
+                              "priority"
+                            ],
+                            "label": "Options",
+                            "description": "Configure preferences",
+                            "icon": "settings"
+                          },
+                          {
+                            "description": "Confirm and submit",
+                            "key": "review",
+                            "icon": "check-circle",
+                            "label": "Review",
+                            "fields": [
+                              "notes"
+                            ]
+                          }
+                        ],
+                        "@entity.currentStepIndex"
+                      ],
+                      "fields",
+                      []
+                    ]
+                  ],
+                  [
+                    "set",
+                    "@entity.isFirstStep",
+                    [
+                      "=",
+                      "@entity.currentStepIndex",
+                      0.0
+                    ]
+                  ],
+                  [
+                    "set",
+                    "@entity.isLastStep",
+                    [
+                      "=",
+                      "@entity.currentStepIndex",
+                      [
+                        "-",
+                        "@entity.totalSteps",
+                        1.0
+                      ]
+                    ]
+                  ],
+                  [
+                    "set",
+                    "@entity.primaryActionLabel",
+                    [
+                      "if",
+                      [
+                        "=",
+                        "@entity.currentStepIndex",
+                        [
+                          "-",
+                          "@entity.totalSteps",
+                          1.0
+                        ]
+                      ],
+                      "Submit",
+                      "Next"
+                    ]
+                  ],
+                  [
+                    "set",
+                    "@entity.primaryActionIcon",
+                    [
+                      "if",
+                      [
+                        "=",
+                        "@entity.currentStepIndex",
+                        [
+                          "-",
+                          "@entity.totalSteps",
+                          1.0
+                        ]
+                      ],
+                      "check-circle",
+                      "chevron-right"
+                    ]
+                  ],
+                  [
+                    "render-ui",
+                    "main",
+                    {
+                      "gap": "lg",
+                      "direction": "vertical",
+                      "type": "stack",
+                      "children": [
+                        {
+                          "gap": "sm",
+                          "align": "center",
+                          "type": "stack",
+                          "direction": "horizontal",
+                          "children": [
+                            {
+                              "name": "list-checks",
+                              "type": "icon"
+                            },
+                            {
+                              "content": "Wizard",
+                              "variant": "h3",
+                              "type": "typography"
+                            }
+                          ]
+                        },
+                        {
+                          "type": "wizard-progress",
+                          "steps": "@entity.wizardSteps",
+                          "currentStep": "@entity.currentStepIndex",
+                          "allowNavigation": false
+                        },
+                        {
+                          "look": "elevated",
+                          "type": "card",
+                          "children": [
+                            {
+                              "children": [
+                                {
+                                  "type": "stack",
+                                  "children": [
+                                    {
+                                      "size": "lg",
+                                      "type": "icon",
+                                      "name": "@entity.currentStepIcon"
+                                    },
+                                    {
+                                      "type": "stack",
+                                      "direction": "vertical",
+                                      "children": [
+                                        {
+                                          "variant": "h2",
+                                          "content": "@entity.currentStepLabel",
+                                          "type": "typography"
+                                        },
+                                        {
+                                          "variant": "body",
+                                          "color": "muted",
+                                          "type": "typography",
+                                          "content": "@entity.currentStepDescription"
+                                        }
+                                      ],
+                                      "gap": "xs"
+                                    }
+                                  ],
+                                  "align": "center",
+                                  "gap": "sm",
+                                  "direction": "horizontal"
+                                },
+                                {
+                                  "type": "divider"
+                                },
+                                {
+                                  "submitEvent": "ADVANCE",
+                                  "cancelEvent": "CANCEL",
+                                  "showSubmit": false,
+                                  "showCancel": false,
+                                  "entity": "@entity",
+                                  "type": "form-section",
+                                  "fields": "@entity.currentFields",
+                                  "mode": "edit"
+                                }
+                              ],
+                              "gap": "md",
+                              "type": "stack",
+                              "direction": "vertical"
+                            }
+                          ]
+                        },
+                        {
+                          "type": "stack",
+                          "gap": "sm",
+                          "direction": "horizontal",
+                          "children": [
+                            {
+                              "disabled": "@entity.isFirstStep",
+                              "action": "RETREAT",
+                              "type": "button",
+                              "label": "Back",
+                              "icon": "chevron-left",
+                              "variant": "ghost"
+                            },
+                            {
+                              "label": "Cancel wizard",
+                              "variant": "ghost",
+                              "icon": "x",
+                              "type": "button",
+                              "action": "CANCEL"
+                            },
+                            {
+                              "label": "@entity.primaryActionLabel",
+                              "variant": "primary",
+                              "type": "button",
+                              "action": "ADVANCE",
+                              "icon": "@entity.primaryActionIcon"
+                            }
+                          ],
+                          "align": "center"
+                        }
+                      ]
+                    }
+                  ]
+                ]
+              },
+              {
+                "from": "running",
+                "to": "cancelled",
+                "event": "CANCEL",
+                "effects": [
+                  [
+                    "set",
+                    "@entity.cancelReason",
+                    "@payload.reason"
+                  ],
+                  [
+                    "render-ui",
+                    "main",
+                    {
+                      "gap": "lg",
+                      "direction": "vertical",
+                      "align": "center",
+                      "children": [
+                        {
+                          "type": "icon",
+                          "name": "x-circle",
+                          "size": "lg"
+                        },
+                        {
+                          "align": "center",
+                          "content": "Cancelled",
+                          "variant": "h2",
+                          "type": "typography"
+                        },
+                        {
+                          "variant": "body",
+                          "align": "center",
+                          "type": "typography",
+                          "content": "The wizard was cancelled. No data was submitted.",
+                          "color": "muted"
+                        },
+                        {
+                          "type": "button",
+                          "action": "RESTART",
+                          "label": "Start a new wizard",
+                          "icon": "rotate-ccw",
+                          "variant": "secondary"
+                        }
+                      ],
+                      "type": "stack"
+                    }
+                  ]
+                ]
+              },
+              {
+                "from": "completed",
+                "to": "loading",
+                "event": "RESTART",
+                "effects": [
+                  [
+                    "set",
+                    "@entity.currentStepIndex",
+                    0.0
+                  ],
+                  [
+                    "set",
+                    "@entity.completionMessage",
+                    ""
+                  ],
+                  [
+                    "fetch",
+                    "WizardView",
+                    {
+                      "emit": {
+                        "failure": "WizardLoadFailed",
+                        "success": "WizardLoaded"
+                      }
+                    }
+                  ],
+                  [
+                    "render-ui",
+                    "main",
+                    {
+                      "title": "Restarting…",
+                      "type": "loading-state"
+                    }
+                  ]
+                ]
+              },
+              {
+                "from": "cancelled",
+                "to": "loading",
+                "event": "RESTART",
+                "effects": [
+                  [
+                    "set",
+                    "@entity.currentStepIndex",
+                    0.0
+                  ],
+                  [
+                    "set",
+                    "@entity.cancelReason",
+                    ""
+                  ],
+                  [
+                    "fetch",
+                    "WizardView",
+                    {
+                      "emit": {
+                        "failure": "WizardLoadFailed",
+                        "success": "WizardLoaded"
+                      }
+                    }
+                  ],
+                  [
+                    "render-ui",
+                    "main",
+                    {
+                      "title": "Restarting…",
+                      "type": "loading-state"
+                    }
+                  ]
+                ]
+              },
+              {
+                "from": "error",
+                "to": "loading",
+                "event": "INIT",
+                "effects": [
+                  [
+                    "render-ui",
+                    "main",
+                    {
+                      "type": "loading-state",
+                      "title": "Retrying…"
+                    }
+                  ]
+                ]
+              }
+            ]
+          },
+          "config": {
+            "steps": {
+              "type": "[StepSpec]",
+              "default": [
+                {
+                  "key": "details",
+                  "fields": [
+                    "title",
+                    "description"
+                  ],
+                  "label": "Details",
+                  "icon": "file-text",
+                  "description": "Basic information"
+                },
+                {
+                  "key": "options",
+                  "fields": [
+                    "category",
+                    "priority"
+                  ],
+                  "label": "Options",
+                  "description": "Configure preferences",
+                  "icon": "settings"
+                },
+                {
+                  "description": "Confirm and submit",
+                  "key": "review",
+                  "icon": "check-circle",
+                  "label": "Review",
+                  "fields": [
+                    "notes"
+                  ]
+                }
+              ],
+              "label": "Steps",
+              "description": "Ordered steps with their label, icon, and form fields",
+              "tier": "domain",
+              "items": {
+                "type": "object",
+                "properties": {
+                  "allowedRoles": {
+                    "name": "allowedRoles",
+                    "type": "array",
+                    "required": false,
+                    "items": {
+                      "type": "string"
+                    }
+                  },
+                  "icon": {
+                    "name": "icon",
+                    "type": "string",
+                    "required": false
+                  },
+                  "key": {
+                    "name": "key",
+                    "type": "string",
+                    "required": false
+                  },
+                  "fields": {
+                    "name": "fields",
+                    "type": "array",
+                    "required": false,
+                    "items": {
+                      "type": "string"
+                    }
+                  },
+                  "label": {
+                    "name": "label",
+                    "type": "string",
+                    "required": true
+                  },
+                  "description": {
+                    "name": "description",
+                    "type": "string",
+                    "required": false
+                  }
+                }
+              }
+            },
+            "title": {
+              "type": "string",
+              "default": "Wizard",
+              "label": "Wizard title",
+              "description": "Heading shown across all wizard steps",
+              "tier": "presentation"
+            },
+            "cardLook": {
+              "type": "string",
+              "default": "elevated",
+              "label": "Card look",
+              "description": "Layer 2 visual treatment for cards rendered by this atom.",
+              "tier": "presentation",
+              "values": [
+                "elevated",
+                "flat-bordered",
+                "borderless-divider",
+                "ticket",
+                "invoice",
+                "chip",
+                "tile-image-first"
+              ]
+            }
+          },
+          "scope": "instance"
+        }
+      ],
+      "pages": [
+        {
+          "name": "WizardPage",
+          "path": "/wizard",
+          "traits": [
+            {
+              "ref": "WizardForm"
+            }
+          ]
+        }
+      ]
+    }
+  ]
+}

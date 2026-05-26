@@ -83,12 +83,14 @@ export interface StdEventLogEventLogSaveFailedPayload {
  * without modifying its state-machine topology.
  */
 export interface StdEventLogConfig {
-  /** Default: `"Activity"` */
-  title?: string;
   /** Default: `["backfillTitle","backfillDescription","backfillKind","backfillDate"]` */
   formFields?: string[];
-  /** Default: `[{"label":"Created","icon":"plus-circle","status":"active","key":"created"},{"icon":"edit-3","status":"pending","label":"Updated","key":"updated"},{"key":"approved","icon":"check-circle","label":"Approved","status":"complete"},{"label":"Rejected","icon":"x-circle","status":"error","key":"rejected"}]` */
+  /** Default: `"elevated"` */
+  cardLook?: 'elevated' | 'flat-bordered' | 'borderless-divider' | 'ticket' | 'invoice' | 'chip' | 'tile-image-first';
+  /** Default: `[{"label":"Created","icon":"plus-circle","key":"created","status":"active"},{"icon":"edit-3","key":"updated","status":"pending","label":"Updated"},{"label":"Approved","key":"approved","icon":"check-circle","status":"complete"},{"label":"Rejected","icon":"x-circle","key":"rejected","status":"error"}]` */
   kindOptions?: EntityRow[];
+  /** Default: `"Activity"` */
+  title?: string;
 }
 
 /**

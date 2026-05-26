@@ -92,8 +92,10 @@ export interface StdStepFlowStepItemsLoadFailedPayload {
  * without modifying its state-machine topology.
  */
 export interface StdStepFlowConfig {
-  /** Default: `[{"description":"Initial review by direct manager","icon":"user","key":"manager","label":"Manager Review"},{"key":"director","label":"Director Approval","icon":"users","description":"Department director sign-off"},{"icon":"shield","key":"executive","label":"Executive Sign-off","description":"Final executive approval"}]` */
+  /** Default: `[{"key":"manager","label":"Manager Review","icon":"user","description":"Initial review by direct manager"},{"icon":"users","description":"Department director sign-off","label":"Director Approval","key":"director"},{"label":"Executive Sign-off","icon":"shield","key":"executive","description":"Final executive approval"}]` */
   steps?: EntityRow[];
+  /** Default: `"elevated"` */
+  cardLook?: 'elevated' | 'flat-bordered' | 'borderless-divider' | 'ticket' | 'invoice' | 'chip' | 'tile-image-first';
   /** Default: `"Review"` */
   title?: string;
 }
