@@ -1,7 +1,7 @@
 {
   "name": "std-signature-capture",
   "version": "1.0.0",
-  "description": "std-signature-capture — proof-of-completion signature capture for field-service jobs and healthcare consent forms. Owns a Signature entity; CHANGE binds @entity.signatureDataUrl; SUBMIT persists @payload.data and emits SignatureSubmitted.",
+  "description": "std-signature-capture — hand-drawn signature primitive. Use when the user voices ANY scenario where a person must attest to or sign off on something via a captured signature — proof of completion, consent acknowledgement, delivery confirmation, agreement assent, attestation on a form. Covers field-service sign-off, consent capture, delivery proof, in-person agreement assent. Owns a Signature entity; CHANGE binds @entity.signatureDataUrl; SUBMIT persists @payload.data and emits SignatureSubmitted.",
   "orbitals": [
     {
       "name": "SignatureCaptureOrbital",
@@ -267,22 +267,22 @@
                     "render-ui",
                     "main",
                     {
-                      "gap": "md",
-                      "className": "py-12",
-                      "direction": "vertical",
-                      "align": "center",
                       "children": [
                         {
                           "type": "spinner"
                         },
                         {
-                          "color": "muted",
+                          "content": "Loading…",
                           "variant": "caption",
-                          "type": "typography",
-                          "content": "Loading…"
+                          "color": "muted",
+                          "type": "typography"
                         }
                       ],
-                      "type": "stack"
+                      "className": "py-12",
+                      "direction": "vertical",
+                      "type": "stack",
+                      "gap": "md",
+                      "align": "center"
                     }
                   ]
                 ]
@@ -296,48 +296,48 @@
                     "render-ui",
                     "main",
                     {
+                      "direction": "vertical",
+                      "gap": "md",
+                      "type": "stack",
                       "children": [
                         {
                           "content": "@config.title",
-                          "type": "typography",
-                          "variant": "h3"
+                          "variant": "h3",
+                          "type": "typography"
                         },
                         {
-                          "type": "typography",
                           "variant": "caption",
-                          "color": "muted",
-                          "content": "@config.instructions"
+                          "content": "@config.instructions",
+                          "type": "typography",
+                          "color": "muted"
                         },
                         {
-                          "value": "@entity.signatureDataUrl",
+                          "onChange": "CHANGE",
                           "type": "signature-pad",
-                          "onChange": "CHANGE"
+                          "value": "@entity.signatureDataUrl"
                         },
                         {
                           "gap": "sm",
-                          "direction": "horizontal",
                           "type": "stack",
+                          "direction": "horizontal",
                           "children": [
                             {
-                              "icon": "trash",
+                              "label": "Clear",
+                              "action": "CLEAR",
                               "type": "button",
                               "variant": "secondary",
-                              "label": "Clear",
-                              "action": "CLEAR"
+                              "icon": "trash"
                             },
                             {
-                              "type": "button",
-                              "icon": "send",
+                              "action": "SUBMIT",
                               "variant": "primary",
                               "label": "Submit",
-                              "action": "SUBMIT"
+                              "icon": "send",
+                              "type": "button"
                             }
                           ]
                         }
-                      ],
-                      "direction": "vertical",
-                      "gap": "md",
-                      "type": "stack"
+                      ]
                     }
                   ]
                 ]
@@ -351,9 +351,9 @@
                     "render-ui",
                     "main",
                     {
-                      "type": "alert",
+                      "message": "@payload.error",
                       "variant": "error",
-                      "message": "@payload.error"
+                      "type": "alert"
                     }
                   ]
                 ]
@@ -384,48 +384,48 @@
                     "render-ui",
                     "main",
                     {
-                      "type": "stack",
+                      "direction": "vertical",
                       "children": [
                         {
-                          "content": "@config.title",
-                          "variant": "h3",
-                          "type": "typography"
-                        },
-                        {
-                          "content": "@config.instructions",
-                          "variant": "caption",
                           "type": "typography",
-                          "color": "muted"
+                          "content": "@config.title",
+                          "variant": "h3"
                         },
                         {
+                          "type": "typography",
+                          "variant": "caption",
+                          "color": "muted",
+                          "content": "@config.instructions"
+                        },
+                        {
+                          "value": "@entity.signatureDataUrl",
                           "onChange": "CHANGE",
-                          "type": "signature-pad",
-                          "value": "@entity.signatureDataUrl"
+                          "type": "signature-pad"
                         },
                         {
-                          "gap": "sm",
-                          "type": "stack",
+                          "direction": "horizontal",
                           "children": [
                             {
-                              "label": "Clear",
-                              "action": "CLEAR",
-                              "variant": "secondary",
                               "icon": "trash",
-                              "type": "button"
+                              "action": "CLEAR",
+                              "type": "button",
+                              "label": "Clear",
+                              "variant": "secondary"
                             },
                             {
                               "variant": "primary",
-                              "icon": "send",
+                              "action": "SUBMIT",
                               "label": "Submit",
-                              "type": "button",
-                              "action": "SUBMIT"
+                              "icon": "send",
+                              "type": "button"
                             }
                           ],
-                          "direction": "horizontal"
+                          "type": "stack",
+                          "gap": "sm"
                         }
                       ],
-                      "gap": "md",
-                      "direction": "vertical"
+                      "type": "stack",
+                      "gap": "md"
                     }
                   ]
                 ]
@@ -451,22 +451,22 @@
                     "render-ui",
                     "main",
                     {
-                      "gap": "md",
                       "direction": "vertical",
-                      "type": "stack",
                       "align": "center",
-                      "className": "py-12",
                       "children": [
                         {
                           "type": "spinner"
                         },
                         {
+                          "type": "typography",
                           "content": "Submitting your signature…",
-                          "variant": "caption",
                           "color": "muted",
-                          "type": "typography"
+                          "variant": "caption"
                         }
-                      ]
+                      ],
+                      "type": "stack",
+                      "gap": "md",
+                      "className": "py-12"
                     }
                   ]
                 ]
@@ -482,19 +482,19 @@
                     {
                       "className": "py-12",
                       "direction": "vertical",
+                      "type": "stack",
                       "children": [
                         {
+                          "type": "icon",
                           "color": "success",
-                          "name": "check-circle",
-                          "type": "icon"
+                          "name": "check-circle"
                         },
                         {
-                          "type": "typography",
                           "content": "Signature recorded. Thank you.",
+                          "type": "typography",
                           "variant": "h3"
                         }
                       ],
-                      "type": "stack",
                       "align": "center",
                       "gap": "md"
                     }
@@ -532,33 +532,34 @@
                     "main",
                     {
                       "gap": "md",
-                      "type": "stack",
+                      "direction": "vertical",
                       "children": [
                         {
-                          "content": "@config.title",
                           "type": "typography",
-                          "variant": "h3"
+                          "variant": "h3",
+                          "content": "@config.title"
                         },
                         {
+                          "variant": "caption",
                           "type": "typography",
-                          "color": "muted",
                           "content": "@config.instructions",
-                          "variant": "caption"
+                          "color": "muted"
                         },
                         {
-                          "type": "signature-pad",
+                          "onChange": "CHANGE",
                           "value": "@entity.signatureDataUrl",
-                          "onChange": "CHANGE"
+                          "type": "signature-pad"
                         },
                         {
+                          "direction": "horizontal",
                           "type": "stack",
                           "children": [
                             {
-                              "action": "CLEAR",
-                              "icon": "trash",
-                              "label": "Clear",
                               "variant": "secondary",
-                              "type": "button"
+                              "action": "CLEAR",
+                              "type": "button",
+                              "label": "Clear",
+                              "icon": "trash"
                             },
                             {
                               "type": "button",
@@ -568,11 +569,10 @@
                               "label": "Submit"
                             }
                           ],
-                          "gap": "sm",
-                          "direction": "horizontal"
+                          "gap": "sm"
                         }
                       ],
-                      "direction": "vertical"
+                      "type": "stack"
                     }
                   ]
                 ]
@@ -586,25 +586,23 @@
                     "render-ui",
                     "main",
                     {
-                      "gap": "md",
                       "type": "stack",
-                      "direction": "vertical",
                       "children": [
                         {
-                          "type": "typography",
                           "variant": "h3",
+                          "type": "typography",
                           "content": "@config.title"
                         },
                         {
-                          "content": "@config.instructions",
-                          "color": "muted",
                           "type": "typography",
-                          "variant": "caption"
+                          "color": "muted",
+                          "variant": "caption",
+                          "content": "@config.instructions"
                         },
                         {
-                          "value": "@entity.signatureDataUrl",
+                          "onChange": "CHANGE",
                           "type": "signature-pad",
-                          "onChange": "CHANGE"
+                          "value": "@entity.signatureDataUrl"
                         },
                         {
                           "direction": "horizontal",
@@ -612,22 +610,24 @@
                           "type": "stack",
                           "children": [
                             {
-                              "action": "CLEAR",
-                              "icon": "trash",
                               "label": "Clear",
+                              "variant": "secondary",
                               "type": "button",
-                              "variant": "secondary"
+                              "icon": "trash",
+                              "action": "CLEAR"
                             },
                             {
-                              "variant": "primary",
                               "label": "Submit",
+                              "variant": "primary",
                               "action": "SUBMIT",
-                              "type": "button",
-                              "icon": "send"
+                              "icon": "send",
+                              "type": "button"
                             }
                           ]
                         }
-                      ]
+                      ],
+                      "gap": "md",
+                      "direction": "vertical"
                     }
                   ]
                 ]
@@ -635,18 +635,18 @@
             ]
           },
           "config": {
-            "title": {
-              "type": "string",
-              "default": "Sign here",
-              "label": "Pad title",
-              "description": "Heading shown above the signature pad",
-              "tier": "presentation"
-            },
             "instructions": {
               "type": "string",
               "default": "Use your finger or stylus to sign below",
               "label": "Instructions",
               "description": "Helper text shown to the signer above the pad",
+              "tier": "presentation"
+            },
+            "title": {
+              "type": "string",
+              "default": "Sign here",
+              "label": "Pad title",
+              "description": "Heading shown above the signature pad",
               "tier": "presentation"
             }
           },
