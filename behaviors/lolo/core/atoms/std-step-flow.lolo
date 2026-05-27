@@ -117,7 +117,12 @@ orbital StepFlowOrbital {
         (render-ui main { type: "error-state", title: "Save failed", message: "@entity.errorMessage" })
     }
     state running {
-      ADVANCE -> running when (and (not @entity.isLastStep) (or (= (array/len (object/get (array/nth @config.steps @entity.currentStepIndex) "allowedRoles" [])) 0) (array/includes (object/get (array/nth @config.steps @entity.currentStepIndex) "allowedRoles" []) @user.role)))
+      ;; Role guard idiom: 3-arg object/get with a STRING sentinel default
+      ;; instead of [] (Zod's SExpr schema rejects bare empty arrays inside a
+      ;; guard expression; the sentinel form is structurally-valid SExpr and
+      ;; semantically equivalent for the "no allowedRoles → permit everyone"
+      ;; case). If allowedRoles is present, fall through to array/includes.
+      ADVANCE -> running when (and (not @entity.isLastStep) (or (= (object/get (array/nth @config.steps @entity.currentStepIndex) "allowedRoles" "ANY") "ANY") (array/includes (object/get (array/nth @config.steps @entity.currentStepIndex) "allowedRoles") @user.role)))
         (set @entity.currentStepIndex (+ @entity.currentStepIndex 1))
         (set @entity.currentStepLabel       (object/get (array/nth @config.steps @entity.currentStepIndex) "label"))
         (set @entity.currentStepDescription (object/get (array/nth @config.steps @entity.currentStepIndex) "description" ""))
@@ -128,7 +133,7 @@ orbital StepFlowOrbital {
         (set @entity.primaryActionVariant (if (= @entity.currentStepIndex (- @entity.totalSteps 1)) "success" "primary"))
         (set @entity.primaryActionIcon    (if (= @entity.currentStepIndex (- @entity.totalSteps 1)) "check-circle" "chevron-right"))
         (render-ui main @config.bodyContent)
-      ADVANCE -> approved when (and @entity.isLastStep (or (= (array/len (object/get (array/nth @config.steps @entity.currentStepIndex) "allowedRoles" [])) 0) (array/includes (object/get (array/nth @config.steps @entity.currentStepIndex) "allowedRoles" []) @user.role)))
+      ADVANCE -> approved when (and @entity.isLastStep (or (= (object/get (array/nth @config.steps @entity.currentStepIndex) "allowedRoles" "ANY") "ANY") (array/includes (object/get (array/nth @config.steps @entity.currentStepIndex) "allowedRoles") @user.role)))
         (set @entity.finalStatus "approved")
         (render-ui main { type: "stack", direction: "vertical", gap: "lg", align: "center", children: [{ type: "icon", name: "check-circle", size: "lg" }, { type: "typography", content: "Approved", variant: "h2", align: "center" }, { type: "typography", content: "All review steps completed successfully.", variant: "body", color: "muted", align: "center" }, { type: "wizard-progress", steps: "@entity.wizardSteps", currentStep: "@entity.totalSteps", allowNavigation: false }, { type: "button", label: "Start a new review", variant: "secondary", action: "RESTART", icon: "rotate-ccw", actionPayload: { id: "@entity.id" } }] })
       BACK -> running
