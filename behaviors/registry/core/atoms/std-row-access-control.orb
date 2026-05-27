@@ -21,6 +21,11 @@
             "items": {
               "type": "object",
               "properties": {
+                "id": {
+                  "name": "id",
+                  "type": "string",
+                  "required": false
+                },
                 "label": {
                   "name": "label",
                   "type": "string",
@@ -33,11 +38,6 @@
                 },
                 "icon": {
                   "name": "icon",
-                  "type": "string",
-                  "required": false
-                },
-                "id": {
-                  "name": "id",
                   "type": "string",
                   "required": false
                 }
@@ -64,6 +64,15 @@
       "traits": [
         {
           "name": "RowAccessGate",
+          "entityRebindable": true,
+          "entityContract": {
+            "provides": [
+              "accessDenied",
+              "filteredData",
+              "inputCount",
+              "outputCount"
+            ]
+          },
           "category": "lifecycle",
           "capabilities": [
             "access",
@@ -218,6 +227,13 @@
             ]
           },
           "config": {
+            "ownerField": {
+              "type": "string",
+              "default": "",
+              "label": "Owner field",
+              "description": "Row field holding the owning user id (blank disables owner filter)",
+              "tier": "domain"
+            },
             "visibleRoles": {
               "type": "[string]",
               "default": [],
@@ -227,13 +243,6 @@
               "items": {
                 "type": "string"
               }
-            },
-            "ownerField": {
-              "type": "string",
-              "default": "",
-              "label": "Owner field",
-              "description": "Row field holding the owning user id (blank disables owner filter)",
-              "tier": "domain"
             }
           },
           "scope": "instance"
