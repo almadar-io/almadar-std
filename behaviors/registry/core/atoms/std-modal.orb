@@ -40,6 +40,8 @@
       "traits": [
         {
           "name": "ModalRecordModal",
+          "entityRebindable": true,
+          "entityContract": {},
           "category": "interaction",
           "linkedEntity": "ModalRecord",
           "emits": [
@@ -161,8 +163,8 @@
                     "ModalRecord",
                     {
                       "emit": {
-                        "failure": "ModalRecordLoadFailed",
-                        "success": "ModalRecordLoaded"
+                        "success": "ModalRecordLoaded",
+                        "failure": "ModalRecordLoadFailed"
                       }
                     }
                   ]
@@ -191,38 +193,38 @@
                     "render-ui",
                     "@config.detailSlot",
                     {
-                      "direction": "vertical",
-                      "type": "@config.detailPattern",
-                      "gap": "md",
                       "children": [
                         {
-                          "gap": "sm",
                           "type": "stack",
-                          "direction": "horizontal",
                           "children": [
                             {
-                              "name": "@config.icon",
-                              "type": "icon"
+                              "type": "icon",
+                              "name": "@config.icon"
                             },
                             {
-                              "content": "@config.title",
                               "variant": "h3",
-                              "type": "typography"
+                              "type": "typography",
+                              "content": "@config.title"
                             }
-                          ]
+                          ],
+                          "gap": "sm",
+                          "direction": "horizontal"
                         },
                         {
                           "type": "divider"
                         },
                         {
                           "submitEvent": "SAVE",
+                          "mode": "@config.mode",
+                          "entity": "@payload.row",
                           "cancelEvent": "CLOSE",
                           "fields": "@config.fields",
-                          "entity": "@payload.row",
-                          "type": "form-section",
-                          "mode": "@config.mode"
+                          "type": "form-section"
                         }
-                      ]
+                      ],
+                      "direction": "vertical",
+                      "gap": "md",
+                      "type": "@config.detailPattern"
                     }
                   ]
                 ]
@@ -259,20 +261,6 @@
             ]
           },
           "config": {
-            "title": {
-              "type": "string",
-              "default": "Details",
-              "label": "Modal title",
-              "description": "Heading at the top of the modal",
-              "tier": "presentation"
-            },
-            "detailSlot": {
-              "type": "slot",
-              "default": "modal",
-              "label": "Render slot",
-              "description": "UI slot the modal renders into",
-              "tier": "internal"
-            },
             "icon": {
               "type": "string",
               "default": "layout-panel-top",
@@ -289,6 +277,20 @@
               "items": {
                 "type": "string"
               }
+            },
+            "title": {
+              "type": "string",
+              "default": "Details",
+              "label": "Modal title",
+              "description": "Heading at the top of the modal",
+              "tier": "presentation"
+            },
+            "detailSlot": {
+              "type": "slot",
+              "default": "modal",
+              "label": "Render slot",
+              "description": "UI slot the modal renders into",
+              "tier": "internal"
             },
             "detailPattern": {
               "type": "pattern",

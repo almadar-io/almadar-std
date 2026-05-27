@@ -91,10 +91,10 @@ export interface StdSignatureCaptureSignatureSubmitFailedPayload {
  * without modifying its state-machine topology.
  */
 export interface StdSignatureCaptureConfig {
-  /** Default: `"Sign here"` */
-  title?: string;
   /** Default: `"Use your finger or stylus to sign below"` */
   instructions?: string;
+  /** Default: `"Sign here"` */
+  title?: string;
 }
 
 /**

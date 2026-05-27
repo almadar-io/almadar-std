@@ -42,6 +42,8 @@
       "traits": [
         {
           "name": "BrowseItemBrowse",
+          "entityRebindable": true,
+          "entityContract": {},
           "category": "interaction",
           "linkedEntity": "BrowseItem",
           "emits": [
@@ -283,19 +285,19 @@
                     "BrowseItem",
                     {
                       "emit": {
-                        "success": "BrowseItemLoaded",
-                        "failure": "BrowseItemLoadFailed"
+                        "failure": "BrowseItemLoadFailed",
+                        "success": "BrowseItemLoaded"
                       },
-                      "limit": "@config.pageSize",
-                      "offset": 0.0
+                      "offset": 0.0,
+                      "limit": "@config.pageSize"
                     }
                   ],
                   [
                     "render-ui",
                     "main",
                     {
-                      "type": "spinner",
-                      "size": "sm"
+                      "size": "sm",
+                      "type": "spinner"
                     }
                   ]
                 ]
@@ -321,10 +323,10 @@
                     "render-ui",
                     "main",
                     {
+                      "color": "error",
                       "content": "@payload.error",
                       "type": "typography",
-                      "variant": "caption",
-                      "color": "error"
+                      "variant": "caption"
                     }
                   ]
                 ]
@@ -338,12 +340,12 @@
                     "fetch",
                     "BrowseItem",
                     {
-                      "offset": 0.0,
-                      "limit": "@config.pageSize",
                       "emit": {
                         "success": "BrowseItemLoaded",
                         "failure": "BrowseItemLoadFailed"
-                      }
+                      },
+                      "offset": 0.0,
+                      "limit": "@config.pageSize"
                     }
                   ],
                   [
@@ -365,12 +367,6 @@
                     "fetch",
                     "BrowseItem",
                     {
-                      "emit": {
-                        "success": "BrowseItemLoaded",
-                        "failure": "BrowseItemLoadFailed"
-                      },
-                      "offset": 0.0,
-                      "limit": "@config.pageSize",
                       "filter": [
                         "or",
                         [
@@ -387,7 +383,13 @@
                           ],
                           "@payload.searchTerm"
                         ]
-                      ]
+                      ],
+                      "emit": {
+                        "success": "BrowseItemLoaded",
+                        "failure": "BrowseItemLoadFailed"
+                      },
+                      "offset": 0.0,
+                      "limit": "@config.pageSize"
                     }
                   ]
                 ]
@@ -401,6 +403,10 @@
                     "fetch",
                     "BrowseItem",
                     {
+                      "emit": {
+                        "success": "BrowseItemLoaded",
+                        "failure": "BrowseItemLoadFailed"
+                      },
                       "offset": 0.0,
                       "limit": "@config.pageSize",
                       "filter": [
@@ -419,11 +425,7 @@
                           ],
                           "@payload.value"
                         ]
-                      ],
-                      "emit": {
-                        "failure": "BrowseItemLoadFailed",
-                        "success": "BrowseItemLoaded"
-                      }
+                      ]
                     }
                   ]
                 ]
@@ -437,11 +439,6 @@
                     "fetch",
                     "BrowseItem",
                     {
-                      "limit": "@config.pageSize",
-                      "emit": {
-                        "success": "BrowseItemLoaded",
-                        "failure": "BrowseItemLoadFailed"
-                      },
                       "offset": [
                         "*",
                         [
@@ -450,7 +447,12 @@
                           1.0
                         ],
                         "@config.pageSize"
-                      ]
+                      ],
+                      "limit": "@config.pageSize",
+                      "emit": {
+                        "failure": "BrowseItemLoadFailed",
+                        "success": "BrowseItemLoaded"
+                      }
                     }
                   ]
                 ]
@@ -476,20 +478,20 @@
                     "fetch",
                     "BrowseItem",
                     {
+                      "offset": 0.0,
                       "limit": "@config.pageSize",
                       "emit": {
-                        "failure": "BrowseItemLoadFailed",
-                        "success": "BrowseItemLoaded"
-                      },
-                      "offset": 0.0
+                        "success": "BrowseItemLoaded",
+                        "failure": "BrowseItemLoadFailed"
+                      }
                     }
                   ],
                   [
                     "render-ui",
                     "main",
                     {
-                      "type": "spinner",
-                      "size": "sm"
+                      "size": "sm",
+                      "type": "spinner"
                     }
                   ]
                 ]
@@ -497,13 +499,6 @@
             ]
           },
           "config": {
-            "cols": {
-              "type": "number",
-              "default": 1.0,
-              "label": "Grid columns",
-              "description": "Number of columns in the responsive grid layout",
-              "tier": "presentation"
-            },
             "gap": {
               "type": "string",
               "default": "md",
@@ -511,12 +506,34 @@
               "description": "Gap size between rows (sm, md, lg)",
               "tier": "presentation"
             },
-            "displayPageSize": {
+            "pageSize": {
               "type": "number",
               "default": 10.0,
-              "label": "Page size (display)",
-              "description": "Rows shown per visible page before pagination",
+              "label": "Page size (fetch)",
+              "description": "Rows fetched from the server per page",
               "tier": "presentation"
+            },
+            "bodyContent": {
+              "type": "render-ui",
+              "default": {
+                "type": "stack",
+                "direction": "vertical",
+                "children": [
+                  {
+                    "type": "data-grid",
+                    "fields": "@config.fields",
+                    "imageField": "@config.imageField",
+                    "entity": "@payload.data",
+                    "itemActions": "@config.itemActions",
+                    "cols": "@config.cols",
+                    "pageSize": "@config.displayPageSize",
+                    "gap": "@config.gap"
+                  }
+                ]
+              },
+              "label": "Body content tree",
+              "description": "Render-ui SExpr rendered after rows load. Default is the canonical data-grid call wrapped in a stack. Layer 3 variants override this with their own tree (composing data-list/data-grid/entity-table + custom renderItem lambdas + filter-group, kbd, card, etc.) to deliver entirely different browse UX while inheriting the same trait, state machine, emits, and listens.",
+              "tier": "internal"
             },
             "viewPattern": {
               "type": "pattern",
@@ -524,13 +541,6 @@
               "label": "Render pattern",
               "description": "UI pattern used to render the collection. Used by the default bodyContent tree; Layer 3 variants override bodyContent directly instead and may ignore this knob.",
               "tier": "internal"
-            },
-            "imageField": {
-              "type": "string",
-              "default": "",
-              "label": "Image field",
-              "description": "Entity field that holds the row thumbnail URL",
-              "tier": "presentation"
             },
             "itemActions": {
               "type": "[ItemAction]",
@@ -551,59 +561,30 @@
                     "type": "string",
                     "required": true
                   },
-                  "label": {
-                    "name": "label",
-                    "type": "string",
-                    "required": true
-                  },
                   "icon": {
                     "name": "icon",
                     "type": "string",
                     "required": false
+                  },
+                  "label": {
+                    "name": "label",
+                    "type": "string",
+                    "required": true
                   }
                 }
               }
-            },
-            "pageSize": {
-              "type": "number",
-              "default": 10.0,
-              "label": "Page size (fetch)",
-              "description": "Rows fetched from the server per page",
-              "tier": "presentation"
-            },
-            "bodyContent": {
-              "type": "render-ui",
-              "default": {
-                "type": "stack",
-                "children": [
-                  {
-                    "gap": "@config.gap",
-                    "pageSize": "@config.displayPageSize",
-                    "itemActions": "@config.itemActions",
-                    "fields": "@config.fields",
-                    "type": "data-grid",
-                    "entity": "@payload.data",
-                    "imageField": "@config.imageField",
-                    "cols": "@config.cols"
-                  }
-                ],
-                "direction": "vertical"
-              },
-              "label": "Body content tree",
-              "description": "Render-ui SExpr rendered after rows load. Default is the canonical data-grid call wrapped in a stack. Layer 3 variants override this with their own tree (composing data-list/data-grid/entity-table + custom renderItem lambdas + filter-group, kbd, card, etc.) to deliver entirely different browse UX while inheriting the same trait, state machine, emits, and listens.",
-              "tier": "internal"
             },
             "fields": {
               "type": "[FieldSpec]",
               "default": [
                 {
+                  "variant": "h4",
                   "name": "name",
-                  "label": "Name",
-                  "variant": "h4"
+                  "label": "Name"
                 },
                 {
-                  "name": "description",
                   "variant": "caption",
+                  "name": "description",
                   "label": "Description"
                 },
                 {
@@ -618,18 +599,8 @@
               "items": {
                 "type": "object",
                 "properties": {
-                  "header": {
-                    "name": "header",
-                    "type": "string",
-                    "required": false
-                  },
-                  "key": {
-                    "name": "key",
-                    "type": "string",
-                    "required": false
-                  },
-                  "format": {
-                    "name": "format",
+                  "label": {
+                    "name": "label",
                     "type": "string",
                     "required": false
                   },
@@ -637,11 +608,6 @@
                     "name": "name",
                     "type": "string",
                     "required": true
-                  },
-                  "label": {
-                    "name": "label",
-                    "type": "string",
-                    "required": false
                   },
                   "variant": {
                     "name": "variant",
@@ -652,9 +618,45 @@
                     "name": "icon",
                     "type": "string",
                     "required": false
+                  },
+                  "format": {
+                    "name": "format",
+                    "type": "string",
+                    "required": false
+                  },
+                  "header": {
+                    "name": "header",
+                    "type": "string",
+                    "required": false
+                  },
+                  "key": {
+                    "name": "key",
+                    "type": "string",
+                    "required": false
                   }
                 }
               }
+            },
+            "imageField": {
+              "type": "string",
+              "default": "",
+              "label": "Image field",
+              "description": "Entity field that holds the row thumbnail URL",
+              "tier": "presentation"
+            },
+            "cols": {
+              "type": "number",
+              "default": 1.0,
+              "label": "Grid columns",
+              "description": "Number of columns in the responsive grid layout",
+              "tier": "presentation"
+            },
+            "displayPageSize": {
+              "type": "number",
+              "default": 10.0,
+              "label": "Page size (display)",
+              "description": "Rows shown per visible page before pagination",
+              "tier": "presentation"
             }
           },
           "scope": "collection"
