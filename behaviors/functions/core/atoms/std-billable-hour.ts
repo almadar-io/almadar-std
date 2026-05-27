@@ -88,12 +88,12 @@ export interface StdBillableHourBillableHourLoadFailedPayload {
  * without modifying its state-machine topology.
  */
 export interface StdBillableHourConfig {
-  /** Default: `"elevated"` */
-  statLook?: 'elevated' | 'flat' | 'progress-backed' | 'gauge' | 'sparkline';
   /** Default: `"dense"` */
   tableLook?: 'dense' | 'spacious' | 'striped' | 'borderless' | 'card-rows';
   /** Default: `"Time Entries"` */
   title?: string;
+  /** Default: `"elevated"` */
+  statLook?: 'elevated' | 'flat' | 'progress-backed' | 'gauge' | 'sparkline';
 }
 
 /**

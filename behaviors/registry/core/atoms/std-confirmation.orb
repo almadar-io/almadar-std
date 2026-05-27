@@ -45,6 +45,13 @@
       "traits": [
         {
           "name": "ConfirmActionConfirmation",
+          "entityRebindable": true,
+          "entityContract": {
+            "provides": [
+              "name",
+              "pendingId"
+            ]
+          },
           "category": "interaction",
           "linkedEntity": "ConfirmAction",
           "emits": [
@@ -163,8 +170,8 @@
                     "ConfirmAction",
                     {
                       "emit": {
-                        "failure": "ConfirmActionLoadFailed",
-                        "success": "ConfirmActionLoaded"
+                        "success": "ConfirmActionLoaded",
+                        "failure": "ConfirmActionLoadFailed"
                       }
                     }
                   ]
@@ -190,71 +197,71 @@
                     "render-ui",
                     "modal",
                     {
-                      "type": "stack",
-                      "direction": "vertical",
-                      "gap": "md",
                       "children": [
                         {
-                          "align": "center",
-                          "type": "stack",
-                          "direction": "horizontal",
+                          "gap": "sm",
                           "children": [
                             {
-                              "type": "icon",
-                              "name": "@config.icon"
+                              "name": "@config.icon",
+                              "type": "icon"
                             },
                             {
-                              "type": "typography",
                               "content": "@config.title",
+                              "type": "typography",
                               "variant": "h3"
                             }
                           ],
-                          "gap": "sm"
+                          "direction": "horizontal",
+                          "align": "center",
+                          "type": "stack"
                         },
                         {
                           "type": "divider"
                         },
                         {
-                          "type": "alert",
                           "variant": "error",
+                          "type": "alert",
                           "message": "@config.alertMessage"
                         },
                         {
-                          "type": "typography",
                           "content": "@entity.name",
+                          "type": "typography",
                           "variant": "h4"
                         },
                         {
-                          "color": "muted",
                           "type": "typography",
                           "variant": "caption",
+                          "color": "muted",
                           "content": "@entity.pendingId"
                         },
                         {
-                          "direction": "horizontal",
                           "gap": "sm",
-                          "type": "stack",
-                          "justify": "end",
                           "children": [
                             {
-                              "variant": "ghost",
-                              "type": "button",
                               "action": "CANCEL",
-                              "label": "Cancel"
+                              "type": "button",
+                              "label": "Cancel",
+                              "variant": "ghost"
                             },
                             {
-                              "type": "button",
+                              "action": "CONFIRM",
                               "actionPayload": {
                                 "id": "@payload.id"
                               },
-                              "icon": "check",
                               "label": "@config.confirmLabel",
-                              "action": "CONFIRM",
-                              "variant": "danger"
+                              "type": "button",
+                              "variant": "danger",
+                              "icon": "check"
                             }
-                          ]
+                          ],
+                          "type": "stack",
+                          "justify": "end",
+                          "direction": "horizontal"
                         }
-                      ]
+                      ],
+                      "direction": "vertical",
+                      "type": "stack",
+                      "gap": "md"
                     }
                   ]
                 ]
@@ -298,11 +305,11 @@
             ]
           },
           "config": {
-            "alertMessage": {
+            "title": {
               "type": "string",
-              "default": "Are you sure?",
-              "label": "Alert message",
-              "description": "Body text explaining what the user is confirming",
+              "default": "Confirm Action",
+              "label": "Modal title",
+              "description": "Heading shown at the top of the confirmation modal",
               "tier": "presentation"
             },
             "icon": {
@@ -312,18 +319,18 @@
               "description": "Icon name displayed in the confirmation modal header",
               "tier": "presentation"
             },
-            "title": {
-              "type": "string",
-              "default": "Confirm Action",
-              "label": "Modal title",
-              "description": "Heading shown at the top of the confirmation modal",
-              "tier": "presentation"
-            },
             "confirmLabel": {
               "type": "string",
               "default": "Confirm",
               "label": "Confirm button",
               "description": "Label on the primary confirm action button",
+              "tier": "presentation"
+            },
+            "alertMessage": {
+              "type": "string",
+              "default": "Are you sure?",
+              "label": "Alert message",
+              "description": "Body text explaining what the user is confirming",
               "tier": "presentation"
             }
           },

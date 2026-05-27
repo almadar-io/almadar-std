@@ -44,19 +44,19 @@
             "type": "render-ui",
             "default": {
               "type": "stack",
+              "direction": "vertical",
               "children": [
                 {
-                  "gap": "@config.gap",
-                  "pageSize": "@config.displayPageSize",
-                  "itemActions": "@config.itemActions",
-                  "fields": "@config.fields",
                   "type": "data-grid",
-                  "entity": "@payload.data",
+                  "fields": "@config.fields",
                   "imageField": "@config.imageField",
-                  "cols": "@config.cols"
+                  "entity": "@payload.data",
+                  "itemActions": "@config.itemActions",
+                  "cols": "@config.cols",
+                  "pageSize": "@config.displayPageSize",
+                  "gap": "@config.gap"
                 }
-              ],
-              "direction": "vertical"
+              ]
             },
             "label": "Body content tree",
             "description": "Render-ui SExpr rendered after rows load. Default is the canonical data-grid call wrapped in a stack. Layer 3 variants override this with their own tree (composing data-list/data-grid/entity-table + custom renderItem lambdas + filter-group, kbd, card, etc.) to deliver entirely different browse UX while inheriting the same trait, state machine, emits, and listens.",
@@ -83,13 +83,13 @@
             "type": "[FieldSpec]",
             "default": [
               {
+                "variant": "h4",
                 "name": "name",
-                "label": "Name",
-                "variant": "h4"
+                "label": "Name"
               },
               {
-                "name": "description",
                 "variant": "caption",
+                "name": "description",
                 "label": "Description"
               },
               {
@@ -103,29 +103,14 @@
             "tier": "presentation",
             "items": {
               "properties": {
-                "header": {
-                  "name": "header",
-                  "required": false,
-                  "type": "string"
-                },
-                "key": {
-                  "name": "key",
-                  "required": false,
-                  "type": "string"
-                },
-                "format": {
-                  "name": "format",
+                "label": {
+                  "name": "label",
                   "required": false,
                   "type": "string"
                 },
                 "name": {
                   "name": "name",
                   "required": true,
-                  "type": "string"
-                },
-                "label": {
-                  "name": "label",
-                  "required": false,
                   "type": "string"
                 },
                 "variant": {
@@ -135,6 +120,21 @@
                 },
                 "icon": {
                   "name": "icon",
+                  "required": false,
+                  "type": "string"
+                },
+                "format": {
+                  "name": "format",
+                  "required": false,
+                  "type": "string"
+                },
+                "header": {
+                  "name": "header",
+                  "required": false,
+                  "type": "string"
+                },
+                "key": {
+                  "name": "key",
                   "required": false,
                   "type": "string"
                 }
@@ -177,14 +177,14 @@
                   "required": true,
                   "type": "string"
                 },
-                "label": {
-                  "name": "label",
-                  "required": true,
-                  "type": "string"
-                },
                 "icon": {
                   "name": "icon",
                   "required": false,
+                  "type": "string"
+                },
+                "label": {
+                  "name": "label",
+                  "required": true,
                   "type": "string"
                 }
               },
@@ -208,7 +208,12 @@
             "tier": "internal"
           }
         ],
-        "capabilities": []
+        "capabilities": [],
+        "entityRebindable": true,
+        "entityContract": {
+          "requires": [],
+          "provides": []
+        }
       }
     ],
     "pages": [

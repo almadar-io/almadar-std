@@ -36,6 +36,11 @@
                   "type": "string",
                   "required": false
                 },
+                "content": {
+                  "name": "content",
+                  "type": "trait",
+                  "required": false
+                },
                 "id": {
                   "name": "id",
                   "type": "string",
@@ -44,11 +49,6 @@
                 "icon": {
                   "name": "icon",
                   "type": "string",
-                  "required": false
-                },
-                "content": {
-                  "name": "content",
-                  "type": "trait",
                   "required": false
                 }
               }
@@ -59,6 +59,13 @@
       "traits": [
         {
           "name": "TabsItemTabs",
+          "entityRebindable": true,
+          "entityContract": {
+            "provides": [
+              "activeTab",
+              "items"
+            ]
+          },
           "category": "interaction",
           "linkedEntity": "TabsItem",
           "emits": [
@@ -149,27 +156,23 @@
             "bodyContent": {
               "type": "render-ui",
               "default": {
-                "orientation": "@config.orientation",
                 "tabChangeEvent": "TAB_CHANGED",
-                "activeTab": "@entity.activeTab",
                 "items": "@entity.items",
                 "variant": "@config.variant",
-                "type": "tabs"
+                "type": "tabs",
+                "activeTab": "@entity.activeTab",
+                "orientation": "@config.orientation"
               },
               "label": "Body content tree",
               "description": "Render-ui SExpr rendered for the tabs surface. Default is the canonical tabs pattern bound to @entity.items / @entity.activeTab. Layer 3 variants override this with their own tree (segmented-pill bar, vertical sidebar rail, etc.) while inheriting the same trait, state machine, emits, and listens.",
               "tier": "internal"
             },
-            "orientation": {
+            "defaultTab": {
               "type": "string",
-              "default": "horizontal",
-              "label": "Orientation",
-              "description": "Horizontal strip or vertical rail layout",
-              "tier": "presentation",
-              "values": [
-                "horizontal",
-                "vertical"
-              ]
+              "default": "overview",
+              "label": "Default tab",
+              "description": "Tab id selected on first render",
+              "tier": "presentation"
             },
             "variant": {
               "type": "string",
@@ -183,25 +186,18 @@
                 "underline"
               ]
             },
-            "defaultTab": {
-              "type": "string",
-              "default": "overview",
-              "label": "Default tab",
-              "description": "Tab id selected on first render",
-              "tier": "presentation"
-            },
             "tabs": {
               "type": "[TabSpec]",
               "default": [
                 {
                   "icon": "info",
-                  "label": "Overview",
-                  "id": "overview"
+                  "id": "overview",
+                  "label": "Overview"
                 },
                 {
                   "icon": "list",
-                  "id": "details",
-                  "label": "Details"
+                  "label": "Details",
+                  "id": "details"
                 },
                 {
                   "id": "settings",
@@ -225,11 +221,6 @@
                     "type": "string",
                     "required": true
                   },
-                  "badge": {
-                    "name": "badge",
-                    "type": "string",
-                    "required": false
-                  },
                   "content": {
                     "name": "content",
                     "type": "trait",
@@ -239,9 +230,25 @@
                     "name": "icon",
                     "type": "string",
                     "required": false
+                  },
+                  "badge": {
+                    "name": "badge",
+                    "type": "string",
+                    "required": false
                   }
                 }
               }
+            },
+            "orientation": {
+              "type": "string",
+              "default": "horizontal",
+              "label": "Orientation",
+              "description": "Horizontal strip or vertical rail layout",
+              "tier": "presentation",
+              "values": [
+                "horizontal",
+                "vertical"
+              ]
             }
           },
           "scope": "instance"

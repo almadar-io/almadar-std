@@ -97,24 +97,24 @@ export interface StdBrowseDeletePayload {
  * without modifying its state-machine topology.
  */
 export interface StdBrowseConfig {
-  /** Default: `1` */
-  cols?: number;
   /** Default: `"md"` */
   gap?: string;
   /** Default: `10` */
-  displayPageSize?: number;
+  pageSize?: number;
+  /** Default: `{"type":"stack","direction":"vertical","children":[{"type":"data-grid","fields":"@config.fields","imageField":"@config.imageField","entity":"@payload.data","itemActions":"@config.itemActions","cols":"@config.cols","pageSize":"@config.displayPageSize","gap":"@config.gap"}]}` */
+  bodyContent?: unknown;
   /** Default: `"data-grid"` */
   viewPattern?: unknown;
-  /** Default: `""` */
-  imageField?: string;
   /** Default: `[]` */
   itemActions?: EntityRow[];
-  /** Default: `10` */
-  pageSize?: number;
-  /** Default: `{"type":"stack","children":[{"gap":"@config.gap","pageSize":"@config.displayPageSize","itemActions":"@config.itemActions","fields":"@config.fields","type":"data-grid","entity":"@payload.data","imageField":"@config.imageField","cols":"@config.cols"}],"direction":"vertical"}` */
-  bodyContent?: unknown;
-  /** Default: `[{"name":"name","label":"Name","variant":"h4"},{"name":"description","variant":"caption","label":"Description"},{"name":"status","label":"Status","variant":"badge"}]` */
+  /** Default: `[{"variant":"h4","name":"name","label":"Name"},{"variant":"caption","name":"description","label":"Description"},{"name":"status","label":"Status","variant":"badge"}]` */
   fields?: EntityRow[];
+  /** Default: `""` */
+  imageField?: string;
+  /** Default: `1` */
+  cols?: number;
+  /** Default: `10` */
+  displayPageSize?: number;
 }
 
 /**

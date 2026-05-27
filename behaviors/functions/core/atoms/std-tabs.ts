@@ -46,16 +46,16 @@ export interface StdTabsTabChangedPayload {
  * without modifying its state-machine topology.
  */
 export interface StdTabsConfig {
-  /** Default: `{"orientation":"@config.orientation","tabChangeEvent":"TAB_CHANGED","activeTab":"@entity.activeTab","items":"@entity.items","variant":"@config.variant","type":"tabs"}` */
+  /** Default: `{"tabChangeEvent":"TAB_CHANGED","items":"@entity.items","variant":"@config.variant","type":"tabs","activeTab":"@entity.activeTab","orientation":"@config.orientation"}` */
   bodyContent?: unknown;
-  /** Default: `"horizontal"` */
-  orientation?: 'horizontal' | 'vertical';
-  /** Default: `"default"` */
-  variant?: 'default' | 'pills' | 'underline';
   /** Default: `"overview"` */
   defaultTab?: string;
-  /** Default: `[{"icon":"info","label":"Overview","id":"overview"},{"icon":"list","id":"details","label":"Details"},{"id":"settings","icon":"settings","label":"Settings"}]` */
+  /** Default: `"default"` */
+  variant?: 'default' | 'pills' | 'underline';
+  /** Default: `[{"icon":"info","id":"overview","label":"Overview"},{"icon":"list","label":"Details","id":"details"},{"id":"settings","icon":"settings","label":"Settings"}]` */
   tabs?: EntityRow[];
+  /** Default: `"horizontal"` */
+  orientation?: 'horizontal' | 'vertical';
 }
 
 /**
