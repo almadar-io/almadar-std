@@ -55,6 +55,18 @@
       "traits": [
         {
           "name": "AuditCaptureListener",
+          "entityRebindable": true,
+          "entityContract": {
+            "provides": [
+              "action",
+              "actor",
+              "after",
+              "before",
+              "entityId",
+              "entityType",
+              "recordedAt"
+            ]
+          },
           "category": "lifecycle",
           "capabilities": [
             "audit",
@@ -235,24 +247,24 @@
                         "create",
                         "AuditEntry",
                         {
-                          "action": "@entity.action",
-                          "actor": "@user.id",
                           "recordedAt": 0.0,
-                          "after": "@entity.after",
-                          "before": "@entity.before",
                           "entityType": "@config.captureEntity",
-                          "entityId": "@entity.entityId"
+                          "entityId": "@entity.entityId",
+                          "action": "@entity.action",
+                          "before": "@entity.before",
+                          "after": "@entity.after",
+                          "actor": "@user.id"
                         }
                       ],
                       [
                         "emit",
                         "AuditRecorded",
                         {
-                          "entityType": "@config.captureEntity",
+                          "entityId": "@entity.entityId",
                           "recordedAt": 0.0,
-                          "action": "@entity.action",
+                          "entityType": "@config.captureEntity",
                           "actor": "@user.id",
-                          "entityId": "@entity.entityId"
+                          "action": "@entity.action"
                         }
                       ]
                     ]
