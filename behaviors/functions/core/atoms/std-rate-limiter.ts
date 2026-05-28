@@ -39,16 +39,18 @@ export type StdRateLimiterEventKey = 'INIT' | 'REQUEST' | 'RESET' | 'THROTTLE';
  * without modifying its state-machine topology.
  */
 export interface StdRateLimiterConfig {
-  /** Default: `60` */
-  requestsPerMinute?: number;
-  /** Default: `10` */
-  burstSize?: number;
   /** Default: `"elevated"` */
   statLook?: 'elevated' | 'flat' | 'progress-backed' | 'gauge' | 'sparkline';
   /** Default: `"user"` */
   keyStrategy?: 'ip' | 'user' | 'api-key' | 'global';
+  /** Default: `60` */
+  requestsPerMinute?: number;
   /** Default: `[]` */
   overrideRoles?: string[];
+  /** Default: `false` */
+  enabled?: boolean;
+  /** Default: `10` */
+  burstSize?: number;
 }
 
 /**

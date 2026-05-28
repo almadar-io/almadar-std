@@ -50,16 +50,18 @@ export interface StdAuditCaptureAuditRecordedPayload {
  * without modifying its state-machine topology.
  */
 export interface StdAuditCaptureConfig {
-  /** Default: `[]` */
-  excludeFields?: string[];
-  /** Default: `2555` */
-  retentionDays?: number;
-  /** Default: `false` */
-  captureBeforeAfter?: boolean;
-  /** Default: `[]` */
-  captureEventTypes?: string[];
   /** Default: `""` */
   captureEntity?: string;
+  /** Default: `false` */
+  enabled?: boolean;
+  /** Default: `[]` */
+  captureEventTypes?: string[];
+  /** Default: `[]` */
+  excludeFields?: string[];
+  /** Default: `false` */
+  captureBeforeAfter?: boolean;
+  /** Default: `2555` */
+  retentionDays?: number;
 }
 
 /**

@@ -72,10 +72,12 @@ export interface StdCascadeOnDeleteCascadeFailedPayload {
 export interface StdCascadeOnDeleteConfig {
   /** Default: `""` */
   parentEntity?: string;
-  /** Default: `[]` */
-  dependentEntities?: string[];
   /** Default: `""` */
   foreignKeyField?: string;
+  /** Default: `false` */
+  enabled?: boolean;
+  /** Default: `[]` */
+  dependentEntities?: string[];
 }
 
 /**

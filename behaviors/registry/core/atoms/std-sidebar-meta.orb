@@ -1,0 +1,591 @@
+{
+  "name": "std-sidebar-meta",
+  "version": "1.0.0",
+  "description": "Right-rail meta panel — Linear/Jira/GitHub-style issue sidebar. Stacked label/value rows grouped with dividers. Standalone atom; fetches one SidebarRecord and renders inline.",
+  "orbitals": [
+    {
+      "name": "SidebarMetaOrbital",
+      "entity": {
+        "name": "SidebarRecord",
+        "persistence": "runtime",
+        "fields": [
+          {
+            "name": "id",
+            "type": "string",
+            "required": true
+          },
+          {
+            "name": "title",
+            "type": "string",
+            "required": true,
+            "default": "Untitled"
+          },
+          {
+            "name": "status",
+            "type": "string",
+            "default": "open",
+            "values": [
+              "open",
+              "in_progress",
+              "closed"
+            ]
+          },
+          {
+            "name": "priority",
+            "type": "string",
+            "default": "medium",
+            "values": [
+              "low",
+              "medium",
+              "high"
+            ]
+          },
+          {
+            "name": "assignee",
+            "type": "string",
+            "default": ""
+          },
+          {
+            "name": "reporter",
+            "type": "string",
+            "default": ""
+          },
+          {
+            "name": "milestone",
+            "type": "string",
+            "default": ""
+          },
+          {
+            "name": "labels",
+            "type": "string",
+            "default": ""
+          },
+          {
+            "name": "createdAt",
+            "type": "string",
+            "default": ""
+          },
+          {
+            "name": "updatedAt",
+            "type": "string",
+            "default": ""
+          },
+          {
+            "name": "errorMessage",
+            "type": "string",
+            "default": ""
+          }
+        ]
+      },
+      "traits": [
+        {
+          "name": "SidebarMeta",
+          "category": "interaction",
+          "linkedEntity": "SidebarRecord",
+          "emits": [
+            {
+              "event": "SidebarRecordLoaded",
+              "payloadSchema": [
+                {
+                  "name": "data",
+                  "type": "[object]"
+                }
+              ]
+            },
+            {
+              "event": "SidebarRecordLoadFailed",
+              "payloadSchema": [
+                {
+                  "name": "error",
+                  "type": "string"
+                },
+                {
+                  "name": "code",
+                  "type": "string"
+                }
+              ]
+            }
+          ],
+          "stateMachine": {
+            "states": [
+              {
+                "name": "loading",
+                "isInitial": true
+              },
+              {
+                "name": "error"
+              }
+            ],
+            "events": [
+              {
+                "key": "INIT",
+                "name": "Initialize"
+              },
+              {
+                "key": "SidebarRecordLoaded",
+                "name": "SidebarRecord loaded",
+                "payloadSchema": [
+                  {
+                    "name": "data",
+                    "type": "[object]"
+                  }
+                ]
+              },
+              {
+                "key": "SidebarRecordLoadFailed",
+                "name": "SidebarRecord load failed",
+                "payloadSchema": [
+                  {
+                    "name": "error",
+                    "type": "string"
+                  },
+                  {
+                    "name": "code",
+                    "type": "string"
+                  }
+                ]
+              }
+            ],
+            "transitions": [
+              {
+                "from": "loading",
+                "to": "loading",
+                "event": "INIT",
+                "effects": [
+                  [
+                    "fetch",
+                    "SidebarRecord",
+                    {
+                      "limit": 1.0,
+                      "emit": {
+                        "success": "SidebarRecordLoaded",
+                        "failure": "SidebarRecordLoadFailed"
+                      }
+                    }
+                  ],
+                  [
+                    "render-ui",
+                    "main",
+                    {
+                      "type": "loading-state",
+                      "title": "Loading…"
+                    }
+                  ]
+                ]
+              },
+              {
+                "from": "loading",
+                "to": "loading",
+                "event": "SidebarRecordLoaded",
+                "effects": [
+                  [
+                    "set",
+                    "@entity.id",
+                    [
+                      "object/get",
+                      [
+                        "array/first",
+                        "@payload.data"
+                      ],
+                      "id"
+                    ]
+                  ],
+                  [
+                    "set",
+                    "@entity.title",
+                    [
+                      "object/get",
+                      [
+                        "array/first",
+                        "@payload.data"
+                      ],
+                      "title"
+                    ]
+                  ],
+                  [
+                    "set",
+                    "@entity.status",
+                    [
+                      "object/get",
+                      [
+                        "array/first",
+                        "@payload.data"
+                      ],
+                      "status"
+                    ]
+                  ],
+                  [
+                    "set",
+                    "@entity.priority",
+                    [
+                      "object/get",
+                      [
+                        "array/first",
+                        "@payload.data"
+                      ],
+                      "priority"
+                    ]
+                  ],
+                  [
+                    "set",
+                    "@entity.assignee",
+                    [
+                      "object/get",
+                      [
+                        "array/first",
+                        "@payload.data"
+                      ],
+                      "assignee"
+                    ]
+                  ],
+                  [
+                    "set",
+                    "@entity.reporter",
+                    [
+                      "object/get",
+                      [
+                        "array/first",
+                        "@payload.data"
+                      ],
+                      "reporter"
+                    ]
+                  ],
+                  [
+                    "set",
+                    "@entity.milestone",
+                    [
+                      "object/get",
+                      [
+                        "array/first",
+                        "@payload.data"
+                      ],
+                      "milestone"
+                    ]
+                  ],
+                  [
+                    "set",
+                    "@entity.labels",
+                    [
+                      "object/get",
+                      [
+                        "array/first",
+                        "@payload.data"
+                      ],
+                      "labels"
+                    ]
+                  ],
+                  [
+                    "set",
+                    "@entity.createdAt",
+                    [
+                      "object/get",
+                      [
+                        "array/first",
+                        "@payload.data"
+                      ],
+                      "createdAt"
+                    ]
+                  ],
+                  [
+                    "set",
+                    "@entity.updatedAt",
+                    [
+                      "object/get",
+                      [
+                        "array/first",
+                        "@payload.data"
+                      ],
+                      "updatedAt"
+                    ]
+                  ],
+                  [
+                    "render-ui",
+                    "main",
+                    {
+                      "children": [
+                        {
+                          "direction": "vertical",
+                          "gap": "md",
+                          "children": [
+                            {
+                              "direction": "vertical",
+                              "children": [
+                                {
+                                  "color": "muted",
+                                  "content": "@entity.id",
+                                  "type": "typography",
+                                  "variant": "caption"
+                                },
+                                {
+                                  "weight": "semibold",
+                                  "type": "typography",
+                                  "content": "@entity.title",
+                                  "variant": "h4"
+                                }
+                              ],
+                              "gap": "xs",
+                              "type": "stack"
+                            },
+                            {
+                              "type": "divider"
+                            },
+                            {
+                              "justify": "between",
+                              "children": [
+                                {
+                                  "color": "muted",
+                                  "type": "typography",
+                                  "content": "Status",
+                                  "variant": "overline"
+                                },
+                                {
+                                  "type": "badge",
+                                  "variant": "default",
+                                  "label": "@entity.status",
+                                  "size": "sm"
+                                }
+                              ],
+                              "direction": "horizontal",
+                              "type": "stack",
+                              "align": "center",
+                              "gap": "sm"
+                            },
+                            {
+                              "children": [
+                                {
+                                  "color": "muted",
+                                  "variant": "overline",
+                                  "type": "typography",
+                                  "content": "Priority"
+                                },
+                                {
+                                  "variant": "neutral",
+                                  "label": "@entity.priority",
+                                  "size": "sm",
+                                  "type": "badge"
+                                }
+                              ],
+                              "justify": "between",
+                              "gap": "sm",
+                              "align": "center",
+                              "type": "stack",
+                              "direction": "horizontal"
+                            },
+                            {
+                              "type": "divider"
+                            },
+                            {
+                              "direction": "vertical",
+                              "type": "stack",
+                              "gap": "xs",
+                              "children": [
+                                {
+                                  "type": "typography",
+                                  "variant": "overline",
+                                  "color": "muted",
+                                  "content": "Assignee"
+                                },
+                                {
+                                  "type": "stack",
+                                  "gap": "sm",
+                                  "align": "center",
+                                  "children": [
+                                    {
+                                      "type": "avatar",
+                                      "name": "@entity.assignee",
+                                      "size": "xs"
+                                    },
+                                    {
+                                      "variant": "body",
+                                      "type": "typography",
+                                      "content": "@entity.assignee"
+                                    }
+                                  ],
+                                  "direction": "horizontal"
+                                }
+                              ]
+                            },
+                            {
+                              "children": [
+                                {
+                                  "content": "Reporter",
+                                  "variant": "overline",
+                                  "color": "muted",
+                                  "type": "typography"
+                                },
+                                {
+                                  "gap": "sm",
+                                  "children": [
+                                    {
+                                      "size": "xs",
+                                      "type": "avatar",
+                                      "name": "@entity.reporter"
+                                    },
+                                    {
+                                      "type": "typography",
+                                      "variant": "body",
+                                      "content": "@entity.reporter"
+                                    }
+                                  ],
+                                  "type": "stack",
+                                  "align": "center",
+                                  "direction": "horizontal"
+                                }
+                              ],
+                              "gap": "xs",
+                              "direction": "vertical",
+                              "type": "stack"
+                            },
+                            {
+                              "type": "divider"
+                            },
+                            {
+                              "justify": "between",
+                              "align": "center",
+                              "gap": "sm",
+                              "type": "stack",
+                              "direction": "horizontal",
+                              "children": [
+                                {
+                                  "color": "muted",
+                                  "variant": "overline",
+                                  "type": "typography",
+                                  "content": "Milestone"
+                                },
+                                {
+                                  "type": "typography",
+                                  "content": "@entity.milestone",
+                                  "variant": "body"
+                                }
+                              ]
+                            },
+                            {
+                              "gap": "xs",
+                              "type": "stack",
+                              "direction": "vertical",
+                              "children": [
+                                {
+                                  "type": "typography",
+                                  "color": "muted",
+                                  "variant": "overline",
+                                  "content": "Labels"
+                                },
+                                {
+                                  "label": "@entity.labels",
+                                  "size": "sm",
+                                  "variant": "neutral",
+                                  "type": "badge"
+                                }
+                              ]
+                            },
+                            {
+                              "type": "divider"
+                            },
+                            {
+                              "direction": "horizontal",
+                              "gap": "sm",
+                              "align": "center",
+                              "type": "stack",
+                              "children": [
+                                {
+                                  "type": "typography",
+                                  "variant": "overline",
+                                  "color": "muted",
+                                  "content": "Created"
+                                },
+                                {
+                                  "type": "typography",
+                                  "color": "muted",
+                                  "content": "@entity.createdAt",
+                                  "variant": "caption"
+                                }
+                              ],
+                              "justify": "between"
+                            },
+                            {
+                              "gap": "sm",
+                              "type": "stack",
+                              "children": [
+                                {
+                                  "content": "Updated",
+                                  "type": "typography",
+                                  "color": "muted",
+                                  "variant": "overline"
+                                },
+                                {
+                                  "variant": "caption",
+                                  "content": "@entity.updatedAt",
+                                  "type": "typography",
+                                  "color": "muted"
+                                }
+                              ],
+                              "direction": "horizontal",
+                              "align": "center",
+                              "justify": "between"
+                            }
+                          ],
+                          "type": "stack"
+                        }
+                      ],
+                      "type": "card",
+                      "look": "flat-bordered",
+                      "padding": "md"
+                    }
+                  ]
+                ]
+              },
+              {
+                "from": "loading",
+                "to": "error",
+                "event": "SidebarRecordLoadFailed",
+                "effects": [
+                  [
+                    "set",
+                    "@entity.errorMessage",
+                    "@payload.error"
+                  ],
+                  [
+                    "render-ui",
+                    "main",
+                    {
+                      "message": "@entity.errorMessage",
+                      "title": "Failed to load sidebar",
+                      "type": "error-state"
+                    }
+                  ]
+                ]
+              },
+              {
+                "from": "error",
+                "to": "loading",
+                "event": "INIT",
+                "effects": [
+                  [
+                    "render-ui",
+                    "main",
+                    {
+                      "type": "loading-state",
+                      "title": "Retrying…"
+                    }
+                  ]
+                ]
+              }
+            ]
+          },
+          "scope": "instance"
+        }
+      ],
+      "pages": [
+        {
+          "name": "SidebarMetaPage",
+          "path": "/sidebar-meta",
+          "traits": [
+            {
+              "ref": "SidebarMeta"
+            }
+          ]
+        }
+      ]
+    }
+  ]
+}

@@ -167,6 +167,7 @@
                 "from": "idle",
                 "to": "idle",
                 "event": "ScanRecordsLoaded",
+                "guard": "@config.enabled",
                 "effects": [
                   [
                     "set",
@@ -193,8 +194,8 @@
                     "@entity",
                     {
                       "emit": {
-                        "success": "LifecycleRunLogged",
-                        "failure": "LifecycleRunFailed"
+                        "failure": "LifecycleRunFailed",
+                        "success": "LifecycleRunLogged"
                       }
                     }
                   ]
@@ -272,6 +273,21 @@
               "description": "Entity name to scan (e.g. 'InvoiceRecord'). v1.1 will drive SET_STATUS transitions on this entity.",
               "tier": "domain"
             },
+            "enabled": {
+              "type": "boolean",
+              "default": false,
+              "label": "Enabled",
+              "description": "Whether the lifecycle scheduler is active for the host orbital. Off by default; turn on to enforce retention / status transitions.",
+              "synonyms": "enable, turn on, enforce, require, activate, apply, switch on, retention, ttl, expire, archive after, sunset, lifecycle, age out, time-based status, scheduled transitions, expire old records, auto-archive",
+              "tier": "domain"
+            },
+            "dryRun": {
+              "type": "boolean",
+              "default": false,
+              "label": "Dry-run mode",
+              "description": "When true, log scan results without emitting transitions.",
+              "tier": "domain"
+            },
             "rules": {
               "type": "[LifecycleRule]",
               "default": [],
@@ -291,14 +307,14 @@
                         "type": "string",
                         "required": false
                       },
-                      "dateField": {
-                        "name": "dateField",
-                        "type": "string",
-                        "required": false
-                      },
                       "value": {
                         "name": "value",
                         "type": "number",
+                        "required": false
+                      },
+                      "dateField": {
+                        "name": "dateField",
+                        "type": "string",
                         "required": false
                       }
                     }
@@ -315,13 +331,6 @@
                   }
                 }
               }
-            },
-            "dryRun": {
-              "type": "boolean",
-              "default": false,
-              "label": "Dry-run mode",
-              "description": "When true, log scan results without emitting transitions.",
-              "tier": "domain"
             }
           },
           "scope": "instance"

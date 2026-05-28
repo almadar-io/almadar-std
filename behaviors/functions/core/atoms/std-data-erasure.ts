@@ -97,16 +97,18 @@ export interface StdDataErasureErasureSaveFailedPayload {
  * without modifying its state-machine topology.
  */
 export interface StdDataErasureConfig {
-  /** Default: `[]` */
-  piiFields?: string[];
   /** Default: `"anonymize"` */
   anonymizeVsDelete?: 'anonymize' | 'delete';
-  /** Default: `30` */
-  gracePeriodDays?: number;
-  /** Default: `""` */
-  targetEntity?: string;
   /** Default: `"dense"` */
   tableLook?: 'dense' | 'spacious' | 'striped' | 'borderless' | 'card-rows';
+  /** Default: `[]` */
+  piiFields?: string[];
+  /** Default: `""` */
+  targetEntity?: string;
+  /** Default: `30` */
+  gracePeriodDays?: number;
+  /** Default: `false` */
+  enabled?: boolean;
 }
 
 /**

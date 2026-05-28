@@ -1,0 +1,66 @@
+app std-hero-banner "1.0.0"
+"Hero marquee — eyebrow + headline + lead + primary CTA, centered in an elevated card. Above-the-fold landing surface. Standalone atom; fetches one HeroPromo record and renders inline."
+
+orbital HeroBannerOrbital {
+  entity HeroPromo [runtime] {
+    id           : string!
+    eyebrow      : string  = "Announcing"
+    headline     : string! = "Headline"
+    lead         : string  = ""
+    ctaLabel     : string  = "Get started"
+    ctaEvent     : string  = "PRIMARY_CTA"
+    errorMessage : string  = ""
+  }
+
+  type HeroPromoLoaded     = Event { data : [object] }              "Fired when the hero promo finishes loading"
+  type HeroPromoLoadFailed = Event { error : string, code : string } "Fired when the hero promo fetch fails"
+
+  trait HeroBanner -> HeroPromo [interaction, instance] {
+    initial: loading
+    state loading {
+      INIT -> loading
+        (fetch HeroPromo { limit: 1, emit: { success: "HeroPromoLoaded", failure: "HeroPromoLoadFailed" } })
+        (render-ui main { type: "loading-state", title: "Loading…" })
+      HeroPromoLoaded -> ready
+        (set @entity.eyebrow  (object/get (array/first @payload.data) "eyebrow"))
+        (set @entity.headline (object/get (array/first @payload.data) "headline"))
+        (set @entity.lead     (object/get (array/first @payload.data) "lead"))
+        (set @entity.ctaLabel (object/get (array/first @payload.data) "ctaLabel"))
+        (set @entity.ctaEvent (object/get (array/first @payload.data) "ctaEvent"))
+        (render-ui main {
+          type: "card", look: "elevated", padding: "lg",
+          children: [{
+            type: "stack", direction: "vertical", gap: "lg", align: "center",
+            children: [
+              { type: "badge", label: "@entity.eyebrow", variant: "neutral", size: "sm" },
+              { type: "typography", variant: "h1", weight: "bold", content: "@entity.headline" },
+              { type: "typography", variant: "body", color: "muted", content: "@entity.lead" },
+              { type: "button", label: "@entity.ctaLabel", variant: "primary", size: "lg", action: "@entity.ctaEvent" }
+            ]
+          }]
+        })
+      HeroPromoLoadFailed -> error
+        (set @entity.errorMessage @payload.error)
+        (render-ui main { type: "error-state", title: "Failed to load hero", message: "@entity.errorMessage" })
+    }
+    state ready {
+      PRIMARY_CTA -> ready
+    }
+    state error {
+      INIT -> loading
+        (render-ui main { type: "loading-state", title: "Retrying…" })
+    }
+    emits {
+      PRIMARY_CTA          { }
+      HeroPromoLoaded      { data : [object] }
+      HeroPromoLoadFailed  { error : string, code : string }
+    }
+    listens {
+      PRIMARY_CTA          { }
+      HeroPromoLoaded      { data : [object] }
+      HeroPromoLoadFailed  { error : string, code : string }
+    }
+  }
+
+  page "/hero-banner" as HeroBannerPage -> HeroBanner
+}

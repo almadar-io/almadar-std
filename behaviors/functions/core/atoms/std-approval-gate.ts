@@ -126,20 +126,22 @@ export interface StdApprovalGateApprovalRequestReviewFailedPayload {
  * without modifying its state-machine topology.
  */
 export interface StdApprovalGateConfig {
-  /** Default: `0` */
-  threshold?: number;
+  /** Default: `false` */
+  enabled?: boolean;
   /** Default: `[]` */
   approverRoles?: string[];
-  /** Default: `0` */
-  escalationHours?: number;
-  /** Default: `[]` */
-  escalationRoles?: string[];
-  /** Default: `"dense"` */
-  tableLook?: 'dense' | 'spacious' | 'striped' | 'borderless' | 'card-rows';
-  /** Default: `""` */
-  valueField?: string;
   /** Default: `true` */
   autoApproveBelowThreshold?: boolean;
+  /** Default: `"dense"` */
+  tableLook?: 'dense' | 'spacious' | 'striped' | 'borderless' | 'card-rows';
+  /** Default: `[]` */
+  escalationRoles?: string[];
+  /** Default: `0` */
+  threshold?: number;
+  /** Default: `""` */
+  valueField?: string;
+  /** Default: `0` */
+  escalationHours?: number;
 }
 
 /**

@@ -18,6 +18,11 @@ orbital RowAccessControlOrbital {
 
   trait RowAccessGate -> @rebindable RowAccessGateView [lifecycle, instance, privacy, access] {
     config {
+      enabled      : boolean  = false
+        @label "Enabled"
+        @description "Whether this access rule is active for the host orbital. Off by default; turn on to enforce."
+        @synonyms "enable, turn on, enforce, require, activate, apply, switch on, only owner can edit, owner-only, private to owner, only see your own, restrict to role, role-based visibility, permission gate, admin-only access, hide from other users, only show mine, ownership scoping"
+        @tier "domain"
       ownerField   : string   = ""
         @label "Owner field"
         @description "Row field holding the owning user id (blank disables owner filter)"
@@ -29,7 +34,7 @@ orbital RowAccessControlOrbital {
     }
     initial: idle
     state idle {
-      RowsLoaded -> idle
+      RowsLoaded -> idle when @config.enabled
         (set @entity.inputCount (array/len @payload.data))
         (set @entity.accessDenied (and (not (= (array/len @config.visibleRoles) 0)) (not (array/includes @config.visibleRoles @user.role))))
         (set @entity.filteredData (if @entity.accessDenied

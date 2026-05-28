@@ -20,6 +20,11 @@ orbital LifecycleOrbital {
 
   trait LifecycleScheduler -> LifecycleRunLog [lifecycle, instance] {
     config {
+      enabled             : boolean  = false
+        @label "Enabled"
+        @description "Whether the lifecycle scheduler is active for the host orbital. Off by default; turn on to enforce retention / status transitions."
+        @synonyms "enable, turn on, enforce, require, activate, apply, switch on, retention, ttl, expire, archive after, sunset, lifecycle, age out, time-based status, scheduled transitions, expire old records, auto-archive"
+        @tier "domain"
       targetEntity        : string   = ""
         @label "Target entity"
         @description "Entity name to scan (e.g. 'InvoiceRecord'). v1.1 will drive SET_STATUS transitions on this entity."
@@ -35,7 +40,7 @@ orbital LifecycleOrbital {
     }
     initial: idle
     state idle {
-      ScanRecordsLoaded -> idle
+      ScanRecordsLoaded -> idle when @config.enabled
         (set @entity.targetEntity @config.targetEntity)
         (set @entity.recordCount (array/len @payload.data))
         (set @entity.ranAt 0)
