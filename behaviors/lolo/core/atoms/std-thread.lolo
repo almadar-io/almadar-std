@@ -12,6 +12,14 @@ orbital ThreadPostOrbital {
     createdAt     : string
     voteCount     : number = 0
     replyCount    : number = 0
+    ;; Forward relation: array of child ThreadPost IDs whose parentId === this.id.
+    ;; Lowers to `type: "relation", cardinality: "many"` (orbital-lolo lower.rs).
+    ;; @rebindable rewrites the target to the rebound entity in variant atoms.
+    ;; `(fetch ThreadPost { include: ["replies"] })` triggers @almadar/runtime's
+    ;; populateRelations to hydrate each ID into the full row inline so the
+    ;; variant's bodyContent can render `@reply.authorName` etc. without
+    ;; per-reply lookups.
+    replies       : [ThreadPost]
   }
 
   type ThreadPostLoaded        = Event { data : [ThreadPost] }              "Fired when the thread-post collection finishes loading"
@@ -58,7 +66,7 @@ orbital ThreadPostOrbital {
     initial: loading
     state loading {
       INIT -> loading
-        (fetch ThreadPost { emit: { success: "ThreadPostLoaded", failure: "ThreadPostLoadFailed" } })
+        (fetch ThreadPost { include: ["replies"], emit: { success: "ThreadPostLoaded", failure: "ThreadPostLoadFailed" } })
         (render-ui main { type: "spinner", size: "sm" })
       ThreadPostLoaded -> browsing
         (render-ui main @config.bodyContent)
@@ -67,7 +75,7 @@ orbital ThreadPostOrbital {
     }
     state browsing {
       INIT -> loading
-        (fetch ThreadPost { emit: { success: "ThreadPostLoaded", failure: "ThreadPostLoadFailed" } })
+        (fetch ThreadPost { include: ["replies"], emit: { success: "ThreadPostLoaded", failure: "ThreadPostLoadFailed" } })
         (render-ui main { type: "spinner", size: "sm" })
       ThreadPostLoaded -> browsing
         (render-ui main @config.bodyContent)
@@ -86,13 +94,13 @@ orbital ThreadPostOrbital {
       ThreadPostCreated -> browsing
         (set @entity.content "")
         (set @entity.parentId "")
-        (fetch ThreadPost { emit: { success: "ThreadPostLoaded", failure: "ThreadPostLoadFailed" } })
+        (fetch ThreadPost { include: ["replies"], emit: { success: "ThreadPostLoaded", failure: "ThreadPostLoadFailed" } })
       ThreadPostCreateFailed -> replying
         (render-ui main { type: "alert", variant: "error", message: "@payload.error" })
     }
     state error {
       INIT -> loading
-        (fetch ThreadPost { emit: { success: "ThreadPostLoaded", failure: "ThreadPostLoadFailed" } })
+        (fetch ThreadPost { include: ["replies"], emit: { success: "ThreadPostLoaded", failure: "ThreadPostLoadFailed" } })
         (render-ui main { type: "spinner", size: "sm" })
     }
     emits {
