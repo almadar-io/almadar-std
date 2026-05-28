@@ -80,9 +80,10 @@
           },
           {
             "name": "replies",
-            "type": "array",
-            "items": {
-              "type": "string"
+            "type": "relation",
+            "relation": {
+              "entity": "EmailThreadedPost",
+              "cardinality": "many"
             }
           },
           {
@@ -115,9 +116,10 @@
           },
           {
             "name": "focusedReplies",
-            "type": "array",
-            "items": {
-              "type": "string"
+            "type": "relation",
+            "relation": {
+              "entity": "EmailThreadedPost",
+              "cardinality": "many"
             }
           }
         ]
@@ -129,130 +131,127 @@
           "linkedEntity": "EmailThreadedPost",
           "config": {
             "bodyContent": {
-              "gap": "none",
               "direction": "horizontal",
-              "type": "stack",
               "className": "max-w-7xl mx-auto h-full border border-[var(--color-border)] rounded-md overflow-hidden",
+              "type": "stack",
+              "gap": "none",
               "children": [
                 {
-                  "className": "w-80 shrink-0 border-r border-[var(--color-border)] bg-[var(--color-muted)]",
+                  "type": "stack",
+                  "gap": "none",
                   "children": [
                     {
-                      "direction": "horizontal",
-                      "gap": "sm",
-                      "className": "px-card-md py-md border-b border-[var(--color-border)]",
                       "align": "center",
                       "type": "stack",
+                      "className": "px-card-md py-md border-b border-[var(--color-border)]",
+                      "direction": "horizontal",
                       "children": [
                         {
                           "size": "sm",
-                          "type": "icon",
-                          "name": "inbox"
+                          "name": "inbox",
+                          "type": "icon"
                         },
                         {
-                          "type": "typography",
                           "weight": "medium",
+                          "type": "typography",
                           "variant": "label",
                           "content": "Inbox"
                         }
-                      ]
+                      ],
+                      "gap": "sm"
                     },
                     {
-                      "entity": "@payload.data",
-                      "fields": [],
                       "type": "data-list",
-                      "variant": "default",
-                      "gap": "none",
+                      "fields": [],
+                      "entity": "@payload.data",
                       "renderItem": [
                         "fn",
                         "item",
                         {
+                          "type": "card",
                           "look": "borderless-divider",
+                          "padding": "md",
                           "children": {
                             "direction": "horizontal",
-                            "align": "start",
+                            "type": "stack",
+                            "gap": "sm",
                             "children": [
                               {
-                                "size": "sm",
+                                "name": "@item.authorName",
                                 "type": "avatar",
-                                "name": "@item.authorName"
+                                "size": "sm"
                               },
                               {
+                                "direction": "vertical",
+                                "gap": "xs",
                                 "className": "flex-1 min-w-0",
                                 "type": "stack",
-                                "direction": "vertical",
                                 "children": [
                                   {
                                     "gap": "sm",
                                     "type": "stack",
                                     "direction": "horizontal",
-                                    "align": "center",
                                     "children": [
                                       {
-                                        "weight": "medium",
+                                        "variant": "body",
                                         "type": "typography",
                                         "content": "@item.authorName",
-                                        "className": "flex-1 truncate",
-                                        "variant": "body"
+                                        "weight": "medium",
+                                        "className": "flex-1 truncate"
                                       },
                                       {
-                                        "type": "typography",
                                         "variant": "caption",
                                         "content": "@item.createdAt",
+                                        "type": "typography",
                                         "color": "muted"
                                       }
-                                    ]
+                                    ],
+                                    "align": "center"
                                   },
                                   {
-                                    "content": "@item.subject",
-                                    "className": "truncate",
-                                    "type": "typography",
+                                    "weight": "medium",
                                     "variant": "body2",
-                                    "weight": "medium"
+                                    "content": "@item.subject",
+                                    "type": "typography",
+                                    "className": "truncate"
                                   },
                                   {
-                                    "variant": "caption",
-                                    "content": "@item.preview",
                                     "type": "typography",
+                                    "className": "truncate",
+                                    "content": "@item.preview",
                                     "color": "muted",
-                                    "className": "truncate"
+                                    "variant": "caption"
                                   }
-                                ],
-                                "gap": "xs"
+                                ]
                               }
                             ],
-                            "type": "stack",
-                            "gap": "sm"
-                          },
-                          "padding": "md",
-                          "type": "card"
+                            "align": "start"
+                          }
                         }
-                      ]
+                      ],
+                      "gap": "none",
+                      "variant": "default"
                     }
                   ],
-                  "type": "stack",
                   "direction": "vertical",
-                  "gap": "none"
+                  "className": "w-80 shrink-0 border-r border-[var(--color-border)] bg-[var(--color-muted)]"
                 },
                 {
                   "direction": "vertical",
-                  "type": "stack",
                   "gap": "md",
+                  "type": "stack",
                   "className": "flex-1 px-card-md py-md overflow-y-auto",
                   "children": [
                     {
-                      "type": "stack",
-                      "className": "pb-md border-b border-[var(--color-border)]",
                       "direction": "vertical",
-                      "gap": "xs",
+                      "className": "pb-md border-b border-[var(--color-border)]",
                       "children": [
                         {
-                          "content": "@entity.focusedSubject",
                           "type": "typography",
-                          "variant": "h3"
+                          "variant": "h3",
+                          "content": "@entity.focusedSubject"
                         },
                         {
-                          "direction": "horizontal",
                           "children": [
                             {
                               "type": "avatar",
@@ -260,178 +259,181 @@
                               "size": "md"
                             },
                             {
+                              "className": "flex-1",
+                              "gap": "xs",
+                              "direction": "vertical",
                               "children": [
                                 {
-                                  "type": "stack",
-                                  "gap": "sm",
-                                  "children": [
-                                    {
-                                      "color": "muted",
-                                      "content": "From",
-                                      "variant": "label",
-                                      "type": "typography"
-                                    },
-                                    {
-                                      "content": "@entity.focusedFromAddress",
-                                      "variant": "body2",
-                                      "weight": "medium",
-                                      "type": "typography"
-                                    }
-                                  ],
-                                  "align": "center",
-                                  "direction": "horizontal"
-                                },
-                                {
-                                  "gap": "sm",
-                                  "type": "stack",
                                   "direction": "horizontal",
+                                  "gap": "sm",
                                   "align": "center",
                                   "children": [
                                     {
                                       "type": "typography",
                                       "color": "muted",
                                       "variant": "label",
-                                      "content": "To"
+                                      "content": "From"
+                                    },
+                                    {
+                                      "content": "@entity.focusedFromAddress",
+                                      "type": "typography",
+                                      "variant": "body2",
+                                      "weight": "medium"
+                                    }
+                                  ],
+                                  "type": "stack"
+                                },
+                                {
+                                  "children": [
+                                    {
+                                      "color": "muted",
+                                      "content": "To",
+                                      "variant": "label",
+                                      "type": "typography"
                                     },
                                     {
                                       "variant": "body2",
                                       "content": "@entity.focusedToAddress",
                                       "type": "typography"
                                     }
-                                  ]
+                                  ],
+                                  "align": "center",
+                                  "type": "stack",
+                                  "gap": "sm",
+                                  "direction": "horizontal"
                                 }
                               ],
-                              "gap": "xs",
-                              "type": "stack",
-                              "direction": "vertical",
-                              "className": "flex-1"
+                              "type": "stack"
                             },
                             {
-                              "color": "muted",
+                              "type": "typography",
                               "variant": "caption",
-                              "content": "@entity.focusedCreatedAt",
-                              "type": "typography"
+                              "color": "muted",
+                              "content": "@entity.focusedCreatedAt"
                             },
                             {
-                              "action": "REPLY",
                               "actionPayload": {
                                 "parentId": "@entity.focusedId"
                               },
                               "label": "Reply",
-                              "variant": "secondary",
-                              "size": "sm",
+                              "action": "REPLY",
+                              "icon": "corner-up-left",
                               "type": "button",
-                              "icon": "corner-up-left"
+                              "variant": "secondary",
+                              "size": "sm"
                             },
                             {
-                              "action": "REPLY",
-                              "size": "sm",
-                              "label": "Forward",
                               "icon": "corner-up-right",
-                              "variant": "ghost",
-                              "type": "button"
+                              "action": "REPLY",
+                              "type": "button",
+                              "label": "Forward",
+                              "size": "sm",
+                              "variant": "ghost"
                             }
                           ],
-                          "gap": "md",
+                          "direction": "horizontal",
+                          "align": "center",
                           "type": "stack",
-                          "align": "center"
-                        }
-                      ]
-                    },
-                    {
-                      "children": {
-                        "content": "@entity.focusedContent",
-                        "type": "typography",
-                        "variant": "body"
-                      },
-                      "type": "card",
-                      "look": "flat-bordered",
-                      "padding": "md"
-                    },
-                    {
-                      "direction": "horizontal",
-                      "type": "stack",
-                      "children": [
-                        {
-                          "name": "corner-down-right",
-                          "size": "xs",
-                          "type": "icon"
-                        },
-                        {
-                          "variant": "label",
-                          "color": "muted",
-                          "content": "Quoted replies",
-                          "type": "typography"
+                          "gap": "md"
                         }
                       ],
-                      "gap": "sm",
-                      "align": "center"
+                      "type": "stack",
+                      "gap": "xs"
                     },
                     {
-                      "entity": "@entity.focusedReplies",
-                      "type": "data-list",
-                      "fields": [],
+                      "type": "card",
+                      "children": {
+                        "content": "@entity.focusedContent",
+                        "variant": "body",
+                        "type": "typography"
+                      },
+                      "padding": "md",
+                      "look": "flat-bordered"
+                    },
+                    {
+                      "type": "stack",
                       "gap": "sm",
+                      "align": "center",
+                      "children": [
+                        {
+                          "size": "xs",
+                          "type": "icon",
+                          "name": "corner-down-right"
+                        },
+                        {
+                          "type": "typography",
+                          "color": "muted",
+                          "variant": "label",
+                          "content": "Quoted replies"
+                        }
+                      ],
+                      "direction": "horizontal"
+                    },
+                    {
+                      "type": "data-list",
                       "variant": "default",
                       "renderItem": [
                         "fn",
                         "reply",
                         {
+                          "look": "flat-bordered",
                           "padding": "md",
                           "type": "card",
-                          "look": "flat-bordered",
                           "className": "border-l-4 border-l-[var(--color-primary)] ml-card-md",
                           "children": {
+                            "type": "stack",
                             "gap": "sm",
+                            "direction": "vertical",
                             "children": [
                               {
-                                "children": [
-                                  {
-                                    "size": "xs",
-                                    "name": "@reply.authorName",
-                                    "type": "avatar"
-                                  },
-                                  {
-                                    "weight": "medium",
-                                    "variant": "body2",
-                                    "content": "@reply.authorName",
-                                    "type": "typography"
-                                  },
-                                  {
-                                    "color": "muted",
-                                    "variant": "caption",
-                                    "content": "@reply.fromAddress",
-                                    "type": "typography"
-                                  },
-                                  {
-                                    "content": "·",
-                                    "type": "typography",
-                                    "variant": "caption",
-                                    "color": "muted"
-                                  },
-                                  {
-                                    "type": "typography",
-                                    "variant": "caption",
-                                    "color": "muted",
-                                    "content": "@reply.createdAt"
-                                  }
-                                ],
+                                "type": "stack",
                                 "gap": "sm",
                                 "align": "center",
-                                "type": "stack",
-                                "direction": "horizontal"
+                                "direction": "horizontal",
+                                "children": [
+                                  {
+                                    "type": "avatar",
+                                    "name": "@reply.authorName",
+                                    "size": "xs"
+                                  },
+                                  {
+                                    "type": "typography",
+                                    "variant": "body2",
+                                    "content": "@reply.authorName",
+                                    "weight": "medium"
+                                  },
+                                  {
+                                    "content": "@reply.fromAddress",
+                                    "type": "typography",
+                                    "color": "muted",
+                                    "variant": "caption"
+                                  },
+                                  {
+                                    "color": "muted",
+                                    "variant": "caption",
+                                    "content": "·",
+                                    "type": "typography"
+                                  },
+                                  {
+                                    "variant": "caption",
+                                    "content": "@reply.createdAt",
+                                    "color": "muted",
+                                    "type": "typography"
+                                  }
+                                ]
                               },
                               {
-                                "variant": "body",
                                 "type": "typography",
+                                "variant": "body",
                                 "content": "@reply.content"
                               }
-                            ],
-                            "type": "stack",
-                            "direction": "vertical"
+                            ]
                           }
                         }
-                      ]
+                      ],
+                      "gap": "sm",
+                      "entity": "@entity.focusedReplies",
+                      "fields": []
                     }
                   ]
                 }

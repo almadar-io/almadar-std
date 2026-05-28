@@ -83,6 +83,7 @@ export interface StdThreadThreadPostCreatedPayload {
     createdAt?: string;
     voteCount?: number;
     replyCount?: number;
+    replies?: EntityRow[];
   };
 }
 
@@ -101,14 +102,14 @@ export interface StdThreadThreadPostCreateFailedPayload {
  * without modifying its state-machine topology.
  */
 export interface StdThreadConfig {
-  /** Default: `{"type":"stack","direction":"vertical","gap":"md","children":[{"gap":"sm","itemActions":[{"label":"Reply","icon":"message-square","event":"REPLY"}],"entity":"@payload.data","look":"@config.tableLook","fields":[{"name":"authorName","variant":"h4","label":"Author"},{"variant":"body","label":"","name":"content"},{"variant":"caption","label":"Votes","name":"voteCount"}],"variant":"card","type":"data-list"}]}` */
-  bodyContent?: unknown;
   /** Default: `""` */
   threadRootId?: string;
-  /** Default: `false` */
-  flat?: boolean;
   /** Default: `"dense"` */
   tableLook?: 'dense' | 'spacious' | 'striped' | 'borderless' | 'card-rows';
+  /** Default: `{"direction":"vertical","type":"stack","gap":"md","children":[{"look":"@config.tableLook","variant":"card","gap":"sm","type":"data-list","fields":[{"label":"Author","name":"authorName","variant":"h4"},{"label":"","variant":"body","name":"content"},{"variant":"caption","label":"Votes","name":"voteCount"}],"itemActions":[{"icon":"message-square","label":"Reply","event":"REPLY"}],"entity":"@payload.data"}]}` */
+  bodyContent?: unknown;
+  /** Default: `false` */
+  flat?: boolean;
 }
 
 /**
