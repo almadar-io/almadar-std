@@ -63,6 +63,7 @@
           "name": "ApprovalGateReview",
           "entityRebindable": true,
           "entityContract": {
+            "requires": [],
             "provides": [
               "reviewer",
               "status"
@@ -383,8 +384,8 @@
                     "ApprovalRequest",
                     {
                       "emit": {
-                        "failure": "ApprovalRequestLoadFailed",
-                        "success": "ApprovalRequestLoaded"
+                        "success": "ApprovalRequestLoaded",
+                        "failure": "ApprovalRequestLoadFailed"
                       }
                     }
                   ],
@@ -392,22 +393,22 @@
                     "render-ui",
                     "main",
                     {
+                      "gap": "md",
                       "type": "stack",
+                      "className": "py-12",
                       "children": [
                         {
                           "type": "spinner"
                         },
                         {
-                          "content": "Loading approval queue…",
+                          "type": "typography",
                           "variant": "caption",
                           "color": "muted",
-                          "type": "typography"
+                          "content": "Loading approval queue…"
                         }
                       ],
-                      "direction": "vertical",
-                      "gap": "md",
                       "align": "center",
-                      "className": "py-12"
+                      "direction": "vertical"
                     }
                   ]
                 ]
@@ -421,69 +422,69 @@
                     "render-ui",
                     "main",
                     {
+                      "gap": "md",
+                      "type": "stack",
+                      "direction": "vertical",
                       "children": [
                         {
-                          "align": "center",
-                          "type": "stack",
-                          "gap": "sm",
                           "direction": "horizontal",
                           "children": [
                             {
-                              "name": "shield-check",
-                              "type": "icon"
+                              "type": "icon",
+                              "name": "shield-check"
                             },
                             {
+                              "variant": "h3",
                               "type": "typography",
-                              "content": "Approval queue",
-                              "variant": "h3"
+                              "content": "Approval queue"
                             }
-                          ]
+                          ],
+                          "gap": "sm",
+                          "align": "center",
+                          "type": "stack"
                         },
                         {
                           "type": "divider"
                         },
                         {
-                          "fields": [
-                            {
-                              "label": "Action",
-                              "name": "gatedEvent",
-                              "variant": "badge"
-                            },
-                            {
-                              "name": "requestedAt",
-                              "label": "Requested",
-                              "variant": "caption"
-                            },
-                            {
-                              "variant": "badge",
-                              "name": "status",
-                              "label": "Status"
-                            }
-                          ],
-                          "cols": 1.0,
-                          "gap": "sm",
                           "itemActions": [
                             {
                               "label": "Approve",
-                              "event": "APPROVE",
                               "icon": "check",
+                              "event": "APPROVE",
                               "variant": "primary"
                             },
                             {
+                              "variant": "danger",
                               "icon": "x",
                               "label": "Deny",
-                              "variant": "danger",
                               "event": "DENY"
                             }
                           ],
                           "entity": "@payload.data",
+                          "look": "@config.tableLook",
                           "type": "data-grid",
-                          "look": "@config.tableLook"
+                          "cols": 1.0,
+                          "fields": [
+                            {
+                              "variant": "badge",
+                              "name": "gatedEvent",
+                              "label": "Action"
+                            },
+                            {
+                              "label": "Requested",
+                              "name": "requestedAt",
+                              "variant": "caption"
+                            },
+                            {
+                              "label": "Status",
+                              "variant": "badge",
+                              "name": "status"
+                            }
+                          ],
+                          "gap": "sm"
                         }
-                      ],
-                      "gap": "md",
-                      "type": "stack",
-                      "direction": "vertical"
+                      ]
                     }
                   ]
                 ]
@@ -497,8 +498,8 @@
                     "render-ui",
                     "main",
                     {
-                      "variant": "error",
                       "type": "alert",
+                      "variant": "error",
                       "message": "@payload.error"
                     }
                   ]
@@ -572,8 +573,8 @@
                     "@entity",
                     {
                       "emit": {
-                        "success": "ApprovalRequestReviewed",
-                        "failure": "ApprovalRequestReviewFailed"
+                        "failure": "ApprovalRequestReviewFailed",
+                        "success": "ApprovalRequestReviewed"
                       }
                     }
                   ],
@@ -612,9 +613,9 @@
                     "render-ui",
                     "main",
                     {
-                      "variant": "error",
                       "type": "alert",
-                      "message": "@payload.error"
+                      "message": "@payload.error",
+                      "variant": "error"
                     }
                   ]
                 ]
@@ -647,12 +648,15 @@
             ]
           },
           "config": {
-            "threshold": {
-              "type": "number",
-              "default": 0.0,
-              "label": "Auto-approve threshold",
-              "description": "Below this value, requests should be auto-approved. v1.0 declarative only; wiring lands in v1.1 (gap).",
-              "tier": "domain"
+            "escalationRoles": {
+              "type": "[string]",
+              "default": [],
+              "label": "Escalation roles",
+              "description": "Roles notified when a request escalates (compose sibling std-notify-on-event).",
+              "tier": "domain",
+              "items": {
+                "type": "string"
+              }
             },
             "approverRoles": {
               "type": "[string]",
@@ -664,6 +668,21 @@
                 "type": "string"
               }
             },
+            "threshold": {
+              "type": "number",
+              "default": 0.0,
+              "label": "Auto-approve threshold",
+              "description": "Below this value, requests should be auto-approved. v1.0 declarative only; wiring lands in v1.1 (gap).",
+              "tier": "domain"
+            },
+            "enabled": {
+              "type": "boolean",
+              "default": false,
+              "label": "Enabled",
+              "description": "Whether the approval gate is active for the host orbital. Off by default; turn on to require sign-off.",
+              "synonyms": "enable, turn on, enforce, require, activate, apply, switch on, approval, needs approval, sign-off, signed off, review before, gatekeeper, editor approval, publishing approval, draft approval, content review, requires approval, manager approval, supervisor approval, admin approval, before going live",
+              "tier": "domain"
+            },
             "autoApproveBelowThreshold": {
               "type": "boolean",
               "default": true,
@@ -671,15 +690,19 @@
               "description": "Skip the review queue when the gated event's value is below the threshold. v1.0 declarative only.",
               "tier": "domain"
             },
-            "escalationRoles": {
-              "type": "[string]",
-              "default": [],
-              "label": "Escalation roles",
-              "description": "Roles notified when a request escalates (compose sibling std-notify-on-event).",
-              "tier": "domain",
-              "items": {
-                "type": "string"
-              }
+            "valueField": {
+              "type": "string",
+              "default": "",
+              "label": "Value field",
+              "description": "Payload field name to compare against threshold (e.g. 'amount' on a RefundRequested event). v1.0 declarative only.",
+              "tier": "domain"
+            },
+            "escalationHours": {
+              "type": "number",
+              "default": 0.0,
+              "label": "Escalation hours",
+              "description": "Hours a request can sit pending before escalating. v1.0 declarative only; per-row escalation needs loop-with-emit primitive (gap).",
+              "tier": "domain"
             },
             "tableLook": {
               "type": "string",
@@ -694,28 +717,6 @@
                 "borderless",
                 "card-rows"
               ]
-            },
-            "enabled": {
-              "type": "boolean",
-              "default": false,
-              "label": "Enabled",
-              "description": "Whether the approval gate is active for the host orbital. Off by default; turn on to require sign-off.",
-              "synonyms": "enable, turn on, enforce, require, activate, apply, switch on, approval, needs approval, sign-off, signed off, review before, gatekeeper, editor approval, publishing approval, draft approval, content review, requires approval, manager approval, supervisor approval, admin approval, before going live",
-              "tier": "domain"
-            },
-            "escalationHours": {
-              "type": "number",
-              "default": 0.0,
-              "label": "Escalation hours",
-              "description": "Hours a request can sit pending before escalating. v1.0 declarative only; per-row escalation needs loop-with-emit primitive (gap).",
-              "tier": "domain"
-            },
-            "valueField": {
-              "type": "string",
-              "default": "",
-              "label": "Value field",
-              "description": "Payload field name to compare against threshold (e.g. 'amount' on a RefundRequested event). v1.0 declarative only.",
-              "tier": "domain"
             }
           },
           "scope": "collection"

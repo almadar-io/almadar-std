@@ -21,13 +21,23 @@
             "items": {
               "type": "object",
               "properties": {
-                "actionLabel": {
-                  "name": "actionLabel",
+                "actionIcon": {
+                  "name": "actionIcon",
                   "type": "string",
                   "required": false
                 },
-                "actionIcon": {
-                  "name": "actionIcon",
+                "icon": {
+                  "name": "icon",
+                  "type": "string",
+                  "required": false
+                },
+                "description": {
+                  "name": "description",
+                  "type": "string",
+                  "required": false
+                },
+                "actionLabel": {
+                  "name": "actionLabel",
                   "type": "string",
                   "required": false
                 },
@@ -36,25 +46,15 @@
                   "type": "string",
                   "required": false
                 },
-                "title": {
-                  "name": "title",
-                  "type": "string",
-                  "required": true
-                },
-                "description": {
-                  "name": "description",
-                  "type": "string",
-                  "required": false
-                },
                 "id": {
                   "name": "id",
                   "type": "string",
                   "required": true
                 },
-                "icon": {
-                  "name": "icon",
+                "title": {
+                  "name": "title",
                   "type": "string",
-                  "required": false
+                  "required": true
                 }
               }
             }
@@ -116,6 +116,21 @@
             "items": {
               "type": "object",
               "properties": {
+                "title": {
+                  "name": "title",
+                  "type": "string",
+                  "required": true
+                },
+                "description": {
+                  "name": "description",
+                  "type": "string",
+                  "required": false
+                },
+                "timestamp": {
+                  "name": "timestamp",
+                  "type": "string",
+                  "required": false
+                },
                 "status": {
                   "name": "status",
                   "type": "string",
@@ -127,23 +142,8 @@
                     "error"
                   ]
                 },
-                "description": {
-                  "name": "description",
-                  "type": "string",
-                  "required": false
-                },
                 "id": {
                   "name": "id",
-                  "type": "string",
-                  "required": true
-                },
-                "timestamp": {
-                  "name": "timestamp",
-                  "type": "string",
-                  "required": false
-                },
-                "title": {
-                  "name": "title",
                   "type": "string",
                   "required": true
                 }
@@ -177,6 +177,7 @@
           "name": "MultiPartyTransaction",
           "entityRebindable": true,
           "entityContract": {
+            "requires": [],
             "provides": [
               "audit",
               "cancelReason",
@@ -422,8 +423,8 @@
                     "render-ui",
                     "main",
                     {
-                      "title": "Loading transaction…",
-                      "type": "loading-state"
+                      "type": "loading-state",
+                      "title": "Loading transaction…"
                     }
                   ]
                 ]
@@ -456,16 +457,16 @@
                         "fn",
                         "party",
                         {
+                          "actor": [
+                            "object/get",
+                            "@party",
+                            "actor",
+                            ""
+                          ],
                           "title": [
                             "object/get",
                             "@party",
                             "title"
-                          ],
-                          "description": [
-                            "object/get",
-                            "@party",
-                            "description",
-                            ""
                           ],
                           "icon": [
                             "object/get",
@@ -473,28 +474,28 @@
                             "icon",
                             "user"
                           ],
-                          "actor": [
-                            "object/get",
-                            "@party",
-                            "actor",
-                            ""
-                          ],
                           "id": [
                             "object/get",
                             "@party",
                             "id"
                           ],
-                          "actionIcon": [
+                          "description": [
                             "object/get",
                             "@party",
-                            "actionIcon",
-                            "check"
+                            "description",
+                            ""
                           ],
                           "actionLabel": [
                             "object/get",
                             "@party",
                             "actionLabel",
                             "Confirm"
+                          ],
+                          "actionIcon": [
+                            "object/get",
+                            "@party",
+                            "actionIcon",
+                            "check"
                           ]
                         }
                       ]
@@ -609,14 +610,14 @@
                     "@entity.audit",
                     [
                       {
-                        "title": "Transaction opened",
-                        "status": "complete",
-                        "id": "init",
                         "description": [
                           "str/concat",
                           "Reference ",
                           "@config.transactionReference"
                         ],
+                        "id": "init",
+                        "status": "complete",
+                        "title": "Transaction opened",
                         "timestamp": "Just now"
                       }
                     ]
@@ -626,15 +627,14 @@
                     "main",
                     {
                       "type": "stack",
-                      "direction": "vertical",
+                      "gap": "lg",
                       "children": [
                         {
-                          "align": "center",
-                          "direction": "horizontal",
+                          "type": "stack",
                           "children": [
                             {
-                              "name": "git-pull-request",
-                              "type": "icon"
+                              "type": "icon",
+                              "name": "git-pull-request"
                             },
                             {
                               "type": "typography",
@@ -647,99 +647,106 @@
                               "type": "badge"
                             }
                           ],
-                          "type": "stack",
+                          "align": "center",
+                          "direction": "horizontal",
                           "gap": "sm"
                         },
                         {
+                          "look": "@config.cardLook",
+                          "type": "card",
                           "children": [
                             {
+                              "type": "stack",
                               "direction": "vertical",
                               "children": [
                                 {
                                   "direction": "horizontal",
+                                  "type": "stack",
+                                  "gap": "lg",
                                   "align": "center",
                                   "children": [
                                     {
+                                      "gap": "xs",
+                                      "type": "stack",
+                                      "direction": "vertical",
                                       "children": [
                                         {
-                                          "color": "muted",
-                                          "variant": "caption",
+                                          "type": "typography",
                                           "content": "Amount in escrow",
-                                          "type": "typography"
+                                          "variant": "caption",
+                                          "color": "muted"
                                         },
                                         {
-                                          "content": "@config.transactionAmount",
                                           "type": "typography",
+                                          "content": "@config.transactionAmount",
                                           "variant": "h1"
                                         }
-                                      ],
-                                      "direction": "vertical",
-                                      "type": "stack",
-                                      "gap": "xs"
+                                      ]
                                     },
                                     {
-                                      "direction": "vertical",
                                       "type": "stack",
+                                      "direction": "vertical",
+                                      "gap": "xs",
                                       "children": [
                                         {
-                                          "content": "Subject",
-                                          "variant": "caption",
+                                          "type": "typography",
                                           "color": "muted",
-                                          "type": "typography"
+                                          "content": "Subject",
+                                          "variant": "caption"
                                         },
                                         {
                                           "variant": "h4",
-                                          "type": "typography",
-                                          "content": "@config.transactionSubject"
+                                          "content": "@config.transactionSubject",
+                                          "type": "typography"
                                         }
-                                      ],
-                                      "gap": "xs"
+                                      ]
                                     },
                                     {
                                       "gap": "xs",
-                                      "direction": "vertical",
-                                      "type": "stack",
                                       "children": [
                                         {
-                                          "type": "typography",
                                           "color": "muted",
                                           "variant": "caption",
-                                          "content": "Reference"
+                                          "content": "Reference",
+                                          "type": "typography"
                                         },
                                         {
-                                          "type": "typography",
                                           "content": "@config.transactionReference",
-                                          "variant": "body"
+                                          "variant": "body",
+                                          "type": "typography"
                                         }
-                                      ]
+                                      ],
+                                      "type": "stack",
+                                      "direction": "vertical"
                                     }
-                                  ],
-                                  "type": "stack",
-                                  "gap": "lg"
+                                  ]
                                 }
                               ],
-                              "type": "stack",
                               "gap": "md"
                             }
-                          ],
-                          "type": "card",
-                          "look": "@config.cardLook"
+                          ]
                         },
                         {
                           "type": "typography",
-                          "variant": "h4",
-                          "content": "Parties"
+                          "content": "Parties",
+                          "variant": "h4"
                         },
                         {
+                          "entity": "@entity.parties",
+                          "type": "data-list",
+                          "fields": [],
                           "renderItem": [
                             "fn",
                             "party",
                             {
+                              "type": "card",
+                              "look": "@config.cardLook",
                               "children": [
                                 {
+                                  "direction": "horizontal",
+                                  "align": "center",
                                   "type": "stack",
                                   "gap": "md",
-                                  "align": "center",
                                   "children": [
                                     {
                                       "name": "@party.icon",
@@ -747,13 +754,9 @@
                                       "size": "lg"
                                     },
                                     {
-                                      "gap": "xs",
-                                      "type": "stack",
-                                      "direction": "vertical",
                                       "children": [
                                         {
                                           "direction": "horizontal",
-                                          "align": "center",
                                           "gap": "xs",
                                           "children": [
                                             {
@@ -762,9 +765,9 @@
                                               "variant": "h4"
                                             },
                                             {
-                                              "type": "typography",
                                               "content": "·",
-                                              "color": "muted"
+                                              "color": "muted",
+                                              "type": "typography"
                                             },
                                             {
                                               "content": "@party.actor",
@@ -772,100 +775,98 @@
                                               "type": "typography"
                                             }
                                           ],
+                                          "align": "center",
                                           "type": "stack"
                                         },
                                         {
-                                          "content": "@party.description",
-                                          "variant": "caption",
                                           "color": "muted",
-                                          "type": "typography"
+                                          "content": "@party.description",
+                                          "type": "typography",
+                                          "variant": "caption"
                                         }
-                                      ]
+                                      ],
+                                      "type": "stack",
+                                      "direction": "vertical",
+                                      "gap": "xs"
                                     }
-                                  ],
-                                  "direction": "horizontal"
+                                  ]
                                 }
-                              ],
-                              "type": "card",
-                              "look": "@config.cardLook"
+                              ]
                             }
                           ],
-                          "gap": "sm",
-                          "type": "data-list",
-                          "fields": [],
-                          "entity": "@entity.parties"
+                          "gap": "sm"
                         },
                         {
                           "type": "typography",
-                          "content": "Progress",
-                          "variant": "h4"
+                          "variant": "h4",
+                          "content": "Progress"
                         },
                         {
-                          "type": "wizard-progress",
                           "steps": "@entity.parties",
-                          "currentStep": "@entity.currentPartyIndex"
+                          "currentStep": "@entity.currentPartyIndex",
+                          "type": "wizard-progress"
                         },
                         {
-                          "variant": "elevated",
-                          "look": "@config.cardLook",
                           "type": "card",
+                          "look": "@config.cardLook",
+                          "variant": "elevated",
                           "children": [
                             {
+                              "type": "stack",
                               "children": [
                                 {
-                                  "type": "stack",
+                                  "gap": "sm",
                                   "direction": "horizontal",
+                                  "type": "stack",
+                                  "align": "center",
                                   "children": [
                                     {
                                       "name": "clock",
                                       "type": "icon"
                                     },
                                     {
-                                      "content": "@entity.currentStepLabel",
                                       "type": "typography",
+                                      "content": "@entity.currentStepLabel",
                                       "color": "muted",
                                       "variant": "caption"
                                     },
                                     {
                                       "color": "muted",
-                                      "type": "typography",
-                                      "content": "·"
+                                      "content": "·",
+                                      "type": "typography"
                                     },
                                     {
-                                      "color": "muted",
-                                      "type": "typography",
                                       "variant": "caption",
-                                      "content": "Waiting for"
+                                      "type": "typography",
+                                      "content": "Waiting for",
+                                      "color": "muted"
                                     },
                                     {
-                                      "weight": "bold",
                                       "content": "@entity.currentPartyActor",
+                                      "weight": "bold",
                                       "variant": "body",
                                       "type": "typography"
                                     }
-                                  ],
-                                  "gap": "sm",
-                                  "align": "center"
+                                  ]
                                 },
                                 {
-                                  "variant": "body",
                                   "content": "@entity.currentActionDescription",
+                                  "variant": "body",
                                   "type": "typography"
                                 },
                                 {
                                   "type": "button",
-                                  "variant": "primary",
                                   "label": "@entity.currentActionLabel",
-                                  "action": "PARTY_CONFIRM",
+                                  "variant": "primary",
                                   "actionPayload": {
                                     "partyKey": "@entity.currentPartyId"
                                   },
+                                  "action": "PARTY_CONFIRM",
                                   "icon": "@entity.currentActionIcon"
                                 }
                               ],
-                              "gap": "md",
-                              "type": "stack",
-                              "direction": "vertical"
+                              "direction": "vertical",
+                              "gap": "md"
                             }
                           ]
                         },
@@ -875,43 +876,43 @@
                           "variant": "h4"
                         },
                         {
-                          "entity": "@entity.audit",
-                          "type": "timeline",
-                          "look": "@config.timelineLook",
                           "fields": [
                             "title",
                             "description",
                             "timestamp",
                             "status"
-                          ]
+                          ],
+                          "type": "timeline",
+                          "look": "@config.timelineLook",
+                          "entity": "@entity.audit"
                         },
                         {
                           "type": "divider"
                         },
                         {
-                          "direction": "horizontal",
                           "gap": "sm",
+                          "align": "center",
                           "type": "stack",
+                          "direction": "horizontal",
                           "children": [
                             {
-                              "type": "button",
-                              "action": "OPEN_DISPUTE",
                               "icon": "@config.disputeIcon",
                               "variant": "danger",
-                              "label": "@config.disputeLabel"
+                              "type": "button",
+                              "label": "@config.disputeLabel",
+                              "action": "OPEN_DISPUTE"
                             },
                             {
+                              "icon": "@config.cancelIcon",
                               "label": "@config.cancelLabel",
                               "variant": "ghost",
                               "type": "button",
-                              "action": "CANCEL_TRANSACTION",
-                              "icon": "@config.cancelIcon"
+                              "action": "CANCEL_TRANSACTION"
                             }
-                          ],
-                          "align": "center"
+                          ]
                         }
                       ],
-                      "gap": "lg"
+                      "direction": "vertical"
                     }
                   ]
                 ]
@@ -930,8 +931,8 @@
                     "render-ui",
                     "main",
                     {
-                      "message": "@entity.errorMessage",
                       "title": "Failed to load",
+                      "message": "@entity.errorMessage",
                       "type": "error-state"
                     }
                   ]
@@ -997,13 +998,18 @@
                       "array/append",
                       "@entity.audit",
                       {
-                        "status": "complete",
                         "description": [
                           "str/concat",
                           "@entity.currentPartyActor",
                           " completed: ",
                           "@entity.currentActionLabel"
                         ],
+                        "title": [
+                          "str/concat",
+                          "@entity.currentPartyTitle",
+                          " confirmed"
+                        ],
+                        "status": "complete",
                         "id": [
                           "str/concat",
                           "confirm-",
@@ -1013,11 +1019,6 @@
                             "partyKey",
                             ""
                           ]
-                        ],
-                        "title": [
-                          "str/concat",
-                          "@entity.currentPartyTitle",
-                          " confirmed"
                         ],
                         "timestamp": [
                           "time/now"
@@ -1150,21 +1151,22 @@
                     "render-ui",
                     "main",
                     {
+                      "gap": "lg",
                       "type": "stack",
+                      "direction": "vertical",
                       "children": [
                         {
-                          "gap": "sm",
-                          "align": "center",
-                          "type": "stack",
                           "direction": "horizontal",
+                          "type": "stack",
+                          "align": "center",
                           "children": [
                             {
-                              "name": "git-pull-request",
-                              "type": "icon"
+                              "type": "icon",
+                              "name": "git-pull-request"
                             },
                             {
-                              "type": "typography",
                               "content": "@config.title",
+                              "type": "typography",
                               "variant": "h3"
                             },
                             {
@@ -1172,58 +1174,58 @@
                               "label": "Active",
                               "variant": "primary"
                             }
-                          ]
+                          ],
+                          "gap": "sm"
                         },
                         {
                           "type": "card",
                           "children": [
                             {
+                              "direction": "vertical",
                               "type": "stack",
                               "gap": "md",
-                              "direction": "vertical",
                               "children": [
                                 {
                                   "direction": "horizontal",
-                                  "type": "stack",
+                                  "align": "center",
                                   "children": [
                                     {
-                                      "type": "stack",
-                                      "direction": "vertical",
                                       "gap": "xs",
+                                      "direction": "vertical",
+                                      "type": "stack",
                                       "children": [
                                         {
-                                          "variant": "caption",
-                                          "type": "typography",
                                           "color": "muted",
-                                          "content": "Amount in escrow"
+                                          "variant": "caption",
+                                          "content": "Amount in escrow",
+                                          "type": "typography"
                                         },
                                         {
-                                          "content": "@config.transactionAmount",
+                                          "variant": "h1",
                                           "type": "typography",
-                                          "variant": "h1"
+                                          "content": "@config.transactionAmount"
                                         }
                                       ]
                                     },
                                     {
-                                      "gap": "xs",
-                                      "direction": "vertical",
-                                      "type": "stack",
                                       "children": [
                                         {
-                                          "variant": "caption",
-                                          "type": "typography",
                                           "color": "muted",
+                                          "type": "typography",
+                                          "variant": "caption",
                                           "content": "Subject"
                                         },
                                         {
-                                          "content": "@config.transactionSubject",
                                           "type": "typography",
-                                          "variant": "h4"
+                                          "variant": "h4",
+                                          "content": "@config.transactionSubject"
                                         }
-                                      ]
+                                      ],
+                                      "type": "stack",
+                                      "gap": "xs",
+                                      "direction": "vertical"
                                     },
                                     {
-                                      "direction": "vertical",
                                       "type": "stack",
                                       "children": [
                                         {
@@ -1233,16 +1235,17 @@
                                           "color": "muted"
                                         },
                                         {
-                                          "type": "typography",
                                           "content": "@config.transactionReference",
-                                          "variant": "body"
+                                          "variant": "body",
+                                          "type": "typography"
                                         }
                                       ],
+                                      "direction": "vertical",
                                       "gap": "xs"
                                     }
                                   ],
                                   "gap": "lg",
-                                  "align": "center"
+                                  "type": "stack"
                                 }
                               ]
                             }
@@ -1250,193 +1253,191 @@
                           "look": "@config.cardLook"
                         },
                         {
-                          "content": "Parties",
+                          "type": "typography",
                           "variant": "h4",
-                          "type": "typography"
+                          "content": "Parties"
                         },
                         {
+                          "type": "data-list",
                           "entity": "@entity.parties",
-                          "gap": "sm",
                           "renderItem": [
                             "fn",
                             "party",
                             {
-                              "type": "card",
+                              "look": "@config.cardLook",
                               "children": [
                                 {
-                                  "gap": "md",
-                                  "type": "stack",
                                   "direction": "horizontal",
-                                  "align": "center",
+                                  "type": "stack",
+                                  "gap": "md",
                                   "children": [
                                     {
-                                      "size": "lg",
                                       "type": "icon",
+                                      "size": "lg",
                                       "name": "@party.icon"
                                     },
                                     {
+                                      "gap": "xs",
+                                      "type": "stack",
+                                      "direction": "vertical",
                                       "children": [
                                         {
+                                          "direction": "horizontal",
+                                          "type": "stack",
+                                          "gap": "xs",
                                           "align": "center",
                                           "children": [
                                             {
+                                              "content": "@party.title",
                                               "variant": "h4",
-                                              "type": "typography",
-                                              "content": "@party.title"
+                                              "type": "typography"
                                             },
                                             {
-                                              "type": "typography",
                                               "content": "·",
+                                              "type": "typography",
                                               "color": "muted"
                                             },
                                             {
-                                              "type": "typography",
+                                              "content": "@party.actor",
                                               "variant": "body",
-                                              "content": "@party.actor"
+                                              "type": "typography"
                                             }
-                                          ],
-                                          "type": "stack",
-                                          "direction": "horizontal",
-                                          "gap": "xs"
+                                          ]
                                         },
                                         {
                                           "type": "typography",
+                                          "color": "muted",
                                           "content": "@party.description",
-                                          "variant": "caption",
-                                          "color": "muted"
+                                          "variant": "caption"
                                         }
-                                      ],
-                                      "direction": "vertical",
-                                      "gap": "xs",
-                                      "type": "stack"
-                                    }
-                                  ]
-                                }
-                              ],
-                              "look": "@config.cardLook"
-                            }
-                          ],
-                          "type": "data-list",
-                          "fields": []
-                        },
-                        {
-                          "type": "typography",
-                          "content": "Progress",
-                          "variant": "h4"
-                        },
-                        {
-                          "steps": "@entity.parties",
-                          "type": "wizard-progress",
-                          "currentStep": "@entity.currentPartyIndex"
-                        },
-                        {
-                          "type": "card",
-                          "children": [
-                            {
-                              "children": [
-                                {
-                                  "gap": "sm",
-                                  "type": "stack",
-                                  "align": "center",
-                                  "children": [
-                                    {
-                                      "name": "clock",
-                                      "type": "icon"
-                                    },
-                                    {
-                                      "color": "muted",
-                                      "type": "typography",
-                                      "variant": "caption",
-                                      "content": "@entity.currentStepLabel"
-                                    },
-                                    {
-                                      "color": "muted",
-                                      "type": "typography",
-                                      "content": "·"
-                                    },
-                                    {
-                                      "type": "typography",
-                                      "variant": "caption",
-                                      "color": "muted",
-                                      "content": "Waiting for"
-                                    },
-                                    {
-                                      "type": "typography",
-                                      "weight": "bold",
-                                      "content": "@entity.currentPartyActor",
-                                      "variant": "body"
+                                      ]
                                     }
                                   ],
-                                  "direction": "horizontal"
-                                },
-                                {
-                                  "type": "typography",
-                                  "content": "@entity.currentActionDescription",
-                                  "variant": "body"
-                                },
-                                {
-                                  "action": "PARTY_CONFIRM",
-                                  "type": "button",
-                                  "icon": "@entity.currentActionIcon",
-                                  "variant": "primary",
-                                  "label": "@entity.currentActionLabel",
-                                  "actionPayload": {
-                                    "partyKey": "@entity.currentPartyId"
-                                  }
+                                  "align": "center"
                                 }
                               ],
-                              "direction": "vertical",
-                              "type": "stack",
-                              "gap": "md"
+                              "type": "card"
                             }
                           ],
-                          "look": "@config.cardLook",
-                          "variant": "elevated"
+                          "fields": [],
+                          "gap": "sm"
                         },
                         {
                           "variant": "h4",
-                          "type": "typography",
-                          "content": "Activity"
+                          "content": "Progress",
+                          "type": "typography"
+                        },
+                        {
+                          "type": "wizard-progress",
+                          "currentStep": "@entity.currentPartyIndex",
+                          "steps": "@entity.parties"
+                        },
+                        {
+                          "children": [
+                            {
+                              "direction": "vertical",
+                              "gap": "md",
+                              "children": [
+                                {
+                                  "align": "center",
+                                  "direction": "horizontal",
+                                  "children": [
+                                    {
+                                      "type": "icon",
+                                      "name": "clock"
+                                    },
+                                    {
+                                      "color": "muted",
+                                      "type": "typography",
+                                      "content": "@entity.currentStepLabel",
+                                      "variant": "caption"
+                                    },
+                                    {
+                                      "type": "typography",
+                                      "content": "·",
+                                      "color": "muted"
+                                    },
+                                    {
+                                      "content": "Waiting for",
+                                      "type": "typography",
+                                      "color": "muted",
+                                      "variant": "caption"
+                                    },
+                                    {
+                                      "type": "typography",
+                                      "content": "@entity.currentPartyActor",
+                                      "variant": "body",
+                                      "weight": "bold"
+                                    }
+                                  ],
+                                  "type": "stack",
+                                  "gap": "sm"
+                                },
+                                {
+                                  "content": "@entity.currentActionDescription",
+                                  "variant": "body",
+                                  "type": "typography"
+                                },
+                                {
+                                  "action": "PARTY_CONFIRM",
+                                  "actionPayload": {
+                                    "partyKey": "@entity.currentPartyId"
+                                  },
+                                  "label": "@entity.currentActionLabel",
+                                  "variant": "primary",
+                                  "type": "button",
+                                  "icon": "@entity.currentActionIcon"
+                                }
+                              ],
+                              "type": "stack"
+                            }
+                          ],
+                          "variant": "elevated",
+                          "look": "@config.cardLook",
+                          "type": "card"
+                        },
+                        {
+                          "content": "Activity",
+                          "variant": "h4",
+                          "type": "typography"
                         },
                         {
                           "entity": "@entity.audit",
+                          "type": "timeline",
+                          "look": "@config.timelineLook",
                           "fields": [
                             "title",
                             "description",
                             "timestamp",
                             "status"
-                          ],
-                          "look": "@config.timelineLook",
-                          "type": "timeline"
+                          ]
                         },
                         {
                           "type": "divider"
                         },
                         {
-                          "align": "center",
+                          "direction": "horizontal",
                           "children": [
                             {
-                              "variant": "danger",
                               "type": "button",
-                              "action": "OPEN_DISPUTE",
                               "label": "@config.disputeLabel",
-                              "icon": "@config.disputeIcon"
+                              "variant": "danger",
+                              "icon": "@config.disputeIcon",
+                              "action": "OPEN_DISPUTE"
                             },
                             {
-                              "label": "@config.cancelLabel",
-                              "variant": "ghost",
-                              "action": "CANCEL_TRANSACTION",
                               "type": "button",
+                              "variant": "ghost",
+                              "label": "@config.cancelLabel",
+                              "action": "CANCEL_TRANSACTION",
                               "icon": "@config.cancelIcon"
                             }
                           ],
-                          "gap": "sm",
                           "type": "stack",
-                          "direction": "horizontal"
+                          "align": "center",
+                          "gap": "sm"
                         }
-                      ],
-                      "direction": "vertical",
-                      "gap": "lg"
+                      ]
                     }
                   ]
                 ]
@@ -1470,6 +1471,7 @@
                         "timestamp": [
                           "time/now"
                         ],
+                        "status": "complete",
                         "id": [
                           "str/concat",
                           "confirm-",
@@ -1485,8 +1487,7 @@
                           "@entity.currentPartyActor",
                           " completed: ",
                           "@entity.currentActionLabel"
-                        ],
-                        "status": "complete"
+                        ]
                       }
                     ]
                   ],
@@ -1498,16 +1499,16 @@
                       "@entity.audit",
                       {
                         "id": "all-confirmed",
+                        "timestamp": [
+                          "time/now"
+                        ],
+                        "title": "All parties confirmed",
+                        "status": "complete",
                         "description": [
                           "str/concat",
                           "@config.transactionAmount",
                           " is now funded and ready for release."
-                        ],
-                        "timestamp": [
-                          "time/now"
-                        ],
-                        "status": "complete",
-                        "title": "All parties confirmed"
+                        ]
                       }
                     ]
                   ],
@@ -1516,115 +1517,111 @@
                     "main",
                     {
                       "direction": "vertical",
-                      "gap": "lg",
+                      "type": "stack",
                       "children": [
                         {
-                          "gap": "sm",
                           "type": "stack",
                           "align": "center",
-                          "direction": "horizontal",
                           "children": [
                             {
-                              "name": "lock",
-                              "type": "icon"
+                              "type": "icon",
+                              "name": "lock"
                             },
                             {
                               "type": "typography",
-                              "variant": "h3",
-                              "content": "@config.title"
+                              "content": "@config.title",
+                              "variant": "h3"
                             },
                             {
                               "type": "badge",
                               "label": "Funded",
                               "variant": "success"
                             }
-                          ]
+                          ],
+                          "direction": "horizontal",
+                          "gap": "sm"
                         },
                         {
-                          "look": "@config.cardLook",
                           "children": [
                             {
-                              "direction": "vertical",
                               "children": [
                                 {
-                                  "align": "center",
                                   "gap": "lg",
+                                  "type": "stack",
+                                  "align": "center",
                                   "children": [
                                     {
-                                      "type": "stack",
                                       "children": [
                                         {
                                           "variant": "caption",
-                                          "type": "typography",
                                           "color": "muted",
+                                          "type": "typography",
                                           "content": "Amount in escrow"
                                         },
                                         {
+                                          "type": "typography",
                                           "variant": "h1",
-                                          "content": "@config.transactionAmount",
-                                          "type": "typography"
+                                          "content": "@config.transactionAmount"
                                         }
                                       ],
-                                      "direction": "vertical",
-                                      "gap": "xs"
+                                      "gap": "xs",
+                                      "type": "stack",
+                                      "direction": "vertical"
                                     },
                                     {
-                                      "type": "stack",
-                                      "direction": "vertical",
                                       "gap": "xs",
+                                      "direction": "vertical",
                                       "children": [
                                         {
-                                          "content": "Subject",
+                                          "variant": "caption",
+                                          "color": "muted",
+                                          "type": "typography",
+                                          "content": "Subject"
+                                        },
+                                        {
+                                          "variant": "h4",
+                                          "type": "typography",
+                                          "content": "@config.transactionSubject"
+                                        }
+                                      ],
+                                      "type": "stack"
+                                    },
+                                    {
+                                      "gap": "xs",
+                                      "type": "stack",
+                                      "children": [
+                                        {
+                                          "content": "Reference",
                                           "color": "muted",
                                           "variant": "caption",
                                           "type": "typography"
                                         },
                                         {
-                                          "type": "typography",
-                                          "content": "@config.transactionSubject",
-                                          "variant": "h4"
-                                        }
-                                      ]
-                                    },
-                                    {
-                                      "gap": "xs",
-                                      "children": [
-                                        {
-                                          "content": "Reference",
-                                          "type": "typography",
-                                          "variant": "caption",
-                                          "color": "muted"
-                                        },
-                                        {
-                                          "variant": "body",
                                           "content": "@config.transactionReference",
+                                          "variant": "body",
                                           "type": "typography"
                                         }
                                       ],
-                                      "direction": "vertical",
-                                      "type": "stack"
+                                      "direction": "vertical"
                                     }
                                   ],
-                                  "direction": "horizontal",
-                                  "type": "stack"
+                                  "direction": "horizontal"
                                 }
                               ],
-                              "type": "stack",
-                              "gap": "md"
+                              "gap": "md",
+                              "direction": "vertical",
+                              "type": "stack"
                             }
                           ],
+                          "look": "@config.cardLook",
                           "type": "card"
                         },
                         {
-                          "type": "card",
-                          "variant": "elevated",
                           "look": "@config.cardLook",
                           "children": [
                             {
-                              "gap": "md",
                               "type": "stack",
                               "direction": "vertical",
-                              "align": "center",
                               "children": [
                                 {
                                   "name": "check-circle",
@@ -1632,62 +1629,66 @@
                                   "type": "icon"
                                 },
                                 {
-                                  "variant": "h2",
+                                  "type": "typography",
                                   "content": "All parties confirmed",
-                                  "align": "center",
-                                  "type": "typography"
+                                  "variant": "h2",
+                                  "align": "center"
                                 },
                                 {
                                   "variant": "body",
+                                  "color": "muted",
                                   "type": "typography",
-                                  "content": "Funds are held in escrow and ready for release to the seller.",
                                   "align": "center",
-                                  "color": "muted"
+                                  "content": "Funds are held in escrow and ready for release to the seller."
                                 },
                                 {
-                                  "type": "stack",
-                                  "align": "center",
-                                  "gap": "sm",
+                                  "direction": "horizontal",
                                   "children": [
                                     {
-                                      "action": "RELEASE",
                                       "icon": "@config.releaseIcon",
-                                      "type": "button",
+                                      "action": "RELEASE",
                                       "label": "@config.releaseLabel",
+                                      "type": "button",
                                       "variant": "success"
                                     },
                                     {
                                       "variant": "danger",
                                       "type": "button",
-                                      "action": "OPEN_DISPUTE",
+                                      "icon": "@config.disputeIcon",
                                       "label": "@config.disputeLabel",
-                                      "icon": "@config.disputeIcon"
+                                      "action": "OPEN_DISPUTE"
                                     }
                                   ],
-                                  "direction": "horizontal"
+                                  "type": "stack",
+                                  "gap": "sm",
+                                  "align": "center"
                                 }
-                              ]
+                              ],
+                              "align": "center",
+                              "gap": "md"
                             }
-                          ]
+                          ],
+                          "type": "card",
+                          "variant": "elevated"
                         },
                         {
-                          "type": "typography",
                           "content": "Activity",
-                          "variant": "h4"
+                          "variant": "h4",
+                          "type": "typography"
                         },
                         {
+                          "entity": "@entity.audit",
+                          "look": "@config.timelineLook",
                           "type": "timeline",
                           "fields": [
                             "title",
                             "description",
                             "timestamp",
                             "status"
-                          ],
-                          "look": "@config.timelineLook",
-                          "entity": "@entity.audit"
+                          ]
                         }
                       ],
-                      "type": "stack"
+                      "gap": "lg"
                     }
                   ]
                 ]
@@ -1706,63 +1707,63 @@
                     "render-ui",
                     "main",
                     {
+                      "type": "stack",
                       "children": [
                         {
-                          "type": "stack",
-                          "gap": "sm",
-                          "direction": "horizontal",
                           "align": "center",
                           "children": [
                             {
-                              "variant": "ghost",
-                              "icon": "arrow-left",
+                              "action": "CANCEL_REASON",
                               "type": "button",
                               "label": "Back",
-                              "action": "CANCEL_REASON"
+                              "variant": "ghost",
+                              "icon": "arrow-left"
                             },
                             {
-                              "type": "icon",
-                              "name": "alert-triangle"
+                              "name": "alert-triangle",
+                              "type": "icon"
                             },
                             {
                               "content": "Open a dispute",
                               "variant": "h3",
                               "type": "typography"
                             }
-                          ]
+                          ],
+                          "type": "stack",
+                          "direction": "horizontal",
+                          "gap": "sm"
                         },
                         {
-                          "look": "@config.cardLook",
                           "children": [
                             {
-                              "direction": "vertical",
-                              "gap": "sm",
-                              "type": "stack",
                               "children": [
                                 {
-                                  "content": "Describe the issue so all parties and the escrow officer can review. Funds will remain in escrow until the dispute is resolved.",
-                                  "color": "muted",
+                                  "variant": "body",
                                   "type": "typography",
-                                  "variant": "body"
+                                  "color": "muted",
+                                  "content": "Describe the issue so all parties and the escrow officer can review. Funds will remain in escrow until the dispute is resolved."
                                 },
                                 {
+                                  "submitEvent": "SUBMIT_DISPUTE",
                                   "mode": "edit",
-                                  "entity": "@entity",
-                                  "submitLabel": "Submit dispute",
                                   "fields": "@config.reasonFields",
+                                  "submitLabel": "Submit dispute",
                                   "cancelEvent": "CANCEL_REASON",
-                                  "type": "form-section",
-                                  "submitEvent": "SUBMIT_DISPUTE"
+                                  "entity": "@entity",
+                                  "type": "form-section"
                                 }
-                              ]
+                              ],
+                              "type": "stack",
+                              "direction": "vertical",
+                              "gap": "sm"
                             }
                           ],
-                          "type": "card"
+                          "type": "card",
+                          "look": "@config.cardLook"
                         }
                       ],
-                      "direction": "vertical",
                       "gap": "md",
-                      "type": "stack"
+                      "direction": "vertical"
                     }
                   ]
                 ]
@@ -1781,63 +1782,63 @@
                     "render-ui",
                     "main",
                     {
-                      "type": "stack",
-                      "gap": "md",
                       "direction": "vertical",
                       "children": [
                         {
-                          "align": "center",
                           "type": "stack",
+                          "align": "center",
                           "direction": "horizontal",
                           "gap": "sm",
                           "children": [
                             {
-                              "variant": "ghost",
-                              "type": "button",
-                              "label": "Back",
                               "icon": "arrow-left",
-                              "action": "CANCEL_REASON"
+                              "label": "Back",
+                              "action": "CANCEL_REASON",
+                              "variant": "ghost",
+                              "type": "button"
                             },
                             {
                               "name": "x-circle",
                               "type": "icon"
                             },
                             {
-                              "content": "Cancel transaction",
+                              "variant": "h3",
                               "type": "typography",
-                              "variant": "h3"
+                              "content": "Cancel transaction"
                             }
                           ]
                         },
                         {
-                          "look": "@config.cardLook",
-                          "type": "card",
                           "children": [
                             {
                               "direction": "vertical",
-                              "type": "stack",
-                              "gap": "sm",
                               "children": [
                                 {
-                                  "color": "muted",
                                   "content": "Tell the other parties why this transaction is being cancelled. Any escrowed funds will be returned to the buyer.",
-                                  "variant": "body",
-                                  "type": "typography"
+                                  "color": "muted",
+                                  "type": "typography",
+                                  "variant": "body"
                                 },
                                 {
-                                  "type": "form-section",
-                                  "mode": "edit",
-                                  "submitEvent": "SUBMIT_CANCEL",
                                   "entity": "@entity",
+                                  "cancelEvent": "CANCEL_REASON",
                                   "submitLabel": "Cancel transaction",
                                   "fields": "@config.reasonFields",
-                                  "cancelEvent": "CANCEL_REASON"
+                                  "type": "form-section",
+                                  "mode": "edit",
+                                  "submitEvent": "SUBMIT_CANCEL"
                                 }
-                              ]
+                              ],
+                              "type": "stack",
+                              "gap": "sm"
                             }
-                          ]
+                          ],
+                          "type": "card",
+                          "look": "@config.cardLook"
                         }
-                      ]
+                      ],
+                      "type": "stack",
+                      "gap": "md"
                     }
                   ]
                 ]
@@ -1864,13 +1865,13 @@
                       "array/append",
                       "@entity.audit",
                       {
-                        "id": "dispute-opened",
-                        "description": "@entity.disputeReason",
-                        "title": "Dispute opened",
                         "timestamp": [
                           "time/now"
                         ],
-                        "status": "error"
+                        "status": "error",
+                        "id": "dispute-opened",
+                        "description": "@entity.disputeReason",
+                        "title": "Dispute opened"
                       }
                     ]
                   ],
@@ -1879,27 +1880,29 @@
                     "main",
                     {
                       "gap": "lg",
+                      "type": "stack",
+                      "direction": "vertical",
                       "children": [
                         {
-                          "direction": "horizontal",
                           "align": "center",
-                          "type": "stack",
                           "children": [
                             {
-                              "name": "alert-triangle",
-                              "type": "icon"
+                              "type": "icon",
+                              "name": "alert-triangle"
                             },
                             {
                               "type": "typography",
-                              "content": "@config.title",
-                              "variant": "h3"
+                              "variant": "h3",
+                              "content": "@config.title"
                             },
                             {
-                              "label": "Disputed",
                               "variant": "danger",
+                              "label": "Disputed",
                               "type": "badge"
                             }
                           ],
+                          "type": "stack",
+                          "direction": "horizontal",
                           "gap": "sm"
                         },
                         {
@@ -1909,24 +1912,24 @@
                             {
                               "children": [
                                 {
+                                  "content": "Reason for dispute",
                                   "variant": "caption",
                                   "color": "muted",
-                                  "type": "typography",
-                                  "content": "Reason for dispute"
+                                  "type": "typography"
                                 },
                                 {
-                                  "content": "@entity.disputeReason",
                                   "variant": "body",
-                                  "type": "typography"
+                                  "type": "typography",
+                                  "content": "@entity.disputeReason"
                                 },
                                 {
                                   "type": "divider"
                                 },
                                 {
                                   "color": "muted",
-                                  "variant": "caption",
                                   "content": "An escrow officer will contact all parties within one business day. Funds remain held until resolution.",
-                                  "type": "typography"
+                                  "type": "typography",
+                                  "variant": "caption"
                                 }
                               ],
                               "gap": "sm",
@@ -1941,26 +1944,24 @@
                           "type": "typography"
                         },
                         {
-                          "type": "timeline",
                           "look": "@config.timelineLook",
-                          "entity": "@entity.audit",
                           "fields": [
                             "title",
                             "description",
                             "timestamp",
                             "status"
-                          ]
+                          ],
+                          "type": "timeline",
+                          "entity": "@entity.audit"
                         },
                         {
-                          "label": "Start a new transaction",
-                          "variant": "secondary",
-                          "icon": "rotate-ccw",
                           "type": "button",
-                          "action": "RESTART"
+                          "label": "Start a new transaction",
+                          "action": "RESTART",
+                          "variant": "secondary",
+                          "icon": "rotate-ccw"
                         }
-                      ],
-                      "type": "stack",
-                      "direction": "vertical"
+                      ]
                     }
                   ]
                 ]
@@ -1975,8 +1976,8 @@
                     "MultiPartyView",
                     {
                       "emit": {
-                        "failure": "FlowLoadFailed",
-                        "success": "FlowLoaded"
+                        "success": "FlowLoaded",
+                        "failure": "FlowLoadFailed"
                       }
                     }
                   ],
@@ -2013,11 +2014,11 @@
                       "@entity.audit",
                       {
                         "title": "Transaction cancelled",
-                        "id": "cancelled",
                         "status": "error",
                         "timestamp": [
                           "time/now"
                         ],
+                        "id": "cancelled",
                         "description": "@entity.cancelReason"
                       }
                     ]
@@ -2026,89 +2027,89 @@
                     "render-ui",
                     "main",
                     {
-                      "direction": "vertical",
                       "type": "stack",
-                      "gap": "lg",
                       "children": [
                         {
                           "direction": "horizontal",
+                          "align": "center",
                           "children": [
                             {
                               "name": "x-circle",
                               "type": "icon"
                             },
                             {
+                              "content": "@config.title",
                               "variant": "h3",
-                              "type": "typography",
-                              "content": "@config.title"
+                              "type": "typography"
                             },
                             {
-                              "label": "Cancelled",
+                              "variant": "warning",
                               "type": "badge",
-                              "variant": "warning"
+                              "label": "Cancelled"
                             }
                           ],
                           "type": "stack",
-                          "align": "center",
                           "gap": "sm"
                         },
                         {
+                          "type": "card",
+                          "look": "@config.cardLook",
                           "children": [
                             {
-                              "type": "stack",
                               "direction": "vertical",
-                              "gap": "sm",
                               "children": [
                                 {
                                   "variant": "caption",
+                                  "content": "Reason for cancellation",
                                   "type": "typography",
-                                  "color": "muted",
-                                  "content": "Reason for cancellation"
+                                  "color": "muted"
                                 },
                                 {
-                                  "content": "@entity.cancelReason",
                                   "type": "typography",
-                                  "variant": "body"
+                                  "variant": "body",
+                                  "content": "@entity.cancelReason"
                                 },
                                 {
                                   "type": "divider"
                                 },
                                 {
-                                  "color": "muted",
                                   "variant": "caption",
-                                  "content": "Any escrowed funds have been returned to the buyer.",
-                                  "type": "typography"
+                                  "color": "muted",
+                                  "type": "typography",
+                                  "content": "Any escrowed funds have been returned to the buyer."
                                 }
-                              ]
+                              ],
+                              "gap": "sm",
+                              "type": "stack"
                             }
-                          ],
-                          "type": "card",
-                          "look": "@config.cardLook"
+                          ]
                         },
                         {
-                          "variant": "h4",
                           "type": "typography",
-                          "content": "Activity"
+                          "content": "Activity",
+                          "variant": "h4"
                         },
                         {
+                          "look": "@config.timelineLook",
                           "fields": [
                             "title",
                             "description",
                             "timestamp",
                             "status"
                           ],
-                          "look": "@config.timelineLook",
                           "type": "timeline",
                           "entity": "@entity.audit"
                         },
                         {
+                          "icon": "rotate-ccw",
                           "label": "Start a new transaction",
                           "variant": "secondary",
                           "action": "RESTART",
-                          "type": "button",
-                          "icon": "rotate-ccw"
+                          "type": "button"
                         }
-                      ]
+                      ],
+                      "gap": "lg",
+                      "direction": "vertical"
                     }
                   ]
                 ]
@@ -2123,8 +2124,8 @@
                     "MultiPartyView",
                     {
                       "emit": {
-                        "failure": "FlowLoadFailed",
-                        "success": "FlowLoaded"
+                        "success": "FlowLoaded",
+                        "failure": "FlowLoadFailed"
                       }
                     }
                   ],
@@ -2132,8 +2133,8 @@
                     "render-ui",
                     "main",
                     {
-                      "type": "loading-state",
-                      "title": "Returning…"
+                      "title": "Returning…",
+                      "type": "loading-state"
                     }
                   ]
                 ]
@@ -2158,9 +2159,9 @@
                         "timestamp": [
                           "time/now"
                         ],
+                        "id": "released",
                         "status": "complete",
-                        "title": "Funds released",
-                        "id": "released"
+                        "title": "Funds released"
                       }
                     ]
                   ],
@@ -2168,66 +2169,68 @@
                     "render-ui",
                     "main",
                     {
+                      "type": "stack",
+                      "gap": "lg",
                       "children": [
                         {
-                          "type": "stack",
-                          "direction": "horizontal",
-                          "gap": "sm",
-                          "align": "center",
                           "children": [
                             {
-                              "type": "icon",
-                              "name": "check-circle"
+                              "name": "check-circle",
+                              "type": "icon"
                             },
                             {
-                              "content": "@config.title",
+                              "type": "typography",
                               "variant": "h3",
-                              "type": "typography"
+                              "content": "@config.title"
                             },
                             {
+                              "label": "Completed",
                               "variant": "success",
-                              "type": "badge",
-                              "label": "Completed"
-                            }
-                          ]
-                        },
-                        {
-                          "look": "@config.cardLook",
-                          "children": [
-                            {
-                              "gap": "md",
-                              "type": "stack",
-                              "direction": "vertical",
-                              "align": "center",
-                              "children": [
-                                {
-                                  "name": "check-circle",
-                                  "size": "lg",
-                                  "type": "icon"
-                                },
-                                {
-                                  "content": "Transaction complete",
-                                  "type": "typography",
-                                  "variant": "h2",
-                                  "align": "center"
-                                },
-                                {
-                                  "variant": "h1",
-                                  "align": "center",
-                                  "type": "typography",
-                                  "content": "@config.transactionAmount"
-                                },
-                                {
-                                  "content": "Funds have been released to the seller.",
-                                  "type": "typography",
-                                  "color": "muted",
-                                  "variant": "body",
-                                  "align": "center"
-                                }
-                              ]
+                              "type": "badge"
                             }
                           ],
-                          "type": "card"
+                          "gap": "sm",
+                          "align": "center",
+                          "type": "stack",
+                          "direction": "horizontal"
+                        },
+                        {
+                          "children": [
+                            {
+                              "align": "center",
+                              "type": "stack",
+                              "children": [
+                                {
+                                  "size": "lg",
+                                  "type": "icon",
+                                  "name": "check-circle"
+                                },
+                                {
+                                  "variant": "h2",
+                                  "type": "typography",
+                                  "align": "center",
+                                  "content": "Transaction complete"
+                                },
+                                {
+                                  "type": "typography",
+                                  "align": "center",
+                                  "content": "@config.transactionAmount",
+                                  "variant": "h1"
+                                },
+                                {
+                                  "color": "muted",
+                                  "align": "center",
+                                  "content": "Funds have been released to the seller.",
+                                  "type": "typography",
+                                  "variant": "body"
+                                }
+                              ],
+                              "gap": "md",
+                              "direction": "vertical"
+                            }
+                          ],
+                          "type": "card",
+                          "look": "@config.cardLook"
                         },
                         {
                           "content": "Activity",
@@ -2236,26 +2239,24 @@
                         },
                         {
                           "type": "timeline",
+                          "look": "@config.timelineLook",
                           "fields": [
                             "title",
                             "description",
                             "timestamp",
                             "status"
                           ],
-                          "look": "@config.timelineLook",
                           "entity": "@entity.audit"
                         },
                         {
-                          "icon": "rotate-ccw",
                           "action": "RESTART",
-                          "label": "Start a new transaction",
                           "variant": "secondary",
-                          "type": "button"
+                          "icon": "rotate-ccw",
+                          "type": "button",
+                          "label": "Start a new transaction"
                         }
                       ],
-                      "type": "stack",
-                      "direction": "vertical",
-                      "gap": "lg"
+                      "direction": "vertical"
                     }
                   ]
                 ]
@@ -2275,14 +2276,19 @@
                     "main",
                     {
                       "direction": "vertical",
+                      "type": "stack",
+                      "gap": "md",
                       "children": [
                         {
+                          "align": "center",
+                          "type": "stack",
+                          "direction": "horizontal",
                           "children": [
                             {
-                              "label": "Back",
-                              "type": "button",
-                              "variant": "ghost",
                               "action": "CANCEL_REASON",
+                              "type": "button",
+                              "label": "Back",
+                              "variant": "ghost",
                               "icon": "arrow-left"
                             },
                             {
@@ -2295,42 +2301,37 @@
                               "variant": "h3"
                             }
                           ],
-                          "direction": "horizontal",
-                          "align": "center",
-                          "type": "stack",
                           "gap": "sm"
                         },
                         {
-                          "type": "card",
                           "look": "@config.cardLook",
                           "children": [
                             {
+                              "direction": "vertical",
+                              "type": "stack",
                               "children": [
                                 {
-                                  "variant": "body",
+                                  "color": "muted",
                                   "type": "typography",
                                   "content": "Describe the issue so all parties and the escrow officer can review. Funds will remain in escrow until the dispute is resolved.",
-                                  "color": "muted"
+                                  "variant": "body"
                                 },
                                 {
                                   "submitEvent": "SUBMIT_DISPUTE",
                                   "mode": "edit",
-                                  "cancelEvent": "CANCEL_REASON",
-                                  "submitLabel": "Submit dispute",
-                                  "fields": "@config.reasonFields",
                                   "type": "form-section",
-                                  "entity": "@entity"
+                                  "fields": "@config.reasonFields",
+                                  "entity": "@entity",
+                                  "cancelEvent": "CANCEL_REASON",
+                                  "submitLabel": "Submit dispute"
                                 }
                               ],
-                              "gap": "sm",
-                              "type": "stack",
-                              "direction": "vertical"
+                              "gap": "sm"
                             }
-                          ]
+                          ],
+                          "type": "card"
                         }
-                      ],
-                      "gap": "md",
-                      "type": "stack"
+                      ]
                     }
                   ]
                 ]
@@ -2354,8 +2355,8 @@
                     "render-ui",
                     "main",
                     {
-                      "title": "Starting new transaction…",
-                      "type": "loading-state"
+                      "type": "loading-state",
+                      "title": "Starting new transaction…"
                     }
                   ]
                 ]
@@ -2420,8 +2421,8 @@
                     "MultiPartyView",
                     {
                       "emit": {
-                        "success": "FlowLoaded",
-                        "failure": "FlowLoadFailed"
+                        "failure": "FlowLoadFailed",
+                        "success": "FlowLoaded"
                       }
                     }
                   ],
@@ -2429,8 +2430,8 @@
                     "render-ui",
                     "main",
                     {
-                      "type": "loading-state",
-                      "title": "Retrying…"
+                      "title": "Retrying…",
+                      "type": "loading-state"
                     }
                   ]
                 ]
@@ -2438,6 +2439,53 @@
             ]
           },
           "config": {
+            "reasonFields": {
+              "type": "[string]",
+              "default": [
+                "reason"
+              ],
+              "label": "Reason fields",
+              "description": "Form fields shown when capturing a dispute or cancel reason",
+              "tier": "presentation",
+              "items": {
+                "type": "string"
+              }
+            },
+            "transactionSubject": {
+              "type": "string",
+              "default": "Sale of 2024 Honda CR-V",
+              "label": "Subject",
+              "description": "Short description of what is being transacted",
+              "tier": "presentation"
+            },
+            "transactionAmount": {
+              "type": "string",
+              "default": "$28,500",
+              "label": "Amount",
+              "description": "Formatted amount held in escrow",
+              "tier": "presentation"
+            },
+            "cancelIcon": {
+              "type": "string",
+              "default": "x",
+              "label": "Cancel icon",
+              "description": "Icon next to the cancel button",
+              "tier": "presentation"
+            },
+            "title": {
+              "type": "string",
+              "default": "Escrow transaction",
+              "label": "Page title",
+              "description": "Heading shown above the transaction view",
+              "tier": "presentation"
+            },
+            "cancelLabel": {
+              "type": "string",
+              "default": "Cancel transaction",
+              "label": "Cancel button",
+              "description": "Label on the cancel-transaction escape-hatch button",
+              "tier": "presentation"
+            },
             "cardLook": {
               "type": "string",
               "default": "elevated",
@@ -2454,18 +2502,111 @@
                 "tile-image-first"
               ]
             },
-            "transactionReference": {
-              "type": "string",
-              "default": "TXN-A8B2C-2024-001",
-              "label": "Reference",
-              "description": "External identifier shown in the summary",
-              "tier": "presentation"
+            "parties": {
+              "type": "[PartySpec]",
+              "default": [
+                {
+                  "title": "Buyer",
+                  "id": "buyer",
+                  "actionLabel": "Confirm payment",
+                  "actionIcon": "credit-card",
+                  "icon": "user",
+                  "actionDescription": "Authorize $28,500 to be held in escrow until delivery is confirmed.",
+                  "description": "Funds the transaction and confirms receipt of the vehicle.",
+                  "stepLabel": "Step 1 of 2",
+                  "actor": "Alice Chen"
+                },
+                {
+                  "actionLabel": "Confirm shipment",
+                  "stepLabel": "Step 2 of 2",
+                  "description": "Ships the vehicle and uploads delivery proof.",
+                  "id": "seller",
+                  "icon": "user-check",
+                  "actionIcon": "package",
+                  "title": "Seller",
+                  "actor": "Bob's Auto Sales LLC",
+                  "actionDescription": "Mark the vehicle as shipped. Funds will release after the buyer confirms receipt."
+                }
+              ],
+              "label": "Parties",
+              "description": "Ordered participants with role, actor name, and required action",
+              "tier": "domain",
+              "items": {
+                "type": "object",
+                "properties": {
+                  "actionDescription": {
+                    "name": "actionDescription",
+                    "type": "string",
+                    "required": false
+                  },
+                  "description": {
+                    "name": "description",
+                    "type": "string",
+                    "required": false
+                  },
+                  "name": {
+                    "name": "name",
+                    "type": "string",
+                    "required": false
+                  },
+                  "label": {
+                    "name": "label",
+                    "type": "string",
+                    "required": false
+                  },
+                  "actionIcon": {
+                    "name": "actionIcon",
+                    "type": "string",
+                    "required": false
+                  },
+                  "title": {
+                    "name": "title",
+                    "type": "string",
+                    "required": false
+                  },
+                  "actor": {
+                    "name": "actor",
+                    "type": "string",
+                    "required": false
+                  },
+                  "id": {
+                    "name": "id",
+                    "type": "string",
+                    "required": false
+                  },
+                  "key": {
+                    "name": "key",
+                    "type": "string",
+                    "required": false
+                  },
+                  "role": {
+                    "name": "role",
+                    "type": "string",
+                    "required": false
+                  },
+                  "stepLabel": {
+                    "name": "stepLabel",
+                    "type": "string",
+                    "required": false
+                  },
+                  "icon": {
+                    "name": "icon",
+                    "type": "string",
+                    "required": false
+                  },
+                  "actionLabel": {
+                    "name": "actionLabel",
+                    "type": "string",
+                    "required": false
+                  }
+                }
+              }
             },
-            "disputeIcon": {
+            "releaseLabel": {
               "type": "string",
-              "default": "alert-triangle",
-              "label": "Dispute icon",
-              "description": "Icon next to the dispute button",
+              "default": "Release funds",
+              "label": "Release button",
+              "description": "Label on the final-release primary button",
               "tier": "presentation"
             },
             "timelineLook": {
@@ -2481,125 +2622,6 @@
                 "swimlane"
               ]
             },
-            "reasonFields": {
-              "type": "[string]",
-              "default": [
-                "reason"
-              ],
-              "label": "Reason fields",
-              "description": "Form fields shown when capturing a dispute or cancel reason",
-              "tier": "presentation",
-              "items": {
-                "type": "string"
-              }
-            },
-            "disputeLabel": {
-              "type": "string",
-              "default": "Open dispute",
-              "label": "Dispute button",
-              "description": "Label on the open-dispute escape-hatch button",
-              "tier": "presentation"
-            },
-            "parties": {
-              "type": "[PartySpec]",
-              "default": [
-                {
-                  "actionIcon": "credit-card",
-                  "id": "buyer",
-                  "actionLabel": "Confirm payment",
-                  "icon": "user",
-                  "description": "Funds the transaction and confirms receipt of the vehicle.",
-                  "title": "Buyer",
-                  "actor": "Alice Chen",
-                  "actionDescription": "Authorize $28,500 to be held in escrow until delivery is confirmed.",
-                  "stepLabel": "Step 1 of 2"
-                },
-                {
-                  "actionLabel": "Confirm shipment",
-                  "icon": "user-check",
-                  "actionIcon": "package",
-                  "actor": "Bob's Auto Sales LLC",
-                  "stepLabel": "Step 2 of 2",
-                  "id": "seller",
-                  "title": "Seller",
-                  "description": "Ships the vehicle and uploads delivery proof.",
-                  "actionDescription": "Mark the vehicle as shipped. Funds will release after the buyer confirms receipt."
-                }
-              ],
-              "label": "Parties",
-              "description": "Ordered participants with role, actor name, and required action",
-              "tier": "domain",
-              "items": {
-                "type": "object",
-                "properties": {
-                  "label": {
-                    "name": "label",
-                    "type": "string",
-                    "required": false
-                  },
-                  "icon": {
-                    "name": "icon",
-                    "type": "string",
-                    "required": false
-                  },
-                  "actor": {
-                    "name": "actor",
-                    "type": "string",
-                    "required": false
-                  },
-                  "actionLabel": {
-                    "name": "actionLabel",
-                    "type": "string",
-                    "required": false
-                  },
-                  "title": {
-                    "name": "title",
-                    "type": "string",
-                    "required": false
-                  },
-                  "actionIcon": {
-                    "name": "actionIcon",
-                    "type": "string",
-                    "required": false
-                  },
-                  "stepLabel": {
-                    "name": "stepLabel",
-                    "type": "string",
-                    "required": false
-                  },
-                  "role": {
-                    "name": "role",
-                    "type": "string",
-                    "required": false
-                  },
-                  "name": {
-                    "name": "name",
-                    "type": "string",
-                    "required": false
-                  },
-                  "actionDescription": {
-                    "name": "actionDescription",
-                    "type": "string",
-                    "required": false
-                  },
-                  "id": {
-                    "name": "id",
-                    "type": "string",
-                    "required": false
-                  },
-                  "key": {
-                    "name": "key",
-                    "type": "string",
-                    "required": false
-                  },
-                  "description": {
-                    "name": "description",
-                    "type": "string",
-                    "required": false
-                  }
-                }
-              }
-            },
             "releaseIcon": {
               "type": "string",
               "default": "unlock",
@@ -2607,46 +2629,25 @@
               "description": "Icon next to the release button",
               "tier": "presentation"
             },
-            "transactionSubject": {
+            "disputeIcon": {
               "type": "string",
-              "default": "Sale of 2024 Honda CR-V",
-              "label": "Subject",
-              "description": "Short description of what is being transacted",
+              "default": "alert-triangle",
+              "label": "Dispute icon",
+              "description": "Icon next to the dispute button",
               "tier": "presentation"
             },
-            "cancelIcon": {
+            "transactionReference": {
               "type": "string",
-              "default": "x",
-              "label": "Cancel icon",
-              "description": "Icon next to the cancel button",
+              "default": "TXN-A8B2C-2024-001",
+              "label": "Reference",
+              "description": "External identifier shown in the summary",
               "tier": "presentation"
             },
-            "cancelLabel": {
+            "disputeLabel": {
               "type": "string",
-              "default": "Cancel transaction",
-              "label": "Cancel button",
-              "description": "Label on the cancel-transaction escape-hatch button",
-              "tier": "presentation"
-            },
-            "title": {
-              "type": "string",
-              "default": "Escrow transaction",
-              "label": "Page title",
-              "description": "Heading shown above the transaction view",
-              "tier": "presentation"
-            },
-            "releaseLabel": {
-              "type": "string",
-              "default": "Release funds",
-              "label": "Release button",
-              "description": "Label on the final-release primary button",
-              "tier": "presentation"
-            },
-            "transactionAmount": {
-              "type": "string",
-              "default": "$28,500",
-              "label": "Amount",
-              "description": "Formatted amount held in escrow",
+              "default": "Open dispute",
+              "label": "Dispute button",
+              "description": "Label on the open-dispute escape-hatch button",
               "tier": "presentation"
             }
           },

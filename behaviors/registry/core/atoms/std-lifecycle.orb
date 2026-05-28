@@ -194,8 +194,8 @@
                     "@entity",
                     {
                       "emit": {
-                        "failure": "LifecycleRunFailed",
-                        "success": "LifecycleRunLogged"
+                        "success": "LifecycleRunLogged",
+                        "failure": "LifecycleRunFailed"
                       }
                     }
                   ]
@@ -228,8 +228,8 @@
                     "@entity",
                     {
                       "emit": {
-                        "failure": "LifecycleRunFailed",
-                        "success": "LifecycleRunLogged"
+                        "success": "LifecycleRunLogged",
+                        "failure": "LifecycleRunFailed"
                       }
                     }
                   ]
@@ -257,8 +257,8 @@
                   "LifecycleRunLog",
                   {
                     "emit": {
-                      "failure": "ScanFailed",
-                      "success": "ScanRecordsLoaded"
+                      "success": "ScanRecordsLoaded",
+                      "failure": "ScanFailed"
                     }
                   }
                 ]
@@ -266,13 +266,6 @@
             }
           ],
           "config": {
-            "targetEntity": {
-              "type": "string",
-              "default": "",
-              "label": "Target entity",
-              "description": "Entity name to scan (e.g. 'InvoiceRecord'). v1.1 will drive SET_STATUS transitions on this entity.",
-              "tier": "domain"
-            },
             "enabled": {
               "type": "boolean",
               "default": false,
@@ -281,11 +274,11 @@
               "synonyms": "enable, turn on, enforce, require, activate, apply, switch on, retention, ttl, expire, archive after, sunset, lifecycle, age out, time-based status, scheduled transitions, expire old records, auto-archive",
               "tier": "domain"
             },
-            "dryRun": {
-              "type": "boolean",
-              "default": false,
-              "label": "Dry-run mode",
-              "description": "When true, log scan results without emitting transitions.",
+            "targetEntity": {
+              "type": "string",
+              "default": "",
+              "label": "Target entity",
+              "description": "Entity name to scan (e.g. 'InvoiceRecord'). v1.1 will drive SET_STATUS transitions on this entity.",
               "tier": "domain"
             },
             "rules": {
@@ -297,6 +290,11 @@
               "items": {
                 "type": "object",
                 "properties": {
+                  "toStatus": {
+                    "name": "toStatus",
+                    "type": "string",
+                    "required": false
+                  },
                   "condition": {
                     "name": "condition",
                     "type": "object",
@@ -307,14 +305,14 @@
                         "type": "string",
                         "required": false
                       },
-                      "value": {
-                        "name": "value",
-                        "type": "number",
-                        "required": false
-                      },
                       "dateField": {
                         "name": "dateField",
                         "type": "string",
+                        "required": false
+                      },
+                      "value": {
+                        "name": "value",
+                        "type": "number",
                         "required": false
                       }
                     }
@@ -323,14 +321,16 @@
                     "name": "fromStatus",
                     "type": "string",
                     "required": false
-                  },
-                  "toStatus": {
-                    "name": "toStatus",
-                    "type": "string",
-                    "required": false
                   }
                 }
               }
+            },
+            "dryRun": {
+              "type": "boolean",
+              "default": false,
+              "label": "Dry-run mode",
+              "description": "When true, log scan results without emitting transitions.",
+              "tier": "domain"
             }
           },
           "scope": "instance"

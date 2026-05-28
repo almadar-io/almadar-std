@@ -27,25 +27,58 @@
             "items": {
               "type": "object",
               "properties": {
-                "prefix": {
-                  "name": "prefix",
+                "trend": {
+                  "name": "trend",
+                  "type": "number",
+                  "required": false
+                },
+                "suffix": {
+                  "name": "suffix",
                   "type": "string",
                   "required": false
+                },
+                "icon": {
+                  "name": "icon",
+                  "type": "string",
+                  "required": false
+                },
+                "format": {
+                  "name": "format",
+                  "type": "string",
+                  "required": false,
+                  "values": [
+                    "number",
+                    "currency",
+                    "percent"
+                  ]
                 },
                 "label": {
                   "name": "label",
                   "type": "string",
                   "required": true
                 },
-                "max": {
-                  "name": "max",
-                  "type": "number",
-                  "required": false
-                },
                 "target": {
                   "name": "target",
                   "type": "number",
                   "required": false
+                },
+                "value": {
+                  "name": "value",
+                  "type": "number",
+                  "required": false
+                },
+                "variant": {
+                  "name": "variant",
+                  "type": "string",
+                  "required": false,
+                  "values": [
+                    "default",
+                    "primary",
+                    "success",
+                    "warning",
+                    "error",
+                    "info"
+                  ]
                 },
                 "trendPolarity": {
                   "name": "trendPolarity",
@@ -65,51 +98,18 @@
                     "percent"
                   ]
                 },
-                "value": {
-                  "name": "value",
+                "max": {
+                  "name": "max",
                   "type": "number",
+                  "required": false
+                },
+                "prefix": {
+                  "name": "prefix",
+                  "type": "string",
                   "required": false
                 },
                 "clickEvent": {
                   "name": "clickEvent",
-                  "type": "string",
-                  "required": false
-                },
-                "icon": {
-                  "name": "icon",
-                  "type": "string",
-                  "required": false
-                },
-                "format": {
-                  "name": "format",
-                  "type": "string",
-                  "required": false,
-                  "values": [
-                    "number",
-                    "currency",
-                    "percent"
-                  ]
-                },
-                "trend": {
-                  "name": "trend",
-                  "type": "number",
-                  "required": false
-                },
-                "variant": {
-                  "name": "variant",
-                  "type": "string",
-                  "required": false,
-                  "values": [
-                    "default",
-                    "primary",
-                    "success",
-                    "warning",
-                    "error",
-                    "info"
-                  ]
-                },
-                "suffix": {
-                  "name": "suffix",
                   "type": "string",
                   "required": false
                 },
@@ -136,46 +136,42 @@
               "className": "w-full",
               "children": [
                 {
+                  "fields": [],
                   "type": "data-list",
-                  "gap": "md",
                   "renderItem": [
                     "fn",
                     "card",
                     {
                       "className": "rounded-lg border border-[var(--color-border)] bg-[var(--color-card)] p-card-md shadow-elevation-sm hover:shadow-elevation-md transition-shadow min-h-[180px]",
-                      "direction": "vertical",
-                      "gap": "sm",
-                      "type": "stack",
                       "children": [
                         {
-                          "gap": "xs",
                           "align": "center",
+                          "direction": "horizontal",
                           "type": "stack",
+                          "gap": "xs",
                           "children": [
                             {
                               "color": "muted",
-                              "name": "@card.icon",
                               "type": "icon",
-                              "size": "xs"
+                              "size": "xs",
+                              "name": "@card.icon"
                             },
                             {
+                              "color": "muted",
+                              "weight": "semibold",
+                              "className": "uppercase tracking-wide truncate",
                               "variant": "overline",
                               "type": "typography",
-                              "color": "muted",
-                              "content": "@card.label",
-                              "className": "uppercase tracking-wide truncate",
-                              "weight": "semibold"
+                              "content": "@card.label"
                             }
-                          ],
-                          "direction": "horizontal"
+                          ]
                         },
                         {
-                          "type": "sparkline",
+                          "height": 64.0,
                           "color": "auto",
+                          "strokeWidth": 2.0,
                           "fill": true,
                           "className": "w-full",
-                          "height": 64.0,
-                          "strokeWidth": 2.0,
                           "data": [
                             1.0,
                             2.0,
@@ -184,60 +180,64 @@
                             5.0,
                             6.0,
                             7.0
-                          ]
+                          ],
+                          "type": "sparkline"
                         },
                         {
-                          "direction": "horizontal",
-                          "justify": "between",
                           "gap": "sm",
-                          "type": "stack",
+                          "direction": "horizontal",
                           "children": [
                             {
                               "gap": "xs",
-                              "direction": "horizontal",
+                              "align": "baseline",
                               "type": "stack",
                               "children": [
                                 {
-                                  "type": "typography",
-                                  "content": "@card.prefix",
                                   "color": "muted",
-                                  "variant": "caption"
+                                  "content": "@card.prefix",
+                                  "variant": "caption",
+                                  "type": "typography"
                                 },
                                 {
-                                  "className": "tabular-nums",
                                   "variant": "h3",
-                                  "content": "@card.value",
                                   "type": "typography",
+                                  "content": "@card.value",
+                                  "className": "tabular-nums",
                                   "weight": "semibold"
                                 },
                                 {
                                   "variant": "caption",
+                                  "content": "@card.suffix",
                                   "type": "typography",
-                                  "color": "muted",
-                                  "content": "@card.suffix"
+                                  "color": "muted"
                                 }
                               ],
-                              "align": "baseline"
+                              "direction": "horizontal"
                             },
                             {
-                              "size": "sm",
+                              "value": "@card.trend",
                               "type": "trend-indicator",
-                              "showValue": true,
-                              "value": "@card.trend"
+                              "size": "sm",
+                              "showValue": true
                             }
                           ],
-                          "align": "baseline"
+                          "justify": "between",
+                          "align": "baseline",
+                          "type": "stack"
                         }
-                      ]
+                      ],
+                      "type": "stack",
+                      "direction": "vertical",
+                      "gap": "sm"
                     }
                   ],
-                  "fields": [],
-                  "entity": "@entity.cards"
+                  "entity": "@entity.cards",
+                  "gap": "md"
                 }
               ],
-              "cols": 2.0,
+              "type": "simple-grid",
               "gap": "md",
-              "type": "simple-grid"
+              "cols": 2.0
             }
           }
         }

@@ -68,6 +68,7 @@
           "name": "ThreadPostBrowse",
           "entityRebindable": true,
           "entityContract": {
+            "requires": [],
             "provides": [
               "content",
               "parentId"
@@ -320,21 +321,21 @@
                     "fetch",
                     "ThreadPost",
                     {
+                      "include": [
+                        "replies"
+                      ],
                       "emit": {
                         "success": "ThreadPostLoaded",
                         "failure": "ThreadPostLoadFailed"
-                      },
-                      "include": [
-                        "replies"
-                      ]
+                      }
                     }
                   ],
                   [
                     "render-ui",
                     "main",
                     {
-                      "size": "sm",
-                      "type": "spinner"
+                      "type": "spinner",
+                      "size": "sm"
                     }
                   ]
                 ]
@@ -360,9 +361,9 @@
                     "render-ui",
                     "main",
                     {
+                      "type": "alert",
                       "variant": "error",
-                      "message": "@payload.error",
-                      "type": "alert"
+                      "message": "@payload.error"
                     }
                   ]
                 ]
@@ -423,39 +424,39 @@
                     {
                       "direction": "vertical",
                       "gap": "md",
-                      "type": "stack",
                       "children": [
                         {
-                          "variant": "h4",
                           "content": "Write a reply",
-                          "type": "typography"
+                          "type": "typography",
+                          "variant": "h4"
                         },
                         {
-                          "type": "textarea",
                           "placeholder": "Your reply…",
-                          "action": "EDIT_REPLY"
+                          "action": "EDIT_REPLY",
+                          "type": "textarea"
                         },
                         {
-                          "type": "stack",
                           "children": [
                             {
-                              "action": "SUBMIT_REPLY",
+                              "variant": "primary",
                               "label": "Submit",
-                              "icon": "send",
                               "type": "button",
-                              "variant": "primary"
+                              "action": "SUBMIT_REPLY",
+                              "icon": "send"
                             },
                             {
-                              "action": "CANCEL_REPLY",
-                              "type": "button",
                               "label": "Cancel",
-                              "variant": "secondary"
+                              "action": "CANCEL_REPLY",
+                              "variant": "secondary",
+                              "type": "button"
                             }
                           ],
+                          "type": "stack",
                           "direction": "horizontal",
                           "gap": "sm"
                         }
-                      ]
+                      ],
+                      "type": "stack"
                     }
                   ]
                 ]
@@ -484,8 +485,8 @@
                     "@payload.data",
                     {
                       "emit": {
-                        "success": "ThreadPostCreated",
-                        "failure": "ThreadPostCreateFailed"
+                        "failure": "ThreadPostCreateFailed",
+                        "success": "ThreadPostCreated"
                       }
                     }
                   ]
@@ -527,13 +528,13 @@
                     "fetch",
                     "ThreadPost",
                     {
+                      "include": [
+                        "replies"
+                      ],
                       "emit": {
                         "failure": "ThreadPostLoadFailed",
                         "success": "ThreadPostLoaded"
-                      },
-                      "include": [
-                        "replies"
-                      ]
+                      }
                     }
                   ]
                 ]
@@ -563,21 +564,21 @@
                     "fetch",
                     "ThreadPost",
                     {
-                      "emit": {
-                        "failure": "ThreadPostLoadFailed",
-                        "success": "ThreadPostLoaded"
-                      },
                       "include": [
                         "replies"
-                      ]
+                      ],
+                      "emit": {
+                        "success": "ThreadPostLoaded",
+                        "failure": "ThreadPostLoadFailed"
+                      }
                     }
                   ],
                   [
                     "render-ui",
                     "main",
                     {
-                      "size": "sm",
-                      "type": "spinner"
+                      "type": "spinner",
+                      "size": "sm"
                     }
                   ]
                 ]
@@ -592,6 +593,57 @@
               "description": "Top-level post whose descendants are loaded (blank = all roots)",
               "tier": "domain"
             },
+            "bodyContent": {
+              "type": "render-ui",
+              "default": {
+                "type": "stack",
+                "children": [
+                  {
+                    "variant": "card",
+                    "entity": "@payload.data",
+                    "look": "@config.tableLook",
+                    "fields": [
+                      {
+                        "label": "Author",
+                        "variant": "h4",
+                        "name": "authorName"
+                      },
+                      {
+                        "name": "content",
+                        "label": "",
+                        "variant": "body"
+                      },
+                      {
+                        "name": "voteCount",
+                        "label": "Votes",
+                        "variant": "caption"
+                      }
+                    ],
+                    "itemActions": [
+                      {
+                        "icon": "message-square",
+                        "event": "REPLY",
+                        "label": "Reply"
+                      }
+                    ],
+                    "gap": "sm",
+                    "type": "data-list"
+                  }
+                ],
+                "gap": "md",
+                "direction": "vertical"
+              },
+              "label": "Body content tree",
+              "description": "Render-ui SExpr rendered after thread posts load. Default is the canonical forum-style data-list. Layer 3 variants override this with their own tree (chat bubbles, email-threaded cards, linear comment stacks, etc.) to deliver entirely different thread UX while inheriting the same trait, state machine, emits, and listens.",
+              "tier": "internal"
+            },
+            "flat": {
+              "type": "boolean",
+              "default": false,
+              "label": "Flat thread",
+              "description": "Render replies as a linear list instead of nested tree",
+              "tier": "presentation"
+            },
             "tableLook": {
               "type": "string",
               "default": "dense",
@@ -605,57 +657,6 @@
                 "borderless",
                 "card-rows"
               ]
-            },
-            "bodyContent": {
-              "type": "render-ui",
-              "default": {
-                "direction": "vertical",
-                "type": "stack",
-                "gap": "md",
-                "children": [
-                  {
-                    "look": "@config.tableLook",
-                    "variant": "card",
-                    "gap": "sm",
-                    "type": "data-list",
-                    "fields": [
-                      {
-                        "label": "Author",
-                        "name": "authorName",
-                        "variant": "h4"
-                      },
-                      {
-                        "label": "",
-                        "variant": "body",
-                        "name": "content"
-                      },
-                      {
-                        "variant": "caption",
-                        "label": "Votes",
-                        "name": "voteCount"
-                      }
-                    ],
-                    "itemActions": [
-                      {
-                        "icon": "message-square",
-                        "label": "Reply",
-                        "event": "REPLY"
-                      }
-                    ],
-                    "entity": "@payload.data"
-                  }
-                ]
-              },
-              "label": "Body content tree",
-              "description": "Render-ui SExpr rendered after thread posts load. Default is the canonical forum-style data-list. Layer 3 variants override this with their own tree (chat bubbles, email-threaded cards, linear comment stacks, etc.) to deliver entirely different thread UX while inheriting the same trait, state machine, emits, and listens.",
-              "tier": "internal"
-            },
-            "flat": {
-              "type": "boolean",
-              "default": false,
-              "label": "Flat thread",
-              "description": "Render replies as a linear list instead of nested tree",
-              "tier": "presentation"
             }
           },
           "scope": "collection"
