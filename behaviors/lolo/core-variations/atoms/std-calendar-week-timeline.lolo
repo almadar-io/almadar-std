@@ -1,5 +1,5 @@
-app std-calendar-week-timeline "1.0.0"
-"Week-timeline calendar — week-strip view with 7 day columns across the top, each day a vertical Stack of event cards ordered by time. Same CalendarEventCalendar trait, same state machine, same emits/listens as std-calendar — only the bodyContent tree differs. For weekly schedule views (fitness-studio class week, healthcare appointment week)."
+app std-calendar-week-timeline "1.1.0"
+"Week-timeline calendar — events grouped by weekday in a 7-column timeline. The visible window normalizes to the payload's actual date range, so events stack into whichever day-of-week they fall on. Same CalendarEventCalendar trait, same state machine as std-calendar — only bodyContent differs. For weekly schedule views (fitness class week, healthcare appointment week)."
 
 orbital WeekTimelineCalendarOrbital {
   uses Calendar from "std/behaviors/std-calendar"
@@ -13,6 +13,7 @@ orbital WeekTimelineCalendarOrbital {
     date        : string = ""
     time        : string = ""
     duration    : number = 60
+    weekday     : string = ""
   }
 
   trait WeekTimelineCalendar = Calendar.traits.CalendarEventCalendar -> WeekTimelineEvent {
@@ -30,41 +31,29 @@ orbital WeekTimelineCalendarOrbital {
             { type: "date-range-selector", onSelect: "SELECT_DAY" }
           ]},
           { type: "divider" },
-          { type: "grid", cols: 7, gap: "sm", className: "min-h-[28rem]", children: [
-            { type: "stack", direction: "vertical", gap: "sm", className: "border-r border-[var(--color-border)] pr-2", children: [
-              { type: "typography", variant: "caption", color: "muted", content: "Mon", className: "text-center pb-2 border-b border-[var(--color-border)]" },
-              { type: "data-list", entity: "@payload.data", gap: "sm", fields: [],
-                renderItem: ["fn", "item", {
-                  type: "card", className: "p-2 cursor-pointer hover:shadow-elevation-1",
-                  children: [
-                    { type: "stack", direction: "vertical", gap: "sm", children: [
-                      { type: "typography", variant: "caption", weight: "medium", content: "@item.time" },
-                      { type: "typography", variant: "caption", content: "@item.name", className: "truncate" },
-                      { type: "badge", label: "@item.status", variant: "default" }
-                    ]}
-                  ]
-                }]
-              }
-            ]},
-            { type: "stack", direction: "vertical", gap: "sm", className: "border-r border-[var(--color-border)] pr-2", children: [
-              { type: "typography", variant: "caption", color: "muted", content: "Tue", className: "text-center pb-2 border-b border-[var(--color-border)]" }
-            ]},
-            { type: "stack", direction: "vertical", gap: "sm", className: "border-r border-[var(--color-border)] pr-2", children: [
-              { type: "typography", variant: "caption", color: "muted", content: "Wed", className: "text-center pb-2 border-b border-[var(--color-border)]" }
-            ]},
-            { type: "stack", direction: "vertical", gap: "sm", className: "border-r border-[var(--color-border)] pr-2", children: [
-              { type: "typography", variant: "caption", color: "muted", content: "Thu", className: "text-center pb-2 border-b border-[var(--color-border)]" }
-            ]},
-            { type: "stack", direction: "vertical", gap: "sm", className: "border-r border-[var(--color-border)] pr-2", children: [
-              { type: "typography", variant: "caption", color: "muted", content: "Fri", className: "text-center pb-2 border-b border-[var(--color-border)]" }
-            ]},
-            { type: "stack", direction: "vertical", gap: "sm", className: "border-r border-[var(--color-border)] pr-2", children: [
-              { type: "typography", variant: "caption", color: "muted", content: "Sat", className: "text-center pb-2 border-b border-[var(--color-border)]" }
-            ]},
-            { type: "stack", direction: "vertical", gap: "sm", className: "pr-2", children: [
-              { type: "typography", variant: "caption", color: "muted", content: "Sun", className: "text-center pb-2 border-b border-[var(--color-border)]" }
-            ]}
-          ]}
+          { type: "data-list",
+            entity: "@payload.data",
+            groupBy: "weekday",
+            gap: "md",
+            variant: "default",
+            fields: [],
+            renderItem: ["fn", "item", {
+              type: "card",
+              look: "flat-bordered",
+              padding: "sm",
+              shadow: "sm",
+              children: [
+                { type: "stack", direction: "vertical", gap: "xs", children: [
+                  { type: "stack", direction: "horizontal", gap: "sm", justify: "between", align: "center", children: [
+                    { type: "typography", variant: "caption", weight: "medium", color: "muted", content: "@item.time" },
+                    { type: "badge", label: "@item.status", variant: "default", size: "sm" }
+                  ]},
+                  { type: "typography", variant: "body2", weight: "medium", content: "@item.name", className: "truncate" },
+                  { type: "typography", variant: "caption", color: "muted", content: "@item.description", className: "truncate" }
+                ]}
+              ]
+            }]
+          }
         ]
       }
     }

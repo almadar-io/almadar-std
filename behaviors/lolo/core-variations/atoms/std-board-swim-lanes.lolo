@@ -1,5 +1,5 @@
-app std-board-swim-lanes "1.0.0"
-"Swim-lane board — horizontal lanes per status, cards flow left-to-right within each lane. Lane header sticks left with icon + label + count; cards render in a horizontal data-list per lane. Useful for HR-portal recruiting stages and project-manager team boards. Same BoardItemBoard trait, same state machine, same emits/listens as std-board — only the bodyContent tree differs."
+app std-board-swim-lanes "1.0.1"
+"Swim-lane board — full-width horizontal lanes per status, cards flow left-to-right within each lane. Lane header on top with icon + label + count; cards render in the lane body. Useful for HR-portal recruiting stages and project-manager team boards. Same BoardItemBoard trait, same state machine, same emits/listens as std-board — only the bodyContent tree differs."
 
 orbital SwimLanesBoardOrbital {
   uses Board from "std/behaviors/std-board"
@@ -35,20 +35,19 @@ orbital SwimLanesBoardOrbital {
           { type: "data-list", entity: "@entity.boards", gap: "md", fields: [], dndRoot: true,
             renderItem: ["fn", "col", {
               type: "card", look: "flat-bordered", padding: "none",
-              className: "overflow-hidden",
+              className: "overflow-hidden rounded-lg",
               children: [
-                { type: "stack", direction: "horizontal", gap: "none", align: "stretch", children: [
-                  { type: "stack", direction: "vertical", gap: "xs", align: "center", className: "w-[180px] shrink-0 px-card-md py-card-md bg-[var(--color-surface-subtle)] border-r border-[var(--color-border)] sticky left-0", children: [
+                { type: "stack", direction: "vertical", gap: "none", children: [
+                  { type: "stack", direction: "horizontal", gap: "sm", align: "center", className: "px-card-md py-3 border-b border-[var(--color-border)] bg-[var(--color-surface-subtle)]", children: [
                     { type: "icon", name: "@col.icon" },
-                    { type: "typography", content: "@col.label", variant: "h4" },
+                    { type: "typography", content: "@col.label", variant: "h4", className: "flex-1" },
                     { type: "badge", label: "@col.count", variant: "primary", size: "sm" }
                   ]},
                   { type: "data-list", entity: "@col.items", gap: "sm", fields: [], dragGroup: "@col.key", accepts: "*", sortable: true, dropEvent: "MOVE_CARD", reorderEvent: "REORDER_CARD", positionEvent: "REORDER_POSITION",
-                    direction: "horizontal",
-                    className: "flex-1 p-card-md overflow-x-auto min-h-[120px]",
+                    className: "p-card-md min-h-[140px] flex flex-row flex-nowrap gap-3 overflow-x-auto",
                     renderItem: ["fn", "item", {
                       type: "card", look: "elevated", padding: "sm",
-                      className: "min-w-[220px] max-w-[260px] cursor-grab hover:shadow-md transition-shadow",
+                      className: "min-w-[220px] max-w-[260px] rounded-md cursor-grab shadow-sm hover:shadow-md transition-shadow",
                       children: [
                         { type: "stack", direction: "vertical", gap: "xs", children: [
                           { type: "typography", content: "@item.title", variant: "body", weight: "medium" },

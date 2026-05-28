@@ -100,58 +100,59 @@
             "key": "bodyContent",
             "type": "render-ui",
             "default": {
+              "direction": "vertical",
               "children": [
                 {
                   "direction": "horizontal",
                   "type": "stack",
-                  "align": "center",
                   "gap": "sm",
                   "children": [
                     {
-                      "type": "icon",
-                      "name": "shield-check"
+                      "name": "shield-check",
+                      "type": "icon"
                     },
                     {
-                      "variant": "h3",
                       "content": "@config.title",
+                      "variant": "h3",
                       "type": "typography"
                     }
-                  ]
+                  ],
+                  "align": "center"
                 },
                 {
-                  "steps": "@entity.wizardSteps",
                   "type": "wizard-progress",
-                  "currentStep": "@entity.currentStepIndex",
-                  "allowNavigation": false
+                  "allowNavigation": false,
+                  "steps": "@entity.wizardSteps",
+                  "currentStep": "@entity.currentStepIndex"
                 },
                 {
-                  "look": "@config.cardLook",
                   "type": "card",
                   "children": [
                     {
+                      "type": "stack",
                       "children": [
                         {
-                          "align": "center",
                           "type": "stack",
                           "gap": "sm",
+                          "align": "center",
                           "direction": "horizontal",
                           "children": [
                             {
+                              "size": "lg",
                               "type": "icon",
-                              "name": "@entity.currentStepIcon",
-                              "size": "lg"
+                              "name": "@entity.currentStepIcon"
                             },
                             {
                               "children": [
                                 {
-                                  "content": "@entity.currentStepLabel",
+                                  "type": "typography",
                                   "variant": "h2",
-                                  "type": "typography"
+                                  "content": "@entity.currentStepLabel"
                                 },
                                 {
                                   "variant": "body",
-                                  "content": "@entity.currentStepDescription",
                                   "color": "muted",
+                                  "content": "@entity.currentStepDescription",
                                   "type": "typography"
                                 }
                               ],
@@ -162,65 +163,64 @@
                           ]
                         }
                       ],
-                      "direction": "vertical",
-                      "type": "stack",
-                      "gap": "md"
-                    }
-                  ]
-                },
-                {
-                  "align": "center",
-                  "children": [
-                    {
-                      "variant": "ghost",
-                      "actionPayload": {
-                        "id": "@entity.id"
-                      },
-                      "icon": "chevron-left",
-                      "type": "button",
-                      "action": "BACK",
-                      "label": "Back",
-                      "disabled": "@entity.isFirstStep"
-                    },
-                    {
-                      "type": "button",
-                      "variant": "ghost",
-                      "action": "REJECT",
-                      "icon": "x",
-                      "actionPayload": {
-                        "id": "@entity.id"
-                      },
-                      "label": "Reject"
-                    },
-                    {
-                      "icon": "alert-triangle",
-                      "label": "Escalate",
-                      "type": "button",
-                      "action": "ESCALATE",
-                      "variant": "ghost",
-                      "actionPayload": {
-                        "id": "@entity.id"
-                      }
-                    },
-                    {
-                      "variant": "primary",
-                      "label": "@entity.primaryActionLabel",
-                      "action": "ADVANCE",
-                      "type": "button",
-                      "icon": "@entity.primaryActionIcon",
-                      "actionPayload": {
-                        "id": "@entity.id"
-                      }
+                      "gap": "md",
+                      "direction": "vertical"
                     }
                   ],
-                  "direction": "horizontal",
+                  "look": "@config.cardLook"
+                },
+                {
+                  "type": "stack",
                   "gap": "sm",
-                  "type": "stack"
+                  "align": "center",
+                  "direction": "horizontal",
+                  "children": [
+                    {
+                      "label": "Back",
+                      "action": "BACK",
+                      "actionPayload": {
+                        "id": "@entity.id"
+                      },
+                      "variant": "ghost",
+                      "disabled": "@entity.isFirstStep",
+                      "icon": "chevron-left",
+                      "type": "button"
+                    },
+                    {
+                      "type": "button",
+                      "label": "Reject",
+                      "action": "REJECT",
+                      "icon": "x",
+                      "variant": "ghost",
+                      "actionPayload": {
+                        "id": "@entity.id"
+                      }
+                    },
+                    {
+                      "variant": "ghost",
+                      "type": "button",
+                      "action": "ESCALATE",
+                      "actionPayload": {
+                        "id": "@entity.id"
+                      },
+                      "label": "Escalate",
+                      "icon": "alert-triangle"
+                    },
+                    {
+                      "label": "@entity.primaryActionLabel",
+                      "type": "button",
+                      "action": "ADVANCE",
+                      "icon": "@entity.primaryActionIcon",
+                      "variant": "primary",
+                      "actionPayload": {
+                        "id": "@entity.id"
+                      }
+                    }
+                  ]
                 }
               ],
               "gap": "lg",
-              "type": "stack",
-              "direction": "vertical"
+              "type": "stack"
             },
             "label": "Body content tree",
             "description": "Render-ui SExpr rendered while the step chain is active (loading-success, running, BACK). Default is the canonical wizard-progress + step-card + action-row tree. Layer 3 variants override this with their own tree (horizontal stepper, sidebar progress, card carousel, etc.) to deliver entirely different step UX while inheriting the same trait, state machine, emits, and listens.",
@@ -249,21 +249,21 @@
             "default": [
               {
                 "key": "manager",
+                "label": "Manager Review",
                 "icon": "user",
-                "description": "Initial review by direct manager",
-                "label": "Manager Review"
+                "description": "Initial review by direct manager"
               },
               {
+                "label": "Director Approval",
                 "description": "Department director sign-off",
                 "key": "director",
-                "icon": "users",
-                "label": "Director Approval"
+                "icon": "users"
               },
               {
-                "key": "executive",
                 "description": "Final executive approval",
-                "icon": "shield",
-                "label": "Executive Sign-off"
+                "label": "Executive Sign-off",
+                "key": "executive",
+                "icon": "shield"
               }
             ],
             "label": "Steps",
@@ -271,18 +271,13 @@
             "tier": "domain",
             "items": {
               "properties": {
-                "key": {
-                  "name": "key",
+                "icon": {
+                  "name": "icon",
                   "required": false,
                   "type": "string"
                 },
-                "label": {
-                  "name": "label",
-                  "required": true,
-                  "type": "string"
-                },
-                "icon": {
-                  "name": "icon",
+                "key": {
+                  "name": "key",
                   "required": false,
                   "type": "string"
                 },
@@ -298,6 +293,11 @@
                   "items": {
                     "type": "string"
                   }
+                },
+                "label": {
+                  "name": "label",
+                  "required": true,
+                  "type": "string"
                 }
               },
               "type": "object"
@@ -312,7 +312,27 @@
             "tier": "presentation"
           }
         ],
-        "capabilities": []
+        "capabilities": [],
+        "entityRebindable": true,
+        "entityContract": {
+          "requires": [],
+          "provides": [
+            "currentStepDescription",
+            "currentStepIcon",
+            "currentStepIndex",
+            "currentStepLabel",
+            "errorMessage",
+            "finalStatus",
+            "isFirstStep",
+            "isLastStep",
+            "primaryActionIcon",
+            "primaryActionLabel",
+            "primaryActionVariant",
+            "rejectionReason",
+            "totalSteps",
+            "wizardSteps"
+          ]
+        }
       }
     ],
     "pages": [

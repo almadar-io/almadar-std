@@ -1,7 +1,7 @@
 {
   "name": "std-thread-email-threaded",
-  "version": "1.0.0",
-  "description": "Email-threaded — Gmail/Outlook style: collapsed message cards with sender + snippet, expandable to full body. Subject header at the top, attachments row, and action bar (reply, forward, archive). For helpdesk email threads, document discussions, support tickets that read like email.",
+  "version": "1.1.0",
+  "description": "Email-threaded — Gmail/Outlook/Mail.app split-pane: left message list (sender, subject, preview), right pane shows the focused message with from/to/subject header and quoted-reply nested tree. For helpdesk email threads, support tickets, document discussions that read like email.",
   "orbitals": [
     {
       "name": "EmailThreadedOrbital",
@@ -41,6 +41,25 @@
             "required": true
           },
           {
+            "name": "fromAddress",
+            "type": "string",
+            "required": true
+          },
+          {
+            "name": "toAddress",
+            "type": "string",
+            "required": true
+          },
+          {
+            "name": "subject",
+            "type": "string",
+            "required": true
+          },
+          {
+            "name": "preview",
+            "type": "string"
+          },
+          {
             "name": "content",
             "type": "string",
             "required": true
@@ -58,6 +77,48 @@
             "name": "replyCount",
             "type": "number",
             "default": 0.0
+          },
+          {
+            "name": "replies",
+            "type": "array",
+            "items": {
+              "type": "string"
+            }
+          },
+          {
+            "name": "focusedId",
+            "type": "string"
+          },
+          {
+            "name": "focusedSubject",
+            "type": "string"
+          },
+          {
+            "name": "focusedAuthorName",
+            "type": "string"
+          },
+          {
+            "name": "focusedFromAddress",
+            "type": "string"
+          },
+          {
+            "name": "focusedToAddress",
+            "type": "string"
+          },
+          {
+            "name": "focusedCreatedAt",
+            "type": "string"
+          },
+          {
+            "name": "focusedContent",
+            "type": "string"
+          },
+          {
+            "name": "focusedReplies",
+            "type": "array",
+            "items": {
+              "type": "string"
+            }
           }
         ]
       },
@@ -68,152 +129,313 @@
           "linkedEntity": "EmailThreadedPost",
           "config": {
             "bodyContent": {
-              "className": "max-w-4xl mx-auto px-card-md py-section",
               "gap": "none",
-              "direction": "vertical",
+              "direction": "horizontal",
+              "type": "stack",
+              "className": "max-w-7xl mx-auto h-full border border-[var(--color-border)] rounded-md overflow-hidden",
               "children": [
                 {
-                  "align": "center",
-                  "direction": "horizontal",
-                  "className": "pb-md border-b border-[var(--color-border)]",
+                  "className": "w-80 shrink-0 border-r border-[var(--color-border)] bg-[var(--color-muted)]",
                   "children": [
                     {
-                      "type": "icon",
-                      "name": "mail"
+                      "direction": "horizontal",
+                      "gap": "sm",
+                      "className": "px-card-md py-md border-b border-[var(--color-border)]",
+                      "align": "center",
+                      "type": "stack",
+                      "children": [
+                        {
+                          "size": "sm",
+                          "type": "icon",
+                          "name": "inbox"
+                        },
+                        {
+                          "type": "typography",
+                          "weight": "medium",
+                          "variant": "label",
+                          "content": "Inbox"
+                        }
+                      ]
                     },
                     {
+                      "entity": "@payload.data",
+                      "fields": [],
+                      "type": "data-list",
+                      "variant": "default",
+                      "gap": "none",
+                      "renderItem": [
+                        "fn",
+                        "item",
+                        {
+                          "look": "borderless-divider",
+                          "children": {
+                            "direction": "horizontal",
+                            "align": "start",
+                            "children": [
+                              {
+                                "size": "sm",
+                                "type": "avatar",
+                                "name": "@item.authorName"
+                              },
+                              {
+                                "className": "flex-1 min-w-0",
+                                "type": "stack",
+                                "direction": "vertical",
+                                "children": [
+                                  {
+                                    "gap": "sm",
+                                    "type": "stack",
+                                    "direction": "horizontal",
+                                    "align": "center",
+                                    "children": [
+                                      {
+                                        "weight": "medium",
+                                        "type": "typography",
+                                        "content": "@item.authorName",
+                                        "className": "flex-1 truncate",
+                                        "variant": "body"
+                                      },
+                                      {
+                                        "type": "typography",
+                                        "variant": "caption",
+                                        "content": "@item.createdAt",
+                                        "color": "muted"
+                                      }
+                                    ]
+                                  },
+                                  {
+                                    "content": "@item.subject",
+                                    "className": "truncate",
+                                    "type": "typography",
+                                    "variant": "body2",
+                                    "weight": "medium"
+                                  },
+                                  {
+                                    "variant": "caption",
+                                    "content": "@item.preview",
+                                    "type": "typography",
+                                    "color": "muted",
+                                    "className": "truncate"
+                                  }
+                                ],
+                                "gap": "xs"
+                              }
+                            ],
+                            "type": "stack",
+                            "gap": "sm"
+                          },
+                          "padding": "md",
+                          "type": "card"
+                        }
+                      ]
+                    }
+                  ],
+                  "type": "stack",
+                  "direction": "vertical",
+                  "gap": "none"
+                },
+                {
+                  "direction": "vertical",
+                  "type": "stack",
+                  "gap": "md",
+                  "className": "flex-1 px-card-md py-md overflow-y-auto",
+                  "children": [
+                    {
+                      "type": "stack",
+                      "className": "pb-md border-b border-[var(--color-border)]",
                       "direction": "vertical",
                       "gap": "xs",
                       "children": [
                         {
-                          "content": "Conversation",
-                          "variant": "h3",
-                          "type": "typography"
+                          "content": "@entity.focusedSubject",
+                          "type": "typography",
+                          "variant": "h3"
                         },
                         {
+                          "direction": "horizontal",
+                          "children": [
+                            {
+                              "type": "avatar",
+                              "name": "@entity.focusedAuthorName",
+                              "size": "md"
+                            },
+                            {
+                              "children": [
+                                {
+                                  "type": "stack",
+                                  "gap": "sm",
+                                  "children": [
+                                    {
+                                      "color": "muted",
+                                      "content": "From",
+                                      "variant": "label",
+                                      "type": "typography"
+                                    },
+                                    {
+                                      "content": "@entity.focusedFromAddress",
+                                      "variant": "body2",
+                                      "weight": "medium",
+                                      "type": "typography"
+                                    }
+                                  ],
+                                  "align": "center",
+                                  "direction": "horizontal"
+                                },
+                                {
+                                  "gap": "sm",
+                                  "type": "stack",
+                                  "direction": "horizontal",
+                                  "align": "center",
+                                  "children": [
+                                    {
+                                      "type": "typography",
+                                      "color": "muted",
+                                      "variant": "label",
+                                      "content": "To"
+                                    },
+                                    {
+                                      "variant": "body2",
+                                      "content": "@entity.focusedToAddress",
+                                      "type": "typography"
+                                    }
+                                  ]
+                                }
+                              ],
+                              "gap": "xs",
+                              "type": "stack",
+                              "direction": "vertical",
+                              "className": "flex-1"
+                            },
+                            {
+                              "color": "muted",
+                              "variant": "caption",
+                              "content": "@entity.focusedCreatedAt",
+                              "type": "typography"
+                            },
+                            {
+                              "action": "REPLY",
+                              "actionPayload": {
+                                "parentId": "@entity.focusedId"
+                              },
+                              "label": "Reply",
+                              "variant": "secondary",
+                              "size": "sm",
+                              "type": "button",
+                              "icon": "corner-up-left"
+                            },
+                            {
+                              "action": "REPLY",
+                              "size": "sm",
+                              "label": "Forward",
+                              "icon": "corner-up-right",
+                              "variant": "ghost",
+                              "type": "button"
+                            }
+                          ],
+                          "gap": "md",
+                          "type": "stack",
+                          "align": "center"
+                        }
+                      ]
+                    },
+                    {
+                      "children": {
+                        "content": "@entity.focusedContent",
+                        "type": "typography",
+                        "variant": "body"
+                      },
+                      "type": "card",
+                      "look": "flat-bordered",
+                      "padding": "md"
+                    },
+                    {
+                      "direction": "horizontal",
+                      "type": "stack",
+                      "children": [
+                        {
+                          "name": "corner-down-right",
+                          "size": "xs",
+                          "type": "icon"
+                        },
+                        {
+                          "variant": "label",
                           "color": "muted",
-                          "content": "Email thread",
-                          "variant": "caption",
+                          "content": "Quoted replies",
                           "type": "typography"
                         }
                       ],
-                      "className": "flex-1",
-                      "type": "stack"
+                      "gap": "sm",
+                      "align": "center"
                     },
                     {
-                      "type": "button",
-                      "label": "Archive",
-                      "action": "ARCHIVE",
-                      "icon": "archive",
-                      "variant": "ghost"
-                    },
-                    {
-                      "type": "button",
-                      "icon": "corner-up-left",
-                      "label": "Reply all",
-                      "variant": "secondary",
-                      "action": "REPLY"
-                    }
-                  ],
-                  "type": "stack",
-                  "gap": "md"
-                },
-                {
-                  "type": "data-list",
-                  "renderItem": [
-                    "fn",
-                    "item",
-                    {
-                      "padding": "md",
-                      "className": "hover:shadow-elevation-1 transition-shadow",
-                      "type": "card",
-                      "children": [
+                      "entity": "@entity.focusedReplies",
+                      "type": "data-list",
+                      "fields": [],
+                      "gap": "sm",
+                      "variant": "default",
+                      "renderItem": [
+                        "fn",
+                        "reply",
                         {
-                          "gap": "sm",
-                          "direction": "vertical",
-                          "type": "stack",
-                          "children": [
-                            {
-                              "className": "w-full",
-                              "children": [
-                                {
-                                  "name": "@item.authorName",
-                                  "type": "avatar",
-                                  "size": "sm"
-                                },
-                                {
-                                  "direction": "vertical",
-                                  "gap": "xs",
-                                  "children": [
-                                    {
-                                      "weight": "medium",
-                                      "type": "typography",
-                                      "variant": "body",
-                                      "content": "@item.authorName"
-                                    },
-                                    {
-                                      "content": "@item.content",
-                                      "type": "typography",
-                                      "className": "truncate",
-                                      "variant": "caption",
-                                      "color": "muted"
-                                    }
-                                  ],
-                                  "className": "flex-1 min-w-0",
-                                  "type": "stack"
-                                },
-                                {
-                                  "color": "muted",
-                                  "content": "@item.createdAt",
-                                  "type": "typography",
-                                  "variant": "caption"
-                                }
-                              ],
-                              "type": "stack",
-                              "direction": "horizontal",
-                              "gap": "md",
-                              "align": "center"
-                            },
-                            {
-                              "type": "divider"
-                            },
-                            {
-                              "children": [
-                                {
-                                  "variant": "secondary",
-                                  "label": "Reply",
-                                  "action": "REPLY",
-                                  "type": "button",
-                                  "actionPayload": {
-                                    "parentId": "@item.id"
+                          "padding": "md",
+                          "type": "card",
+                          "look": "flat-bordered",
+                          "className": "border-l-4 border-l-[var(--color-primary)] ml-card-md",
+                          "children": {
+                            "gap": "sm",
+                            "children": [
+                              {
+                                "children": [
+                                  {
+                                    "size": "xs",
+                                    "name": "@reply.authorName",
+                                    "type": "avatar"
                                   },
-                                  "icon": "corner-up-left"
-                                },
-                                {
-                                  "action": "FORWARD",
-                                  "icon": "corner-up-right",
-                                  "label": "Forward",
-                                  "variant": "ghost",
-                                  "type": "button"
-                                }
-                              ],
-                              "direction": "horizontal",
-                              "type": "stack",
-                              "gap": "sm"
-                            }
-                          ]
+                                  {
+                                    "weight": "medium",
+                                    "variant": "body2",
+                                    "content": "@reply.authorName",
+                                    "type": "typography"
+                                  },
+                                  {
+                                    "color": "muted",
+                                    "variant": "caption",
+                                    "content": "@reply.fromAddress",
+                                    "type": "typography"
+                                  },
+                                  {
+                                    "content": "·",
+                                    "type": "typography",
+                                    "variant": "caption",
+                                    "color": "muted"
+                                  },
+                                  {
+                                    "type": "typography",
+                                    "variant": "caption",
+                                    "color": "muted",
+                                    "content": "@reply.createdAt"
+                                  }
+                                ],
+                                "gap": "sm",
+                                "align": "center",
+                                "type": "stack",
+                                "direction": "horizontal"
+                              },
+                              {
+                                "variant": "body",
+                                "type": "typography",
+                                "content": "@reply.content"
+                              }
+                            ],
+                            "type": "stack",
+                            "direction": "vertical"
+                          }
                         }
-                      ],
-                      "look": "flat-bordered"
+                      ]
                     }
-                  ],
-                  "entity": "@payload.data",
-                  "gap": "sm",
-                  "variant": "default",
-                  "fields": []
+                  ]
                 }
-              ],
-              "type": "stack"
+              ]
             }
           }
         }

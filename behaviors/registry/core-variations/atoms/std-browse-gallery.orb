@@ -1,7 +1,7 @@
 {
   "name": "std-browse-gallery",
   "version": "1.0.0",
-  "description": "Gallery browse — image-first Pinterest/Dribbble grid where each item is a visually-dominant card with a large square thumbnail area, title, one-line description, and an overlay price/status badge. Responsive 3–4 column grid with generous gap. Same BrowseItemBrowse trait, state machine, emits, and listens as std-browse — only the bodyContent tree differs.",
+  "description": "Gallery browse — image-first responsive card grid (Pinterest/Dribbble) using data-grid with auto-fit minCardWidth so it stays a grid from 3 cols above 1200px down to 1 col under 600px.",
   "orbitals": [
     {
       "name": "GalleryBrowseOrbital",
@@ -60,111 +60,124 @@
           "linkedEntity": "GalleryItem",
           "config": {
             "bodyContent": {
-              "type": "stack",
-              "className": "max-w-6xl mx-auto px-card-md py-section",
-              "direction": "vertical",
               "children": [
                 {
-                  "type": "input",
-                  "placeholder": "Search the gallery…",
-                  "inputType": "search",
-                  "action": "REFETCH_QUERY",
-                  "className": "w-full text-base"
+                  "direction": "horizontal",
+                  "type": "stack",
+                  "className": "sticky top-0 z-10 -mx-card-md px-card-md py-3 bg-[var(--color-surface)]/95 backdrop-blur border-b border-[var(--color-border)]",
+                  "children": [
+                    {
+                      "className": "text-muted-foreground",
+                      "name": "search",
+                      "type": "icon"
+                    },
+                    {
+                      "type": "input",
+                      "inputType": "search",
+                      "placeholder": "Search the gallery…",
+                      "action": "REFETCH_QUERY"
+                    }
+                  ],
+                  "align": "center",
+                  "gap": "sm"
                 },
                 {
-                  "type": "data-list",
-                  "cols": 3.0,
-                  "fields": [],
+                  "entity": "@payload.data",
+                  "gap": "lg",
+                  "className": "w-full",
                   "renderItem": [
                     "fn",
                     "item",
                     {
+                      "direction": "vertical",
                       "children": [
                         {
+                          "type": "stack",
+                          "direction": "vertical",
+                          "className": "relative aspect-square w-full bg-muted overflow-hidden",
+                          "justify": "center",
                           "gap": "xs",
+                          "align": "center",
                           "children": [
                             {
+                              "size": "lg",
+                              "className": "text-muted-foreground opacity-50 transition-transform duration-normal group-hover:scale-105",
                               "name": "image",
-                              "className": "text-muted-foreground opacity-60",
-                              "type": "icon",
-                              "size": "lg"
+                              "type": "icon"
                             },
                             {
-                              "content": "@item.thumbnailLabel",
-                              "className": "px-2 text-center truncate max-w-full",
                               "color": "muted",
+                              "variant": "caption",
+                              "className": "px-2 text-center truncate max-w-full",
                               "type": "typography",
-                              "variant": "caption"
+                              "content": "@item.thumbnailLabel"
                             },
                             {
                               "type": "stack",
-                              "gap": "xs",
-                              "direction": "horizontal",
-                              "align": "center",
                               "className": "absolute top-2 right-2",
+                              "direction": "horizontal",
+                              "gap": "xs",
+                              "align": "center",
                               "children": [
                                 {
+                                  "variant": "primary",
                                   "type": "badge",
-                                  "label": "@item.price",
-                                  "variant": "default"
+                                  "label": "@item.price"
                                 }
                               ]
                             },
                             {
-                              "type": "stack",
-                              "direction": "horizontal",
                               "className": "absolute top-2 left-2",
                               "children": [
                                 {
+                                  "label": "@item.status",
                                   "type": "badge",
-                                  "variant": "default",
-                                  "label": "@item.status"
+                                  "variant": "neutral"
                                 }
                               ],
-                              "align": "center",
-                              "gap": "xs"
+                              "type": "stack",
+                              "direction": "horizontal",
+                              "gap": "xs",
+                              "align": "center"
                             }
-                          ],
-                          "align": "center",
-                          "direction": "vertical",
-                          "className": "relative aspect-square w-full bg-muted rounded-md border border-[var(--color-border)] overflow-hidden",
-                          "type": "stack",
-                          "justify": "center"
+                          ]
                         },
                         {
+                          "className": "px-card-md pb-card-md",
                           "gap": "xs",
-                          "direction": "vertical",
+                          "type": "stack",
                           "children": [
                             {
-                              "type": "typography",
                               "content": "@item.name",
+                              "type": "typography",
                               "className": "truncate",
-                              "variant": "body",
-                              "weight": "medium"
+                              "variant": "h4"
                             },
                             {
-                              "className": "line-clamp-1",
-                              "variant": "caption",
                               "content": "@item.description",
-                              "color": "muted",
-                              "type": "typography"
+                              "type": "typography",
+                              "className": "line-clamp-2",
+                              "variant": "caption",
+                              "color": "muted"
                             }
                           ],
-                          "className": "px-1",
-                          "type": "stack"
+                          "direction": "vertical"
                         }
                       ],
-                      "gap": "sm",
-                      "direction": "vertical",
                       "type": "stack",
-                      "className": "group rounded-lg overflow-hidden cursor-pointer"
+                      "className": "group rounded-lg overflow-hidden bg-[var(--color-card)] border border-[var(--color-border)] shadow-sm hover:shadow-hover hover:-translate-y-0.5 transition-all duration-normal cursor-pointer",
+                      "gap": "sm"
                     }
                   ],
-                  "gap": "lg",
-                  "entity": "@payload.data"
+                  "minCardWidth": 280.0,
+                  "type": "data-grid",
+                  "fields": []
                 }
               ],
-              "gap": "lg"
+              "gap": "lg",
+              "className": "max-w-7xl mx-auto px-card-md py-section",
+              "type": "stack",
+              "direction": "vertical"
             }
           }
         }

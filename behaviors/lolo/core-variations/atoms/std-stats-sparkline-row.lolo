@@ -1,5 +1,5 @@
 app std-stats-sparkline-row "1.0.0"
-"Sparkline row — Datadog/Grafana-style horizontal strip of compact KPIs with inline trend chips and tiny sparklines. Each cell: metric label, current value, change indicator, micro sparkline. For devops dashboards, IoT telemetry, health scores, observability overviews. Same StatsItemStats trait, same aggregation pipeline, same listens as std-stats — only the bodyContent tree differs."
+"Sparkline tile grid — chart-first card tiles where the mini trend line is the visual centerpiece, with label above and value+delta footer. For trend-led overviews: telemetry, weekly active users, traffic shape, observability at a glance."
 
 orbital SparklineRowStatsOrbital {
   uses Stats from "std/behaviors/std-stats"
@@ -29,36 +29,34 @@ orbital SparklineRowStatsOrbital {
   trait SparklineRowStatsItemStats = Stats.traits.StatsItemStats -> SparklineRowStats {
     config: {
       bodyContent: {
-        type: "stack",
-        direction: "horizontal",
-        gap: "none",
-        align: "stretch",
-        wrap: true,
-        className: "w-full rounded-md border border-[var(--color-border)] bg-[var(--color-surface)] divide-x divide-[var(--color-border)] overflow-hidden",
+        type: "simple-grid",
+        cols: 2,
+        gap: "md",
+        className: "w-full",
         children: [{
           type: "data-list",
           entity: "@entity.cards",
-          gap: "none",
+          gap: "md",
           fields: [],
           renderItem: ["fn", "card", {
             type: "stack",
             direction: "vertical",
-            gap: "xs",
-            className: "flex-1 min-w-[180px] px-card-md py-card-sm",
+            gap: "sm",
+            className: "rounded-lg border border-[var(--color-border)] bg-[var(--color-card)] p-card-md shadow-elevation-sm hover:shadow-elevation-md transition-shadow min-h-[180px]",
             children: [
               { type: "stack", direction: "horizontal", gap: "xs", align: "center", children: [
                 { type: "icon", name: "@card.icon", size: "xs", color: "muted" },
-                { type: "typography", variant: "caption", color: "muted", weight: "medium", content: "@card.label", className: "uppercase tracking-wide truncate" }
+                { type: "typography", variant: "overline", color: "muted", weight: "semibold", content: "@card.label", className: "uppercase tracking-wide truncate" }
               ]},
-              { type: "stack", direction: "horizontal", gap: "sm", align: "center", justify: "between", children: [
+              { type: "sparkline", data: [1, 2, 3, 4, 5, 6, 7], color: "auto", height: 64, strokeWidth: 2, fill: true, className: "w-full" },
+              { type: "stack", direction: "horizontal", gap: "sm", align: "baseline", justify: "between", children: [
                 { type: "stack", direction: "horizontal", gap: "xs", align: "baseline", children: [
                   { type: "typography", variant: "caption", color: "muted", content: "@card.prefix" },
-                  { type: "typography", variant: "h4", weight: "semibold", content: "@card.value", className: "tabular-nums" },
+                  { type: "typography", variant: "h3", weight: "semibold", content: "@card.value", className: "tabular-nums" },
                   { type: "typography", variant: "caption", color: "muted", content: "@card.suffix" }
                 ]},
-                { type: "badge", label: "@card.trend", variant: "@card.variant", size: "sm" }
-              ]},
-              { type: "sparkline", data: [1, 2, 3, 4, 5, 6, 7], color: "auto", height: 20, strokeWidth: 1, fill: false, className: "w-full" }
+                { type: "trend-indicator", value: "@card.trend", size: "sm", showValue: true }
+              ]}
             ]
           }]
         }]

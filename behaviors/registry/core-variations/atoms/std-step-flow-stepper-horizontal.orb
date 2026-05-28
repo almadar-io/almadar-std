@@ -1,7 +1,7 @@
 {
   "name": "std-step-flow-stepper-horizontal",
   "version": "1.0.0",
-  "description": "Horizontal stepper-bar step flow — Stripe-checkout-style numbered circles connected by lines at the top of the viewport, active step highlighted, completed steps marked done. Step content card sits below the bar centered in a constrained column. Same StepFlowReview trait, same state machine, same emits/listens as std-step-flow — only the bodyContent tree differs. Suited for checkout flows, onboarding wizards, ats-recruiting stage progression.",
+  "description": "Chrome-only horizontal stepper indicator — numbered badges with labels and connectors. No form body. Pure step navigation.",
   "orbitals": [
     {
       "name": "StepperHorizontalOrbital",
@@ -29,124 +29,66 @@
           "linkedEntity": "StepperHorizontalView",
           "config": {
             "bodyContent": {
+              "align": "center",
+              "className": "max-w-4xl mx-auto pt-section w-full justify-between",
+              "direction": "horizontal",
               "type": "stack",
-              "gap": "xl",
-              "className": "max-w-3xl mx-auto pt-section",
+              "gap": "sm",
               "children": [
                 {
-                  "allowNavigation": false,
-                  "currentStep": "@entity.currentStepIndex",
-                  "type": "wizard-progress",
-                  "steps": "@entity.wizardSteps"
-                },
-                {
-                  "type": "card",
-                  "children": [
+                  "renderItem": [
+                    "fn",
+                    "step",
                     {
-                      "direction": "vertical",
+                      "align": "center",
+                      "gap": "sm",
                       "type": "stack",
-                      "className": "p-card-lg",
+                      "direction": "horizontal",
                       "children": [
                         {
+                          "disabled": "@step.isPending",
+                          "type": "button",
+                          "label": "",
+                          "action": "ADVANCE",
+                          "actionPayload": {
+                            "id": "@entity.id",
+                            "stepKey": "@step.key"
+                          },
+                          "icon": "@step.icon",
+                          "variant": "ghost"
+                        },
+                        {
+                          "align": "center",
+                          "direction": "horizontal",
+                          "children": [
+                            {
+                              "type": "badge",
+                              "label": "@step.indexLabel",
+                              "variant": "@step.badgeVariant"
+                            },
+                            {
+                              "type": "typography",
+                              "variant": "caption",
+                              "color": "@step.labelColor",
+                              "content": "@step.label"
+                            }
+                          ],
                           "type": "stack",
-                          "children": [
-                            {
-                              "size": "lg",
-                              "name": "@entity.currentStepIcon",
-                              "type": "icon"
-                            },
-                            {
-                              "type": "stack",
-                              "direction": "vertical",
-                              "gap": "xs",
-                              "children": [
-                                {
-                                  "type": "typography",
-                                  "variant": "h2",
-                                  "content": "@entity.currentStepLabel"
-                                },
-                                {
-                                  "content": "@entity.currentStepDescription",
-                                  "variant": "body",
-                                  "type": "typography",
-                                  "color": "muted"
-                                }
-                              ]
-                            }
-                          ],
-                          "direction": "horizontal",
-                          "align": "center",
-                          "gap": "md"
+                          "gap": "sm"
                         },
                         {
+                          "className": "flex-1 min-w-spacing-xl",
                           "type": "divider"
-                        },
-                        {
-                          "align": "center",
-                          "className": "justify-between",
-                          "children": [
-                            {
-                              "variant": "ghost",
-                              "label": "Back",
-                              "icon": "chevron-left",
-                              "disabled": "@entity.isFirstStep",
-                              "actionPayload": {
-                                "id": "@entity.id"
-                              },
-                              "type": "button",
-                              "action": "BACK"
-                            },
-                            {
-                              "gap": "sm",
-                              "direction": "horizontal",
-                              "children": [
-                                {
-                                  "variant": "ghost",
-                                  "type": "button",
-                                  "action": "REJECT",
-                                  "icon": "x",
-                                  "actionPayload": {
-                                    "id": "@entity.id"
-                                  },
-                                  "label": "Reject"
-                                },
-                                {
-                                  "icon": "alert-triangle",
-                                  "actionPayload": {
-                                    "id": "@entity.id"
-                                  },
-                                  "action": "ESCALATE",
-                                  "label": "Escalate",
-                                  "variant": "ghost",
-                                  "type": "button"
-                                },
-                                {
-                                  "label": "@entity.primaryActionLabel",
-                                  "action": "ADVANCE",
-                                  "type": "button",
-                                  "icon": "@entity.primaryActionIcon",
-                                  "actionPayload": {
-                                    "id": "@entity.id"
-                                  },
-                                  "variant": "primary"
-                                }
-                              ],
-                              "align": "center",
-                              "type": "stack"
-                            }
-                          ],
-                          "gap": "sm",
-                          "direction": "horizontal",
-                          "type": "stack"
                         }
-                      ],
-                      "gap": "lg"
+                      ]
                     }
                   ],
-                  "look": "@config.cardLook"
+                  "entity": "@entity.wizardSteps",
+                  "gap": "sm",
+                  "fields": [],
+                  "type": "data-list"
                 }
-              ],
-              "direction": "vertical"
+              ]
             }
           }
         }

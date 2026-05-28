@@ -1,7 +1,7 @@
 {
   "name": "std-display-sidebar-meta",
   "version": "1.0.0",
-  "description": "Sidebar-meta display — Linear-issue / GitHub-issue style record detail. Main content (title + description body) occupies the left two-thirds; a right rail stacks meta panels (status, assignee, dates, labels) in compact label/value rows. Best for helpdesk tickets, ats-recruiting candidates, project tasks, and bug reports. Same DisplayItemDisplay trait, same state machine, same emits/listens as std-display — only bodyContent differs.",
+  "description": "Narrow right-rail meta panel — Linear/Jira/GitHub issue sidebar. Stacked label/value rows in a ~280px column, grouped with dividers.",
   "orbitals": [
     {
       "name": "SidebarMetaDisplayOrbital",
@@ -26,10 +26,6 @@
             "required": true
           },
           {
-            "name": "description",
-            "type": "string"
-          },
-          {
             "name": "status",
             "type": "string",
             "default": "open",
@@ -38,22 +34,6 @@
               "in_progress",
               "closed"
             ]
-          },
-          {
-            "name": "assignee",
-            "type": "string"
-          },
-          {
-            "name": "reporter",
-            "type": "string"
-          },
-          {
-            "name": "createdAt",
-            "type": "string"
-          },
-          {
-            "name": "updatedAt",
-            "type": "string"
           },
           {
             "name": "priority",
@@ -66,7 +46,27 @@
             ]
           },
           {
+            "name": "assignee",
+            "type": "string"
+          },
+          {
+            "name": "reporter",
+            "type": "string"
+          },
+          {
+            "name": "milestone",
+            "type": "string"
+          },
+          {
             "name": "labels",
+            "type": "string"
+          },
+          {
+            "name": "createdAt",
+            "type": "string"
+          },
+          {
+            "name": "updatedAt",
             "type": "string"
           }
         ]
@@ -78,215 +78,230 @@
           "linkedEntity": "SidebarRecord",
           "config": {
             "bodyContent": {
-              "type": "stack",
+              "gap": "md",
+              "direction": "vertical",
               "children": [
                 {
-                  "gap": "md",
+                  "gap": "xs",
+                  "type": "stack",
+                  "direction": "vertical",
                   "children": [
                     {
-                      "type": "stack",
-                      "align": "center",
-                      "direction": "horizontal",
-                      "className": "pb-2 border-b border-[var(--color-border)]",
-                      "gap": "sm",
+                      "variant": "caption",
+                      "content": "@entity.id",
+                      "color": "muted",
+                      "className": "font-mono uppercase tracking-wide",
+                      "type": "typography"
+                    },
+                    {
+                      "className": "leading-snug break-words",
+                      "weight": "semibold",
+                      "variant": "h4",
+                      "type": "typography",
+                      "content": "@entity.title"
+                    }
+                  ]
+                },
+                {
+                  "type": "divider"
+                },
+                {
+                  "type": "stack",
+                  "direction": "horizontal",
+                  "gap": "sm",
+                  "align": "center",
+                  "children": [
+                    {
+                      "variant": "overline",
+                      "type": "typography",
+                      "color": "muted",
+                      "content": "Status"
+                    },
+                    {
+                      "type": "badge",
+                      "label": "@entity.status",
+                      "variant": "default"
+                    }
+                  ],
+                  "justify": "between"
+                },
+                {
+                  "align": "center",
+                  "type": "stack",
+                  "direction": "horizontal",
+                  "gap": "sm",
+                  "justify": "between",
+                  "children": [
+                    {
+                      "color": "muted",
+                      "type": "typography",
+                      "content": "Priority",
+                      "variant": "overline"
+                    },
+                    {
+                      "label": "@entity.priority",
+                      "type": "badge",
+                      "variant": "neutral"
+                    }
+                  ]
+                },
+                {
+                  "type": "divider"
+                },
+                {
+                  "type": "stack",
+                  "gap": "xs",
+                  "children": [
+                    {
+                      "content": "Assignee",
+                      "variant": "overline",
+                      "color": "muted",
+                      "type": "typography"
+                    },
+                    {
                       "children": [
                         {
-                          "type": "typography",
-                          "className": "font-mono",
-                          "content": "@payload.id",
-                          "color": "muted",
-                          "variant": "caption"
+                          "type": "avatar",
+                          "size": "xs",
+                          "name": "@entity.assignee"
                         },
                         {
                           "type": "typography",
-                          "className": "flex-1 min-w-0",
-                          "content": "@payload.title",
-                          "weight": "semibold",
-                          "variant": "h2"
+                          "content": "@entity.assignee",
+                          "variant": "body2"
                         }
-                      ]
-                    },
-                    {
-                      "variant": "body",
-                      "className": "whitespace-pre-wrap break-words leading-relaxed",
-                      "type": "typography",
-                      "content": "@payload.description"
+                      ],
+                      "type": "stack",
+                      "direction": "horizontal",
+                      "gap": "xs",
+                      "className": "hover:bg-[var(--color-muted)] rounded-sm -mx-1 px-1 py-0.5 transition-colors cursor-pointer",
+                      "align": "center"
                     }
                   ],
+                  "direction": "vertical"
+                },
+                {
                   "type": "stack",
+                  "gap": "xs",
                   "direction": "vertical",
-                  "className": "flex-1 min-w-0"
+                  "children": [
+                    {
+                      "color": "muted",
+                      "type": "typography",
+                      "variant": "overline",
+                      "content": "Reporter"
+                    },
+                    {
+                      "gap": "xs",
+                      "type": "stack",
+                      "direction": "horizontal",
+                      "align": "center",
+                      "children": [
+                        {
+                          "type": "avatar",
+                          "size": "xs",
+                          "name": "@entity.reporter"
+                        },
+                        {
+                          "variant": "body2",
+                          "type": "typography",
+                          "content": "@entity.reporter"
+                        }
+                      ]
+                    }
+                  ]
+                },
+                {
+                  "type": "divider"
+                },
+                {
+                  "type": "stack",
+                  "justify": "between",
+                  "children": [
+                    {
+                      "color": "muted",
+                      "content": "Milestone",
+                      "variant": "overline",
+                      "type": "typography"
+                    },
+                    {
+                      "variant": "body2",
+                      "content": "@entity.milestone",
+                      "type": "typography"
+                    }
+                  ],
+                  "direction": "horizontal",
+                  "gap": "sm",
+                  "align": "center"
                 },
                 {
                   "direction": "vertical",
-                  "gap": "md",
                   "type": "stack",
-                  "className": "w-72 flex-shrink-0 border-l border-[var(--color-border)] pl-card-md",
                   "children": [
                     {
-                      "type": "stack",
-                      "children": [
-                        {
-                          "content": "Status",
-                          "className": "uppercase tracking-wide",
-                          "type": "typography",
-                          "variant": "caption",
-                          "color": "muted"
-                        },
-                        {
-                          "type": "badge",
-                          "variant": "default",
-                          "label": "@payload.status"
-                        }
-                      ],
-                      "gap": "xs",
-                      "direction": "vertical"
+                      "variant": "overline",
+                      "content": "Labels",
+                      "type": "typography",
+                      "color": "muted"
                     },
                     {
-                      "children": [
-                        {
-                          "className": "uppercase tracking-wide",
-                          "variant": "caption",
-                          "color": "muted",
-                          "type": "typography",
-                          "content": "Priority"
-                        },
-                        {
-                          "type": "badge",
-                          "label": "@payload.priority",
-                          "variant": "neutral"
-                        }
-                      ],
-                      "gap": "xs",
-                      "type": "stack",
-                      "direction": "vertical"
-                    },
-                    {
-                      "children": [
-                        {
-                          "content": "Assignee",
-                          "type": "typography",
-                          "color": "muted",
-                          "className": "uppercase tracking-wide",
-                          "variant": "caption"
-                        },
-                        {
-                          "type": "stack",
-                          "gap": "xs",
-                          "direction": "horizontal",
-                          "align": "center",
-                          "children": [
-                            {
-                              "name": "user",
-                              "type": "icon"
-                            },
-                            {
-                              "variant": "body",
-                              "type": "typography",
-                              "content": "@payload.assignee"
-                            }
-                          ]
-                        }
-                      ],
-                      "type": "stack",
-                      "direction": "vertical",
-                      "gap": "xs"
-                    },
-                    {
-                      "type": "stack",
-                      "gap": "xs",
-                      "children": [
-                        {
-                          "variant": "caption",
-                          "color": "muted",
-                          "content": "Reporter",
-                          "className": "uppercase tracking-wide",
-                          "type": "typography"
-                        },
-                        {
-                          "type": "stack",
-                          "children": [
-                            {
-                              "type": "icon",
-                              "name": "user"
-                            },
-                            {
-                              "type": "typography",
-                              "variant": "body",
-                              "content": "@payload.reporter"
-                            }
-                          ],
-                          "align": "center",
-                          "direction": "horizontal",
-                          "gap": "xs"
-                        }
-                      ],
-                      "direction": "vertical"
-                    },
-                    {
-                      "gap": "xs",
-                      "direction": "vertical",
-                      "type": "stack",
-                      "children": [
-                        {
-                          "className": "uppercase tracking-wide",
-                          "type": "typography",
-                          "color": "muted",
-                          "content": "Created",
-                          "variant": "caption"
-                        },
-                        {
-                          "type": "typography",
-                          "content": "@payload.createdAt",
-                          "variant": "body"
-                        }
-                      ]
-                    },
-                    {
-                      "gap": "xs",
-                      "children": [
-                        {
-                          "type": "typography",
-                          "variant": "caption",
-                          "className": "uppercase tracking-wide",
-                          "color": "muted",
-                          "content": "Updated"
-                        },
-                        {
-                          "variant": "body",
-                          "content": "@payload.updatedAt",
-                          "type": "typography"
-                        }
-                      ],
-                      "direction": "vertical",
-                      "type": "stack"
-                    },
-                    {
-                      "gap": "xs",
-                      "children": [
-                        {
-                          "type": "typography",
-                          "className": "uppercase tracking-wide",
-                          "color": "muted",
-                          "content": "Labels",
-                          "variant": "caption"
-                        },
-                        {
-                          "type": "badge",
-                          "variant": "neutral",
-                          "label": "@payload.labels"
-                        }
-                      ],
-                      "direction": "vertical",
-                      "type": "stack"
+                      "label": "@entity.labels",
+                      "variant": "neutral",
+                      "type": "badge"
                     }
-                  ]
+                  ],
+                  "gap": "xs"
+                },
+                {
+                  "type": "divider"
+                },
+                {
+                  "justify": "between",
+                  "gap": "sm",
+                  "children": [
+                    {
+                      "color": "muted",
+                      "type": "typography",
+                      "content": "Created",
+                      "variant": "overline"
+                    },
+                    {
+                      "type": "typography",
+                      "content": "@entity.createdAt",
+                      "variant": "caption",
+                      "color": "muted",
+                      "className": "tabular-nums"
+                    }
+                  ],
+                  "type": "stack",
+                  "direction": "horizontal",
+                  "align": "center"
+                },
+                {
+                  "children": [
+                    {
+                      "variant": "overline",
+                      "content": "Updated",
+                      "type": "typography",
+                      "color": "muted"
+                    },
+                    {
+                      "variant": "caption",
+                      "className": "tabular-nums",
+                      "color": "muted",
+                      "type": "typography",
+                      "content": "@entity.updatedAt"
+                    }
+                  ],
+                  "type": "stack",
+                  "direction": "horizontal",
+                  "gap": "sm",
+                  "justify": "between",
+                  "align": "center"
                 }
               ],
-              "align": "start",
-              "className": "max-w-6xl mx-auto px-card-md py-card-md",
-              "direction": "horizontal",
-              "gap": "lg"
+              "type": "stack",
+              "className": "max-w-[280px] w-full p-card-md"
             }
           }
         }

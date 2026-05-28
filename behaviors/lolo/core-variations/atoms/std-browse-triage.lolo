@@ -1,5 +1,5 @@
 app std-browse-triage "1.0.0"
-"Triage browse — Linear/Gmail inbox-style prioritized list. Compact horizontal rows scan status → title → context fast: small status badge, primary title (truncate), one-line muted description (truncate), assignee badge, due-date chip. Top filter-group narrows by status. Same BrowseItemBrowse trait, state machine, emits, and listens as std-browse — only the bodyContent tree differs."
+"Work-queue triage — prioritized rows with leading queue-position pill, priority badge, and per-row Accept/Defer/Escalate action buttons."
 
 orbital TriageBrowseOrbital {
   uses Browse from "std/behaviors/std-browse"
@@ -8,10 +8,9 @@ orbital TriageBrowseOrbital {
     id          : string!
     name        : string!
     description : string
-    status      : "new" | "in_progress" | "done" | "blocked" = "new"
     priority    : "low" | "medium" | "high" = "medium"
+    queueIndex  : string
     assignee    : string
-    dueAt       : string
     createdAt   : string
   }
 
@@ -20,38 +19,49 @@ orbital TriageBrowseOrbital {
       bodyContent: {
         type: "stack",
         direction: "vertical",
-        gap: "none",
-        className: "max-w-4xl mx-auto",
+        gap: "md",
+        className: "max-w-3xl mx-auto p-card-md",
         children: [
-          { type: "stack", direction: "horizontal", gap: "sm", align: "center", className: "px-card-md py-2 border-b border-[var(--color-border)] sticky top-0 bg-[var(--color-surface)] z-10", children: [
-            { type: "filter-group", entity: "TriageItem", filters: [
-              { field: "status", label: "Status", type: "select", options: ["new", "in_progress", "done", "blocked"] },
-              { field: "priority", label: "Priority", type: "select", options: ["low", "medium", "high"] }
-            ]}
+          { type: "stack", direction: "horizontal", gap: "sm", align: "center", justify: "between", className: "px-1", children: [
+            { type: "typography", variant: "overline", color: "muted", content: "Triage queue" },
+            { type: "badge", label: "@payload.data.length", variant: "neutral", size: "sm" }
           ]},
-          { type: "data-list", entity: "@payload.data", gap: "none", selectable: true, fields: [],
+          { type: "divider" },
+          { type: "data-list", entity: "@payload.data", variant: "card", gap: "md", fields: [],
             renderItem: ["fn", "item", {
-              type: "stack", direction: "horizontal", gap: "md", align: "center", className: "px-card-md py-2 border-b border-[var(--color-border)] hover:bg-muted cursor-pointer",
-              children: [
-                { type: "badge", label: "@item.status", variant: "info", size: "sm" },
-                { type: "stack", direction: "vertical", gap: "none", className: "flex-1 min-w-0", children: [
-                  { type: "typography", variant: "body", weight: "medium", content: "@item.name", className: "truncate" },
-                  { type: "typography", variant: "caption", color: "muted", content: "@item.description", className: "truncate" }
-                ]},
-                { type: "stack", direction: "horizontal", gap: "xs", align: "center", className: "shrink-0", children: [
-                  { type: "icon", name: "user" },
-                  { type: "typography", variant: "caption", color: "muted", content: "@item.assignee" }
-                ]},
-                { type: "stack", direction: "horizontal", gap: "xs", align: "center", className: "shrink-0 px-2 py-0.5 border rounded", children: [
-                  { type: "icon", name: "calendar" },
-                  { type: "typography", variant: "caption", content: "@item.dueAt" }
-                ]}
-              ]
+              type: "card", look: "flat-bordered",
+              className: "group rounded-md bg-[var(--color-card)] border border-[var(--color-border)] shadow-sm transition-all duration-normal hover:shadow-hover hover:border-[var(--color-border-strong)] hover:-translate-y-px",
+              children: [{
+                type: "stack", direction: "horizontal", gap: "md", align: "center", className: "p-card-md",
+                children: [
+                  { type: "stack", direction: "vertical", gap: "none", align: "center", justify: "center", className: "shrink-0 w-10 h-10 rounded-full bg-[var(--color-primary-soft)] text-[var(--color-primary-strong)] font-semibold", children: [
+                    { type: "typography", variant: "caption", weight: "bold", content: "@item.queueIndex" }
+                  ]},
+                  { type: "icon", name: "flag", className: "shrink-0 text-[var(--color-text-muted)]" },
+                  { type: "stack", direction: "vertical", gap: "xs", className: "flex-1 min-w-0", children: [
+                    { type: "stack", direction: "horizontal", gap: "xs", align: "center", className: "flex-wrap", children: [
+                      { type: "typography", variant: "body", weight: "medium", content: "@item.name", className: "truncate" },
+                      { type: "badge", label: "@item.priority", variant: "warning", size: "sm" }
+                    ]},
+                    { type: "typography", variant: "caption", color: "muted", content: "@item.description", className: "truncate" },
+                    { type: "stack", direction: "horizontal", gap: "xs", align: "center", className: "pt-0.5", children: [
+                      { type: "icon", name: "user", className: "text-[var(--color-text-muted)]" },
+                      { type: "typography", variant: "caption", color: "muted", content: "@item.assignee" }
+                    ]}
+                  ]},
+                  { type: "stack", direction: "horizontal", gap: "xs", align: "center", className: "shrink-0 opacity-60 group-hover:opacity-100 transition-opacity duration-normal", children: [
+                    { type: "button", label: "Defer",    action: "DEFER",    variant: "ghost",   size: "sm" },
+                    { type: "button", label: "Escalate", action: "ESCALATE", variant: "warning", size: "sm" },
+                    { type: "button", label: "Accept",   action: "ACCEPT",   variant: "primary", size: "sm" }
+                  ]}
+                ]
+              }]
             }]
           }
         ]
       }
     }
+    events { VIEW: ACCEPT, EDIT: DEFER, DELETE: ESCALATE }
   }
 
   page "/triage" as TriagePage -> TriageBrowse

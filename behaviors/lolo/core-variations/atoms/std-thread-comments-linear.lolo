@@ -1,5 +1,5 @@
-app std-thread-comments-linear "1.0.0"
-"Linear comments — GitHub/Linear-issue style: linear top-to-bottom stack of full-content comment cards. Each card shows author header (avatar + name + timestamp), the full body, and a reactions row below. For forum discussions, project-manager issue comments, wiki page discussions, document review threads."
+app std-thread-comments-linear "1.1.0"
+"Nested threaded comments — Disqus/Hacker News style: indented reply tree, inline reply composer on every comment card, and a visible replies group per parent. For forum discussions, blog comments, document review threads, project-manager issue comments."
 
 orbital CommentsLinearOrbital {
   uses Thread from "std/behaviors/std-thread"
@@ -14,6 +14,7 @@ orbital CommentsLinearOrbital {
     createdAt     : string
     voteCount     : number = 0
     replyCount    : number = 0
+    replies       : [CommentsLinearPost]
   }
 
   trait CommentsLinear = Thread.traits.ThreadPostBrowse -> CommentsLinearPost {
@@ -21,9 +22,30 @@ orbital CommentsLinearOrbital {
       bodyContent: {
         type: "stack",
         direction: "vertical",
-        gap: "md",
+        gap: "lg",
         className: "max-w-3xl mx-auto px-card-md py-section",
         children: [
+          { type: "stack", direction: "horizontal", gap: "sm", align: "center",
+            children: [
+              { type: "icon", name: "message-square", size: "md" },
+              { type: "typography", variant: "h3", content: "Discussion" }
+            ]
+          },
+          { type: "card", look: "flat-bordered", padding: "md",
+            children: {
+              type: "stack", direction: "vertical", gap: "sm",
+              children: [
+                { type: "typography", variant: "label", content: "Add a comment" },
+                { type: "input", inputType: "textarea", rows: 3, placeholder: "Share your thoughts…", action: "EDIT_REPLY" },
+                { type: "stack", direction: "horizontal", gap: "sm", justify: "end",
+                  children: [
+                    { type: "button", label: "Cancel", action: "CANCEL_REPLY", variant: "ghost", size: "sm" },
+                    { type: "button", label: "Comment", icon: "send", action: "SUBMIT_REPLY", variant: "primary", size: "sm" }
+                  ]
+                }
+              ]
+            }
+          },
           { type: "data-list", entity: "@payload.data", gap: "md", variant: "default",
             fields: [],
             renderItem: ["fn", "item", {
@@ -39,34 +61,57 @@ orbital CommentsLinearOrbital {
                       { type: "typography", variant: "caption", color: "muted", content: "@item.createdAt" }
                     ]
                   },
-                  { type: "divider" },
                   { type: "typography", variant: "body", content: "@item.content" },
                   { type: "stack", direction: "horizontal", gap: "xs", align: "center",
-                    className: "pt-sm",
                     children: [
-                      { type: "button", label: "Upvote", icon: "arrow-up", action: "UPVOTE", actionPayload: { id: "@item.id" }, variant: "ghost" },
-                      { type: "badge", label: "@item.voteCount", variant: "default" },
-                      { type: "button", label: "Reply", icon: "message-square", action: "REPLY", actionPayload: { parentId: "@item.id" }, variant: "ghost" }
+                      { type: "button", label: "Reply", icon: "corner-down-right", action: "REPLY", actionPayload: { parentId: "@item.id" }, variant: "ghost", size: "sm" }
+                    ]
+                  },
+                  { type: "stack", direction: "vertical", gap: "sm",
+                    className: "pl-card-md border-l border-[var(--color-border)]",
+                    children: [
+                      { type: "stack", direction: "horizontal", gap: "xs", align: "center",
+                        children: [
+                          { type: "icon", name: "chevron-down", size: "xs" },
+                          { type: "typography", variant: "caption", weight: "medium", color: "muted", content: "@item.replyCount replies" }
+                        ]
+                      },
+                      { type: "data-list", entity: "@item.replies", gap: "sm", variant: "default",
+                        fields: [],
+                        renderItem: ["fn", "reply", {
+                          type: "card", look: "borderless-divider", padding: "sm",
+                          children: {
+                            type: "stack", direction: "vertical", gap: "xs",
+                            children: [
+                              { type: "stack", direction: "horizontal", gap: "sm", align: "center",
+                                children: [
+                                  { type: "avatar", name: "@reply.authorName", size: "xs" },
+                                  { type: "typography", variant: "caption", weight: "medium", content: "@reply.authorName" },
+                                  { type: "typography", variant: "caption", color: "muted", content: "·" },
+                                  { type: "typography", variant: "caption", color: "muted", content: "@reply.createdAt" }
+                                ]
+                              },
+                              { type: "typography", variant: "body", content: "@reply.content" },
+                              { type: "stack", direction: "horizontal", gap: "xs", align: "center",
+                                children: [
+                                  { type: "button", label: "Reply", icon: "corner-down-right", action: "REPLY", actionPayload: { parentId: "@reply.id" }, variant: "ghost", size: "sm" }
+                                ]
+                              }
+                            ]
+                          }
+                        }]
+                      },
+                      { type: "stack", direction: "horizontal", gap: "sm", align: "center",
+                        children: [
+                          { type: "input", inputType: "text", placeholder: "Write a reply…", action: "EDIT_REPLY" },
+                          { type: "button", label: "Send", icon: "send", action: "SUBMIT_REPLY", actionPayload: { parentId: "@item.id" }, variant: "primary", size: "sm" }
+                        ]
+                      }
                     ]
                   }
                 ]
               }
             }]
-          },
-          { type: "card", look: "flat-bordered", padding: "md",
-            children: {
-              type: "stack", direction: "vertical", gap: "sm",
-              children: [
-                { type: "typography", variant: "h4", content: "Add a comment" },
-                { type: "textarea", placeholder: "Write your comment…", action: "EDIT_REPLY" },
-                { type: "stack", direction: "horizontal", gap: "sm",
-                  children: [
-                    { type: "button", label: "Comment", icon: "send", action: "SUBMIT_REPLY", variant: "primary" },
-                    { type: "button", label: "Cancel", action: "CANCEL_REPLY", variant: "ghost" }
-                  ]
-                }
-              ]
-            }
           }
         ]
       }

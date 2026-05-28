@@ -1,5 +1,5 @@
 app std-browse-dense "1.0.0"
-"Terminal-style dense browse — Bloomberg/Datadog row density with monospace columns, tabular-nums, color-coded change, and status badges. Sticky column header strip + 30-50 rows on screen. Same BrowseItemBrowse trait, state machine, emits, and listens as std-browse — only bodyContent differs."
+"Spreadsheet-style dense browse — sortable column-row table, sticky header, monospaced numerics, tight 8px row padding."
 
 orbital DenseBrowseOrbital {
   uses Browse from "std/behaviors/std-browse"
@@ -20,37 +20,31 @@ orbital DenseBrowseOrbital {
       bodyContent: {
         type: "stack",
         direction: "vertical",
-        gap: "none",
-        className: "font-mono text-sm",
+        gap: "sm",
+        className: "p-card-md",
         children: [
-          { type: "stack", direction: "horizontal", gap: "sm", align: "center", className: "px-card-md py-2 border-b border-[var(--color-border)] bg-[var(--color-surface-muted)]", children: [
-            { type: "input", inputType: "search", placeholder: "filter…", action: "REFETCH_QUERY", className: "flex-1 font-mono text-sm h-8" }
+          { type: "stack", direction: "horizontal", gap: "sm", align: "center", className: "max-w-md", children: [
+            { type: "icon", name: "search" },
+            { type: "input", inputType: "search", placeholder: "Filter records…", action: "REFETCH_QUERY" }
           ]},
-          { type: "stack", direction: "horizontal", gap: "md", align: "center", className: "px-card-md py-1.5 border-b border-[var(--color-border)] sticky top-0 bg-[var(--color-surface)] uppercase", children: [
-            { type: "typography", variant: "caption", color: "muted", content: "ID",     className: "w-24 truncate" },
-            { type: "typography", variant: "caption", color: "muted", content: "SYMBOL", className: "w-24 truncate" },
-            { type: "typography", variant: "caption", color: "muted", content: "VALUE",  className: "w-24 text-right tabular-nums" },
-            { type: "typography", variant: "caption", color: "muted", content: "CHANGE", className: "w-20 text-right tabular-nums" },
-            { type: "typography", variant: "caption", color: "muted", content: "VOLUME", className: "w-20 text-right tabular-nums" },
-            { type: "typography", variant: "caption", color: "muted", content: "DESC",   className: "flex-1 min-w-0 truncate" },
-            { type: "typography", variant: "caption", color: "muted", content: "STATUS", className: "w-16 text-right" }
-          ]},
-          { type: "data-list", entity: "@payload.data", gap: "none", selectable: true, fields: [],
-            renderItem: ["fn", "item", {
-              type: "stack", direction: "horizontal", gap: "md", align: "center", className: "px-card-md py-1 border-b border-[var(--color-border)] hover:bg-[var(--color-surface-muted)] cursor-pointer",
-              children: [
-                { type: "typography", variant: "caption", color: "muted", content: "@item.id",     className: "w-24 truncate" },
-                { type: "typography", variant: "caption", weight: "medium", content: "@item.name", className: "w-24 truncate" },
-                { type: "typography", variant: "caption", content: "@item.value",                  className: "w-24 text-right tabular-nums" },
-                { type: "typography", variant: "caption", content: "@item.change",                 className: "w-20 text-right tabular-nums" },
-                { type: "typography", variant: "caption", color: "muted", content: "@item.volume", className: "w-20 text-right tabular-nums" },
-                { type: "typography", variant: "caption", color: "muted", content: "@item.description", className: "flex-1 min-w-0 truncate" },
-                { type: "stack", direction: "horizontal", gap: "none", align: "center", className: "w-16 justify-end", children: [
-                  { type: "badge", label: "@item.status", variant: "default", size: "sm" }
-                ]}
-              ]
-            }]
-          }
+          { type: "stack", direction: "vertical", gap: "none", className: "rounded-md border border-[var(--color-border)] overflow-hidden bg-[var(--color-surface)]", children: [
+            { type: "table",
+              entity: "@payload.data",
+              selectable: true,
+              className: "w-full text-sm [&_thead]:sticky [&_thead]:top-0 [&_thead]:z-10 [&_thead]:bg-[var(--color-surface-muted)] [&_thead]:text-[var(--color-text-muted)] [&_thead]:uppercase [&_thead]:text-xs [&_thead]:font-semibold [&_thead]:tracking-wide [&_thead]:border-b [&_thead]:border-[var(--color-border)] [&_tbody_tr]:border-b [&_tbody_tr]:border-[var(--color-border)] [&_tbody_tr:last-child]:border-b-0 [&_tbody_tr:hover]:bg-[var(--color-surface-muted)] [&_td]:px-3 [&_td]:py-2 [&_th]:px-3 [&_th]:py-2",
+              columns: [
+                { key: "id",          label: "ID",          field: "id",          header: "ID",       width: "w-28",  align: "left",  className: "font-mono text-[var(--color-text-muted)] truncate" },
+                { key: "name",        label: "Name",        field: "name",        header: "NAME",     width: "flex-1 min-w-[10rem]", align: "left",  weight: "medium", className: "truncate" },
+                { key: "description", label: "Detail",      field: "description", header: "DETAIL",   width: "flex-1 min-w-[12rem]", align: "left",  className: "text-[var(--color-text-muted)] truncate" },
+                { key: "value",       label: "Value",       field: "value",       header: "VALUE",    width: "w-28",  align: "right", className: "font-mono tabular-nums" },
+                { key: "change",      label: "Change",      field: "change",      header: "CHANGE",   width: "w-24",  align: "right", className: "font-mono tabular-nums" },
+                { key: "volume",      label: "Volume",      field: "volume",      header: "VOLUME",   width: "w-24",  align: "right", className: "font-mono tabular-nums text-[var(--color-text-muted)]" },
+                { key: "status",      label: "Status",      field: "status",      header: "STATUS",   width: "w-24",  align: "center" },
+                { key: "createdAt",   label: "Created",     field: "createdAt",   header: "CREATED",  width: "w-32",  align: "right", className: "font-mono tabular-nums text-[var(--color-text-muted)] truncate" }
+              ],
+              emptyMessage: "No records"
+            }
+          ]}
         ]
       }
     }

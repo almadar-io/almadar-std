@@ -101,14 +101,14 @@ export interface StdThreadThreadPostCreateFailedPayload {
  * without modifying its state-machine topology.
  */
 export interface StdThreadConfig {
+  /** Default: `{"type":"stack","direction":"vertical","gap":"md","children":[{"gap":"sm","itemActions":[{"label":"Reply","icon":"message-square","event":"REPLY"}],"entity":"@payload.data","look":"@config.tableLook","fields":[{"name":"authorName","variant":"h4","label":"Author"},{"variant":"body","label":"","name":"content"},{"variant":"caption","label":"Votes","name":"voteCount"}],"variant":"card","type":"data-list"}]}` */
+  bodyContent?: unknown;
   /** Default: `""` */
   threadRootId?: string;
-  /** Default: `"dense"` */
-  tableLook?: 'dense' | 'spacious' | 'striped' | 'borderless' | 'card-rows';
   /** Default: `false` */
   flat?: boolean;
-  /** Default: `{"type":"stack","children":[{"variant":"card","type":"data-list","look":"@config.tableLook","fields":[{"label":"Author","variant":"h4","name":"authorName"},{"label":"","variant":"body","name":"content"},{"label":"Votes","name":"voteCount","variant":"caption"}],"itemActions":[{"icon":"message-square","event":"REPLY","label":"Reply"}],"entity":"@payload.data","gap":"sm"}],"gap":"md","direction":"vertical"}` */
-  bodyContent?: unknown;
+  /** Default: `"dense"` */
+  tableLook?: 'dense' | 'spacious' | 'striped' | 'borderless' | 'card-rows';
 }
 
 /**

@@ -67,41 +67,41 @@
             "type": "render-ui",
             "default": {
               "type": "stack",
+              "direction": "vertical",
+              "gap": "md",
               "children": [
                 {
-                  "variant": "card",
-                  "type": "data-list",
-                  "look": "@config.tableLook",
-                  "fields": [
-                    {
-                      "label": "Author",
-                      "variant": "h4",
-                      "name": "authorName"
-                    },
-                    {
-                      "label": "",
-                      "variant": "body",
-                      "name": "content"
-                    },
-                    {
-                      "label": "Votes",
-                      "name": "voteCount",
-                      "variant": "caption"
-                    }
-                  ],
+                  "gap": "sm",
                   "itemActions": [
                     {
+                      "label": "Reply",
                       "icon": "message-square",
-                      "event": "REPLY",
-                      "label": "Reply"
+                      "event": "REPLY"
                     }
                   ],
                   "entity": "@payload.data",
-                  "gap": "sm"
+                  "look": "@config.tableLook",
+                  "fields": [
+                    {
+                      "name": "authorName",
+                      "variant": "h4",
+                      "label": "Author"
+                    },
+                    {
+                      "variant": "body",
+                      "label": "",
+                      "name": "content"
+                    },
+                    {
+                      "variant": "caption",
+                      "label": "Votes",
+                      "name": "voteCount"
+                    }
+                  ],
+                  "variant": "card",
+                  "type": "data-list"
                 }
-              ],
-              "gap": "md",
-              "direction": "vertical"
+              ]
             },
             "label": "Body content tree",
             "description": "Render-ui SExpr rendered after thread posts load. Default is the canonical forum-style data-list. Layer 3 variants override this with their own tree (chat bubbles, email-threaded cards, linear comment stacks, etc.) to deliver entirely different thread UX while inheriting the same trait, state machine, emits, and listens.",
@@ -139,7 +139,15 @@
             "tier": "domain"
           }
         ],
-        "capabilities": []
+        "capabilities": [],
+        "entityRebindable": true,
+        "entityContract": {
+          "requires": [],
+          "provides": [
+            "content",
+            "parentId"
+          ]
+        }
       }
     ],
     "pages": [

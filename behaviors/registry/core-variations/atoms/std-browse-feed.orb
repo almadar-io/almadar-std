@@ -1,7 +1,7 @@
 {
   "name": "std-browse-feed",
   "version": "1.0.0",
-  "description": "Feed browse — chronological top-down stream inspired by Twitter timelines and Linear comment threads. Each post is a row with an avatar icon, author + timestamp header, body content, and an inline tag/action row separated by thin dividers. Same BrowseItemBrowse trait, same state machine, same emits/listens as std-browse — only the bodyContent tree differs.",
+  "description": "Activity feed — chronological card-per-item stream with avatar, title, meta, body, timestamp; hover-lift, gap-md rhythm.",
   "orbitals": [
     {
       "name": "FeedBrowseOrbital",
@@ -56,125 +56,122 @@
           "linkedEntity": "FeedPost",
           "config": {
             "bodyContent": {
-              "className": "max-w-2xl mx-auto",
+              "gap": "lg",
+              "className": "max-w-2xl mx-auto p-card-md",
               "children": [
                 {
                   "gap": "sm",
+                  "type": "stack",
+                  "className": "rounded-md border border-[var(--color-border)] bg-[var(--color-surface)] px-3 py-2 shadow-sm",
                   "children": [
                     {
-                      "name": "search",
-                      "type": "icon"
+                      "type": "icon",
+                      "name": "search"
                     },
                     {
-                      "className": "flex-1",
                       "type": "input",
                       "placeholder": "Filter the feed…",
-                      "inputType": "search",
-                      "action": "REFETCH_QUERY"
+                      "action": "REFETCH_QUERY",
+                      "inputType": "search"
                     }
                   ],
-                  "type": "stack",
-                  "direction": "horizontal",
-                  "className": "px-card-md py-3 border-b border-[var(--color-border)]",
-                  "align": "center"
+                  "align": "center",
+                  "direction": "horizontal"
                 },
                 {
-                  "type": "data-list",
-                  "entity": "@payload.data",
-                  "gap": "none",
-                  "selectable": false,
+                  "variant": "card",
+                  "fields": [],
                   "renderItem": [
                     "fn",
                     "item",
                     {
-                      "className": "px-card-md py-card-md border-b border-[var(--color-border)]",
-                      "align": "start",
+                      "type": "card",
+                      "className": "rounded-lg bg-[var(--color-card)] border border-[var(--color-border)] shadow-sm transition-all duration-normal hover:shadow-main hover:border-[var(--color-border-strong)] hover:-translate-y-px",
+                      "look": "flat-bordered",
                       "children": [
                         {
-                          "gap": "none",
-                          "align": "center",
-                          "className": "w-10 h-10 rounded-full bg-muted flex-shrink-0",
-                          "direction": "vertical",
+                          "className": "p-card-md",
+                          "gap": "md",
                           "children": [
                             {
-                              "name": "user",
-                              "type": "icon"
+                              "size": "md",
+                              "type": "avatar",
+                              "fallback": "@item.name",
+                              "className": "rounded-full flex-shrink-0"
+                            },
+                            {
+                              "className": "flex-1 min-w-0",
+                              "gap": "xs",
+                              "children": [
+                                {
+                                  "type": "stack",
+                                  "align": "center",
+                                  "children": [
+                                    {
+                                      "className": "truncate",
+                                      "content": "@item.name",
+                                      "weight": "medium",
+                                      "variant": "body",
+                                      "type": "typography"
+                                    },
+                                    {
+                                      "size": "sm",
+                                      "label": "@item.category",
+                                      "variant": "neutral",
+                                      "type": "badge"
+                                    }
+                                  ],
+                                  "direction": "horizontal",
+                                  "gap": "xs",
+                                  "className": "flex-wrap"
+                                },
+                                {
+                                  "className": "text-[var(--color-foreground)] whitespace-pre-wrap break-words leading-relaxed",
+                                  "variant": "body",
+                                  "content": "@item.description",
+                                  "type": "typography"
+                                },
+                                {
+                                  "direction": "horizontal",
+                                  "align": "center",
+                                  "type": "stack",
+                                  "justify": "between",
+                                  "className": "pt-1",
+                                  "children": [
+                                    {
+                                      "content": "@item.createdAt",
+                                      "variant": "caption",
+                                      "color": "muted",
+                                      "type": "typography"
+                                    },
+                                    {
+                                      "variant": "default",
+                                      "label": "@item.status",
+                                      "size": "sm",
+                                      "type": "badge"
+                                    }
+                                  ],
+                                  "gap": "sm"
+                                }
+                              ],
+                              "type": "stack",
+                              "direction": "vertical"
                             }
                           ],
-                          "justify": "center",
-                          "type": "stack"
-                        },
-                        {
+                          "align": "start",
                           "type": "stack",
-                          "direction": "vertical",
-                          "className": "flex-1 min-w-0",
-                          "gap": "xs",
-                          "children": [
-                            {
-                              "gap": "xs",
-                              "type": "stack",
-                              "children": [
-                                {
-                                  "variant": "body",
-                                  "type": "typography",
-                                  "content": "@item.name",
-                                  "weight": "medium"
-                                },
-                                {
-                                  "type": "typography",
-                                  "color": "muted",
-                                  "variant": "caption",
-                                  "content": "·"
-                                },
-                                {
-                                  "variant": "caption",
-                                  "color": "muted",
-                                  "content": "@item.createdAt",
-                                  "type": "typography"
-                                }
-                              ],
-                              "direction": "horizontal",
-                              "align": "center"
-                            },
-                            {
-                              "variant": "body",
-                              "type": "typography",
-                              "content": "@item.description",
-                              "className": "whitespace-pre-wrap break-words"
-                            },
-                            {
-                              "children": [
-                                {
-                                  "type": "badge",
-                                  "label": "@item.category",
-                                  "variant": "default"
-                                },
-                                {
-                                  "type": "badge",
-                                  "label": "@item.status",
-                                  "variant": "neutral"
-                                }
-                              ],
-                              "className": "pt-1",
-                              "align": "center",
-                              "gap": "sm",
-                              "type": "stack",
-                              "direction": "horizontal"
-                            }
-                          ]
+                          "direction": "horizontal"
                         }
-                      ],
-                      "type": "stack",
-                      "gap": "md",
-                      "direction": "horizontal"
+                      ]
                     }
                   ],
-                  "fields": []
+                  "entity": "@payload.data",
+                  "gap": "md",
+                  "type": "data-list"
                 }
               ],
               "type": "stack",
-              "direction": "vertical",
-              "gap": "none"
+              "direction": "vertical"
             }
           }
         }
